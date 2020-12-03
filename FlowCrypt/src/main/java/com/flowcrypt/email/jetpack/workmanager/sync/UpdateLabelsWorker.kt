@@ -14,7 +14,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -36,35 +35,9 @@ import javax.mail.Store
  * E-mail: DenBond7@gmail.com
  */
 class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
-  override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        if (isStopped) {
-          return@withContext Result.success()
-        }
-
-        try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-          activeAccountEntity?.let {
-            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.store?.let { store ->
-              fetchLabels(activeAccountEntity, store)
-            }
-          }
-
-          return@withContext Result.success()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          when (e) {
-            is MessagingException -> {
-              return@withContext Result.retry()
-            }
-
-            else -> return@withContext Result.failure()
-          }
-        }
-      }
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    fetchLabels(accountEntity, store)
+  }
 
   private suspend fun fetchLabels(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)

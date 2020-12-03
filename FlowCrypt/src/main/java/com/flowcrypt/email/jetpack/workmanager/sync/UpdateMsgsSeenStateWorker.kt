@@ -13,7 +13,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -34,29 +33,10 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
-  override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        if (isStopped) {
-          return@withContext Result.success()
-        }
-
-        try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-          activeAccountEntity?.let {
-            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.executeIMAPAction {
-              changeMsgsReadState(activeAccountEntity, it, MessageState.PENDING_MARK_UNREAD)
-              changeMsgsReadState(activeAccountEntity, it, MessageState.PENDING_MARK_READ)
-            }
-          }
-
-          return@withContext Result.success()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          return@withContext handleExceptionWithResult(e)
-        }
-      }
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    changeMsgsReadState(accountEntity, store, MessageState.PENDING_MARK_UNREAD)
+    changeMsgsReadState(accountEntity, store, MessageState.PENDING_MARK_READ)
+  }
 
   private suspend fun changeMsgsReadState(account: AccountEntity, store: Store, state: MessageState) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
@@ -73,8 +53,7 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
         }
 
         store.getFolder(fullFolderName).use { folder ->
-          val imapFolder = folder as IMAPFolder
-          imapFolder.open(Folder.READ_WRITE)
+          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
 
           val uidList = filteredMsgs.map { it.uid }
           val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()

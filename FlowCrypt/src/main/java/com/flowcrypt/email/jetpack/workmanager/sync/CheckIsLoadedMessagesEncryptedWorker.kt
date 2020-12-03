@@ -16,18 +16,15 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.mail.Folder
-import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
@@ -39,37 +36,11 @@ import javax.mail.Store
  * E-mail: DenBond7@gmail.com
  */
 class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
-  override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        if (isStopped) {
-          return@withContext Result.success()
-        }
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    identifyEncryptedMsgs(accountEntity, store)
+  }
 
-        try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-          activeAccountEntity?.let {
-            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.store?.let { store ->
-              archive(activeAccountEntity, store)
-            }
-          }
-
-          return@withContext Result.success()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          when (e) {
-            is MessagingException -> {
-              return@withContext Result.retry()
-            }
-
-            else -> return@withContext Result.failure()
-          }
-        }
-      }
-
-  private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+  private suspend fun identifyEncryptedMsgs(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val folderFullName = inputData.getString(KEY_FOLDER_FULL_NAME) ?: return@withContext
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
     val localFolder = foldersManager.getFolderByFullName(folderFullName) ?: return@withContext
@@ -80,21 +51,21 @@ class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParam
       return@withContext
     }
 
-    val imapFolder = store.getFolder(folderFullName) as IMAPFolder
-    imapFolder.open(Folder.READ_ONLY)
+    store.getFolder(folderFullName).use { folder ->
+      val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
 
-    val encryptionStates = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList)
-    imapFolder.close(false)
-    if (encryptionStates.isNotEmpty()) {
-      roomDatabase.msgDao().updateEncryptionStates(account.email, folderFullName, encryptionStates)
-    }
+      val encryptionStates = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList)
+      if (encryptionStates.isNotEmpty()) {
+        roomDatabase.msgDao().updateEncryptionStates(account.email, folderFullName, encryptionStates)
+      }
 
-    val email = account.email
-    val folderType = FoldersManager.getFolderType(localFolder)
+      val email = account.email
+      val folderType = FoldersManager.getFolderType(localFolder)
 
-    if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
-      val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(email, folderFullName)
-      MessagesNotificationManager(applicationContext).notify(applicationContext, account, localFolder, detailsList)
+      if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
+        val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(email, folderFullName)
+        MessagesNotificationManager(applicationContext).notify(applicationContext, account, localFolder, detailsList)
+      }
     }
   }
 

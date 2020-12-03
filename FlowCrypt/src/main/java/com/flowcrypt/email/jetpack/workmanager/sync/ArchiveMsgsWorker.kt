@@ -14,11 +14,9 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,29 +33,9 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
-  override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        if (isStopped) {
-          return@withContext Result.success()
-        }
-
-        try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-          activeAccountEntity?.let {
-            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.executeIMAPAction {
-              archive(activeAccountEntity, it)
-            }
-          }
-
-          return@withContext Result.success()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          return@withContext handleExceptionWithResult(e)
-        }
-      }
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    archive(accountEntity, store)
+  }
 
   private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
@@ -72,17 +50,16 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
         break
       } else {
         val uidList = candidatesForArchiving.map { it.uid }
-        val remoteSrcFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
-        val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
-        remoteSrcFolder.open(Folder.READ_WRITE)
-        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+        store.getFolder(inboxFolder.fullName).use { folder ->
+          val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
 
-        if (msgs.isNotEmpty()) {
-          remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
+          if (msgs.isNotEmpty()) {
+            val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
+            remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+            roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
+          }
         }
-
-        remoteSrcFolder.close()
       }
     }
   }

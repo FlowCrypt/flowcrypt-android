@@ -14,18 +14,15 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
@@ -35,35 +32,9 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
-  override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        if (isStopped) {
-          return@withContext Result.success()
-        }
-
-        try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-          activeAccountEntity?.let {
-            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.store?.let { store ->
-              deleteMsgsPermanently(activeAccountEntity, store)
-            }
-          }
-
-          return@withContext Result.success()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          when (e) {
-            is MessagingException -> {
-              return@withContext Result.retry()
-            }
-
-            else -> return@withContext Result.failure()
-          }
-        }
-      }
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    deleteMsgsPermanently(accountEntity, store)
+  }
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
@@ -77,18 +48,17 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
       if (candidatesForDeleting.isEmpty()) {
         break
       } else {
-        val uidList = candidatesForDeleting.map { it.uid }
-        val remoteTrashFolder = store.getFolder(trash.fullName) as IMAPFolder
-        remoteTrashFolder.open(Folder.READ_WRITE)
+        store.getFolder(trash.fullName).use { folder ->
+          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
 
-        val msgs: List<Message> = remoteTrashFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+          val uidList = candidatesForDeleting.map { it.uid }
+          val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
 
-        if (msgs.isNotEmpty()) {
-          remoteTrashFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.DELETED), true)
-          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
+          if (msgs.isNotEmpty()) {
+            imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.DELETED), true)
+            roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
+          }
         }
-
-        remoteTrashFolder.close(true)
       }
     }
   }

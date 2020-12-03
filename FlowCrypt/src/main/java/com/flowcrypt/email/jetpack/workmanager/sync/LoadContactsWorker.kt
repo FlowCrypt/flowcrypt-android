@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.workmanager.sync
 import android.content.Context
 import android.text.TextUtils
 import androidx.work.Constraints
+import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -15,12 +16,10 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.EmailAndNamePair
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,12 +27,11 @@ import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.MessagingException
 import javax.mail.Store
 import javax.mail.internet.InternetAddress
 
 /**
- * This [SyncTask] loads information about contacts from the SENT folder.
+ * This [CoroutineWorker] loads information about contacts from the SENT folder.
  *
  * @author Denis Bondarenko
  * Date: 23.04.2018
@@ -41,55 +39,30 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
-  override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        if (isStopped) {
-          return@withContext Result.success()
-        }
-
-        try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-          activeAccountEntity?.let {
-            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.store?.let { store ->
-              fetchContacts(activeAccountEntity, store)
-            }
-          }
-
-          return@withContext Result.success()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          when (e) {
-            is MessagingException -> {
-              return@withContext Result.retry()
-            }
-
-            else -> return@withContext Result.failure()
-          }
-        }
-      }
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    fetchContacts(accountEntity, store)
+  }
 
   private suspend fun fetchContacts(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     if (account.areContactsLoaded == true) return@withContext
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
     val folderSent = foldersManager.findSentFolder() ?: return@withContext
-    val imapFolder = (store.getFolder(folderSent.fullName) as IMAPFolder).apply { open(Folder.READ_ONLY) }
-    val msgs = imapFolder.messages
 
-    if (msgs.isNotEmpty()) {
-      val fetchProfile = FetchProfile()
-      fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
-      fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
-      fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
-      imapFolder.fetch(msgs, fetchProfile)
+    store.getFolder(folderSent.fullName).use { folder ->
+      val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+      val msgs = imapFolder.messages
 
-      updateContacts(msgs)
-      FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
+      if (msgs.isNotEmpty()) {
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
+        fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
+        fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
+        imapFolder.fetch(msgs, fetchProfile)
+
+        updateContacts(msgs)
+        FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
+      }
     }
-
-    imapFolder.close(false)
   }
 
   private suspend fun updateContacts(msgs: Array<Message>) = withContext(Dispatchers.IO) {
