@@ -27,16 +27,19 @@ interface StoreConnection {
   val accountEntity: AccountEntity
 
   @WorkerThread
-  suspend fun connect(): Boolean
+  suspend fun connect()
 
   @WorkerThread
-  suspend fun reconnect(): Boolean
+  suspend fun reconnect()
 
   @WorkerThread
-  suspend fun disconnect(): Boolean
+  suspend fun disconnect()
 
   @WorkerThread
   suspend fun isConnected(): Boolean
+
+  @WorkerThread
+  suspend fun <T> execute(action: suspend (store: Store) -> T): T
 
   @WorkerThread
   /**

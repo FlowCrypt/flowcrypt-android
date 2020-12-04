@@ -12,14 +12,9 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.BaseWorker
-import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.sun.mail.util.MailConnectException
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
-import javax.mail.FolderClosedException
-import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
@@ -49,41 +44,14 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
       return@withContext Result.success()
     } catch (e: Exception) {
       e.printStackTrace()
-      return@withContext handleExceptionWithResult(e)
-    }
-  }
-
-  private fun handleExceptionWithResult(e: Throwable): Result {
-    when (e) {
-      //reschedule a task if we have a connection issue
-      is UnknownHostException, is MailConnectException, is FolderClosedException, is SocketTimeoutException -> {
-        return Result.retry()
-      }
-
-      is IllegalStateException -> {
-        return if (e.message.equals("Not connected", true)) {
+      return@withContext when (e) {
+        //reschedule a task if we have a connection issue
+        is CommonConnectionException -> {
           Result.retry()
-        } else Result.failure()
-      }
+        }
 
-      is MessagingException -> {
-        return e.message?.let {
-          if (it.contains("Connection closed by peer")
-              || it.contains("Connection reset by peer")) {
-            Result.retry()
-          } else Result.failure()
-
-        } ?: Result.failure()
-      }
-
-      else -> {
-        return if (e.cause == null) {
-          ExceptionUtil.handleError(e)
+        else -> {
           Result.failure()
-        } else {
-          e.cause?.let {
-            handleExceptionWithResult(it)
-          } ?: Result.failure()
         }
       }
     }

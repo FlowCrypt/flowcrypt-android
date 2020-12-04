@@ -141,8 +141,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           emit(processingResult)
         } else {
           val newMsgSnapshot = try {
-            val accountEntity = getActiveAccountSuspend()
-            loadMessageFromServer(messageEntity, accountEntity)
+            loadMessageFromServer(messageEntity)
           } catch (e: Exception) {
             e.printStackTrace()
             emit(Result.exception(e))
@@ -475,54 +474,55 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(d))
   }
 
-  private suspend fun loadMessageFromServer(messageEntity: MessageEntity, accountEntity: AccountEntity?): DiskLruCache.Snapshot = withContext(Dispatchers.IO) {
-    if (accountEntity == null) {
-      throw java.lang.NullPointerException("Account is null")
-    }
-
+  private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot = withContext(Dispatchers.IO) {
+    val accountEntity = getActiveAccountSuspend()
+        ?: throw java.lang.NullPointerException("Account is null")
     val connection = IMAPStoreManager.activeConnections[accountEntity.id]
     if (connection == null) {
       throw java.lang.NullPointerException("There is no active connection for ${accountEntity.email}")
     } else {
-      val imapFolder = connection.store.getFolder(localFolder.fullName) as IMAPFolder
-      processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_connecting, progress = 10.toDouble()))
-      imapFolder.open(Folder.READ_WRITE)
-      processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_connecting, progress = 20.toDouble()))
+      return@withContext connection.execute { store ->
+        store.getFolder(localFolder.fullName).use {
+          val imapFolder = it as IMAPFolder
+          processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_connecting, progress = 10.toDouble()))
+          imapFolder.open(Folder.READ_WRITE)
+          processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_connecting, progress = 20.toDouble()))
 
-      val originalMsg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
-          ?: throw java.lang.NullPointerException("Message not found")
+          val originalMsg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
+              ?: throw java.lang.NullPointerException("Message not found")
 
-      msgSize = originalMsg.size
+          msgSize = originalMsg.size
 
-      val fetchProfile = FetchProfile()
-      fetchProfile.add(FetchProfile.Item.SIZE)
-      fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-      fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
-      imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
+          val fetchProfile = FetchProfile()
+          fetchProfile.add(FetchProfile.Item.SIZE)
+          fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+          fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
+          imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
 
-      val rawHeaders = TextUtils.join("\n", Collections.list(originalMsg.allHeaderLines))
-      if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
-      val customMsg = CustomMimeMessage(connection.session, rawHeaders)
+          val rawHeaders = TextUtils.join("\n", Collections.list(originalMsg.allHeaderLines))
+          if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
+          val customMsg = CustomMimeMessage(connection.session, rawHeaders)
 
-      val originalMultipart = originalMsg.content as? Multipart
-      if (originalMultipart != null) {
-        val modifiedMultipart = CustomMimeMultipart(customMsg.contentType)
-        buildFromSource(originalMultipart, modifiedMultipart)
-        customMsg.setContent(modifiedMultipart)
-      } else {
-        customMsg.setContent(originalMsg.content, originalMsg.contentType)
-        downloadedMsgSize += originalMsg.size
+          val originalMultipart = originalMsg.content as? Multipart
+          if (originalMultipart != null) {
+            val modifiedMultipart = CustomMimeMultipart(customMsg.contentType)
+            buildFromSource(originalMultipart, modifiedMultipart)
+            customMsg.setContent(modifiedMultipart)
+          } else {
+            customMsg.setContent(originalMsg.content, originalMsg.contentType)
+            downloadedMsgSize += originalMsg.size
+          }
+
+          customMsg.saveChanges()
+          customMsg.setMessageId(originalMsg.messageID ?: "")
+
+          MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
+          processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_fetching_message, progress = 60.toDouble()))
+
+          return@execute MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+              ?: throw java.lang.NullPointerException("Message not found in the local cache")
+        }
       }
-
-      customMsg.saveChanges()
-      customMsg.setMessageId(originalMsg.messageID ?: "")
-
-      MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
-      processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_fetching_message, progress = 60.toDouble()))
-      imapFolder.close(false)
-
-      return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString()) ?: throw
-      java.lang.NullPointerException("Message not found in the local cache")
     }
   }
 

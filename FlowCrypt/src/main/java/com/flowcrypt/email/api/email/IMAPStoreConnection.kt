@@ -12,7 +12,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.sun.mail.iap.ConnectionException
+import com.sun.mail.util.FolderClosedIOException
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -23,7 +23,8 @@ import java.net.UnknownHostException
 import javax.mail.FolderClosedException
 import javax.mail.MessagingException
 import javax.mail.Store
-import javax.net.ssl.SSLException
+import javax.net.ssl.SSLHandshakeException
+import javax.net.ssl.SSLProtocolException
 
 /**
  * @author Denis Bondarenko
@@ -42,64 +43,67 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
    */
   private val mutex = Mutex()
 
-  override suspend fun connect(): Boolean = withContext(Dispatchers.IO) {
+  override suspend fun connect() = withContext(Dispatchers.IO) {
     mutex.withLock {
       LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): check connection")
       if (isConnected()) {
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): connected, skip connection")
-        return@withContext true
+        return@withContext
       }
 
-      return@withContext try {
+      try {
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): try to open a new connection to store")
         OpenStoreHelper.openStore(context, accountEntity, store)
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): connected to store")
-        true
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): connection to store failed", e)
-        e.printStackTrace()
-        when (e) {
-          is MailConnectException -> throw e
-          else -> false
-        }
+        throw e
       }
     }
   }
 
-  override suspend fun reconnect(): Boolean = withContext(Dispatchers.IO) {
+  override suspend fun reconnect() = withContext(Dispatchers.IO) {
     LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "reconnect(${accountEntity.email}): begin reconnection")
-    if (!disconnect()) {
-      throw IllegalStateException("Can't disconnect")
-    }
+    disconnect()
+    connect()
     LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "reconnect(${accountEntity.email}): reconnection completed")
-    return@withContext connect()
   }
 
-  override suspend fun disconnect(): Boolean = withContext(Dispatchers.IO) {
+  override suspend fun disconnect() = withContext(Dispatchers.IO) {
     mutex.withLock {
       LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): check connection")
       if (!isConnected()) {
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnected, skipping...")
-        return@withContext true
+        return@withContext
       }
 
-      return@withContext try {
+      try {
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnecting...")
         if (store.isConnected) {
           store.close()
         }
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnected")
-        true
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnecting failed", e)
-        e.printStackTrace()
-        false
+        throw e
       }
     }
   }
 
   override suspend fun isConnected(): Boolean = withContext(Dispatchers.IO) {
     return@withContext store.isConnected
+  }
+
+  override suspend fun <T> execute(action: suspend (store: Store) -> T): T = withContext(Dispatchers.IO) {
+    return@withContext try {
+      if (!isConnected()) {
+        connect()
+      }
+
+      action.invoke(store)
+    } catch (e: Exception) {
+      throw processException(e)
+    }
   }
 
   override suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
@@ -110,23 +114,12 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
 
       action.invoke()
     } catch (e: Exception) {
-      e.printStackTrace()
-
-      when (e) {
-        //catch different connection issues
-        is UnknownHostException, is MailConnectException, is FolderClosedException, is SocketTimeoutException -> Result.exception(CommonConnectionException(e))
-
-        //catch different connection issues via a nested exception
-        is MessagingException -> if (e.nextException is SSLException || e.nextException is ConnectionException) {
-          Result.exception(CommonConnectionException(e))
-        } else {
-          ExceptionUtil.handleError(e)
-          Result.exception(e)
-        }
+      when (val exception = processException(e)) {
+        is CommonConnectionException -> Result.exception(exception)
 
         else -> {
-          ExceptionUtil.handleError(e)
-          Result.exception(e)
+          ExceptionUtil.handleError(exception)
+          Result.exception(exception)
         }
       }
     }
@@ -144,7 +137,41 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
       LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} completed")
     } catch (e: Exception) {
       LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} failed", e)
-      throw e
+      val exception = processException(e)
+      throw exception
+    }
+  }
+
+  private fun processException(e: Throwable): Throwable {
+    return when (e) {
+      is UnknownHostException, is MailConnectException, is FolderClosedException, is SocketTimeoutException, is FolderClosedIOException -> {
+        CommonConnectionException(e)
+      }
+
+      is IllegalStateException -> {
+        if (e.message.equals("Not connected", true)) {
+          CommonConnectionException(e)
+        } else e
+      }
+
+      is SSLHandshakeException, is SSLProtocolException, is MessagingException -> {
+        e.message?.let {
+          if (it.contains("Connection closed by peer")
+              || it.contains("I/O error during system call")
+              || it.contains("Failure in SSL library, usually a protocol error")
+              || it.contains("Handshake failed")
+              || it.contains("Exception reading response")
+              || it.contains("connection failure")
+              || it.contains("Error reading input stream")
+              || it.contains("Connection reset;")) {
+            CommonConnectionException(e)
+          } else e
+        } ?: e
+      }
+
+      else -> e.cause?.let {
+        processException(it)
+      } ?: e
     }
   }
 }

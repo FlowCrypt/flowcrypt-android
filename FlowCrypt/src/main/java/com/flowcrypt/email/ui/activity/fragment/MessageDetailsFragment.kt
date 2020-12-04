@@ -76,6 +76,7 @@ import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import kotlinx.android.synthetic.main.fragment_server_settings.*
@@ -224,7 +225,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
     menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
 
-    args.localFolder.searchQuery?.let {
+    args.localFolder.searchQuery.let {
       menuItemArchiveMsg?.isVisible = false
       menuItemDeleteMsg?.isVisible = false
       menuActionMoveToInbox?.isVisible = false
@@ -986,8 +987,17 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         Result.Status.EXCEPTION -> {
           setActionProgress(100)
-          showStatus(msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-          ?: getString(R.string.unknown_error))
+
+          when (it.exception) {
+            is CommonConnectionException -> {
+              showStatus(getString(R.string.connection_lost))
+            }
+
+            else -> {
+              showStatus(msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error))
+            }
+          }
         }
 
         else -> {

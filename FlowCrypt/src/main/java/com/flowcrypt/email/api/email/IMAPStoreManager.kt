@@ -41,7 +41,11 @@ object IMAPStoreManager {
         //check if we have not-registered connections and close them
         activeConnections.forEach { connection ->
           if (roomDatabase.accountDao().getAccount(connection.value.accountEntity.email) == null) {
-            connection.value.disconnect()
+            try {
+              connection.value.disconnect()
+            } catch (e: Exception) {
+              e.printStackTrace()
+            }
           }
         }
 
@@ -49,7 +53,11 @@ object IMAPStoreManager {
           val key = it.id ?: -1
           //stop and create a new one
           val existedActiveAccountIMAPStoreConnection = activeConnections[key]
-          existedActiveAccountIMAPStoreConnection?.disconnect()
+          try {
+            existedActiveAccountIMAPStoreConnection?.disconnect()
+          } catch (e: Exception) {
+            e.printStackTrace()
+          }
           activeConnections.remove(key, existedActiveAccountIMAPStoreConnection)
 
           val newActiveAccountIMAPStoreConnection = IMAPStoreConnection(applicationContext, it)
