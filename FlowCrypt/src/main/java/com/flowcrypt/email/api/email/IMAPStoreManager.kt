@@ -38,6 +38,7 @@ object IMAPStoreManager {
 
     activeAccountLiveData.observeForever { activeAccount ->
       GlobalScope.launch(Dispatchers.IO) {
+        EmailUtil.patchingSecurityProviderSuspend(context)
         //check if we have not-registered connections and close them
         activeConnections.forEach { connection ->
           if (roomDatabase.accountDao().getAccount(connection.value.accountEntity.email) == null) {

@@ -14,6 +14,7 @@ import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Base64
 import android.util.SparseArray
+import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -39,7 +40,10 @@ import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.gms.security.ProviderInstaller
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailRawSearchTerm
@@ -51,6 +55,8 @@ import com.sun.mail.imap.protocol.FetchResponse
 import com.sun.mail.imap.protocol.UID
 import com.sun.mail.imap.protocol.UIDSet
 import com.sun.mail.util.ASCIIUtility
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -844,6 +850,45 @@ class EmailUtil {
       val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
       val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: "(unknown content)"
       return "\n\nOn $date, $sender wrote:\n$replyText"
+    }
+
+    suspend fun patchingSecurityProviderSuspend(context: Context) = withContext(Dispatchers.IO) {
+      patchingSecurityProvider(context)
+    }
+
+    /**
+     * To update a device's security provider, use the ProviderInstaller class.
+     *
+     *
+     * When you call installIfNeeded(), the ProviderInstaller does the following:
+     *  * If the device's Provider is successfully updated (or is already up-to-date), the method returns
+     * normally.
+     *  * If the device's Google Play services library is out of date, the method throws
+     * GooglePlayServicesRepairableException. The app can then catch this exception and show the user an
+     * appropriate dialog box to update Google Play services.
+     *  * If a non-recoverable error occurs, the method throws GooglePlayServicesNotAvailableException to indicate
+     * that it is unable to update the Provider. The app can then catch the exception and choose an appropriate
+     * course of action, such as displaying the standard fix-it flow diagram.
+     *
+     *
+     * If installIfNeeded() needs to install a new Provider, this can take anywhere from 30-50 milliseconds (on
+     * more recent devices) to 350 ms (on older devices). If the security provider is already up-to-date, the
+     * method takes a negligible amount of time.
+     *
+     *
+     * Details here https://developer.android.com/training/articles/security-gms-provider.html#patching
+     *
+     * @param context Interface to global information about an application environment;
+     */
+    @WorkerThread
+    fun patchingSecurityProvider(context: Context) {
+      try {
+        ProviderInstaller.installIfNeeded(context)
+      } catch (e: GooglePlayServicesRepairableException) {
+        e.printStackTrace()
+      } catch (e: GooglePlayServicesNotAvailableException) {
+        e.printStackTrace()
+      }
     }
   }
 }

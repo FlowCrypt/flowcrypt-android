@@ -45,8 +45,6 @@ class EmailSyncManager(val listener: SyncListener) {
       connectionFuture = connectionExecutorService.submit(connectionRunnable)
     }
 
-    runIdleInboxIfNeeded()
-
     ForwardedAttachmentsDownloaderWorker.enqueue(listener.context)
     MessagesSenderWorker.enqueue(listener.context)
   }
@@ -60,18 +58,6 @@ class EmailSyncManager(val listener: SyncListener) {
     idleSyncRunnable?.interruptIdle()
     connectionExecutorService.shutdown()
     idleExecutorService.shutdown()
-  }
-
-  /**
-   * Run a thread where we will idle INBOX folder.
-   */
-  private fun runIdleInboxIfNeeded() {
-    if (!isThreadAlreadyWorking(idleFuture)) {
-      idleSyncRunnable = IdleSyncRunnable(listener, this)
-      idleSyncRunnable?.let {
-        idleFuture = idleExecutorService.submit(it)
-      }
-    }
   }
 
   /**

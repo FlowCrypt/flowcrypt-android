@@ -278,17 +278,14 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @param flags   The message flags.
    */
   @Transaction
-  open fun updateLocalMsgFlags(email: String?, label: String?, uid: Long, flags: Flags) {
-    val msgEntity = getMsg(account = email, folder = label, uid = uid)
+  open suspend fun updateLocalMsgFlags(email: String?, label: String?, uid: Long, flags: Flags) = withContext(Dispatchers.IO) {
+    val msgEntity = getMsgSuspend(account = email, folder = label, uid = uid) ?: return@withContext
     val modifiedMsgEntity = if (flags.contains(Flags.Flag.SEEN)) {
-      msgEntity?.copy(flags = flags.toString().toUpperCase(Locale.getDefault()), isNew = false)
+      msgEntity.copy(flags = flags.toString().toUpperCase(Locale.getDefault()), isNew = false)
     } else {
-      msgEntity?.copy(flags = flags.toString().toUpperCase(Locale.getDefault()))
+      msgEntity.copy(flags = flags.toString().toUpperCase(Locale.getDefault()))
     }
-
-    modifiedMsgEntity?.let {
-      update(it)
-    }
+    updateSuspend(modifiedMsgEntity)
   }
 
   @Transaction
