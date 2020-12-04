@@ -88,7 +88,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var listener: OnManageEmailsListener? = null
   private var isEmptyViewAvailable = false
   private var keepSelectionInMemory = false
-  private var isForceLoadNextMsgsNeeded = false
+  private var isForceLoadNextMsgsEnabled = false
 
   override val contentResourceId: Int = R.layout.fragment_email_list
 
@@ -420,7 +420,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun showConnLostHint() {
-    isForceLoadNextMsgsNeeded = true
+    isForceLoadNextMsgsEnabled = true
     showSnackbar(
         view = requireView(),
         msgText = getString(R.string.can_not_connect_to_the_imap_server),
@@ -509,7 +509,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * @param totalItemsCount The count of already loaded messages.
    */
   private fun loadNextMsgs(totalItemsCount: Int) {
-    isForceLoadNextMsgsNeeded = false
+    isForceLoadNextMsgsEnabled = false
     val localFolder = listener?.currentFolder
 
     if (isOutboxFolder) {
@@ -532,7 +532,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
     } else {
       footerProgressView?.visibility = View.GONE
-      isForceLoadNextMsgsNeeded = true
+      isForceLoadNextMsgsEnabled = true
 
       if (totalItemsCount == 0) {
         contentView?.visibility = View.GONE
@@ -828,6 +828,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
         Result.Status.EXCEPTION -> {
           setActionProgress(100)
+          if (it.exception is CommonConnectionException) {
+            showConnLostHint()
+          }
         }
 
         else -> {
@@ -905,7 +908,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   private fun setupConnectionNotifier() {
     connectionLifecycleObserver.connectionLiveData.observe(this, {
-      if (isForceLoadNextMsgsNeeded && it) {
+      if (isForceLoadNextMsgsEnabled && it) {
         loadNextItemsToAdapter()
       }
     })
