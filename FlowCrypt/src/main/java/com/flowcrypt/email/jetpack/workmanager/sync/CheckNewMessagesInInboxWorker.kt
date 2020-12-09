@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks
+package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
 import androidx.work.Constraints
@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
@@ -37,7 +36,7 @@ import javax.mail.UIDFolder
  * Time: 15:50
  * E-mail: DenBond7@gmail.com
  */
-class CheckNewMessagesSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class CheckNewMessagesInInboxWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     checkAndProcessNewMessages(accountEntity, store)
   }
@@ -111,7 +110,7 @@ class CheckNewMessagesSyncTask(context: Context, params: WorkerParameters) : Bas
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<CheckNewMessagesSyncTask>()
+              OneTimeWorkRequestBuilder<CheckNewMessagesInInboxWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()
