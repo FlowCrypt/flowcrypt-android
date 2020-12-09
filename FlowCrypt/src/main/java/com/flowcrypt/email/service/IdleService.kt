@@ -9,12 +9,16 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.IdleSyncRunnable
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
@@ -74,20 +78,27 @@ class IdleService : LifecycleService() {
     lifecycle.addObserver(connectionLifecycleObserver)
     connectionLifecycleObserver.connectionLiveData.observe(this, { isConnected ->
       if (isConnected) {
-        cleanPool()
         cachedAccountEntity?.let { accountEntity -> submitIdle(accountEntity) }
       }
     })
   }
 
   private fun observeActiveAccountChanges() {
-    FlowCryptRoomDatabase.getDatabase(this).accountDao().getActiveAccountLD().observe(this, {
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(this)
+    val activeAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD().switchMap { accountEntity ->
+      liveData {
+        emit(AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+      }
+    }
+
+    activeAccountLiveData.observe(this, {
       cachedAccountEntity = it
       cachedAccountEntity?.let { accountEntity -> submitIdle(accountEntity) }
     })
   }
 
   private fun submitIdle(accountEntity: AccountEntity) {
+    cleanPool()
     stopIdleThread()
 
     idleSyncRunnable = IdleSyncRunnable(applicationContext, accountEntity, object : IdleSyncRunnable.ActionsListener {
