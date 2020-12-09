@@ -85,24 +85,24 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
 
         LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "Start idling for store $store")
 
-        store.getFolder(inboxLocalFolder.fullName).use { folder ->
-          remoteFolder = (folder as IMAPFolder).apply { open(javax.mail.Folder.READ_ONLY) }
+        store.getFolder(inboxLocalFolder.fullName).use { remoteFolder ->
+          this.remoteFolder = (remoteFolder as IMAPFolder).apply { open(javax.mail.Folder.READ_ONLY) }
           actionsListener?.syncFolderState()
-          folder.addMessageCountListener(object : MessageCountListener {
+          remoteFolder.addMessageCountListener(object : MessageCountListener {
             override fun messagesAdded(e: MessageCountEvent?) {
-              actionsListener?.messagesAdded(accountEntity, inboxLocalFolder, e)
+              actionsListener?.messagesAdded(accountEntity, inboxLocalFolder, remoteFolder, e)
             }
 
             override fun messagesRemoved(e: MessageCountEvent?) {
-              actionsListener?.messagesRemoved(accountEntity, inboxLocalFolder, e)
+              actionsListener?.messagesRemoved(accountEntity, inboxLocalFolder, remoteFolder, e)
             }
           })
-          folder.addMessageChangedListener { messageChangedEvent ->
-            actionsListener?.messageChanged(accountEntity, inboxLocalFolder, folder, messageChangedEvent)
+          remoteFolder.addMessageChangedListener { messageChangedEvent ->
+            actionsListener?.messageChanged(accountEntity, inboxLocalFolder, remoteFolder, messageChangedEvent)
           }
 
           while (!Thread.interrupted() && isIdlingAvailable) {
-            folder.idle()
+            remoteFolder.idle()
           }
         }
       } catch (e: Exception) {
@@ -116,9 +116,27 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
 
   interface ActionsListener {
     fun syncFolderState()
-    fun messageChanged(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageChangedEvent?)
-    fun messagesAdded(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?)
-    fun messagesRemoved(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?)
+
+    fun messageChanged(
+        accountEntity: AccountEntity,
+        localFolder: LocalFolder,
+        remoteFolder: IMAPFolder,
+        e: MessageChangedEvent?
+    )
+
+    fun messagesAdded(
+        accountEntity: AccountEntity,
+        localFolder: LocalFolder,
+        remoteFolder: IMAPFolder,
+        e: MessageCountEvent?
+    )
+
+    fun messagesRemoved(
+        accountEntity: AccountEntity,
+        localFolder: LocalFolder,
+        remoteFolder: IMAPFolder,
+        e: MessageCountEvent?
+    )
   }
 
   companion object {

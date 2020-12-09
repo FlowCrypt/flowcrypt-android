@@ -552,15 +552,18 @@ class EmailUtil {
      * @return A list of messages which already exist in the local database.
      * @throws MessagingException for other failures.
      */
-    fun getUpdatedMsgsByUID(folder: IMAPFolder, first: Long, end: Long): Array<Message> {
-      return if (end <= first) {
+    fun getUpdatedMsgsByUID(folder: IMAPFolder, first: Long, end: Long, fetchFlags: Boolean = true):
+        Array<Message> {
+      return if (end <= first && end != UIDFolder.LASTUID) {
         arrayOf()
       } else {
         val msgs = folder.getMessagesByUID(first, end)
 
         if (msgs.isNotEmpty()) {
           val fetchProfile = FetchProfile()
-          fetchProfile.add(FetchProfile.Item.FLAGS)
+          if (fetchFlags) {
+            fetchProfile.add(FetchProfile.Item.FLAGS)
+          }
           fetchProfile.add(UIDFolder.FetchProfileItem.UID)
           folder.fetch(msgs, fetchProfile)
         }
