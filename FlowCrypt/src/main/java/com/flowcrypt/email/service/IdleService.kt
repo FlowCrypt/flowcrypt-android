@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.jetpack.workmanager.sync.CheckNewMessagesInInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsAddedWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsRemovedWorker
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -126,7 +126,7 @@ class IdleService : LifecycleService() {
 
       override fun messagesAdded(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageCountEvent?) {
         LogsUtil.d(TAG, "messagesAdded: " + e?.messages?.size)
-        CheckNewMessagesInInboxWorker.enqueue(applicationContext)
+        InboxIdleMsgsAddedWorker.enqueue(applicationContext)
       }
 
       override fun messagesRemoved(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageCountEvent?) {

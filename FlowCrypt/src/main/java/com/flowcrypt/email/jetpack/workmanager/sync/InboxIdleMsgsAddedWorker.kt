@@ -37,7 +37,7 @@ import javax.mail.UIDFolder
  * Time: 15:50
  * E-mail: DenBond7@gmail.com
  */
-class CheckNewMessagesInInboxWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     checkAndProcessNewMessages(accountEntity, store)
   }
@@ -117,7 +117,7 @@ class CheckNewMessagesInInboxWorker(context: Context, params: WorkerParameters) 
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<CheckNewMessagesInInboxWorker>()
+              OneTimeWorkRequestBuilder<InboxIdleMsgsAddedWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()
