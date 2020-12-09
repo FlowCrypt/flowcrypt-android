@@ -19,9 +19,9 @@ import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.launch
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.ThreadPoolExecutor
 import javax.mail.event.MessageChangedEvent
 import javax.mail.event.MessageCountEvent
 
@@ -33,7 +33,7 @@ import javax.mail.event.MessageCountEvent
  * E-mail: DenBond7@gmail.com
  */
 class IdleService : LifecycleService() {
-  private val idleExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
+  private val idleExecutorService = Executors.newFixedThreadPool(1) as ThreadPoolExecutor
   private var idleFuture: Future<*>? = null
   private var idleSyncRunnable: IdleSyncRunnable? = null
 
@@ -67,59 +67,71 @@ class IdleService : LifecycleService() {
   private fun stopIdleThread() {
     idleFuture?.cancel(true)
     idleSyncRunnable?.interruptIdle()
+    idleSyncRunnable = null
   }
 
   private fun setupConnectionObserver() {
     lifecycle.addObserver(connectionLifecycleObserver)
-    connectionLifecycleObserver.connectionLiveData.observe(this, {
-      //try to reconnect here
+    connectionLifecycleObserver.connectionLiveData.observe(this, { isConnected ->
+      if (isConnected) {
+        cleanPool()
+        cachedAccountEntity?.let { accountEntity -> submitIdle(accountEntity) }
+      }
     })
   }
 
   private fun observeActiveAccountChanges() {
     FlowCryptRoomDatabase.getDatabase(this).accountDao().getActiveAccountLD().observe(this, {
       cachedAccountEntity = it
+      cachedAccountEntity?.let { accountEntity -> submitIdle(accountEntity) }
+    })
+  }
 
-      stopIdleThread()
+  private fun submitIdle(accountEntity: AccountEntity) {
+    stopIdleThread()
 
-      cachedAccountEntity?.let { accountEntity ->
-        idleSyncRunnable = IdleSyncRunnable(applicationContext, accountEntity, object : IdleSyncRunnable.ActionsListener {
-          override fun syncFolderState() {
-            //RefreshMessagesSyncTask
-          }
+    idleSyncRunnable = IdleSyncRunnable(applicationContext, accountEntity, object : IdleSyncRunnable.ActionsListener {
+      override fun syncFolderState() {
+        //RefreshMessagesSyncTask
+      }
 
-          override fun messageChanged(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageChangedEvent?) {
-            LogsUtil.d(TAG, "messageChanged")
-            lifecycleScope.launch {
-              val msg = e?.message
-              if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
-                try {
-                  val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-                  roomDatabase.msgDao().updateLocalMsgFlags(accountEntity.email, localFolder.fullName, remoteFolder.getUID(msg), msg.flags)
-                } catch (e: Exception) {
-                  e.printStackTrace()
-                  ExceptionUtil.handleError(e)
-                }
-              }
+      override fun messageChanged(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageChangedEvent?) {
+        LogsUtil.d(TAG, "messageChanged")
+        lifecycleScope.launch {
+          val msg = e?.message
+          if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
+            try {
+              val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+              roomDatabase.msgDao().updateLocalMsgFlags(accountEntity.email, localFolder.fullName, remoteFolder.getUID(msg), msg.flags)
+            } catch (e: Exception) {
+              e.printStackTrace()
+              ExceptionUtil.handleError(e)
             }
           }
-
-          override fun messagesAdded(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?) {
-            LogsUtil.d(TAG, "messagesAdded: " + e?.messages?.size)
-            //CheckNewMessagesSyncTask
-          }
-
-          override fun messagesRemoved(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?) {
-            LogsUtil.d(TAG, "messagesRemoved")
-            syncFolderState()
-          }
-        })
-
-        idleSyncRunnable?.let { runnable ->
-          idleFuture = idleExecutorService.submit(runnable)
         }
       }
+
+      override fun messagesAdded(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?) {
+        LogsUtil.d(TAG, "messagesAdded: " + e?.messages?.size)
+        //CheckNewMessagesSyncTask
+      }
+
+      override fun messagesRemoved(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?) {
+        LogsUtil.d(TAG, "messagesRemoved")
+        syncFolderState()
+      }
     })
+
+    idleSyncRunnable?.let { runnable ->
+      idleFuture = idleExecutorService.submit(runnable)
+    }
+  }
+
+  private fun cleanPool() {
+    val iterator = idleExecutorService.queue.iterator()
+    while (iterator.hasNext()) {
+      iterator.remove()
+    }
   }
 
   companion object {

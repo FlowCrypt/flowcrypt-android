@@ -11,11 +11,9 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.sun.mail.imap.IMAPFolder
 import java.util.concurrent.TimeUnit
-import javax.mail.MessagingException
 import javax.mail.event.MessageChangedEvent
 import javax.mail.event.MessageCountEvent
 import javax.mail.event.MessageCountListener
@@ -67,21 +65,17 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
     }.start()
   }
 
-  private fun idle() {
+  private fun idle(attempt: Int = 0) {
+    if (attempt >= ATTEMPT_COUNT) {
+      return
+    }
+
+    LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "idle: attempt = $attempt")
     store.use {
       val foldersManager = FoldersManager.fromDatabase(context, accountEntity.email)
       val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@use
 
       try {
-        while (!GeneralUtil.isConnected(context)) {
-          try {
-            //wait while a connection will be established
-            TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(30))
-          } catch (interruptedException: InterruptedException) {
-            interruptedException.printStackTrace()
-          }
-        }
-
         if (!store.isConnected) {
           EmailUtil.patchingSecurityProvider(context)
           LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "Not connected. Start a reconnection ...")
@@ -113,13 +107,9 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
         }
       } catch (e: Exception) {
         e.printStackTrace()
-        if (e is MessagingException) {
-          if ("IDLE not supported" == e.message) {
-            LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "IDLE not supported!")
-          }
-        } else {
-          idle()
-        }
+        //timeout between attempts
+        TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(5))
+        idle(attempt + 1)
       }
     }
   }
@@ -129,5 +119,9 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
     fun messageChanged(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageChangedEvent?)
     fun messagesAdded(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?)
     fun messagesRemoved(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?)
+  }
+
+  companion object {
+    private const val ATTEMPT_COUNT = 5
   }
 }
