@@ -29,7 +29,7 @@ import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.node.Node
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -246,11 +246,11 @@ abstract class BaseActivity : AppCompatActivity() {
           val firstNonactiveAccount = nonactiveAccounts.first()
           roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
           roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
-          EmailSyncService.restart(applicationContext)
+          IdleService.restart(applicationContext)
           EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
           finish()
         } else {
-          stopService(Intent(applicationContext, EmailSyncService::class.java))
+          stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
           startActivity(intent)

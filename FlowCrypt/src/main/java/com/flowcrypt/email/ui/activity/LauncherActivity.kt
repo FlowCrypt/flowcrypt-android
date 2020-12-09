@@ -19,8 +19,8 @@ import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.node.Node
-import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.FeedbackJobIntentService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -111,7 +111,7 @@ class LauncherActivity : BaseActivity() {
       roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, activeAccount!!.email, 0))
     }
 
-    EmailSyncService.startEmailSyncService(this)
+    IdleService.start(this)
     EmailManagerActivity.runEmailManagerActivity(this)
     finish()
   }

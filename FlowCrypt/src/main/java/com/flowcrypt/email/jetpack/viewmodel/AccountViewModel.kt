@@ -7,6 +7,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
@@ -17,9 +18,8 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -81,9 +81,9 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
       try {
         val accountDao = roomDatabase.accountDao()
         val isUpdated = accountDao.updateAccountByAuthCredentials(authCredentials) > 0
-        EmailSyncService.restart(context)
-        //need to wait restart of EmailSyncService
-        delay(2000)
+        val intent = Intent(context, IdleService::class.java)
+        context.stopService(intent)
+        context.startService(intent)
         updateAuthCredentialsLiveData.value = Result.success(isUpdated)
       } catch (e: Exception) {
         e.printStackTrace()

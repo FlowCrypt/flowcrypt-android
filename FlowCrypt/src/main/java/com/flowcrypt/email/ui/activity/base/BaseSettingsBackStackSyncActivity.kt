@@ -8,11 +8,11 @@ package com.flowcrypt.email.ui.activity.base
 import android.view.Menu
 import android.view.MenuItem
 import com.flowcrypt.email.R
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 
 /**
- * A base settings activity which uses back stack and [EmailSyncService]
+ * A base settings activity which uses back stack and [IdleService]
  *
  * @author Denis Bondarenko
  * Date: 07.08.2018

@@ -32,7 +32,7 @@ import javax.mail.event.MessageCountEvent
  * Time: 12:18
  * E-mail: DenBond7@gmail.com
  */
-class EmailSyncService : LifecycleService() {
+class IdleService : LifecycleService() {
   private val idleExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
   private var idleFuture: Future<*>? = null
   private var idleSyncRunnable: IdleSyncRunnable? = null
@@ -123,26 +123,26 @@ class EmailSyncService : LifecycleService() {
   }
 
   companion object {
-    private val TAG = EmailSyncService::class.java.simpleName
+    private val TAG = IdleService::class.java.simpleName
 
     /**
-     * This method can bu used to start [EmailSyncService].
+     * This method can bu used to start [IdleService].
      *
      * @param context Interface to global information about an application environment.
      */
-    fun startEmailSyncService(context: Context) {
-      val startEmailServiceIntent = Intent(context, EmailSyncService::class.java)
+    fun start(context: Context) {
+      val startEmailServiceIntent = Intent(context, IdleService::class.java)
       context.startService(startEmailServiceIntent)
     }
 
     /**
-     * Restart [EmailSyncService].
+     * Restart [IdleService].
      *
      * @param context Interface to global information about an application environment.
      */
     fun restart(context: Context) {
       NotificationManagerCompat.from(context).cancelAll()
-      val intent = Intent(context, EmailSyncService::class.java)
+      val intent = Intent(context, IdleService::class.java)
       context.stopService(intent)
       context.startService(intent)
     }

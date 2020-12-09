@@ -18,7 +18,7 @@ import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
@@ -126,7 +126,7 @@ abstract class BaseSingInFragment : BaseFragment(), ProgressBehaviour {
   }
 
   protected open fun runEmailManagerActivity() {
-    EmailSyncService.startEmailSyncService(requireContext())
+    IdleService.start(requireContext())
     getTempAccount()?.let { roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email)) }
     EmailManagerActivity.runEmailManagerActivity(requireContext())
     activity?.finish()

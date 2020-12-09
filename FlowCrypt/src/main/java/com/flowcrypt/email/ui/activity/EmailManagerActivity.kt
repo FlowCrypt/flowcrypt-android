@@ -28,7 +28,6 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.bumptech.glide.request.RequestOptions
@@ -51,7 +50,7 @@ import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
@@ -119,11 +118,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     setupLabelsViewModel()
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
-    accountViewModel.nonActiveAccountsLiveData.observe(this, Observer {
+    accountViewModel.nonActiveAccountsLiveData.observe(this, {
       genAccountsLayout(it)
     })
 
-    msgsViewModel.outboxMsgsLiveData.observe(this, Observer {
+    msgsViewModel.outboxMsgsLiveData.observe(this, {
       val msgsCount = it.size
       toolbar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
         getString(R.string.outbox_msgs_count, msgsCount)
@@ -275,7 +274,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         Activity.RESULT_OK -> {
           countingIdlingResource.incrementSafely()
           finish()
-          EmailSyncService.restart(this@EmailManagerActivity)
+          IdleService.restart(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
           countingIdlingResource.decrementSafely()
         }
@@ -418,7 +417,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   private fun showGmailSignIn() {
     showSnackbar(rootView, getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-        Snackbar.LENGTH_INDEFINITE, View.OnClickListener { onRetryGoogleAuth() })
+        Snackbar.LENGTH_INDEFINITE) { onRetryGoogleAuth() }
   }
 
   private fun doLogout() {
@@ -586,7 +585,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       lifecycleScope.launch {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
         roomDatabase.accountDao().switchAccountSuspend(account)
-        EmailSyncService.restart(this@EmailManagerActivity)
+        IdleService.restart(this@EmailManagerActivity)
         runEmailManagerActivity(this@EmailManagerActivity)
       }
       finish()
@@ -596,7 +595,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(this, Observer {
+    labelsViewModel.foldersManagerLiveData.observe(this, {
       this.foldersManager = it
 
       if (foldersManager?.allFolders?.isNotEmpty() == true) {

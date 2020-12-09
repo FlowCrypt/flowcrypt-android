@@ -275,7 +275,7 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".service.EmailSyncService"
+            android:name=".service.IdleService"
             android:exported="false" />
 
         <service
