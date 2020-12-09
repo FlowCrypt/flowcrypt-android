@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.service.MessagesNotificationManager
@@ -73,26 +74,32 @@ class CheckNewMessagesInInboxWorker(context: Context, params: WorkerParameters) 
         EmailUtil.fetchMsgs(remoteFolder, newestMsgsFromFetchExceptExisted.toTypedArray())
       }
 
-      if (newMsgs.isNotEmpty()) {
-        val msgsEncryptionStates = EmailUtil.getMsgsEncryptionInfo(accountEntity.isShowOnlyEncrypted, folder, newMsgs)
-        val msgEntities = MessageEntity.genMessageEntities(
-            context = applicationContext,
-            email = accountEntity.email,
-            label = folderFullName,
-            folder = remoteFolder,
-            msgs = newMsgs,
-            msgsEncryptionStates = msgsEncryptionStates,
-            isNew = !GeneralUtil.isAppForegrounded(),
-            areAllMsgsEncrypted = false
-        )
+      processNewMsgs(newMsgs, accountEntity, folder, folderFullName, remoteFolder, inboxLocalFolder)
+    }
+  }
 
-        roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+  private suspend fun processNewMsgs(newMsgs: Array<Message>, accountEntity: AccountEntity,
+                                     folder: IMAPFolder, folderFullName: String,
+                                     remoteFolder: IMAPFolder, inboxLocalFolder: LocalFolder) = withContext(Dispatchers.IO) {
+    if (newMsgs.isNotEmpty()) {
+      val msgsEncryptionStates = EmailUtil.getMsgsEncryptionInfo(accountEntity.isShowOnlyEncrypted, folder, newMsgs)
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = applicationContext,
+          email = accountEntity.email,
+          label = folderFullName,
+          folder = remoteFolder,
+          msgs = newMsgs,
+          msgsEncryptionStates = msgsEncryptionStates,
+          isNew = !GeneralUtil.isAppForegrounded(),
+          areAllMsgsEncrypted = false
+      )
 
-        if (!GeneralUtil.isAppForegrounded()) {
-          val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, folderFullName)
-          MessagesNotificationManager(applicationContext)
-              .notify(applicationContext, accountEntity, inboxLocalFolder, detailsList)
-        }
+      roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+
+      if (!GeneralUtil.isAppForegrounded()) {
+        val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, folderFullName)
+        MessagesNotificationManager(applicationContext)
+            .notify(applicationContext, accountEntity, inboxLocalFolder, detailsList)
       }
     }
   }
