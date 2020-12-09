@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
-import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.entity.AccountEntity
 

@@ -24,6 +24,8 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
+  protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
   abstract suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store)
 
   override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -32,7 +34,6 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
     }
 
     try {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
       val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
       activeAccountEntity?.let {
         val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]

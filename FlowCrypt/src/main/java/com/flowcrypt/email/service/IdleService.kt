@@ -15,6 +15,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.IdleSyncRunnable
+import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
@@ -124,7 +125,7 @@ class IdleService : LifecycleService() {
 
       override fun messagesAdded(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?) {
         LogsUtil.d(TAG, "messagesAdded: " + e?.messages?.size)
-        //CheckNewMessagesSyncTask
+        CheckNewMessagesSyncTask.enqueue(applicationContext)
       }
 
       override fun messagesRemoved(accountEntity: AccountEntity, localFolder: LocalFolder, e: MessageCountEvent?) {

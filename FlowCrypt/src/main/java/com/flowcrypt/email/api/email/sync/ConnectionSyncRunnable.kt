@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.api.email.sync
 
-import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -63,48 +60,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
 
     closeConn()
     LogsUtil.d(tag, " stopped!")
-  }
-
-  private fun removeOldTasks(cls: Class<*>, queue: BlockingQueue<SyncTask>, syncTask: SyncTask? = null) {
-    val iterator = queue.iterator()
-    while (iterator.hasNext()) {
-      val item = iterator.next()
-      if (cls.isInstance(item)) {
-        if (syncTask == null || (item.requestCode == syncTask.requestCode && item.ownerKey == syncTask.ownerKey)) {
-          item.isCancelled = true
-          iterator.remove()
-          //todo-denbond7 Need to improve this code to use an account. it will help us to manage accounts requests
-          syncTask ?: continue
-        }
-      }
-    }
-  }
-
-  fun loadNewMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
-    try {
-      removeOldTasks(CheckNewMessagesSyncTask::class.java, tasksQueue)
-      tasksQueue.put(CheckNewMessagesSyncTask(ownerKey, requestCode, localFolder))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun refreshMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
-    try {
-      val syncTaskBlockingQueue = tasksQueue
-      val task = RefreshMessagesSyncTask(ownerKey, requestCode, localFolder)
-      removeOldTasks(RefreshMessagesSyncTask::class.java, syncTaskBlockingQueue, task)
-      syncTaskBlockingQueue.put(task)
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun cancelTask(uniqueId: String) {
-    val future = tasksMap[uniqueId]
-    if (future?.isDone == false) {
-      future.cancel(true)
-    }
   }
 
   private fun loadContactsInfoIfNeeded() {

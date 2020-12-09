@@ -5,16 +5,27 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
+import com.flowcrypt.email.service.MessagesNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
 
@@ -26,50 +37,85 @@ import javax.mail.UIDFolder
  * Time: 15:50
  * E-mail: DenBond7@gmail.com
  */
-class CheckNewMessagesSyncTask(ownerKey: String,
-                               requestCode: Int,
-                               val localFolder: LocalFolder) : BaseSyncTask(ownerKey, requestCode) {
+class CheckNewMessagesSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    checkAndProcessNewMessages(accountEntity, store)
+  }
 
-  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
-    val context = listener.context
-    val email = account.email
-    val folderName = localFolder.fullName
-    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
+  private suspend fun checkAndProcessNewMessages(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity.email)
+    val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
+    val folderFullName = inboxLocalFolder.fullName
 
-    val folder = store.getFolder(localFolder.fullName) as IMAPFolder
-    folder.open(Folder.READ_ONLY)
-
-    val nextUID = folder.uidNext
-    val newestCachedUID = FlowCryptRoomDatabase.getDatabase(context).msgDao().getLastUIDOfMsgForLabel(email, folderName)
-    var newMsgs: Array<Message> = emptyArray()
-
-    if (newestCachedUID < nextUID - 1) {
-      if (isEncryptedModeEnabled == true) {
-        val foundMsgs = folder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
+    store.getFolder(folderFullName).use { folder ->
+      val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+      val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName)
+      val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
+      val newMsgs = if (accountEntity.isShowOnlyEncrypted == true) {
+        val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
 
         val fetchProfile = FetchProfile()
         fetchProfile.add(UIDFolder.FetchProfileItem.UID)
 
-        folder.fetch(foundMsgs, fetchProfile)
+        remoteFolder.fetch(foundMsgs, fetchProfile)
 
         val newMsgsList = mutableListOf<Message>()
 
-        for (msg in foundMsgs) {
-          if (folder.getUID(msg) > newestCachedUID) {
-            newMsgsList.add(msg)
+        for (message in foundMsgs) {
+          if (remoteFolder.getUID(message) > newestCachedUID) {
+            newMsgsList.add(message)
           }
         }
 
-        newMsgs = EmailUtil.fetchMsgs(folder, newMsgsList.toTypedArray())
+        EmailUtil.fetchMsgs(remoteFolder, newMsgsList.toTypedArray())
       } else {
-        newMsgs = EmailUtil.fetchMsgs(folder, folder.getMessagesByUID((newestCachedUID + 1).toLong(), nextUID - 1))
+        val newestMsgsFromFetchExceptExisted = remoteFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
+            .filterNot { remoteFolder.getUID(it) in cachedUIDSet }
+        EmailUtil.fetchMsgs(remoteFolder, newestMsgsFromFetchExceptExisted.toTypedArray())
+      }
+
+      if (newMsgs.isNotEmpty()) {
+        val msgsEncryptionStates = EmailUtil.getMsgsEncryptionInfo(accountEntity.isShowOnlyEncrypted, folder, newMsgs)
+        val msgEntities = MessageEntity.genMessageEntities(
+            context = applicationContext,
+            email = accountEntity.email,
+            label = folderFullName,
+            folder = remoteFolder,
+            msgs = newMsgs,
+            msgsEncryptionStates = msgsEncryptionStates,
+            isNew = !GeneralUtil.isAppForegrounded(),
+            areAllMsgsEncrypted = false
+        )
+
+        roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+
+        if (!GeneralUtil.isAppForegrounded()) {
+          val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, folderFullName)
+          MessagesNotificationManager(applicationContext)
+              .notify(applicationContext, accountEntity, inboxLocalFolder, detailsList)
+        }
       }
     }
+  }
 
-    if (newMsgs.isNotEmpty()) {
-      val array = EmailUtil.getMsgsEncryptionInfo(isEncryptedModeEnabled, folder, newMsgs)
-      listener.onNewMsgsReceived(account, localFolder, folder, newMsgs, array, ownerKey, requestCode)
+  companion object {
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".CHECK_NEW_MESSAGES_IN_INBOX"
+
+    fun enqueue(context: Context) {
+      val constraints = Constraints.Builder()
+          .setRequiredNetworkType(NetworkType.CONNECTED)
+          .build()
+
+      WorkManager
+          .getInstance(context.applicationContext)
+          .enqueueUniqueWork(
+              GROUP_UNIQUE_TAG,
+              ExistingWorkPolicy.REPLACE,
+              OneTimeWorkRequestBuilder<CheckNewMessagesSyncTask>()
+                  .addTag(TAG_SYNC)
+                  .setConstraints(constraints)
+                  .build()
+          )
     }
-    folder.close(false)
   }
 }
