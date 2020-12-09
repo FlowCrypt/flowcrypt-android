@@ -5,17 +5,29 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
+import com.flowcrypt.email.service.MessagesNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
 
@@ -28,59 +40,99 @@ import javax.mail.UIDFolder
  * Time: 17:12
  * E-mail: DenBond7@gmail.com
  */
-class RefreshMessagesSyncTask(ownerKey: String,
-                              requestCode: Int,
-                              val localFolder: LocalFolder) : BaseSyncTask(ownerKey, requestCode) {
+class RefreshMessagesSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+  private val notificationManager = MessagesNotificationManager(applicationContext)
 
-  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
-    val context = listener.context
-    val folderName = localFolder.fullName
-    val imapFolder = store.getFolder(folderName) as IMAPFolder
-    imapFolder.open(Folder.READ_ONLY)
+  override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
+    syncMessages(accountEntity, store)
+  }
 
-    val nextUID = imapFolder.uidNext
+  private suspend fun syncMessages(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity.email)
+    val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
+    val folderFullName = inboxLocalFolder.fullName
 
-    var newMsgs: Array<Message> = emptyArray()
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+    store.getFolder(folderFullName).use { folder ->
+      val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+      val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName)
+      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName)
+      val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(accountEntity.email, folderFullName)
+      val cachedUIDSet = mapOfUIDAndMsgFlags.keys.toSet()
 
-    val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabel(account.email, folderName)
-    val countOfLoadedMsgs = roomDatabase.msgDao().count(account.email, folderName)
-    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
+      if (accountEntity.isShowOnlyEncrypted == true) {
+        val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+        val fetchProfile = FetchProfile().apply {
+          add(UIDFolder.FetchProfileItem.UID)
+        }
+        remoteFolder.fetch(foundMsgs, fetchProfile)
+        EmailUtil.fetchMsgs(remoteFolder, foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }.toTypedArray())
+      } else {
+        val allMsgsFromOldestExisted = EmailUtil.getUpdatedMsgsByUID(remoteFolder, oldestCachedUID.toLong(), UIDFolder.LASTUID)
 
-    if (newestCachedUID in (2 until nextUID - 1)) {
-      if (isEncryptedModeEnabled == true) {
-        val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
-
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-
-        imapFolder.fetch(foundMsgs, fetchProfile)
-
-        val newMsgsList = ArrayList<Message>()
-
-        for (message in foundMsgs) {
-          if (imapFolder.getUID(message) > newestCachedUID) {
-            newMsgsList.add(message)
+        //delete not found messages
+        val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(cachedUIDSet, remoteFolder, allMsgsFromOldestExisted)
+        roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderFullName, deleteCandidatesUIDs)
+        if (!GeneralUtil.isAppForegrounded()) {
+          for (uid in deleteCandidatesUIDs) {
+            notificationManager.cancel(uid.toInt())
           }
         }
 
-        newMsgs = EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
-      } else {
-        val msgs = imapFolder.getMessagesByUID((newestCachedUID + 1).toLong(), nextUID - 1)
-        newMsgs = EmailUtil.fetchMsgs(imapFolder, msgs)
+        //update flags of existed messages
+        val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, allMsgsFromOldestExisted)
+            .map { remoteFolder.getUID(it) to it.flags }.toMap()
+        roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderFullName, updateCandidates)
+
+        //add new messages
+        val newCandidates = EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, allMsgsFromOldestExisted)
+        processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
       }
     }
+  }
 
-    val updatedMsgs = if (isEncryptedModeEnabled == true) {
-      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabel(account.email, folderName)
-      EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
-    } else {
-      val countOfNewMsgs = newMsgs.size
-      EmailUtil.getUpdatedMsgs(imapFolder, countOfLoadedMsgs, countOfNewMsgs)
+  private suspend fun processNewMsgs(newMsgs: Array<Message>, accountEntity: AccountEntity,
+                                     localFolder: LocalFolder, remoteFolder: IMAPFolder) = withContext(Dispatchers.IO) {
+    if (newMsgs.isNotEmpty()) {
+      EmailUtil.fetchMsgs(remoteFolder, newMsgs)
+      val msgsEncryptionStates = EmailUtil.getMsgsEncryptionInfo(accountEntity.isShowOnlyEncrypted, remoteFolder, newMsgs)
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = applicationContext,
+          email = accountEntity.email,
+          label = localFolder.fullName,
+          folder = remoteFolder,
+          msgs = newMsgs,
+          msgsEncryptionStates = msgsEncryptionStates,
+          isNew = !GeneralUtil.isAppForegrounded(),
+          areAllMsgsEncrypted = false
+      )
+
+      roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+
+      if (!GeneralUtil.isAppForegrounded()) {
+        val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, localFolder.fullName)
+        notificationManager.notify(applicationContext, accountEntity, localFolder, detailsList)
+      }
     }
+  }
 
-    listener.onRefreshMsgsReceived(account, localFolder, imapFolder, newMsgs, updatedMsgs, ownerKey, requestCode)
+  companion object {
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".IDLE_SYNC_INBOX"
 
-    imapFolder.close(false)
+    fun enqueue(context: Context) {
+      val constraints = Constraints.Builder()
+          .setRequiredNetworkType(NetworkType.CONNECTED)
+          .build()
+
+      WorkManager
+          .getInstance(context.applicationContext)
+          .enqueueUniqueWork(
+              GROUP_UNIQUE_TAG,
+              ExistingWorkPolicy.REPLACE,
+              OneTimeWorkRequestBuilder<RefreshMessagesSyncTask>()
+                  .addTag(TAG_SYNC)
+                  .setConstraints(constraints)
+                  .build()
+          )
+    }
   }
 }

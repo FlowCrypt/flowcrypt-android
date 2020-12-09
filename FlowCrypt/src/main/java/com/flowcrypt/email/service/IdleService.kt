@@ -15,6 +15,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.IdleSyncRunnable
+import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
@@ -105,7 +106,7 @@ class IdleService : LifecycleService() {
 
     idleSyncRunnable = IdleSyncRunnable(applicationContext, accountEntity, object : IdleSyncRunnable.ActionsListener {
       override fun syncFolderState() {
-        //RefreshMessagesSyncTask
+        RefreshMessagesSyncTask.enqueue(applicationContext)
       }
 
       override fun messageChanged(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageChangedEvent?) {

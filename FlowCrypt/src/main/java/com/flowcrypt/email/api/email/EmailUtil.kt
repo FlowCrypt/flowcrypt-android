@@ -468,16 +468,11 @@ class EmailUtil {
      * @param msgs   The array of incoming messages.
      * @return An array of the messages which are candidates for updating iin the local database.
      */
-    fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>):
-        Array<Message> {
+    fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
       val updateCandidates = mutableListOf<Message>()
       try {
         for (msg in msgs) {
-          var flags = map[folder.getUID(msg)]
-          if (flags == null) {
-            flags = ""
-          }
-
+          val flags = map[folder.getUID(msg)] ?: ""
           if (!flags.equals(msg.flags.toString(), ignoreCase = true)) {
             updateCandidates.add(msg)
           }
