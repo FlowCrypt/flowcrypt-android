@@ -552,7 +552,7 @@ class EmailUtil {
       return if (end <= first && end != UIDFolder.LASTUID) {
         arrayOf()
       } else {
-        val msgs = folder.getMessagesByUID(first, end)
+        val msgs = folder.getMessagesByUID(first, end).filterNotNull().toTypedArray()
 
         if (msgs.isNotEmpty()) {
           val fetchProfile = FetchProfile()
@@ -578,7 +578,7 @@ class EmailUtil {
       return if (uids.isEmpty()) {
         arrayOf()
       } else {
-        val msgs = folder.getMessagesByUID(uids)
+        val msgs = folder.getMessagesByUID(uids).filterNotNull().toTypedArray()
 
         if (msgs.isNotEmpty()) {
           val fetchProfile = FetchProfile()

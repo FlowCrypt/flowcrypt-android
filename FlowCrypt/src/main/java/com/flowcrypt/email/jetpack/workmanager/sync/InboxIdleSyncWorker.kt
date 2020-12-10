@@ -47,8 +47,10 @@ class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : BaseIdle
 
     store.getFolder(folderFullName).use { folder ->
       val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName)
-      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName)
+      val newestCachedUID = roomDatabase.msgDao()
+          .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
+      val oldestCachedUID = roomDatabase.msgDao()
+          .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
       val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(accountEntity.email, folderFullName)
       val cachedUIDSet = mapOfUIDAndMsgFlags.keys.toSet()
 

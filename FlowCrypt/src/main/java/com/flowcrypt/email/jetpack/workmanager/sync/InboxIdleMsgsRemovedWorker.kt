@@ -41,7 +41,8 @@ class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : B
 
     store.getFolder(folderFullName).use { folder ->
       val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName)
+      val oldestCachedUID = roomDatabase.msgDao()
+          .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
       val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
       val updatedMsgs = EmailUtil.getUpdatedMsgsByUID(
           folder = remoteFolder,

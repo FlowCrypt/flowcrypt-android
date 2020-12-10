@@ -529,8 +529,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
-      val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
-      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
+      val newestCachedUID = roomDatabase.msgDao()
+          .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName) ?: 0
+      val oldestCachedUID = roomDatabase.msgDao()
+          .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderName) ?: 0
       val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderName).toSet()
       val updatedMsgs = EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
 
@@ -552,7 +554,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
       } else {
-        val newestMsgsFromFetchExceptExisted = imapFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID).filterNot { imapFolder.getUID(it) in cachedUIDSet }
+        val newestMsgsFromFetchExceptExisted = imapFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
+            .filterNot { imapFolder.getUID(it) in cachedUIDSet }
+            .filterNotNull()
         val msgs = newestMsgsFromFetchExceptExisted + updatedMsgs.filter { imapFolder.getUID(it) !in cachedUIDSet }
         EmailUtil.fetchMsgs(imapFolder, msgs.toTypedArray())
       }

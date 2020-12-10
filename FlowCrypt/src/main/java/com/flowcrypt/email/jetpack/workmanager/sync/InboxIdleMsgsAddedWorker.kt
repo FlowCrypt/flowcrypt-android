@@ -44,7 +44,8 @@ class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : Bas
 
     store.getFolder(folderFullName).use { folder ->
       val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName)
+      val newestCachedUID = roomDatabase.msgDao()
+          .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
       val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
       val newMsgs = if (accountEntity.isShowOnlyEncrypted == true) {
         val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
@@ -57,6 +58,7 @@ class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : Bas
       } else {
         val newestMsgsFromFetchExceptExisted = remoteFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
             .filterNot { remoteFolder.getUID(it) in cachedUIDSet }
+            .filterNotNull()
         EmailUtil.fetchMsgs(remoteFolder, newestMsgsFromFetchExceptExisted.toTypedArray())
       }
 

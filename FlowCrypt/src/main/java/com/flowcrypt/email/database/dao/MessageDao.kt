@@ -129,25 +129,26 @@ abstract class MessageDao : BaseDao<MessageEntity> {
                                                              MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND.value,
                                                              MessageState.ERROR_SENDING_FAILED.value,
                                                              MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-                                                             MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value)): Int
+                                                             MessageState
+                                                                 .ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value)): Int?
 
   @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun count(account: String?, folder: String?): Int
 
   @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
-  abstract suspend fun countSuspend(account: String?, folder: String?): Int
+  abstract suspend fun countSuspend(account: String?, folder: String?): Int?
 
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getLastUIDOfMsgForLabel(account: String?, folder: String?): Int
 
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
-  abstract suspend fun getLastUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int
+  abstract suspend fun getLastUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int?
 
   @Query("SELECT min(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getOldestUIDOfMsgForLabel(account: String?, folder: String?): Int
 
   @Query("SELECT min(uid) FROM messages WHERE email = :account AND folder = :folder")
-  abstract suspend fun getOldestUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int
+  abstract suspend fun getOldestUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int?
 
   @Query("SELECT uid FROM messages WHERE email = :account AND folder = :folder")
   abstract suspend fun getUIDsForLabel(account: String?, folder: String?): List<Long>
