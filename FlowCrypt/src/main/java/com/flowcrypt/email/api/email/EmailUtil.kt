@@ -268,7 +268,7 @@ class EmailUtil {
      */
     fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
       try {
-        val account: Account? = accountEntity.account
+        val account: Account = accountEntity.account
             ?: throw NullPointerException("Account can't be a null!")
 
         return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
@@ -553,6 +553,32 @@ class EmailUtil {
         arrayOf()
       } else {
         val msgs = folder.getMessagesByUID(first, end)
+
+        if (msgs.isNotEmpty()) {
+          val fetchProfile = FetchProfile()
+          if (fetchFlags) {
+            fetchProfile.add(FetchProfile.Item.FLAGS)
+          }
+          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+          folder.fetch(msgs, fetchProfile)
+        }
+        msgs
+      }
+    }
+
+    /**
+     * Get updated information about messages in the local database using UIDs.
+     *
+     * @param folder The folder which contains messages.
+     * @param uids  A list of UID.
+     * @return A list of messages which already exist in the local database.
+     * @throws MessagingException for other failures.
+     */
+    fun getUpdatedMsgsByUIDs(folder: IMAPFolder, uids: LongArray, fetchFlags: Boolean = true): Array<Message> {
+      return if (uids.isEmpty()) {
+        arrayOf()
+      } else {
+        val msgs = folder.getMessagesByUID(uids)
 
         if (msgs.isNotEmpty()) {
           val fetchProfile = FetchProfile()

@@ -15,17 +15,12 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.service.MessagesNotificationManager
-import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.mail.FetchProfile
 import javax.mail.Folder
-import javax.mail.Message
 import javax.mail.Store
 import javax.mail.UIDFolder
 
@@ -37,7 +32,7 @@ import javax.mail.UIDFolder
  * Time: 15:50
  * E-mail: DenBond7@gmail.com
  */
-class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     checkAndProcessNewMessages(accountEntity, store)
   }
@@ -54,53 +49,18 @@ class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : Bas
       val newMsgs = if (accountEntity.isShowOnlyEncrypted == true) {
         val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
 
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-
-        remoteFolder.fetch(foundMsgs, fetchProfile)
-
-        val newMsgsList = mutableListOf<Message>()
-
-        for (message in foundMsgs) {
-          if (remoteFolder.getUID(message) > newestCachedUID) {
-            newMsgsList.add(message)
-          }
+        val fetchProfile = FetchProfile().apply {
+          add(UIDFolder.FetchProfileItem.UID)
         }
-
-        EmailUtil.fetchMsgs(remoteFolder, newMsgsList.toTypedArray())
+        remoteFolder.fetch(foundMsgs, fetchProfile)
+        EmailUtil.fetchMsgs(remoteFolder, foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }.toTypedArray())
       } else {
         val newestMsgsFromFetchExceptExisted = remoteFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
             .filterNot { remoteFolder.getUID(it) in cachedUIDSet }
         EmailUtil.fetchMsgs(remoteFolder, newestMsgsFromFetchExceptExisted.toTypedArray())
       }
 
-      processNewMsgs(newMsgs, accountEntity, folder, folderFullName, remoteFolder, inboxLocalFolder)
-    }
-  }
-
-  private suspend fun processNewMsgs(newMsgs: Array<Message>, accountEntity: AccountEntity,
-                                     folder: IMAPFolder, folderFullName: String,
-                                     remoteFolder: IMAPFolder, inboxLocalFolder: LocalFolder) = withContext(Dispatchers.IO) {
-    if (newMsgs.isNotEmpty()) {
-      val msgsEncryptionStates = EmailUtil.getMsgsEncryptionInfo(accountEntity.isShowOnlyEncrypted, folder, newMsgs)
-      val msgEntities = MessageEntity.genMessageEntities(
-          context = applicationContext,
-          email = accountEntity.email,
-          label = folderFullName,
-          folder = remoteFolder,
-          msgs = newMsgs,
-          msgsEncryptionStates = msgsEncryptionStates,
-          isNew = !GeneralUtil.isAppForegrounded(),
-          areAllMsgsEncrypted = false
-      )
-
-      roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-
-      if (!GeneralUtil.isAppForegrounded()) {
-        val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, folderFullName)
-        MessagesNotificationManager(applicationContext)
-            .notify(applicationContext, accountEntity, inboxLocalFolder, detailsList)
-      }
+      processNewMsgs(newMsgs, accountEntity, inboxLocalFolder, remoteFolder)
     }
   }
 
