@@ -246,9 +246,9 @@ abstract class BaseActivity : AppCompatActivity() {
           val firstNonactiveAccount = nonactiveAccounts.first()
           roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
           roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
+          finish()
           IdleService.restart(applicationContext)
           EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
-          finish()
         } else {
           stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)

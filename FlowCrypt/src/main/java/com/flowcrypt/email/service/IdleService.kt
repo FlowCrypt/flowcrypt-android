@@ -7,6 +7,9 @@ package com.flowcrypt.email.service
 
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Binder
+import android.os.IBinder
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.LiveData
@@ -40,6 +43,7 @@ import javax.mail.event.MessageCountEvent
  * E-mail: DenBond7@gmail.com
  */
 class IdleService : LifecycleService() {
+  private val binder = LocalBinder()
   private val idleExecutorService = Executors.newFixedThreadPool(1) as ThreadPoolExecutor
   private var idleFuture: Future<*>? = null
   private var idleSyncRunnable: IdleSyncRunnable? = null
@@ -69,6 +73,22 @@ class IdleService : LifecycleService() {
 
     stopIdleThread()
     idleExecutorService.shutdown()
+  }
+
+  override fun onBind(intent: Intent): IBinder {
+    super.onBind(intent)
+    LogsUtil.d(TAG, "onBind")
+    return binder
+  }
+
+  override fun onRebind(intent: Intent) {
+    super.onRebind(intent)
+    LogsUtil.d(TAG, "onRebind:$intent")
+  }
+
+  override fun onUnbind(intent: Intent): Boolean {
+    LogsUtil.d(TAG, "onUnbind:$intent")
+    return super.onUnbind(intent)
   }
 
   private fun stopIdleThread() {
@@ -148,6 +168,12 @@ class IdleService : LifecycleService() {
     }
   }
 
+  /**
+   * We use an instance of [Binder] to prevent the system kills a service if the app will go to the
+   * background
+   */
+  inner class LocalBinder : Binder()
+
   companion object {
     private val TAG = IdleService::class.java.simpleName
 
@@ -171,6 +197,12 @@ class IdleService : LifecycleService() {
       val intent = Intent(context, IdleService::class.java)
       context.stopService(intent)
       context.startService(intent)
+    }
+
+    fun bind(context: Context, serviceConnection: ServiceConnection) {
+      Intent(context, IdleService::class.java).also { intent ->
+        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+      }
     }
   }
 }

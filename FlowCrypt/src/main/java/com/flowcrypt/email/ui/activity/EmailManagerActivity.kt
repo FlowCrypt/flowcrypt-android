@@ -8,9 +8,12 @@ package com.flowcrypt.email.ui.activity
 import android.accounts.Account
 import android.app.Activity
 import android.app.SearchManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.Menu
@@ -103,6 +106,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private var switchView: SwitchMaterial? = null
   private var isForceSendingEnabled: Boolean = true
 
+  private val idleServiceConnection = object : ServiceConnection {
+    override fun onServiceConnected(className: ComponentName, service: IBinder) {}
+    override fun onServiceDisconnected(arg0: ComponentName) {}
+  }
+
   override val rootView: View
     get() = drawerLayout ?: View(this)
 
@@ -114,7 +122,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    IdleService.start(this)
+    IdleService.bind(this, idleServiceConnection)
     initViews()
     setupLabelsViewModel()
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
@@ -155,6 +163,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onDestroy() {
     super.onDestroy()
+    unbindService(idleServiceConnection)
     actionBarDrawerToggle?.let { drawerLayout?.removeDrawerListener(it) }
   }
 
@@ -586,10 +595,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       lifecycleScope.launch {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
         roomDatabase.accountDao().switchAccountSuspend(account)
+        finish()
         IdleService.restart(this@EmailManagerActivity)
         runEmailManagerActivity(this@EmailManagerActivity)
       }
-      finish()
     }
 
     return view
