@@ -15,4 +15,6 @@ import androidx.work.WorkerParameters
  *         Time: 5:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params)
+abstract class BaseWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+  abstract val useIndependentConnection: Boolean
+}

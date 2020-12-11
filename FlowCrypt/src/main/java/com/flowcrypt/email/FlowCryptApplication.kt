@@ -15,6 +15,7 @@ import androidx.work.WorkManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.SyncInboxWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.security.CryptoMigrationUtil
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -78,11 +79,8 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     MsgsCacheManager.init(this)
     NotificationChannelManager.registerNotificationChannels(this)
     IMAPStoreManager.init(this)
-
     initLeakCanary()
-
-
-
+    SyncInboxWorker.enqueuePeriodic(this)
     enqueueMsgsCacheCleanerWorker()
   }
 

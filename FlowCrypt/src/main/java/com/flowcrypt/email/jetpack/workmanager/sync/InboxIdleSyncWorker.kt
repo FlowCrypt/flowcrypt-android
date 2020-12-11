@@ -34,7 +34,7 @@ import javax.mail.UIDFolder
  * Time: 17:12
  * E-mail: DenBond7@gmail.com
  */
-class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(context, params) {
+open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(context, params) {
 
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     syncMessages(accountEntity, store)

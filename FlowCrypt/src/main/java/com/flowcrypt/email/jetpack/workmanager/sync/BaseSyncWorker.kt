@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.workmanager.sync
 import android.content.Context
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.api.email.IMAPStoreConnection
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -24,6 +25,7 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
+  override val useIndependentConnection: Boolean = false
   protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
   abstract suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store)
@@ -36,9 +38,18 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
     try {
       val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
       activeAccountEntity?.let {
-        val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-        connection?.executeIMAPAction {
-          runIMAPAction(activeAccountEntity, it)
+        if (useIndependentConnection) {
+          val connection = IMAPStoreConnection(applicationContext, it)
+          connection.store.use { store ->
+            connection.executeIMAPAction {
+              runIMAPAction(activeAccountEntity, store)
+            }
+          }
+        } else {
+          val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
+          connection?.executeIMAPAction { store ->
+            runIMAPAction(activeAccountEntity, store)
+          }
         }
       }
 
