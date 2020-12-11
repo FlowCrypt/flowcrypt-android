@@ -6,7 +6,6 @@
 package com.flowcrypt.email
 
 import android.app.Application
-import android.app.job.JobScheduler
 import android.content.Context
 import androidx.preference.PreferenceManager
 import androidx.work.Configuration
@@ -17,7 +16,6 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
-import com.flowcrypt.email.jobscheduler.SyncJobService
 import com.flowcrypt.email.security.CryptoMigrationUtil
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
@@ -83,9 +81,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
     initLeakCanary()
 
-    val scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-    scheduler.cancel(JobIdManager.JOB_TYPE_SYNC)
-    SyncJobService.schedule(this)
+
 
     enqueueMsgsCacheCleanerWorker()
   }

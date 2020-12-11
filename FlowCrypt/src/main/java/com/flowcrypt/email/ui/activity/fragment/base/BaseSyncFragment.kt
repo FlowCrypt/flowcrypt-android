@@ -9,9 +9,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
-import com.flowcrypt.email.util.UIUtil
 
 /**
  * The base fragment which must used when we will work with an email provider.
@@ -48,29 +46,5 @@ abstract class BaseSyncFragment : BaseFragment() {
     if (progressView == null || statusView == null || textViewStatusInfo == null) {
       throw IllegalArgumentException("The layout file of this fragment not contains " + "some needed views")
     }
-  }
-
-  /**
-   * Handle an error from the sync service.
-   *
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   * @param errorType   The [SyncErrorTypes]
-   * @param e           The exception which happened.
-   */
-  open fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
-    contentView?.visibility = View.GONE
-
-    when (errorType) {
-      SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> textViewStatusInfo?.setText(R.string.there_was_syncing_problem)
-
-      else -> if (e?.message.isNullOrEmpty()) {
-        textViewStatusInfo?.text = e?.javaClass?.simpleName
-      } else {
-        textViewStatusInfo?.text = e?.message
-      }
-    }
-
-    UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
-    snackBar?.dismiss()
   }
 }

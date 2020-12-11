@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync
+package com.flowcrypt.email.service
 
 import android.content.Context
 import com.flowcrypt.email.api.email.EmailUtil
