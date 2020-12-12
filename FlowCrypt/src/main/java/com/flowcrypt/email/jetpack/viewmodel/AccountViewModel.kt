@@ -50,7 +50,8 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
   val pureAccountsLiveData: LiveData<List<AccountEntity>> = roomDatabase.accountDao().getAccountsLD()
 
   suspend fun getActiveAccountSuspend(): AccountEntity? {
-    return activeAccountLiveData.value ?: return roomDatabase.accountDao().getActiveAccountSuspend()
+    return activeAccountLiveData.value
+        ?: return getAccountEntityWithDecryptedInfoSuspend(roomDatabase.accountDao().getActiveAccountSuspend())
   }
 
   fun addNewAccount(accountEntity: AccountEntity) {
