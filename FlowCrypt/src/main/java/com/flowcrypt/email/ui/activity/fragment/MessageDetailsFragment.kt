@@ -980,7 +980,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         Result.Status.SUCCESS -> {
           showContent()
           it.data?.let { incomingMsgInfo ->
-            msgDetailsViewModel.setSeenStatus(true)
             showIncomingMsgInfo(incomingMsgInfo)
           }
         }

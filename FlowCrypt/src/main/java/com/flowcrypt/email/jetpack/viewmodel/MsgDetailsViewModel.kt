@@ -36,6 +36,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
@@ -135,7 +136,8 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
         if (existedMsgSnapshot != null) {
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-          setSeenStatusInternal(messageEntity, true)
+          setSeenStatusInternal(msgEntity = messageEntity, isSeen = true, usePending = true)
+          UpdateMsgsSeenStateWorker.enqueue(application)
           val processingResult = processingMsgSnapshot(existedMsgSnapshot)
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
           emit(processingResult)
@@ -147,7 +149,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
             emit(Result.exception(e))
             return@liveData
           }
-          setSeenStatusInternal(messageEntity, true)
+          setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
           val processingResult = processingMsgSnapshot(newMsgSnapshot)
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
@@ -235,15 +237,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingNonOutgoingMsgLiveData) { processingMsgLiveData.value = it }
-  }
-
-  fun setSeenStatus(isSeen: Boolean) {
-    val freshMsgEntity = mediatorMsgLiveData.value
-    freshMsgEntity?.let { msgEntity ->
-      viewModelScope.launch {
-        setSeenStatusInternal(msgEntity, isSeen)
-      }
-    }
   }
 
   fun changeMsgState(newMsgState: MessageState) {
@@ -638,16 +631,21 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     }
   }
 
-  private suspend fun setSeenStatusInternal(msgEntity: MessageEntity, isSeen: Boolean) {
-    roomDatabase.msgDao().updateSuspend(msgEntity.copy(flags = if (isSeen) {
-      if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-        msgEntity.flags
-      } else {
-        msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
-      }
-    } else {
-      msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
-    }))
+  private suspend fun setSeenStatusInternal(msgEntity: MessageEntity, isSeen: Boolean, usePending: Boolean = false) {
+    roomDatabase.msgDao().updateSuspend(msgEntity.copy(
+        state = if (usePending) {
+          if (isSeen) MessageState.PENDING_MARK_READ.value else MessageState.PENDING_MARK_UNREAD.value
+        } else msgEntity.state,
+        flags = if (isSeen) {
+          if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+            msgEntity.flags
+          } else {
+            msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+          }
+        } else {
+          msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+        }
+    ))
   }
 
   private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
