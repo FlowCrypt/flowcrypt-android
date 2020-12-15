@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.test.espresso.idling.CountingIdlingResource
+import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -28,6 +29,7 @@ import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
@@ -229,6 +231,7 @@ abstract class BaseActivity : AppCompatActivity() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
         countingIdlingResource.incrementSafely()
+        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
         //remove all info about the given account from the local db

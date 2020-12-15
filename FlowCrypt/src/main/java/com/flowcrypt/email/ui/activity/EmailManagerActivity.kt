@@ -33,6 +33,7 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import androidx.work.WorkManager
 import com.bumptech.glide.request.RequestOptions
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -51,6 +52,7 @@ import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.IdleService
@@ -595,6 +597,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     view.setOnClickListener {
       lifecycleScope.launch {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
+        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
         roomDatabase.accountDao().switchAccountSuspend(account)
         finish()
         IdleService.restart(this@EmailManagerActivity)
