@@ -110,18 +110,12 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   private val msgsObserver = Observer<PagedList<MessageEntity>> {
     if (it?.size ?: 0 == 0) {
       if (isEmptyViewAvailable || isOutboxFolder) {
-        progressView?.visibility = View.GONE
-        statusView?.visibility = View.GONE
-        contentView?.visibility = View.GONE
-        emptyView?.visibility = View.VISIBLE
+        showEmptyView()
       }
 
       isEmptyViewAvailable = true
     } else {
-      emptyView?.visibility = View.GONE
-      progressView?.visibility = View.GONE
-      statusView?.visibility = View.GONE
-      contentView?.visibility = View.VISIBLE
+      showContent()
     }
 
     adapter.submitList(it)
@@ -801,6 +795,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
+          if (recyclerViewMsgs?.adapter?.itemCount == 0) {
+            showProgress()
+          }
+
           when (it.resultCode) {
             R.id.progress_id_start_of_loading_new_messages -> setActionProgress(0, "Starting")
 
@@ -824,6 +822,9 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
+          if (recyclerViewMsgs?.adapter?.itemCount == 0) {
+            showEmptyView()
+          }
         }
 
         Result.Status.EXCEPTION -> {
