@@ -502,12 +502,6 @@ class MessageDetailsActivityTest : BaseTest() {
   private fun launchActivity(msgEntity: MessageEntity) {
     activeActivityRule.launch(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, msgEntity))
     registerAllIdlingResources()
-
-    activityScenario?.onActivity { activity ->
-      val messageDetailsActivity = (activity as? MessageDetailsActivity) ?: return@onActivity
-      idlingForWebView = messageDetailsActivity.idlingForWebView
-      idlingForWebView?.let { IdlingRegistry.getInstance().register(it) }
-    }
   }
 
   private fun testTopReplyAction(title: String) {

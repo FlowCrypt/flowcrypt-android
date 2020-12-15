@@ -32,7 +32,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.ui.activity.base.BaseActivity
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import org.hamcrest.MatcherAssert.assertThat
@@ -60,7 +59,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
   private var countingIdlingResource: IdlingResource? = null
   private var nodeIdlingResource: IdlingResource? = null
-  var syncServiceCountingIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
 
   protected var decorView: View? = null
@@ -84,20 +82,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
   @After
   open fun unregisterNodeIdling() {
     nodeIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
-  }
-
-  @Before
-  fun registerSyncServiceCountingIdlingResource() {
-    activityScenario?.onActivity { activity ->
-      val baseSyncActivity = (activity as? BaseSyncActivity) ?: return@onActivity
-      syncServiceCountingIdlingResource = baseSyncActivity.syncServiceCountingIdlingResource
-      syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
-    }
-  }
-
-  @After
-  fun unregisterSyncServiceCountingIdlingResource() {
-    syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
@@ -265,7 +249,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
   fun registerAllIdlingResources() {
     registerCountingIdlingResource()
     registerNodeIdling()
-    registerSyncServiceCountingIdlingResource()
     initDecorView()
   }
 

@@ -92,14 +92,14 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fail sometimes")
+  @Ignore("fails sometimes")
   fun testForceLoadMsgs() {
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, scrollTo()))
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(isDisplayed()))
         .perform(swipeDown())
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(not(withEmptyRecyclerView())))
         .check(matches(isDisplayed()))
   }
