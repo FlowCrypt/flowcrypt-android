@@ -43,11 +43,13 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -55,7 +57,6 @@ import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.material.snackbar.Snackbar
 
@@ -68,13 +69,22 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListener,
-    MsgsPagedListAdapter.OnMessageClickListener {
+class EmailListFragment : BaseFragment(), ListProgressBehaviour,
+    SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
 
+  override val emptyView: View?
+    get() = view?.findViewById(R.id.empty)
+  override val progressView: View?
+    get() = view?.findViewById(R.id.progress)
+  override val contentView: View?
+    get() = view?.findViewById(R.id.rVMsgs)
+  override val statusView: View?
+    get() = view?.findViewById(R.id.status)
+
+  private val labelsViewModel: LabelsViewModel by viewModels()
   private val msgsViewModel: MessagesViewModel by viewModels()
 
   private var recyclerViewMsgs: RecyclerView? = null
-  private var emptyView: TextView? = null
   private var footerProgressView: View? = null
   private var swipeRefreshLayout: SwipeRefreshLayout? = null
   private var textViewActionProgress: TextView? = null
@@ -150,9 +160,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
   }
 
-  override val contentView: View?
-    get() = recyclerViewMsgs
-
   override fun onAttach(context: Context) {
     super.onAttach(context)
 
@@ -173,6 +180,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
     setupMsgsViewModel()
+    setupLabelsViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -261,7 +269,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     if (localFolder == null) {
       swipeRefreshLayout?.isRefreshing = false
-      baseSyncActivity.updateLabels()
+      labelsViewModel.loadLabels()
       return
     }
 
@@ -282,7 +290,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           swipeRefreshLayout?.isRefreshing = false
 
           if (adapter.itemCount == 0) {
-            UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
+            showProgress()
           }
 
           loadNextMsgs(-1)
@@ -291,8 +299,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         swipeRefreshLayout?.isRefreshing = false
 
         if (adapter.itemCount == 0) {
-          textViewStatusInfo!!.setText(R.string.no_connection)
-          UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
+          showStatus(msg = getString(R.string.no_connection))
         }
 
         showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
@@ -384,7 +391,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   fun onFilterMsgs(isEncryptedModeEnabled: Boolean) {
-    emptyView?.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
+    updateEmptyViewText(getString(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results))
     onFolderChanged(deleteAllMsgs = true)
   }
 
@@ -518,29 +525,23 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     if (GeneralUtil.isConnected(context)) {
       if (totalItemsCount == 0) {
-        contentView?.visibility = View.GONE
-        statusView?.visibility = View.GONE
-        emptyView?.visibility = View.GONE
-        progressView?.visibility = View.VISIBLE
-        textViewStatusInfo?.text = null
+        showProgress()
       }
 
       footerProgressView?.visibility = View.VISIBLE
-      localFolder?.let {
+
+      if (localFolder == null) {
+        labelsViewModel.loadLabels()
+      } else {
         adapter.changeProgress(true)
-        msgsViewModel.loadMsgsFromRemoteServer(it, totalItemsCount)
+        msgsViewModel.loadMsgsFromRemoteServer(localFolder, totalItemsCount)
       }
     } else {
       footerProgressView?.visibility = View.GONE
       isForceLoadNextMsgsEnabled = true
 
       if (totalItemsCount == 0) {
-        contentView?.visibility = View.GONE
-        statusView?.visibility = View.VISIBLE
-        emptyView?.visibility = View.GONE
-        progressView?.visibility = View.GONE
-
-        textViewStatusInfo?.setText(R.string.there_was_syncing_problem)
+        showStatus(msg = getString(R.string.there_was_syncing_problem))
       }
 
       showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
@@ -554,14 +555,13 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     textViewActionProgress = view.findViewById(R.id.textViewActionProgress)
     progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
 
-    recyclerViewMsgs = view.findViewById(R.id.recyclerViewMsgs)
+    recyclerViewMsgs = view.findViewById(R.id.rVMsgs)
     setupRecyclerView()
 
     footerProgressView = LayoutInflater.from(context).inflate(R.layout.list_view_progress_footer, recyclerViewMsgs, false)
     footerProgressView?.visibility = View.GONE
 
-    emptyView = view.findViewById(R.id.emptyView)
-    swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
+    swipeRefreshLayout = view.findViewById(R.id.sRL)
     swipeRefreshLayout?.setColorSchemeResources(
         R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
     swipeRefreshLayout?.setOnRefreshListener(this)
@@ -869,6 +869,33 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
               else -> toast(R.string.failed_please_try_again_later)
             }
           }
+        }
+      }
+    })
+  }
+
+  private fun setupLabelsViewModel() {
+    labelsViewModel.loadLabelsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          setActionProgress(0, getString(R.string.loading_labels))
+        }
+
+        Result.Status.SUCCESS -> {
+          setActionProgress(100)
+        }
+
+        Result.Status.EXCEPTION -> {
+          setActionProgress(100)
+          if (it.exception is CommonConnectionException) {
+            showConnLostHint()
+            showStatus(msg = getString(R.string.no_connection))
+          } else {
+            showStatus(msg = it.exception?.message)
+          }
+        }
+
+        else -> {
         }
       }
     })

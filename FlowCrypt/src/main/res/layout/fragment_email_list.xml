@@ -2,90 +2,84 @@
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
-
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sRL"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom">
-
-        <TextView
-            android:id="@+id/textViewActionProgress"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/default_margin_content_small"
-            android:layout_marginEnd="@dimen/default_margin_content_small"
-            android:textSize="@dimen/default_text_size_very_small"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/progressBarActionProgress"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            tools:text="5% Connecting to mail server"
-            tools:visibility="visible" />
-
-        <ProgressBar
-            android:id="@+id/progressBarActionProgress"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100"
-            android:maxHeight="@dimen/default_twice_dip"
-            android:minHeight="@dimen/default_twice_dip"
-            android:progressDrawable="@drawable/download_progress_style"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            tools:progress="45"
-            tools:visibility="visible" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <TextView
-        android:id="@+id/emptyView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/no_results"
-        android:visibility="gone" />
-
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefreshLayout"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom">
+
+            <TextView
+                android:id="@+id/textViewActionProgress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/default_margin_content_small"
+                android:layout_marginEnd="@dimen/default_margin_content_small"
+                android:textSize="@dimen/default_text_size_very_small"
+                android:visibility="gone"
+                app:layout_constraintBottom_toTopOf="@+id/progressBarActionProgress"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:text="5% Connecting to mail server"
+                tools:visibility="visible" />
+
+            <ProgressBar
+                android:id="@+id/progressBarActionProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:maxHeight="@dimen/default_twice_dip"
+                android:minHeight="@dimen/default_twice_dip"
+                android:progressDrawable="@drawable/download_progress_style"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:progress="45"
+                tools:visibility="visible" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <include
+            android:id="@+id/progress"
+            layout="@layout/progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewMsgs"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:listitem="@layout/messages_list_item" />
+            android:id="@+id/rVMsgs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            tools:listitem="@layout/messages_list_item"
+            tools:visibility="visible" />
 
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        <include
+            android:id="@+id/status"
+            layout="@layout/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
 
-    <ProgressBar
-        android:id="@id/viewIdProgressView"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+        <include
+            android:id="@+id/empty"
+            layout="@layout/empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
 
-    <include
-        android:id="@+id/viewIdStatusView"
-        layout="@layout/sync_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
-
-</FrameLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

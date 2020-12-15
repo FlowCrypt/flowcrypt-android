@@ -36,41 +36,7 @@ import javax.mail.Store
  */
 class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
-    fetchLabels(accountEntity, store)
-  }
-
-  private suspend fun fetchLabels(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    val folders = store.defaultFolder.list("*")
-    val email = account.email
-
-    val foldersManager = FoldersManager(account.email)
-    for (folder in folders) {
-      try {
-        val imapFolder = folder as IMAPFolder
-        foldersManager.addFolder(imapFolder, folder.getName())
-      } catch (e: MessagingException) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-      }
-    }
-
-    val localFolder = LocalFolder(email, JavaEmailConstants.FOLDER_OUTBOX,
-        JavaEmailConstants.FOLDER_OUTBOX, listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
-
-    foldersManager.addFolder(localFolder)
-
-    val existedLabels = roomDatabase.labelDao().getLabelsSuspend(email)
-    val freshLabels = mutableListOf<LabelEntity>()
-    for (folder in foldersManager.allFolders) {
-      freshLabels.add(LabelEntity.genLabel(email, folder))
-    }
-
-    if (existedLabels.isEmpty()) {
-      roomDatabase.labelDao().insertSuspend(freshLabels)
-    } else {
-      roomDatabase.labelDao().update(existedLabels, freshLabels)
-    }
+    fetchAndSaveLabels(applicationContext, accountEntity, store)
   }
 
   companion object {
@@ -91,6 +57,40 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
                   .setConstraints(constraints)
                   .build()
           )
+    }
+
+    suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      val folders = store.defaultFolder.list("*")
+      val email = account.email
+
+      val foldersManager = FoldersManager(account.email)
+      for (folder in folders) {
+        try {
+          val imapFolder = folder as IMAPFolder
+          foldersManager.addFolder(imapFolder, folder.getName())
+        } catch (e: MessagingException) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
+        }
+      }
+
+      val localFolder = LocalFolder(email, JavaEmailConstants.FOLDER_OUTBOX,
+          JavaEmailConstants.FOLDER_OUTBOX, listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
+
+      foldersManager.addFolder(localFolder)
+
+      val existedLabels = roomDatabase.labelDao().getLabelsSuspend(email)
+      val freshLabels = mutableListOf<LabelEntity>()
+      for (folder in foldersManager.allFolders) {
+        freshLabels.add(LabelEntity.genLabel(email, folder))
+      }
+
+      if (existedLabels.isEmpty()) {
+        roomDatabase.labelDao().insertSuspend(freshLabels)
+      } else {
+        roomDatabase.labelDao().update(existedLabels, freshLabels)
+      }
     }
   }
 }
