@@ -16,7 +16,7 @@ package com.flowcrypt.email.api.email
 class JavaEmailConstants {
   companion object {
 
-    const val DEFAULT_FETCH_BUFFER = 1024 * 128
+    const val DEFAULT_FETCH_BUFFER = 1024 * 1024
     const val ATTACHMENTS_FETCH_BUFFER = 1024 * 256
     const val COUNT_OF_LOADED_EMAILS_BY_STEP = 45
 
