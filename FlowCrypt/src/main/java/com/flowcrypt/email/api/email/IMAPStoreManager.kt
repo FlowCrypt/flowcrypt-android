@@ -15,6 +15,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * @author Denis Bondarenko
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 object IMAPStoreManager {
-  val activeConnections = HashMap<Long, IMAPStoreConnection>()
+  val activeConnections = ConcurrentHashMap<Long, IMAPStoreConnection>()
 
   fun init(context: Context) {
     val applicationContext = context.applicationContext
@@ -40,10 +41,12 @@ object IMAPStoreManager {
       GlobalScope.launch(Dispatchers.IO) {
         EmailUtil.patchingSecurityProviderSuspend(context)
         //check if we have not-registered connections and close them
-        activeConnections.forEach { connection ->
-          if (roomDatabase.accountDao().getAccount(connection.value.accountEntity.email) == null) {
+        val iterator = activeConnections.iterator()
+        while (iterator.hasNext()) {
+          val connection = iterator.next().value
+          if (roomDatabase.accountDao().getAccount(connection.accountEntity.email) == null) {
             try {
-              connection.value.disconnect()
+              connection.disconnect()
             } catch (e: Exception) {
               e.printStackTrace()
             }
