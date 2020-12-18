@@ -337,6 +337,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     backupsViewModel.onlineBackupsLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
+          countingIdlingResource.incrementSafely()
           UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         }
 
@@ -362,6 +363,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             hideImportButton()
           }
           UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -372,9 +374,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             layoutSyncStatus?.visibility = View.GONE
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
           })
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {
+          countingIdlingResource.decrementSafely()
         }
       }
     })
