@@ -137,7 +137,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     msgsViewModel.outboxMsgsLiveData.observe(this, {
       val msgsCount = it.size
       toolbar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
-        getString(R.string.outbox_msgs_count, msgsCount)
+        resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
       } else null
 
       isForceSendingEnabled = msgsCount > 0
@@ -394,9 +394,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       if (it.isOutbox()) {
         toolbar?.subtitle = null
       } else {
-        val msgCount = msgsViewModel.outboxMsgsLiveData.value?.size
-        toolbar?.subtitle = if (msgCount != null && msgCount > 0) {
-          getString(R.string.outbox_msgs_count, msgCount)
+        val msgsCount = msgsViewModel.outboxMsgsLiveData.value?.size
+        toolbar?.subtitle = if (msgsCount != null && msgsCount > 0) {
+          resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
         } else null
       }
     }

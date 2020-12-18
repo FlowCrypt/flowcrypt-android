@@ -235,8 +235,6 @@
         this email account.</string>
     <string name="please_wait_while_key_will_be_created">Creating a key, please wait</string>
     <string name="not_private_key">This is not a private key</string>
-    <string name="gmail_user_recoverable_auth_exception">Cannot open inbox.\n Did you recently change email security
-        settings?</string>
     <string name="get_access_to_gmail">Get access to Gmail</string>
     <string name="sign_in">SIGN IN</string>
     <string name="setup_app">Please set up the app before use this option</string>
@@ -252,8 +250,6 @@
     <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
     <string name="cannot_forward_encrypted_attachments">Encrypted attachments are not forwarded. Please attach the files if you want them included.</string>
     <string name="failed_please_try_again_later">Failed. Please try again later</string>
-    <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again later</string>
-    <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
     <string name="cyrillic_search_not_support_yet">Searching with foreign alphabets not supported yet</string>
     <string name="add_contact">Add Contact</string>
     <string name="add_public_keys_of_your_contacts">Add public keys of your contacts to send them encrypted messages.</string>
@@ -303,10 +299,6 @@
     <string name="cache_error">Can\'t send message: cache problem</string>
     <string name="can_not_delete_sending_message">You can\'t delete a message which is now being sent</string>
     <string name="preparing">Preparing&#8230;</string>
-    <string name="gmail_imap_disabled_error" translatable="false">[ALERT] Your account is not enabled for IMAP use. Please visit your Gmail
-        settings page and enable your account for IMAP access. (Failure)</string>
-    <string name="it_seems_imap_access_is_disabled">Could not connect to mail server.\n\nIt seems IMAP access is
-        disabled.\n\nPlease allow IMAP on your Google account.</string>
     <string name="back_up_my_key">Back up my key</string>
     <string name="there_are_no_private_keys">There are no imported private keys for %1$s</string>
     <string name="original_message_missing">Could not forward: original message missing</string>
@@ -405,7 +397,6 @@
     <string name="network_error">Network error</string>
     <string name="error_no_keys">Error: no keys</string>
     <string name="could_not_load_private_keys">Couldn\'t load private keys</string>
-    <string name="internal_api_error">Internal API error</string>
     <string name="internal_node_init_error">Internal Node initializing error</string>
     <string name="error_loader_result_is_empty">Error. The loader result is empty</string>
     <string name="could_not_load_domain_rules">Couldn\'t load domain rules</string>
@@ -425,7 +416,10 @@
     <string name="show_more">Show more</string>
     <string name="delete_quoted_text">Delete quoted text</string>
     <string name="cannot_save_copy_in_sent_folder">Cannot save a copy in SENT folder</string>
-    <string name="outbox_msgs_count" tools:ignore="PluralsCandidate">Outbox: %1$d unsent</string>
+    <plurals name="outbox_msgs_count">
+        <item quantity="one">Outbox: 1 unsent</item>
+        <item quantity="other">Outbox: %1$d unsent</item>
+    </plurals>
     <string name="delete_message">Delete message</string>
     <string name="write_us">Write us</string>
     <string name="message_failed_to_create">The message failed to create. Please create the message again</string>
@@ -443,7 +437,6 @@
         <item quantity="one">Delete this message permanently?</item>
         <item quantity="other">Delete these %1$d messages permanently?</item>
     </plurals>
-    <string name="emptying_trash_failed">Emptying trash failed!</string>
     <string name="processing">Processing&#8230;</string>
     <string name="or_use_your_credentials_to_connect">or use your credentials to connect</string>
     <string name="advanced_settings">Advanced settings</string>
