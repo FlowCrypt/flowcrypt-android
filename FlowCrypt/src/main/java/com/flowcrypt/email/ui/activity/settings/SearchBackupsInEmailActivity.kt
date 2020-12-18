@@ -15,6 +15,8 @@ import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.ui.activity.BackupKeysActivity
@@ -104,6 +106,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
     backupsViewModel.onlineBackupsLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
+          countingIdlingResource.incrementSafely()
           UIUtil.exchangeViewVisibility(true, progressBar, rootView)
         }
 
@@ -119,14 +122,17 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
             privateKeys.addAll(keys)
             showBackupFoundView()
           }
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           toast(it.exception?.message ?: getString(R.string.unknown_error))
+          countingIdlingResource.decrementSafely()
           finish()
         }
 
         else -> {
+          countingIdlingResource.decrementSafely()
         }
       }
     })
