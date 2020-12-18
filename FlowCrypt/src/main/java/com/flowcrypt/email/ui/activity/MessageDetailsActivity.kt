@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
  * This activity describe details of some message.
@@ -29,6 +30,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity() {
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_message_details
+
+  val idlingForWebView: SingleIdlingResources = SingleIdlingResources(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

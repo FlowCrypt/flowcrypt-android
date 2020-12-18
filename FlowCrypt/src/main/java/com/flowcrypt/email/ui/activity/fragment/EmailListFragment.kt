@@ -41,6 +41,8 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
@@ -795,28 +797,34 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
+          if (it.progress == null) {
+            baseActivity.countingIdlingResource.incrementSafely()
+          }
+
           if (recyclerViewMsgs?.adapter?.itemCount == 0) {
             showProgress()
           }
 
+          val progress = it.progress?.toInt() ?: 0
+
           when (it.resultCode) {
-            R.id.progress_id_start_of_loading_new_messages -> setActionProgress(0, "Starting")
+            R.id.progress_id_start_of_loading_new_messages -> setActionProgress(progress, "Starting")
 
-            R.id.progress_id_adding_task_to_queue -> setActionProgress(10, "Queuing")
+            R.id.progress_id_adding_task_to_queue -> setActionProgress(progress, "Queuing")
 
-            R.id.progress_id_running_task -> setActionProgress(20, "Running task")
+            R.id.progress_id_running_task -> setActionProgress(progress, "Running task")
 
-            R.id.progress_id_resetting_connection -> setActionProgress(30, "Resetting connection")
+            R.id.progress_id_resetting_connection -> setActionProgress(progress, "Resetting connection")
 
-            R.id.progress_id_connecting_to_email_server -> setActionProgress(40, "Connecting")
+            R.id.progress_id_connecting_to_email_server -> setActionProgress(progress, "Connecting")
 
-            R.id.progress_id_running_smtp_action -> setActionProgress(50, "Running SMTP action")
+            R.id.progress_id_running_smtp_action -> setActionProgress(progress, "Running SMTP action")
 
-            R.id.progress_id_running_imap_action -> setActionProgress(60, "Running IMAP action")
+            R.id.progress_id_running_imap_action -> setActionProgress(progress, "Running IMAP action")
 
-            R.id.progress_id_opening_store -> setActionProgress(70, "Opening store")
+            R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
 
-            R.id.progress_id_getting_list_of_emails -> setActionProgress(80, "Getting list of emails")
+            R.id.progress_id_getting_list_of_emails -> setActionProgress(progress, "Getting list of emails")
           }
         }
 
@@ -825,6 +833,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           if (recyclerViewMsgs?.adapter?.itemCount == 0) {
             showEmptyView()
           }
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -832,9 +841,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           if (it.exception is CommonConnectionException) {
             showConnLostHint()
           }
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         else -> {
+          baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })
@@ -858,6 +869,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
           swipeRefreshLayout?.isRefreshing = true
         }
 
@@ -870,6 +882,8 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
               else -> toast(R.string.failed_please_try_again_later)
             }
           }
+
+          baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })
@@ -879,11 +893,13 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     labelsViewModel.loadLabelsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
           setActionProgress(0, getString(R.string.loading_labels))
         }
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -894,9 +910,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           } else {
             showStatus(msg = it.exception?.message)
           }
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         else -> {
+          baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })

@@ -121,6 +121,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private val processingOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
     liveData {
       if (messageEntity?.isOutboxMsg() == true) {
+        emit(Result.loading())
         emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
         val processingResult = processingByteArray(messageEntity.rawMessageWithoutAttachments?.toByteArray())
         emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))

@@ -53,6 +53,8 @@ import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
@@ -65,6 +67,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -660,7 +663,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       override fun onPageFinished() {
         setActionProgress(100, null)
         updateReplyButtons()
-        //(activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
+        (activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
       }
     })
   }
@@ -966,6 +969,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           showProgress()
 
           val value = it.progress?.toInt() ?: 0
+
+          if (value == 0) {
+            baseActivity.countingIdlingResource.incrementSafely()
+          }
+
           when (it.resultCode) {
             R.id.progress_id_connecting -> setActionProgress(value, "Connecting")
 
@@ -982,6 +990,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           it.data?.let { incomingMsgInfo ->
             showIncomingMsgInfo(incomingMsgInfo)
           }
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -997,10 +1006,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               ?: getString(R.string.unknown_error))
             }
           }
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         else -> {
           setActionProgress(100)
+          baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })
