@@ -404,7 +404,7 @@ dependencies {
     implementation 'ch.acra:acra:4.11.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
     implementation 'ja.burhanrashid52:photoeditor:1.1.0'
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.4.10"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.4.21"
     implementation 'net.openid:appauth:0.7.1-14-ged7e194'
     implementation 'org.bitbucket.b_c:jose4j:0.7.3'
 }
