@@ -264,7 +264,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     store.getFolder(localFolder.fullName).use { folder ->
       val imapFolder = folder as IMAPFolder
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(resultCode = R.id.progress_id_opening_store))
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_opening_store))
       imapFolder.open(Folder.READ_ONLY)
 
       val countOfLoadedMsgs = when {
@@ -298,7 +298,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         roomDatabase.labelDao().update(it.copy(msgsCount = msgsCount))
       }
 
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(resultCode = R.id.progress_id_getting_list_of_emails))
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
+          progress = 80.0,
+          resultCode = R.id.progress_id_getting_list_of_emails
+      ))
       if (end < 1) {
         handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
       } else {
@@ -447,7 +450,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         else -> startCandidate
       }
 
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(resultCode = R.id.progress_id_getting_list_of_emails))
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
+          progress = 80.0,
+          resultCode = R.id.progress_id_getting_list_of_emails
+      ))
 
       if (end < 1) {
         handleSearchResults(accountEntity, localFolder, imapFolder, arrayOf())
