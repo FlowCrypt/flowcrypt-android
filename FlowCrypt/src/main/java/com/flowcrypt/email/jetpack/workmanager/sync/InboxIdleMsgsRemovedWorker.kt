@@ -29,7 +29,8 @@ import javax.mail.UIDFolder
  *         Time: 1:50 PM
  *         E-mail: DenBond7@gmail.com
  */
-class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(context,
+    params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     syncInboxAndRemoveRedundantMsgs(accountEntity, store)
   }
@@ -50,9 +51,8 @@ class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : B
           end = UIDFolder.LASTUID,
           fetchFlags = false
       )
-      val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(cachedUIDSet, remoteFolder, updatedMsgs)
 
-      roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderFullName, deleteCandidatesUIDs)
+      processDeletedMsgs(cachedUIDSet, remoteFolder, updatedMsgs, accountEntity, folderFullName)
     }
   }
 

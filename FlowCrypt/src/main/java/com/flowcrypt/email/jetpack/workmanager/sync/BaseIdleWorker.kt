@@ -16,6 +16,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.mail.Flags
 import javax.mail.Message
 
 /**
@@ -46,6 +47,16 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) : Base
     val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, msgs)
         .map { remoteFolder.getUID(it) to it.flags }.toMap()
     roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderFullName, updateCandidates)
+
+    if (!GeneralUtil.isAppForegrounded()) {
+      for (item in updateCandidates) {
+        val uid = item.key
+        val flags = item.value
+        if (flags.contains(Flags.Flag.SEEN)) {
+          notificationManager.cancel(uid.toInt())
+        }
+      }
+    }
   }
 
   protected suspend fun processNewMsgs(newMsgs: Array<Message>, accountEntity: AccountEntity,

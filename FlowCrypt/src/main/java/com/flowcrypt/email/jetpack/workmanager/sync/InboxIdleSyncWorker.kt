@@ -65,7 +65,6 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
         val newMsgs = EmailUtil.fetchMsgs(remoteFolder, foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }.toTypedArray())
         val newCandidates = EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, newMsgs)
         processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
-
       } else {
         val oldestCachedUID = roomDatabase.msgDao()
             .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: return@use
