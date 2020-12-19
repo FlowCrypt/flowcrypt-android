@@ -380,7 +380,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   private fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder, messages: Array<Message>) {
     try {
-      val isSentFolder = listOf(*imapFolder.attributes).contains("\\Sent")
+      val isSentFolder = imapFolder.attributes.contains("\\Sent")
 
       if (isSentFolder) {
         val emailAndNamePairs = ArrayList<EmailAndNamePair>()

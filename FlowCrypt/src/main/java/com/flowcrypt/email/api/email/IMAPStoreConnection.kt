@@ -156,14 +156,7 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
 
       is SSLHandshakeException, is SSLProtocolException, is MessagingException -> {
         e.message?.let {
-          if (it.contains("Connection closed by peer")
-              || it.contains("I/O error during system call")
-              || it.contains("Failure in SSL library, usually a protocol error")
-              || it.contains("Handshake failed")
-              || it.contains("Exception reading response")
-              || it.contains("connection failure")
-              || it.contains("Error reading input stream")
-              || it.contains("Connection reset;")) {
+          if (hasConnectionIssueMsg(it)) {
             CommonConnectionException(e)
           } else e
         } ?: e
@@ -174,4 +167,13 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
       } ?: e
     }
   }
+
+  private fun hasConnectionIssueMsg(it: String) = (it.contains("Connection closed by peer")
+      || it.contains("I/O error during system call")
+      || it.contains("Failure in SSL library, usually a protocol error")
+      || it.contains("Handshake failed")
+      || it.contains("Exception reading response")
+      || it.contains("connection failure")
+      || it.contains("Error reading input stream")
+      || it.contains("Connection reset;"))
 }

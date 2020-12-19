@@ -959,10 +959,19 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun setupMsgDetailsViewModel() {
+    observeFreshMsgLiveData()
+    observerIncomingMessageInfoLiveData()
+    observeAttsLiveData()
+    observerMsgStatesLiveData()
+  }
+
+  private fun observeFreshMsgLiveData() {
     msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner, {
       it?.let { messageEntity -> updateActionBar(messageEntity) }
     })
+  }
 
+  private fun observerIncomingMessageInfoLiveData() {
     msgDetailsViewModel.incomingMessageInfoLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
@@ -1015,7 +1024,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         }
       }
     })
+  }
 
+  private fun observeAttsLiveData() {
     msgDetailsViewModel.attsLiveData.observe(viewLifecycleOwner, { list ->
       val attachmentInfoList = list.map {
         if (args.localFolder.searchQuery.isNullOrEmpty()) {
@@ -1030,7 +1041,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         msgDetailsViewModel.fetchAttachments()
       }
     })
+  }
 
+  private fun observerMsgStatesLiveData() {
     msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, { newState ->
       var finishActivity = true
       val syncActivity = activity as? BaseSyncActivity
