@@ -117,6 +117,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
             runBackupKeysActivity()
             countingIdlingResource.decrementSafely()
           }
+
+          else -> countingIdlingResource.decrementSafely()
         }
       }
     })
@@ -155,6 +157,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
             countingIdlingResource.decrementSafely()
           }
+
+          else -> countingIdlingResource.decrementSafely()
         }
       }
     })
@@ -163,6 +167,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            countingIdlingResource.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -170,13 +175,17 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
             Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
             setResult(Activity.RESULT_OK)
+            countingIdlingResource.decrementSafely()
             finish()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             isBackEnabled = true
             runBackupKeysActivity()
+            countingIdlingResource.decrementSafely()
           }
+
+          else -> countingIdlingResource.decrementSafely()
         }
       }
     })
