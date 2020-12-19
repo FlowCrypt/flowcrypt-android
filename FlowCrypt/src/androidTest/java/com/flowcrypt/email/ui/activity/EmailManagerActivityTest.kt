@@ -42,7 +42,6 @@ import com.flowcrypt.email.viewaction.CustomViewActions.Companion.navigateToItem
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -88,12 +87,16 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   fun testRunMsgDetailsActivity() {
+    //need to add some timeout while database will be updated
+    Thread.sleep(1000)
     testRunMsgDetailsActivity(0)
   }
 
   @Test
-  @Ignore("fails sometimes")
   fun testForceLoadMsgs() {
+    //need to add some timeout while database will be updated
+    Thread.sleep(1000)
+
     onView(withId(R.id.rVMsgs))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, scrollTo()))
     onView(withId(R.id.rVMsgs))
