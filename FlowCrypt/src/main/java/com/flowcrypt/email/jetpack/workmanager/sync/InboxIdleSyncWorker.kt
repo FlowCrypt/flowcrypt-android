@@ -47,10 +47,6 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
 
     store.getFolder(folderFullName).use { folder ->
       val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val newestCachedUID = roomDatabase.msgDao()
-          .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
-      val oldestCachedUID = roomDatabase.msgDao()
-          .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
       val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(accountEntity.email, folderFullName)
       val cachedUIDSet = mapOfUIDAndMsgFlags.keys.toSet()
 
@@ -64,11 +60,15 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
         processUpdatedMsgs(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs, accountEntity, folderFullName)
         processDeletedMsgs(cachedUIDSet, remoteFolder, updatedMsgs, accountEntity, folderFullName)
 
+        val newestCachedUID = roomDatabase.msgDao()
+            .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: return@use
         val newMsgs = EmailUtil.fetchMsgs(remoteFolder, foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }.toTypedArray())
         val newCandidates = EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, newMsgs)
         processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
 
       } else {
+        val oldestCachedUID = roomDatabase.msgDao()
+            .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: return@use
         val allMsgsFromOldestExisted = EmailUtil.getUpdatedMsgsByUID(remoteFolder, oldestCachedUID.toLong(), UIDFolder.LASTUID)
         processDeletedMsgs(cachedUIDSet, remoteFolder, allMsgsFromOldestExisted, accountEntity, folderFullName)
         processUpdatedMsgs(mapOfUIDAndMsgFlags, remoteFolder, allMsgsFromOldestExisted, accountEntity, folderFullName)
