@@ -30,6 +30,8 @@ import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -383,6 +385,10 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           Result.Status.SUCCESS -> {
+            context?.let { context ->
+              MessagesSenderWorker.enqueue(context, true)
+              InboxIdleSyncWorker.enqueue(context)
+            }
             navController?.popBackStack()
             toast(text = getString(R.string.server_settings_updated))
           }
