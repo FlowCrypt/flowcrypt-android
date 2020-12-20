@@ -113,7 +113,29 @@ class OpenStoreHelper {
             accountEntity.password
           }
 
-          store.connect(accountEntity.imapServer, accountEntity.username, password)
+          try {
+            store.connect(accountEntity.imapServer, accountEntity.username, password)
+          } catch (e: AuthenticationFailedException) {
+            val activeAccountWithEncryptedInfo = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
+            activeAccountWithEncryptedInfo?.let {
+              if (activeAccountWithEncryptedInfo.email.equals(accountEntity.email, true)) {
+                if (accountEntity.useOAuth2) {
+                  ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
+                  e.printStackTrace()
+                  throw e
+                } else {
+                  try {
+                    val refreshedPassword = KeyStoreCryptoManager.decrypt(it.password)
+                    store.connect(accountEntity.imapServer, accountEntity.username, refreshedPassword)
+                  } catch (e: AuthenticationFailedException) {
+                    ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
+                    e.printStackTrace()
+                    throw e
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -129,49 +151,7 @@ class OpenStoreHelper {
               account.imapOpt() === SecurityType.Option.NONE -> session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
               else -> session.getStore(JavaEmailConstants.PROTOCOL_IMAPS)
             }
-
-            val password = if (account.useOAuth2) {
-              val accountManager = AccountManager.get(context)
-              val oauthAccount = accountManager.accounts.firstOrNull { it.name == account.email }
-              if (oauthAccount != null && oauthAccount.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
-                val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
-                    FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
-                if (encryptedToken.isNullOrEmpty()) {
-                  ExceptionUtil.handleError(NullPointerException("Warning. Encrypted token is null!"))
-                  ""
-                } else {
-                  KeyStoreCryptoManager.decrypt(encryptedToken)
-                }
-              } else {
-                account.password
-              }
-            } else {
-              account.password
-            }
-
-            try {
-              store.connect(account.imapServer, account.username, password)
-            } catch (e: AuthenticationFailedException) {
-              val activeAccountWithEncryptedInfo = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
-              activeAccountWithEncryptedInfo?.let {
-                if (activeAccountWithEncryptedInfo.email.equals(account.email, true)) {
-                  if (account.useOAuth2) {
-                    ErrorNotificationManager(context).notifyUserAboutAuthFailure(account)
-                    e.printStackTrace()
-                    throw e
-                  } else {
-                    try {
-                      val refreshedPassword = KeyStoreCryptoManager.decrypt(it.password)
-                      store.connect(account.imapServer, account.username, refreshedPassword)
-                    } catch (e: AuthenticationFailedException) {
-                      ErrorNotificationManager(context).notifyUserAboutAuthFailure(account)
-                      e.printStackTrace()
-                      throw e
-                    }
-                  }
-                }
-              }
-            }
+            openStore(context, account, store)
             store
           }
         }
