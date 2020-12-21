@@ -28,7 +28,9 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
@@ -133,22 +135,7 @@ class IdleService : LifecycleService() {
       override fun messageChanged(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageChangedEvent?) {
         LogsUtil.d(TAG, "messageChanged")
         lifecycleScope.launch {
-          val msg = e?.message
-          if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
-            try {
-              val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-              roomDatabase.msgDao().updateLocalMsgFlags(accountEntity.email, localFolder.fullName, remoteFolder.getUID(msg), msg.flags)
-
-              if (!GeneralUtil.isAppForegrounded()) {
-                if (msg.flags.contains(Flags.Flag.SEEN)) {
-                  MessagesNotificationManager(applicationContext).cancel(remoteFolder.getUID(msg).toInt())
-                }
-              }
-            } catch (e: Exception) {
-              e.printStackTrace()
-              ExceptionUtil.handleError(e)
-            }
-          }
+          handleMsgChangedEvent(e, accountEntity, localFolder, remoteFolder)
         }
       }
 
@@ -165,6 +152,26 @@ class IdleService : LifecycleService() {
 
     idleSyncRunnable?.let { runnable ->
       idleFuture = idleExecutorService.submit(runnable)
+    }
+  }
+
+  private suspend fun handleMsgChangedEvent(e: MessageChangedEvent?, accountEntity: AccountEntity,
+                                            localFolder: LocalFolder, remoteFolder: IMAPFolder) = withContext(Dispatchers.IO) {
+    val msg = e?.message
+    if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
+      try {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+        roomDatabase.msgDao().updateLocalMsgFlags(accountEntity.email, localFolder.fullName, remoteFolder.getUID(msg), msg.flags)
+
+        if (!GeneralUtil.isAppForegrounded()) {
+          if (msg.flags.contains(Flags.Flag.SEEN)) {
+            MessagesNotificationManager(applicationContext).cancel(remoteFolder.getUID(msg).toInt())
+          }
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+      }
     }
   }
 
