@@ -16,7 +16,6 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
@@ -224,12 +223,12 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     }
   }
 
-  protected fun showAuthIssueHint(recoverableIntent: Intent) {
+  protected fun showAuthIssueHint(recoverableIntent: Intent, duration: Int = Snackbar.LENGTH_LONG) {
     showSnackbar(
         view = requireView(),
         msgText = getString(R.string.auth_failure_hint, getString(R.string.app_name)),
         btnName = getString(R.string.fix),
-        duration = Snackbar.LENGTH_LONG
+        duration = duration
     ) {
       context?.let { context ->
         val intent = ErrorNotificationManager.getFixAuthIssueIntent(context, account, recoverableIntent)
@@ -241,7 +240,7 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
   }
 
   private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, Observer {
+    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, {
       account = it
       isAccountInfoReceived = true
       onAccountInfoRefreshed(account)

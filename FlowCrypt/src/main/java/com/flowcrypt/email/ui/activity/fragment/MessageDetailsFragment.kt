@@ -82,6 +82,9 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.android.material.snackbar.Snackbar
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import kotlinx.android.synthetic.main.fragment_server_settings.*
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -1008,6 +1011,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           when (it.exception) {
             is CommonConnectionException -> {
               showStatus(getString(R.string.connection_lost))
+            }
+
+            is UserRecoverableAuthException -> {
+              showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+            }
+
+            is UserRecoverableAuthIOException -> {
+              showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
             }
 
             else -> {
