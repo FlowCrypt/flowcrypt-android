@@ -21,6 +21,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showDialogFragment
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -368,12 +369,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
         Result.Status.EXCEPTION -> {
           hideImportButton()
-          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutSyncStatus)
-          UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
-              getString(android.R.string.ok), {
-            layoutSyncStatus?.visibility = View.GONE
-            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-          })
+          toast(R.string.error_occurred_while_receiving_private_keys)
+          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
           countingIdlingResource.decrementSafely()
         }
 

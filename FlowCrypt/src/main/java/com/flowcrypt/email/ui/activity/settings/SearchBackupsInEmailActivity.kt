@@ -126,7 +126,9 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
         }
 
         Result.Status.EXCEPTION -> {
-          toast(it.exception?.message ?: getString(R.string.unknown_error))
+          toast(it.exception?.message
+              ?: it.exception?.cause?.message
+              ?: getString(R.string.unknown_error))
           countingIdlingResource.decrementSafely()
           finish()
         }
