@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -26,6 +27,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
 
@@ -219,6 +221,22 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
       }
     } else {
       UIUtil.showInfoSnackbar(requireView(), getString(R.string.error_loader_result_is_empty))
+    }
+  }
+
+  protected fun showAuthIssueHint(recoverableIntent: Intent) {
+    showSnackbar(
+        view = requireView(),
+        msgText = getString(R.string.auth_failure_hint, getString(R.string.app_name)),
+        btnName = getString(R.string.fix),
+        duration = Snackbar.LENGTH_LONG
+    ) {
+      context?.let { context ->
+        val intent = ErrorNotificationManager.getFixAuthIssueIntent(context, account, recoverableIntent)
+        if (intent.resolveActivity(context.packageManager) != null) {
+          startActivity(intent)
+        }
+      }
     }
   }
 

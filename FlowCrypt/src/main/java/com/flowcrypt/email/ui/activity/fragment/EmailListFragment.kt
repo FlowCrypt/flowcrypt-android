@@ -60,7 +60,9 @@ import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
+import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -866,8 +868,8 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       }
     })
 
-    msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner, {
-      when (it.status) {
+    msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner, { result ->
+      when (result.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
           swipeRefreshLayout?.isRefreshing = true
@@ -876,9 +878,18 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         else -> {
           swipeRefreshLayout?.isRefreshing = false
 
-          if (it.status == Result.Status.EXCEPTION) {
-            when (it.exception) {
+          if (result.status == Result.Status.EXCEPTION) {
+            when (result.exception) {
               is CommonConnectionException -> showConnProblemHint()
+
+              is UserRecoverableAuthException -> {
+                showAuthIssueHint(result.exception.intent)
+              }
+
+              is UserRecoverableAuthIOException -> {
+                showAuthIssueHint(result.exception.intent)
+              }
+
               else -> toast(R.string.failed_please_try_again_later)
             }
           }

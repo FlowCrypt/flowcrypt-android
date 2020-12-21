@@ -64,15 +64,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
       return
     }
 
-    val intent = Intent().apply {
-      val uriStringResId = when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> R.string.deep_link_auth_failure
-        else -> R.string.deep_link_server_settings
-      }
-      data = Uri.parse(context.getString(uriStringResId))
-
-      recoverableIntent?.let { putExtra("recoverableIntent", recoverableIntent) }
-    }
+    val intent = getFixAuthIssueIntent(context, account, recoverableIntent)
 
     val pendingIntent = PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
 
@@ -125,5 +117,17 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
 
     const val GROUP_NAME_ERRORS = BuildConfig.APPLICATION_ID + ".ERRORS"
     const val NOTIFICATIONS_GROUP_ERROR = -4
+
+    fun getFixAuthIssueIntent(context: Context, account: AccountEntity?, recoverableIntent: Intent?): Intent {
+      return Intent().apply {
+        val uriStringResId = when (account?.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> R.string.deep_link_auth_failure
+          else -> R.string.deep_link_server_settings
+        }
+        data = Uri.parse(context.getString(uriStringResId))
+
+        recoverableIntent?.let { putExtra("recoverableIntent", recoverableIntent) }
+      }
+    }
   }
 }
