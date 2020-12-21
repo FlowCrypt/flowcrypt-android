@@ -385,7 +385,7 @@
     <string name="submitting_pub_key">Submitting the pub key</string>
     <string name="saving_prv_keys">Saving the private key(s)</string>
     <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
-    <string name="reconnect_your_account">Please reconnect your account to continue using %1$s with %2$s</string>
+    <string name="reconnect_your_account">Please reconnect your account to continue using %1$s\nwith\n%2$s</string>
     <string name="reconnect">Reconnect</string>
     <string name="access_was_not_granted">Access was not granted</string>
     <string name="can_not_send_due_to_auth_failure">Can\'t send message: auth failure</string>
@@ -492,7 +492,8 @@
         <item quantity="other">Delete these %1$d keys permanently?</item>
     </plurals>
     <string name="auth_failure">Authentication failure</string>
-    <string name="auth_failure_hint">Failed to log-in, please, check your account name and password in the server settings.</string>
+    <string name="auth_failure_hint">Failed to log-in, please, reconnect your account to continue using %1$s</string>
+    <string name="auth_failure_hint_regular_accounts">Failed to log-in, please, check your account name and password in the server settings.</string>
     <string name="connection_lost">Connection lost</string>
     <string name="loading_labels">Loading labels</string>
 </resources>

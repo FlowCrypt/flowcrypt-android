@@ -8,6 +8,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/mainSettingsFragment">
+
     <fragment
         android:id="@+id/mainSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MainSettingsFragment"
@@ -16,6 +17,7 @@
             android:id="@+id/action_mainSettingsFragment_to_serverSettingsFragment"
             app:destination="@id/serverSettingsFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/serverSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ServerSettingsFragment"
@@ -28,6 +30,7 @@
             android:id="@+id/deepLinkServerSettings"
             app:uri="flowcrypt://email.flowcrypt.com/settings/server_settings" />
     </fragment>
+
     <fragment
         android:id="@+id/checkCredentialsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.CheckCredentialsFragment"
@@ -49,6 +52,21 @@
         <argument
             android:name="localFolder"
             app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/userRecoverableAuthExceptionFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment"
+        android:label="UserRecoverableAuthExceptionFragment"
+        tools:layout="@layout/fragment_user_recoverable_auth_exception">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/auth_failure" />
+        <argument
+            android:name="recoverableIntent"
+            android:defaultValue="@null"
+            app:argType="android.content.Intent"
+            app:nullable="true" />
     </fragment>
 
     <dialog

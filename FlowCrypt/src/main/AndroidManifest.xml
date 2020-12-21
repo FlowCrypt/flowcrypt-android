@@ -245,10 +245,6 @@
             android:theme="@style/AppTheme.NoActionBar.Launcher" />
 
         <activity
-            android:name=".ui.activity.UserRecoverableAuthExceptionActivity"
-            android:launchMode="singleTask" />
-
-        <activity
             android:name=".ui.activity.EditContactActivity"
             android:screenOrientation="portrait" />
 
@@ -321,8 +317,6 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver" />
     </application>
 
 </manifest>

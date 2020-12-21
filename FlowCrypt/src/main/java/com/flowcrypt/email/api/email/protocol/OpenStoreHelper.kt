@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.protocol
 
 import android.accounts.AccountManager
 import android.content.Context
+import android.content.Intent
 import androidx.annotation.WorkerThread
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
@@ -21,6 +22,8 @@ import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.gimap.GmailSSLStore
 import javax.mail.AuthenticationFailedException
 import javax.mail.Session
@@ -89,8 +92,7 @@ class OpenStoreHelper {
     fun openStore(context: Context, accountEntity: AccountEntity, store: Store) {
       when (accountEntity.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          val token = EmailUtil.getGmailAccountToken(context, accountEntity)
-          store.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
+          connectToGimapsStore(context, accountEntity, false, store)
         }
 
         else -> {
@@ -144,7 +146,7 @@ class OpenStoreHelper {
     fun openStore(context: Context, account: AccountEntity?, session: Session): Store {
       return if (account != null) {
         when (account.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> openAndConnectToGimapsStore(context, session, account, false)
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> openAndConnectToGimapsStore(context, session, account)
 
           else -> {
             val store = when {
@@ -159,10 +161,13 @@ class OpenStoreHelper {
         throw NullPointerException("AccountEntity must not be a null!")
     }
 
-    private fun openAndConnectToGimapsStore(context: Context, session: Session, accountEntity: AccountEntity,
-                                            isResetTokenNeeded: Boolean): GmailSSLStore {
+    private fun openAndConnectToGimapsStore(context: Context, session: Session, accountEntity: AccountEntity): GmailSSLStore {
       val gmailSSLStore: GmailSSLStore = session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
+      connectToGimapsStore(context, accountEntity, false, gmailSSLStore)
+      return gmailSSLStore
+    }
 
+    private fun connectToGimapsStore(context: Context, accountEntity: AccountEntity, isResetTokenNeeded: Boolean, store: Store) {
       try {
         var token = EmailUtil.getGmailAccountToken(context, accountEntity)
 
@@ -172,17 +177,24 @@ class OpenStoreHelper {
           token = EmailUtil.getGmailAccountToken(context, accountEntity)
         }
 
-        gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
-      } catch (e: AuthenticationFailedException) {
+        store.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
+      } catch (e: Exception) {
         e.printStackTrace()
-        return if (!isResetTokenNeeded) {
-          openAndConnectToGimapsStore(context, session, accountEntity, true)
-        } else {
-          throw e
-        }
-      }
+        if (e is AuthenticationFailedException || e is UserRecoverableAuthException || e is UserRecoverableAuthIOException) {
+          val recoverableIntent: Intent? = when (e) {
+            is UserRecoverableAuthException -> e.intent
+            is UserRecoverableAuthIOException -> e.intent
+            else -> null
+          }
 
-      return gmailSSLStore
+          if (!isResetTokenNeeded) {
+            connectToGimapsStore(context, accountEntity, true, store)
+          } else {
+            ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity, recoverableIntent)
+            throw e
+          }
+        } else throw e
+      }
     }
   }
 }

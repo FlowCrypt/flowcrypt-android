@@ -227,7 +227,7 @@ abstract class BaseActivity : AppCompatActivity() {
     }
   }
 
-  protected fun logout() {
+  fun logout() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
         countingIdlingResource.incrementSafely()

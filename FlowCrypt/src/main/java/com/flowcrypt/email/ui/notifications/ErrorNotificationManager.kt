@@ -59,15 +59,28 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     notificationManagerCompat.notify(groupName, R.id.notification_id_has_failed_outgoing_msgs, builder.build())
   }
 
-  fun notifyUserAboutAuthFailure(account: AccountEntity) {
+  fun notifyUserAboutAuthFailure(account: AccountEntity, recoverableIntent: Intent? = null) {
     if (!isShowingAuthErrorEnabled) {
       return
     }
 
-    val intent = Intent().apply { data = Uri.parse(context.getString(R.string.deep_link_server_settings)) }
+    val intent = Intent().apply {
+      val uriStringResId = when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> R.string.deep_link_auth_failure
+        else -> R.string.deep_link_server_settings
+      }
+      data = Uri.parse(context.getString(uriStringResId))
+
+      recoverableIntent?.let { putExtra("recoverableIntent", recoverableIntent) }
+    }
+
     val pendingIntent = PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
 
-    val contentText = context.getString(R.string.auth_failure_hint)
+    val contentText = when (account.accountType) {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> context.getString(R.string.auth_failure_hint, context.getString(R.string.app_name))
+      else -> context.getString(R.string.auth_failure_hint_regular_accounts)
+    }
+
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_ERRORS)
         .setSmallIcon(android.R.drawable.stat_sys_warning)
         .setContentTitle(context.getString(R.string.auth_failure))

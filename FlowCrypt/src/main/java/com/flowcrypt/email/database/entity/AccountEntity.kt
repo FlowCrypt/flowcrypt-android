@@ -61,6 +61,7 @@ data class AccountEntity constructor(
     @ColumnInfo(name = "is_show_only_encrypted", defaultValue = "0") val isShowOnlyEncrypted: Boolean? = false,
     @ColumnInfo(defaultValue = "NULL") val uuid: String? = null,
     @ColumnInfo(name = "domain_rules", defaultValue = "NULL") val domainRules: String? = null,
+    @Deprecated("Don't use this field. Should be removed in the next database upgrading")
     @ColumnInfo(name = "is_restore_access_required", defaultValue = "0") val isRestoreAccessRequired: Boolean? = false) : Parcelable {
 
   @Ignore

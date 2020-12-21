@@ -14,7 +14,6 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
@@ -34,7 +33,6 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
  * E-mail: DenBond7@gmail.com
  */
 class LauncherActivity : BaseActivity() {
-  private val checkGmailTokenViewModel: CheckGmailTokenViewModel by viewModels()
   private val launcherViewModel: LauncherViewModel by viewModels()
 
   override val isDisplayHomeAsUpEnabled: Boolean
@@ -53,8 +51,6 @@ class LauncherActivity : BaseActivity() {
     ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
     MessagesSenderWorker.enqueue(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
-
-    setupCheckGmailTokenViewModel()
   }
 
   override fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
@@ -73,27 +69,11 @@ class LauncherActivity : BaseActivity() {
           && launcherViewModel.isNodeInfoReceivedLiveData.value == true) {
         if (isAccountInfoReceived) {
           if (activeAccount != null) {
-            if (AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount?.accountType && activeAccount?.isRestoreAccessRequired == true) {
-              activeAccount?.let { checkGmailTokenViewModel.checkToken(it) }
-            } else {
-              showEmailManagerActivity()
-            }
+            showEmailManagerActivity()
           } else {
             showSignInActivity()
           }
         }
-      }
-    })
-  }
-
-  private fun setupCheckGmailTokenViewModel() {
-    checkGmailTokenViewModel.tokenLiveData.observe(this, {
-      if (it != null) {
-        if (UserRecoverableAuthExceptionActivity.isRunEnabled()) {
-          startActivity(UserRecoverableAuthExceptionActivity.newIntent(this, it))
-        }
-      } else {
-        showEmailManagerActivity()
       }
     })
   }

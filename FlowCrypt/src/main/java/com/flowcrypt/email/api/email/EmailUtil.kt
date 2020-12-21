@@ -28,10 +28,9 @@ import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -267,16 +266,10 @@ class EmailUtil {
      * result from client errors (e.g. providing an invalid scope).
      */
     fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
-      try {
-        val account: Account = accountEntity.account
-            ?: throw NullPointerException("Account can't be a null!")
+      val account: Account = accountEntity.account
+          ?: throw NullPointerException("Account can't be a null!")
 
-        return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
-      } catch (e: UserRecoverableAuthException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(accountEntity.copy(isRestoreAccessRequired = true))
-        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
-        throw e
-      }
+      return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
     }
 
     /**
@@ -359,12 +352,10 @@ class EmailUtil {
 
         return list
       } catch (e: UserRecoverableAuthIOException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
-        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
         throw e
       } catch (e: UserRecoverableAuthException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
-        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
         throw e
       }
     }

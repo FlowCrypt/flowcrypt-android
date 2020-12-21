@@ -178,6 +178,7 @@ class IdleService : LifecycleService() {
   private fun cleanPool() {
     val iterator = idleExecutorService.queue.iterator()
     while (iterator.hasNext()) {
+      iterator.next()
       iterator.remove()
     }
   }
