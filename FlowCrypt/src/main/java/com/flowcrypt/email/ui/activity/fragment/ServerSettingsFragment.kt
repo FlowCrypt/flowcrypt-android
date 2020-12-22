@@ -15,6 +15,7 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
@@ -22,6 +23,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.getNavigationResult
@@ -32,12 +35,14 @@ import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
+import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
 import com.sun.mail.util.MailConnectException
+import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 /**
@@ -385,12 +390,19 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           Result.Status.SUCCESS -> {
-            context?.let { context ->
-              MessagesSenderWorker.enqueue(context, true)
-              InboxIdleSyncWorker.enqueue(context)
+            lifecycleScope.launch {
+              context?.let { context ->
+                val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+                roomDatabase.msgDao().changeMsgsStateSuspend(
+                    account?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
+                    MessageState.QUEUED.value)
+                MessagesSenderWorker.enqueue(context, true)
+                InboxIdleSyncWorker.enqueue(context)
+                toast(text = getString(R.string.server_settings_updated))
+                EmailManagerActivity.runEmailManagerActivity(context)
+              }
+              activity?.finish()
             }
-            navController?.popBackStack()
-            toast(text = getString(R.string.server_settings_updated))
           }
 
           else -> {
