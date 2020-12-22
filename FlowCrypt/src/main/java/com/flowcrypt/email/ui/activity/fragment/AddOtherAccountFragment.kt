@@ -581,7 +581,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           showContent()
           showInfoDialog(
               dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't load the server configuration")
+              ?: getString(R.string.could_not_load_oauth_server_configuration))
         }
       }
     })

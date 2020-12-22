@@ -6,26 +6,35 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.oauth.OAuth2Helper
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.jetpack.viewmodel.OAuth2AuthCredentialsViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
+import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
+import net.openid.appauth.AuthorizationRequest
+import net.openid.appauth.AuthorizationService
 
 /**
  * @author Denis Bondarenko
@@ -40,6 +49,9 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
     get() = view?.findViewById(R.id.layoutContent)
   override val statusView: View?
     get() = view?.findViewById(R.id.status)
+
+  private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
+  private var authRequest: AuthorizationRequest? = null
 
   private lateinit var textViewExplanation: TextView
 
@@ -56,6 +68,7 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
 
     supportActionBar?.title = null
     initViews(view)
+    setupOAuth2AuthCredentialsViewModel()
   }
 
   override fun onDestroy() {
@@ -113,7 +126,9 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
           }
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
-
+            oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
+                requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
+                provider = OAuth2Helper.Provider.MICROSOFT)
           }
 
           else -> {
@@ -134,7 +149,43 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
+  private fun setupOAuth2AuthCredentialsViewModel() {
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
+        }
+
+        Result.Status.SUCCESS -> {
+          it.data?.let { authorizationRequest ->
+            oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
+            showContent()
+
+            authRequest = authorizationRequest
+            authRequest?.let { request ->
+              AuthorizationService(requireContext())
+                  .performAuthorizationRequest(
+                      request,
+                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
+            }
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
+          showContent()
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.could_not_load_oauth_server_configuration))
+        }
+        else -> {
+        }
+      }
+    })
+  }
+
   companion object {
     private const val REQUEST_CODE_RUN_GMAIL_RECOVERABLE_INTENT = 101
+    private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
   }
 }
