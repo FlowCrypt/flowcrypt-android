@@ -17,6 +17,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
@@ -93,6 +94,17 @@ class ApiHelper private constructor(context: Context) {
     @JvmStatic
     fun getInstance(context: Context): ApiHelper {
       return ApiHelper(context)
+    }
+
+    inline fun <reified T> parseAsError(context: Context, response: Response<T>): T? {
+      val retrofit = getInstance(context).retrofit
+      try {
+        val converter = retrofit.responseBodyConverter<T>(T::class.java, arrayOfNulls<Annotation>(0))
+        val errorBody = response.errorBody() ?: return null
+        return converter.convert(errorBody)
+      } catch (e: Exception) {
+        return null
+      }
     }
   }
 }

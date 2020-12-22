@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.accounts.AuthenticatorException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -892,6 +893,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
               }
 
               is AuthenticationFailedException -> {
+                showAuthIssueHint()
+              }
+
+              is AuthenticatorException -> {
                 showAuthIssueHint()
               }
 

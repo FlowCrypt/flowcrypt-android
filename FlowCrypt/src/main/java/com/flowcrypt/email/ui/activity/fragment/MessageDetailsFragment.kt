@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.Manifest
+import android.accounts.AuthenticatorException
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -1025,6 +1026,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             }
 
             is AuthenticationFailedException -> {
+              showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+            }
+
+            is AuthenticatorException -> {
               showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
               showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
             }

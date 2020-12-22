@@ -80,8 +80,11 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
           accountManager.setUserData(account, KEY_REFRESH_TOKEN, KeyStoreCryptoManager.encrypt(tokenResponse?.refreshToken))
           accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
         } else return Bundle().apply {
+          val errorResponse = ApiHelper.parseAsError(context, apiResponse)
+          val errorMsg = errorResponse?.errorDescription
+              ?: context.getString(R.string.could_not_fetch_access_token)
           putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
-          putString(AccountManager.KEY_ERROR_MESSAGE, context.getString(R.string.could_not_fetch_access_token))
+          putString(AccountManager.KEY_ERROR_MESSAGE, errorMsg)
         }
       } catch (e: Exception) {
         return Bundle().apply {

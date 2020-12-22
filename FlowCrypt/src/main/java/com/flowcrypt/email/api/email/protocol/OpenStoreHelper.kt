@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email.protocol
 
 import android.accounts.AccountManager
+import android.accounts.AuthenticatorException
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.WorkerThread
@@ -96,47 +97,29 @@ class OpenStoreHelper {
         }
 
         else -> {
-          val password = if (accountEntity.useOAuth2) {
-            val accountManager = AccountManager.get(context)
-            val oauthAccount = accountManager.accounts.firstOrNull { it.name == accountEntity.email }
-            if (oauthAccount != null && oauthAccount.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
-              val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
-                  FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
-              if (encryptedToken.isNullOrEmpty()) {
-                ExceptionUtil.handleError(NullPointerException("Warning. Encrypted token is null!"))
-                ""
+          try {
+            val password = if (accountEntity.useOAuth2) {
+              val accountManager = AccountManager.get(context)
+              val oauthAccount = accountManager.accounts.firstOrNull { it.name == accountEntity.email }
+              if (oauthAccount != null && oauthAccount.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
+                val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
+                    FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+                if (encryptedToken.isNullOrEmpty()) {
+                  ExceptionUtil.handleError(NullPointerException("Warning. Encrypted token is null!"))
+                  ""
+                } else {
+                  KeyStoreCryptoManager.decrypt(encryptedToken)
+                }
               } else {
-                KeyStoreCryptoManager.decrypt(encryptedToken)
+                accountEntity.password
               }
             } else {
               accountEntity.password
             }
-          } else {
-            accountEntity.password
-          }
 
-          try {
             store.connect(accountEntity.imapServer, accountEntity.username, password)
-          } catch (e: AuthenticationFailedException) {
-            val activeAccountWithEncryptedInfo = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
-            activeAccountWithEncryptedInfo?.let {
-              if (activeAccountWithEncryptedInfo.email.equals(accountEntity.email, true)) {
-                if (accountEntity.useOAuth2) {
-                  ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
-                  e.printStackTrace()
-                  throw e
-                } else {
-                  try {
-                    val refreshedPassword = KeyStoreCryptoManager.decrypt(it.password)
-                    store.connect(accountEntity.imapServer, accountEntity.username, refreshedPassword)
-                  } catch (e: AuthenticationFailedException) {
-                    ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
-                    e.printStackTrace()
-                    throw e
-                  }
-                }
-              }
-            }
+          } catch (e: Exception) {
+            handleConnectException(e, context, accountEntity, store)
           }
         }
       }
@@ -180,7 +163,7 @@ class OpenStoreHelper {
         store.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
       } catch (e: Exception) {
         e.printStackTrace()
-        if (e is AuthenticationFailedException || e is UserRecoverableAuthException || e is UserRecoverableAuthIOException) {
+        if (isAuthException(e)) {
           val recoverableIntent: Intent? = when (e) {
             is UserRecoverableAuthException -> e.intent
             is UserRecoverableAuthIOException -> e.intent
@@ -195,6 +178,38 @@ class OpenStoreHelper {
           }
         } else throw e
       }
+    }
+
+    private fun isAuthException(e: Exception) =
+        e is AuthenticationFailedException
+            || e is UserRecoverableAuthException
+            || e is UserRecoverableAuthIOException
+            || e is AuthenticatorException
+
+    private fun handleConnectException(e: Exception, context: Context, accountEntity: AccountEntity, store: Store) {
+      if (isAuthException(e)) {
+        val activeAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
+        activeAccount?.let {
+          if (activeAccount.email.equals(accountEntity.email, true)) {
+            if (accountEntity.useOAuth2) {
+              ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
+              e.printStackTrace()
+              throw e
+            } else {
+              try {
+                val refreshedPassword = KeyStoreCryptoManager.decrypt(it.password)
+                store.connect(accountEntity.imapServer, accountEntity.username, refreshedPassword)
+              } catch (e: Exception) {
+                if (isAuthException(e)) {
+                  ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
+                  e.printStackTrace()
+                  throw e
+                } else throw e
+              }
+            }
+          }
+        }
+      } else throw e
     }
   }
 }
