@@ -44,6 +44,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.gmail.Gmail
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.util.MailConnectException
@@ -62,6 +63,7 @@ import java.net.SocketException
 import java.nio.charset.StandardCharsets
 import javax.activation.DataHandler
 import javax.activation.DataSource
+import javax.mail.AuthenticationFailedException
 import javax.mail.BodyPart
 import javax.mail.Flags
 import javax.mail.Folder
@@ -88,7 +90,6 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           return@withContext Result.success()
         }
 
-        var store: Store? = null
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
         try {
@@ -110,41 +111,37 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
             setForeground(genForegroundInfo(account))
 
             val session = OpenStoreHelper.getAccountSess(applicationContext, account)
-            store = OpenStoreHelper.openStore(applicationContext, account, session)
+            OpenStoreHelper.openStore(applicationContext, account, session).use { store ->
+              if (!CollectionUtils.isEmpty(queuedMsgs)) {
+                sendQueuedMsgs(account, session, store, attsCacheDir)
+              }
 
-            if (!CollectionUtils.isEmpty(queuedMsgs)) {
-              sendQueuedMsgs(account, session, store, attsCacheDir)
-            }
-
-            if (!CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
-              saveCopyOfAlreadySentMsgs(account, session, store, attsCacheDir)
+              if (!CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
+                saveCopyOfAlreadySentMsgs(account, session, store, attsCacheDir)
+              }
             }
           }
 
           return@withContext Result.success()
-        } catch (e: UserRecoverableAuthException) {
-          e.printStackTrace()
-          markMsgsWithAuthFailureState(roomDatabase)
-
-          return@withContext Result.failure()
-        } catch (e: AuthenticatorException) {
-          e.printStackTrace()
-          markMsgsWithAuthFailureState(roomDatabase)
-
-          return@withContext Result.failure()
         } catch (e: Exception) {
           e.printStackTrace()
+          when (e) {
+            is UserRecoverableAuthException, is UserRecoverableAuthIOException, is AuthenticatorException, is AuthenticationFailedException -> {
+              markMsgsWithAuthFailureState(roomDatabase)
+            }
 
-          val account = roomDatabase.accountDao().getActiveAccountSuspend()
-          account?.email?.let { roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email) }
+            else -> {
+              val account = roomDatabase.accountDao().getActiveAccountSuspend()
+              account?.email?.let { roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email) }
 
-          ExceptionUtil.handleError(ForceHandlingException(e))
+              ExceptionUtil.handleError(ForceHandlingException(e))
+            }
+          }
+
           return@withContext Result.failure()
         } finally {
           val account = roomDatabase.accountDao().getActiveAccountSuspend()
           account?.email?.let { roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email) }
-
-          store?.close()
           LogsUtil.d(TAG, "work was finished")
         }
       }

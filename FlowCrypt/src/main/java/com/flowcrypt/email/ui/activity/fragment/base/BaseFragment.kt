@@ -223,10 +223,14 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     }
   }
 
-  protected fun showAuthIssueHint(recoverableIntent: Intent, duration: Int = Snackbar.LENGTH_LONG) {
+  protected fun showAuthIssueHint(recoverableIntent: Intent? = null, duration: Int = Snackbar.LENGTH_LONG) {
+    val msgText = when (account?.accountType) {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> getString(R.string.auth_failure_hint, getString(R.string.app_name))
+      else -> getString(R.string.auth_failure_hint_regular_accounts)
+    }
     showSnackbar(
         view = requireView(),
-        msgText = getString(R.string.auth_failure_hint, getString(R.string.app_name)),
+        msgText = msgText,
         btnName = getString(R.string.fix),
         duration = duration
     ) {
@@ -238,6 +242,7 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
       }
     }
   }
+
 
   private fun initAccountViewModel() {
     accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, {

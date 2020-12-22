@@ -88,6 +88,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import kotlinx.android.synthetic.main.fragment_server_settings.*
 import java.io.File
 import java.nio.charset.StandardCharsets
+import javax.mail.AuthenticationFailedException
 
 /**
  * This fragment describe msgEntity of some message.
@@ -1020,6 +1021,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
             is UserRecoverableAuthIOException -> {
               showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+            }
+
+            is AuthenticationFailedException -> {
+              showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
               showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
             }
 

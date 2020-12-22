@@ -63,6 +63,7 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import javax.mail.AuthenticationFailedException
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -888,6 +889,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
               is UserRecoverableAuthIOException -> {
                 showAuthIssueHint(result.exception.intent)
+              }
+
+              is AuthenticationFailedException -> {
+                showAuthIssueHint()
               }
 
               else -> toast(R.string.failed_please_try_again_later)

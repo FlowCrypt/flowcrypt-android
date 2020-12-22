@@ -408,7 +408,19 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         when (result) {
           TwoWayDialogFragment.RESULT_OK -> {
             if (isForceSendingEnabled) {
-              MessagesSenderWorker.enqueue(applicationContext, true)
+              lifecycleScope.launch {
+                val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
+                activeAccount?.let { accountEntity ->
+                  roomDatabase.msgDao().changeMsgsStateSuspend(
+                      account = accountEntity.email,
+                      label = JavaEmailConstants.FOLDER_OUTBOX,
+                      oldValue = MessageState.AUTH_FAILURE.value,
+                      newValues = MessageState.QUEUED.value
+                  )
+                }
+
+                MessagesSenderWorker.enqueue(applicationContext, true)
+              }
             }
           }
         }
