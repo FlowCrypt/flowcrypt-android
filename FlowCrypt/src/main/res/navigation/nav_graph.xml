@@ -59,9 +59,6 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment"
         android:label="UserRecoverableAuthExceptionFragment"
         tools:layout="@layout/fragment_user_recoverable_auth_exception">
-        <deepLink
-            android:id="@+id/deepLink"
-            app:uri="flowcrypt://email.flowcrypt.com/settings/auth_failure" />
         <argument
             android:name="recoverableIntent"
             android:defaultValue="@null"

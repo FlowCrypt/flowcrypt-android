@@ -31,7 +31,7 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 6:29 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSingInFragment : BaseFragment(), ProgressBehaviour {
+abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   protected val existedAccounts = mutableListOf<AccountEntity>()

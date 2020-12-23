@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.accounts.Account
+import android.accounts.AccountManager
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
@@ -12,10 +14,11 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -23,18 +26,18 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.jetpack.viewmodel.OAuth2AuthCredentialsViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
-import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
-import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationService
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -42,16 +45,15 @@ import net.openid.appauth.AuthorizationService
  *         Time: 12:18 PM
  *         E-mail: DenBond7@gmail.com
  */
-class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
+class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehaviour {
+  private val args by navArgs<UserRecoverableAuthExceptionFragmentArgs>()
+
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
   override val contentView: View?
     get() = view?.findViewById(R.id.layoutContent)
   override val statusView: View?
     get() = view?.findViewById(R.id.status)
-
-  private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
-  private var authRequest: AuthorizationRequest? = null
 
   private lateinit var textViewExplanation: TextView
 
@@ -119,9 +121,7 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
       account?.let { accountEntity ->
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            val firstArgName = arguments?.keySet()?.firstOrNull() ?: return@setOnClickListener
-            val recoverableIntent = arguments?.getParcelable<Intent>(firstArgName)?.getParcelableExtra<Intent>("recoverableIntent")
-                ?: return@setOnClickListener
+            val recoverableIntent = args.recoverableIntent ?: return@setOnClickListener
             startActivityForResult(recoverableIntent, REQUEST_CODE_RUN_GMAIL_RECOVERABLE_INTENT)
           }
 
@@ -147,6 +147,10 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
     view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
       startActivity(HtmlViewFromAssetsRawActivity.newIntent(requireContext(), getString(R.string.security), "html/security.htm"))
     }
+
+    view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
+      FeedbackActivity.show(requireActivity())
+    }
   }
 
   private fun setupOAuth2AuthCredentialsViewModel() {
@@ -166,7 +170,8 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
               AuthorizationService(requireContext())
                   .performAuthorizationRequest(
                       request,
-                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
+                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(),
+                          SignInActivity::class.java).apply { action = SignInActivity.ACTION_UPDATE_OAUTH_ACCOUNT }, 0))
             }
           }
         }
@@ -177,6 +182,40 @@ class UserRecoverableAuthExceptionFragment : BaseFragment(), ProgressBehaviour {
           showInfoDialog(
               dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_load_oauth_server_configuration))
+        }
+        else -> {
+        }
+      }
+    })
+
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(progressMsg = getString(R.string.loading_account_details))
+        }
+
+        Result.Status.SUCCESS -> {
+          it.data?.authTokenInfo?.let { authTokenInfo ->
+            oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
+            account?.let { accountEntity ->
+              val accountManager = AccountManager.get(requireContext())
+              val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
+              accountManager.setUserData(account, FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, authTokenInfo.email)
+              accountManager.setUserData(account, FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, authTokenInfo.refreshToken)
+              accountManager.setUserData(account, FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, authTokenInfo.expiresAt?.toString())
+            }
+
+            context?.let { context -> EmailManagerActivity.runEmailManagerActivity(context) }
+            activity?.finish()
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
+          showContent()
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: "Couldn't fetch token")
         }
         else -> {
         }

@@ -16,6 +16,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
+import com.flowcrypt.email.ui.activity.SignInActivity
 
 /**
  * It's a manager which helps to show errors notifications with a high priority.
@@ -119,14 +120,15 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     const val NOTIFICATIONS_GROUP_ERROR = -4
 
     fun getFixAuthIssueIntent(context: Context, account: AccountEntity?, recoverableIntent: Intent?): Intent {
-      return Intent().apply {
-        val uriStringResId = when (account?.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> R.string.deep_link_auth_failure
-          else -> R.string.deep_link_server_settings
+      return when (account?.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
+          Intent(context, SignInActivity::class.java).apply {
+            action = SignInActivity.ACTION_UPDATE_OAUTH_ACCOUNT
+            recoverableIntent?.let { putExtra("recoverableIntent", recoverableIntent) }
+          }
         }
-        data = Uri.parse(context.getString(uriStringResId))
 
-        recoverableIntent?.let { putExtra("recoverableIntent", recoverableIntent) }
+        else -> Intent(null, Uri.parse(context.getString(R.string.deep_link_server_settings)))
       }
     }
   }

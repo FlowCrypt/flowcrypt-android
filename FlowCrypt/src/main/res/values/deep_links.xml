@@ -5,5 +5,4 @@
 
 <resources>
     <string name="deep_link_server_settings" translatable="false">flowcrypt://email.flowcrypt.com/settings/server_settings</string>
-    <string name="deep_link_auth_failure" translatable="false">flowcrypt://email.flowcrypt.com/settings/auth_failure</string>
 </resources>

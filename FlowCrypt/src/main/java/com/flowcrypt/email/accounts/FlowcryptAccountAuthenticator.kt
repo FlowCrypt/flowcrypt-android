@@ -80,6 +80,9 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
           accountManager.setUserData(account, KEY_REFRESH_TOKEN, KeyStoreCryptoManager.encrypt(tokenResponse?.refreshToken))
           accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
         } else return Bundle().apply {
+          //via clearing the current token we force the token updating in the next call
+          accountManager.setAuthToken(account, authTokenType, null)
+
           val errorResponse = ApiHelper.parseAsError(context, apiResponse)
           val errorMsg = errorResponse?.errorDescription
               ?: context.getString(R.string.could_not_fetch_access_token)

@@ -23,7 +23,6 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
-import androidx.fragment.app.viewModels
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -41,7 +40,6 @@ import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.jetpack.viewmodel.OAuth2AuthCredentialsViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
@@ -59,9 +57,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import kotlinx.android.synthetic.main.fragment_screenshot_editor.*
-import net.openid.appauth.AuthorizationException
-import net.openid.appauth.AuthorizationRequest
-import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
 import java.util.*
@@ -94,9 +89,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
-  private var authRequest: AuthorizationRequest? = null
-
-  private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -109,8 +101,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    savedInstanceState?.let { restoreAuthRequest(it) }
-
     this.authCreds = getTempAuthCreds()
 
     if (authCreds == null) {
@@ -135,11 +125,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   override fun onPause() {
     super.onPause()
     saveTempCreds()
-  }
-
-  override fun onSaveInstanceState(outState: Bundle) {
-    super.onSaveInstanceState(outState)
-    outState.putString(KEY_AUTH_REQUEST, authRequest?.jsonSerializeString())
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -219,42 +204,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     super.returnResultOk()
   }
 
-  fun handleOAuth2Intent(intent: Intent?) {
-    intent?.let {
-      val schema = intent.data?.scheme
-      if (schema !in OAuth2Helper.SUPPORTED_SCHEMAS) {
-        return
-      }
-
-      val authResponse = AuthorizationResponse.fromIntent(intent)
-      val authException = AuthorizationException.fromIntent(intent)
-      if (authResponse != null) {
-        val code = authResponse.authorizationCode
-        if (code != null) {
-          getOAuthToken(schema, code)
-        } else {
-          showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = getString(R.string.could_not_verify_response),
-              useLinkify = true
-          )
-        }
-      } else if (authException != null) {
-        showInfoDialog(
-            dialogTitle = getString(R.string.error_with_value, authException.error),
-            dialogMsg = authException.errorDescription,
-            useLinkify = true
-        )
-      } else {
-        showInfoDialog(
-            dialogTitle = getString(R.string.oauth_error),
-            dialogMsg = getString(R.string.could_not_verify_response),
-            useLinkify = true
-        )
-      }
-    }
-  }
-
   private fun initViews(view: View) {
     editTextEmail = view.findViewById(R.id.editTextEmail)
     editTextUserName = view.findViewById(R.id.editTextUserName)
@@ -308,9 +257,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
     checkBoxAdvancedMode = view.findViewById(R.id.checkBoxAdvancedMode)
     checkBoxRequireSignInForSmtp = view.findViewById(R.id.checkBoxRequireSignInForSmtp)
+    val groupRequireSignInForSmtp = view.findViewById<View>(R.id.groupRequireSignInForSmtp)
+
     checkBoxRequireSignInForSmtp?.setOnCheckedChangeListener { _, isChecked ->
       if (checkBoxAdvancedMode?.isChecked == true) {
-        view.findViewById<View>(R.id.groupRequireSignInForSmtp).visibility = if (isChecked) View.VISIBLE else View.GONE
+        groupRequireSignInForSmtp.visibility = if (isChecked) View.VISIBLE else View.GONE
       }
     }
 
@@ -318,9 +269,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       buttonView.hideKeyboard()
       view.findViewById<View>(R.id.groupAdvancedSettings)?.visibility = if (isChecked) View.VISIBLE else View.GONE
       if ((checkBoxRequireSignInForSmtp?.isChecked == true) && isChecked) {
-        view.findViewById<View>(R.id.groupRequireSignInForSmtp)?.visibility = View.VISIBLE
+        groupRequireSignInForSmtp?.visibility = View.VISIBLE
       } else {
-        view.findViewById<View>(R.id.groupRequireSignInForSmtp)?.visibility = View.GONE
+        groupRequireSignInForSmtp?.visibility = View.GONE
       }
 
       if (!isChecked) {
@@ -587,19 +538,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     })
   }
 
-  private fun getOAuthToken(schema: String?, code: String) {
-    authRequest?.let { request ->
-      when (schema) {
-        OAuth2Helper.MICROSOFT_OAUTH2_SCHEMA -> {
-          oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(
-              authorizeCode = code,
-              authRequest = request
-          )
-        }
-      }
-    }
-  }
-
   /**
    * Retrieve a temp [AuthCredentials] from the shared preferences.
    */
@@ -821,17 +759,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     return false
   }
 
-  private fun restoreAuthRequest(state: Bundle) {
-    val serializedAuthorizationRequest = state.getString(KEY_AUTH_REQUEST)
-    serializedAuthorizationRequest?.let { jsonString ->
-      try {
-        authRequest = AuthorizationRequest.jsonDeserialize(jsonString)
-      } catch (e: Exception) {
-        e.printStackTrace()
-      }
-    }
-  }
-
   private fun storeAccountInfoToAccountManager() {
     getTempAccount()?.let { accountEntity ->
       val accountManager = AccountManager.get(requireContext())
@@ -847,9 +774,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   }
 
   companion object {
-    private val KEY_AUTH_REQUEST =
-        GeneralUtil.generateUniqueExtraKey("KEY_UUID_FOR_OAUTH", AddOtherAccountFragment::class.java)
-
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
