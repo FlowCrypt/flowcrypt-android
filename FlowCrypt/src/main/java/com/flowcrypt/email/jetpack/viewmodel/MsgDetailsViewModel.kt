@@ -143,6 +143,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
           emit(processingResult)
         } else {
+          emit(Result.loading(resultCode = R.id.progress_id_connecting, progress = 5.toDouble()))
           val newMsgSnapshot = try {
             loadMessageFromServer(messageEntity)
           } catch (e: Exception) {
