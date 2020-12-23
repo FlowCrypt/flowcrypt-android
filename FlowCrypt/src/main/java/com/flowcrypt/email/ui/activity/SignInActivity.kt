@@ -16,6 +16,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.ui.activity.fragment.MainSignInFragment
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -41,6 +42,7 @@ class SignInActivity : BaseNodeActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    ErrorNotificationManager.isShowingAuthErrorEnabled = false
 
     accountAuthenticatorResponse = intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
     accountAuthenticatorResponse?.onRequestContinued()
@@ -64,6 +66,11 @@ class SignInActivity : BaseNodeActivity() {
         ).commitNow()
       }
     }
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    ErrorNotificationManager.isShowingAuthErrorEnabled = true
   }
 
   override fun finish() {

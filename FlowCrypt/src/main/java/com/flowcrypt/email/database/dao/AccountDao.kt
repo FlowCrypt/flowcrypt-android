@@ -41,6 +41,9 @@ abstract class AccountDao : BaseDao<AccountEntity> {
   @Query("SELECT * FROM accounts WHERE email = :email")
   abstract fun getAccount(email: String): AccountEntity?
 
+  @Query("SELECT * FROM accounts WHERE _id = :id")
+  abstract fun getAccountById(id: Long?): AccountEntity?
+
   @Query("SELECT * FROM accounts WHERE is_active = 0")
   abstract fun getAllNonactiveAccounts(): List<AccountEntity>
 

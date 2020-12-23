@@ -190,7 +190,7 @@ class OpenStoreHelper {
       if (isAuthException(e)) {
         val activeAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
         activeAccount?.let {
-          if (activeAccount.email.equals(accountEntity.email, true)) {
+          if (activeAccount.id == accountEntity.id) {
             if (accountEntity.useOAuth2) {
               ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
               e.printStackTrace()

@@ -10,6 +10,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
+import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -17,6 +18,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
@@ -96,6 +98,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
           if (it.data == true) {
             //clear LiveData value to prevent duplicate running
             accountViewModel.addNewAccountLiveData.value = Result.success(null)
+            context?.let { context -> WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC) }
 
             getTempAccount()?.let { accountEntity ->
               privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)

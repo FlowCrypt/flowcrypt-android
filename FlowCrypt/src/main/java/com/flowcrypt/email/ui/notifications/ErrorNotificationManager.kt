@@ -14,6 +14,7 @@ import android.net.Uri
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
@@ -61,9 +62,10 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
   }
 
   fun notifyUserAboutAuthFailure(account: AccountEntity, recoverableIntent: Intent? = null) {
-    if (!isShowingAuthErrorEnabled) {
-      return
-    }
+    if (!isShowingAuthErrorEnabled) return
+
+    val refreshedAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccountById(account.id)
+    if (refreshedAccount?.isActive == false) return
 
     val intent = getFixAuthIssueIntent(context, account, recoverableIntent)
 
