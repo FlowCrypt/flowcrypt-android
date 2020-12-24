@@ -19,6 +19,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
+import com.sun.mail.imap.IMAPStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.mail.Folder
@@ -67,7 +68,11 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
             val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
 
             if (msgs.isNotEmpty()) {
-              remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+              if ((store as IMAPStore).hasCapability("MOVE")) {
+                remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+              } else {
+                remoteSrcFolder.copyMessages(msgs.toTypedArray(), remoteDestFolder)
+              }
               roomDatabase.msgDao().deleteByUIDsSuspend(account.email, srcFolder, uidList)
             }
           }
