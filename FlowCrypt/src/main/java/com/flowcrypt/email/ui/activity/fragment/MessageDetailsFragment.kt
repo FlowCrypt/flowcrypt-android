@@ -762,7 +762,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
         GeneralUtil.doSectionsInText(" ", keyDetails?.fingerprint, 4)), fingerprint)
 
-    textViewPgpPublicKey.text = block.content
+    textViewPgpPublicKey.text = clipLargeText(block.content)
 
     val existingPgpContact = block.existingPgpContact
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
@@ -844,7 +844,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun genDefPart(block: MsgBlock, inflater: LayoutInflater, res: Int, viewGroup: ViewGroup?): TextView {
     val textViewMsgPartOther = inflater.inflate(res, viewGroup, false) as TextView
-    textViewMsgPartOther.text = block.content
+    textViewMsgPartOther.text = clipLargeText(block.content)
     return textViewMsgPartOther
   }
 
@@ -860,23 +860,23 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val decryptError = block.error ?: return View(context)
 
     when (decryptError.details?.type) {
-      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(block.content, layoutInflater)
+      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(clipLargeText(block.content), layoutInflater)
 
       DecryptErrorDetails.Type.FORMAT -> {
         val formatErrorMsg = (getString(R.string.decrypt_error_message_badly_formatted,
             getString(R.string.app_name)) + "\n\n"
             + decryptError.details.type + ": " + decryptError.details.message)
-        return getView(block.content, formatErrorMsg, layoutInflater)
+        return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
       }
 
       DecryptErrorDetails.Type.OTHER -> {
         val otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
             "\n\n" + getString(R.string.decrypt_error_please_write_me, getString(R.string.support_email)) +
             "\n\n" + decryptError.details.type + ": " + decryptError.details.message
-        return getView(block.content, otherErrorMsg, layoutInflater)
+        return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 
-      else -> return getView(block.content, getString(R.string.could_not_decrypt_message_due_to_error,
+      else -> return getView(clipLargeText(block.content), getString(R.string.could_not_decrypt_message_due_to_error,
           decryptError.details?.type.toString() + ": " + decryptError.details?.message),
           layoutInflater)
     }
