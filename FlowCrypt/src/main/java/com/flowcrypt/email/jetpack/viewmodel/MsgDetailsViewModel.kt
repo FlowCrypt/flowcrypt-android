@@ -47,6 +47,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
+import com.sun.mail.imap.IMAPMessage
 import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -486,32 +487,38 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           val originalMsg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
               ?: throw java.lang.NullPointerException("Message not found")
 
-          msgSize = originalMsg.size
-
           val fetchProfile = FetchProfile()
           fetchProfile.add(FetchProfile.Item.SIZE)
           fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
           fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
           imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
 
-          val rawHeaders = TextUtils.join("\n", Collections.list(originalMsg.allHeaderLines))
-          if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
-          val customMsg = CustomMimeMessage(connection.session, rawHeaders)
+          msgSize = originalMsg.size
 
-          val originalMultipart = originalMsg.content as? Multipart
-          if (originalMultipart != null) {
-            val modifiedMultipart = CustomMimeMultipart(customMsg.contentType)
-            buildFromSource(originalMultipart, modifiedMultipart)
-            customMsg.setContent(modifiedMultipart)
+          if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            val rawHeaders = TextUtils.join("\n", Collections.list(originalMsg.allHeaderLines))
+            if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
+            val customMsg = CustomMimeMessage(connection.session, rawHeaders)
+
+            val originalMultipart = originalMsg.content as? Multipart
+            if (originalMultipart != null) {
+              val modifiedMultipart = CustomMimeMultipart(customMsg.contentType)
+              buildFromSource(originalMultipart, modifiedMultipart)
+              customMsg.setContent(modifiedMultipart)
+            } else {
+              customMsg.setContent(originalMsg.content, originalMsg.contentType)
+              downloadedMsgSize += originalMsg.size
+            }
+
+            customMsg.saveChanges()
+            customMsg.setMessageId(originalMsg.messageID ?: "")
+
+            MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
           } else {
-            customMsg.setContent(originalMsg.content, originalMsg.contentType)
-            downloadedMsgSize += originalMsg.size
+            val cachedMsg = MimeMessage(originalMsg.session, FetchingInputStream((originalMsg as IMAPMessage).mimeStream))
+            MsgsCacheManager.storeMsg(messageEntity.id.toString(), cachedMsg)
           }
 
-          customMsg.saveChanges()
-          customMsg.setMessageId(originalMsg.messageID ?: "")
-
-          MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
           processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_fetching_message, progress = 60.toDouble()))
 
           return@execute MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
