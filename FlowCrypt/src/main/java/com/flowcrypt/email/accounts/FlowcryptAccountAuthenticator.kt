@@ -84,14 +84,24 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
           accountManager.setAuthToken(account, authTokenType, null)
 
           val errorResponse = ApiHelper.parseAsError(context, apiResponse)
+          //https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow#error-codes-for-token-endpoint-errors
+          when (errorResponse?.error) {
+            "invalid_grant", "invalid_client", "consent_required" -> {
+              putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
+            }
+
+            else -> {
+              putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_NETWORK_ERROR)
+            }
+          }
+
           val errorMsg = errorResponse?.errorDescription
               ?: context.getString(R.string.could_not_fetch_access_token)
-          putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
           putString(AccountManager.KEY_ERROR_MESSAGE, errorMsg)
         }
       } catch (e: Exception) {
         return Bundle().apply {
-          putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
+          putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_NETWORK_ERROR)
           putString(AccountManager.KEY_ERROR_MESSAGE, e.message)
         }
       }
