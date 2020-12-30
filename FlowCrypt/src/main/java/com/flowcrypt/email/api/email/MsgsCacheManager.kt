@@ -18,6 +18,8 @@ import okhttp3.internal.io.FileSystem
 import okio.buffer
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import javax.crypto.CipherOutputStream
 import javax.mail.internet.MimeMessage
 
@@ -40,27 +42,14 @@ object MsgsCacheManager {
   }
 
   fun storeMsg(key: String, msg: MimeMessage) {
-    val editor = diskLruCache.edit(key) ?: return
+    storeMsgInternal(key) {
+      msg.writeTo(it)
+    }
+  }
 
-    val bufferedSink = editor.newSink().buffer()
-    val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
-    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
-    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
-    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
-
-    try {
-      outputStream.use {
-        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
-        outputStreamOfBufferedSink.write("\n".toByteArray())
-        msg.writeTo(it)
-        bufferedSink.flush()
-        editor.commit()
-      }
-
-      diskLruCache[key] ?: throw IOException("No space left on device")
-    } catch (e: SyncTaskTerminatedException) {
-      e.printStackTrace()
-      editor.abort()
+  fun storeMsg(key: String, inputStream: InputStream) {
+    storeMsgInternal(key) {
+      inputStream.copyTo(it)
     }
   }
 
@@ -84,5 +73,30 @@ object MsgsCacheManager {
   fun evictAll(context: Context?) {
     context ?: return
     diskLruCache.evictAll()
+  }
+
+  private fun storeMsgInternal(key: String, action: (outputStream: OutputStream) -> Unit) {
+    val editor = diskLruCache.edit(key) ?: return
+
+    val bufferedSink = editor.newSink().buffer()
+    val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
+    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
+    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
+
+    try {
+      outputStream.use {
+        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+        outputStreamOfBufferedSink.write("\n".toByteArray())
+        action.invoke(outputStream)
+        bufferedSink.flush()
+        editor.commit()
+      }
+
+      diskLruCache[key] ?: throw IOException("No space left on device")
+    } catch (e: SyncTaskTerminatedException) {
+      e.printStackTrace()
+      editor.abort()
+    }
   }
 }

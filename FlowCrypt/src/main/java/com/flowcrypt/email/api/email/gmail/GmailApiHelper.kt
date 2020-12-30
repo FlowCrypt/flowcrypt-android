@@ -7,13 +7,18 @@ package com.flowcrypt.email.api.email.gmail
 
 import android.accounts.Account
 import android.content.Context
+import android.util.Base64
+import android.util.Base64InputStream
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
+import java.io.InputStream
 
 /**
  * This class helps to work with Gmail API.
@@ -62,6 +67,21 @@ class GmailApiHelper {
      */
     private fun generateGoogleAccountCredential(context: Context, account: Account?): GoogleAccountCredential {
       return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES)).setSelectedAccount(account)
+    }
+
+    fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream {
+      val msgId = messageEntity.msgId ?: throw NullPointerException("msgId == null")
+      val gmailApiService = generateGmailApiService(context, account)
+
+      val message = gmailApiService
+          .users()
+          .messages()
+          .get(DEFAULT_USER_ID, msgId)
+          .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
+      message.fields = "raw"
+
+      return Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()), Base64.URL_SAFE)
+
     }
   }
 }

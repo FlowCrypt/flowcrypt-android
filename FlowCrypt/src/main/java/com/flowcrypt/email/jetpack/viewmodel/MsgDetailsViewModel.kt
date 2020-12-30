@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -473,6 +474,14 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot = withContext(Dispatchers.IO) {
     val accountEntity = getActiveAccountSuspend()
         ?: throw java.lang.NullPointerException("Account is null")
+
+    if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+      val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
+      MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+      return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+          ?: throw java.lang.NullPointerException("Message not found in the local cache")
+    }
+
     val connection = IMAPStoreManager.activeConnections[accountEntity.id]
     if (connection == null) {
       throw java.lang.NullPointerException("There is no active connection for ${accountEntity.email}")

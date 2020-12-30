@@ -9,7 +9,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
-import android.provider.BaseColumns
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -67,7 +66,9 @@ data class MessageEntity(
     @ColumnInfo(defaultValue = "-1") val state: Int? = null,
     @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
     @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
-    @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null
+    @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
+    @ColumnInfo(name = "msg_id", defaultValue = "NULL") val msgId: String? = null,
+    @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null
 ) : Parcelable {
 
   @Ignore
@@ -127,6 +128,8 @@ data class MessageEntity(
       parcel.readValue(Int::class.java.classLoader) as? Int,
       parcel.readString(),
       parcel.readString(),
+      parcel.readString(),
+      parcel.readString(),
       parcel.readString())
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -149,6 +152,8 @@ data class MessageEntity(
     parcel.writeString(attachmentsDirectory)
     parcel.writeString(errorMsg)
     parcel.writeString(replyTo)
+    parcel.writeString(msgId)
+    parcel.writeString(threadId)
   }
 
   override fun describeContents(): Int {

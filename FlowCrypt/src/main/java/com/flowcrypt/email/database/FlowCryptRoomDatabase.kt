@@ -79,7 +79,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 23
+    const val DB_VERSION = 24
 
     private val MIGRATION_1_3 = object : Migration(1, 3) {
       override fun migrate(database: SupportSQLiteDatabase) {
@@ -441,6 +441,23 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    /**
+     * Here we do preparation for https://github.com/FlowCrypt/flowcrypt-android/issues/932
+     */
+    @VisibleForTesting
+    private val MIGRATION_23_24 = object : Migration(23, 24) {
+      override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        try {
+          database.execSQL("ALTER TABLE messages ADD COLUMN msg_id TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN thread_id TEXT DEFAULT NULL;")
+          database.setTransactionSuccessful()
+        } finally {
+          database.endTransaction()
+        }
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -476,7 +493,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
                 MIGRATION_19_20,
                 MIGRATION_20_21,
                 MIGRATION_21_22,
-                MIGRATION_22_23)
+                MIGRATION_22_23,
+                MIGRATION_23_24)
             .build()
         INSTANCE = instance
         return instance
