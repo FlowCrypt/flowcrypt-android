@@ -15,6 +15,8 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.ui.activity.fragment.MainSignInFragment
+import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -40,14 +42,35 @@ class SignInActivity : BaseNodeActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    ErrorNotificationManager.isShowingAuthErrorEnabled = false
 
     accountAuthenticatorResponse = intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
     accountAuthenticatorResponse?.onRequestContinued()
 
     if (savedInstanceState == null) {
-      supportFragmentManager.beginTransaction().add(
-          R.id.fragmentContainerView, MainSignInFragment()).commitNow()
+      when (intent.action) {
+        ACTION_UPDATE_OAUTH_ACCOUNT -> {
+          supportFragmentManager.beginTransaction().add(
+              R.id.fragmentContainerView,
+              UserRecoverableAuthExceptionFragment().apply {
+                arguments = intent.extras
+              },
+              UserRecoverableAuthExceptionFragment::class.java.simpleName
+          ).commitNow()
+        }
+
+        else -> supportFragmentManager.beginTransaction().add(
+            R.id.fragmentContainerView,
+            MainSignInFragment(),
+            MainSignInFragment::class.java.simpleName
+        ).commitNow()
+      }
     }
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    ErrorNotificationManager.isShowingAuthErrorEnabled = true
   }
 
   override fun finish() {
@@ -65,14 +88,25 @@ class SignInActivity : BaseNodeActivity() {
 
   override fun onNewIntent(intent: Intent?) {
     super.onNewIntent(intent)
-    val fragment = supportFragmentManager
-        .findFragmentByTag(AddOtherAccountFragment::class.java.simpleName) as AddOtherAccountFragment?
+    val fragment = when (intent?.action) {
+      ACTION_UPDATE_OAUTH_ACCOUNT -> {
+        supportFragmentManager
+            .findFragmentByTag(UserRecoverableAuthExceptionFragment::class.java.simpleName) as UserRecoverableAuthExceptionFragment?
+      }
+
+      else -> {
+        supportFragmentManager
+            .findFragmentByTag(AddOtherAccountFragment::class.java.simpleName) as AddOtherAccountFragment?
+      }
+    }
+
     fragment?.handleOAuth2Intent(intent)
   }
 
   companion object {
     const val ACTION_ADD_ONE_MORE_ACCOUNT = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
+    const val ACTION_UPDATE_OAUTH_ACCOUNT = BuildConfig.APPLICATION_ID + ".ACTION_UPDATE_OAUTH_ACCOUNT"
 
     val KEY_EXTRA_NEW_ACCOUNT =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)

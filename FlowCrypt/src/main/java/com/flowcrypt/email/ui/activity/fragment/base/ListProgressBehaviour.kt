@@ -54,4 +54,11 @@ interface ListProgressBehaviour : ProgressBehaviour {
 
     emptyView?.visibility = View.VISIBLE
   }
+
+  fun updateEmptyViewText(msg: String?) {
+    val tVEmpty = emptyView?.findViewById<TextView>(R.id.tVEmpty)
+    msg?.let {
+      tVEmpty?.text = it
+    }
+  }
 }

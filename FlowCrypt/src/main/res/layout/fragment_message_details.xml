@@ -18,7 +18,6 @@
         android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/layoutContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -120,29 +119,37 @@
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:layout_weight="1">
 
-                <ProgressBar
-                    android:id="@id/viewIdProgressView"
-                    style="?android:attr/progressBarStyle"
+                <include
+                    android:id="@+id/progress"
+                    layout="@layout/progress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center" />
 
                 <include
-                    android:id="@+id/viewIdStatusView"
-                    layout="@layout/sync_status"
+                    android:id="@+id/status"
+                    layout="@layout/status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:visibility="gone" />
 
                 <LinearLayout
-                    android:id="@+id/layoutMessageContainer"
+                    android:id="@+id/layoutContent"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:paddingTop="@dimen/default_margin_small"
                     android:paddingBottom="@dimen/default_margin_small"
-                    android:visibility="gone">
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <com.flowcrypt.email.ui.widget.EmailWebView
+                        android:id="@+id/emailWebView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                    </com.flowcrypt.email.ui.widget.EmailWebView>
 
                     <LinearLayout
                         android:id="@+id/layoutMessageParts"
@@ -153,11 +160,16 @@
                         android:paddingTop="@dimen/default_margin_small"
                         android:paddingBottom="@dimen/default_margin_small">
 
-                        <com.flowcrypt.email.ui.widget.EmailWebView
-                            android:id="@+id/emailWebView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content" />
                     </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rVAttachments"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never"
+                        tools:itemCount="3"
+                        tools:listitem="@layout/attachment_item" />
 
                     <include
                         android:id="@+id/layoutReplyButtons"
@@ -171,14 +183,6 @@
             </FrameLayout>
         </LinearLayout>
     </com.flowcrypt.email.ui.widget.NonLockingScrollView>
-
-    <ProgressBar
-        android:id="@+id/progressBarActionRunning"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutActionProgress"

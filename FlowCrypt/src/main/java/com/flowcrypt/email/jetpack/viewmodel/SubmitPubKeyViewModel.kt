@@ -33,7 +33,7 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
   val submitPubKeyLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
   fun submitPubKey(account: AccountEntity, keys: List<NodeKeyDetails>) {
-    submitPubKeyLiveData.value = Result.loading(null)
+    submitPubKeyLiveData.value = Result.loading()
     val context: Context = getApplication()
 
     val keyDetails = keys.firstOrNull()

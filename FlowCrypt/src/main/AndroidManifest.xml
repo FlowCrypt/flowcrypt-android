@@ -10,16 +10,14 @@
 
     <!-- we use tools:ignore="LockedOrientationActivity" as for now we support android:screenOrientation="portrait" only-->
 
-    <!-- android.permission.INTERNET needed to make a network requests -->
+    <!-- android.permission.INTERNET is needed to make a network requests -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- android.permission.ACCESS_NETWORK_STATE used to check is internet connection available -->
+    <!-- android.permission.ACCESS_NETWORK_STATE is used to check is internet connection available-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- android.permission.READ_EXTERNAL_STORAGE used to import private keys -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- android.permission.WRITE_EXTERNAL_STORAGE used to save attachments -->
-    <!-- Temporary added tools:ignore="ScopedStorage" to fix lint warnings. Need to look at this in the near future-->
+    <!-- android.permission.WRITE_EXTERNAL_STORAGE is used to save attachments for Build.VERSION.SDK_INT <= Build.VERSION_CODES.P -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
         tools:ignore="ScopedStorage" />
     <!-- android.permission.RECEIVE_BOOT_COMPLETED will be used by JobScheduler to persists jobs after the device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -138,7 +136,9 @@
         <activity
             android:name=".ui.activity.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait">
+            <nav-graph android:value="@navigation/nav_graph" />
+        </activity>
 
         <activity
             android:name=".ui.activity.settings.LegalSettingsActivity"
@@ -245,10 +245,6 @@
             android:theme="@style/AppTheme.NoActionBar.Launcher" />
 
         <activity
-            android:name=".ui.activity.UserRecoverableAuthExceptionActivity"
-            android:launchMode="singleTask" />
-
-        <activity
             android:name=".ui.activity.EditContactActivity"
             android:screenOrientation="portrait" />
 
@@ -275,7 +271,7 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".service.EmailSyncService"
+            android:name=".service.IdleService"
             android:exported="false" />
 
         <service
@@ -293,12 +289,6 @@
 
         <service
             android:name=".service.PrepareOutgoingMessagesJobIntentService"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
-        <!--This service will be used for syncing (JobScheduler logic)-->
-        <service
-            android:name=".jobscheduler.SyncJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
@@ -327,8 +317,6 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver" />
     </application>
 
 </manifest>

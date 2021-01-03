@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,7 +16,6 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
@@ -26,6 +26,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
 
@@ -222,8 +223,29 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     }
   }
 
+  protected fun showAuthIssueHint(recoverableIntent: Intent? = null, duration: Int = Snackbar.LENGTH_LONG) {
+    val msgText = when (account?.accountType) {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> getString(R.string.auth_failure_hint, getString(R.string.app_name))
+      else -> getString(R.string.auth_failure_hint_regular_accounts)
+    }
+    showSnackbar(
+        view = requireView(),
+        msgText = msgText,
+        btnName = getString(R.string.fix),
+        duration = duration
+    ) {
+      context?.let { context ->
+        val intent = ErrorNotificationManager.getFixAuthIssueIntent(context, account, recoverableIntent)
+        if (intent.resolveActivity(context.packageManager) != null) {
+          startActivity(intent)
+        }
+      }
+    }
+  }
+
+
   private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, Observer {
+    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, {
       account = it
       isAccountInfoReceived = true
       onAccountInfoRefreshed(account)

@@ -6,14 +6,14 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.Manifest
+import android.accounts.AuthenticatorException
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.text.format.DateFormat
-import android.text.format.Formatter
 import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.Menu
@@ -33,7 +33,9 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -43,8 +45,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes
-import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
@@ -53,10 +54,14 @@ import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -64,17 +69,27 @@ import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.android.material.snackbar.Snackbar
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import kotlinx.android.synthetic.main.fragment_server_settings.*
 import java.io.File
 import java.nio.charset.StandardCharsets
+import javax.mail.AuthenticationFailedException
 
 /**
  * This fragment describe msgEntity of some message.
@@ -84,9 +99,35 @@ import java.nio.charset.StandardCharsets
  * Time: 16:29
  * E-mail: DenBond7@gmail.com
  */
-class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
+class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickListener {
+  override val progressView: View?
+    get() = view?.findViewById(R.id.progress)
+  override val contentView: View?
+    get() = view?.findViewById(R.id.layoutContent)
+  override val statusView: View?
+    get() = view?.findViewById(R.id.status)
 
-  private lateinit var onMsgDetailsListener: MessageDetailsListener
+  private val args by navArgs<MessageDetailsFragmentArgs>()
+  private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
+    MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
+  }
+
+  private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
+      object : AttachmentsRecyclerViewAdapter.Listener {
+        override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
+          lastClickedAtt = attachmentInfo
+          lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+              ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            lastClickedAtt?.let {
+              context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
+            }
+          } else {
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
+          }
+        }
+      })
 
   private var textViewSenderAddress: TextView? = null
   private var textViewDate: TextView? = null
@@ -96,9 +137,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var layoutContent: View? = null
   private var imageBtnReplyAll: ImageButton? = null
   private var imageBtnMoreOptions: View? = null
-  private var progressBarActionRunning: View? = null
-  override var contentView: View? = null
-    private set
   private var layoutReplyButton: View? = null
   private var layoutFwdButton: View? = null
   private var layoutReplyBtns: View? = null
@@ -106,13 +144,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var layoutActionProgress: View? = null
   private var textViewActionProgress: TextView? = null
   private var progressBarActionProgress: ProgressBar? = null
+  private var rVAttachments: RecyclerView? = null
 
   private var dateFormat: java.text.DateFormat? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val contactsViewModel: ContactsViewModel by viewModels()
-  private var atts = mutableListOf<AttachmentInfo>()
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
@@ -121,32 +159,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
 
-  private val msgDetailsViewModel: MsgDetailsViewModel?
-    get() = onMsgDetailsListener.getMsgDetailsViewModel()
-
-  private val msgEntity: MessageEntity?
-    get() = msgDetailsViewModel?.msgEntity
-
-  private val localFolder: LocalFolder?
-    get() = msgDetailsViewModel?.localFolder
-
   override val contentResourceId: Int = R.layout.fragment_message_details
-
-  override fun onAttach(context: Context) {
-    super.onAttach(context)
-    if (context is MessageDetailsListener) {
-      this.onMsgDetailsListener = context
-    } else
-      throw IllegalArgumentException(context.toString() + " must implement " +
-          MessageDetailsListener::class.java.simpleName)
-  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    dateFormat = DateFormat.getTimeFormat(context)
+    dateFormat = DateFormat.getTimeFormat(requireContext())
 
-    updateActionsVisibility(localFolder, null)
+    updateActionsVisibility(args.localFolder, null)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -155,6 +175,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     updateViews()
 
     setupLabelsViewModel()
+    setupMsgDetailsViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -162,10 +183,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
         Activity.RESULT_OK -> {
           Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
-          UIUtil.exchangeViewVisibility(true, progressView, contentView)
-
-          val activity = baseActivity as MessageDetailsActivity
-          activity.decryptMsg()
         }
       }
 
@@ -184,7 +201,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
-            msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
+            msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
           }
         }
       }
@@ -209,15 +226,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
     menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
     menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
-    menuActionMarkUnread?.isVisible = !JavaEmailConstants.FOLDER_OUTBOX.equals(msgEntity?.folder,
-        ignoreCase = true)
+    menuActionMarkUnread?.isVisible = !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
 
     menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
     menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
     menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
     menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
 
-    localFolder?.searchQuery?.let {
+    args.localFolder.searchQuery.let {
       menuItemArchiveMsg?.isVisible = false
       menuItemDeleteMsg?.isVisible = false
       menuActionMoveToInbox?.isVisible = false
@@ -228,24 +244,24 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuActionArchiveMessage -> {
-        msgDetailsViewModel?.changeMsgState(MessageState.PENDING_ARCHIVING)
+        msgDetailsViewModel.changeMsgState(MessageState.PENDING_ARCHIVING)
         true
       }
 
       R.id.menuActionDeleteMessage -> {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equals(msgEntity?.folder, ignoreCase = true)) {
-          val msgEntity = msgDetailsViewModel?.msgLiveData?.value
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
+          val msgEntity = args.messageEntity
 
-          msgEntity?.let {
+          msgEntity.let {
             if (msgEntity.msgState === MessageState.SENDING) {
               Toast.makeText(context, R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
             } else {
-              msgDetailsViewModel?.deleteMsg()
+              msgDetailsViewModel.deleteMsg()
               Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
             }
           }
         } else {
-          if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+          if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
             showTwoWayDialog(
                 dialogTitle = "",
                 dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_msg_question, 1, 1),
@@ -254,19 +270,19 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
                 requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG
             )
           } else {
-            msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING)
+            msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
           }
         }
         true
       }
 
       R.id.menuActionMoveToInbox -> {
-        msgDetailsViewModel?.changeMsgState(MessageState.PENDING_MOVE_TO_INBOX)
+        msgDetailsViewModel.changeMsgState(MessageState.PENDING_MOVE_TO_INBOX)
         true
       }
 
       R.id.menuActionMarkUnread -> {
-        msgDetailsViewModel?.changeMsgState(MessageState.PENDING_MARK_UNREAD)
+        msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_UNREAD)
         true
       }
 
@@ -312,14 +328,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          if (atts.isNotEmpty()) {
+          if (attachmentsRecyclerViewAdapter.currentList.isNotEmpty()) {
             Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
           }
         } else {
-          for (att in atts) {
-            att.isForwarded = true
-          }
-          msgInfo?.atts = atts
+          msgInfo?.atts = attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
         }
 
         startActivity(CreateMessageActivity.generateIntent(
@@ -328,28 +341,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
   }
 
-  override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
-    super.onErrorOccurred(requestCode, errorType, e)
-    isAdditionalActionEnabled = true
-    UIUtil.exchangeViewVisibility(false, progressBarActionRunning, layoutContent)
-    activity?.invalidateOptionsMenu()
-
-    when (requestCode) {
-      R.id.syns_request_code_load_raw_mime_msg -> when (errorType) {
-        SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> {
-          showConnLostHint()
-          return
-        }
-      }
-    }
-  }
-
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
-        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          AttachmentDownloadManagerService.newIntent(context, lastClickedAtt)?.let {
-            context?.startService(it)
+        if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+          lastClickedAtt?.let {
+            context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
           }
         } else {
           Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
@@ -365,44 +362,22 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    *
    * @param msgInfo An incoming message info
    */
-  fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
+  private fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
     imageBtnReplyAll?.visibility = View.VISIBLE
     imageBtnMoreOptions?.visibility = View.VISIBLE
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
-    msgInfo.localFolder = localFolder
+    msgInfo.localFolder = args.localFolder
 
     msgInfo.inlineSubject?.let { textViewSubject?.text = it }
 
     updateMsgBody()
-    UIUtil.exchangeViewVisibility(false, progressView, contentView)
+    showContent()
   }
 
-  /**
-   * Show info about an error.
-   */
-  fun showErrorInfo(apiError: ApiError?, e: Throwable?) {
-    when {
-      apiError != null -> textViewStatusInfo?.text = apiError.msg
-      e != null -> textViewStatusInfo?.text = e.message
-      else -> textViewStatusInfo?.setText(R.string.unknown_error)
-    }
-
-    UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
-  }
-
-  fun onMsgDetailsUpdated() {
-    updateViews()
-  }
-
-  fun updateAttInfos(attInfoList: List<AttachmentInfo>) {
-    this.atts.addAll(attInfoList)
-    showAttsIfTheyExist()
-  }
-
-  fun setActionProgress(progress: Int, message: String?) {
+  private fun setActionProgress(progress: Int, message: String? = null) {
     if (progress > 0) {
       progressBarActionProgress?.progress = progress
     }
@@ -419,16 +394,15 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun updateMsgBody() {
     if (msgInfo != null) {
       updateMsgView()
-      showAttsIfTheyExist()
     }
   }
 
   private fun showConnLostHint() {
     showSnackbar(requireView(), getString(R.string.failed_load_message_from_email_server),
-        getString(R.string.retry), View.OnClickListener {
+        getString(R.string.retry)) {
       UIUtil.exchangeViewVisibility(true, progressView, statusView)
-      (baseActivity as MessageDetailsActivity).loadMsgDetails()
-    })
+
+    }
   }
 
   private fun makeAttsProtected(atts: List<AttachmentInfo>) {
@@ -441,7 +415,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private fun showSendersPublicKeyDialog() {
-    val fragment = ChoosePublicKeyDialogFragment.newInstance(msgEntity!!.email,
+    val fragment = ChoosePublicKeyDialogFragment.newInstance(args.messageEntity.email,
         ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings)
     fragment.setTargetFragment(this@MessageDetailsFragment, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION)
     fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
@@ -526,13 +500,48 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       isDeleteActionEnabled = false
     }
 
-    when (msgEntity?.msgState) {
+    when (args.messageEntity.msgState) {
       MessageState.PENDING_ARCHIVING -> isArchiveActionEnabled = false
       else -> {
       }
     }
 
     activity?.invalidateOptionsMenu()
+  }
+
+  private fun updateActionBar(messageEntity: MessageEntity) {
+    var actionBarTitle: String? = null
+    var actionBarSubTitle: String? = null
+
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+      actionBarTitle = getString(R.string.outgoing)
+      actionBarSubTitle = when (messageEntity.msgState) {
+        MessageState.NEW, MessageState.NEW_FORWARDED -> getString(R.string.preparing)
+
+        MessageState.QUEUED, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER -> getString(R.string.queued)
+
+        MessageState.SENDING -> getString(R.string.sending)
+
+        MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> getString(R.string.sent)
+
+        MessageState.ERROR_CACHE_PROBLEM,
+        MessageState.ERROR_DURING_CREATION,
+        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+        MessageState.ERROR_SENDING_FAILED,
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> getString(R.string.an_error_has_occurred)
+
+        else -> null
+      }
+    } else when (messageEntity.msgState) {
+      MessageState.PENDING_ARCHIVING -> actionBarTitle = getString(R.string.pending)
+      else -> {
+      }
+    }
+
+    supportActionBar?.title = actionBarTitle
+    supportActionBar?.subtitle = actionBarSubTitle
   }
 
   private fun initViews(view: View) {
@@ -545,9 +554,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     textViewSubject = view.findViewById(R.id.textViewSubject)
     viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader)
     layoutMsgParts = view.findViewById(R.id.layoutMessageParts)
-    contentView = view.findViewById(R.id.layoutMessageContainer)
     layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons)
-    progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning)
     emailWebView = view.findViewById(R.id.emailWebView)
 
     layoutContent = view.findViewById(R.id.layoutContent)
@@ -555,96 +562,39 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     imageBtnReplyAll?.setOnClickListener(this)
     imageBtnMoreOptions = view.findViewById(R.id.imageButtonMoreOptions)
     imageBtnMoreOptions?.setOnClickListener(this)
+
+    rVAttachments = view.findViewById(R.id.rVAttachments)
   }
 
   private fun updateViews() {
-    msgEntity?.let {
-      val subject = if (TextUtils.isEmpty(it.subject)) getString(R.string.no_subject) else
-        it.subject
+    rVAttachments?.layoutManager = LinearLayoutManager(requireContext())
+    rVAttachments?.adapter = attachmentsRecyclerViewAdapter
+    rVAttachments?.addItemDecoration(
+        MarginItemDecoration(marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)))
 
-      if (folderType === FoldersManager.FolderType.SENT) {
-        textViewSenderAddress?.text = EmailUtil.getFirstAddressString(it.to)
-      } else {
-        textViewSenderAddress?.text = EmailUtil.getFirstAddressString(it.from)
-      }
-      textViewSubject?.text = subject
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(it.folder, ignoreCase = true)) {
-        textViewDate?.text = DateTimeUtil.formatSameDayTime(context, it.sentDate ?: 0)
-      } else {
-        textViewDate?.text = DateTimeUtil.formatSameDayTime(context, it.receivedDate ?: 0)
-      }
+    val subject = if (TextUtils.isEmpty(args.messageEntity.subject)) getString(R.string.no_subject) else
+      args.messageEntity.subject
+
+    if (folderType === FoldersManager.FolderType.SENT) {
+      textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
+    } else {
+      textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.from)
+    }
+    textViewSubject?.text = subject
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
+      textViewDate?.text = DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
+    } else {
+      textViewDate?.text = DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate
+          ?: 0)
     }
 
     updateMsgBody()
   }
 
-  private fun showAttsIfTheyExist() {
-    if (atts.size > 0) {
-      val layoutInflater = LayoutInflater.from(context)
-
-      for (att in atts) {
-        val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false)
-
-        if (att.isDecrypted) {
-          rootView.setBackgroundResource(R.drawable.bg_att_decrypted)
-        }
-
-        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
-        textViewAttName.text = att.getSafeName()
-
-        val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
-        textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
-
-        val button = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
-        button.setOnClickListener(getDownloadAttClickListener(att))
-
-        if (att.uri != null) {
-          val layoutAtt = rootView.findViewById<View>(R.id.layoutAtt)
-          layoutAtt.setOnClickListener(getOpenFileClickListener(att, button))
-        }
-
-        layoutMsgParts?.addView(rootView)
-      }
-    }
-  }
-
-  private fun getOpenFileClickListener(att: AttachmentInfo, button: View): View.OnClickListener {
-    return View.OnClickListener {
-      if (att.uri?.lastPathSegment?.endsWith(Constants.PGP_FILE_EXT) == true) {
-        button.performClick()
-      } else {
-        val intentOpenFile = Intent(Intent.ACTION_VIEW, att.uri)
-        intentOpenFile.action = Intent.ACTION_VIEW
-        intentOpenFile.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        if (intentOpenFile.resolveActivity(requireContext().packageManager) != null) {
-          startActivity(intentOpenFile)
-        }
-      }
-    }
-  }
-
-  private fun getDownloadAttClickListener(att: AttachmentInfo): View.OnClickListener {
-    return View.OnClickListener {
-      lastClickedAtt = att
-      lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
-      val isPermissionGranted = ContextCompat.checkSelfPermission(requireContext(),
-          Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-      if (isPermissionGranted) {
-        requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
-      } else {
-        context?.startService(AttachmentDownloadManagerService.newIntent(context, lastClickedAtt!!))
-      }
-    }
-  }
-
   private fun updateMsgView() {
+    val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
     emailWebView?.loadUrl("about:blank")
-    val childCount = layoutMsgParts?.childCount ?: 0
-    if (childCount > 1) {
-      layoutMsgParts?.removeViews(1, childCount - 1)
-    }
+    layoutMsgParts?.removeAllViews()
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
@@ -687,7 +637,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
             att.uri?.path?.let {
               att.uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, File(it))
             }
-            atts.add(att)
+
+            inlineEncryptedAtts.add(att)
           }
         }
 
@@ -699,6 +650,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     if (!isHtmlDisplayed) {
       updateReplyButtons()
+    }
+
+    if (inlineEncryptedAtts.isNotEmpty()) {
+      inlineEncryptedAtts.addAll(attachmentsRecyclerViewAdapter.currentList)
+      attachmentsRecyclerViewAdapter.submitList(inlineEncryptedAtts)
     }
   }
 
@@ -806,7 +762,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
         GeneralUtil.doSectionsInText(" ", keyDetails?.fingerprint, 4)), fingerprint)
 
-    textViewPgpPublicKey.text = block.content
+    textViewPgpPublicKey.text = clipLargeText(block.content)
 
     val existingPgpContact = block.existingPgpContact
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
@@ -888,7 +844,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private fun genDefPart(block: MsgBlock, inflater: LayoutInflater, res: Int, viewGroup: ViewGroup?): TextView {
     val textViewMsgPartOther = inflater.inflate(res, viewGroup, false) as TextView
-    textViewMsgPartOther.text = block.content
+    textViewMsgPartOther.text = clipLargeText(block.content)
     return textViewMsgPartOther
   }
 
@@ -904,23 +860,23 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     val decryptError = block.error ?: return View(context)
 
     when (decryptError.details?.type) {
-      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(block.content, layoutInflater)
+      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(clipLargeText(block.content), layoutInflater)
 
       DecryptErrorDetails.Type.FORMAT -> {
         val formatErrorMsg = (getString(R.string.decrypt_error_message_badly_formatted,
             getString(R.string.app_name)) + "\n\n"
             + decryptError.details.type + ": " + decryptError.details.message)
-        return getView(block.content, formatErrorMsg, layoutInflater)
+        return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
       }
 
       DecryptErrorDetails.Type.OTHER -> {
         val otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
             "\n\n" + getString(R.string.decrypt_error_please_write_me, getString(R.string.support_email)) +
             "\n\n" + decryptError.details.type + ": " + decryptError.details.message
-        return getView(block.content, otherErrorMsg, layoutInflater)
+        return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 
-      else -> return getView(block.content, getString(R.string.could_not_decrypt_message_due_to_error,
+      else -> return getView(clipLargeText(block.content), getString(R.string.could_not_decrypt_message_due_to_error,
           decryptError.details?.type.toString() + ": " + decryptError.details?.message),
           layoutInflater)
     }
@@ -1002,13 +958,149 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, Observer {
-      updateActionsVisibility(localFolder, it)
+    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, {
+      updateActionsVisibility(args.localFolder, it)
     })
   }
 
-  interface MessageDetailsListener {
-    fun getMsgDetailsViewModel(): MsgDetailsViewModel?
+  private fun setupMsgDetailsViewModel() {
+    observeFreshMsgLiveData()
+    observerIncomingMessageInfoLiveData()
+    observeAttsLiveData()
+    observerMsgStatesLiveData()
+  }
+
+  private fun observeFreshMsgLiveData() {
+    msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner, {
+      it?.let { messageEntity -> updateActionBar(messageEntity) }
+    })
+  }
+
+  private fun observerIncomingMessageInfoLiveData() {
+    msgDetailsViewModel.incomingMessageInfoLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress()
+
+          val value = it.progress?.toInt() ?: 0
+
+          if (value == 0) {
+            baseActivity.countingIdlingResource.incrementSafely()
+          }
+
+          when (it.resultCode) {
+            R.id.progress_id_connecting -> setActionProgress(value, "Connecting")
+
+            R.id.progress_id_fetching_message -> setActionProgress(value, "Fetching message")
+
+            R.id.progress_id_processing -> setActionProgress(value, "Processing")
+
+            R.id.progress_id_rendering -> setActionProgress(value, "Rendering")
+          }
+        }
+
+        Result.Status.SUCCESS -> {
+          showContent()
+          it.data?.let { incomingMsgInfo ->
+            showIncomingMsgInfo(incomingMsgInfo)
+          }
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.EXCEPTION -> {
+          setActionProgress(100)
+
+          when (it.exception) {
+            is CommonConnectionException -> {
+              showStatus(getString(R.string.connection_lost))
+            }
+
+            is UserRecoverableAuthException -> {
+              showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+            }
+
+            is UserRecoverableAuthIOException -> {
+              showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+            }
+
+            is AuthenticationFailedException -> {
+              showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+            }
+
+            is AuthenticatorException -> {
+              showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
+              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+            }
+
+            else -> {
+              showStatus(msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error))
+            }
+          }
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        else -> {
+          setActionProgress(100)
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+      }
+    })
+  }
+
+  private fun observeAttsLiveData() {
+    msgDetailsViewModel.attsLiveData.observe(viewLifecycleOwner, { list ->
+      val attachmentInfoList = list.map {
+        if (args.localFolder.searchQuery.isNullOrEmpty()) {
+          it.toAttInfo()
+        } else {
+          it.toAttInfo().copy(folder = args.localFolder.fullName)
+        }
+      }.toMutableList()
+
+      attachmentsRecyclerViewAdapter.submitList(attachmentInfoList)
+      if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
+        msgDetailsViewModel.fetchAttachments()
+      }
+    })
+  }
+
+  private fun observerMsgStatesLiveData() {
+    msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, { newState ->
+      var finishActivity = true
+      val syncActivity = activity as? BaseSyncActivity
+      syncActivity?.let {
+        with(syncActivity) {
+          when (newState) {
+            MessageState.PENDING_ARCHIVING -> archiveMsgs()
+            MessageState.PENDING_DELETING -> deleteMsgs()
+            MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
+            MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
+            MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
+            MessageState.PENDING_MARK_READ -> {
+              changeMsgsReadState()
+              finishActivity = false
+            }
+            else -> {
+            }
+          }
+        }
+      }
+
+      if (finishActivity) {
+        activity?.finish()
+      }
+    })
+  }
+
+  private fun messageNotAvailableInFolder(showToast: Boolean = true) {
+    msgDetailsViewModel.deleteMsg()
+    if (showToast) {
+      toast(R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG)
+    }
   }
 
   companion object {

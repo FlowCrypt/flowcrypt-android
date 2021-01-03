@@ -21,6 +21,8 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showDialogFragment
+import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
@@ -42,28 +44,26 @@ import com.google.android.material.snackbar.Snackbar
  * E-mail: DenBond7@gmail.com
  */
 class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
-  private var privateKeysFromEmailBackups: ArrayList<NodeKeyDetails>? = null
+  private val backupsViewModel: BackupsViewModel by viewModels()
+  private var privateKeysFromEmailBackups = mutableListOf<NodeKeyDetails>()
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
   private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
 
   private var layoutSyncStatus: View? = null
   private var buttonImportBackup: Button? = null
 
-  private var isLoadPrivateKeysRequestSent: Boolean = false
-
   private val submitPubKeyViewModel: SubmitPubKeyViewModel by viewModels()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_private_key
 
-  override val isPrivateKeyMode: Boolean
-    get() = true
+  override val isPrivateKeyMode: Boolean = true
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (isSyncEnabled && GeneralUtil.isConnected(this)) {
+    if (intent.getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true) && GeneralUtil.isConnected(this)) {
       textViewProgressText.setText(R.string.loading_backups)
-      UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+      initSearchBackupsInEmailViewModel()
     } else {
       hideImportButton()
       UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
@@ -77,65 +77,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     super.initViews()
     this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus)
     this.buttonImportBackup = findViewById(R.id.buttonImportBackup)
-    this.buttonImportBackup!!.setOnClickListener(this)
-  }
-
-  override fun onSyncServiceConnected() {
-    if (!isLoadPrivateKeysRequestSent) {
-      isLoadPrivateKeysRequestSent = true
-      loadPrivateKeys(R.id.syns_load_private_keys)
-    }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-    when (requestCode) {
-      R.id.syns_load_private_keys -> {
-        if (privateKeysFromEmailBackups == null) {
-          val keys = obj as ArrayList<NodeKeyDetails>?
-          if (keys != null) {
-            if (keys.isNotEmpty()) {
-              this.privateKeysFromEmailBackups = keys
-
-              val uniqueKeysLongIds = filterKeys()
-
-              if (this.privateKeysFromEmailBackups!!.isEmpty()) {
-                hideImportButton()
-              } else {
-                buttonImportBackup!!.text = resources.getQuantityString(
-                    R.plurals.import_keys, uniqueKeysLongIds.size)
-                textViewTitle.text = resources.getQuantityString(
-                    R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size)
-              }
-            } else {
-              hideImportButton()
-            }
-          } else {
-            hideImportButton()
-          }
-          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        }
-      }
-    }
-
-    super.onReplyReceived(requestCode, resultCode, obj)
-  }
-
-  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-    when (requestCode) {
-      R.id.syns_load_private_keys -> {
-        hideImportButton()
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutSyncStatus)
-        UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(android.R.string.ok), {
-          layoutSyncStatus?.visibility = View.GONE
-          UIUtil.exchangeViewVisibility(
-              false, layoutProgress, layoutContentView)
-        })
-      }
-    }
-
-    super.onErrorHappened(requestCode, errorType, e)
+    this.buttonImportBackup?.setOnClickListener(this)
   }
 
   override fun onClick(v: View) {
@@ -146,7 +88,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
           keyDetailsType = KeyDetails.Type.EMAIL
           startActivityForResult(CheckKeysActivity.newIntent(
               context = this,
-              privateKeys = privateKeysFromEmailBackups!!,
+              privateKeys = ArrayList(privateKeysFromEmailBackups),
               type = KeyDetails.Type.EMAIL,
               positiveBtnTitle = getString(R.string.continue_),
               negativeBtnTitle = getString(R
@@ -291,9 +233,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   }
 
   private fun hideImportButton() {
-    buttonImportBackup!!.visibility = View.GONE
-    val marginLayoutParams = buttonLoadFromFile
-        .layoutParams as ViewGroup.MarginLayoutParams
+    buttonImportBackup?.visibility = View.GONE
+    val marginLayoutParams = buttonLoadFromFile.layoutParams as ViewGroup.MarginLayoutParams
     marginLayoutParams.topMargin = resources.getDimensionPixelSize(R.dimen
         .margin_top_first_button)
     buttonLoadFromFile.requestLayout()
@@ -302,7 +243,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private fun filterKeys(): Set<String> {
     val connector = KeysStorageImpl.getInstance(this)
 
-    val iterator = privateKeysFromEmailBackups!!.iterator()
+    val iterator = privateKeysFromEmailBackups.iterator()
     val uniqueKeysLongIds = HashSet<String>()
 
     while (iterator.hasNext()) {
@@ -393,6 +334,53 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     })
   }
 
+  private fun initSearchBackupsInEmailViewModel() {
+    backupsViewModel.onlineBackupsLiveData.observe(this, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          countingIdlingResource.incrementSafely()
+          UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+        }
+
+        Result.Status.SUCCESS -> {
+          val keys = it.data
+          privateKeysFromEmailBackups.clear()
+          if (keys != null) {
+            if (keys.isNotEmpty()) {
+              privateKeysFromEmailBackups.addAll(keys)
+
+              val uniqueKeysLongIds = filterKeys()
+
+              if (privateKeysFromEmailBackups.isEmpty()) {
+                hideImportButton()
+              } else {
+                buttonImportBackup?.text = resources.getQuantityString(R.plurals.import_keys, uniqueKeysLongIds.size)
+                textViewTitle.text = resources.getQuantityString(R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size)
+              }
+            } else {
+              hideImportButton()
+            }
+          } else {
+            hideImportButton()
+          }
+          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+          countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.EXCEPTION -> {
+          hideImportButton()
+          toast(R.string.error_occurred_while_receiving_private_keys)
+          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+          countingIdlingResource.decrementSafely()
+        }
+
+        else -> {
+          countingIdlingResource.decrementSafely()
+        }
+      }
+    })
+  }
+
   private fun handleSuccessSubmit() {
     textViewProgressText.setText(R.string.saving_prv_keys)
     privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, keyDetailsType, intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false))
@@ -415,7 +403,15 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
                   isSubmittingPubKeysEnabled: Boolean = true,
                   skipImportedKeys: Boolean = false,
                   addAccountIfNotExist: Boolean = false): Intent {
-      val intent = newIntent(context, accountEntity, isSyncEnabled, title, model, throwErrorIfDuplicateFoundEnabled, cls)
+      val intent = newIntent(
+          context = context,
+          accountEntity = accountEntity,
+          isSyncEnabled = isSyncEnabled,
+          title = title,
+          model = model,
+          throwErrorIfDuplicateFoundEnabled = throwErrorIfDuplicateFoundEnabled,
+          cls = cls
+      )
       intent.putExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, isSubmittingPubKeysEnabled)
       intent.putExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, skipImportedKeys)
       intent.putExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, addAccountIfNotExist)

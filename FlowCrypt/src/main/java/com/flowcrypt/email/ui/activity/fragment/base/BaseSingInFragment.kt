@@ -10,6 +10,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
+import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -17,8 +18,9 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
@@ -31,7 +33,7 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 6:29 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSingInFragment : BaseFragment(), ProgressBehaviour {
+abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   protected val existedAccounts = mutableListOf<AccountEntity>()
@@ -96,6 +98,7 @@ abstract class BaseSingInFragment : BaseFragment(), ProgressBehaviour {
           if (it.data == true) {
             //clear LiveData value to prevent duplicate running
             accountViewModel.addNewAccountLiveData.value = Result.success(null)
+            context?.let { context -> WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC) }
 
             getTempAccount()?.let { accountEntity ->
               privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)
@@ -126,7 +129,7 @@ abstract class BaseSingInFragment : BaseFragment(), ProgressBehaviour {
   }
 
   protected open fun runEmailManagerActivity() {
-    EmailSyncService.startEmailSyncService(requireContext())
+    IdleService.start(requireContext())
     getTempAccount()?.let { roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email)) }
     EmailManagerActivity.runEmailManagerActivity(requireContext())
     activity?.finish()

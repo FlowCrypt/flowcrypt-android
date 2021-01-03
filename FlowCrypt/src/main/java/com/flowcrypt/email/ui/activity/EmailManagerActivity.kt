@@ -8,9 +8,12 @@ package com.flowcrypt.email.ui.activity
 import android.accounts.Account
 import android.app.Activity
 import android.app.SearchManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.Menu
@@ -28,9 +31,9 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import androidx.work.WorkManager
 import com.bumptech.glide.request.RequestOptions
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -49,9 +52,10 @@ import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
@@ -104,8 +108,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private var switchView: SwitchMaterial? = null
   private var isForceSendingEnabled: Boolean = true
 
-  override val isSyncEnabled: Boolean
-    get() = true
+  private val idleServiceConnection = object : ServiceConnection {
+    override fun onServiceConnected(className: ComponentName, service: IBinder) {}
+    override fun onServiceDisconnected(arg0: ComponentName) {}
+  }
 
   override val rootView: View
     get() = drawerLayout ?: View(this)
@@ -118,18 +124,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    updateLabels()
+    IdleService.bind(this, idleServiceConnection)
     initViews()
     setupLabelsViewModel()
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
-    accountViewModel.nonActiveAccountsLiveData.observe(this, Observer {
+    accountViewModel.nonActiveAccountsLiveData.observe(this, {
       genAccountsLayout(it)
     })
 
-    msgsViewModel.outboxMsgsLiveData.observe(this, Observer {
+    msgsViewModel.outboxMsgsLiveData.observe(this, {
       val msgsCount = it.size
       toolbar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
-        getString(R.string.outbox_msgs_count, msgsCount)
+        resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
       } else null
 
       isForceSendingEnabled = msgsCount > 0
@@ -158,6 +166,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onDestroy() {
     super.onDestroy()
+    unbindService(idleServiceConnection)
     actionBarDrawerToggle?.let { drawerLayout?.removeDrawerListener(it) }
   }
 
@@ -277,9 +286,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> {
           countingIdlingResource.incrementSafely()
-          disconnectFromSyncService()
           finish()
-          EmailSyncService.switchAccount(this@EmailManagerActivity)
+          IdleService.restart(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
           countingIdlingResource.decrementSafely()
         }
@@ -305,68 +313,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
-  }
-
-  override fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    switchView?.isEnabled = false
-    super.loadNextMsgs(requestCode, localFolder, alreadyLoadedMsgsCount)
-  }
-
-  override fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
-    switchView?.isEnabled = false
-    super.refreshMsgs(requestCode, currentLocalFolder)
-  }
-
-  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-    when (requestCode) {
-      R.id.syns_request_code_refresh_msgs -> {
-        switchView?.isEnabled = true
-        onRefreshMsgsCompleted()
-      }
-
-      R.id.syns_request_code_load_next_messages -> {
-        switchView?.isEnabled = true
-        onFetchMsgsCompleted()
-      }
-
-      else -> {
-      }
-    }
-
-    super.onReplyReceived(requestCode, resultCode, obj)
-  }
-
-  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-    when (requestCode) {
-      R.id.syns_request_code_refresh_msgs -> {
-        switchView?.isEnabled = true
-        onErrorOccurred(requestCode, errorType, e)
-        onRefreshMsgsCompleted()
-      }
-
-      R.id.syns_request_code_update_labels -> {
-        onErrorOccurred(requestCode, errorType, e)
-      }
-
-      R.id.syns_request_code_load_next_messages -> {
-        switchView?.isEnabled = true
-        onFetchMsgsCompleted()
-      }
-
-      R.id.syns_request_empty_trash -> {
-        toast(R.string.emptying_trash_failed)
-      }
-
-      else -> {
-      }
-    }
-
-    super.onErrorHappened(requestCode, errorType, e)
-  }
-
-  override fun onSyncServiceConnected() {
-    super.onSyncServiceConnected()
-    updateLabels(R.id.syns_request_code_update_labels)
   }
 
   override fun onBackPressed() {
@@ -448,9 +394,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       if (it.isOutbox()) {
         toolbar?.subtitle = null
       } else {
-        val msgCount = msgsViewModel.outboxMsgsLiveData.value?.size
-        toolbar?.subtitle = if (msgCount != null && msgCount > 0) {
-          getString(R.string.outbox_msgs_count, msgCount)
+        val msgsCount = msgsViewModel.outboxMsgsLiveData.value?.size
+        toolbar?.subtitle = if (msgsCount != null && msgsCount > 0) {
+          resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
         } else null
       }
     }
@@ -462,7 +408,19 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         when (result) {
           TwoWayDialogFragment.RESULT_OK -> {
             if (isForceSendingEnabled) {
-              MessagesSenderWorker.enqueue(applicationContext, true)
+              lifecycleScope.launch {
+                val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
+                activeAccount?.let { accountEntity ->
+                  roomDatabase.msgDao().changeMsgsStateSuspend(
+                      account = accountEntity.email,
+                      label = JavaEmailConstants.FOLDER_OUTBOX,
+                      oldValue = MessageState.AUTH_FAILURE.value,
+                      newValues = MessageState.QUEUED.value
+                  )
+                }
+
+                MessagesSenderWorker.enqueue(applicationContext, true)
+              }
             }
           }
         }
@@ -472,7 +430,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         when (result) {
           TwoWayDialogFragment.RESULT_OK -> {
             if (GeneralUtil.isConnected(this)) {
-              emptyTrash(R.id.syns_request_empty_trash)
+              emptyTrash()
             } else {
               showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
             }
@@ -484,12 +442,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   private fun showGmailSignIn() {
     showSnackbar(rootView, getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-        Snackbar.LENGTH_INDEFINITE, View.OnClickListener { onRetryGoogleAuth() })
+        Snackbar.LENGTH_INDEFINITE) { onRetryGoogleAuth() }
   }
 
   private fun doLogout() {
-    disconnectFromSyncService()
-
     activeAccount?.let {
       if (it.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
     }
@@ -652,28 +608,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     view.setOnClickListener {
       lifecycleScope.launch {
-        disconnectFromSyncService()
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
+        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
         roomDatabase.accountDao().switchAccountSuspend(account)
-        EmailSyncService.switchAccount(this@EmailManagerActivity)
+        finish()
+        IdleService.restart(this@EmailManagerActivity)
         runEmailManagerActivity(this@EmailManagerActivity)
       }
-      finish()
     }
 
     return view
   }
 
-  private fun onFetchMsgsCompleted() {
-    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onFetchMsgsCompleted()
-  }
-
-  private fun onRefreshMsgsCompleted() {
-    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onRefreshMsgsCompleted()
-  }
-
   private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(this, Observer {
+    labelsViewModel.foldersManagerLiveData.observe(this, {
       this.foldersManager = it
 
       if (foldersManager?.allFolders?.isNotEmpty() == true) {
@@ -730,7 +678,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         invalidateOptionsMenu()
 
         if (currentFolder?.isOutbox() == true) {
-          ErrorNotificationManager(this).cancel(ErrorNotificationManager.NOTIFICATION_ID_HAS_FAILED_OUTGOING_MSGS)
+          ErrorNotificationManager(this).cancel(R.id.notification_id_has_failed_outgoing_msgs)
         }
       }
     }
@@ -768,7 +716,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       super.onDrawerOpened(drawerView)
 
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
-        updateLabels(R.id.syns_request_code_update_labels)
+        updateLabels()
       }
 
       labelsViewModel.updateOutboxMsgsCount()

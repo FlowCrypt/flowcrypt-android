@@ -148,7 +148,8 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
             val updateResult = roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = msgState.value))
             if (updateResult > 0) {
               if (msgState != MessageState.QUEUED) {
-                val failedOutgoingMsgsCount = roomDatabase.msgDao().getFailedOutgoingMsgsCountSuspend(account.email)
+                val failedOutgoingMsgsCount = roomDatabase.msgDao()
+                    .getFailedOutgoingMsgsCountSuspend(account.email) ?: 0
                 if (failedOutgoingMsgsCount > 0) {
                   ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(account, failedOutgoingMsgsCount)
                 }

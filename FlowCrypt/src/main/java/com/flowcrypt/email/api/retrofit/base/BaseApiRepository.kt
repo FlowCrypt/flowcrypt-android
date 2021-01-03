@@ -46,7 +46,7 @@ interface BaseApiRepository {
             Result.success(data = body, requestCode = requestCode)
           }
         } else {
-          Result.exception(error = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+          Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
         }
       } else {
         val apiResponseWithError = parseError(context, expectedResultClass, response)
@@ -55,18 +55,18 @@ interface BaseApiRepository {
             return if (apiResponseWithError.apiError != null) {
               Result.error(data = apiResponseWithError, requestCode = requestCode)
             } else {
-              Result.exception(error = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+              Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
             }
           } else {
-            Result.exception(error = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+            Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
           }
         } else {
-          Result.exception(error = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+          Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
         }
       }
     } catch (e: Exception) {
       e.printStackTrace()
-      Result.exception(error = e, requestCode = requestCode)
+      Result.exception(throwable = e, requestCode = requestCode)
     }
   }
 

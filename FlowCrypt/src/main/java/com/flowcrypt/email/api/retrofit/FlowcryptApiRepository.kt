@@ -72,7 +72,7 @@ class FlowcryptApiRepository : ApiRepository {
 
           Result.Status.ERROR -> Result.error(requestCode = requestCode, data = PubResponse(null, null))
 
-          Result.Status.EXCEPTION -> Result.exception(requestCode = requestCode, error = result.exception
+          Result.Status.EXCEPTION -> Result.exception(requestCode = requestCode, throwable = result.exception
               ?: Exception())
 
           Result.Status.LOADING -> Result.loading(requestCode = requestCode)

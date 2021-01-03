@@ -5,14 +5,12 @@
 
 package com.flowcrypt.email.ui.activity.base
 
-import android.Manifest
 import android.app.Activity
 import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
@@ -21,8 +19,6 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -89,9 +85,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
 
-  override val isSyncEnabled: Boolean
-    get() = intent == null || intent.getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true)
-
   abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>)
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -155,19 +148,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
   }
 
-  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    when (requestCode) {
-      REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE -> {
-        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          selectFile()
-        } else {
-          showAccessDeniedWarning()
-        }
-      }
-    }
-  }
-
   override fun onBackPressed() {
     if (isCheckingPrivateKeyNow) {
       Toast.makeText(this, R.string.parsing_keys_please_wait, Toast.LENGTH_SHORT).show()
@@ -180,21 +160,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     when (v.id) {
       R.id.buttonLoadFromFile -> {
         dismissSnackBar()
-
-        val isPermissionGranted = ContextCompat.checkSelfPermission(this,
-            Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-
-        if (isPermissionGranted) {
-          selectFile()
-        } else {
-          if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                  Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            showReadSdCardExplanation()
-          } else {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE)
-          }
-        }
+        selectFile()
       }
 
       R.id.buttonLoadFromClipboard -> {
@@ -327,25 +293,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     })
   }
 
-  private fun showAccessDeniedWarning() {
-    UIUtil.showSnackbar(rootView, getString(R.string.access_to_read_the_sdcard_id_denied),
-        getString(R.string.change),
-        View.OnClickListener { GeneralUtil.showAppSettingScreen(this@BaseImportKeyActivity) })
-  }
-
-  /**
-   * Show an explanation to the user for readOption the sdcard.
-   * After the user sees the explanation, we try again to request the permission.
-   */
-  private fun showReadSdCardExplanation() {
-    UIUtil.showSnackbar(rootView, getString(R.string.read_sdcard_permission_explanation_text),
-        getString(R.string.do_request), View.OnClickListener {
-      ActivityCompat.requestPermissions(this@BaseImportKeyActivity,
-          arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-          REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE)
-    })
-  }
-
   private fun selectFile() {
     val intent = Intent()
     intent.action = Intent.ACTION_OPEN_DOCUMENT
@@ -384,7 +331,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
     private const val WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType"
     private const val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
-    private const val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11
 
     fun newIntent(context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
                   title: String, model: KeyImportModel? = null,

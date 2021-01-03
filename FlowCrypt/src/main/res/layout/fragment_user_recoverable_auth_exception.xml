@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true">
+
+    <include
+        android:id="@+id/progress"
+        layout="@layout/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:visibility="visible">
+
+        <Button
+            android:id="@+id/buttonPrivacy"
+            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            android:layout_marginTop="0dp"
+            android:text="@string/privacy"
+            app:layout_constraintEnd_toStartOf="@+id/buttonTerms"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+            tools:layout_constraintTop_creator="1" />
+
+        <Button
+            android:id="@+id/buttonTerms"
+            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            android:layout_marginTop="0dp"
+            android:text="@string/terms"
+            app:layout_constraintEnd_toStartOf="@+id/buttonSecurity"
+            app:layout_constraintStart_toEndOf="@+id/buttonPrivacy"
+            app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+            tools:layout_constraintTop_creator="1" />
+
+        <Button
+            android:id="@+id/buttonSecurity"
+            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            android:layout_marginTop="0dp"
+            android:text="@string/security"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toEndOf="@+id/buttonTerms"
+            app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+            tools:layout_constraintTop_creator="1" />
+
+        <ImageView
+            android:id="@+id/imageViewLogo"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/default_margin_content_large"
+            android:contentDescription="@string/app_name"
+            android:drawablePadding="@dimen/default_margin_medium"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:scaleType="center"
+            android:textAlignment="center"
+            android:textAllCaps="false"
+            android:textSize="@dimen/text_size_logo_crypt"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/buttonTerms"
+            app:srcCompat="@mipmap/logo_flowcrypt" />
+
+        <TextView
+            android:id="@+id/textViewExplanation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:lineSpacingExtra="@dimen/default_margin_small"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/default_text_size_big"
+            app:layout_constraintBottom_toTopOf="@+id/buttonReconnect"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/imageViewLogo"
+            tools:text="Please reconnect your account to continue using FlowCrypt with email@domain.com" />
+
+        <Button
+            android:id="@+id/buttonReconnect"
+            style="@style/AppWidget.Button.White.ConnectAccount"
+            android:layout_marginBottom="@dimen/default_margin_content"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:text="@string/reconnect"
+            android:theme="@style/AppWidget.Button.White.ConnectAccount"
+            app:layout_constraintBottom_toTopOf="@+id/buttonLogout"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+
+        <Button
+            android:id="@+id/buttonLogout"
+            style="@style/AppWidget.Button.White.ConnectAccount"
+            android:layout_marginBottom="@dimen/default_margin_content_big"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:text="@string/log_out"
+            android:theme="@style/AppWidget.Button.White.ConnectAccount"
+            app:layout_constraintBottom_toTopOf="@+id/buttonHelp"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.491"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+
+        <Button
+            android:id="@+id/buttonHelp"
+            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            android:layout_marginBottom="@dimen/default_margin_content"
+            android:text="@string/help"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineTop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include
+        android:id="@+id/status"
+        layout="@layout/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+</FrameLayout>

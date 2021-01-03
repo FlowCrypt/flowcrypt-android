@@ -26,6 +26,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity
 import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,6 +41,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class SearchBackupsInEmailActivityTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SearchBackupsInEmailActivity>()
 

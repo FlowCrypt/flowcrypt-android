@@ -15,6 +15,8 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
 import com.flowcrypt.email.database.entity.MessageEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.*
 import javax.mail.Flags
 import kotlin.collections.ArrayList
@@ -36,10 +38,13 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract suspend fun getMsgSuspend(account: String?, folder: String?, uid: Long): MessageEntity?
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
-  abstract fun getMsgs(account: String, folder: String): LiveData<MessageEntity>
+  abstract fun getMsgsLD(account: String, folder: String): LiveData<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
-  abstract fun getMsgsAsList(account: String, folder: String): List<MessageEntity>
+  abstract fun getMsgs(account: String, folder: String): List<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
+  abstract suspend fun getMsgsSuspend(account: String, folder: String): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND _id IN (:msgsID)")
   abstract suspend fun getMsgsByIDSuspend(account: String, folder: String, msgsID: Collection<Long>?):
@@ -49,8 +54,15 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract fun getNewMsgs(account: String, folder: String,
                           orderBy: String = "received_date ASC"): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy")
+  abstract suspend fun getNewMsgsSuspend(account: String, folder: String,
+                                         orderBy: String = "received_date ASC"): List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
   abstract fun getMsgsByUids(account: String?, folder: String?, msgsUID: Collection<Long>?): List<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
+  abstract suspend fun getMsgsByUidsSuspend(account: String?, folder: String?, msgsUID: Collection<Long>?): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
   abstract fun getMessagesDataSourceFactory(account: String, folder: String): DataSource.Factory<Int, MessageEntity>
@@ -66,6 +78,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
+
+  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
+  abstract suspend fun deleteSuspend(email: String?, label: String?, msgsUID: Collection<Long>): Int
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
   abstract fun getOutboxMsgs(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): List<MessageEntity>
@@ -114,16 +129,29 @@ abstract class MessageDao : BaseDao<MessageEntity> {
                                                              MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND.value,
                                                              MessageState.ERROR_SENDING_FAILED.value,
                                                              MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-                                                             MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value)): Int
+                                                             MessageState
+                                                                 .ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value)): Int?
 
   @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun count(account: String?, folder: String?): Int
 
+  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
+  abstract suspend fun countSuspend(account: String?, folder: String?): Int?
+
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getLastUIDOfMsgForLabel(account: String?, folder: String?): Int
 
+  @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
+  abstract suspend fun getLastUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int?
+
   @Query("SELECT min(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getOldestUIDOfMsgForLabel(account: String?, folder: String?): Int
+
+  @Query("SELECT min(uid) FROM messages WHERE email = :account AND folder = :folder")
+  abstract suspend fun getOldestUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int?
+
+  @Query("SELECT uid FROM messages WHERE email = :account AND folder = :folder")
+  abstract suspend fun getUIDsForLabel(account: String?, folder: String?): List<Long>
 
   /**
    * Get the list of UID of all messages in the database which were not checked to encryption.
@@ -133,7 +161,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @return The list of UID of selected messages in the database for some label.
    */
   @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND is_encrypted = -1")
-  abstract fun getNotCheckedUIDs(account: String?, label: String): List<Long>
+  abstract suspend fun getNotCheckedUIDs(account: String?, label: String): List<Long>
 
   /**
    * Get a list of UID and flags of all unseen messages in the database for some label.
@@ -159,6 +187,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query("UPDATE messages SET state=:newValue WHERE email = :account AND folder = :label")
   abstract fun changeMsgsState(account: String?, label: String?, newValue: Int? = null): Int
+
+  @Query("UPDATE messages SET state=:newValue WHERE email = :account AND folder = :label")
+  abstract suspend fun changeMsgsStateSuspend(account: String?, label: String?, newValue: Int? = null): Int
 
   @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
   abstract suspend fun changeMsgsStateSuspend(account: String?, label: String?, oldValue: Int,
@@ -187,11 +218,20 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT uid, flags FROM messages WHERE email = :account AND folder = :label")
   abstract fun getUIDAndFlagsPairs(account: String?, label: String): List<UidFlagsPair>
 
+  @Query("SELECT uid, flags FROM messages WHERE email = :account AND folder = :label")
+  abstract suspend fun getUIDAndFlagsPairsSuspend(account: String?, label: String): List<UidFlagsPair>
+
   @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
   abstract fun getMsgsWithState(account: String?, stateValue: Int): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
+  abstract suspend fun getMsgsWithStateSuspend(account: String?, stateValue: Int): List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state =:stateValue")
   abstract fun getMsgsWithState(account: String?, label: String?, stateValue: Int): List<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state =:stateValue")
+  abstract suspend fun getMsgsWithStateSuspend(account: String?, label: String?, stateValue: Int): List<MessageEntity>
 
   @Query("UPDATE messages SET is_new = 0 WHERE email = :account AND folder = :label AND uid IN (:uidList)")
   abstract suspend fun markMsgsAsOld(account: String?, label: String?, uidList: Collection<Long>): Int
@@ -210,9 +250,23 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   }
 
   @Transaction
+  open suspend fun deleteByUIDsSuspend(email: String?, label: String?, msgsUID: Collection<Long>) = withContext(Dispatchers.IO) {
+    doOperationViaStepsSuspend(list = ArrayList(msgsUID)) { stepUIDs: Collection<Long> ->
+      deleteSuspend(email, label, stepUIDs)
+    }
+  }
+
+  @Transaction
   open fun updateFlags(email: String?, label: String?, flagsMap: Map<Long, Flags>) {
     doOperationViaSteps(list = ArrayList(flagsMap.keys)) { stepUIDs: Collection<Long> ->
       updateFlagsByUIDs(email, label, flagsMap, stepUIDs)
+    }
+  }
+
+  @Transaction
+  open suspend fun updateFlagsSuspend(email: String?, label: String?, flagsMap: Map<Long, Flags>) = withContext(Dispatchers.IO) {
+    doOperationViaStepsSuspend(list = ArrayList(flagsMap.keys)) { stepUIDs: Collection<Long> ->
+      updateFlagsByUIDsSuspend(email, label, flagsMap, stepUIDs)
     }
   }
 
@@ -225,22 +279,19 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @param flags   The message flags.
    */
   @Transaction
-  open fun updateLocalMsgFlags(email: String?, label: String?, uid: Long, flags: Flags) {
-    val msgEntity = getMsg(account = email, folder = label, uid = uid)
+  open suspend fun updateLocalMsgFlags(email: String?, label: String?, uid: Long, flags: Flags) = withContext(Dispatchers.IO) {
+    val msgEntity = getMsgSuspend(account = email, folder = label, uid = uid) ?: return@withContext
     val modifiedMsgEntity = if (flags.contains(Flags.Flag.SEEN)) {
-      msgEntity?.copy(flags = flags.toString().toUpperCase(Locale.getDefault()), isNew = false)
+      msgEntity.copy(flags = flags.toString().toUpperCase(Locale.getDefault()), isNew = false)
     } else {
-      msgEntity?.copy(flags = flags.toString().toUpperCase(Locale.getDefault()))
+      msgEntity.copy(flags = flags.toString().toUpperCase(Locale.getDefault()))
     }
-
-    modifiedMsgEntity?.let {
-      update(it)
-    }
+    updateSuspend(modifiedMsgEntity)
   }
 
   @Transaction
-  open fun updateEncryptionStates(email: String?, label: String?, flagsMap: Map<Long, Boolean>) {
-    val msgEntities = getMsgsByUids(account = email, folder = label, msgsUID = flagsMap.keys)
+  open suspend fun updateEncryptionStates(email: String?, label: String?, flagsMap: Map<Long, Boolean>) = withContext(Dispatchers.IO) {
+    val msgEntities = getMsgsByUidsSuspend(account = email, folder = label, msgsUID = flagsMap.keys)
     val modifiedMsgEntities = ArrayList<MessageEntity>()
 
     for (msgEntity in msgEntities) {
@@ -250,7 +301,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       }
     }
 
-    update(modifiedMsgEntities)
+    updateSuspend(modifiedMsgEntities)
   }
 
   /**
@@ -266,6 +317,18 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   }
 
   /**
+   * Get a map of UID and flags of all messages in the database for some label.
+   *
+   * @param email   The user email.
+   * @param label   The label name.
+   * @return The map of UID and flags of all messages in the database for some label.
+   */
+  @Transaction
+  open suspend fun getMapOfUIDAndMsgFlagsSuspend(email: String, label: String): Map<Long, String?> = withContext(Dispatchers.IO) {
+    return@withContext getUIDAndFlagsPairsSuspend(email, label).map { it.uid to it.flags }.toMap()
+  }
+
+  /**
    * Mark messages as old in the local database.
    *
    * @param email   The email that the message linked.
@@ -273,10 +336,30 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @param uidList The list of the UIDs.
    */
   @Transaction
-  open suspend fun setOldStatus(email: String?, label: String?, uidList: List<Long>) {
+  open suspend fun setOldStatus(email: String?, label: String?, uidList: List<Long>) = withContext(Dispatchers.IO) {
     doOperationViaStepsSuspend(list = uidList) { stepUIDs: Collection<Long> ->
       markMsgsAsOld(email, label, stepUIDs)
     }
+  }
+
+  private suspend fun updateFlagsByUIDsSuspend(email: String?, label: String?, flagsMap: Map<Long, Flags>,
+                                               uids: Collection<Long>?): Int = withContext(Dispatchers.IO) {
+    val msgEntities = getMsgsByUidsSuspend(account = email, folder = label, msgsUID = uids)
+    val modifiedMsgEntities = ArrayList<MessageEntity>()
+
+    for (msgEntity in msgEntities) {
+      val flags = flagsMap[msgEntity.uid]
+      flags?.let {
+        val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
+          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()), isNew = false)
+        } else {
+          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
+        }
+        modifiedMsgEntities.add(modifiedMsgEntity)
+      }
+    }
+
+    return@withContext updateSuspend(modifiedMsgEntities)
   }
 
   private fun updateFlagsByUIDs(email: String?, label: String?, flagsMap: Map<Long, Flags>,

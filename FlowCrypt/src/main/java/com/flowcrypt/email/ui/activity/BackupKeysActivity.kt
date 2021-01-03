@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
+import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
@@ -42,9 +43,8 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:06
  * E-mail: DenBond7@gmail.com
  */
-class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
-    RadioGroup.OnCheckedChangeListener {
-
+class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener, RadioGroup.OnCheckedChangeListener {
+  private val backupsViewModel: BackupsViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   private var progressBar: View? = null
@@ -66,51 +66,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     super.onCreate(savedInstanceState)
     initViews()
     setupPrivateKeysViewModel()
-  }
-
-  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-    when (requestCode) {
-      R.id.syns_send_backup_with_private_key_to_key_owner -> {
-        isPrivateKeySendingNow = false
-        setResult(Activity.RESULT_OK)
-        finish()
-        countingIdlingResource.decrementSafely()
-      }
-    }
-    super.onReplyReceived(requestCode, resultCode, obj)
-  }
-
-  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-    when (requestCode) {
-      R.id.syns_send_backup_with_private_key_to_key_owner -> {
-        isPrivateKeySendingNow = false
-        when (e) {
-          is PrivateKeyStrengthException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-            showPassWeakHint()
-          }
-
-          is DifferentPassPhrasesException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-            showDifferentPassHint()
-          }
-
-          is NoPrivateKeysAvailableException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-            showInfoSnackbar(rootView, e.message, Snackbar.LENGTH_LONG)
-          }
-
-          else -> {
-            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-            showBackupingErrorHint()
-          }
-        }
-
-        countingIdlingResource.decrementSafely()
-      }
-    }
-
-    super.onErrorHappened(requestCode, errorType, e)
+    initBackupsViewModel()
   }
 
   override fun onClick(v: View) {
@@ -126,8 +82,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
               if (GeneralUtil.isConnected(this)) {
                 isPrivateKeySendingNow = true
                 UIUtil.exchangeViewVisibility(true, progressBar, rootView)
-                countingIdlingResource.incrementSafely()
-                sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
+                backupsViewModel.postBackup()
               } else {
                 UIUtil.showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
               }
@@ -203,7 +158,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       layoutSyncStatus?.visibility = View.GONE
       UIUtil.exchangeViewVisibility(true, progressBar, rootView)
       countingIdlingResource.incrementSafely()
-      sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
+      backupsViewModel.postBackup()
     }
   }
 
@@ -293,6 +248,55 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
             }
             countingIdlingResource.decrementSafely()
           }
+        }
+      }
+    })
+  }
+
+  private fun initBackupsViewModel() {
+    backupsViewModel.postBackupLiveData.observe(this, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          countingIdlingResource.incrementSafely()
+          UIUtil.exchangeViewVisibility(true, progressBar, rootView)
+        }
+
+        Result.Status.SUCCESS -> {
+          isPrivateKeySendingNow = false
+          setResult(Activity.RESULT_OK)
+          finish()
+          countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.EXCEPTION -> {
+          val e = it.exception
+          isPrivateKeySendingNow = false
+          when (e) {
+            is PrivateKeyStrengthException -> {
+              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+              showPassWeakHint()
+            }
+
+            is DifferentPassPhrasesException -> {
+              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+              showDifferentPassHint()
+            }
+
+            is NoPrivateKeysAvailableException -> {
+              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+              showInfoSnackbar(rootView, e.message, Snackbar.LENGTH_LONG)
+            }
+
+            else -> {
+              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+              showBackupingErrorHint()
+            }
+          }
+
+          countingIdlingResource.decrementSafely()
+        }
+
+        else -> {
         }
       }
     })

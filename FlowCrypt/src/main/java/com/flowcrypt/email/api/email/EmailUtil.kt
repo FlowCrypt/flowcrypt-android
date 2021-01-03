@@ -14,6 +14,7 @@ import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Base64
 import android.util.SparseArray
+import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -27,10 +28,9 @@ import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -39,7 +39,10 @@ import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.gms.security.ProviderInstaller
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailRawSearchTerm
@@ -51,6 +54,8 @@ import com.sun.mail.imap.protocol.FetchResponse
 import com.sun.mail.imap.protocol.UID
 import com.sun.mail.imap.protocol.UIDSet
 import com.sun.mail.util.ASCIIUtility
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -261,16 +266,10 @@ class EmailUtil {
      * result from client errors (e.g. providing an invalid scope).
      */
     fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
-      try {
-        val account: Account? = accountEntity.account
-            ?: throw NullPointerException("Account can't be a null!")
+      val account: Account = accountEntity.account
+          ?: throw NullPointerException("Account can't be a null!")
 
-        return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
-      } catch (e: UserRecoverableAuthException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(accountEntity.copy(isRestoreAccessRequired = true))
-        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
-        throw e
-      }
+      return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
     }
 
     /**
@@ -290,13 +289,11 @@ class EmailUtil {
      *
      * @param context context Interface to global information about an application environment;
      * @param account An [AccountEntity] object.
-     * @param sess A [Session] object.
      * @return A list of [NodeKeyDetails]
      * @throws MessagingException
      * @throws IOException
      */
-    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity, sess: Session):
-        Collection<NodeKeyDetails> {
+    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity): MutableCollection<NodeKeyDetails> {
       try {
         val list = mutableListOf<NodeKeyDetails>()
 
@@ -337,7 +334,7 @@ class EmailUtil {
               .execute()
 
           val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
-          val msg = MimeMessage(sess, stream)
+          val msg = MimeMessage(Session.getInstance(Properties()), stream)
           val backup = getKeyFromMimeMsg(msg)
 
           if (TextUtils.isEmpty(backup)) {
@@ -355,12 +352,10 @@ class EmailUtil {
 
         return list
       } catch (e: UserRecoverableAuthIOException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
-        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
         throw e
       } catch (e: UserRecoverableAuthException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
-        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
         throw e
       }
     }
@@ -464,16 +459,11 @@ class EmailUtil {
      * @param msgs   The array of incoming messages.
      * @return An array of the messages which are candidates for updating iin the local database.
      */
-    fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>):
-        Array<Message> {
+    fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
       val updateCandidates = mutableListOf<Message>()
       try {
         for (msg in msgs) {
-          var flags = map[folder.getUID(msg)]
-          if (flags == null) {
-            flags = ""
-          }
-
+          val flags = map[folder.getUID(msg)] ?: ""
           if (!flags.equals(msg.flags.toString(), ignoreCase = true)) {
             updateCandidates.add(msg)
           }
@@ -548,15 +538,44 @@ class EmailUtil {
      * @return A list of messages which already exist in the local database.
      * @throws MessagingException for other failures.
      */
-    fun getUpdatedMsgsByUID(folder: IMAPFolder, first: Long, end: Long): Array<Message> {
-      return if (end <= first) {
+    fun getUpdatedMsgsByUID(folder: IMAPFolder, first: Long, end: Long, fetchFlags: Boolean = true):
+        Array<Message> {
+      return if (end <= first && end != UIDFolder.LASTUID) {
         arrayOf()
       } else {
-        val msgs = folder.getMessagesByUID(first, end)
+        val msgs = folder.getMessagesByUID(first, end).filterNotNull().toTypedArray()
 
         if (msgs.isNotEmpty()) {
           val fetchProfile = FetchProfile()
-          fetchProfile.add(FetchProfile.Item.FLAGS)
+          if (fetchFlags) {
+            fetchProfile.add(FetchProfile.Item.FLAGS)
+          }
+          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+          folder.fetch(msgs, fetchProfile)
+        }
+        msgs
+      }
+    }
+
+    /**
+     * Get updated information about messages in the local database using UIDs.
+     *
+     * @param folder The folder which contains messages.
+     * @param uids  A list of UID.
+     * @return A list of messages which already exist in the local database.
+     * @throws MessagingException for other failures.
+     */
+    fun getUpdatedMsgsByUIDs(folder: IMAPFolder, uids: LongArray, fetchFlags: Boolean = true): Array<Message> {
+      return if (uids.isEmpty()) {
+        arrayOf()
+      } else {
+        val msgs = folder.getMessagesByUID(uids).filterNotNull().toTypedArray()
+
+        if (msgs.isNotEmpty()) {
+          val fetchProfile = FetchProfile()
+          if (fetchFlags) {
+            fetchProfile.add(FetchProfile.Item.FLAGS)
+          }
           fetchProfile.add(UIDFolder.FetchProfileItem.UID)
           folder.fetch(msgs, fetchProfile)
         }
@@ -846,6 +865,45 @@ class EmailUtil {
       val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
       val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: "(unknown content)"
       return "\n\nOn $date, $sender wrote:\n$replyText"
+    }
+
+    suspend fun patchingSecurityProviderSuspend(context: Context) = withContext(Dispatchers.IO) {
+      patchingSecurityProvider(context)
+    }
+
+    /**
+     * To update a device's security provider, use the ProviderInstaller class.
+     *
+     *
+     * When you call installIfNeeded(), the ProviderInstaller does the following:
+     *  * If the device's Provider is successfully updated (or is already up-to-date), the method returns
+     * normally.
+     *  * If the device's Google Play services library is out of date, the method throws
+     * GooglePlayServicesRepairableException. The app can then catch this exception and show the user an
+     * appropriate dialog box to update Google Play services.
+     *  * If a non-recoverable error occurs, the method throws GooglePlayServicesNotAvailableException to indicate
+     * that it is unable to update the Provider. The app can then catch the exception and choose an appropriate
+     * course of action, such as displaying the standard fix-it flow diagram.
+     *
+     *
+     * If installIfNeeded() needs to install a new Provider, this can take anywhere from 30-50 milliseconds (on
+     * more recent devices) to 350 ms (on older devices). If the security provider is already up-to-date, the
+     * method takes a negligible amount of time.
+     *
+     *
+     * Details here https://developer.android.com/training/articles/security-gms-provider.html#patching
+     *
+     * @param context Interface to global information about an application environment;
+     */
+    @WorkerThread
+    fun patchingSecurityProvider(context: Context) {
+      try {
+        ProviderInstaller.installIfNeeded(context)
+      } catch (e: GooglePlayServicesRepairableException) {
+        e.printStackTrace()
+      } catch (e: GooglePlayServicesNotAvailableException) {
+        e.printStackTrace()
+      }
     }
   }
 }

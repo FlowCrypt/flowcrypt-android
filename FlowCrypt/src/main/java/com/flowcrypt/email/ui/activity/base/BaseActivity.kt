@@ -6,16 +6,9 @@
 package com.flowcrypt.email.ui.activity.base
 
 import android.accounts.AccountManager
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Message
-import android.os.Messenger
-import android.os.RemoteException
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -24,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.test.espresso.idling.CountingIdlingResource
+import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -35,20 +29,18 @@ import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.node.Node
-import com.flowcrypt.email.service.BaseService
-import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.idling.NodeIdlingResource
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
-import java.lang.ref.WeakReference
 
 /**
  * This is a base activity. This class describes a base logic for all activities.
@@ -58,7 +50,7 @@ import java.lang.ref.WeakReference
  * Time: 22:21.
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback {
+abstract class BaseActivity : AppCompatActivity() {
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val tag: String = javaClass.simpleName
@@ -97,31 +89,12 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
    */
   abstract val rootView: View
 
-  val replyMessengerName: String
-    get() = javaClass.simpleName + "_" + hashCode()
-
   val isNodeReady: Boolean
     get() = if (Node.getInstance(application).liveData.value == null) {
       false
     } else {
       Node.getInstance(application).liveData.value?.isReady ?: false
     }
-
-  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-
-  }
-
-  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-
-  }
-
-  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-
-  }
-
-  override fun onCanceled(requestCode: Int, resultCode: Int, obj: Any?) {
-
-  }
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -229,74 +202,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     snackBar?.dismiss()
   }
 
-  /**
-   * Check is current [Activity] connected to some service.
-   *
-   * @return true if current activity connected to the service, otherwise false.
-   */
-  protected fun checkServiceBound(isBound: Boolean): Boolean {
-    if (!isBound) {
-      if (GeneralUtil.isDebugBuild()) {
-        LogsUtil.d(tag, "Activity not connected to the service")
-      }
-      return true
-    }
-    return false
-  }
-
-  protected fun bindService(cls: Class<*>, conn: ServiceConnection) {
-    bindService(Intent(this, cls), conn, Context.BIND_AUTO_CREATE)
-    LogsUtil.d(tag, "bind to " + cls.simpleName)
-  }
-
-  /**
-   * Disconnect from a service
-   */
-  protected fun unbindService(cls: Class<*>, conn: ServiceConnection) {
-    unbindService(conn)
-    LogsUtil.d(tag, "unbind from " + cls.simpleName)
-  }
-
-  /**
-   * Register a reply [Messenger] to receive notifications from some service.
-   *
-   * @param what             A [Message.what]}
-   * @param serviceMessenger A service [Messenger]
-   * @param replyToMessenger A reply to [Messenger]
-   */
-  protected fun registerReplyMessenger(what: Int, serviceMessenger: Messenger, replyToMessenger: Messenger) {
-    val action = BaseService.Action(replyMessengerName, -1, null)
-
-    val message = Message.obtain(null, what, action)
-    message.replyTo = replyToMessenger
-    try {
-      serviceMessenger.send(message)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
-   * Unregister a reply [Messenger] from some service.
-   *
-   * @param what             A [Message.what]}
-   * @param serviceMessenger A service [Messenger]
-   * @param replyToMessenger A reply to [Messenger]
-   */
-  protected fun unregisterReplyMessenger(what: Int, serviceMessenger: Messenger, replyToMessenger: Messenger) {
-    val action = BaseService.Action(replyMessengerName, -1, null)
-
-    val message = Message.obtain(null, what, action)
-    message.replyTo = replyToMessenger
-    try {
-      serviceMessenger.send(message)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
   protected open fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
 
   }
@@ -322,10 +227,11 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     }
   }
 
-  protected fun logout() {
+  fun logout() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
         countingIdlingResource.incrementSafely()
+        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
         //remove all info about the given account from the local db
@@ -343,11 +249,11 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
           val firstNonactiveAccount = nonactiveAccounts.first()
           roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
           roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
-          EmailSyncService.switchAccount(applicationContext)
-          EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
           finish()
+          IdleService.restart(applicationContext)
+          EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
         } else {
-          stopService(Intent(applicationContext, EmailSyncService::class.java))
+          stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
           startActivity(intent)
@@ -383,35 +289,5 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     toolbar = findViewById(R.id.toolbar)
     toolbar?.let { setSupportActionBar(it) }
     supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
-  }
-
-  /**
-   * The incoming handler realization. This handler will be used to communicate with a service and other Android
-   * components.
-   */
-  protected class ReplyHandler internal constructor(onServiceCallback: BaseService.OnServiceCallback) : Handler() {
-    private val weakRef: WeakReference<BaseService.OnServiceCallback> = WeakReference(onServiceCallback)
-
-    override fun handleMessage(message: Message) {
-      if (weakRef.get() != null) {
-        when (message.what) {
-          BaseService.REPLY_OK -> weakRef.get()?.onReplyReceived(message.arg1, message.arg2, message.obj)
-
-          BaseService.REPLY_ERROR -> {
-            var exception: Exception? = null
-
-            if (message.obj is Exception) {
-              exception = message.obj as Exception
-            }
-
-            weakRef.get()?.onErrorHappened(message.arg1, message.arg2, exception!!)
-          }
-
-          BaseService.REPLY_ACTION_PROGRESS -> weakRef.get()?.onProgressReplyReceived(message.arg1, message.arg2, message.obj)
-
-          BaseService.REPLY_ACTION_CANCELED -> weakRef.get()?.onCanceled(message.arg1, message.arg2, message.obj)
-        }
-      }
-    }
   }
 }

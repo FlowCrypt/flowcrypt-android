@@ -23,6 +23,7 @@ import android.provider.MediaStore
 import android.text.TextUtils
 import android.webkit.MimeTypeMap
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -178,7 +179,7 @@ class AttachmentDownloadManagerService : Service() {
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private class ReplyHandler internal constructor(attDownloadManagerService: AttachmentDownloadManagerService)
+  private class ReplyHandler(attDownloadManagerService: AttachmentDownloadManagerService)
     : Handler() {
 
     private val weakRef: WeakReference<AttachmentDownloadManagerService> = WeakReference(attDownloadManagerService)
@@ -243,7 +244,7 @@ class AttachmentDownloadManagerService : Service() {
    * This handler will be used by the instance of [HandlerThread] to receive message from
    * the UI thread.
    */
-  private class ServiceWorkerHandler internal constructor(looper: Looper, private val messenger: Messenger)
+  private class ServiceWorkerHandler(looper: Looper, private val messenger: Messenger)
     : Handler(looper), OnDownloadAttachmentListener {
     private val executorService: ExecutorService = Executors.newFixedThreadPool(QUEUE_SIZE)
 
@@ -394,8 +395,8 @@ class AttachmentDownloadManagerService : Service() {
     }
   }
 
-  private class AttDownloadRunnable internal constructor(private val context: Context,
-                                                         private val att: AttachmentInfo) : Runnable {
+  private class AttDownloadRunnable(private val context: Context,
+                                    private val att: AttachmentInfo) : Runnable {
     private var listener: OnDownloadAttachmentListener? = null
 
     override fun run() {
@@ -477,58 +478,76 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    @Suppress("DEPRECATION")
     private fun storeFileToSharedFolder(context: Context, attFile: File): Uri {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        val resolver = context.contentResolver
-        val fileExtension = FilenameUtils.getExtension(att.name).toLowerCase(Locale.getDefault())
-        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
-
-        val contentValues = ContentValues().apply {
-          put(MediaStore.DownloadColumns.DISPLAY_NAME, att.getSafeName())
-          put(MediaStore.DownloadColumns.SIZE, attFile.length())
-          put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
-        }
-
-        val imageUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-
-        requireNotNull(imageUri)
-
-        //we should check maybe a file is already exist.
-        // Then we will use the file name from the system
-        val cursor = resolver.query(imageUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
-        if (cursor != null) {
-          if (cursor.moveToFirst()) {
-            val nameIndex = cursor.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
-            if (nameIndex != -1) {
-              val nameFromSystem = cursor.getString(nameIndex)
-              if (nameFromSystem != att.getSafeName()) {
-                att.name = nameFromSystem
-              }
-            }
-          }
-          cursor.close()
-        }
-
-        IOUtils.copy(attFile.inputStream(), resolver.openOutputStream(imageUri))
-        return imageUri
+        return storeFileUsingScopedStorage(context, attFile)
       } else {
-        val fileName = att.getSafeName()
-        val fileDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        var sharedFile = File(fileDir, fileName)
-        sharedFile = if (sharedFile.exists()) {
-          FileAndDirectoryUtils.createFileWithIncreasedIndex(fileDir, fileName)
-        } else {
-          sharedFile
-        }
-
-        att.name = sharedFile.name
-        IOUtils.copy(attFile.inputStream(), FileUtils.openOutputStream(sharedFile))
-        return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
+        return storeLegacy(attFile, context)
       }
     }
 
-    internal fun setListener(listener: OnDownloadAttachmentListener) {
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
+      val resolver = context.contentResolver
+      val fileExtension = FilenameUtils.getExtension(att.name).toLowerCase(Locale.getDefault())
+      val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+
+      val contentValues = ContentValues().apply {
+        put(MediaStore.DownloadColumns.DISPLAY_NAME, att.getSafeName())
+        put(MediaStore.DownloadColumns.SIZE, attFile.length())
+        put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
+        put(MediaStore.Downloads.IS_PENDING, 1)
+      }
+
+      val imageUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+      requireNotNull(imageUri)
+
+      //we should check maybe a file is already exist. Then we will use the file name from the system
+      val cursor = resolver.query(imageUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
+      cursor?.let {
+        if (it.moveToFirst()) {
+          val nameIndex = it.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
+          if (nameIndex != -1) {
+            val nameFromSystem = it.getString(nameIndex)
+            if (nameFromSystem != att.getSafeName()) {
+              att.name = nameFromSystem
+            }
+          }
+        }
+      }
+      cursor?.close()
+
+      IOUtils.copy(attFile.inputStream(), resolver.openOutputStream(imageUri))
+
+      //notify the system that the file is ready
+      resolver.update(imageUri, ContentValues().apply {
+        put(MediaStore.Downloads.IS_PENDING, 0)
+      }, null, null)
+
+      return imageUri
+    }
+
+    /**
+     * We use this method to support saving files on Android 9 and less which uses an old approach.
+     */
+    @Suppress("DEPRECATION")
+    private fun storeLegacy(attFile: File, context: Context): Uri {
+      val fileName = att.getSafeName()
+      val fileDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+      var sharedFile = File(fileDir, fileName)
+      sharedFile = if (sharedFile.exists()) {
+        FileAndDirectoryUtils.createFileWithIncreasedIndex(fileDir, fileName)
+      } else {
+        sharedFile
+      }
+
+      att.name = sharedFile.name
+      IOUtils.copy(attFile.inputStream(), FileUtils.openOutputStream(sharedFile))
+      return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
+    }
+
+    fun setListener(listener: OnDownloadAttachmentListener) {
       this.listener = listener
     }
 

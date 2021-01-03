@@ -16,6 +16,8 @@ package com.flowcrypt.email.api.email
 class JavaEmailConstants {
   companion object {
 
+    const val DEFAULT_FETCH_BUFFER = 1024 * 1024
+    const val ATTACHMENTS_FETCH_BUFFER = 1024 * 256
     const val COUNT_OF_LOADED_EMAILS_BY_STEP = 45
 
     /*IMAP*/
@@ -25,6 +27,9 @@ class JavaEmailConstants {
     const val PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS = "mail.imap.auth.mechanisms"
     const val PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE = "mail.imap.fetchsize"
     const val PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT = "mail.imap.connectiontimeout"
+    const val PROPERTY_NAME_MAIL_IMAPS_CONNECTIONTIMEOUT = "mail.imaps.connectiontimeout"
+    const val PROPERTY_NAME_MAIL_IMAP_TIMEOUT = "mail.imap.timeout"
+    const val PROPERTY_NAME_MAIL_IMAPS_TIMEOUT = "mail.imaps.timeout"
     const val PROPERTY_NAME_MAIL_IMAP_SSL_TRUST = "mail.imap.ssl.trust"
     const val PROPERTY_NAME_MAIL_IMAPS_SSL_TRUST = "mail.imaps.ssl.trust"
     const val DEFAULT_IMAP_PORT = 143
@@ -40,6 +45,7 @@ class JavaEmailConstants {
     const val PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE = "mail.smtp.starttls.enable"
     const val PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS = "mail.smtp.auth.mechanisms"
     const val PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT = "mail.smtp.connectiontimeout"
+    const val PROPERTY_NAME_MAIL_SMTP_TIMEOUT = "mail.smtp.timeout"
     const val PROPERTY_NAME_MAIL_SMTP_SSL_TRUST = "mail.smtp.ssl.trust"
     const val DEFAULT_SMTP_PORT = 25
     const val SSL_SMTP_PORT = 465

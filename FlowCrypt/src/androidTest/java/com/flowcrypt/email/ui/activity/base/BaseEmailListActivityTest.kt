@@ -32,7 +32,7 @@ abstract class BaseEmailListActivityTest : BaseTest() {
   override val useIntents: Boolean = true
 
   protected fun testRunMsgDetailsActivity(position: Int) {
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(position, click()))
 
     intended(hasComponent(MessageDetailsActivity::class.java.name))

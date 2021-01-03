@@ -85,14 +85,14 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
         .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(not(withEmptyRecyclerView())))
   }
 
   @Test
   @ReadyForCIAnnotation
   fun testSearchQuery() {
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
 
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -100,7 +100,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(withRecyclerViewItemCount(2))).check(matches(isDisplayed()))
   }
 
@@ -112,16 +112,16 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(withRecyclerViewItemCount(4))).check(matches(isDisplayed()))
   }
 
   @Test
   @ReadyForCIAnnotation
   fun testShowNotEmptyList() {
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(isDisplayed()))
-    onView(withId(R.id.recyclerViewMsgs))
+    onView(withId(R.id.rVMsgs))
         .check(matches(not(withEmptyRecyclerView())))
   }
 

@@ -22,7 +22,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 @Dao
 interface ContactsDao : BaseDao<ContactEntity> {
   @Query("SELECT * FROM contacts")
-  fun getAllContacts(): List<ContactEntity>
+  suspend fun getAllContacts(): List<ContactEntity>
 
   @Query("SELECT * FROM contacts")
   fun getAllContactsLD(): LiveData<List<ContactEntity>>

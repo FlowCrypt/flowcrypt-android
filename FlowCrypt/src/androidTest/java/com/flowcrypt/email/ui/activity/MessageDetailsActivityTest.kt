@@ -202,16 +202,16 @@ class MessageDetailsActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
+    onView(withId(R.id.buttonImportPrivateKey))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
         keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )
-
-    onView(withId(R.id.buttonImportPrivateKey))
-        .check(matches(isDisplayed()))
-        .perform(scrollTo(), click())
 
     val incomingMsgInfoFixed =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plain_text_with_missing_key_fixed.json",
@@ -290,12 +290,14 @@ class MessageDetailsActivityTest : BaseTest() {
 
     testMissingKey(msgInfo)
 
-    PrivateKeysManager.saveKeyFromAssetsToDatabase(addAccountToDatabaseRule
-        .account, TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
     onView(withId(R.id.buttonSendOwnPublicKey))
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
+
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(addAccountToDatabaseRule
+        .account, TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+
 
     val msg = getTargetContext().resources.getQuantityString(R.plurals
         .tell_sender_to_update_their_settings, 2)

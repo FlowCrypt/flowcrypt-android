@@ -65,7 +65,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
 
           when (accountEntity.accountType) {
             AccountEntity.ACCOUNT_TYPE_GOOGLE ->
-              privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getApplication(), accountEntity, session))
+              privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getApplication(), accountEntity))
 
             else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session, accountEntity))
           }
@@ -74,7 +74,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
-          Result.exception(e, null)
+          Result.exception(e)
         }
       }
 
@@ -87,8 +87,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session, accountEntity: AccountEntity):
-      Collection<NodeKeyDetails> =
+  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session, accountEntity: AccountEntity): Collection<NodeKeyDetails> =
       withContext(Dispatchers.IO) {
         val details = ArrayList<NodeKeyDetails>()
         var store: Store? = null

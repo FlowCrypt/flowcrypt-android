@@ -68,7 +68,6 @@
     <dimen name="drop_down_vertical_offset_spinner_from">56dp</dimen>
     <dimen name="drop_down_size">32dp</dimen>
     <dimen name="padding_recipients_to">48dp</dimen>
-    <dimen name="margin_bottom_att">8dp</dimen>
     <dimen name="height_screenshot">150dp</dimen>
     <dimen name="width_screenshot">100dp</dimen>
 </resources>
