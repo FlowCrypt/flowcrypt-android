@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -71,6 +72,7 @@ import kotlin.collections.ArrayList
  */
 class MessagesViewModel(application: Application) : AccountViewModel(application) {
   private var currentLocalFolder: LocalFolder? = null
+  private var nextPageToken: String? = null
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
@@ -138,6 +140,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
 
       if (resetObserver()) {
+        nextPageToken = null
         msgsLiveData?.removeObserver(observer)
       }
 
@@ -262,67 +265,103 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                                                               localFolder: LocalFolder,
                                                               countOfAlreadyLoadedMsgs: Int
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
-    store.getFolder(localFolder.fullName).use { folder ->
-      val imapFolder = folder as IMAPFolder
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_opening_store))
-      imapFolder.open(Folder.READ_ONLY)
-
-      val countOfLoadedMsgs = when {
-        countOfAlreadyLoadedMsgs < 0 -> 0
-        else -> countOfAlreadyLoadedMsgs
+    when (accountEntity.accountType) {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(getApplication(), accountEntity,
+            localFolder, countOfAlreadyLoadedMsgs, nextPageToken)
+        val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo)
+        handleReceivedMsgs(accountEntity, localFolder, msgs)
       }
 
-      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
-      var foundMsgs: Array<Message> = emptyArray()
-      var msgsCount = 0
+      else -> {
+        store.getFolder(localFolder.fullName).use { folder ->
+          val imapFolder = folder as IMAPFolder
+          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_opening_store))
+          imapFolder.open(Folder.READ_ONLY)
 
-      if (isEncryptedModeEnabled == true) {
-        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
-        foundMsgs?.let {
-          msgsCount = foundMsgs.size
+          val countOfLoadedMsgs = when {
+            countOfAlreadyLoadedMsgs < 0 -> 0
+            else -> countOfAlreadyLoadedMsgs
+          }
+
+          val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+          var foundMsgs: Array<Message> = emptyArray()
+          var msgsCount = 0
+
+          if (isEncryptedModeEnabled == true) {
+            foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+            foundMsgs?.let {
+              msgsCount = foundMsgs.size
+            }
+          } else {
+            msgsCount = imapFolder.messageCount
+          }
+
+          val end = msgsCount - countOfLoadedMsgs
+          val startCandidate = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1
+          val start = when {
+            startCandidate < 1 -> 1
+            else -> startCandidate
+          }
+          val folderName = imapFolder.fullName
+
+          val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+          roomDatabase.labelDao().getLabelSuspend(accountEntity.email, folderName)?.let {
+            roomDatabase.labelDao().update(it.copy(msgsCount = msgsCount))
+          }
+
+          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
+              progress = 80.0,
+              resultCode = R.id.progress_id_getting_list_of_emails
+          ))
+          if (end < 1) {
+            handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
+          } else {
+            val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
+              foundMsgs.copyOfRange(start - 1, end)
+            } else {
+              imapFolder.getMessages(start, end)
+            }
+
+            val fetchProfile = FetchProfile()
+            fetchProfile.add(FetchProfile.Item.ENVELOPE)
+            fetchProfile.add(FetchProfile.Item.FLAGS)
+            fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+            fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+            imapFolder.fetch(msgs, fetchProfile)
+
+            handleReceivedMsgs(accountEntity, localFolder, folder, msgs)
+          }
         }
-      } else {
-        msgsCount = imapFolder.messageCount
-      }
-
-      val end = msgsCount - countOfLoadedMsgs
-      val startCandidate = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1
-      val start = when {
-        startCandidate < 1 -> 1
-        else -> startCandidate
-      }
-      val folderName = imapFolder.fullName
-
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
-      roomDatabase.labelDao().getLabelSuspend(accountEntity.email, folderName)?.let {
-        roomDatabase.labelDao().update(it.copy(msgsCount = msgsCount))
-      }
-
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
-          progress = 80.0,
-          resultCode = R.id.progress_id_getting_list_of_emails
-      ))
-      if (end < 1) {
-        handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
-      } else {
-        val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
-          foundMsgs.copyOfRange(start - 1, end)
-        } else {
-          imapFolder.getMessages(start, end)
-        }
-
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(FetchProfile.Item.ENVELOPE)
-        fetchProfile.add(FetchProfile.Item.FLAGS)
-        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-        imapFolder.fetch(msgs, fetchProfile)
-
-        handleReceivedMsgs(accountEntity, localFolder, folder, msgs)
       }
     }
 
     return@withContext Result.success(true)
+  }
+
+  private suspend fun handleReceivedMsgs(account: AccountEntity, localFolder: LocalFolder,
+                                         msgs: List<com.google.api.services.gmail.model.Message>) = withContext(Dispatchers.IO) {
+    val email = account.email
+    val folder = localFolder.fullName
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val msgEntities = MessageEntity.genMessageEntities(
+        context = getApplication(),
+        email = email,
+        label = folder,
+        msgsList = msgs,
+        isNew = false,
+        areAllMsgsEncrypted = isEncryptedModeEnabled
+    )
+
+    roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+
+    if (!isEncryptedModeEnabled) {
+      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
+    }
+
+    //identifyAttachments(msgEntities, msgs, remoteFolder, account, localFolder, roomDatabase)
   }
 
   private suspend fun handleReceivedMsgs(account: AccountEntity, localFolder: LocalFolder,

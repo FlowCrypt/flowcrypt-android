@@ -9,6 +9,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
+import android.provider.BaseColumns
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -30,8 +31,10 @@ import javax.mail.Flags
 import javax.mail.Message
 import javax.mail.MessageRemovedException
 import javax.mail.MessagingException
+import javax.mail.Session
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeMessage
 import kotlin.collections.HashMap
 
 /**
@@ -41,7 +44,7 @@ import kotlin.collections.HashMap
  *         E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 need to add ForeignKey on account table
-@Entity(tableName = "messages",
+@Entity(tableName = MessageEntity.TABLE_NAME,
     indices = [
       Index(name = "email_in_messages", value = ["email"]),
       Index(name = "email_uid_folder_in_messages", value = ["email", "uid", "folder"], unique = true)
@@ -174,6 +177,8 @@ data class MessageEntity(
   }
 
   companion object CREATOR : Parcelable.Creator<MessageEntity> {
+    const val TABLE_NAME = "messages"
+
     override fun createFromParcel(parcel: Parcel): MessageEntity {
       return MessageEntity(parcel)
     }
@@ -226,6 +231,58 @@ data class MessageEntity(
           } catch (e: AddressException) {
             e.printStackTrace()
           }
+        }
+      }
+
+      return messageEntities
+    }
+
+    fun genMessageEntities(context: Context, email: String, label: String, msgsList: List<com.google.api.services.gmail.model.Message>,
+                           msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
+                           isNew: Boolean, areAllMsgsEncrypted: Boolean): List<MessageEntity> {
+      val messageEntities = mutableListOf<MessageEntity>()
+      val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
+          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+
+      val onlyEncryptedMsgs = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
+          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+
+      val timestamp = System.currentTimeMillis().toString()
+
+      for ((index, msg) in msgsList.withIndex()) {
+        try {
+          var isEncrypted: Boolean? = null
+          var isNewTemp = isNew
+
+          if (isNotificationDisabled) {
+            isNewTemp = false
+          }
+
+          val isMsgEncrypted: Boolean? = areAllMsgsEncrypted
+
+          isMsgEncrypted?.let {
+            isEncrypted = it
+
+            if (onlyEncryptedMsgs && !it) {
+              isNewTemp = false
+            }
+          }
+
+          val mimeMessage = MimeMessage(Session.getInstance(Properties())).apply {
+            for (header in msg.payload.headers) {
+              setHeader(header.name, header.value)
+            }
+          }
+
+          val uid = (timestamp + index).toLong()
+          messageEntities.add(genMsgEntity(email, label, mimeMessage, uid, isNewTemp,
+              isEncrypted).copy(msgId = msg.id, threadId = msg.threadId))
+        } catch (e: MessageRemovedException) {
+          e.printStackTrace()
+        } catch (e: AddressException) {
+          e.printStackTrace()
         }
       }
 

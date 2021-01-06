@@ -10,14 +10,21 @@ import android.content.Context
 import android.util.Base64
 import android.util.Base64InputStream
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.googleapis.json.GoogleJsonError
+import com.google.api.client.http.HttpHeaders
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
+import com.google.api.services.gmail.model.ListMessagesResponse
+import com.google.api.services.gmail.model.Message
 import java.io.InputStream
 
 /**
@@ -81,7 +88,48 @@ class GmailApiHelper {
       message.fields = "raw"
 
       return Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()), Base64.URL_SAFE)
+    }
 
+    fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder: LocalFolder, countOfAlreadyLoadedMsgs: Int, nextPageToken: String? = null): ListMessagesResponse {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      return gmailApiService
+          .users()
+          .messages()
+          .list(DEFAULT_USER_ID)
+          .setLabelIds(listOf(localFolder.fullName))
+          .setMaxResults(JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong())
+          .execute()
+    }
+
+    fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, list: ListMessagesResponse): List<Message> {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      val listResult = mutableListOf<Message>()
+
+      for (message in list.messages) {
+        val request = gmailApiService
+            .users()
+            .messages()
+            .get(DEFAULT_USER_ID, message.id)
+            .setFormat("METADATA")
+        request.queue(batch, object : JsonBatchCallback<Message>() {
+          override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
+            if (t != null) {
+              listResult.add(t)
+            } else throw java.lang.NullPointerException()
+          }
+
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            throw IllegalStateException()
+          }
+        })
+      }
+
+      batch.execute()
+
+
+      return listResult
     }
   }
 }
