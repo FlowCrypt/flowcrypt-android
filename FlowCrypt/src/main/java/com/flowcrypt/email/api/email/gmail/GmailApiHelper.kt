@@ -28,6 +28,7 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
+import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
@@ -45,8 +46,12 @@ import javax.mail.Part
 class GmailApiHelper {
   companion object {
     const val DEFAULT_USER_ID = "me"
+
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
     const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
+
+    const val FOLDER_TYPE_USER = "user"
+
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
     /**
@@ -136,7 +141,6 @@ class GmailApiHelper {
 
       batch.execute()
 
-
       return listResult
     }
 
@@ -165,6 +169,18 @@ class GmailApiHelper {
       }
 
       return attachmentInfoList
+    }
+
+    fun getLabels(context: Context, account: AccountEntity?): List<Label> {
+      val gmailApiService = generateGmailApiService(context, account)
+
+      val response = gmailApiService
+          .users()
+          .labels()
+          .list(DEFAULT_USER_ID)
+          .execute()
+
+      return response.labels ?: emptyList()
     }
   }
 }

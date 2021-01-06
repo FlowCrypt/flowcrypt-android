@@ -8,9 +8,11 @@ package com.flowcrypt.email.api.email
 import android.content.Context
 import android.text.TextUtils
 import androidx.annotation.WorkerThread
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.LabelEntity
+import com.google.api.services.gmail.model.Label
 import com.sun.mail.imap.IMAPFolder
 import java.util.*
 import javax.mail.MessagingException
@@ -114,10 +116,23 @@ class FoldersManager constructor(val account: String) {
    * @param folderAlias The folder alias.
    * @throws MessagingException
    */
-  fun addFolder(imapFolder: IMAPFolder?, folderAlias: String) {
+  fun addFolder(imapFolder: IMAPFolder?) {
     imapFolder?.let {
       if (!EmailUtil.containsNoSelectAttr(it) && !TextUtils.isEmpty(it.fullName) && !folders.containsKey(it.fullName)) {
-        this.folders[prepareFolderKey(it)] = generateFolder(account, it, folderAlias)
+        this.folders[prepareFolderKey(it)] = generateFolder(account, it, imapFolder.name)
+      }
+    }
+  }
+
+  /**
+   * Add a new folder to [FoldersManager] to manage it.
+   *
+   * @param gMailLabel  The [Label] object which contains information about a remote folder.
+   */
+  fun addFolder(gMailLabel: Label?) {
+    gMailLabel?.let {
+      if (it.id.isNotEmpty() && !folders.containsKey(it.id)) {
+        this.folders[prepareFolderKey(it)] = generateFolder(account, it)
       }
     }
   }
@@ -255,6 +270,11 @@ class FoldersManager constructor(val account: String) {
     return folderType?.value ?: imapFolder.fullName
   }
 
+  private fun prepareFolderKey(label: Label): String {
+    val folderType = getFolderType(generateFolder(account, label))
+    return folderType?.value ?: label.id
+  }
+
   private fun prepareFolderKey(localFolder: LocalFolder): String {
     val folderType = getFolderType(localFolder)
     return folderType?.value ?: localFolder.fullName
@@ -322,6 +342,16 @@ class FoldersManager constructor(val account: String) {
     }
 
     /**
+     * Generate a new [LocalFolder]
+     *
+     * @param label  The [Label] object which contains information about a remote folder.
+     * @param folderAlias The folder alias.
+     */
+    fun generateFolder(account: String, label: Label): LocalFolder {
+      return LocalFolder(account, label.id, label.name, emptyList(), label.type == GmailApiHelper.FOLDER_TYPE_USER, 0, "")
+    }
+
+    /**
      * Check if current folder is a custom label.
      *
      * @param folder The [IMAPFolder] object which contains information about a
@@ -352,33 +382,26 @@ class FoldersManager constructor(val account: String) {
      */
     fun getFolderType(localFolder: LocalFolder?): FolderType? {
       val folderTypes = FolderType.values()
+      val attributes = localFolder?.attributes ?: emptyList()
 
-      if (localFolder != null) {
-        val attributes = localFolder.attributes
-
-        if (attributes != null) {
-          for (attribute in attributes) {
-            for (folderType in folderTypes) {
-              if (folderType.value == attribute) {
-                return folderType
-              }
-            }
-          }
-        }
-
-        if (!TextUtils.isEmpty(localFolder.fullName)) {
-          if (JavaEmailConstants.FOLDER_INBOX.equals(localFolder.fullName, ignoreCase = true)) {
-            return FolderType.INBOX
-          }
-        }
-
-        if (!TextUtils.isEmpty(localFolder.fullName)) {
-          if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
-            return FolderType.OUTBOX
+      for (attribute in attributes) {
+        for (folderType in folderTypes) {
+          if (folderType.value == attribute) {
+            return folderType
           }
         }
       }
-      return null
+
+      return when {
+        JavaEmailConstants.FOLDER_INBOX.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.INBOX
+        JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.OUTBOX
+        JavaEmailConstants.FOLDER_SENT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.SENT
+        JavaEmailConstants.FOLDER_TRASH.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.TRASH
+        JavaEmailConstants.FOLDER_DRAFT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.DRAFTS
+        JavaEmailConstants.FOLDER_STARRED.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.STARRED
+        JavaEmailConstants.FOLDER_IMPORTANT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.IMPORTANT
+        else -> null
+      }
     }
 
     /**

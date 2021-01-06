@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -61,17 +62,29 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
 
     suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val folders = store.defaultFolder.list("*")
       val email = account.email
-
       val foldersManager = FoldersManager(account.email)
-      for (folder in folders) {
-        try {
-          val imapFolder = folder as IMAPFolder
-          foldersManager.addFolder(imapFolder, folder.getName())
-        } catch (e: MessagingException) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
+
+      when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          val gMailLabels = GmailApiHelper.getLabels(context, account)
+          for (label in gMailLabels) {
+            foldersManager.addFolder(label)
+          }
+        }
+
+        else -> {
+          val folders = store.defaultFolder.list("*")
+
+          for (folder in folders) {
+            try {
+              val imapFolder = folder as IMAPFolder
+              foldersManager.addFolder(imapFolder)
+            } catch (e: MessagingException) {
+              e.printStackTrace()
+              ExceptionUtil.handleError(e)
+            }
+          }
         }
       }
 
