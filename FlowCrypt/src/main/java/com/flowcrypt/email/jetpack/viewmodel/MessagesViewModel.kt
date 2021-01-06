@@ -30,6 +30,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.service.EmailAndNameUpdaterService
@@ -361,7 +362,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
     }
 
-    //identifyAttachments(msgEntities, msgs, remoteFolder, account, localFolder, roomDatabase)
+    identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
+    //updateLocalContactsIfNeeded(remoteFolder, msgs)
   }
 
   private suspend fun handleReceivedMsgs(account: AccountEntity, localFolder: LocalFolder,
@@ -388,6 +390,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
 
     identifyAttachments(msgEntities, msgs, remoteFolder, account, localFolder, roomDatabase)
+    updateLocalContactsIfNeeded(remoteFolder, msgs)
   }
 
   private suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: Array<Message>,
@@ -403,21 +406,45 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             AttachmentEntity.fromAttInfo(it.apply {
               this.email = account.email
               this.folder = localFolder.fullName
-              this.uid = uid.toInt()
+              this.uid = uid
             })
           })
         }
       }
 
       roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
-      updateLocalContactsIfNeeded(remoteFolder, msgs)
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
     }
   }
 
-  private fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder, messages: Array<Message>) {
+  private suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: List<com.google.api.services.gmail.model.Message>,
+                                          account: AccountEntity, localFolder:
+                                          LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
+    try {
+      val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
+      val attachments = mutableListOf<AttachmentEntity>()
+      for (msg in msgs) {
+        if (msg.uid in savedMsgUIDsSet) {
+          attachments.addAll(GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
+            AttachmentEntity.fromAttInfo(it.apply {
+              this.email = account.email
+              this.folder = localFolder.fullName
+              this.uid = msg.uid
+            })
+          })
+        }
+      }
+
+      roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  private suspend fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder, messages: Array<Message>) = withContext(Dispatchers.IO) {
     try {
       val isSentFolder = imapFolder.attributes.contains("\\Sent")
 

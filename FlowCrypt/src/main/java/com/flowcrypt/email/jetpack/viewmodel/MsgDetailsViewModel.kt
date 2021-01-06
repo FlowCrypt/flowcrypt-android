@@ -682,7 +682,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         AttachmentEntity.fromAttInfo(it.apply {
           email = accountEntity.email
           folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
-          uid = msgUid.toInt()
+          uid = msgUid
         })
       }
 

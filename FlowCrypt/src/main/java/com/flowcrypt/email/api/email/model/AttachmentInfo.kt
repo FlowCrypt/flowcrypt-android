@@ -22,9 +22,9 @@ import com.flowcrypt.email.security.SecurityUtils
 data class AttachmentInfo constructor(var rawData: String? = null,
                                       var email: String? = null,
                                       var folder: String? = null,
-                                      var uid: Int = 0,
+                                      var uid: Long = 0,
                                       var fwdFolder: String? = null,
-                                      var fwdUid: Int = 0,
+                                      var fwdUid: Long = 0,
                                       var name: String? = null,
                                       var encodedSize: Long = 0,
                                       var type: String = Constants.MIME_TYPE_BINARY_DATA,
@@ -40,7 +40,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
   val uniqueStringId: String
     get() = uid.toString() + "_" + id + "_" + path
 
-  fun copy(newFolder: String, newUid: Int): AttachmentInfo {
+  fun copy(newFolder: String, newUid: Long): AttachmentInfo {
     return copy(folder = newFolder, uid = newUid, fwdFolder = this.folder, fwdUid = this.uid, orderNumber = 0)
   }
 
@@ -48,9 +48,9 @@ data class AttachmentInfo constructor(var rawData: String? = null,
       source.readString(),
       source.readString(),
       source.readString(),
-      source.readInt(),
+      source.readLong(),
       source.readString(),
-      source.readInt(),
+      source.readLong(),
       source.readString(),
       source.readLong(),
       source.readString()!!,
@@ -73,9 +73,9 @@ data class AttachmentInfo constructor(var rawData: String? = null,
       writeString(rawData)
       writeString(email)
       writeString(folder)
-      writeInt(uid)
+      writeLong(uid)
       writeString(fwdFolder)
-      writeInt(fwdUid)
+      writeLong(fwdUid)
       writeString(name)
       writeLong(encodedSize)
       writeString(type)
@@ -121,9 +121,9 @@ data class AttachmentInfo constructor(var rawData: String? = null,
     var result = rawData?.hashCode() ?: 0
     result = 31 * result + (email?.hashCode() ?: 0)
     result = 31 * result + (folder?.hashCode() ?: 0)
-    result = 31 * result + uid
+    result = 31 * result + uid.hashCode()
     result = 31 * result + (fwdFolder?.hashCode() ?: 0)
-    result = 31 * result + fwdUid
+    result = 31 * result + fwdUid.hashCode()
     result = 31 * result + (name?.hashCode() ?: 0)
     result = 31 * result + encodedSize.hashCode()
     result = 31 * result + type.hashCode()

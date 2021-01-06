@@ -10,11 +10,16 @@ import android.content.Context
 import android.util.Base64
 import android.util.Base64InputStream
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.contentId
+import com.flowcrypt.email.extensions.disposition
+import com.flowcrypt.email.extensions.isMimeType
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.json.GoogleJsonError
@@ -25,7 +30,9 @@ import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
+import com.google.api.services.gmail.model.MessagePart
 import java.io.InputStream
+import javax.mail.Part
 
 /**
  * This class helps to work with Gmail API.
@@ -39,6 +46,7 @@ class GmailApiHelper {
   companion object {
     const val DEFAULT_USER_ID = "me"
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
+    const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
     /**
@@ -112,7 +120,7 @@ class GmailApiHelper {
             .users()
             .messages()
             .get(DEFAULT_USER_ID, message.id)
-            .setFormat("METADATA")
+            .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
         request.queue(batch, object : JsonBatchCallback<Message>() {
           override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
             if (t != null) {
@@ -130,6 +138,33 @@ class GmailApiHelper {
 
 
       return listResult
+    }
+
+    /**
+     * Get information about attachments from the given [MessagePart]
+     *
+     * @param depth          The depth of the given [MessagePart]
+     * @param messagePart    The given [MessagePart]
+     * @return a list of found attachments
+     */
+    fun getAttsInfoFromMessagePart(messagePart: MessagePart, depth: String = "0"): MutableList<AttachmentInfo> {
+      val attachmentInfoList = mutableListOf<AttachmentInfo>()
+      if (messagePart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+        for ((index, part) in (messagePart.parts ?: emptyList()).withIndex()) {
+          attachmentInfoList.addAll(getAttsInfoFromMessagePart(part, "$depth${AttachmentInfo.DEPTH_SEPARATOR}${index}"))
+        }
+      } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
+        val attachmentInfo = AttachmentInfo()
+        attachmentInfo.name = messagePart.filename ?: depth
+        attachmentInfo.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
+        attachmentInfo.type = messagePart.mimeType ?: ""
+        attachmentInfo.id = messagePart.contentId()
+            ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
+        attachmentInfo.path = depth
+        attachmentInfoList.add(attachmentInfo)
+      }
+
+      return attachmentInfoList
     }
   }
 }

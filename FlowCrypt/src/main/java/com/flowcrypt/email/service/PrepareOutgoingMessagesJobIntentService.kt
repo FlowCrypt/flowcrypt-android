@@ -234,7 +234,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         it.apply {
           this.email = accountEntity.email
           this.folder = JavaEmailConstants.FOLDER_OUTBOX
-          this.uid = uid.toInt()
+          this.uid = uid
         }
       }
 
@@ -317,11 +317,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         }
 
         if (att.isEncryptionAllowed && msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid.toInt())
+          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid)
           encryptedAtt.name = encryptedAtt.name + Constants.PGP_FILE_EXT
           cachedAtts.add(encryptedAtt)
         } else {
-          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid.toInt()))
+          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid))
         }
       }
     }

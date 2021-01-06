@@ -51,7 +51,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     prepareAndShowNotificationsGroup(context, attInfo, true)
 
 
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
+    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
   }
 
   /**
@@ -75,7 +75,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
         .setGroup(GROUP_NAME_ATTACHMENTS)
         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
+    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, true)
   }
 
@@ -106,7 +106,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
         .setGroup(GROUP_NAME_ATTACHMENTS)
         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
 
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
+    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
 
     prepareAndShowNotificationsGroup(context, attInfo, false)
   }
@@ -139,7 +139,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
         .setGroup(GROUP_NAME_ATTACHMENTS)
         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
 
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
+    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, false)
   }
 
@@ -149,7 +149,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param attInfo The [AttachmentInfo] object.
    */
   fun loadingCanceledByUser(attInfo: AttachmentInfo) {
-    cancel(attInfo.id, attInfo.uid)
+    cancel(attInfo.id, attInfo.uid.toInt())
   }
 
   /**
@@ -233,7 +233,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
 
     for (stBarNotification in manager.activeNotifications) {
       if (!TextUtils.isEmpty(stBarNotification.tag) && stBarNotification.tag != attInfo.id
-          && stBarNotification.id != attInfo.uid) {
+          && stBarNotification.id != attInfo.uid.toInt()) {
         val notification = stBarNotification.notification
         if (GROUP_NAME_ATTACHMENTS == notification.group) {
           val extras = notification.extras
