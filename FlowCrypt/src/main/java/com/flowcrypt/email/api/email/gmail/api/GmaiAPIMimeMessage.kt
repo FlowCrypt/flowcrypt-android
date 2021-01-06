@@ -1,0 +1,31 @@
+/*
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.api.email.gmail.api
+
+import com.google.api.services.gmail.model.Message
+import java.util.*
+import javax.mail.Session
+import javax.mail.internet.MimeMessage
+
+/**
+ * @author Denis Bondarenko
+ *         Date: 1/6/21
+ *         Time: 3:12 PM
+ *         E-mail: DenBond7@gmail.com
+ */
+class GmaiAPIMimeMessage(session: Session, message: Message) : MimeMessage(session) {
+  private val internalDate = Date(message.internalDate)
+
+  init {
+    for (header in message.payload.headers) {
+      setHeader(header.name, header.value)
+    }
+  }
+
+  override fun getReceivedDate(): Date {
+    return internalDate
+  }
+}

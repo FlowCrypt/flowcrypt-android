@@ -77,7 +77,7 @@ class GmailApiHelper {
     }
 
     fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream {
-      val msgId = messageEntity.msgId ?: throw NullPointerException("msgId == null")
+      val msgId = messageEntity.gMailId
       val gmailApiService = generateGmailApiService(context, account)
 
       val message = gmailApiService

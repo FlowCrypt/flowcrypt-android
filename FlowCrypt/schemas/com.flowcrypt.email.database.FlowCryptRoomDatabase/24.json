@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 24,
-    "identityHash": "875f7ad4e61fd1ce5e63488e580d3738",
+    "identityHash": "18d856653cbc60b0317915b557883a66",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -756,7 +756,7 @@
       },
       {
         "tableName": "messages",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `received_date` INTEGER DEFAULT NULL, `sent_date` INTEGER DEFAULT NULL, `from_address` TEXT DEFAULT NULL, `to_address` TEXT DEFAULT NULL, `cc_address` TEXT DEFAULT NULL, `subject` TEXT DEFAULT NULL, `flags` TEXT DEFAULT NULL, `raw_message_without_attachments` TEXT DEFAULT NULL, `is_message_has_attachments` INTEGER DEFAULT 0, `is_encrypted` INTEGER DEFAULT -1, `is_new` INTEGER DEFAULT -1, `state` INTEGER DEFAULT -1, `attachments_directory` TEXT, `error_msg` TEXT DEFAULT NULL, `reply_to` TEXT DEFAULT NULL, `msg_id` TEXT DEFAULT NULL, `thread_id` TEXT DEFAULT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `received_date` INTEGER DEFAULT NULL, `sent_date` INTEGER DEFAULT NULL, `from_address` TEXT DEFAULT NULL, `to_address` TEXT DEFAULT NULL, `cc_address` TEXT DEFAULT NULL, `subject` TEXT DEFAULT NULL, `flags` TEXT DEFAULT NULL, `raw_message_without_attachments` TEXT DEFAULT NULL, `is_message_has_attachments` INTEGER DEFAULT 0, `is_encrypted` INTEGER DEFAULT -1, `is_new` INTEGER DEFAULT -1, `state` INTEGER DEFAULT -1, `attachments_directory` TEXT, `error_msg` TEXT DEFAULT NULL, `reply_to` TEXT DEFAULT NULL, `thread_id` TEXT DEFAULT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -887,13 +887,6 @@
             "defaultValue": "NULL"
           },
           {
-            "fieldPath": "msgId",
-            "columnName": "msg_id",
-            "affinity": "TEXT",
-            "notNull": false,
-            "defaultValue": "NULL"
-          },
-          {
             "fieldPath": "threadId",
             "columnName": "thread_id",
             "affinity": "TEXT",
@@ -933,7 +926,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '875f7ad4e61fd1ce5e63488e580d3738')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '18d856653cbc60b0317915b557883a66')"
     ]
   }
 }

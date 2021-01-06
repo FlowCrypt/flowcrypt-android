@@ -449,7 +449,6 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE messages ADD COLUMN msg_id TEXT DEFAULT NULL;")
           database.execSQL("ALTER TABLE messages ADD COLUMN thread_id TEXT DEFAULT NULL;")
           database.setTransactionSuccessful()
         } finally {

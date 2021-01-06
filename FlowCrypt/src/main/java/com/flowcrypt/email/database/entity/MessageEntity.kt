@@ -9,7 +9,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
-import android.provider.BaseColumns
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -19,9 +18,11 @@ import androidx.room.PrimaryKey
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
@@ -34,7 +35,6 @@ import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
 import kotlin.collections.HashMap
 
 /**
@@ -70,7 +70,6 @@ data class MessageEntity(
     @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
     @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
     @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
-    @ColumnInfo(name = "msg_id", defaultValue = "NULL") val msgId: String? = null,
     @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null
 ) : Parcelable {
 
@@ -91,6 +90,9 @@ data class MessageEntity(
 
   @Ignore
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
+
+  @Ignore
+  val gMailId: String = java.lang.Long.toHexString(uid).toLowerCase(Locale.US)
 
   /**
    * Generate a list of the all recipients.
@@ -132,7 +134,6 @@ data class MessageEntity(
       parcel.readString(),
       parcel.readString(),
       parcel.readString(),
-      parcel.readString(),
       parcel.readString())
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -155,7 +156,6 @@ data class MessageEntity(
     parcel.writeString(attachmentsDirectory)
     parcel.writeString(errorMsg)
     parcel.writeString(replyTo)
-    parcel.writeString(msgId)
     parcel.writeString(threadId)
   }
 
@@ -249,9 +249,7 @@ data class MessageEntity(
           SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
               Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
-      val timestamp = System.currentTimeMillis().toString()
-
-      for ((index, msg) in msgsList.withIndex()) {
+      for (msg in msgsList) {
         try {
           var isEncrypted: Boolean? = null
           var isNewTemp = isNew
@@ -270,15 +268,9 @@ data class MessageEntity(
             }
           }
 
-          val mimeMessage = MimeMessage(Session.getInstance(Properties())).apply {
-            for (header in msg.payload.headers) {
-              setHeader(header.name, header.value)
-            }
-          }
-
-          val uid = (timestamp + index).toLong()
-          messageEntities.add(genMsgEntity(email, label, mimeMessage, uid, isNewTemp,
-              isEncrypted).copy(msgId = msg.id, threadId = msg.threadId))
+          val mimeMessage = GmaiAPIMimeMessage(Session.getInstance(Properties()), msg)
+          messageEntities.add(genMsgEntity(email, label, mimeMessage, msg.uid, isNewTemp,
+              isEncrypted).copy(threadId = msg.threadId))
         } catch (e: MessageRemovedException) {
           e.printStackTrace()
         } catch (e: AddressException) {
