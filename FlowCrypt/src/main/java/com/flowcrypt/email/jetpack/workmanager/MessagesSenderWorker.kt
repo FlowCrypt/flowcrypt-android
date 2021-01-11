@@ -227,10 +227,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
               }
 
               val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(email).size
-              val outboxLabel = roomDatabase.labelDao().getLabelSuspend(email, JavaEmailConstants.FOLDER_OUTBOX)
+              val outboxLabel = roomDatabase.labelDao().getLabelSuspend(email, account.accountType, JavaEmailConstants.FOLDER_OUTBOX)
 
               outboxLabel?.let {
-                roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
+                roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
               }
             }
           } catch (e: Exception) {
@@ -500,7 +500,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
    */
   private suspend fun saveCopyOfSentMsg(account: AccountEntity, store: Store, mimeMsg: MimeMessage): Boolean =
       withContext(Dispatchers.IO) {
-        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
+        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
         val sentLocalFolder = foldersManager.findSentFolder()
 
         if (sentLocalFolder != null) {

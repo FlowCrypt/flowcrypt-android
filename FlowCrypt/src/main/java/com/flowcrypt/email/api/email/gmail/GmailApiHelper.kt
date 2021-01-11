@@ -32,6 +32,8 @@ import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 import javax.mail.Part
 
@@ -171,7 +173,7 @@ class GmailApiHelper {
       return attachmentInfoList
     }
 
-    fun getLabels(context: Context, account: AccountEntity?): List<Label> {
+    suspend fun getLabels(context: Context, account: AccountEntity?): List<Label> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, account)
 
       val response = gmailApiService
@@ -180,7 +182,7 @@ class GmailApiHelper {
           .list(DEFAULT_USER_ID)
           .execute()
 
-      return response.labels ?: emptyList()
+      return@withContext response.labels ?: emptyList()
     }
   }
 }

@@ -307,8 +307,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           val folderName = imapFolder.fullName
 
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
-          roomDatabase.labelDao().getLabelSuspend(accountEntity.email, folderName)?.let {
-            roomDatabase.labelDao().update(it.copy(msgsCount = msgsCount))
+          roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
+            roomDatabase.labelDao().update(it.copy(messagesTotal = msgsCount))
           }
 
           loadMsgsFromRemoteServerLiveData.postValue(Result.loading(

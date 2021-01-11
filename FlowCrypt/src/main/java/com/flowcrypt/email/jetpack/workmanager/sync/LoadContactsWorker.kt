@@ -45,7 +45,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
 
   private suspend fun fetchContacts(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     if (account.areContactsLoaded == true) return@withContext
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val folderSent = foldersManager.findSentFolder() ?: return@withContext
 
     store.getFolder(folderSent.fullName).use { folder ->

@@ -88,22 +88,17 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
         }
       }
 
-      val localFolder = LocalFolder(email, JavaEmailConstants.FOLDER_OUTBOX,
-          JavaEmailConstants.FOLDER_OUTBOX, listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
+      foldersManager.addFolder(LocalFolder(
+          account = email,
+          fullName = JavaEmailConstants.FOLDER_OUTBOX,
+          folderAlias = JavaEmailConstants.FOLDER_OUTBOX,
+          attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
+          isCustom = false,
+          msgCount = 0,
+          searchQuery = ""
+      ))
 
-      foldersManager.addFolder(localFolder)
-
-      val existedLabels = roomDatabase.labelDao().getLabelsSuspend(email)
-      val freshLabels = mutableListOf<LabelEntity>()
-      for (folder in foldersManager.allFolders) {
-        freshLabels.add(LabelEntity.genLabel(email, folder))
-      }
-
-      if (existedLabels.isEmpty()) {
-        roomDatabase.labelDao().insertSuspend(freshLabels)
-      } else {
-        roomDatabase.labelDao().update(existedLabels, freshLabels)
-      }
+      roomDatabase.labelDao().update(account, foldersManager.allFolders.map { LabelEntity.genLabel(account, it) })
     }
   }
 }

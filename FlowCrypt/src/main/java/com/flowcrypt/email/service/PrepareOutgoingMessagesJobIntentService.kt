@@ -115,7 +115,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
       if (newMsgId > 0) {
-        updateOutgoingMsgCount(email, roomDatabase)
+        updateOutgoingMsgCount(email, accountEntity.accountType, roomDatabase)
 
         val hasAtts = outgoingMsgInfo.atts?.isNotEmpty() == true
             || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
@@ -180,7 +180,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     }
 
     if (newMsgId > 0) {
-      updateOutgoingMsgCount(email, roomDatabase)
+      updateOutgoingMsgCount(email, accountEntity.accountType, roomDatabase)
     }
   }
 
@@ -194,12 +194,12 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     return attsCacheDir
   }
 
-  private fun updateOutgoingMsgCount(email: String, roomDatabase: FlowCryptRoomDatabase) {
+  private fun updateOutgoingMsgCount(email: String, accountType: String?, roomDatabase: FlowCryptRoomDatabase) {
     val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgs(email).size
-    val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
+    val outboxLabel = roomDatabase.labelDao().getLabel(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {
-      roomDatabase.labelDao().update(it.copy(msgsCount = outgoingMsgCount))
+      roomDatabase.labelDao().update(it.copy(messagesTotal = outgoingMsgCount))
     }
   }
 

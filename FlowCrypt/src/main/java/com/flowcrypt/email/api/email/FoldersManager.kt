@@ -11,6 +11,7 @@ import androidx.annotation.WorkerThread
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.google.api.services.gmail.model.Label
 import com.sun.mail.imap.IMAPFolder
@@ -304,13 +305,13 @@ class FoldersManager constructor(val account: String) {
      * called from a background thread only.
      *
      * @param context     Interface to global information about an application environment.
-     * @param accountName The name of an account.
+     * @param accountEntity [AccountEntity].
      * @return The new [FoldersManager].
      */
     @WorkerThread
-    fun fromDatabase(context: Context, accountName: String): FoldersManager {
+    fun fromDatabase(context: Context, accountEntity: AccountEntity): FoldersManager {
       val appContext = context.applicationContext
-      return build(accountName, FlowCryptRoomDatabase.getDatabase(appContext).labelDao().getLabels(accountName))
+      return build(accountEntity.email, FlowCryptRoomDatabase.getDatabase(appContext).labelDao().getLabels(accountEntity.email, accountEntity.accountType))
     }
 
     /**
@@ -322,9 +323,10 @@ class FoldersManager constructor(val account: String) {
      * @return The new [FoldersManager].
      */
     @WorkerThread
-    suspend fun fromDatabaseSuspend(context: Context, accountName: String): FoldersManager {
+    suspend fun fromDatabaseSuspend(context: Context, accountEntity: AccountEntity): FoldersManager {
       val appContext = context.applicationContext
-      return build(accountName, FlowCryptRoomDatabase.getDatabase(appContext).labelDao().getLabelsSuspend(accountName))
+      return build(accountEntity.email, FlowCryptRoomDatabase.getDatabase(appContext).labelDao()
+          .getLabelsSuspend(accountEntity.email, accountEntity.accountType))
     }
 
     /**

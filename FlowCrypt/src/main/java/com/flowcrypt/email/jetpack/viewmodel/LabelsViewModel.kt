@@ -30,7 +30,7 @@ import javax.mail.Store
  */
 class LabelsViewModel(application: Application) : AccountViewModel(application) {
   val labelsLiveData: LiveData<List<LabelEntity>> = Transformations.switchMap(activeAccountLiveData) {
-    roomDatabase.labelDao().getLabelsLD(it?.email ?: "")
+    roomDatabase.labelDao().getLabelsLD(it?.email ?: "", it?.accountType)
   }
 
   val foldersManagerLiveData: LiveData<FoldersManager> = Transformations.switchMap(labelsLiveData) {

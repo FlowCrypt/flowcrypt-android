@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
@@ -22,31 +23,33 @@ import com.flowcrypt.email.database.entity.LabelEntity
  */
 @Dao
 interface LabelDao : BaseDao<LabelEntity> {
-  @Query("SELECT * FROM imap_labels WHERE email = :account AND folder_name = :label")
-  suspend fun getLabelSuspend(account: String?, label: String): LabelEntity?
+  @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType AND name = :label")
+  suspend fun getLabelSuspend(account: String, accountType: String?, label: String): LabelEntity?
 
-  @Query("SELECT * FROM imap_labels WHERE email = :account AND folder_name = :label")
-  fun getLabel(account: String?, label: String): LabelEntity?
+  @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType AND name = :label")
+  fun getLabel(account: String, accountType: String?, label: String): LabelEntity?
 
-  @Query("SELECT * FROM imap_labels WHERE email = :account")
-  fun getLabelsLD(account: String): LiveData<List<LabelEntity>>
+  @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType")
+  fun getLabelsLD(account: String, accountType: String?): LiveData<List<LabelEntity>>
 
-  @Query("SELECT * FROM imap_labels WHERE email = :account")
-  fun getLabels(account: String): List<LabelEntity>
+  @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType")
+  fun getLabels(account: String, accountType: String?): List<LabelEntity>
 
-  @Query("SELECT * FROM imap_labels WHERE email = :account")
-  suspend fun getLabelsSuspend(account: String): List<LabelEntity>
+  @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType")
+  suspend fun getLabelsSuspend(account: String, accountType: String?): List<LabelEntity>
 
-  @Query("DELETE FROM imap_labels WHERE email = :email")
-  suspend fun deleteByEmailSuspend(email: String?): Int
+  @Query("DELETE FROM labels WHERE email = :account AND account_type = :accountType")
+  suspend fun deleteByEmailSuspend(account: String, accountType: String?): Int
 
   @Transaction
-  suspend fun update(existedLabels: Collection<LabelEntity>, freshLabels: Collection<LabelEntity>) {
+  suspend fun update(accountEntity: AccountEntity, freshLabels: Collection<LabelEntity>) {
+    val existedLabels = getLabelsSuspend(accountEntity.email, accountEntity.accountType)
+
     val deleteCandidates = mutableListOf<LabelEntity>()
     for (existedLabel in existedLabels) {
       var isFolderFound = false
       for (freshLabel in freshLabels) {
-        if (freshLabel.folderName == existedLabel.folderName) {
+        if (freshLabel.name == existedLabel.name) {
           isFolderFound = true
           break
         }
@@ -61,7 +64,7 @@ interface LabelDao : BaseDao<LabelEntity> {
     for (freshLabel in freshLabels) {
       var isFolderFound = false
       for (existedLabel in existedLabels) {
-        if (existedLabel.folderName == freshLabel.folderName) {
+        if (existedLabel.name == freshLabel.name) {
           isFolderFound = true
           break
         }
@@ -73,6 +76,6 @@ interface LabelDao : BaseDao<LabelEntity> {
     }
 
     deleteSuspend(deleteCandidates)
-    insertSuspend(newCandidates)
+    insertWithReplaceSuspend(newCandidates)
   }
 }

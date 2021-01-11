@@ -435,14 +435,14 @@ class AttachmentDownloadManagerService : Service() {
         val session = OpenStoreHelper.getAttsSess(context, account)
         val store = OpenStoreHelper.openStore(context, account, session)
 
-        val label = roomDatabase.labelDao().getLabel(email, att.folder!!)
+        val label = roomDatabase.labelDao().getLabel(email, account.accountType, att.folder!!)
             ?: if (roomDatabase.accountDao().getAccount(email) == null) {
               listener?.onCanceled(this.att)
               store.close()
               return
             } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
 
-        val remoteFolder = store.getFolder(label.folderName) as IMAPFolder
+        val remoteFolder = store.getFolder(label.name) as IMAPFolder
         remoteFolder.open(Folder.READ_ONLY)
 
         val msg = remoteFolder.getMessageByUID(att.uid.toLong())

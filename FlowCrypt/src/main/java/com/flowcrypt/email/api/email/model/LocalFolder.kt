@@ -40,11 +40,11 @@ data class LocalFolder constructor(val account: String,
 
   constructor(source: LabelEntity) : this(
       source.email,
-      source.folderName,
-      source.folderAlias,
+      source.name,
+      source.alias,
       source.attributesList,
-      source.isCustomLabel ?: false,
-      source.msgsCount ?: 0,
+      source.isCustom,
+      source.messagesTotal,
       null
   )
 

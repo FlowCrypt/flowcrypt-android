@@ -281,13 +281,18 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
       viewModelScope.launch {
         roomDatabase.msgDao().deleteSuspend(msgEntity)
 
+        val accountEntity = getActiveAccountSuspend() ?: return@launch
+
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
           val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.email).size
-          val outboxLabel = roomDatabase.labelDao().getLabelSuspend(msgEntity.email,
-              JavaEmailConstants.FOLDER_OUTBOX)
+          val outboxLabel = roomDatabase.labelDao().getLabelSuspend(
+              account = accountEntity.email,
+              accountType = accountEntity.accountType,
+              label = JavaEmailConstants.FOLDER_OUTBOX
+          )
 
           outboxLabel?.let {
-            roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
+            roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
           }
         }
       }

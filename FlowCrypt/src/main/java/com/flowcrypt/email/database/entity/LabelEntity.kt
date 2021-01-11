@@ -8,7 +8,9 @@ package com.flowcrypt.email.database.entity
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.google.android.gms.common.util.CollectionUtils
@@ -19,31 +21,40 @@ import com.google.android.gms.common.util.CollectionUtils
  *         Time: 5:57 PM
  *         E-mail: DenBond7@gmail.com
  */
-//todo-denbond7 need to add ForeignKey on account table
-@Entity(tableName = "imap_labels")
+@Entity(tableName = "labels",
+    indices = [
+      Index(name = "email_account_type_name_in_labels", value = ["email", "account_type", "name"], unique = true)
+    ],
+    foreignKeys = [
+      ForeignKey(entity = AccountEntity::class, parentColumns = ["email", "account_type"],
+          childColumns = ["email", "account_type"], onDelete = ForeignKey.CASCADE)
+    ])
 data class LabelEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     val email: String,
-    @ColumnInfo(name = "folder_name") val folderName: String,
-    @ColumnInfo(name = "is_custom_label", defaultValue = "0") val isCustomLabel: Boolean?,
-    @ColumnInfo(name = "folder_alias", defaultValue = "NULL") val folderAlias: String?,
-    @ColumnInfo(name = "message_count", defaultValue = "0") val msgsCount: Int?,
-    @ColumnInfo(name = "folder_attributes") val folderAttributes: String,
-    @ColumnInfo(name = "folder_message_count", defaultValue = "0") val folderMessageCount: Int? = 0) {
+    @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
+    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "alias", defaultValue = "NULL") val alias: String?,
+    @ColumnInfo(name = "is_custom", defaultValue = "0") val isCustom: Boolean = false,
+    @ColumnInfo(name = "messages_total", defaultValue = "0") val messagesTotal: Int = 0,
+    @ColumnInfo(name = "message_unread", defaultValue = "0") val messagesUnread: Int = 0,
+    @ColumnInfo(name = "attributes", defaultValue = "NULL") val attributes: String? = null) {
 
   @Ignore
-  val attributesList: List<String> = parseAttributes(folderAttributes)
+  val attributesList: List<String> = parseAttributes(attributes)
 
   companion object {
 
-    fun genLabel(accountName: String, localFolder: LocalFolder): LabelEntity {
+    fun genLabel(accountEntity: AccountEntity, localFolder: LocalFolder): LabelEntity {
       return with(localFolder) {
-        LabelEntity(email = accountName,
-            folderName = fullName,
-            isCustomLabel = isCustom,
-            folderAlias = folderAlias,
-            msgsCount = msgCount,
-            folderAttributes = convertAttributesToString(localFolder.attributes))
+        LabelEntity(
+            email = accountEntity.email,
+            accountType = accountEntity.accountType,
+            name = fullName,
+            isCustom = isCustom,
+            alias = folderAlias,
+            messagesTotal = msgCount,
+            attributes = convertAttributesToString(localFolder.attributes))
       }
     }
 

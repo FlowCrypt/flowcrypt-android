@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 24,
-    "identityHash": "18d856653cbc60b0317915b557883a66",
+    "identityHash": "e0db05d81af03e6a21e8c187c77f5907",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -689,8 +689,8 @@
         ]
       },
       {
-        "tableName": "imap_labels",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder_name` TEXT NOT NULL, `is_custom_label` INTEGER DEFAULT 0, `folder_alias` TEXT DEFAULT NULL, `message_count` INTEGER DEFAULT 0, `folder_attributes` TEXT NOT NULL, `folder_message_count` INTEGER DEFAULT 0)",
+        "tableName": "labels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -705,44 +705,52 @@
             "notNull": true
           },
           {
-            "fieldPath": "folderName",
-            "columnName": "folder_name",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "isCustomLabel",
-            "columnName": "is_custom_label",
-            "affinity": "INTEGER",
-            "notNull": false,
-            "defaultValue": "0"
-          },
-          {
-            "fieldPath": "folderAlias",
-            "columnName": "folder_alias",
+            "fieldPath": "accountType",
+            "columnName": "account_type",
             "affinity": "TEXT",
             "notNull": false,
             "defaultValue": "NULL"
           },
           {
-            "fieldPath": "msgsCount",
-            "columnName": "message_count",
-            "affinity": "INTEGER",
-            "notNull": false,
-            "defaultValue": "0"
-          },
-          {
-            "fieldPath": "folderAttributes",
-            "columnName": "folder_attributes",
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "folderMessageCount",
-            "columnName": "folder_message_count",
-            "affinity": "INTEGER",
+            "fieldPath": "alias",
+            "columnName": "alias",
+            "affinity": "TEXT",
             "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "isCustom",
+            "columnName": "is_custom",
+            "affinity": "INTEGER",
+            "notNull": true,
             "defaultValue": "0"
+          },
+          {
+            "fieldPath": "messagesTotal",
+            "columnName": "messages_total",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "messagesUnread",
+            "columnName": "message_unread",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "attributes",
+            "columnName": "attributes",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
           }
         ],
         "primaryKey": {
@@ -751,8 +759,33 @@
           ],
           "autoGenerate": true
         },
-        "indices": [],
-        "foreignKeys": []
+        "indices": [
+          {
+            "name": "email_account_type_name_in_labels",
+            "unique": true,
+            "columnNames": [
+              "email",
+              "account_type",
+              "name"
+            ],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_name_in_labels` ON `${TABLE_NAME}` (`email`, `account_type`, `name`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "accounts",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "email",
+              "account_type"
+            ],
+            "referencedColumns": [
+              "email",
+              "account_type"
+            ]
+          }
+        ]
       },
       {
         "tableName": "messages",
@@ -926,7 +959,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '18d856653cbc60b0317915b557883a66')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e0db05d81af03e6a21e8c187c77f5907')"
     ]
   }
 }

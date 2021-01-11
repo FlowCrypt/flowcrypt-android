@@ -39,7 +39,7 @@ class MovingToInboxWorker(context: Context, params: WorkerParameters) : BaseSync
   }
 
   private suspend fun moveMessagesToInbox(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 

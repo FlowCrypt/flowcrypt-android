@@ -42,7 +42,7 @@ class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParam
 
   private suspend fun identifyEncryptedMsgs(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val folderFullName = inputData.getString(KEY_FOLDER_FULL_NAME) ?: return@withContext
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val localFolder = foldersManager.getFolderByFullName(folderFullName) ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
     val uidList = roomDatabase.msgDao().getNotCheckedUIDs(account.email, folderFullName)

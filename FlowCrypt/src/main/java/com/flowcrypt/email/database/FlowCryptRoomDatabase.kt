@@ -449,6 +449,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
+          database.execSQL("DROP TABLE IF EXISTS imap_labels;")
+          database.execSQL("CREATE TABLE IF NOT EXISTS `labels` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
           database.execSQL("ALTER TABLE messages ADD COLUMN thread_id TEXT DEFAULT NULL;")
           database.setTransactionSuccessful()
         } finally {
