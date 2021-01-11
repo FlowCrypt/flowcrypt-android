@@ -268,9 +268,14 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     when (accountEntity.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
         val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(getApplication(), accountEntity,
             localFolder, countOfAlreadyLoadedMsgs, nextPageToken)
+        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 50.0, resultCode = R.id.progress_id_gmail_list))
+        nextPageToken = messagesBaseInfo.nextPageToken
+        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
         val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo)
+        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
         handleReceivedMsgs(accountEntity, localFolder, msgs)
       }
 

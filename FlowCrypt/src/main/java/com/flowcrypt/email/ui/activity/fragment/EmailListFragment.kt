@@ -829,6 +829,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
 
             R.id.progress_id_getting_list_of_emails -> setActionProgress(progress, "Getting list of emails")
+
+            R.id.progress_id_gmail_list -> setActionProgress(progress, "Getting list of emails")
+
+            R.id.progress_id_gmail_msgs_info -> setActionProgress(progress, "Getting emails info")
           }
         }
 

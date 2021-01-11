@@ -105,15 +105,17 @@ class GmailApiHelper {
       return Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()), Base64.URL_SAFE)
     }
 
-    fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder: LocalFolder, countOfAlreadyLoadedMsgs: Int, nextPageToken: String? = null): ListMessagesResponse {
+    fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder: LocalFolder, countOfAlreadyLoadedMsgs: Int, nextPageToken: String? = null):
+        ListMessagesResponse {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      return gmailApiService
+      val list = gmailApiService
           .users()
           .messages()
           .list(DEFAULT_USER_ID)
+          .setPageToken(nextPageToken)
           .setLabelIds(listOf(localFolder.fullName))
-          .setMaxResults(JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong())
-          .execute()
+          .setMaxResults(20)
+      return list.execute()
     }
 
     fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, list: ListMessagesResponse): List<Message> {
@@ -130,9 +132,7 @@ class GmailApiHelper {
             .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
         request.queue(batch, object : JsonBatchCallback<Message>() {
           override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
-            if (t != null) {
-              listResult.add(t)
-            } else throw java.lang.NullPointerException()
+            t?.let { listResult.add(it) } ?: throw java.lang.NullPointerException()
           }
 
           override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {

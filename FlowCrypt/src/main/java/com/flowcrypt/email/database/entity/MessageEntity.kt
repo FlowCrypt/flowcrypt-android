@@ -9,7 +9,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
-import android.provider.BaseColumns
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -19,6 +18,7 @@ import androidx.room.PrimaryKey
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
@@ -270,8 +270,15 @@ data class MessageEntity(
           }
 
           val mimeMessage = GmaiAPIMimeMessage(Session.getInstance(Properties()), msg)
-          messageEntities.add(genMsgEntity(email, label, mimeMessage, msg.uid, isNewTemp,
-              isEncrypted).copy(threadId = msg.threadId))
+          messageEntities.add(genMsgEntity(
+              email = email,
+              label = label,
+              msg = mimeMessage,
+              uid = msg.uid,
+              isNew = isNewTemp,
+              isEncrypted = isEncrypted,
+              hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
+          ).copy(threadId = msg.threadId))
         } catch (e: MessageRemovedException) {
           e.printStackTrace()
         } catch (e: AddressException) {
@@ -295,7 +302,9 @@ data class MessageEntity(
      * @throws MessagingException This exception may be occured when we call methods of thr
      * [Message] object
      */
-    fun genMsgEntity(email: String, label: String, msg: Message, uid: Long, isNew: Boolean, isEncrypted: Boolean? = null): MessageEntity {
+    fun genMsgEntity(email: String, label: String, msg: Message, uid: Long, isNew: Boolean,
+                     isEncrypted: Boolean? = null, hasAttachments: Boolean? = null):
+        MessageEntity {
       return MessageEntity(email = email,
           folder = label,
           uid = uid,
@@ -307,7 +316,7 @@ data class MessageEntity(
           ccAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)),
           subject = msg.subject,
           flags = msg.flags.toString().toUpperCase(Locale.getDefault()),
-          hasAttachments = EmailUtil.hasAtt(msg),
+          hasAttachments = hasAttachments?.let { hasAttachments } ?: EmailUtil.hasAtt(msg),
           isNew = if (!msg.flags.contains(Flags.Flag.SEEN)) {
             isNew
           } else {
