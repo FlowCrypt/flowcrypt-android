@@ -62,10 +62,11 @@ data class AccountEntity constructor(
     @ColumnInfo(defaultValue = "NULL") val uuid: String? = null,
     @ColumnInfo(name = "domain_rules", defaultValue = "NULL") val domainRules: String? = null,
     @Deprecated("Don't use this field. Should be removed in the next database upgrading")
-    @ColumnInfo(name = "is_restore_access_required", defaultValue = "0") val isRestoreAccessRequired: Boolean? = false) : Parcelable {
+    @ColumnInfo(name = "is_restore_access_required", defaultValue = "0") val isRestoreAccessRequired: Boolean? = false,
+    @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false) : Parcelable {
 
   @Ignore
-  val account: Account? = Account(this.email, accountType
+  val account: Account = Account(this.email, accountType
       ?: this.email.substring(this.email.indexOf('@') + 1).toLowerCase(Locale.US))
 
   val useOAuth2: Boolean
@@ -101,7 +102,8 @@ data class AccountEntity constructor(
           isShowOnlyEncrypted = false,
           uuid = uuid,
           domainRules = domainRules?.joinToString(),
-          isRestoreAccessRequired = false
+          isRestoreAccessRequired = false,
+          useAPI = true
       )
 
   constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<String>? = null) :
@@ -133,7 +135,8 @@ data class AccountEntity constructor(
           isShowOnlyEncrypted = false,
           uuid = uuid,
           domainRules = domainRules?.joinToString(),
-          isRestoreAccessRequired = false
+          isRestoreAccessRequired = false,
+          useAPI = false
       )
 
   constructor(email: String) :
@@ -165,7 +168,8 @@ data class AccountEntity constructor(
           isShowOnlyEncrypted = false,
           uuid = null,
           domainRules = null,
-          isRestoreAccessRequired = false
+          isRestoreAccessRequired = false,
+          useAPI = false
       )
 
   constructor(source: Parcel) : this(
@@ -197,7 +201,8 @@ data class AccountEntity constructor(
       source.readValue(Boolean::class.java.classLoader) as Boolean?,
       source.readString(),
       source.readString(),
-      source.readValue(Boolean::class.java.classLoader) as Boolean?
+      source.readValue(Boolean::class.java.classLoader) as Boolean?,
+      source.readValue(Boolean::class.java.classLoader) as Boolean
   )
 
   fun domainRulesList(): List<String> {
@@ -279,6 +284,7 @@ data class AccountEntity constructor(
     writeString(uuid)
     writeString(domainRules)
     writeValue(isRestoreAccessRequired)
+    writeValue(useAPI)
   }
 
   companion object {

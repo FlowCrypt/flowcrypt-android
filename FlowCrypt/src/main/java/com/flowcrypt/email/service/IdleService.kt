@@ -151,7 +151,7 @@ class IdleService : LifecycleService() {
     })
 
     idleSyncRunnable?.let { runnable ->
-      idleFuture = idleExecutorService.submit(runnable)
+      idleFuture = if (accountEntity.useAPI) null else idleExecutorService.submit(runnable)
     }
   }
 
