@@ -239,7 +239,6 @@ data class MessageEntity(
     }
 
     fun genMessageEntities(context: Context, email: String, label: String, msgsList: List<com.google.api.services.gmail.model.Message>,
-                           msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
                            isNew: Boolean, areAllMsgsEncrypted: Boolean): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
@@ -252,21 +251,20 @@ data class MessageEntity(
 
       for (msg in msgsList) {
         try {
-          var isEncrypted: Boolean? = null
           var isNewTemp = isNew
 
           if (isNotificationDisabled) {
             isNewTemp = false
           }
 
-          val isMsgEncrypted: Boolean? = areAllMsgsEncrypted
+          val isEncrypted: Boolean = if (areAllMsgsEncrypted) {
+            true
+          } else {
+            EmailUtil.hasEncryptedData(msg.snippet)
+          }
 
-          isMsgEncrypted?.let {
-            isEncrypted = it
-
-            if (onlyEncryptedMsgs && !it) {
-              isNewTemp = false
-            }
+          if (onlyEncryptedMsgs && !isEncrypted) {
+            isNewTemp = false
           }
 
           val mimeMessage = GmaiAPIMimeMessage(Session.getInstance(Properties()), msg)

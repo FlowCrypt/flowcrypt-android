@@ -650,7 +650,7 @@ class EmailUtil {
               val body = response.getItem(BODY::class.java)
               if (body != null && body.byteArrayInputStream != null) {
                 val rawMsg = ASCIIUtility.toString(body.byteArrayInputStream)
-                hashMap[uid.uid] = rawMsg.contains("-----BEGIN PGP MESSAGE-----")
+                hashMap[uid.uid] = hasEncryptedData(rawMsg)
               }
             }
           }
@@ -662,6 +662,8 @@ class EmailUtil {
         hashMap
       } as HashMap<Long, Boolean>
     }
+
+    fun hasEncryptedData(rawMsg: String) = rawMsg.contains("-----BEGIN PGP MESSAGE-----")
 
     /**
      * Generate a [SearchTerm] for encrypted messages which depends on an input [AccountEntity].
