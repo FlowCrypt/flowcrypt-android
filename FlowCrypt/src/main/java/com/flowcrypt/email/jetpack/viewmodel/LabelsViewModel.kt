@@ -56,19 +56,23 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
         loadLabelsFromRemoteServerLiveData.value = Result.loading()
-        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-        if (connection == null) {
-          loadLabelsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+        if (accountEntity.useAPI) {
+          fetchLabels(accountEntity)
         } else {
-          loadLabelsFromRemoteServerLiveData.value = connection.executeWithResult {
-            fetchLabels(accountEntity, connection.store)
+          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+          if (connection == null) {
+            loadLabelsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+          } else {
+            loadLabelsFromRemoteServerLiveData.value = connection.executeWithResult {
+              fetchLabels(accountEntity, connection.store)
+            }
           }
         }
       }
     }
   }
 
-  private suspend fun fetchLabels(accountEntity: AccountEntity, store: Store): Result<Boolean> = withContext(Dispatchers.IO) {
+  private suspend fun fetchLabels(accountEntity: AccountEntity, store: Store? = null): Result<Boolean> = withContext(Dispatchers.IO) {
     UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity, store)
     return@withContext Result.success(true)
   }

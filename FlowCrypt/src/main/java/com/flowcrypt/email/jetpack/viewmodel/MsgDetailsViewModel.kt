@@ -480,11 +480,13 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     val accountEntity = getActiveAccountSuspend()
         ?: throw java.lang.NullPointerException("Account is null")
 
-    if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-      val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
-      MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
-      return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-          ?: throw java.lang.NullPointerException("Message not found in the local cache")
+    if (accountEntity.useAPI) {
+      if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+        val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
+        MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+        return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+            ?: throw java.lang.NullPointerException("Message not found in the local cache")
+      }
     }
 
     val connection = IMAPStoreManager.activeConnections[accountEntity.id]

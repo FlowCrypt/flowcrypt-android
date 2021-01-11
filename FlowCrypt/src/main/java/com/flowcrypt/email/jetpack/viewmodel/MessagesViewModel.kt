@@ -106,15 +106,24 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
-        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-        if (connection == null) {
-          loadMsgsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+        if (accountEntity.useAPI) {
+          loadMsgsFromRemoteServerLiveData.value = if (localFolder.searchQuery.isNullOrEmpty()) {
+            loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+          } else {
+            Result.success(true)
+            //searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
+          }
         } else {
-          loadMsgsFromRemoteServerLiveData.value = connection.executeWithResult {
-            if (localFolder.searchQuery.isNullOrEmpty()) {
-              loadMsgsFromRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
-            } else {
-              searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
+          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+          if (connection == null) {
+            loadMsgsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+          } else {
+            loadMsgsFromRemoteServerLiveData.value = connection.executeWithResult {
+              if (localFolder.searchQuery.isNullOrEmpty()) {
+                loadMsgsFromRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
+              } else {
+                searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
+              }
             }
           }
         }
@@ -266,6 +275,73 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                                                               localFolder: LocalFolder,
                                                               countOfAlreadyLoadedMsgs: Int
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
+    store.getFolder(localFolder.fullName).use { folder ->
+      val imapFolder = folder as IMAPFolder
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_opening_store))
+      imapFolder.open(Folder.READ_ONLY)
+
+      val countOfLoadedMsgs = when {
+        countOfAlreadyLoadedMsgs < 0 -> 0
+        else -> countOfAlreadyLoadedMsgs
+      }
+
+      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+      var foundMsgs: Array<Message> = emptyArray()
+      var msgsCount = 0
+
+      if (isEncryptedModeEnabled == true) {
+        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+        foundMsgs?.let {
+          msgsCount = foundMsgs.size
+        }
+      } else {
+        msgsCount = imapFolder.messageCount
+      }
+
+      val end = msgsCount - countOfLoadedMsgs
+      val startCandidate = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1
+      val start = when {
+        startCandidate < 1 -> 1
+        else -> startCandidate
+      }
+      val folderName = imapFolder.fullName
+
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+      roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
+        roomDatabase.labelDao().update(it.copy(messagesTotal = msgsCount))
+      }
+
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
+          progress = 80.0,
+          resultCode = R.id.progress_id_getting_list_of_emails
+      ))
+      if (end < 1) {
+        handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
+      } else {
+        val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
+          foundMsgs.copyOfRange(start - 1, end)
+        } else {
+          imapFolder.getMessages(start, end)
+        }
+
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(FetchProfile.Item.ENVELOPE)
+        fetchProfile.add(FetchProfile.Item.FLAGS)
+        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+        imapFolder.fetch(msgs, fetchProfile)
+
+        handleReceivedMsgs(accountEntity, localFolder, folder, msgs)
+      }
+    }
+
+    return@withContext Result.success(true)
+  }
+
+  private suspend fun loadMsgsFromRemoteServerAndStoreLocally(accountEntity: AccountEntity,
+                                                              localFolder: LocalFolder,
+                                                              countOfAlreadyLoadedMsgs: Int
+  ): Result<Boolean?> = withContext(Dispatchers.IO) {
     when (accountEntity.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
@@ -277,68 +353,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo)
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
         handleReceivedMsgs(accountEntity, localFolder, msgs)
-      }
-
-      else -> {
-        store.getFolder(localFolder.fullName).use { folder ->
-          val imapFolder = folder as IMAPFolder
-          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_opening_store))
-          imapFolder.open(Folder.READ_ONLY)
-
-          val countOfLoadedMsgs = when {
-            countOfAlreadyLoadedMsgs < 0 -> 0
-            else -> countOfAlreadyLoadedMsgs
-          }
-
-          val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
-          var foundMsgs: Array<Message> = emptyArray()
-          var msgsCount = 0
-
-          if (isEncryptedModeEnabled == true) {
-            foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
-            foundMsgs?.let {
-              msgsCount = foundMsgs.size
-            }
-          } else {
-            msgsCount = imapFolder.messageCount
-          }
-
-          val end = msgsCount - countOfLoadedMsgs
-          val startCandidate = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1
-          val start = when {
-            startCandidate < 1 -> 1
-            else -> startCandidate
-          }
-          val folderName = imapFolder.fullName
-
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
-          roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
-            roomDatabase.labelDao().update(it.copy(messagesTotal = msgsCount))
-          }
-
-          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
-              progress = 80.0,
-              resultCode = R.id.progress_id_getting_list_of_emails
-          ))
-          if (end < 1) {
-            handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
-          } else {
-            val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
-              foundMsgs.copyOfRange(start - 1, end)
-            } else {
-              imapFolder.getMessages(start, end)
-            }
-
-            val fetchProfile = FetchProfile()
-            fetchProfile.add(FetchProfile.Item.ENVELOPE)
-            fetchProfile.add(FetchProfile.Item.FLAGS)
-            fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-            fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-            imapFolder.fetch(msgs, fetchProfile)
-
-            handleReceivedMsgs(accountEntity, localFolder, folder, msgs)
-          }
-        }
       }
     }
 

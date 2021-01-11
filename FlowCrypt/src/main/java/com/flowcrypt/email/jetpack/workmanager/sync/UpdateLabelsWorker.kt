@@ -60,7 +60,7 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
           )
     }
 
-    suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity, store: Store? = null) = withContext(Dispatchers.IO) {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       val email = account.email
       val foldersManager = FoldersManager(account.email)
@@ -74,15 +74,17 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
         }
 
         else -> {
-          val folders = store.defaultFolder.list("*")
+          store?.let {
+            val folders = store.defaultFolder.list("*")
 
-          for (folder in folders) {
-            try {
-              val imapFolder = folder as IMAPFolder
-              foldersManager.addFolder(imapFolder)
-            } catch (e: MessagingException) {
-              e.printStackTrace()
-              ExceptionUtil.handleError(e)
+            for (folder in folders) {
+              try {
+                val imapFolder = folder as IMAPFolder
+                foldersManager.addFolder(imapFolder)
+              } catch (e: MessagingException) {
+                e.printStackTrace()
+                ExceptionUtil.handleError(e)
+              }
             }
           }
         }
