@@ -14,12 +14,14 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message
@@ -37,33 +39,56 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
   }
 
   override suspend fun runAPIAction(accountEntity: AccountEntity) {
-
+    deleteMsgsPermanently(accountEntity)
   }
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-    val trash = foldersManager.folderTrash ?: return@withContext
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-
-    while (true) {
-      val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
-          account.email, trash.fullName, MessageState.PENDING_DELETING_PERMANENTLY.value)
-
-      if (candidatesForDeleting.isEmpty()) {
-        break
-      } else {
-        store.getFolder(trash.fullName).use { folder ->
-          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-
-          val uidList = candidatesForDeleting.map { it.uid }
-          val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-          if (msgs.isNotEmpty()) {
-            imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.DELETED), true)
-            roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
-          }
+    deleteMsgsPermanentlyInternal(account) { folderName, uidList ->
+      store.getFolder(folderName).use { folder ->
+        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+        val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+        if (msgs.isNotEmpty()) {
+          imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.DELETED), true)
         }
       }
+    }
+  }
+
+  private suspend fun deleteMsgsPermanently(account: AccountEntity) = withContext(Dispatchers.IO) {
+    deleteMsgsPermanentlyInternal(account) { _, uidList ->
+      when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          GmailApiHelper.deleteMsgsPermanently(
+              context = applicationContext,
+              accountEntity = account,
+              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+        }
+      }
+    }
+  }
+
+  private suspend fun deleteMsgsPermanentlyInternal(account: AccountEntity,
+                                                    action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
+  {
+    try {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      val trash = foldersManager.folderTrash ?: return@withContext
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
+      while (true) {
+        val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
+            account.email, trash.fullName, MessageState.PENDING_DELETING_PERMANENTLY.value)
+
+        if (candidatesForDeleting.isEmpty()) {
+          break
+        } else {
+          val uidList = candidatesForDeleting.map { it.uid }
+          action.invoke(trash.fullName, uidList)
+          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
+        }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
     }
   }
 

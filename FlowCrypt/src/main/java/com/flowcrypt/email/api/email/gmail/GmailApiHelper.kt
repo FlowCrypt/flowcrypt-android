@@ -28,6 +28,7 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
+import com.google.api.services.gmail.model.BatchDeleteMessagesRequest
 import com.google.api.services.gmail.model.BatchModifyMessagesRequest
 import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
@@ -129,7 +130,7 @@ class GmailApiHelper {
 
       val listResult = mutableListOf<Message>()
 
-      for (message in list.messages) {
+      for (message in list.messages ?: return@withContext emptyList<Message>()) {
         val request = gmailApiService
             .users()
             .messages()
@@ -141,7 +142,7 @@ class GmailApiHelper {
           }
 
           override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-            throw IllegalStateException()
+
           }
         })
       }
@@ -204,6 +205,18 @@ class GmailApiHelper {
             this.ids = ids
             this.addLabelIds = addLabelIds
             this.removeLabelIds = removeLabelIds
+          })
+          .execute()
+    }
+
+    suspend fun deleteMsgsPermanently(context: Context, accountEntity: AccountEntity,
+                                      ids: List<String>) = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      gmailApiService
+          .users()
+          .messages()
+          .batchDelete(DEFAULT_USER_ID, BatchDeleteMessagesRequest().apply {
+            this.ids = ids
           })
           .execute()
     }
