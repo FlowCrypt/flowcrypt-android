@@ -40,6 +40,10 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
     syncMessages(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+
+  }
+
   private suspend fun syncMessages(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
     val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext

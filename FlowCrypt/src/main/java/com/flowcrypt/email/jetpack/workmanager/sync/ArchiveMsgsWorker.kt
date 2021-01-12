@@ -37,6 +37,10 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
     archive(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+
+  }
+
   private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext

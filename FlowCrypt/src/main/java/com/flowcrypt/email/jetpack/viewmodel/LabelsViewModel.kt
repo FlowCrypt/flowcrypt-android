@@ -14,13 +14,9 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import javax.mail.Store
 
 /**
  * @author Denis Bondarenko
@@ -57,23 +53,20 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
       accountEntity?.let {
         loadLabelsFromRemoteServerLiveData.value = Result.loading()
         if (accountEntity.useAPI) {
-          fetchLabels(accountEntity)
+          UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity)
+          loadLabelsFromRemoteServerLiveData.value = Result.success(true)
         } else {
           val connection = IMAPStoreManager.activeConnections[accountEntity.id]
           if (connection == null) {
             loadLabelsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
           } else {
             loadLabelsFromRemoteServerLiveData.value = connection.executeWithResult {
-              fetchLabels(accountEntity, connection.store)
+              UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity, connection.store)
+              Result.success(true)
             }
           }
         }
       }
     }
-  }
-
-  private suspend fun fetchLabels(accountEntity: AccountEntity, store: Store? = null): Result<Boolean> = withContext(Dispatchers.IO) {
-    UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity, store)
-    return@withContext Result.success(true)
   }
 }

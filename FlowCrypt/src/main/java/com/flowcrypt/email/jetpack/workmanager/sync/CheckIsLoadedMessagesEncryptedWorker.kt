@@ -40,6 +40,10 @@ class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParam
     identifyEncryptedMsgs(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+
+  }
+
   private suspend fun identifyEncryptedMsgs(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val folderFullName = inputData.getString(KEY_FOLDER_FULL_NAME) ?: return@withContext
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)

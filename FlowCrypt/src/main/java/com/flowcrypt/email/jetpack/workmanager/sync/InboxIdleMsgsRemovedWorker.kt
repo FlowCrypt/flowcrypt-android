@@ -35,6 +35,10 @@ class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : B
     syncInboxAndRemoveRedundantMsgs(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+
+  }
+
   private suspend fun syncInboxAndRemoveRedundantMsgs(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
     val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext

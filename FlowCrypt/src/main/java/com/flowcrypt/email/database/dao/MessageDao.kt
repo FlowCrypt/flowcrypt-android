@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
+import com.flowcrypt.email.database.dao.BaseDao.Companion.getEntitiesViaStepsSuspend
 import com.flowcrypt.email.database.entity.MessageEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -339,6 +340,12 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   open suspend fun setOldStatus(email: String?, label: String?, uidList: List<Long>) = withContext(Dispatchers.IO) {
     doOperationViaStepsSuspend(list = uidList) { stepUIDs: Collection<Long> ->
       markMsgsAsOld(email, label, stepUIDs)
+    }
+  }
+
+  open suspend fun getMsgsByUIDs(email: String, label: String, uidList: List<Long>): List<MessageEntity> = withContext(Dispatchers.IO) {
+    return@withContext getEntitiesViaStepsSuspend(list = uidList) { stepUIDs: Collection<Long> ->
+      getMsgsByUids(email, label, stepUIDs)
     }
   }
 

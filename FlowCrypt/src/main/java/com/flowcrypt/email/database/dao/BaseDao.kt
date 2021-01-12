@@ -120,5 +120,29 @@ interface BaseDao<T> {
         }
       }
     }
+
+    suspend fun <M, F> getEntitiesViaStepsSuspend(stepValue: Int = 50,
+                                                  list: List<F>,
+                                                  step: suspend (list: Collection<F>) -> List<M>): List<M> = withContext(Dispatchers.IO) {
+      val results = mutableListOf<M>()
+      if (list.isNotEmpty()) {
+        if (list.size <= stepValue) {
+          results.addAll(step(list))
+        } else {
+          var i = 0
+          while (i < list.size) {
+            val tempList = if (list.size - i > stepValue) {
+              list.subList(i, i + stepValue)
+            } else {
+              list.subList(i, list.size)
+            }
+            results.addAll(step(tempList))
+            i += stepValue
+          }
+        }
+      }
+
+      return@withContext results
+    }
   }
 }

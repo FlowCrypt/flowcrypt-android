@@ -20,11 +20,9 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
@@ -38,6 +36,10 @@ import javax.mail.Store
 class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     fetchAndSaveLabels(applicationContext, accountEntity, store)
+  }
+
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+    fetchAndSaveLabels(applicationContext, accountEntity)
   }
 
   companion object {
@@ -60,47 +62,62 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
           )
     }
 
-    suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity, store: Store? = null) = withContext(Dispatchers.IO) {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val email = account.email
-      val foldersManager = FoldersManager(account.email)
-
-      when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          val gMailLabels = GmailApiHelper.getLabels(context, account)
-          for (label in gMailLabels) {
-            foldersManager.addFolder(label)
-          }
-        }
-
-        else -> {
-          store?.let {
-            val folders = store.defaultFolder.list("*")
-
-            for (folder in folders) {
-              try {
-                val imapFolder = folder as IMAPFolder
-                foldersManager.addFolder(imapFolder)
-              } catch (e: MessagingException) {
-                e.printStackTrace()
-                ExceptionUtil.handleError(e)
-              }
+    suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity) = withContext(Dispatchers.IO) {
+      saveLabels(context, account) {
+        when (account.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+            GmailApiHelper.getLabels(context, account).map {
+              FoldersManager.generateFolder(account.email, it)
             }
+          }
+
+          else -> {
+            emptyList()
           }
         }
       }
+    }
 
-      foldersManager.addFolder(LocalFolder(
-          account = email,
-          fullName = JavaEmailConstants.FOLDER_OUTBOX,
-          folderAlias = JavaEmailConstants.FOLDER_OUTBOX,
-          attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
-          isCustom = false,
-          msgCount = 0,
-          searchQuery = ""
-      ))
+    suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+      saveLabels(context, account) {
+        val folders = store.defaultFolder.list("*")
+        folders.mapNotNull {
+          try {
+            FoldersManager.generateFolder(account.email, it as IMAPFolder, it.name)
+          } catch (e: Exception) {
+            e.printStackTrace()
+            null
+          }
+        }
+      }
+    }
 
-      roomDatabase.labelDao().update(account, foldersManager.allFolders.map { LabelEntity.genLabel(account, it) })
+    private suspend fun saveLabels(context: Context, account: AccountEntity, action: suspend () -> List<LocalFolder>) = withContext(Dispatchers.IO) {
+      try {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+        val email = account.email
+        val foldersManager = FoldersManager(account.email)
+
+        val list = action.invoke()
+
+        for (folder in list) {
+          foldersManager.addFolder(folder)
+        }
+
+        foldersManager.addFolder(LocalFolder(
+            account = email,
+            fullName = JavaEmailConstants.FOLDER_OUTBOX,
+            folderAlias = JavaEmailConstants.FOLDER_OUTBOX,
+            attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
+            isCustom = false,
+            msgCount = 0,
+            searchQuery = ""
+        ))
+
+        roomDatabase.labelDao().update(account, foldersManager.allFolders.map { LabelEntity.genLabel(account, it) })
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
     }
   }
 }

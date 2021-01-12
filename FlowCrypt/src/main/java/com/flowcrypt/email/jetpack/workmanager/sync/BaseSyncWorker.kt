@@ -30,6 +30,7 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
   protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
   abstract suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store)
+  abstract suspend fun runAPIAction(accountEntity: AccountEntity)
 
   override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
     if (isStopped) {
@@ -41,17 +42,25 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
       activeAccountEntity?.let {
         if (useIndependentConnection) {
           AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(it)?.let { accountWithDecryptedInfo ->
-            val connection = IMAPStoreConnection(applicationContext, accountWithDecryptedInfo)
-            connection.store.use { store ->
-              connection.executeIMAPAction {
-                runIMAPAction(activeAccountEntity, store)
+            if (accountWithDecryptedInfo.useAPI) {
+              runAPIAction(accountWithDecryptedInfo)
+            } else {
+              val connection = IMAPStoreConnection(applicationContext, accountWithDecryptedInfo)
+              connection.store.use { store ->
+                connection.executeIMAPAction {
+                  runIMAPAction(activeAccountEntity, store)
+                }
               }
             }
           }
         } else {
-          val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-          connection?.executeIMAPAction { store ->
-            runIMAPAction(activeAccountEntity, store)
+          if (activeAccountEntity.useAPI) {
+            runAPIAction(activeAccountEntity)
+          } else {
+            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
+            connection?.executeIMAPAction { store ->
+              runIMAPAction(activeAccountEntity, store)
+            }
           }
         }
       }

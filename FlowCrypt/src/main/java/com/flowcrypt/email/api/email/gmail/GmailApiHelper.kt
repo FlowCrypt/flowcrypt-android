@@ -28,6 +28,7 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
+import com.google.api.services.gmail.model.BatchModifyMessagesRequest
 import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
@@ -53,6 +54,8 @@ class GmailApiHelper {
     const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
 
     const val FOLDER_TYPE_USER = "user"
+
+    const val LABEL_UNREAD = JavaEmailConstants.FOLDER_UNREAD
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
@@ -183,6 +186,24 @@ class GmailApiHelper {
           .execute()
 
       return@withContext response.labels ?: emptyList()
+    }
+
+    suspend fun changeLabels(context: Context, accountEntity: AccountEntity,
+                             ids: List<String>,
+                             addLabelIds: List<String>? = null,
+                             removeLabelIds: List<String>? = null) = withContext(Dispatchers.IO) {
+      if (addLabelIds == null && removeLabelIds == null) return@withContext
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+
+      gmailApiService
+          .users()
+          .messages()
+          .batchModify(DEFAULT_USER_ID, BatchModifyMessagesRequest().apply {
+            this.ids = ids
+            this.addLabelIds = addLabelIds
+            this.removeLabelIds = removeLabelIds
+          })
+          .execute()
     }
   }
 }

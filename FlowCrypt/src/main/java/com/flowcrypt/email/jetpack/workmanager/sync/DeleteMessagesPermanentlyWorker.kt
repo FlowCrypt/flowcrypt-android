@@ -36,6 +36,10 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
     deleteMsgsPermanently(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+
+  }
+
   private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val trash = foldersManager.folderTrash ?: return@withContext

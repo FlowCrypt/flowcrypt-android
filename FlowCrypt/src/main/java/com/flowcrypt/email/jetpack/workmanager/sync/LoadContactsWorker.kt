@@ -43,6 +43,10 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
     fetchContacts(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+
+  }
+
   private suspend fun fetchContacts(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     if (account.areContactsLoaded == true) return@withContext
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)

@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.email.gmail.api
 
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.google.api.services.gmail.model.Message
 import java.util.*
 import javax.mail.Flags
@@ -25,7 +26,7 @@ class GmaiAPIMimeMessage(session: Session, message: Message) : MimeMessage(sessi
       setHeader(header.name, header.value)
     }
 
-    if (!message.labelIds.contains("UNREAD")) {
+    if (!message.labelIds.contains(GmailApiHelper.LABEL_UNREAD)) {
       setFlag(Flags.Flag.SEEN, true)
     }
   }
