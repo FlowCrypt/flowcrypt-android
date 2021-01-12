@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -51,6 +52,7 @@ import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.MessagingException
+import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
 import javax.mail.internet.InternetAddress
@@ -375,13 +377,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-
-    if (!isEncryptedModeEnabled) {
-      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
-    }
-
     identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
-    //updateLocalContactsIfNeeded(remoteFolder, msgs)
+    val session = Session.getInstance(Properties())
+    updateLocalContactsIfNeeded(messages = msgs
+        .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+        .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
   }
 
   private suspend fun handleReceivedMsgs(account: AccountEntity, localFolder: LocalFolder,
@@ -462,9 +462,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  private suspend fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder, messages: Array<Message>) = withContext(Dispatchers.IO) {
+  private suspend fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder? = null, messages: Array<Message>) = withContext(Dispatchers.IO) {
     try {
-      val isSentFolder = imapFolder.attributes.contains("\\Sent")
+      val isSentFolder = imapFolder?.attributes?.contains("\\Sent") ?: true
 
       if (isSentFolder) {
         val emailAndNamePairs = ArrayList<EmailAndNamePair>()

@@ -57,6 +57,7 @@ class GmailApiHelper {
 
     const val LABEL_INBOX = JavaEmailConstants.FOLDER_INBOX
     const val LABEL_UNREAD = JavaEmailConstants.FOLDER_UNREAD
+    const val LABEL_SENT = JavaEmailConstants.FOLDER_SENT
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
