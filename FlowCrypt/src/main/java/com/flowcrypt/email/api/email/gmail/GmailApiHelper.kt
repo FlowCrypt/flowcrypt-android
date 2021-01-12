@@ -94,7 +94,7 @@ class GmailApiHelper {
       return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES)).setSelectedAccount(account)
     }
 
-    fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream {
+    suspend fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream = withContext(Dispatchers.IO) {
       val msgId = messageEntity.gMailId
       val gmailApiService = generateGmailApiService(context, account)
 
@@ -105,11 +105,11 @@ class GmailApiHelper {
           .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
       message.fields = "raw"
 
-      return Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()), Base64.URL_SAFE)
+      return@withContext Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()), Base64.URL_SAFE)
     }
 
-    fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder: LocalFolder, countOfAlreadyLoadedMsgs: Int, nextPageToken: String? = null):
-        ListMessagesResponse {
+    suspend fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder:
+    LocalFolder, nextPageToken: String? = null): ListMessagesResponse = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val list = gmailApiService
           .users()
@@ -118,10 +118,10 @@ class GmailApiHelper {
           .setPageToken(nextPageToken)
           .setLabelIds(listOf(localFolder.fullName))
           .setMaxResults(20)
-      return list.execute()
+      return@withContext list.execute()
     }
 
-    fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, list: ListMessagesResponse): List<Message> {
+    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, list: ListMessagesResponse): List<Message> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
 
@@ -146,7 +146,7 @@ class GmailApiHelper {
 
       batch.execute()
 
-      return listResult
+      return@withContext listResult
     }
 
     /**
