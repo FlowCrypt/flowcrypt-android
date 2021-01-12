@@ -55,6 +55,7 @@ class GmailApiHelper {
 
     const val FOLDER_TYPE_USER = "user"
 
+    const val LABEL_INBOX = JavaEmailConstants.FOLDER_INBOX
     const val LABEL_UNREAD = JavaEmailConstants.FOLDER_UNREAD
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)

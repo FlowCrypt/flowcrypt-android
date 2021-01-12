@@ -59,20 +59,22 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
 
   private suspend fun changeMsgsReadState(account: AccountEntity, state: MessageState) = withContext(Dispatchers.IO) {
     changeMsgsReadStateInternal(account, state) { _, uidList ->
-      if (state == MessageState.PENDING_MARK_READ) {
-        GmailApiHelper.changeLabels(
-            context = applicationContext,
-            accountEntity = account,
-            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
-            removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
-        )
-      } else {
-        GmailApiHelper.changeLabels(
-            context = applicationContext,
-            accountEntity = account,
-            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
-            addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
-        )
+      when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          if (state == MessageState.PENDING_MARK_READ) {
+            GmailApiHelper.changeLabels(
+                context = applicationContext,
+                accountEntity = account,
+                ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+                removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
+          } else {
+            GmailApiHelper.changeLabels(
+                context = applicationContext,
+                accountEntity = account,
+                ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+                addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
+          }
+        }
       }
     }
   }
