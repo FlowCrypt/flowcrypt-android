@@ -59,6 +59,7 @@ class GmailApiHelper {
     const val LABEL_INBOX = JavaEmailConstants.FOLDER_INBOX
     const val LABEL_UNREAD = JavaEmailConstants.FOLDER_UNREAD
     const val LABEL_SENT = JavaEmailConstants.FOLDER_SENT
+    const val LABEL_TRASH = JavaEmailConstants.FOLDER_TRASH
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
@@ -124,11 +125,12 @@ class GmailApiHelper {
       return@withContext list.execute()
     }
 
-    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, list: ListMessagesResponse): List<Message> = withContext(Dispatchers.IO) {
+    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, list: ListMessagesResponse, localFolder: LocalFolder): List<Message> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
 
       val listResult = mutableListOf<Message>()
+      val isTrash = localFolder.fullName.equals(LABEL_TRASH, true)
 
       for (message in list.messages ?: return@withContext emptyList<Message>()) {
         val request = gmailApiService
@@ -138,7 +140,11 @@ class GmailApiHelper {
             .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
         request.queue(batch, object : JsonBatchCallback<Message>() {
           override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
-            t?.let { listResult.add(it) } ?: throw java.lang.NullPointerException()
+            t?.let {
+              if (isTrash || !it.labelIds.contains(LABEL_TRASH)) {
+                listResult.add(it)
+              }
+            } ?: throw java.lang.NullPointerException()
           }
 
           override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
@@ -219,6 +225,29 @@ class GmailApiHelper {
             this.ids = ids
           })
           .execute()
+    }
+
+    suspend fun moveToTrash(context: Context, accountEntity: AccountEntity, ids: List<String>) = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      for (id in ids) {
+        val request = gmailApiService
+            .users()
+            .messages()
+            .trash(DEFAULT_USER_ID, id)
+        request.queue(batch, object : JsonBatchCallback<Message>() {
+          override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
+
+          }
+
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+
+          }
+        })
+      }
+
+      batch.execute()
     }
   }
 }

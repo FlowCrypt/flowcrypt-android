@@ -105,6 +105,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   fun loadMsgsFromRemoteServer(localFolder: LocalFolder, totalItemsCount: Int) {
     viewModelScope.launch {
+      if (totalItemsCount == 0) {
+        nextPageToken = null
+      }
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
@@ -351,7 +354,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 50.0, resultCode = R.id.progress_id_gmail_list))
         nextPageToken = messagesBaseInfo.nextPageToken
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
-        val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo)
+        val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo, localFolder)
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
         handleReceivedMsgs(accountEntity, localFolder, msgs)
       }
