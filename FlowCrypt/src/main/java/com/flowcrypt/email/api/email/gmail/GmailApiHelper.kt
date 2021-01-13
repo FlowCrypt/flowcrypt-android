@@ -249,5 +249,35 @@ class GmailApiHelper {
 
       batch.execute()
     }
+
+    suspend fun loadTrashMsgs(context: Context, accountEntity: AccountEntity): List<Message> = withContext(Dispatchers.IO) {
+      val gmailApiService = GmailApiHelper.generateGmailApiService(context, accountEntity)
+
+      var response = gmailApiService
+          .users()
+          .messages()
+          .list(DEFAULT_USER_ID)
+          .setLabelIds(listOf(LABEL_TRASH))
+          .execute()
+
+      val msgs = mutableListOf<Message>()
+
+      //Try to load all messages. Only base info
+      while (response.messages != null) {
+        msgs.addAll(response.messages)
+        if (response.nextPageToken != null) {
+          response = gmailApiService
+              .users()
+              .messages()
+              .list(DEFAULT_USER_ID)
+              .setPageToken(response.nextPageToken)
+              .execute()
+        } else {
+          break
+        }
+      }
+
+      return@withContext msgs
+    }
   }
 }

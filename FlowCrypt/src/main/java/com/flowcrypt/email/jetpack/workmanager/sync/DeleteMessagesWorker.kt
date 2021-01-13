@@ -50,9 +50,13 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
 
   private suspend fun moveMsgsToTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
     moveMsgsToTrashInternal(account) { _, uidList ->
-      GmailApiHelper.moveToTrash(applicationContext, account, uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
-      //need to wait while the Gmail server will update labels
-      delay(2000)
+      when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          GmailApiHelper.moveToTrash(applicationContext, account, uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+          //need to wait while the Gmail server will update labels
+          delay(2000)
+        }
+      }
     }
   }
 
