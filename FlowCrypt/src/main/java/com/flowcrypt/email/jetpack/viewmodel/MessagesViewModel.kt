@@ -30,6 +30,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
@@ -113,7 +114,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
         if (accountEntity.useAPI) {
           loadMsgsFromRemoteServerLiveData.value = if (localFolder.searchQuery.isNullOrEmpty()) {
-            loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+            loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder)
           } else {
             Result.success(true)
             //searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
@@ -344,15 +345,25 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   private suspend fun loadMsgsFromRemoteServerAndStoreLocally(accountEntity: AccountEntity,
-                                                              localFolder: LocalFolder,
-                                                              countOfAlreadyLoadedMsgs: Int
+                                                              localFolder: LocalFolder
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     when (accountEntity.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+        val folderType = FoldersManager.getFolderType(localFolder)
+        var inboxLabelEntity: LabelEntity? = null
+        if (folderType === FoldersManager.FolderType.INBOX) {
+          inboxLabelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email,
+              accountEntity.accountType, localFolder.fullName)
+          nextPageToken = inboxLabelEntity?.nextPageToken
+        }
+
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
         val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(getApplication(), accountEntity, localFolder, nextPageToken)
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 50.0, resultCode = R.id.progress_id_gmail_list))
         nextPageToken = messagesBaseInfo.nextPageToken
+        if (folderType === FoldersManager.FolderType.INBOX) {
+          inboxLabelEntity?.let { roomDatabase.labelDao().update(it.copy(nextPageToken = nextPageToken)) }
+        }
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
         val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo, localFolder)
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
