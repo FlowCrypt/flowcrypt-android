@@ -233,7 +233,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
     menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
 
-    args.localFolder.searchQuery.let {
+    args.localFolder.searchQuery?.let {
       menuItemArchiveMsg?.isVisible = false
       menuItemDeleteMsg?.isVisible = false
       menuActionMoveToInbox?.isVisible = false

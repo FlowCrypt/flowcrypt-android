@@ -15,12 +15,15 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.Store
@@ -39,45 +42,76 @@ class MovingToInboxWorker(context: Context, params: WorkerParameters) : BaseSync
   }
 
   override suspend fun runAPIAction(accountEntity: AccountEntity) {
-
+    moveMessagesToInbox(accountEntity)
   }
 
   private suspend fun moveMessagesToInbox(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-    while (true) {
-      val candidatesForMovingToInbox = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email,
-          MessageState.PENDING_MOVE_TO_INBOX.value)
-
-      if (candidatesForMovingToInbox.isEmpty()) {
-        break
-      } else {
-        val setOfFolders = candidatesForMovingToInbox.map { it.folder }.toSet()
+    moveMessagesToInboxInternal(account) { folderName, uidList ->
+      store.getFolder(folderName).use { folder ->
+        val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
         val remoteDestFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
 
-        for (srcFolder in setOfFolders) {
-          val filteredMsgs = candidatesForMovingToInbox.filter { it.folder == srcFolder }
+        if (msgs.isNotEmpty()) {
+          remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+        }
+      }
+    }
+  }
 
-          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
-            continue
-          }
+  private suspend fun moveMessagesToInbox(account: AccountEntity) = withContext(Dispatchers.IO) {
+    moveMessagesToInboxInternal(account) { folderName, uidList ->
+      when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          GmailApiHelper.changeLabels(
+              context = applicationContext,
+              accountEntity = account,
+              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+              addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
+              removeLabelIds = if (GmailApiHelper.LABEL_TRASH.equals(folderName, true)) listOf(GmailApiHelper.LABEL_TRASH) else null)
+        }
+      }
+      delay(2000)
+    }
+  }
 
-          store.getFolder(srcFolder).use { folder ->
+  private suspend fun moveMessagesToInboxInternal(account: AccountEntity,
+                                                  action: suspend (folderName: String, uidList: List<Long>) -> Unit) = withContext(Dispatchers.IO) {
+    try {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      val folderTrash = foldersManager.folderTrash
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
+      while (true) {
+        val candidatesForMovingToInbox = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email,
+            MessageState.PENDING_MOVE_TO_INBOX.value)
+
+        if (candidatesForMovingToInbox.isEmpty()) {
+          break
+        } else {
+          val setOfFolders = candidatesForMovingToInbox.map { it.folder }.toSet()
+          for (srcFolder in setOfFolders) {
+            val filteredMsgs = candidatesForMovingToInbox.filter { it.folder == srcFolder }
+            if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
+              continue
+            }
+
             val uidList = filteredMsgs.map { it.uid }
-            val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-            val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-            if (msgs.isNotEmpty()) {
-              remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-
-              val movedMessages = candidatesForMovingToInbox.filter { it.uid in uidList }.map { it.copy(state = MessageState.NONE.value) }
+            action.invoke(srcFolder, uidList)
+            val movedMessages = candidatesForMovingToInbox.filter { it.uid in uidList }.map { it.copy(state = MessageState.NONE.value) }
+            if (srcFolder.equals(folderTrash?.fullName, true)) {
+              roomDatabase.msgDao().deleteSuspend(movedMessages)
+            } else {
               roomDatabase.msgDao().updateSuspend(movedMessages)
             }
           }
         }
       }
+    } catch (e: Exception) {
+      e.printStackTrace()
     }
   }
 
