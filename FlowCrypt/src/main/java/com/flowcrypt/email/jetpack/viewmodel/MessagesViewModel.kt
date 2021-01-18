@@ -770,25 +770,68 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
-    val permanentlyDeletedCandidates = historyList.map {
-      it.messagesDeleted?.map { historyMsgDeleted ->
-        historyMsgDeleted.message.uid
-      } ?: emptyList()
-    }.flatten()
+    val deleteCandidatesUIDs = mutableSetOf<Long>()
+    val newCandidatesMap = mutableMapOf<Long, com.google.api.services.gmail.model.Message>()
+    val updateCandidates = mutableMapOf<Long, Flags>()
 
-    val withRemovedLabelCandidates = historyList.map {
-      it.labelsRemoved?.mapNotNull { historyLabelsRemoved ->
-        if (folderName in historyLabelsRemoved.labelIds) historyLabelsRemoved.message.uid else null
-      } ?: emptyList()
-    }.flatten()
+    for (history in historyList) {
+      history.messagesDeleted?.let { messagesDeleted ->
+        for (historyMsgDeleted in messagesDeleted) {
+          newCandidatesMap.remove(historyMsgDeleted.message.uid)
+          updateCandidates.remove(historyMsgDeleted.message.uid)
+          deleteCandidatesUIDs.add(historyMsgDeleted.message.uid)
+        }
+      }
 
-    val withAddedTrashLabelCandidates = historyList.map {
-      it.labelsAdded?.mapNotNull { historyLabelsAdded ->
-        if (historyLabelsAdded.labelIds.contains(GmailApiHelper.LABEL_TRASH)) historyLabelsAdded.message.uid else null
-      } ?: emptyList()
-    }.flatten()
+      history.messagesAdded?.let { messagesAdded ->
+        for (historyMsgAdded in messagesAdded) {
+          deleteCandidatesUIDs.remove(historyMsgAdded.message.uid)
+          updateCandidates.remove(historyMsgAdded.message.uid)
+          newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
+        }
+      }
 
-    val deleteCandidatesUIDs = permanentlyDeletedCandidates + withRemovedLabelCandidates + withAddedTrashLabelCandidates
+      history.labelsRemoved?.let { labelsRemoved ->
+        for (historyLabelRemoved in labelsRemoved) {
+          if (folderName in historyLabelRemoved.labelIds) {
+            newCandidatesMap.remove(historyLabelRemoved.message.uid)
+            updateCandidates.remove(historyLabelRemoved.message.uid)
+            deleteCandidatesUIDs.add(historyLabelRemoved.message.uid)
+            continue
+          }
+
+          if (GmailApiHelper.LABEL_UNREAD in historyLabelRemoved.labelIds) {
+            val existedFlags = updateCandidates[historyLabelRemoved.message.uid] ?: Flags()
+            existedFlags.add(Flags.Flag.SEEN)
+            updateCandidates[historyLabelRemoved.message.uid] = existedFlags
+          }
+        }
+      }
+
+      history.labelsAdded?.let { labelsAdded ->
+        for (historyLabelAdded in labelsAdded) {
+          if (folderName in historyLabelAdded.labelIds) {
+            deleteCandidatesUIDs.remove(historyLabelAdded.message.uid)
+            updateCandidates.remove(historyLabelAdded.message.uid)
+            newCandidatesMap[historyLabelAdded.message.uid] = historyLabelAdded.message
+            continue
+          }
+
+          if (historyLabelAdded.labelIds.contains(GmailApiHelper.LABEL_TRASH)) {
+            newCandidatesMap.remove(historyLabelAdded.message.uid)
+            updateCandidates.remove(historyLabelAdded.message.uid)
+            deleteCandidatesUIDs.add(historyLabelAdded.message.uid)
+            continue
+          }
+
+          if (GmailApiHelper.LABEL_UNREAD in historyLabelAdded.labelIds) {
+            val existedFlags = updateCandidates[historyLabelAdded.message.uid] ?: Flags()
+            existedFlags.remove(Flags.Flag.SEEN)
+            updateCandidates[historyLabelAdded.message.uid] = existedFlags
+          }
+        }
+      }
+    }
 
     roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderName, deleteCandidatesUIDs)
 
@@ -800,12 +843,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
     }
 
-    val newCandidates = historyList.map {
-      it.messagesAdded?.mapNotNull { historyMsgAdded ->
-        historyMsgAdded.message
-      } ?: emptyList()
-    }.flatten()
-
+    val newCandidates = newCandidatesMap.values
     if (newCandidates.isNotEmpty()) {
       val msgsShortInfo = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity,
           newCandidates, localFolder)
@@ -823,32 +861,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       )
 
       roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-    }
-
-    val withRemovedUnreadLabelCandidates = historyList.map {
-      it.labelsRemoved?.mapNotNull { historyLabelsRemoved ->
-        if (GmailApiHelper.LABEL_UNREAD in historyLabelsRemoved.labelIds) historyLabelsRemoved.message
-        else null
-      } ?: emptyList()
-    }.flatten()
-
-    val withAddedUnreadLabelCandidates = historyList.map {
-      it.labelsAdded?.mapNotNull { historyLabelsAdded ->
-        if (GmailApiHelper.LABEL_UNREAD in historyLabelsAdded.labelIds) historyLabelsAdded.message
-        else null
-      } ?: emptyList()
-    }.flatten()
-
-    val updateCandidates = mutableMapOf<Long, Flags>()
-
-    for (msg in withRemovedUnreadLabelCandidates) {
-      updateCandidates[msg.uid] = Flags(Flags.Flag.SEEN)
-    }
-
-    for (msg in withAddedUnreadLabelCandidates) {
-      val existedFlags = updateCandidates[msg.uid] ?: Flags()
-      existedFlags.remove(Flags.Flag.SEEN)
-      updateCandidates[msg.uid] = existedFlags
     }
 
     roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderName, updateCandidates)

@@ -128,7 +128,7 @@ class GmailApiHelper {
       return@withContext list.execute()
     }
 
-    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, messages: List<Message>, localFolder: LocalFolder): List<Message> = withContext(Dispatchers.IO) {
+    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, messages: Collection<Message>, localFolder: LocalFolder): List<Message> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
 
