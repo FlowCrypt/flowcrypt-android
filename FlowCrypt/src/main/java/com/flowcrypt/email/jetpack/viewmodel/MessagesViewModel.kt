@@ -51,6 +51,7 @@ import java.io.File
 import java.io.IOException
 import java.util.*
 import javax.mail.FetchProfile
+import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.MessagingException
@@ -806,11 +807,40 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
     }
 
-    /*val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs)
-        .map { remoteFolder.getUID(it) to it.flags }.toMap()
+    val withRemovedUnreadLabelCandidates = historyList.map {
+      it.labelsRemoved?.mapNotNull { historyLabelsRemoved ->
+        if (GmailApiHelper.LABEL_UNREAD in historyLabelsRemoved.labelIds) historyLabelsRemoved.message
+        else null
+      } ?: emptyList()
+    }.flatten()
+
+    val withAddedUnreadLabelCandidates = historyList.map {
+      it.labelsAdded?.mapNotNull { historyLabelsAdded ->
+        if (GmailApiHelper.LABEL_UNREAD in historyLabelsAdded.labelIds) historyLabelsAdded.message
+        else null
+      } ?: emptyList()
+    }.flatten()
+
+    val updateCandidates = mutableMapOf<Long, Flags>()
+
+    for (msg in withRemovedUnreadLabelCandidates) {
+      updateCandidates[msg.uid] = Flags(Flags.Flag.SEEN)
+    }
+
+    for (msg in withAddedUnreadLabelCandidates) {
+      val existedFlags = updateCandidates[msg.uid] ?: Flags()
+      existedFlags.remove(Flags.Flag.SEEN)
+      updateCandidates[msg.uid] = existedFlags
+    }
+
     roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderName, updateCandidates)
 
-    updateLocalContactsIfNeeded(remoteFolder, newCandidates)*/
+    if (folderType === FoldersManager.FolderType.SENT) {
+      val session = Session.getInstance(Properties())
+      updateLocalContactsIfNeeded(messages = newCandidates
+          .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+          .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
+    }
   }
 
   private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
