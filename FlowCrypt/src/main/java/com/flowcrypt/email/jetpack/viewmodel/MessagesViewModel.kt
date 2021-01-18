@@ -49,6 +49,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.math.BigInteger
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Flags
@@ -78,7 +79,6 @@ import kotlin.collections.ArrayList
  */
 class MessagesViewModel(application: Application) : AccountViewModel(application) {
   private var currentLocalFolder: LocalFolder? = null
-  private var nextPageToken: String? = null
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
@@ -112,15 +112,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   fun loadMsgsFromRemoteServer(localFolder: LocalFolder, totalItemsCount: Int) {
     viewModelScope.launch {
-      if (totalItemsCount == 0) {
-        nextPageToken = null
-      }
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
         if (accountEntity.useAPI) {
           loadMsgsFromRemoteServerLiveData.value = if (localFolder.searchQuery.isNullOrEmpty()) {
-            loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder)
+            loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
           } else {
             Result.success(true)
             //searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
@@ -162,14 +159,28 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
 
       if (resetObserver()) {
-        nextPageToken = null
         msgsLiveData?.removeObserver(observer)
       }
 
+      val accountEntity = getActiveAccountSuspend()
       if (deleteAllMsgs) {
-        roomDatabase.msgDao().deleteAllExceptOutgoing(getActiveAccountSuspend()?.email)
+        roomDatabase.msgDao().deleteAllExceptOutgoing(accountEntity?.email)
+        when (accountEntity?.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+            if (FoldersManager.FolderType.INBOX != localFolder?.getFolderType()) {
+              clearHistoryIdForLabel(accountEntity, label)
+            }
+          }
+        }
       } else if (forceClearFolderCache) {
-        roomDatabase.msgDao().delete(getActiveAccountSuspend()?.email, label)
+        roomDatabase.msgDao().delete(accountEntity?.email, label)
+        when (accountEntity?.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+            if (FoldersManager.FolderType.INBOX != localFolder?.getFolderType()) {
+              clearHistoryIdForLabel(accountEntity, label)
+            }
+          }
+        }
       }
 
       if (resetObserver()) {
@@ -320,7 +331,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
       roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
-        roomDatabase.labelDao().update(it.copy(messagesTotal = msgsCount))
+        roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = msgsCount))
       }
 
       loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
@@ -351,30 +362,27 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   private suspend fun loadMsgsFromRemoteServerAndStoreLocally(accountEntity: AccountEntity,
-                                                              localFolder: LocalFolder
+                                                              localFolder: LocalFolder,
+                                                              totalItemsCount: Int
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     when (accountEntity.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-        val folderType = FoldersManager.getFolderType(localFolder)
-        var inboxLabelEntity: LabelEntity? = null
-        if (folderType === FoldersManager.FolderType.INBOX) {
-          inboxLabelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email,
-              accountEntity.accountType, localFolder.fullName)
-          nextPageToken = inboxLabelEntity?.nextPageToken
-        }
-
+        val labelEntity: LabelEntity? = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
-        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(getApplication(), accountEntity, localFolder, nextPageToken)
+        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(getApplication(), accountEntity,
+            localFolder, if (totalItemsCount > 0) labelEntity?.nextPageToken else null)
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 50.0, resultCode = R.id.progress_id_gmail_list))
-        nextPageToken = messagesBaseInfo.nextPageToken
-        if (folderType === FoldersManager.FolderType.INBOX) {
-          inboxLabelEntity?.let { roomDatabase.labelDao().update(it.copy(nextPageToken = nextPageToken)) }
-        }
+        labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(nextPageToken = messagesBaseInfo.nextPageToken)) }
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
-        val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo.messages
-            ?: emptyList(), localFolder)
-        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
-        handleReceivedMsgs(accountEntity, localFolder, msgs)
+
+        if (messagesBaseInfo.messages?.isNotEmpty() == true) {
+          val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo.messages
+              ?: emptyList(), localFolder)
+          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
+          handleReceivedMsgs(accountEntity, localFolder, msgs)
+        } else {
+          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
+        }
       }
     }
 
@@ -636,11 +644,15 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val newestMsg = roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, localFolder.fullName)
     if (newestMsg != null) {
       try {
+        val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
+        val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
+        val msgEntityHistoryId = BigInteger(newestMsg.historyId ?: "0")
+
         val historyList = GmailApiHelper.loadHistoryInfo(
             getApplication(),
             accountEntity,
             localFolder,
-            newestMsg
+            labelEntityHistoryId.max(msgEntityHistoryId)
         )
 
         handleMsgsFromHistory(accountEntity, localFolder, historyList)
@@ -770,7 +782,13 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       } ?: emptyList()
     }.flatten()
 
-    val deleteCandidatesUIDs = permanentlyDeletedCandidates + withRemovedLabelCandidates
+    val withAddedTrashLabelCandidates = historyList.map {
+      it.labelsAdded?.mapNotNull { historyLabelsAdded ->
+        if (historyLabelsAdded.labelIds.contains(GmailApiHelper.LABEL_TRASH)) historyLabelsAdded.message.uid else null
+      } ?: emptyList()
+    }.flatten()
+
+    val deleteCandidatesUIDs = permanentlyDeletedCandidates + withRemovedLabelCandidates + withAddedTrashLabelCandidates
 
     roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderName, deleteCandidatesUIDs)
 
@@ -852,5 +870,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
         RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
     ))
+  }
+
+  private suspend fun clearHistoryIdForLabel(accountEntity: AccountEntity, label: String) {
+    val labelEntity: LabelEntity? = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, label)
+    labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(historyId = null)) }
   }
 }

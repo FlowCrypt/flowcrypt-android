@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.contentId
@@ -287,18 +288,27 @@ class GmailApiHelper {
         context: Context,
         accountEntity: AccountEntity,
         localFolder: LocalFolder,
-        newestMsg: MessageEntity,
+        historyId: BigInteger,
         nextPageToken: String? = null,
     ): List<History> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      val list = gmailApiService
+      val request = gmailApiService
           .users()
           .history()
           .list(DEFAULT_USER_ID)
-          .setStartHistoryId(BigInteger(newestMsg.historyId ?: "0"))
+          .setStartHistoryId(historyId)
           .setLabelId(localFolder.fullName)
           .setPageToken(nextPageToken)
-      return@withContext list.execute().history
+
+      val response = request.execute()
+
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
+      labelEntity?.let { folder ->
+        roomDatabase.labelDao().updateSuspend(folder.copy(historyId = response?.historyId?.toString()))
+      }
+
+      return@withContext response.history
     }
   }
 }

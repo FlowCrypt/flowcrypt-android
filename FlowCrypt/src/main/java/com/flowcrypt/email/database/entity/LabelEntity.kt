@@ -39,7 +39,8 @@ data class LabelEntity(
     @ColumnInfo(name = "messages_total", defaultValue = "0") val messagesTotal: Int = 0,
     @ColumnInfo(name = "message_unread", defaultValue = "0") val messagesUnread: Int = 0,
     @ColumnInfo(name = "attributes", defaultValue = "NULL") val attributes: String? = null,
-    @ColumnInfo(name = "next_page_token", defaultValue = "NULL") val nextPageToken: String? = null) {
+    @ColumnInfo(name = "next_page_token", defaultValue = "NULL") val nextPageToken: String? = null,
+    @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null) {
 
   @Ignore
   val attributesList: List<String> = parseAttributes(attributes)

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 24,
-    "identityHash": "280f419ea384d70ccf2e3151a6f1ded3",
+    "identityHash": "27b09b859233fc03abaab220d650bf92",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -697,7 +697,7 @@
       },
       {
         "tableName": "labels",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, `next_page_token` TEXT DEFAULT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, `next_page_token` TEXT DEFAULT NULL, `history_id` TEXT DEFAULT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -762,6 +762,13 @@
           {
             "fieldPath": "nextPageToken",
             "columnName": "next_page_token",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "historyId",
+            "columnName": "history_id",
             "affinity": "TEXT",
             "notNull": false,
             "defaultValue": "NULL"
@@ -980,7 +987,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '280f419ea384d70ccf2e3151a6f1ded3')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '27b09b859233fc03abaab220d650bf92')"
     ]
   }
 }
