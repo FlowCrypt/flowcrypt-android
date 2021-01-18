@@ -30,6 +30,7 @@ import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
 import com.google.api.services.gmail.model.BatchDeleteMessagesRequest
 import com.google.api.services.gmail.model.BatchModifyMessagesRequest
+import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
@@ -37,6 +38,7 @@ import com.google.api.services.gmail.model.MessagePart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
+import java.math.BigInteger
 import javax.mail.Part
 
 /**
@@ -125,14 +127,14 @@ class GmailApiHelper {
       return@withContext list.execute()
     }
 
-    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, list: ListMessagesResponse, localFolder: LocalFolder): List<Message> = withContext(Dispatchers.IO) {
+    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, messages: List<Message>, localFolder: LocalFolder): List<Message> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
 
       val listResult = mutableListOf<Message>()
       val isTrash = localFolder.fullName.equals(LABEL_TRASH, true)
 
-      for (message in list.messages ?: return@withContext emptyList<Message>()) {
+      for (message in messages) {
         val request = gmailApiService
             .users()
             .messages()
@@ -278,6 +280,25 @@ class GmailApiHelper {
       }
 
       return@withContext msgs
+    }
+
+    // fix to load all history
+    suspend fun loadHistoryInfo(
+        context: Context,
+        accountEntity: AccountEntity,
+        localFolder: LocalFolder,
+        newestMsg: MessageEntity,
+        nextPageToken: String? = null,
+    ): List<History> = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val list = gmailApiService
+          .users()
+          .history()
+          .list(DEFAULT_USER_ID)
+          .setStartHistoryId(BigInteger(newestMsg.historyId ?: "0"))
+          .setLabelId(localFolder.fullName)
+          .setPageToken(nextPageToken)
+      return@withContext list.execute().history
     }
   }
 }

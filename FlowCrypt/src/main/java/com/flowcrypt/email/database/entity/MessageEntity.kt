@@ -72,7 +72,8 @@ data class MessageEntity(
     @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
     @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
     @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
-    @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null
+    @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
+    @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null
 ) : Parcelable {
 
   @Ignore
@@ -136,6 +137,7 @@ data class MessageEntity(
       parcel.readString(),
       parcel.readString(),
       parcel.readString(),
+      parcel.readString(),
       parcel.readString())
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -159,6 +161,7 @@ data class MessageEntity(
     parcel.writeString(errorMsg)
     parcel.writeString(replyTo)
     parcel.writeString(threadId)
+    parcel.writeString(historyId)
   }
 
   override fun describeContents(): Int {
@@ -277,7 +280,7 @@ data class MessageEntity(
               isNew = isNewTemp,
               isEncrypted = isEncrypted,
               hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
-          ).copy(threadId = msg.threadId))
+          ).copy(threadId = msg.threadId, historyId = msg.historyId.toString()))
         } catch (e: MessageRemovedException) {
           e.printStackTrace()
         } catch (e: AddressException) {

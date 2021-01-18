@@ -142,6 +142,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getLastUIDOfMsgForLabel(account: String?, folder: String?): Int
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY uid DESC LIMIT 1")
+  abstract fun getNewestMsg(account: String?, folder: String?): MessageEntity?
+
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract suspend fun getLastUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int?
 
