@@ -800,6 +800,16 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             continue
           }
 
+          if (GmailApiHelper.LABEL_TRASH in historyLabelRemoved.labelIds) {
+            val msg = historyLabelRemoved.message
+            if (folderName in msg.labelIds) {
+              deleteCandidatesUIDs.remove(msg.uid)
+              updateCandidates.remove(msg.uid)
+              newCandidatesMap[msg.uid] = msg
+              continue
+            }
+          }
+
           if (GmailApiHelper.LABEL_UNREAD in historyLabelRemoved.labelIds) {
             val existedFlags = updateCandidates[historyLabelRemoved.message.uid] ?: Flags()
             existedFlags.add(Flags.Flag.SEEN)
