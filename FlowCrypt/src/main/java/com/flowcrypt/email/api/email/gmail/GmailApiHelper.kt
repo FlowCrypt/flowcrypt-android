@@ -285,24 +285,34 @@ class GmailApiHelper {
       return@withContext msgs
     }
 
-    // fix to load all history
-    suspend fun loadHistoryInfo(
-        context: Context,
-        accountEntity: AccountEntity,
-        localFolder: LocalFolder,
-        historyId: BigInteger,
-        nextPageToken: String? = null,
+    suspend fun loadHistoryInfo(context: Context, accountEntity: AccountEntity,
+                                localFolder: LocalFolder, historyId: BigInteger
     ): List<History> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      val request = gmailApiService
+      var response = gmailApiService
           .users()
           .history()
           .list(DEFAULT_USER_ID)
           .setStartHistoryId(historyId)
           .setLabelId(localFolder.fullName)
-          .setPageToken(nextPageToken)
+          .execute()
 
-      val response = request.execute()
+      val historyList = mutableListOf<History>()
+      response.history?.let { historyList.addAll(it) }
+
+      //Try to load all history
+      while (response.nextPageToken?.isNotEmpty() == true) {
+        response = gmailApiService
+            .users()
+            .history()
+            .list(DEFAULT_USER_ID)
+            .setStartHistoryId(historyId)
+            .setLabelId(localFolder.fullName)
+            .setPageToken(response.nextPageToken)
+            .execute()
+
+        response.history?.let { historyList.addAll(it) }
+      }
 
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
@@ -310,7 +320,7 @@ class GmailApiHelper {
         roomDatabase.labelDao().updateSuspend(folder.copy(historyId = response?.historyId?.toString()))
       }
 
-      return@withContext response.history
+      return@withContext historyList
     }
 
     suspend fun processHistory(localFolder: LocalFolder,

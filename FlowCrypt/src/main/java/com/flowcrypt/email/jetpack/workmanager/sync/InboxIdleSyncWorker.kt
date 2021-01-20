@@ -100,10 +100,10 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
         val startHistoryId = labelEntityHistoryId.max(msgEntityHistoryId)
         if (startHistoryId != BigInteger.ZERO) {
           val historyList = GmailApiHelper.loadHistoryInfo(
-              applicationContext,
-              accountEntity,
-              inboxLocalFolder,
-              labelEntityHistoryId.max(msgEntityHistoryId)
+              context = applicationContext,
+              accountEntity = accountEntity,
+              localFolder = inboxLocalFolder,
+              historyId = labelEntityHistoryId.max(msgEntityHistoryId)
           )
 
           handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)

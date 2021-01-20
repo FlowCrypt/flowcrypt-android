@@ -648,10 +648,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         val msgEntityHistoryId = BigInteger(newestMsg.historyId ?: "0")
 
         val historyList = GmailApiHelper.loadHistoryInfo(
-            getApplication(),
-            accountEntity,
-            localFolder,
-            labelEntityHistoryId.max(msgEntityHistoryId)
+            context = getApplication(),
+            accountEntity = accountEntity,
+            localFolder = localFolder,
+            historyId = labelEntityHistoryId.max(msgEntityHistoryId)
         )
 
         handleMsgsFromHistory(accountEntity, localFolder, historyList)
