@@ -104,7 +104,7 @@ class GmailApiHelper {
     }
 
     suspend fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream = withContext(Dispatchers.IO) {
-      val msgId = messageEntity.gMailId
+      val msgId = messageEntity.uidAsHEX
       val gmailApiService = generateGmailApiService(context, account)
 
       val message = gmailApiService

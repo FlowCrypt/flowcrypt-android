@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.toHex
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -95,7 +96,7 @@ data class MessageEntity(
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
 
   @Ignore
-  val gMailId: String = java.lang.Long.toHexString(uid).toLowerCase(Locale.US)
+  val uidAsHEX: String = uid.toHex()
 
   /**
    * Generate a list of the all recipients.

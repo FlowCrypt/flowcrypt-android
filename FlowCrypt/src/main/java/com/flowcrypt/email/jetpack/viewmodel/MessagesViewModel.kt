@@ -32,6 +32,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.toHex
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.model.EmailAndNamePair
@@ -730,7 +731,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
       val notificationManager = MessagesNotificationManager(getApplication())
       for (uid in deleteCandidatesUIDs) {
-        notificationManager.cancel(uid.toInt())
+        notificationManager.cancel(uid.toHex())
       }
     }
 
@@ -774,7 +775,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       if (folderType === FoldersManager.FolderType.INBOX) {
         val notificationManager = MessagesNotificationManager(getApplication())
         for (uid in deleteCandidatesUIDs) {
-          notificationManager.cancel(uid.toInt())
+          notificationManager.cancel(uid.toHex())
         }
       }
 

@@ -127,7 +127,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           .setDefaults(Notification.DEFAULT_ALL)
           .setSubText(account.email)
 
-      notificationManagerCompat.notify(groupName, msg.uid.toInt(), builder.build())
+      notificationManagerCompat.notify(msg.uidAsHEX, -1, builder.build())
     }
   }
 

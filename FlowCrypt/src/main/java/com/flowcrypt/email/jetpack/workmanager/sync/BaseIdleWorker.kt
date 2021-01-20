@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.toHex
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
@@ -40,7 +41,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) : Base
     roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderFullName, deleteCandidatesUIDs)
     if (!GeneralUtil.isAppForegrounded()) {
       for (uid in deleteCandidatesUIDs) {
-        notificationManager.cancel(uid.toInt())
+        notificationManager.cancel(uid.toHex())
       }
     }
   }
@@ -61,7 +62,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) : Base
       for (item in updateCandidates) {
         val uid = item.key
         if (item.value.contains(Flags.Flag.SEEN)) {
-          notificationManager.cancel(uid.toInt())
+          notificationManager.cancel(uid.toHex())
         }
       }
     }

@@ -19,6 +19,7 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.toHex
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsAddedWorker
@@ -165,7 +166,7 @@ class IdleService : LifecycleService() {
 
         if (!GeneralUtil.isAppForegrounded()) {
           if (msg.flags.contains(Flags.Flag.SEEN)) {
-            MessagesNotificationManager(applicationContext).cancel(remoteFolder.getUID(msg).toInt())
+            MessagesNotificationManager(applicationContext).cancel(remoteFolder.getUID(msg).toHex())
           }
         }
       } catch (e: Exception) {
