@@ -15,10 +15,16 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.util.GeneralUtil
+import com.google.api.services.gmail.model.History
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.math.BigInteger
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -41,7 +47,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
   }
 
   override suspend fun runAPIAction(accountEntity: AccountEntity) {
-
+    syncMessages(accountEntity)
   }
 
   private suspend fun syncMessages(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
@@ -79,6 +85,62 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
         val newCandidates = EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, allMsgsFromOldestExisted)
         processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
       }
+    }
+  }
+
+  private suspend fun syncMessages(accountEntity: AccountEntity) = withContext(Dispatchers.IO) {
+    when (accountEntity.accountType) {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
+        val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
+        val newestMsg = roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, inboxLocalFolder.fullName)
+        val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, inboxLocalFolder.fullName)
+        val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
+        val msgEntityHistoryId = BigInteger(newestMsg?.historyId ?: "0")
+        val startHistoryId = labelEntityHistoryId.max(msgEntityHistoryId)
+        if (startHistoryId != BigInteger.ZERO) {
+          val historyList = GmailApiHelper.loadHistoryInfo(
+              applicationContext,
+              accountEntity,
+              inboxLocalFolder,
+              labelEntityHistoryId.max(msgEntityHistoryId)
+          )
+
+          handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
+        }
+      }
+    }
+  }
+
+  private suspend fun handleMsgsFromHistory(accountEntity: AccountEntity, localFolder: LocalFolder,
+                                            historyList: List<History>) = withContext(Dispatchers.IO) {
+    GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
+                                                              newCandidatesMap,
+                                                              updateCandidatesMap ->
+      val email = accountEntity.email
+      processDeletedMsgs(accountEntity, localFolder.fullName, deleteCandidatesUIDs)
+
+      val newCandidates = newCandidatesMap.values
+      if (newCandidates.isNotEmpty()) {
+        val msgsShortInfo = GmailApiHelper.loadMsgsShortInfo(applicationContext, accountEntity,
+            newCandidates, localFolder)
+
+        val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
+        val isNew = !GeneralUtil.isAppForegrounded()
+
+        val msgEntities = MessageEntity.genMessageEntities(
+            context = applicationContext,
+            email = email,
+            label = localFolder.fullName,
+            msgsList = msgsShortInfo,
+            isNew = isNew,
+            areAllMsgsEncrypted = isEncryptedModeEnabled
+        )
+
+        processNewMsgs(accountEntity, localFolder, msgEntities)
+      }
+
+      processUpdatedMsgs(accountEntity, localFolder.fullName, updateCandidatesMap)
     }
   }
 

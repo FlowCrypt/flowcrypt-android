@@ -52,7 +52,6 @@ import java.io.IOException
 import java.math.BigInteger
 import java.util.*
 import javax.mail.FetchProfile
-import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.MessagingException
@@ -765,121 +764,48 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   private suspend fun handleMsgsFromHistory(accountEntity: AccountEntity, localFolder: LocalFolder,
                                             historyList: List<History>) = withContext(Dispatchers.IO) {
-    val email = accountEntity.email
-    val folderName = localFolder.fullName
 
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+    GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
+                                                              newCandidatesMap,
+                                                              updateCandidatesMap ->
+      roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs)
 
-    val deleteCandidatesUIDs = mutableSetOf<Long>()
-    val newCandidatesMap = mutableMapOf<Long, com.google.api.services.gmail.model.Message>()
-    val updateCandidates = mutableMapOf<Long, Flags>()
-
-    for (history in historyList) {
-      history.messagesDeleted?.let { messagesDeleted ->
-        for (historyMsgDeleted in messagesDeleted) {
-          newCandidatesMap.remove(historyMsgDeleted.message.uid)
-          updateCandidates.remove(historyMsgDeleted.message.uid)
-          deleteCandidatesUIDs.add(historyMsgDeleted.message.uid)
+      val folderType = FoldersManager.getFolderType(localFolder)
+      if (folderType === FoldersManager.FolderType.INBOX) {
+        val notificationManager = MessagesNotificationManager(getApplication())
+        for (uid in deleteCandidatesUIDs) {
+          notificationManager.cancel(uid.toInt())
         }
       }
 
-      history.messagesAdded?.let { messagesAdded ->
-        for (historyMsgAdded in messagesAdded) {
-          deleteCandidatesUIDs.remove(historyMsgAdded.message.uid)
-          updateCandidates.remove(historyMsgAdded.message.uid)
-          newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
-        }
+      val newCandidates = newCandidatesMap.values
+      if (newCandidates.isNotEmpty()) {
+        val msgsShortInfo = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity,
+            newCandidates, localFolder)
+
+        val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
+        val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
+
+        val msgEntities = MessageEntity.genMessageEntities(
+            context = getApplication(),
+            email = accountEntity.email,
+            label = localFolder.fullName,
+            msgsList = msgsShortInfo,
+            isNew = isNew,
+            areAllMsgsEncrypted = isEncryptedModeEnabled
+        )
+
+        roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
       }
 
-      history.labelsRemoved?.let { labelsRemoved ->
-        for (historyLabelRemoved in labelsRemoved) {
-          if (folderName in historyLabelRemoved.labelIds) {
-            newCandidatesMap.remove(historyLabelRemoved.message.uid)
-            updateCandidates.remove(historyLabelRemoved.message.uid)
-            deleteCandidatesUIDs.add(historyLabelRemoved.message.uid)
-            continue
-          }
+      roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, localFolder.fullName, updateCandidatesMap)
 
-          if (GmailApiHelper.LABEL_TRASH in historyLabelRemoved.labelIds) {
-            val msg = historyLabelRemoved.message
-            if (folderName in msg.labelIds) {
-              deleteCandidatesUIDs.remove(msg.uid)
-              updateCandidates.remove(msg.uid)
-              newCandidatesMap[msg.uid] = msg
-              continue
-            }
-          }
-
-          if (GmailApiHelper.LABEL_UNREAD in historyLabelRemoved.labelIds) {
-            val existedFlags = updateCandidates[historyLabelRemoved.message.uid] ?: Flags()
-            existedFlags.add(Flags.Flag.SEEN)
-            updateCandidates[historyLabelRemoved.message.uid] = existedFlags
-          }
-        }
+      if (folderType === FoldersManager.FolderType.SENT) {
+        val session = Session.getInstance(Properties())
+        updateLocalContactsIfNeeded(messages = newCandidates
+            .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+            .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
       }
-
-      history.labelsAdded?.let { labelsAdded ->
-        for (historyLabelAdded in labelsAdded) {
-          if (folderName in historyLabelAdded.labelIds) {
-            deleteCandidatesUIDs.remove(historyLabelAdded.message.uid)
-            updateCandidates.remove(historyLabelAdded.message.uid)
-            newCandidatesMap[historyLabelAdded.message.uid] = historyLabelAdded.message
-            continue
-          }
-
-          if (historyLabelAdded.labelIds.contains(GmailApiHelper.LABEL_TRASH)) {
-            newCandidatesMap.remove(historyLabelAdded.message.uid)
-            updateCandidates.remove(historyLabelAdded.message.uid)
-            deleteCandidatesUIDs.add(historyLabelAdded.message.uid)
-            continue
-          }
-
-          if (GmailApiHelper.LABEL_UNREAD in historyLabelAdded.labelIds) {
-            val existedFlags = updateCandidates[historyLabelAdded.message.uid] ?: Flags()
-            existedFlags.remove(Flags.Flag.SEEN)
-            updateCandidates[historyLabelAdded.message.uid] = existedFlags
-          }
-        }
-      }
-    }
-
-    roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderName, deleteCandidatesUIDs)
-
-    val folderType = FoldersManager.getFolderType(localFolder)
-    if (folderType === FoldersManager.FolderType.INBOX) {
-      val notificationManager = MessagesNotificationManager(getApplication())
-      for (uid in deleteCandidatesUIDs) {
-        notificationManager.cancel(uid.toInt())
-      }
-    }
-
-    val newCandidates = newCandidatesMap.values
-    if (newCandidates.isNotEmpty()) {
-      val msgsShortInfo = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity,
-          newCandidates, localFolder)
-
-      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
-      val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
-
-      val msgEntities = MessageEntity.genMessageEntities(
-          context = getApplication(),
-          email = email,
-          label = localFolder.fullName,
-          msgsList = msgsShortInfo,
-          isNew = isNew,
-          areAllMsgsEncrypted = isEncryptedModeEnabled
-      )
-
-      roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-    }
-
-    roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderName, updateCandidates)
-
-    if (folderType === FoldersManager.FolderType.SENT) {
-      val session = Session.getInstance(Properties())
-      updateLocalContactsIfNeeded(messages = newCandidates
-          .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
-          .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
     }
   }
 

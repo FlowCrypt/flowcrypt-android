@@ -21,6 +21,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
+import com.flowcrypt.email.extensions.uid
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.json.GoogleJsonError
@@ -40,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.math.BigInteger
+import javax.mail.Flags
 import javax.mail.Part
 
 /**
@@ -309,6 +311,86 @@ class GmailApiHelper {
       }
 
       return@withContext response.history
+    }
+
+    suspend fun processHistory(localFolder: LocalFolder,
+                               historyList: List<History>,
+                               action: suspend (deleteCandidatesUIDs: Set<Long>, newCandidatesMap: Map<Long, Message>, updateCandidatesMap: Map<Long, Flags>) -> Unit) = withContext(Dispatchers.IO)
+    {
+      val deleteCandidatesUIDs = mutableSetOf<Long>()
+      val newCandidatesMap = mutableMapOf<Long, Message>()
+      val updateCandidates = mutableMapOf<Long, Flags>()
+
+      for (history in historyList) {
+        history.messagesDeleted?.let { messagesDeleted ->
+          for (historyMsgDeleted in messagesDeleted) {
+            newCandidatesMap.remove(historyMsgDeleted.message.uid)
+            updateCandidates.remove(historyMsgDeleted.message.uid)
+            deleteCandidatesUIDs.add(historyMsgDeleted.message.uid)
+          }
+        }
+
+        history.messagesAdded?.let { messagesAdded ->
+          for (historyMsgAdded in messagesAdded) {
+            deleteCandidatesUIDs.remove(historyMsgAdded.message.uid)
+            updateCandidates.remove(historyMsgAdded.message.uid)
+            newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
+          }
+        }
+
+        history.labelsRemoved?.let { labelsRemoved ->
+          for (historyLabelRemoved in labelsRemoved) {
+            if (localFolder.fullName in historyLabelRemoved.labelIds) {
+              newCandidatesMap.remove(historyLabelRemoved.message.uid)
+              updateCandidates.remove(historyLabelRemoved.message.uid)
+              deleteCandidatesUIDs.add(historyLabelRemoved.message.uid)
+              continue
+            }
+
+            if (LABEL_TRASH in historyLabelRemoved.labelIds) {
+              val msg = historyLabelRemoved.message
+              if (localFolder.fullName in msg.labelIds) {
+                deleteCandidatesUIDs.remove(msg.uid)
+                updateCandidates.remove(msg.uid)
+                newCandidatesMap[msg.uid] = msg
+                continue
+              }
+            }
+
+            if (LABEL_UNREAD in historyLabelRemoved.labelIds) {
+              val existedFlags = updateCandidates[historyLabelRemoved.message.uid] ?: Flags()
+              existedFlags.add(Flags.Flag.SEEN)
+              updateCandidates[historyLabelRemoved.message.uid] = existedFlags
+            }
+          }
+        }
+
+        history.labelsAdded?.let { labelsAdded ->
+          for (historyLabelAdded in labelsAdded) {
+            if (localFolder.fullName in historyLabelAdded.labelIds) {
+              deleteCandidatesUIDs.remove(historyLabelAdded.message.uid)
+              updateCandidates.remove(historyLabelAdded.message.uid)
+              newCandidatesMap[historyLabelAdded.message.uid] = historyLabelAdded.message
+              continue
+            }
+
+            if (historyLabelAdded.labelIds.contains(LABEL_TRASH)) {
+              newCandidatesMap.remove(historyLabelAdded.message.uid)
+              updateCandidates.remove(historyLabelAdded.message.uid)
+              deleteCandidatesUIDs.add(historyLabelAdded.message.uid)
+              continue
+            }
+
+            if (LABEL_UNREAD in historyLabelAdded.labelIds) {
+              val existedFlags = updateCandidates[historyLabelAdded.message.uid] ?: Flags()
+              existedFlags.remove(Flags.Flag.SEEN)
+              updateCandidates[historyLabelAdded.message.uid] = existedFlags
+            }
+          }
+        }
+
+        action.invoke(deleteCandidatesUIDs, newCandidatesMap, updateCandidates)
+      }
     }
   }
 }
