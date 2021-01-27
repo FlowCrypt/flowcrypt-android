@@ -28,6 +28,7 @@ import androidx.core.content.FileProvider
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
@@ -36,6 +37,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -398,14 +401,13 @@ class AttachmentDownloadManagerService : Service() {
   private class AttDownloadRunnable(private val context: Context,
                                     private val att: AttachmentInfo) : Runnable {
     private var listener: OnDownloadAttachmentListener? = null
+    private var attTempFile: File = File.createTempFile("tmp", null, context.externalCacheDir)
 
     override fun run() {
       if (GeneralUtil.isDebugBuild()) {
         Thread.currentThread().name = AttDownloadRunnable::class.java.simpleName + "|" + att.getSafeName()
       }
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-
-      var attTempFile: File = createTempFile(directory = context.externalCacheDir)
 
       try {
         checkFileSize()
@@ -432,43 +434,41 @@ class AttachmentDownloadManagerService : Service() {
           return
         }
 
-        val session = OpenStoreHelper.getAttsSess(context, account)
-        val store = OpenStoreHelper.openStore(context, account, session)
+        if (account.useAPI) {
+          when (account.accountType) {
+            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+              val msg = GmailApiHelper.loadMsgShortInfo(context, account, att.uid.toHex())
+              val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = att.path)
+                  ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
 
-        val label = roomDatabase.labelDao().getLabel(email, account.accountType, att.folder!!)
-            ?: if (roomDatabase.accountDao().getAccount(email) == null) {
-              listener?.onCanceled(this.att)
-              store.close()
-              return
-            } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
+              GmailApiHelper.getAttInputStream(context, account, att.uid.toHex(), attPart.body.attachmentId).use { inputStream ->
+                handleAttachmentInputStream(inputStream)
+              }
+            }
 
-        val remoteFolder = store.getFolder(label.name) as IMAPFolder
-        remoteFolder.open(Folder.READ_ONLY)
+            else -> throw ManualHandledException("Unsupported provider")
+          }
+        } else {
+          val session = OpenStoreHelper.getAttsSess(context, account)
+          OpenStoreHelper.openStore(context, account, session).use { store ->
+            val label = roomDatabase.labelDao().getLabel(email, account.accountType, att.folder!!)
+                ?: if (roomDatabase.accountDao().getAccount(email) == null) {
+                  listener?.onCanceled(this.att)
+                  store.close()
+                  return
+                } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
 
-        val msg = remoteFolder.getMessageByUID(att.uid.toLong())
-            ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
+            store.getFolder(label.name).use { folder ->
+              val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+              val msg = remoteFolder.getMessageByUID(att.uid)
+                  ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
 
-        val att = ImapProtocolUtil.getAttPartByPath(msg, neededPath = this.att.path)
-
-        if (att != null) {
-          val inputStream = att.inputStream
-          downloadFile(attTempFile, inputStream)
-
-          if (Thread.currentThread().isInterrupted) {
-            listener?.onCanceled(this.att)
-          } else {
-            attTempFile = decryptFileIfNeeded(context, attTempFile)
-            if (Thread.currentThread().isInterrupted) {
-              listener?.onCanceled(this.att)
-            } else {
-              val uri = storeFileToSharedFolder(context, attTempFile)
-              listener?.onAttDownloaded(this.att, uri)
+              ImapProtocolUtil.getAttPartByPath(msg, neededPath = this.att.path)?.inputStream?.let { inputStream ->
+                handleAttachmentInputStream(inputStream)
+              } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
             }
           }
-        } else throw ManualHandledException(context.getString(R.string.attachment_not_found))
-
-        remoteFolder.close(false)
-        store.close()
+        }
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
@@ -478,11 +478,27 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    private fun storeFileToSharedFolder(context: Context, attFile: File): Uri {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        return storeFileUsingScopedStorage(context, attFile)
+    private fun handleAttachmentInputStream(inputStream: InputStream) {
+      downloadFile(attTempFile, inputStream)
+
+      if (Thread.currentThread().isInterrupted) {
+        listener?.onCanceled(this.att)
       } else {
-        return storeLegacy(attFile, context)
+        attTempFile = decryptFileIfNeeded(context, attTempFile)
+        if (Thread.currentThread().isInterrupted) {
+          listener?.onCanceled(this.att)
+        } else {
+          val uri = storeFileToSharedFolder(context, attTempFile)
+          listener?.onAttDownloaded(this.att, uri)
+        }
+      }
+    }
+
+    private fun storeFileToSharedFolder(context: Context, attFile: File): Uri {
+      return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        storeFileUsingScopedStorage(context, attFile)
+      } else {
+        storeLegacy(attFile, context)
       }
     }
 
@@ -629,7 +645,7 @@ class AttachmentDownloadManagerService : Service() {
       FileInputStream(file).use { inputStream ->
         val decryptedFileResult = getDecryptedFileResult(context, inputStream)
 
-        val decryptedFile = createTempFile(directory = context.externalCacheDir)
+        val decryptedFile = File.createTempFile("tmp", null, context.externalCacheDir)
         att.name = FilenameUtils.getBaseName(att.name)
 
         FileUtils.openOutputStream(decryptedFile).use { outputStream ->

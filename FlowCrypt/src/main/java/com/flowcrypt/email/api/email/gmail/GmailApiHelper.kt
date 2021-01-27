@@ -7,11 +7,10 @@ package com.flowcrypt.email.api.email.gmail
 
 import android.accounts.Account
 import android.content.Context
-import android.util.Base64
-import android.util.Base64InputStream
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.api.GMailRawAttachmentFilterInputStream
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -39,6 +38,7 @@ import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.codec.binary.Base64InputStream
 import java.io.InputStream
 import java.math.BigInteger
 import javax.mail.Flags
@@ -87,6 +87,10 @@ class GmailApiHelper {
       val credential = generateGoogleAccountCredential(context, account)
 
       val transport = NetHttpTransport()
+      /*
+      maybe we will use it for debug. need to investigate
+      val s = Logger.getLogger(HttpTransport::class.java.name)
+      s.level = Level.ALL*/
       val factory = JacksonFactory.getDefaultInstance()
       val appName = context.getString(R.string.app_name)
       return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
@@ -114,7 +118,7 @@ class GmailApiHelper {
           .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
       message.fields = "raw"
 
-      return@withContext Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()), Base64.URL_SAFE)
+      return@withContext Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()))
     }
 
     suspend fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder:
@@ -401,6 +405,65 @@ class GmailApiHelper {
 
         action.invoke(deleteCandidatesUIDs, newCandidatesMap, updateCandidates)
       }
+    }
+
+    fun loadMsgShortInfo(context: Context, accountEntity: AccountEntity, msgId: String): Message {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+
+      return gmailApiService
+          .users()
+          .messages()
+          .get(DEFAULT_USER_ID, msgId)
+          .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
+          .execute()
+    }
+
+    /**
+     * Get [Part] which has an attachment with the given attachment path.
+     *
+     * @param part         The parent part.
+     * @param currentPath  The current path of MIME hierarchy.
+     * @param neededPath   The path where the needed attachment exists.
+     * @return [Part] which has attachment or null if message doesn't have such attachment.
+     */
+    fun getAttPartByPath(part: MessagePart, currentPath: String = "0/", neededPath: String): MessagePart? {
+      if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+        val neededParentPath = neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
+        val partsCount = (part.parts ?: emptyList()).size
+
+        if (currentPath == neededParentPath) {
+          val position = neededPath.substringAfterLast(AttachmentInfo.DEPTH_SEPARATOR).toInt()
+
+          if (partsCount > position) {
+            val bodyPart = part.parts[position]
+            if (Part.ATTACHMENT.equals(bodyPart.disposition(), ignoreCase = true)) {
+              return bodyPart
+            }
+          }
+        } else {
+          val nextDepth = neededParentPath
+              .replaceFirst(currentPath, "")
+              .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
+          val bodyPart = part.parts[nextDepth]
+          return getAttPartByPath(bodyPart, currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR, neededPath)
+        }
+        return null
+      } else {
+        return null
+      }
+    }
+
+    fun getAttInputStream(context: Context, accountEntity: AccountEntity, msgId: String, attId: String): InputStream {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val request = gmailApiService
+          .users()
+          .messages()
+          .attachments()
+          .get(DEFAULT_USER_ID, msgId, attId)
+          .setPrettyPrint(false)
+          .setFields("data")
+
+      return Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
     }
   }
 }
