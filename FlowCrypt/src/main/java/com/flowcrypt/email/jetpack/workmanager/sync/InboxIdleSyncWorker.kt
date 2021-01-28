@@ -138,6 +138,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
         )
 
         processNewMsgs(accountEntity, localFolder, msgEntities)
+        GmailApiHelper.identifyAttachments(msgEntities, msgsShortInfo, accountEntity, localFolder, roomDatabase)
       }
 
       processUpdatedMsgs(accountEntity, localFolder.fullName, updateCandidatesMap)

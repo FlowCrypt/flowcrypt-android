@@ -33,7 +33,6 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.toHex
-import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.service.EmailAndNameUpdaterService
@@ -406,7 +405,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-    identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
+    GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
     val session = Session.getInstance(Properties())
     updateLocalContactsIfNeeded(messages = msgs
         .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
@@ -454,31 +453,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               this.email = account.email
               this.folder = localFolder.fullName
               this.uid = uid
-            })
-          })
-        }
-      }
-
-      roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
-    } catch (e: Exception) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  private suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: List<com.google.api.services.gmail.model.Message>,
-                                          account: AccountEntity, localFolder:
-                                          LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
-    try {
-      val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
-      val attachments = mutableListOf<AttachmentEntity>()
-      for (msg in msgs) {
-        if (msg.uid in savedMsgUIDsSet) {
-          attachments.addAll(GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
-            AttachmentEntity.fromAttInfo(it.apply {
-              this.email = account.email
-              this.folder = localFolder.fullName
-              this.uid = msg.uid
             })
           })
         }
@@ -797,6 +771,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         )
 
         roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+        GmailApiHelper.identifyAttachments(msgEntities, msgsShortInfo, accountEntity, localFolder, roomDatabase)
       }
 
       roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, localFolder.fullName, updateCandidatesMap)

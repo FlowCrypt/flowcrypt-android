@@ -16,11 +16,13 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.json.GoogleJsonError
@@ -464,6 +466,31 @@ class GmailApiHelper {
           .setFields("data")
 
       return Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
+    }
+
+    suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: List<Message>,
+                                    account: AccountEntity, localFolder:
+                                    LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
+      try {
+        val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
+        val attachments = mutableListOf<AttachmentEntity>()
+        for (msg in msgs) {
+          if (msg.uid in savedMsgUIDsSet) {
+            attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull {
+              AttachmentEntity.fromAttInfo(it.apply {
+                this.email = account.email
+                this.folder = localFolder.fullName
+                this.uid = msg.uid
+              })
+            })
+          }
+        }
+
+        roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+      }
     }
   }
 }
