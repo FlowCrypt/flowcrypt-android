@@ -38,6 +38,7 @@ import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
+import com.sun.mail.gimap.GmailRawSearchTerm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.binary.Base64InputStream
@@ -469,8 +470,7 @@ class GmailApiHelper {
     }
 
     suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: List<Message>,
-                                    account: AccountEntity, localFolder:
-                                    LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
+                                    account: AccountEntity, localFolder: LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
       try {
         val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
         val attachments = mutableListOf<AttachmentEntity>()
@@ -491,6 +491,22 @@ class GmailApiHelper {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
       }
+    }
+
+    suspend fun loadMsgsBaseInfoUsingSearch(context: Context, accountEntity: AccountEntity,
+                                            localFolder: LocalFolder, nextPageToken: String? = null):
+        ListMessagesResponse = withContext(Dispatchers.IO) {
+
+
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val list = gmailApiService
+          .users()
+          .messages()
+          .list(DEFAULT_USER_ID)
+          .setQ((EmailUtil.generateSearchTerm(accountEntity, localFolder) as GmailRawSearchTerm).pattern)
+          .setPageToken(nextPageToken)
+          .setMaxResults(20)
+      return@withContext list.execute()
     }
   }
 }

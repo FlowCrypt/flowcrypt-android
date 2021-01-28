@@ -42,7 +42,6 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.api.services.gmail.model.History
-import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,14 +58,6 @@ import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
 import javax.mail.internet.InternetAddress
-import javax.mail.search.AndTerm
-import javax.mail.search.BodyTerm
-import javax.mail.search.FromStringTerm
-import javax.mail.search.OrTerm
-import javax.mail.search.RecipientStringTerm
-import javax.mail.search.SearchTerm
-import javax.mail.search.StringTerm
-import javax.mail.search.SubjectTerm
 import kotlin.collections.ArrayList
 
 
@@ -78,6 +69,7 @@ import kotlin.collections.ArrayList
  */
 class MessagesViewModel(application: Application) : AccountViewModel(application) {
   private var currentLocalFolder: LocalFolder? = null
+  private var searchNextPageToken: String? = null
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
@@ -118,8 +110,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           loadMsgsFromRemoteServerLiveData.value = if (localFolder.searchQuery.isNullOrEmpty()) {
             loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
           } else {
-            Result.success(true)
-            //searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
+            searchMsgsOnRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
           }
         } else {
           val connection = IMAPStoreManager.activeConnections[accountEntity.id]
@@ -370,8 +361,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
         val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(getApplication(), accountEntity,
             localFolder, if (totalItemsCount > 0) labelEntity?.nextPageToken else null)
-        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 50.0, resultCode = R.id.progress_id_gmail_list))
-        labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(nextPageToken = messagesBaseInfo.nextPageToken)) }
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
 
         if (messagesBaseInfo.messages?.isNotEmpty() == true) {
@@ -382,6 +371,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         } else {
           loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
         }
+        labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(nextPageToken = messagesBaseInfo.nextPageToken)) }
       }
     }
 
@@ -515,6 +505,33 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return pairs
   }
 
+  private suspend fun searchMsgsOnRemoteServerAndStoreLocally(accountEntity: AccountEntity,
+                                                              localFolder: LocalFolder,
+                                                              totalItemsCount: Int): Result<Boolean?> = withContext(Dispatchers.IO) {
+    when (accountEntity.accountType) {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
+        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfoUsingSearch(getApplication(), accountEntity,
+            localFolder, if (totalItemsCount > 0) searchNextPageToken else null)
+        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
+
+        if (messagesBaseInfo.messages?.isNotEmpty() == true) {
+          val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo.messages
+              ?: emptyList(), localFolder)
+          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
+          handleSearchResults(accountEntity, localFolder.copy(fullName = SearchMessagesActivity.SEARCH_FOLDER_NAME), msgs)
+        } else {
+          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
+        }
+
+        searchNextPageToken = messagesBaseInfo.nextPageToken
+      }
+    }
+
+    return@withContext Result.success(true)
+  }
+
+
   private suspend fun searchMsgsOnRemoteServerAndStoreLocally(accountEntity: AccountEntity, store: Store,
                                                               localFolder: LocalFolder,
                                                               countOfAlreadyLoadedMsgs: Int): Result<Boolean?> = withContext(Dispatchers.IO) {
@@ -527,7 +544,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         else -> countOfAlreadyLoadedMsgs
       }
 
-      val foundMsgs = imapFolder.search(generateSearchTerm(accountEntity, localFolder))
+      val foundMsgs = imapFolder.search(EmailUtil.generateSearchTerm(accountEntity, localFolder))
 
       val messagesCount = foundMsgs.size
       val end = messagesCount - countOfLoadedMsgs
@@ -587,31 +604,28 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     updateLocalContactsIfNeeded(remoteFolder, msgs)
   }
 
-  /**
-   * Generate a [SearchTerm] depend on an input [AccountEntity].
-   *
-   * @param account An input [AccountEntity]
-   * @return A generated [SearchTerm].
-   */
-  private fun generateSearchTerm(account: AccountEntity, localFolder: LocalFolder): SearchTerm {
-    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
+  private suspend fun handleSearchResults(account: AccountEntity, localFolder: LocalFolder,
+                                          msgs: List<com.google.api.services.gmail.model.Message>) = withContext(Dispatchers.IO) {
+    val email = account.email
+    val label = localFolder.fullName
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
-    if (isEncryptedModeEnabled == true) {
-      val searchTerm = EmailUtil.genEncryptedMsgsSearchTerm(account)
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val msgEntities = MessageEntity.genMessageEntities(
+        context = getApplication(),
+        email = email,
+        label = label,
+        msgsList = msgs,
+        isNew = false,
+        areAllMsgsEncrypted = isEncryptedModeEnabled
+    )
 
-      return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
-        val stringTerm = searchTerm as StringTerm
-        GmailRawSearchTerm(localFolder.searchQuery + " AND (" + stringTerm.pattern + ")")
-      } else {
-        AndTerm(searchTerm, generateNonGmailSearchTerm(localFolder))
-      }
-    } else {
-      return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
-        GmailRawSearchTerm(localFolder.searchQuery)
-      } else {
-        generateNonGmailSearchTerm(localFolder)
-      }
-    }
+    roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+    GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
+    val session = Session.getInstance(Properties())
+    updateLocalContactsIfNeeded(messages = msgs
+        .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+        .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
   }
 
   private suspend fun refreshMsgsInternal(accountEntity: AccountEntity, localFolder: LocalFolder): Result<Boolean?> = withContext(Dispatchers.IO) {
@@ -783,17 +797,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
       }
     }
-  }
-
-  private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
-    return OrTerm(arrayOf(
-        SubjectTerm(localFolder.searchQuery),
-        BodyTerm(localFolder.searchQuery),
-        FromStringTerm(localFolder.searchQuery),
-        RecipientStringTerm(Message.RecipientType.TO, localFolder.searchQuery),
-        RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
-        RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
-    ))
   }
 
   private suspend fun clearHistoryIdForLabel(accountEntity: AccountEntity, label: String) {

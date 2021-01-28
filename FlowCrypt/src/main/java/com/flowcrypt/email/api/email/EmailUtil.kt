@@ -22,6 +22,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
@@ -76,8 +77,14 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
+import javax.mail.search.AndTerm
 import javax.mail.search.BodyTerm
+import javax.mail.search.FromStringTerm
+import javax.mail.search.OrTerm
+import javax.mail.search.RecipientStringTerm
 import javax.mail.search.SearchTerm
+import javax.mail.search.StringTerm
+import javax.mail.search.SubjectTerm
 import javax.mail.util.ByteArrayDataSource
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -267,7 +274,6 @@ class EmailUtil {
      */
     fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
       val account: Account = accountEntity.account
-          ?: throw NullPointerException("Account can't be a null!")
 
       return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
     }
@@ -906,6 +912,44 @@ class EmailUtil {
       } catch (e: GooglePlayServicesNotAvailableException) {
         e.printStackTrace()
       }
+    }
+
+    /**
+     * Generate a [SearchTerm] depend on an input [AccountEntity].
+     *
+     * @param account An input [AccountEntity]
+     * @return A generated [SearchTerm].
+     */
+    fun generateSearchTerm(account: AccountEntity, localFolder: LocalFolder): SearchTerm {
+      val isEncryptedModeEnabled = account.isShowOnlyEncrypted
+
+      if (isEncryptedModeEnabled == true) {
+        val searchTerm = genEncryptedMsgsSearchTerm(account)
+
+        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+          val stringTerm = searchTerm as StringTerm
+          GmailRawSearchTerm(localFolder.searchQuery + " AND (" + stringTerm.pattern + ")")
+        } else {
+          AndTerm(searchTerm, generateNonGmailSearchTerm(localFolder))
+        }
+      } else {
+        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+          GmailRawSearchTerm(localFolder.searchQuery)
+        } else {
+          generateNonGmailSearchTerm(localFolder)
+        }
+      }
+    }
+
+    private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
+      return OrTerm(arrayOf(
+          SubjectTerm(localFolder.searchQuery),
+          BodyTerm(localFolder.searchQuery),
+          FromStringTerm(localFolder.searchQuery),
+          RecipientStringTerm(Message.RecipientType.TO, localFolder.searchQuery),
+          RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
+          RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
+      ))
     }
   }
 }
