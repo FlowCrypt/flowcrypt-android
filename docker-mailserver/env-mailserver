@@ -81,7 +81,7 @@ SMTP_ONLY=
 # custom => Enables custom certificates
 # manual => Let's you manually specify locations of your SSL certificates for non-standard cases
 # self-signed => Enables self-signed certificates
-SSL_TYPE=
+SSL_TYPE=self-signed
 
 # Set how many days a virusmail will stay on the server before being deleted
 # empty => 7 days

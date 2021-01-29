@@ -1,5 +1,2 @@
 # File for additional dovecot configurations.
 # For more informations read http://wiki.dovecot.org/BasicConfiguration
-
-ssl = yes
-disable_plaintext_auth=no
