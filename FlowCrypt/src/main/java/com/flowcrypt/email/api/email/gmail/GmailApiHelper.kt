@@ -42,6 +42,7 @@ import com.sun.mail.gimap.GmailRawSearchTerm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.binary.Base64InputStream
+import java.io.IOException
 import java.io.InputStream
 import java.math.BigInteger
 import javax.mail.Flags
@@ -507,6 +508,27 @@ class GmailApiHelper {
           .setPageToken(nextPageToken)
           .setMaxResults(20)
       return@withContext list.execute()
+    }
+
+    /**
+     * Retrieve a Gmail message thread id.
+     *
+     * @param service          A [Gmail] reference.
+     * @param rfc822msgidValue An rfc822 Message-Id value of the input message.
+     * @return The input message thread id.
+     * @throws IOException
+     */
+    suspend fun getGmailMsgThreadID(service: Gmail, rfc822msgidValue: String): String? = withContext(Dispatchers.IO) {
+      val response = service
+          .users()
+          .messages()
+          .list(DEFAULT_USER_ID)
+          .setQ("rfc822msgid:$rfc822msgidValue")
+          .execute()
+
+      return@withContext if (response.messages != null && response.messages.size == 1) {
+        response.messages[0].threadId
+      } else null
     }
   }
 }
