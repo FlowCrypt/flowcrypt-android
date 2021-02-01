@@ -12,39 +12,32 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.TextUtils
-import android.util.Base64
 import android.util.SparseArray
 import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeEncryptException
-import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
-import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.gms.security.ProviderInstaller
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.iap.Argument
@@ -58,7 +51,6 @@ import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
-import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -288,82 +280,6 @@ class EmailUtil {
       return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(
           PreferenceManager.getDefaultSharedPreferences(context.applicationContext),
           Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED, BuildConfig.IS_MAIL_DEBUG_ENABLED)
-    }
-
-    /**
-     * Get a list of [NodeKeyDetails] using the **Gmail API**
-     *
-     * @param context context Interface to global information about an application environment;
-     * @param account An [AccountEntity] object.
-     * @return A list of [NodeKeyDetails]
-     * @throws MessagingException
-     * @throws IOException
-     */
-    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity): MutableCollection<NodeKeyDetails> {
-      try {
-        val list = mutableListOf<NodeKeyDetails>()
-
-        val searchQuery = NodeCallsExecutor.getGmailBackupSearch(account.email)
-        val gmailApiService = GmailApiHelper.generateGmailApiService(context, account)
-
-        var response = gmailApiService
-            .users()
-            .messages()
-            .list(GmailApiHelper.DEFAULT_USER_ID)
-            .setQ(searchQuery)
-            .execute()
-
-        val msgs = mutableListOf<com.google.api.services.gmail.model.Message>()
-
-        //Try to load all backups
-        while (response.messages != null) {
-          msgs.addAll(response.messages)
-          if (response.nextPageToken != null) {
-            response = gmailApiService
-                .users()
-                .messages()
-                .list(GmailApiHelper.DEFAULT_USER_ID)
-                .setQ(searchQuery)
-                .setPageToken(response.nextPageToken)
-                .execute()
-          } else {
-            break
-          }
-        }
-
-        for (origMsg in msgs) {
-          val message = gmailApiService
-              .users()
-              .messages()
-              .get(GmailApiHelper.DEFAULT_USER_ID, origMsg.id)
-              .setFormat(GmailApiHelper.MESSAGE_RESPONSE_FORMAT_RAW)
-              .execute()
-
-          val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
-          val msg = MimeMessage(Session.getInstance(Properties()), stream)
-          val backup = getKeyFromMimeMsg(msg)
-
-          if (TextUtils.isEmpty(backup)) {
-            continue
-          }
-
-          try {
-            list.addAll(NodeCallsExecutor.parseKeys(backup))
-          } catch (e: NodeException) {
-            e.printStackTrace()
-            ExceptionUtil.handleError(e)
-          }
-
-        }
-
-        return list
-      } catch (e: UserRecoverableAuthIOException) {
-        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
-        throw e
-      } catch (e: UserRecoverableAuthException) {
-        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
-        throw e
-      }
     }
 
     /**

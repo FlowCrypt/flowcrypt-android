@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.SearchBackupsUtil
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -65,7 +66,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
 
           when (accountEntity.accountType) {
             AccountEntity.ACCOUNT_TYPE_GOOGLE ->
-              privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getApplication(), accountEntity))
+              privateKeyDetailsList.addAll(GmailApiHelper.getPrivateKeyBackups(getApplication(), accountEntity))
 
             else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session, accountEntity))
           }

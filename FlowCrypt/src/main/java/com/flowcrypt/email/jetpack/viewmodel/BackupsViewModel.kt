@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.SearchBackupsUtil
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
@@ -22,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.exception.NodeException
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
@@ -45,30 +47,42 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
     liveData {
       accountEntity?.let {
         emit(Result.loading())
-        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-        if (connection == null) {
-          emit(Result.exception<List<NodeKeyDetails>?>(NullPointerException("There is no active connection for ${accountEntity.email}")))
-        } else {
-          val store = connection.store
-          val keyDetailsList = mutableListOf<NodeKeyDetails>()
 
-          try {
+        try {
+          val keyDetailsList = mutableListOf<NodeKeyDetails>()
+          if (accountEntity.useAPI) {
             when (accountEntity.accountType) {
               AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
                 val keys = withContext(Dispatchers.IO) {
-                  return@withContext EmailUtil.getPrivateKeyBackupsViaGmailAPI(application, accountEntity)
+                  return@withContext GmailApiHelper.getPrivateKeyBackups(application, accountEntity)
                 }
                 keyDetailsList.addAll(keys)
               }
 
-              else -> keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity, store))
+              else -> throw ManualHandledException("Unsupported provider")
             }
+          } else {
+            val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+            if (connection == null) {
+              emit(Result.exception<List<NodeKeyDetails>?>(NullPointerException("There is no active connection for ${accountEntity.email}")))
+            } else {
+              when (accountEntity.accountType) {
+                AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+                  val keys = withContext(Dispatchers.IO) {
+                    return@withContext GmailApiHelper.getPrivateKeyBackups(application, accountEntity)
+                  }
+                  keyDetailsList.addAll(keys)
+                }
 
-            emit(Result.success(keyDetailsList.toList()))
-          } catch (e: Exception) {
-            e.printStackTrace()
-            emit(Result.exception<List<NodeKeyDetails>?>(e))
+                else -> keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity, connection.store))
+              }
+            }
           }
+
+          emit(Result.success(keyDetailsList.toList()))
+        } catch (e: Exception) {
+          e.printStackTrace()
+          emit(Result.exception<List<NodeKeyDetails>?>(e))
         }
       }
     }
@@ -81,11 +95,21 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
         postBackupLiveData.value = Result.loading()
-        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-        if (connection == null) {
-          postBackupLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+        if (accountEntity.useAPI) {
+          when (accountEntity.accountType) {
+            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+              postBackupLiveData.value = postBackupInternal(accountEntity)
+            }
+
+            else -> throw ManualHandledException("Unsupported provider")
+          }
         } else {
-          postBackupLiveData.value = postBackupInternal(accountEntity, connection.session)
+          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+          if (connection == null) {
+            postBackupLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+          } else {
+            postBackupLiveData.value = postBackupInternal(accountEntity, connection.session)
+          }
         }
       }
     }
@@ -98,6 +122,16 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
       transport.sendMessage(message, message.allRecipients)
 
       return@withContext Result.success(true)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      return@withContext Result.exception(e)
+    }
+  }
+
+  private suspend fun postBackupInternal(accountEntity: AccountEntity): Result<Boolean> = withContext(Dispatchers.IO) {
+    try {
+      val message = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), accountEntity, Session.getInstance(Properties()))
+      return@withContext Result.success(GmailApiHelper.sendMsg(getApplication(), accountEntity, message))
     } catch (e: Exception) {
       e.printStackTrace()
       return@withContext Result.exception(e)

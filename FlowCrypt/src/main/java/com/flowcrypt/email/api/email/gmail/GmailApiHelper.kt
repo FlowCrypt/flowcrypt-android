@@ -7,6 +7,8 @@ package com.flowcrypt.email.api.email.gmail
 
 import android.accounts.Account
 import android.content.Context
+import android.text.TextUtils
+import android.util.Base64
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -14,6 +16,8 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawAttachmentFilterInputStre
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
@@ -22,9 +26,13 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.NodeException
+import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.googleapis.json.GoogleJsonError
 import com.google.api.client.http.HttpHeaders
 import com.google.api.client.http.javanet.NetHttpTransport
@@ -42,11 +50,17 @@ import com.sun.mail.gimap.GmailRawSearchTerm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.binary.Base64InputStream
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.math.BigInteger
+import java.util.*
 import javax.mail.Flags
+import javax.mail.MessagingException
 import javax.mail.Part
+import javax.mail.Session
+import javax.mail.internet.MimeMessage
 
 /**
  * This class helps to work with Gmail API.
@@ -264,7 +278,7 @@ class GmailApiHelper {
     }
 
     suspend fun loadTrashMsgs(context: Context, accountEntity: AccountEntity): List<Message> = withContext(Dispatchers.IO) {
-      val gmailApiService = GmailApiHelper.generateGmailApiService(context, accountEntity)
+      val gmailApiService = generateGmailApiService(context, accountEntity)
 
       var response = gmailApiService
           .users()
@@ -529,6 +543,100 @@ class GmailApiHelper {
       return@withContext if (response.messages != null && response.messages.size == 1) {
         response.messages[0].threadId
       } else null
+    }
+
+    /**
+     * Get a list of [NodeKeyDetails] using the **Gmail API**
+     *
+     * @param context context Interface to global information about an application environment;
+     * @param account An [AccountEntity] object.
+     * @return A list of [NodeKeyDetails]
+     * @throws MessagingException
+     * @throws IOException
+     */
+    fun getPrivateKeyBackups(context: Context, account: AccountEntity): MutableCollection<NodeKeyDetails> {
+      try {
+        val list = mutableListOf<NodeKeyDetails>()
+
+        val searchQuery = NodeCallsExecutor.getGmailBackupSearch(account.email)
+        val gmailApiService = generateGmailApiService(context, account)
+
+        var response = gmailApiService
+            .users()
+            .messages()
+            .list(DEFAULT_USER_ID)
+            .setQ(searchQuery)
+            .execute()
+
+        val msgs = mutableListOf<Message>()
+
+        //Try to load all backups
+        while (response.messages != null) {
+          msgs.addAll(response.messages)
+          if (response.nextPageToken != null) {
+            response = gmailApiService
+                .users()
+                .messages()
+                .list(DEFAULT_USER_ID)
+                .setQ(searchQuery)
+                .setPageToken(response.nextPageToken)
+                .execute()
+          } else {
+            break
+          }
+        }
+
+        for (origMsg in msgs) {
+          val message = gmailApiService
+              .users()
+              .messages()
+              .get(DEFAULT_USER_ID, origMsg.id)
+              .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
+              .execute()
+
+          val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
+          val msg = MimeMessage(Session.getInstance(Properties()), stream)
+          val backup = EmailUtil.getKeyFromMimeMsg(msg)
+
+          if (TextUtils.isEmpty(backup)) {
+            continue
+          }
+
+          try {
+            list.addAll(NodeCallsExecutor.parseKeys(backup))
+          } catch (e: NodeException) {
+            e.printStackTrace()
+            ExceptionUtil.handleError(e)
+          }
+
+        }
+
+        return list
+      } catch (e: UserRecoverableAuthIOException) {
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
+        throw e
+      } catch (e: UserRecoverableAuthException) {
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
+        throw e
+      }
+    }
+
+    suspend fun sendMsg(context: Context, account: AccountEntity, mimeMessage: javax.mail.Message): Boolean = withContext(Dispatchers.IO) {
+      val gmail = generateGmailApiService(context, account)
+      val outputStream = ByteArrayOutputStream()
+      mimeMessage.writeTo(outputStream)
+
+      val sentMsg = Message().apply {
+        raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+      }
+
+      gmail
+          .users()
+          .messages()
+          .send(DEFAULT_USER_ID, sentMsg)
+          .execute()
+
+      return@withContext sentMsg.id == null
     }
   }
 }
