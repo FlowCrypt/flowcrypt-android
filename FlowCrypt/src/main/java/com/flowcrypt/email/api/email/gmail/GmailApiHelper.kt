@@ -76,6 +76,7 @@ class GmailApiHelper {
 
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
     const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
+    const val MESSAGE_RESPONSE_FORMAT_METADATA = "metadata"
 
     const val FOLDER_TYPE_USER = "user"
 
@@ -92,6 +93,7 @@ class GmailApiHelper {
         "CATEGORY_PERSONAL",
         "CATEGORY_PROMOTIONS",
         "CATEGORY_SOCIAL")
+    private const val COUNT_OF_LOADED_EMAILS_BY_STEP = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
 
     /**
      * Generate [Gmail] using incoming [AccountEntity]. [Gmail] class is the main point of
@@ -154,7 +156,7 @@ class GmailApiHelper {
           .messages()
           .list(DEFAULT_USER_ID)
           .setPageToken(nextPageToken)
-          .setMaxResults(20)
+          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
 
       if (!localFolder.isAll()) {
         request.labelIds = listOf(localFolder.fullName)
@@ -162,7 +164,9 @@ class GmailApiHelper {
       return@withContext request.execute()
     }
 
-    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, messages: Collection<Message>, localFolder: LocalFolder): List<Message> = withContext(Dispatchers.IO) {
+    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
+                                  localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_METADATA): List<Message> = withContext(Dispatchers.IO)
+    {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
 
@@ -174,7 +178,7 @@ class GmailApiHelper {
             .users()
             .messages()
             .get(DEFAULT_USER_ID, message.id)
-            .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
+            .setFormat(format)
         request.queue(batch, object : JsonBatchCallback<Message>() {
           override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
             t?.let {
@@ -537,7 +541,7 @@ class GmailApiHelper {
           .list(DEFAULT_USER_ID)
           .setQ((EmailUtil.generateSearchTerm(accountEntity, localFolder) as GmailRawSearchTerm).pattern)
           .setPageToken(nextPageToken)
-          .setMaxResults(20)
+          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
       return@withContext list.execute()
     }
 
