@@ -61,11 +61,22 @@ interface LabelDao : BaseDao<LabelEntity> {
     }
 
     val newCandidates = mutableListOf<LabelEntity>()
+    val updateCandidates = mutableListOf<LabelEntity>()
+
     for (freshLabel in freshLabels) {
       var isFolderFound = false
       for (existedLabel in existedLabels) {
         if (existedLabel.name == freshLabel.name) {
           isFolderFound = true
+          if (existedLabel.alias != freshLabel.alias) {
+            if (existedLabel.attributes == freshLabel.attributes) {
+              updateCandidates.add(existedLabel.copy(alias = freshLabel.alias))
+            } else {
+              updateCandidates.add(existedLabel.copy(
+                  alias = freshLabel.alias,
+                  attributes = freshLabel.attributes))
+            }
+          }
           break
         }
       }
@@ -76,6 +87,7 @@ interface LabelDao : BaseDao<LabelEntity> {
     }
 
     deleteSuspend(deleteCandidates)
+    updateSuspend(updateCandidates)
     insertWithReplaceSuspend(newCandidates)
   }
 }

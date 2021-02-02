@@ -82,6 +82,8 @@ class JavaEmailConstants {
     const val FOLDER_STARRED = "STARRED"
     const val FOLDER_IMPORTANT = "IMPORTANT"
     const val FOLDER_UNREAD = "UNREAD"
+    const val FOLDER_SPAM = "SPAM"
+    const val FOLDER_ALL_MAIL = "ALL_MAIL"
     const val FOLDER_OUTBOX = "Outbox"
     const val FOLDER_FLAG_HAS_NO_CHILDREN = "\\HasNoChildren"
 

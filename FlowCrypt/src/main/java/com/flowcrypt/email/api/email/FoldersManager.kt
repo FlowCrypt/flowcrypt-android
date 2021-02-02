@@ -402,6 +402,7 @@ class FoldersManager constructor(val account: String) {
         JavaEmailConstants.FOLDER_DRAFT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.DRAFTS
         JavaEmailConstants.FOLDER_STARRED.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.STARRED
         JavaEmailConstants.FOLDER_IMPORTANT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.IMPORTANT
+        JavaEmailConstants.FOLDER_SPAM.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.SPAM
         else -> null
       }
     }

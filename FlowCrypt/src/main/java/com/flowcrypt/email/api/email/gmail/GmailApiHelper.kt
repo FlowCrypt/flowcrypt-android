@@ -85,6 +85,13 @@ class GmailApiHelper {
     const val LABEL_TRASH = JavaEmailConstants.FOLDER_TRASH
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
+    private val HIDDEN_LABEL_IDS = arrayOf(
+        "CHAT",
+        "CATEGORY_FORUMS",
+        "CATEGORY_UPDATES",
+        "CATEGORY_PERSONAL",
+        "CATEGORY_PROMOTIONS",
+        "CATEGORY_SOCIAL")
 
     /**
      * Generate [Gmail] using incoming [AccountEntity]. [Gmail] class is the main point of
@@ -142,14 +149,17 @@ class GmailApiHelper {
     suspend fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder:
     LocalFolder, nextPageToken: String? = null): ListMessagesResponse = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      val list = gmailApiService
+      val request = gmailApiService
           .users()
           .messages()
           .list(DEFAULT_USER_ID)
           .setPageToken(nextPageToken)
-          .setLabelIds(listOf(localFolder.fullName))
           .setMaxResults(20)
-      return@withContext list.execute()
+
+      if (!localFolder.isAll()) {
+        request.labelIds = listOf(localFolder.fullName)
+      }
+      return@withContext request.execute()
     }
 
     suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, messages: Collection<Message>, localFolder: LocalFolder): List<Message> = withContext(Dispatchers.IO) {
@@ -221,7 +231,7 @@ class GmailApiHelper {
           .list(DEFAULT_USER_ID)
           .execute()
 
-      return@withContext response.labels ?: emptyList()
+      return@withContext response.labels?.filterNot { it.id in HIDDEN_LABEL_IDS } ?: emptyList()
     }
 
     suspend fun changeLabels(context: Context, accountEntity: AccountEntity,
@@ -315,8 +325,11 @@ class GmailApiHelper {
           .users()
           .history()
           .list(DEFAULT_USER_ID)
-          .setStartHistoryId(historyId)
-          .setLabelId(localFolder.fullName)
+          .setStartHistoryId(historyId).apply {
+            if (!localFolder.isAll()) {
+              labelId = localFolder.fullName
+            }
+          }
           .execute()
 
       val historyList = mutableListOf<History>()
@@ -329,7 +342,11 @@ class GmailApiHelper {
             .history()
             .list(DEFAULT_USER_ID)
             .setStartHistoryId(historyId)
-            .setLabelId(localFolder.fullName)
+            .apply {
+              if (!localFolder.isAll()) {
+                labelId = localFolder.fullName
+              }
+            }
             .setPageToken(response.nextPageToken)
             .execute()
 

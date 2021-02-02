@@ -13,6 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -113,6 +114,18 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
             msgCount = 0,
             searchQuery = ""
         ))
+
+        if (foldersManager.folderAll == null) {
+          foldersManager.addFolder(LocalFolder(
+              account = email,
+              fullName = JavaEmailConstants.FOLDER_ALL_MAIL,
+              folderAlias = context.getString(R.string.all_mail),
+              attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
+              isCustom = false,
+              msgCount = 0,
+              searchQuery = ""
+          ))
+        }
 
         roomDatabase.labelDao().update(account, foldersManager.allFolders.map { LabelEntity.genLabel(account, it) })
       } catch (e: Exception) {

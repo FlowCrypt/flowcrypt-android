@@ -52,6 +52,10 @@ data class LocalFolder constructor(val account: String,
     return JavaEmailConstants.FOLDER_OUTBOX.equals(fullName, ignoreCase = true)
   }
 
+  fun isAll(): Boolean {
+    return JavaEmailConstants.FOLDER_ALL_MAIL.equals(fullName, ignoreCase = true)
+  }
+
   fun getFolderType(): FoldersManager.FolderType? {
     return FoldersManager.getFolderType(this)
   }

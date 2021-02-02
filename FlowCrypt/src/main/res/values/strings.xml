@@ -497,4 +497,5 @@
     <string name="connection_lost">Connection lost</string>
     <string name="loading_labels">Loading labels</string>
     <string name="could_not_load_oauth_server_configuration">Couldn\'t load OAuth server configuration</string>
+    <string name="all_mail">All Mail</string>
 </resources>
