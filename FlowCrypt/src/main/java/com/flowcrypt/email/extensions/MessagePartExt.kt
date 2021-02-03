@@ -38,10 +38,15 @@ fun MessagePart.isMimeType(inputMimeType: String): Boolean {
  * This method is similar to [javax.mail.internet.MimeBodyPart.getDisposition]
  */
 fun MessagePart.disposition(): String? {
-  val value = headers?.firstOrNull { it.name.equals("Content-Disposition", true) }?.value
-      ?: return null
-  val cd = ContentDisposition(value)
-  return cd.disposition
+  try {
+    val value = headers?.firstOrNull { it.name.equals("Content-Disposition", true) }?.value
+        ?: return null
+    val cd = ContentDisposition(value)
+    return cd.disposition
+  } catch (e: Exception) {
+    //we can drop the exception and just return null
+    return null
+  }
 }
 
 fun MessagePart.contentId(): String? {

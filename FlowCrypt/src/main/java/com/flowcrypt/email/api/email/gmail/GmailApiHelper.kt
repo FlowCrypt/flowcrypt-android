@@ -47,7 +47,10 @@ import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import com.sun.mail.gimap.GmailRawSearchTerm
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.binary.Base64InputStream
 import java.io.ByteArrayInputStream
@@ -164,8 +167,41 @@ class GmailApiHelper {
       return@withContext request.execute()
     }
 
-    suspend fun loadMsgsShortInfo(context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
-                                  localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_METADATA): List<Message> = withContext(Dispatchers.IO)
+    /**
+     * This method is responsible for loading messages. If the input list of Message large than the
+     * twice value of <code>stepValue</code> we will use parallel requests to minimize latency
+     */
+    suspend fun loadMsgsInParallel(context: Context, accountEntity: AccountEntity, messages: List<Message>,
+                                   localFolder: LocalFolder,
+                                   format: String = MESSAGE_RESPONSE_FORMAT_FULL, stepValue: Int = 10): List<Message> = withContext(Dispatchers.IO)
+    {
+      val useParallel = messages.size > stepValue * 2
+      val steps = mutableListOf<Deferred<List<Message>>>()
+
+      if (messages.isNotEmpty()) {
+        if (messages.size <= stepValue && !useParallel) {
+          steps.add(async { loadMsgs(context, accountEntity, messages, localFolder, format) })
+        } else {
+          var i = 0
+          while (i < messages.size) {
+            val tempList = if (messages.size - i > stepValue) {
+              messages.subList(i, i + stepValue)
+            } else {
+              messages.subList(i, messages.size)
+            }
+            steps.add(async {
+              loadMsgs(context, accountEntity, tempList, localFolder, format)
+            })
+            i += stepValue
+          }
+        }
+      }
+
+      return@withContext awaitAll(*steps.toTypedArray()).flatten()
+    }
+
+    suspend fun loadMsgs(context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
+                         localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_FULL): List<Message> = withContext(Dispatchers.IO)
     {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
@@ -446,7 +482,7 @@ class GmailApiHelper {
       }
     }
 
-    fun loadMsgShortInfo(context: Context, accountEntity: AccountEntity, msgId: String): Message {
+    fun loadMsgFullInfo(context: Context, accountEntity: AccountEntity, msgId: String): Message {
       val gmailApiService = generateGmailApiService(context, accountEntity)
 
       return gmailApiService

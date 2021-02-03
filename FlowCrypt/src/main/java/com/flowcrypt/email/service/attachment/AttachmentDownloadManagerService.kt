@@ -437,7 +437,7 @@ class AttachmentDownloadManagerService : Service() {
         if (account.useAPI) {
           when (account.accountType) {
             AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-              val msg = GmailApiHelper.loadMsgShortInfo(context, account, att.uid.toHex())
+              val msg = GmailApiHelper.loadMsgFullInfo(context, account, att.uid.toHex())
               val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = att.path)
                   ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
 

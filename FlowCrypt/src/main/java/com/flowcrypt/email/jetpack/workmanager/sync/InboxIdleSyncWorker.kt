@@ -120,9 +120,9 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
       val email = accountEntity.email
       processDeletedMsgs(accountEntity, localFolder.fullName, deleteCandidatesUIDs)
 
-      val newCandidates = newCandidatesMap.values
+      val newCandidates = newCandidatesMap.values.toList()
       if (newCandidates.isNotEmpty()) {
-        val msgsShortInfo = GmailApiHelper.loadMsgsShortInfo(applicationContext, accountEntity,
+        val msgs = GmailApiHelper.loadMsgsInParallel(applicationContext, accountEntity,
             newCandidates, localFolder)
 
         val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
@@ -132,13 +132,13 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
             context = applicationContext,
             email = email,
             label = localFolder.fullName,
-            msgsList = msgsShortInfo,
+            msgsList = msgs,
             isNew = isNew,
             areAllMsgsEncrypted = isEncryptedModeEnabled
         )
 
         processNewMsgs(accountEntity, localFolder, msgEntities)
-        GmailApiHelper.identifyAttachments(msgEntities, msgsShortInfo, accountEntity, localFolder, roomDatabase)
+        GmailApiHelper.identifyAttachments(msgEntities, msgs, accountEntity, localFolder, roomDatabase)
       }
 
       processUpdatedMsgs(accountEntity, localFolder.fullName, updateCandidatesMap)

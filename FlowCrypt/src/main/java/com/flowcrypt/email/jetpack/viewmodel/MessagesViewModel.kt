@@ -364,7 +364,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
 
         if (messagesBaseInfo.messages?.isNotEmpty() == true) {
-          val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo.messages
+          val msgs = GmailApiHelper.loadMsgsInParallel(getApplication(), accountEntity, messagesBaseInfo.messages
               ?: emptyList(), localFolder)
           loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
           handleReceivedMsgs(accountEntity, localFolder, msgs)
@@ -516,7 +516,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
 
         if (messagesBaseInfo.messages?.isNotEmpty() == true) {
-          val msgs = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity, messagesBaseInfo.messages
+          val msgs = GmailApiHelper.loadMsgsInParallel(getApplication(), accountEntity, messagesBaseInfo.messages
               ?: emptyList(), localFolder)
           loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
           handleSearchResults(accountEntity, localFolder.copy(fullName = SearchMessagesActivity.SEARCH_FOLDER_NAME), msgs)
@@ -769,8 +769,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       val newCandidates = newCandidatesMap.values
       if (newCandidates.isNotEmpty()) {
-        val msgsShortInfo = GmailApiHelper.loadMsgsShortInfo(getApplication(), accountEntity,
-            newCandidates, localFolder)
+        val msgs = GmailApiHelper.loadMsgsInParallel(getApplication(), accountEntity,
+            newCandidates.toList(), localFolder)
 
         val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
         val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
@@ -779,13 +779,13 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             context = getApplication(),
             email = accountEntity.email,
             label = localFolder.fullName,
-            msgsList = msgsShortInfo,
+            msgsList = msgs,
             isNew = isNew,
             areAllMsgsEncrypted = isEncryptedModeEnabled
         )
 
         roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-        GmailApiHelper.identifyAttachments(msgEntities, msgsShortInfo, accountEntity, localFolder, roomDatabase)
+        GmailApiHelper.identifyAttachments(msgEntities, msgs, accountEntity, localFolder, roomDatabase)
       }
 
       roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, localFolder.fullName, updateCandidatesMap)
