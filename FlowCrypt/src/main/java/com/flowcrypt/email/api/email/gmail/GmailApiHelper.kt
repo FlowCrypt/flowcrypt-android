@@ -76,6 +76,7 @@ import javax.mail.internet.MimeMessage
 class GmailApiHelper {
   companion object {
     const val DEFAULT_USER_ID = "me"
+    const val PATTERN_SEARCH_ENCRYPTED_MESSAGES = "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg"
 
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
     const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
@@ -164,6 +165,11 @@ class GmailApiHelper {
       if (!localFolder.isAll()) {
         request.labelIds = listOf(localFolder.fullName)
       }
+
+      if (accountEntity.isShowOnlyEncrypted == true) {
+        request.q = (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+      }
+
       return@withContext request.execute()
     }
 
@@ -575,7 +581,7 @@ class GmailApiHelper {
           .users()
           .messages()
           .list(DEFAULT_USER_ID)
-          .setQ((EmailUtil.generateSearchTerm(accountEntity, localFolder) as GmailRawSearchTerm).pattern)
+          .setQ((EmailUtil.generateSearchTerm(accountEntity, localFolder) as? GmailRawSearchTerm)?.pattern)
           .setPageToken(nextPageToken)
           .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
       return@withContext list.execute()

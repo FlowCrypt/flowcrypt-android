@@ -18,6 +18,7 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -595,8 +596,7 @@ class EmailUtil {
      */
     fun genEncryptedMsgsSearchTerm(account: AccountEntity): SearchTerm {
       return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
-        GmailRawSearchTerm(
-            "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg")
+        GmailRawSearchTerm(GmailApiHelper.PATTERN_SEARCH_ENCRYPTED_MESSAGES)
       } else {
         BodyTerm("-----BEGIN PGP MESSAGE-----")
       }
