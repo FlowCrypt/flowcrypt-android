@@ -489,6 +489,8 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
 
     if (accountEntity.useAPI) {
       if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+        val msgFullInfo = GmailApiHelper.loadMsgFullInfo(getApplication(), accountEntity, messageEntity.uidAsHEX)
+        msgSize = msgFullInfo.sizeEstimate
         val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
         MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
         return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
