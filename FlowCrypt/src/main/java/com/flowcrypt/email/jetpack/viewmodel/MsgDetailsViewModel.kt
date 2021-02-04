@@ -37,6 +37,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -302,11 +303,17 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   fun fetchAttachments() {
     viewModelScope.launch {
       val accountEntity = getActiveAccountSuspend() ?: return@launch
-      IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
-        try {
-          fetchAttachmentsInternal(accountEntity, store)
-        } catch (e: Exception) {
-          e.printStackTrace()
+      if (accountEntity.useAPI) {
+        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+          fetchAttachmentsInternal(accountEntity)
+        }
+      } else {
+        IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
+          try {
+            fetchAttachmentsInternal(accountEntity, store)
+          } catch (e: Exception) {
+            e.printStackTrace()
+          }
         }
       }
     }
@@ -698,6 +705,22 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
       e.printStackTrace()
     } finally {
       imapFolder.close(false)
+    }
+  }
+
+  private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity) = withContext(Dispatchers.IO) {
+    try {
+      val msg = GmailApiHelper.loadMsgFullInfo(getApplication(), accountEntity, messageEntity.uidAsHEX)
+      val attachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
+        AttachmentEntity.fromAttInfo(it.apply {
+          this.email = accountEntity.email
+          this.folder = localFolder.fullName
+          this.uid = msg.uid
+        })
+      }
+      FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
+    } catch (e: Exception) {
+      e.printStackTrace()
     }
   }
 
