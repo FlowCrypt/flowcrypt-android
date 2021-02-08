@@ -417,7 +417,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   private fun showConnProblemHint() {
     showSnackbar(
         view = requireView(),
-        msgText = getString(R.string.can_not_connect_to_the_imap_server),
+        msgText = getString(R.string.can_not_connect_to_the_server),
         btnName = getString(R.string.retry),
         duration = Snackbar.LENGTH_LONG
     ) { onRefresh() }
@@ -427,7 +427,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     isForceLoadNextMsgsEnabled = true
     showSnackbar(
         view = requireView(),
-        msgText = getString(R.string.can_not_connect_to_the_imap_server),
+        msgText = getString(R.string.can_not_connect_to_the_server),
         btnName = getString(R.string.retry),
         duration = Snackbar.LENGTH_LONG
     ) {

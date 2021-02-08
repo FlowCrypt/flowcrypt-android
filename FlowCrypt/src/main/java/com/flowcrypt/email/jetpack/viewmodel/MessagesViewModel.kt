@@ -86,7 +86,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       accountEntity?.let {
         refreshMsgsLiveData.value = Result.loading()
         if (accountEntity.useAPI) {
-          refreshMsgsLiveData.value = refreshMsgsInternal(accountEntity, localFolder)
+          refreshMsgsLiveData.value = GmailApiHelper.executeWithResult {
+            refreshMsgsInternal(accountEntity, localFolder)
+          }
         } else {
           val connection = IMAPStoreManager.activeConnections[accountEntity.id]
           if (connection == null) {
@@ -649,6 +651,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         handleMsgsFromHistory(accountEntity, localFolder, historyList)
       } catch (e: Exception) {
         e.printStackTrace()
+        throw e
         //load first messages
       }
     } else {

@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStr
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -27,6 +28,7 @@ import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.UserRecoverableAuthException
@@ -59,6 +61,8 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.math.BigInteger
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.*
 import java.util.logging.ConsoleHandler
 import java.util.logging.Level
@@ -68,6 +72,8 @@ import javax.mail.MessagingException
 import javax.mail.Part
 import javax.mail.Session
 import javax.mail.internet.MimeMessage
+import javax.net.ssl.SSLHandshakeException
+import javax.net.ssl.SSLProtocolException
 
 /**
  * This class helps to work with Gmail API.
@@ -103,6 +109,21 @@ class GmailApiHelper {
         "CATEGORY_SOCIAL")
     private const val COUNT_OF_LOADED_EMAILS_BY_STEP = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
 
+    suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
+      return@withContext try {
+        action.invoke()
+      } catch (e: Exception) {
+        when (val exception = processException(e)) {
+          is CommonConnectionException -> Result.exception(exception)
+
+          else -> {
+            ExceptionUtil.handleError(exception)
+            Result.exception(exception)
+          }
+        }
+      }
+    }
+
     /**
      * Generate [Gmail] using incoming [AccountEntity]. [Gmail] class is the main point of
      * Gmail API.
@@ -132,17 +153,6 @@ class GmailApiHelper {
       val factory = JacksonFactory.getDefaultInstance()
       val appName = context.getString(R.string.app_name)
       return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
-    }
-
-    /**
-     * Generate [GoogleAccountCredential] which will be used with Gmail API.
-     *
-     * @param context Interface to global information about an application environment.
-     * @param account The Gmail account.
-     * @return Generated [GoogleAccountCredential].
-     */
-    private fun generateGoogleAccountCredential(context: Context, account: Account?): GoogleAccountCredential {
-      return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES)).setSelectedAccount(account)
     }
 
     suspend fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream = withContext(Dispatchers.IO) {
@@ -707,6 +717,35 @@ class GmailApiHelper {
           .execute()
 
       return@withContext sentMsg.id == null
+    }
+
+    /**
+     * Generate [GoogleAccountCredential] which will be used with Gmail API.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param account The Gmail account.
+     * @return Generated [GoogleAccountCredential].
+     */
+    private fun generateGoogleAccountCredential(context: Context, account: Account?): GoogleAccountCredential {
+      return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES)).setSelectedAccount(account)
+    }
+
+    private fun processException(e: Throwable): Throwable {
+      return when (e) {
+        /*is GoogleJsonResponseException -> {
+          if (e.message.equals("Not connected", true)) {
+            CommonConnectionException(e)
+          } else e
+        }*/
+
+        is SSLHandshakeException, is SSLProtocolException, is SocketTimeoutException, is UnknownHostException -> {
+          CommonConnectionException(e)
+        }
+
+        else -> e.cause?.let {
+          processException(it)
+        } ?: e
+      }
     }
   }
 }
