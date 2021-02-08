@@ -35,6 +35,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.googleapis.json.GoogleJsonError
 import com.google.api.client.http.HttpHeaders
+import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
@@ -59,6 +60,9 @@ import java.io.IOException
 import java.io.InputStream
 import java.math.BigInteger
 import java.util.*
+import java.util.logging.ConsoleHandler
+import java.util.logging.Level
+import java.util.logging.Logger
 import javax.mail.Flags
 import javax.mail.MessagingException
 import javax.mail.Part
@@ -118,10 +122,13 @@ class GmailApiHelper {
       val credential = generateGoogleAccountCredential(context, account)
 
       val transport = NetHttpTransport()
-      /*
-      maybe we will use it for debug. need to investigate
-      val s = Logger.getLogger(HttpTransport::class.java.name)
-      s.level = Level.ALL*/
+      if (EmailUtil.hasEnabledDebug(context)) {
+        Logger.getLogger(HttpTransport::class.java.name).apply {
+          level = Level.CONFIG
+          addHandler(object : ConsoleHandler() {}.apply { level = Level.CONFIG })
+        }
+      }
+
       val factory = JacksonFactory.getDefaultInstance()
       val appName = context.getString(R.string.app_name)
       return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
