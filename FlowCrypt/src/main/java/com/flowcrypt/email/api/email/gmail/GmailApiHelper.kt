@@ -30,12 +30,14 @@ import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.GmailAPIException
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.googleapis.json.GoogleJsonError
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpHeaders
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
@@ -732,11 +734,9 @@ class GmailApiHelper {
 
     private fun processException(e: Throwable): Throwable {
       return when (e) {
-        /*is GoogleJsonResponseException -> {
-          if (e.message.equals("Not connected", true)) {
-            CommonConnectionException(e)
-          } else e
-        }*/
+        is GoogleJsonResponseException -> {
+          GmailAPIException(e)
+        }
 
         is SSLHandshakeException, is SSLProtocolException, is SocketTimeoutException, is UnknownHostException -> {
           CommonConnectionException(e)

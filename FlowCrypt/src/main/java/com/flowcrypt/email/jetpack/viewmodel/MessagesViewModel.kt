@@ -41,6 +41,7 @@ import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
@@ -324,7 +325,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
       val folderName = imapFolder.fullName
 
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
       roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
         roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = msgsCount))
       }
@@ -387,7 +387,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                                          msgs: List<com.google.api.services.gmail.model.Message>) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
     val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
@@ -411,7 +410,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                                          remoteFolder: IMAPFolder, msgs: Array<Message>) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
     val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
@@ -600,7 +598,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         areAllMsgsEncrypted = isEncryptedModeEnabled
     )
 
-    FlowCryptRoomDatabase.getDatabase(getApplication()).msgDao().insertWithReplaceSuspend(msgEntities)
+    roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
 
     if (!isEncryptedModeEnabled) {
       CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
@@ -613,7 +611,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                                           msgs: List<com.google.api.services.gmail.model.Message>) = withContext(Dispatchers.IO) {
     val email = account.email
     val label = localFolder.fullName
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
     val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
@@ -635,27 +632,35 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   private suspend fun refreshMsgsInternal(accountEntity: AccountEntity, localFolder: LocalFolder): Result<Boolean?> = withContext(Dispatchers.IO) {
     val newestMsg = roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, localFolder.fullName)
-    if (newestMsg != null) {
-      try {
-        val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
-        val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
-        val msgEntityHistoryId = BigInteger(newestMsg.historyId ?: "0")
+    try {
+      val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
+      val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
+      val msgEntityHistoryId = BigInteger(newestMsg?.historyId ?: "0")
 
-        val historyList = GmailApiHelper.loadHistoryInfo(
-            context = getApplication(),
-            accountEntity = accountEntity,
-            localFolder = localFolder,
-            historyId = labelEntityHistoryId.max(msgEntityHistoryId)
-        )
+      val historyList = GmailApiHelper.loadHistoryInfo(
+          context = getApplication(),
+          accountEntity = accountEntity,
+          localFolder = localFolder,
+          historyId = labelEntityHistoryId.max(msgEntityHistoryId)
+      )
 
-        handleMsgsFromHistory(accountEntity, localFolder, historyList)
-      } catch (e: Exception) {
-        e.printStackTrace()
-        throw e
-        //load first messages
+      handleMsgsFromHistory(accountEntity, localFolder, historyList)
+    } catch (e: Exception) {
+      when (e) {
+        is GoogleJsonResponseException -> {
+          if (e.statusCode == 404
+              && e.details.errors.any { it.reason.equals("notFound", true) }) {
+            //client must perform a full sync
+            //https://developers.google.com/gmail/api/guides/sync#partial_synchronization
+            roomDatabase.msgDao().delete(accountEntity.email, localFolder.fullName)
+          }
+        }
+
+        else -> {
+          e.printStackTrace()
+          throw e
+        }
       }
-    } else {
-      //load first messages
     }
 
     return@withContext Result.success(true)
@@ -666,8 +671,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       val imapFolder = folder as IMAPFolder
       imapFolder.open(Folder.READ_ONLY)
       val folderName = localFolder.fullName
-
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
       val newestCachedUID = roomDatabase.msgDao()
           .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName) ?: 0
@@ -712,8 +715,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                                           updatedMsgs: Array<Message>) = withContext(Dispatchers.IO) {
     val email = accountEntity.email
     val folderName = localFolder.fullName
-
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
     val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(email, folderName)
     val msgsUIDs = HashSet(mapOfUIDAndMsgFlags.keys)
