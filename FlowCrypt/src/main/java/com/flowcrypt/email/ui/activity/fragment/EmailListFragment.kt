@@ -131,12 +131,12 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
     override fun onZeroItemsLoaded() {
       super.onZeroItemsLoaded()
-      loadNextMsgs(0)
+      loadNextMsgs(true)
     }
 
     override fun onItemAtEndLoaded(itemAtEnd: MessageEntity) {
       super.onItemAtEndLoaded(itemAtEnd)
-      loadNextItemsToAdapter()
+      loadNextMsgs()
     }
   }
 
@@ -181,10 +181,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     initViews(view)
     setupMsgsViewModel()
     setupLabelsViewModel()
-  }
 
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
     listener?.currentFolder?.searchQuery?.let {
       swipeRefreshLayout?.isEnabled = false
     }
@@ -293,7 +290,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             showProgress()
           }
 
-          loadNextMsgs(-1)
+          loadNextMsgs()
         }
       } else {
         swipeRefreshLayout?.isRefreshing = false
@@ -434,7 +431,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         btnName = getString(R.string.retry),
         duration = Snackbar.LENGTH_LONG
     ) {
-      loadNextItemsToAdapter()
+      loadNextMsgs()
     }
   }
 
@@ -515,7 +512,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
    *
    * @param totalItemsCount The count of already loaded messages.
    */
-  private fun loadNextMsgs(totalItemsCount: Int) {
+  private fun loadNextMsgs(isFreshLoading: Boolean = false) {
     isForceLoadNextMsgsEnabled = false
     val localFolder = listener?.currentFolder
 
@@ -524,8 +521,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     }
 
     if (GeneralUtil.isConnected(context)) {
-      if (totalItemsCount == 0) {
+      if (isFreshLoading) {
         showProgress()
+      } else {
+        showContent()
       }
 
       footerProgressView?.visibility = View.VISIBLE
@@ -534,19 +533,18 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         labelsViewModel.loadLabels()
       } else {
         adapter.changeProgress(true)
-        msgsViewModel.loadMsgsFromRemoteServer(localFolder, totalItemsCount)
+        msgsViewModel.loadMsgsFromRemoteServer(localFolder)
       }
     } else {
       footerProgressView?.visibility = View.GONE
       isForceLoadNextMsgsEnabled = true
 
-      if (totalItemsCount == 0) {
+      if (isFreshLoading) {
         showStatus(msg = getString(R.string.there_was_syncing_problem))
       }
 
-      showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
-          Snackbar.LENGTH_LONG) {
-        loadNextMsgs(totalItemsCount)
+      showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry), Snackbar.LENGTH_LONG) {
+        loadNextMsgs()
       }
     }
   }
@@ -980,17 +978,9 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   private fun setupConnectionNotifier() {
     connectionLifecycleObserver.connectionLiveData.observe(this, {
       if (isForceLoadNextMsgsEnabled && it) {
-        loadNextItemsToAdapter()
+        loadNextMsgs()
       }
     })
-  }
-
-  private fun loadNextItemsToAdapter() {
-    adapter.currentList?.size?.let {
-      if (it > 0) {
-        loadNextMsgs(it)
-      }
-    }
   }
 
   interface OnManageEmailsListener {

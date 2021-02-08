@@ -246,6 +246,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("DELETE FROM messages WHERE email = :email")
   abstract suspend fun deleteByEmailSuspend(email: String?): Int
 
+  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :label")
+  abstract suspend fun getMsgsCount(account: String, label: String): Int
+
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     doOperationViaSteps(list = ArrayList(msgsUID)) { stepUIDs: Collection<Long> ->

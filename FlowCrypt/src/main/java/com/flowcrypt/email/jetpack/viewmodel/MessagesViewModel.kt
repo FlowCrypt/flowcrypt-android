@@ -101,10 +101,13 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun loadMsgsFromRemoteServer(localFolder: LocalFolder, totalItemsCount: Int) {
+  fun loadMsgsFromRemoteServer(localFolder: LocalFolder) {
     viewModelScope.launch {
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
+        val totalItemsCount = roomDatabase.msgDao().getMsgsCount(accountEntity.email, localFolder.fullName)
+        if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
+
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
         if (accountEntity.useAPI) {
           loadMsgsFromRemoteServerLiveData.value = if (localFolder.searchQuery.isNullOrEmpty()) {
