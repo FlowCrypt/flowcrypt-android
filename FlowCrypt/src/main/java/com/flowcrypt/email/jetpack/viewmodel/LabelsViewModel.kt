@@ -13,6 +13,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
@@ -53,8 +54,10 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
       accountEntity?.let {
         loadLabelsFromRemoteServerLiveData.value = Result.loading()
         if (accountEntity.useAPI) {
-          UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity)
-          loadLabelsFromRemoteServerLiveData.value = Result.success(true)
+          loadLabelsFromRemoteServerLiveData.value = GmailApiHelper.executeWithResult {
+            UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity)
+            Result.success(true)
+          }
         } else {
           val connection = IMAPStoreManager.activeConnections[accountEntity.id]
           if (connection == null) {

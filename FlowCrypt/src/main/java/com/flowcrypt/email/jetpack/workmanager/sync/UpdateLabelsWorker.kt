@@ -64,12 +64,17 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
     }
 
     suspend fun fetchAndSaveLabels(context: Context, account: AccountEntity) = withContext(Dispatchers.IO) {
-      saveLabels(context, account) {
+      saveLabels(context = context, account = account) {
         when (account.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            GmailApiHelper.getLabels(context, account).map {
-              FoldersManager.generateFolder(account.email, it)
+            val result = GmailApiHelper.executeWithResult {
+              com.flowcrypt.email.api.retrofit.response.base.Result.success(GmailApiHelper.getLabels(context, account).map {
+                FoldersManager.generateFolder(account.email, it)
+              })
             }
+
+            result.data ?: throw result.exception
+                ?: IllegalStateException(context.getString(R.string.unknown_error))
           }
 
           else -> {
@@ -94,43 +99,39 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
     }
 
     private suspend fun saveLabels(context: Context, account: AccountEntity, action: suspend () -> List<LocalFolder>) = withContext(Dispatchers.IO) {
-      try {
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-        val email = account.email
-        val foldersManager = FoldersManager(account.email)
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      val email = account.email
+      val foldersManager = FoldersManager(account.email)
 
-        val list = action.invoke()
+      val list = action.invoke()
 
-        for (folder in list) {
-          foldersManager.addFolder(folder)
-        }
+      for (folder in list) {
+        foldersManager.addFolder(folder)
+      }
 
+      foldersManager.addFolder(LocalFolder(
+          account = email,
+          fullName = JavaEmailConstants.FOLDER_OUTBOX,
+          folderAlias = JavaEmailConstants.FOLDER_OUTBOX,
+          attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
+          isCustom = false,
+          msgCount = 0,
+          searchQuery = ""
+      ))
+
+      if (foldersManager.folderAll == null) {
         foldersManager.addFolder(LocalFolder(
             account = email,
-            fullName = JavaEmailConstants.FOLDER_OUTBOX,
-            folderAlias = JavaEmailConstants.FOLDER_OUTBOX,
+            fullName = JavaEmailConstants.FOLDER_ALL_MAIL,
+            folderAlias = context.getString(R.string.all_mail),
             attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
             isCustom = false,
             msgCount = 0,
             searchQuery = ""
         ))
-
-        if (foldersManager.folderAll == null) {
-          foldersManager.addFolder(LocalFolder(
-              account = email,
-              fullName = JavaEmailConstants.FOLDER_ALL_MAIL,
-              folderAlias = context.getString(R.string.all_mail),
-              attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
-              isCustom = false,
-              msgCount = 0,
-              searchQuery = ""
-          ))
-        }
-
-        roomDatabase.labelDao().update(account, foldersManager.allFolders.map { LabelEntity.genLabel(account, it) })
-      } catch (e: Exception) {
-        e.printStackTrace()
       }
+
+      roomDatabase.labelDao().update(account, foldersManager.allFolders.map { LabelEntity.genLabel(account, it) })
     }
   }
 }

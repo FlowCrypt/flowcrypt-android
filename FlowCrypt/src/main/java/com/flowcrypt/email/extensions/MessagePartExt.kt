@@ -50,5 +50,5 @@ fun MessagePart.disposition(): String? {
 }
 
 fun MessagePart.contentId(): String? {
-  return headers.firstOrNull { it.name.equals("Content-ID", true) }?.value
+  return headers?.firstOrNull { it.name.equals("Content-ID", true) }?.value
 }
