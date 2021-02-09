@@ -63,6 +63,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.math.BigInteger
+import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.*
@@ -74,8 +75,7 @@ import javax.mail.MessagingException
 import javax.mail.Part
 import javax.mail.Session
 import javax.mail.internet.MimeMessage
-import javax.net.ssl.SSLHandshakeException
-import javax.net.ssl.SSLProtocolException
+import javax.net.ssl.SSLException
 
 /**
  * This class helps to work with Gmail API.
@@ -115,6 +115,7 @@ class GmailApiHelper {
       return@withContext try {
         action.invoke()
       } catch (e: Exception) {
+        e.printStackTrace()
         when (val exception = processException(e)) {
           is CommonConnectionException -> Result.exception(exception)
 
@@ -738,7 +739,7 @@ class GmailApiHelper {
           GmailAPIException(e)
         }
 
-        is SSLHandshakeException, is SSLProtocolException, is SocketTimeoutException, is UnknownHostException -> {
+        is ProtocolException, is SSLException, is SocketTimeoutException, is UnknownHostException -> {
           CommonConnectionException(e)
         }
 

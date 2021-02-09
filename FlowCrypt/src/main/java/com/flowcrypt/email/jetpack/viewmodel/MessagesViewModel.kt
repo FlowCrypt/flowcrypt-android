@@ -113,10 +113,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
         if (accountEntity.useAPI) {
-          loadMsgsFromRemoteServerLiveData.value = if (localFolder.searchQuery.isNullOrEmpty()) {
-            loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
-          } else {
-            searchMsgsOnRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+          loadMsgsFromRemoteServerLiveData.value = GmailApiHelper.executeWithResult {
+            if (localFolder.searchQuery.isNullOrEmpty()) {
+              loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+            } else {
+              searchMsgsOnRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+            }
           }
         } else {
           val connection = IMAPStoreManager.activeConnections[accountEntity.id]
@@ -656,10 +658,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           }
         }
 
-        else -> {
-          e.printStackTrace()
-          throw e
-        }
+        else -> throw e
       }
     }
 

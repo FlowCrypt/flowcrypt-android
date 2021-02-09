@@ -423,11 +423,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     ) { onRefresh() }
   }
 
-  private fun showConnLostHint() {
+  private fun showConnLostHint(msgText: String = getString(R.string.can_not_connect_to_the_server)) {
     isForceLoadNextMsgsEnabled = true
     showSnackbar(
         view = requireView(),
-        msgText = getString(R.string.can_not_connect_to_the_server),
+        msgText = msgText,
         btnName = getString(R.string.retry),
         duration = Snackbar.LENGTH_LONG
     ) {
@@ -844,8 +844,17 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
         Result.Status.EXCEPTION -> {
           setActionProgress(100)
-          if (it.exception is CommonConnectionException) {
-            showConnLostHint()
+          if (adapter.itemCount == 0) {
+            if (it.exception is CommonConnectionException) {
+              isForceLoadNextMsgsEnabled = true
+              showStatus(msg = getString(R.string.can_not_connect_to_the_server))
+            } else showStatus(msg = it.exception?.message
+                ?: getString(R.string.can_not_connect_to_the_server))
+          } else {
+            if (it.exception is CommonConnectionException) {
+              showConnLostHint()
+            } else showConnLostHint(it.exception?.message
+                ?: getString(R.string.can_not_connect_to_the_server))
           }
           baseActivity.countingIdlingResource.decrementSafely()
         }
