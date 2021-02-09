@@ -108,7 +108,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     viewModelScope.launch {
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
-        val totalItemsCount = roomDatabase.msgDao().getMsgsCount(accountEntity.email, localFolder.fullName)
+        val totalItemsCount = roomDatabase.msgDao().getMsgsCount(accountEntity.email,
+            if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME)
         if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
 
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
