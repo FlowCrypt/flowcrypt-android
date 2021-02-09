@@ -173,7 +173,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
         return@withContext if (account.useAPI) {
           when (account.accountType) {
             AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-              val msg = atts.first().forwardedUid?.toHex()?.let { GmailApiHelper.loadMsgFullInfo(applicationContext, account, it) }
+              val msg = atts.first().forwardedUid?.toHex()?.let { GmailApiHelper.loadMsgFullInfoSuspend(applicationContext, account, it) }
                   ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING
 
               loadAttachments(account, msgEntity, atts, msgAttsDir) { attachmentEntity ->

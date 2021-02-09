@@ -89,25 +89,24 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
   }
 
   private suspend fun syncMessages(accountEntity: AccountEntity) = withContext(Dispatchers.IO) {
-    when (accountEntity.accountType) {
-      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
-        val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
-        val newestMsg = roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, inboxLocalFolder.fullName)
-        val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, inboxLocalFolder.fullName)
-        val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
-        val msgEntityHistoryId = BigInteger(newestMsg?.historyId ?: "0")
-        val startHistoryId = labelEntityHistoryId.max(msgEntityHistoryId)
-        if (startHistoryId != BigInteger.ZERO) {
-          val historyList = GmailApiHelper.loadHistoryInfo(
-              context = applicationContext,
-              accountEntity = accountEntity,
-              localFolder = inboxLocalFolder,
-              historyId = labelEntityHistoryId.max(msgEntityHistoryId)
-          )
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
+    val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
+    val newestMsg = roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, inboxLocalFolder.fullName)
+    val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, inboxLocalFolder.fullName)
+    val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
+    val msgEntityHistoryId = BigInteger(newestMsg?.historyId ?: "0")
+    val startHistoryId = labelEntityHistoryId.max(msgEntityHistoryId)
 
-          handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
-        }
+    executeGMailAPICall(applicationContext) {
+      if (startHistoryId != BigInteger.ZERO) {
+        val historyList = GmailApiHelper.loadHistoryInfo(
+            context = applicationContext,
+            accountEntity = accountEntity,
+            localFolder = inboxLocalFolder,
+            historyId = labelEntityHistoryId.max(msgEntityHistoryId)
+        )
+
+        handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
       }
     }
   }

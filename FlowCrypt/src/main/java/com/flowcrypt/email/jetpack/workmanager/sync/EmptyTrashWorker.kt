@@ -43,25 +43,23 @@ class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWor
 
   private suspend fun emptyTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
     emptyTrashInternal(account) { folderName ->
-      when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
-          try {
-            val msgs = GmailApiHelper.loadTrashMsgs(applicationContext, account)
-            if (msgs.isNotEmpty()) {
-              GmailApiHelper.deleteMsgsPermanently(applicationContext, account, msgs.map { it.id })
-              //need to wait while the Gmail server will update labels
-              delay(2000)
-            }
-          } catch (e: Exception) {
-            roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName)
-            throw e
+      roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
+      try {
+        executeGMailAPICall(applicationContext) {
+          val msgs = GmailApiHelper.loadTrashMsgs(applicationContext, account)
+          if (msgs.isNotEmpty()) {
+            GmailApiHelper.deleteMsgsPermanently(applicationContext, account, msgs.map { it.id })
+            //need to wait while the Gmail server will update labels
+            delay(2000)
           }
-
-          val candidatesForDeleting = roomDatabase.msgDao().getMsgsSuspend(account.email, folderName)
-          roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
         }
+      } catch (e: Exception) {
+        roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName)
+        throw e
       }
+
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsSuspend(account.email, folderName)
+      roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
     }
   }
 
@@ -91,13 +89,9 @@ class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWor
   private suspend fun emptyTrashInternal(account: AccountEntity,
                                          action: suspend (folderName: String) -> Unit) = withContext(Dispatchers.IO)
   {
-    try {
-      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      val trash = foldersManager.folderTrash ?: return@withContext
-      action.invoke(trash.fullName)
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+    val trash = foldersManager.folderTrash ?: return@withContext
+    action.invoke(trash.fullName)
   }
 
   companion object {

@@ -50,12 +50,12 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
 
   private suspend fun moveMsgsToTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
     moveMsgsToTrashInternal(account) { _, uidList ->
-      when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          GmailApiHelper.moveToTrash(applicationContext, account, uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
-          //need to wait while the Gmail server will update labels
-          delay(2000)
-        }
+      executeGMailAPICall(applicationContext) {
+        //todo-denbond7 need to improve this logic. We should delete local messages only if we'll
+        // success delete remote messages
+        GmailApiHelper.moveToTrash(applicationContext, account, uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+        //need to wait while the Gmail server will update labels
+        delay(2000)
       }
     }
   }
@@ -82,33 +82,29 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
   private suspend fun moveMsgsToTrashInternal(account: AccountEntity,
                                               action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
   {
-    try {
-      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      val trash = foldersManager.folderTrash ?: return@withContext
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+    val trash = foldersManager.folderTrash ?: return@withContext
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-      while (true) {
-        val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
-            account.email, MessageState.PENDING_DELETING.value)
+    while (true) {
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
+          account.email, MessageState.PENDING_DELETING.value)
 
-        if (candidatesForDeleting.isEmpty()) {
-          break
-        } else {
-          val setOfFolders = candidatesForDeleting.map { it.folder }.toSet()
+      if (candidatesForDeleting.isEmpty()) {
+        break
+      } else {
+        val setOfFolders = candidatesForDeleting.map { it.folder }.toSet()
 
-          for (srcFolder in setOfFolders) {
-            val filteredMsgs = candidatesForDeleting.filter { it.folder == srcFolder }
-            if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
-              continue
-            }
-            val uidList = filteredMsgs.map { it.uid }
-            action.invoke(trash.fullName, uidList)
-            roomDatabase.msgDao().deleteByUIDsSuspend(account.email, srcFolder, uidList)
+        for (srcFolder in setOfFolders) {
+          val filteredMsgs = candidatesForDeleting.filter { it.folder == srcFolder }
+          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
+            continue
           }
+          val uidList = filteredMsgs.map { it.uid }
+          action.invoke(trash.fullName, uidList)
+          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, srcFolder, uidList)
         }
       }
-    } catch (e: Exception) {
-      e.printStackTrace()
     }
   }
 

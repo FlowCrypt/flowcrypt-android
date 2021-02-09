@@ -391,7 +391,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
 
               val threadId = msgEntity.threadId ?: mimeMsg.getHeader(
                   JavaEmailConstants.HEADER_IN_REPLY_TO, null)?.let { replyMsgId ->
-                GmailApiHelper.getGmailMsgThreadID(gmail, replyMsgId)
+                GmailApiHelper.executeWithResult {
+                  com.flowcrypt.email.api.retrofit.response.base.Result.success(GmailApiHelper
+                      .getGmailMsgThreadID(gmail, replyMsgId))
+                }.data
               }
 
               var sentMsg = com.google.api.services.gmail.model.Message().apply {

@@ -56,13 +56,11 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity) = withContext(Dispatchers.IO) {
     deleteMsgsPermanentlyInternal(account) { _, uidList ->
-      when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          GmailApiHelper.deleteMsgsPermanently(
-              context = applicationContext,
-              accountEntity = account,
-              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
-        }
+      executeGMailAPICall(applicationContext) {
+        GmailApiHelper.deleteMsgsPermanently(
+            context = applicationContext,
+            accountEntity = account,
+            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
       }
     }
   }
@@ -70,25 +68,21 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
   private suspend fun deleteMsgsPermanentlyInternal(account: AccountEntity,
                                                     action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
   {
-    try {
-      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      val trash = foldersManager.folderTrash ?: return@withContext
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+    val trash = foldersManager.folderTrash ?: return@withContext
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-      while (true) {
-        val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
-            account.email, trash.fullName, MessageState.PENDING_DELETING_PERMANENTLY.value)
+    while (true) {
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
+          account.email, trash.fullName, MessageState.PENDING_DELETING_PERMANENTLY.value)
 
-        if (candidatesForDeleting.isEmpty()) {
-          break
-        } else {
-          val uidList = candidatesForDeleting.map { it.uid }
-          action.invoke(trash.fullName, uidList)
-          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
-        }
+      if (candidatesForDeleting.isEmpty()) {
+        break
+      } else {
+        val uidList = candidatesForDeleting.map { it.uid }
+        action.invoke(trash.fullName, uidList)
+        roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
       }
-    } catch (e: Exception) {
-      e.printStackTrace()
     }
   }
 

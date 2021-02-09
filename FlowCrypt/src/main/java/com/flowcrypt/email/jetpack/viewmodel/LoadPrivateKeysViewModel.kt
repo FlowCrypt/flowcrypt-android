@@ -31,6 +31,7 @@ import java.util.*
 import javax.mail.Folder
 import javax.mail.MessagingException
 import javax.mail.Session
+import kotlin.collections.ArrayList
 
 /**
  * This loader finds and returns a user backup of private keys from the mail.
@@ -58,17 +59,16 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
 
   private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>> =
       withContext(Dispatchers.IO) {
-        val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
-
         try {
           when (accountEntity.accountType) {
-            AccountEntity.ACCOUNT_TYPE_GOOGLE ->
-              privateKeyDetailsList.addAll(GmailApiHelper.getPrivateKeyBackups(getApplication(), accountEntity))
+            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+              GmailApiHelper.executeWithResult {
+                Result.success(ArrayList(GmailApiHelper.getPrivateKeyBackups(getApplication(), accountEntity)))
+              }
+            }
 
-            else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity))
+            else -> Result.success(ArrayList(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity)))
           }
-
-          Result.success(privateKeyDetailsList)
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)

@@ -53,10 +53,9 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
           if (accountEntity.useAPI) {
             when (accountEntity.accountType) {
               AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-                val keys = withContext(Dispatchers.IO) {
-                  return@withContext GmailApiHelper.getPrivateKeyBackups(application, accountEntity)
-                }
-                keyDetailsList.addAll(keys)
+                emit(GmailApiHelper.executeWithResult {
+                  Result.success(GmailApiHelper.getPrivateKeyBackups(application, accountEntity))
+                })
               }
 
               else -> throw ManualHandledException("Unsupported provider")
@@ -68,13 +67,12 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
             } else {
               when (accountEntity.accountType) {
                 AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-                  val keys = withContext(Dispatchers.IO) {
-                    return@withContext GmailApiHelper.getPrivateKeyBackups(application, accountEntity)
-                  }
-                  keyDetailsList.addAll(keys)
+                  emit(GmailApiHelper.executeWithResult {
+                    Result.success(GmailApiHelper.getPrivateKeyBackups(application, accountEntity))
+                  })
                 }
 
-                else -> keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity, connection.store))
+                else -> emit(Result.success(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity, connection.store)))
               }
             }
           }
@@ -98,7 +96,9 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
         if (accountEntity.useAPI) {
           when (accountEntity.accountType) {
             AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-              postBackupLiveData.value = postBackupInternal(accountEntity)
+              postBackupLiveData.value = GmailApiHelper.executeWithResult {
+                postBackupInternal(accountEntity)
+              }
             }
 
             else -> throw ManualHandledException("Unsupported provider")

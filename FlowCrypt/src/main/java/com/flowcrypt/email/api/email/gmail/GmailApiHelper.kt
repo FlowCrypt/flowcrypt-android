@@ -257,33 +257,6 @@ class GmailApiHelper {
       return@withContext listResult
     }
 
-    /**
-     * Get information about attachments from the given [MessagePart]
-     *
-     * @param depth          The depth of the given [MessagePart]
-     * @param messagePart    The given [MessagePart]
-     * @return a list of found attachments
-     */
-    fun getAttsInfoFromMessagePart(messagePart: MessagePart, depth: String = "0"): MutableList<AttachmentInfo> {
-      val attachmentInfoList = mutableListOf<AttachmentInfo>()
-      if (messagePart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        for ((index, part) in (messagePart.parts ?: emptyList()).withIndex()) {
-          attachmentInfoList.addAll(getAttsInfoFromMessagePart(part, "$depth${AttachmentInfo.DEPTH_SEPARATOR}${index}"))
-        }
-      } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
-        val attachmentInfo = AttachmentInfo()
-        attachmentInfo.name = messagePart.filename ?: depth
-        attachmentInfo.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
-        attachmentInfo.type = messagePart.mimeType ?: ""
-        attachmentInfo.id = messagePart.contentId()
-            ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
-        attachmentInfo.path = depth
-        attachmentInfoList.add(attachmentInfo)
-      }
-
-      return attachmentInfoList
-    }
-
     suspend fun getLabels(context: Context, account: AccountEntity?): List<Label> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, account)
 
@@ -337,11 +310,11 @@ class GmailApiHelper {
             .trash(DEFAULT_USER_ID, id)
         request.queue(batch, object : JsonBatchCallback<Message>() {
           override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
-
+            //need to think about it
           }
 
           override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-
+            //need to think about it
           }
         })
       }
@@ -504,71 +477,12 @@ class GmailApiHelper {
       }
     }
 
-    fun loadMsgFullInfo(context: Context, accountEntity: AccountEntity, msgId: String): Message {
-      val gmailApiService = generateGmailApiService(context, accountEntity)
-
-      return gmailApiService
-          .users()
-          .messages()
-          .get(DEFAULT_USER_ID, msgId)
-          .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
-          .execute()
-    }
-
-    /**
-     * Get [Part] which has an attachment with the given attachment path.
-     *
-     * @param part         The parent part.
-     * @param currentPath  The current path of MIME hierarchy.
-     * @param neededPath   The path where the needed attachment exists.
-     * @return [Part] which has attachment or null if message doesn't have such attachment.
-     */
-    fun getAttPartByPath(part: MessagePart, currentPath: String = "0/", neededPath: String): MessagePart? {
-      if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        val neededParentPath = neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
-        val partsCount = (part.parts ?: emptyList()).size
-
-        if (currentPath == neededParentPath) {
-          val position = neededPath.substringAfterLast(AttachmentInfo.DEPTH_SEPARATOR).toInt()
-
-          if (partsCount > position) {
-            val bodyPart = part.parts[position]
-            if (Part.ATTACHMENT.equals(bodyPart.disposition(), ignoreCase = true)) {
-              return bodyPart
-            }
-          }
-        } else {
-          val nextDepth = neededParentPath
-              .replaceFirst(currentPath, "")
-              .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
-          val bodyPart = part.parts[nextDepth]
-          return getAttPartByPath(bodyPart, currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR, neededPath)
-        }
-        return null
-      } else {
-        return null
-      }
-    }
-
-    fun getAttInputStream(context: Context, accountEntity: AccountEntity, msgId: String, attId: String): InputStream {
-      val gmailApiService = generateGmailApiService(context, accountEntity)
-      val request = gmailApiService
-          .users()
-          .messages()
-          .attachments()
-          .get(DEFAULT_USER_ID, msgId, attId)
-          .setPrettyPrint(false)
-          .setFields("data")
-
-      return Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
-    }
-
     suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: List<Message>,
                                     account: AccountEntity, localFolder: LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
-      try {
-        val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
-        val attachments = mutableListOf<AttachmentEntity>()
-        for (msg in msgs) {
+      val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
+      val attachments = mutableListOf<AttachmentEntity>()
+      for (msg in msgs) {
+        try {
           if (msg.uid in savedMsgUIDsSet) {
             attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull {
               AttachmentEntity.fromAttInfo(it.apply {
@@ -578,13 +492,12 @@ class GmailApiHelper {
               })
             })
           }
+        } catch (e: Exception) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
         }
-
-        roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
       }
+      roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
     }
 
     suspend fun loadMsgsBaseInfoUsingSearch(context: Context, accountEntity: AccountEntity,
@@ -624,6 +537,28 @@ class GmailApiHelper {
       } else null
     }
 
+    suspend fun sendMsg(context: Context, account: AccountEntity, mimeMessage: javax.mail.Message): Boolean = withContext(Dispatchers.IO) {
+      val gmail = generateGmailApiService(context, account)
+      val outputStream = ByteArrayOutputStream()
+      mimeMessage.writeTo(outputStream)
+
+      val sentMsg = Message().apply {
+        raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+      }
+
+      gmail
+          .users()
+          .messages()
+          .send(DEFAULT_USER_ID, sentMsg)
+          .execute()
+
+      return@withContext sentMsg.id == null
+    }
+
+    suspend fun loadMsgFullInfoSuspend(context: Context, accountEntity: AccountEntity, msgId: String): Message = withContext(Dispatchers.IO) {
+      return@withContext loadMsgFullInfo(context, accountEntity, msgId)
+    }
+
     /**
      * Get a list of [NodeKeyDetails] using the **Gmail API**
      *
@@ -633,7 +568,7 @@ class GmailApiHelper {
      * @throws MessagingException
      * @throws IOException
      */
-    fun getPrivateKeyBackups(context: Context, account: AccountEntity): MutableCollection<NodeKeyDetails> {
+    suspend fun getPrivateKeyBackups(context: Context, account: AccountEntity): List<NodeKeyDetails> = withContext(Dispatchers.IO) {
       try {
         val list = mutableListOf<NodeKeyDetails>()
 
@@ -687,10 +622,9 @@ class GmailApiHelper {
             e.printStackTrace()
             ExceptionUtil.handleError(e)
           }
-
         }
 
-        return list
+        return@withContext list
       } catch (e: UserRecoverableAuthIOException) {
         ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
         throw e
@@ -700,22 +634,90 @@ class GmailApiHelper {
       }
     }
 
-    suspend fun sendMsg(context: Context, account: AccountEntity, mimeMessage: javax.mail.Message): Boolean = withContext(Dispatchers.IO) {
-      val gmail = generateGmailApiService(context, account)
-      val outputStream = ByteArrayOutputStream()
-      mimeMessage.writeTo(outputStream)
+    fun loadMsgFullInfo(context: Context, accountEntity: AccountEntity, msgId: String): Message {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
 
-      val sentMsg = Message().apply {
-        raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
-      }
-
-      gmail
+      return gmailApiService
           .users()
           .messages()
-          .send(DEFAULT_USER_ID, sentMsg)
+          .get(DEFAULT_USER_ID, msgId)
+          .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
           .execute()
+    }
 
-      return@withContext sentMsg.id == null
+    /**
+     * Get information about attachments from the given [MessagePart]
+     *
+     * @param depth          The depth of the given [MessagePart]
+     * @param messagePart    The given [MessagePart]
+     * @return a list of found attachments
+     */
+    fun getAttsInfoFromMessagePart(messagePart: MessagePart, depth: String = "0"): MutableList<AttachmentInfo> {
+      val attachmentInfoList = mutableListOf<AttachmentInfo>()
+      if (messagePart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+        for ((index, part) in (messagePart.parts ?: emptyList()).withIndex()) {
+          attachmentInfoList.addAll(getAttsInfoFromMessagePart(part, "$depth${AttachmentInfo.DEPTH_SEPARATOR}${index}"))
+        }
+      } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
+        val attachmentInfo = AttachmentInfo()
+        attachmentInfo.name = messagePart.filename ?: depth
+        attachmentInfo.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
+        attachmentInfo.type = messagePart.mimeType ?: ""
+        attachmentInfo.id = messagePart.contentId()
+            ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
+        attachmentInfo.path = depth
+        attachmentInfoList.add(attachmentInfo)
+      }
+
+      return attachmentInfoList
+    }
+
+    /**
+     * Get [Part] which has an attachment with the given attachment path.
+     *
+     * @param part         The parent part.
+     * @param currentPath  The current path of MIME hierarchy.
+     * @param neededPath   The path where the needed attachment exists.
+     * @return [Part] which has attachment or null if message doesn't have such attachment.
+     */
+    fun getAttPartByPath(part: MessagePart, currentPath: String = "0/", neededPath: String): MessagePart? {
+      if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+        val neededParentPath = neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
+        val partsCount = (part.parts ?: emptyList()).size
+
+        if (currentPath == neededParentPath) {
+          val position = neededPath.substringAfterLast(AttachmentInfo.DEPTH_SEPARATOR).toInt()
+
+          if (partsCount > position) {
+            val bodyPart = part.parts[position]
+            if (Part.ATTACHMENT.equals(bodyPart.disposition(), ignoreCase = true)) {
+              return bodyPart
+            }
+          }
+        } else {
+          val nextDepth = neededParentPath
+              .replaceFirst(currentPath, "")
+              .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
+          val bodyPart = part.parts[nextDepth]
+          return getAttPartByPath(bodyPart, currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR, neededPath)
+        }
+        return null
+      } else {
+        return null
+      }
+    }
+
+    fun getAttInputStream(context: Context, accountEntity: AccountEntity, msgId: String, attId: String): InputStream {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val request = gmailApiService
+          .users()
+          .messages()
+          .attachments()
+          .get(DEFAULT_USER_ID, msgId, attId)
+          .setPrettyPrint(false)
+          .setFields("data")
+
+      return Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
     }
 
     /**

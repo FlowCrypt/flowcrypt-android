@@ -490,7 +490,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     if (accountEntity.useAPI) {
       if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
         val result = GmailApiHelper.executeWithResult {
-          val msgFullInfo = GmailApiHelper.loadMsgFullInfo(getApplication(), accountEntity, messageEntity.uidAsHEX)
+          val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(), accountEntity, messageEntity.uidAsHEX)
           msgSize = msgFullInfo.sizeEstimate
           val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
           MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
@@ -718,7 +718,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
 
   private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity) = withContext(Dispatchers.IO) {
     try {
-      val msg = GmailApiHelper.loadMsgFullInfo(getApplication(), accountEntity, messageEntity.uidAsHEX)
+      val msg = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(), accountEntity, messageEntity.uidAsHEX)
       val attachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
         AttachmentEntity.fromAttInfo(it.apply {
           this.email = accountEntity.email
