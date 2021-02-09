@@ -486,15 +486,21 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot = withContext(Dispatchers.IO) {
     val accountEntity = getActiveAccountSuspend()
         ?: throw java.lang.NullPointerException("Account is null")
-
+    val context: Context = getApplication()
     if (accountEntity.useAPI) {
       if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-        val msgFullInfo = GmailApiHelper.loadMsgFullInfo(getApplication(), accountEntity, messageEntity.uidAsHEX)
-        msgSize = msgFullInfo.sizeEstimate
-        val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
-        MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
-        return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-            ?: throw java.lang.NullPointerException("Message not found in the local cache")
+        val result = GmailApiHelper.executeWithResult {
+          val msgFullInfo = GmailApiHelper.loadMsgFullInfo(getApplication(), accountEntity, messageEntity.uidAsHEX)
+          msgSize = msgFullInfo.sizeEstimate
+          val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
+          MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+          Result.success(null)
+        }
+        if (result.status == Result.Status.SUCCESS) {
+          return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+              ?: throw java.lang.NullPointerException("Message not found in the local cache")
+        } else throw result.exception ?: java.lang.IllegalStateException(context.getString(R
+            .string.unknown_error))
       }
     }
 

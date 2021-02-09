@@ -13,7 +13,6 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.ProgressOutputStream
 import com.flowcrypt.email.util.cache.DiskLruCache
-import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import okhttp3.internal.io.FileSystem
 import okio.buffer
 import java.io.File
@@ -78,13 +77,13 @@ object MsgsCacheManager {
   private fun storeMsgInternal(key: String, action: (outputStream: OutputStream) -> Unit) {
     val editor = diskLruCache.edit(key) ?: return
 
-    val bufferedSink = editor.newSink().buffer()
-    val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
-    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
-    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
-    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
-
     try {
+      val bufferedSink = editor.newSink().buffer()
+      val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
+      val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
+      val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+      val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
+
       outputStream.use {
         outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
         outputStreamOfBufferedSink.write("\n".toByteArray())
@@ -94,9 +93,9 @@ object MsgsCacheManager {
       }
 
       diskLruCache[key] ?: throw IOException("No space left on device")
-    } catch (e: SyncTaskTerminatedException) {
-      e.printStackTrace()
+    } catch (e: Exception) {
       editor.abort()
+      throw e
     }
   }
 }
