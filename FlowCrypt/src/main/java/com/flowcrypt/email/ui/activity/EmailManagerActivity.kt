@@ -251,6 +251,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
     }
 
+    itemSwitch.isVisible = activeAccount?.useAPI != true
+
     return super.onPrepareOptionsMenu(menu)
   }
 
