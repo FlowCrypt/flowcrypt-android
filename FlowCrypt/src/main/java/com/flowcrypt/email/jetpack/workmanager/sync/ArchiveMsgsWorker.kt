@@ -62,38 +62,31 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
 
   private suspend fun archive(account: AccountEntity) = withContext(Dispatchers.IO) {
     archiveInternal(account) { _, uidList ->
-      when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          GmailApiHelper.changeLabels(
-              context = applicationContext,
-              accountEntity = account,
-              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
-              removeLabelIds = listOf(GmailApiHelper.LABEL_INBOX))
-        }
+      executeGMailAPICall(applicationContext) {
+        GmailApiHelper.changeLabels(
+            context = applicationContext,
+            accountEntity = account,
+            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+            removeLabelIds = listOf(GmailApiHelper.LABEL_INBOX))
       }
     }
   }
 
   private suspend fun archiveInternal(account: AccountEntity,
-                                      action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
-  {
-    try {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
+                                      action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO) {
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+    val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
 
-      while (true) {
-        val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
-        if (candidatesForArchiving.isEmpty()) {
-          break
-        } else {
-          val uidList = candidatesForArchiving.map { it.uid }
-          action.invoke(inboxFolder.fullName, uidList)
-          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
-        }
+    while (true) {
+      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
+      if (candidatesForArchiving.isEmpty()) {
+        break
+      } else {
+        val uidList = candidatesForArchiving.map { it.uid }
+        action.invoke(inboxFolder.fullName, uidList)
+        roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
       }
-    } catch (e: Exception) {
-      e.printStackTrace()
     }
   }
 

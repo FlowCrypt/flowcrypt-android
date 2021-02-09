@@ -64,54 +64,49 @@ class MovingToInboxWorker(context: Context, params: WorkerParameters) : BaseSync
 
   private suspend fun moveMessagesToInbox(account: AccountEntity) = withContext(Dispatchers.IO) {
     moveMessagesToInboxInternal(account) { folderName, uidList ->
-      when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          GmailApiHelper.changeLabels(
-              context = applicationContext,
-              accountEntity = account,
-              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
-              addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
-              removeLabelIds = if (GmailApiHelper.LABEL_TRASH.equals(folderName, true)) listOf(GmailApiHelper.LABEL_TRASH) else null)
-        }
+      executeGMailAPICall(applicationContext) {
+        GmailApiHelper.changeLabels(
+            context = applicationContext,
+            accountEntity = account,
+            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+            addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
+            removeLabelIds = if (GmailApiHelper.LABEL_TRASH.equals(folderName, true)) listOf(GmailApiHelper.LABEL_TRASH) else null)
       }
+
       delay(2000)
     }
   }
 
   private suspend fun moveMessagesToInboxInternal(account: AccountEntity,
                                                   action: suspend (folderName: String, uidList: List<Long>) -> Unit) = withContext(Dispatchers.IO) {
-    try {
-      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      val folderTrash = foldersManager.folderTrash
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+    val folderTrash = foldersManager.folderTrash
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-      while (true) {
-        val candidatesForMovingToInbox = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email,
-            MessageState.PENDING_MOVE_TO_INBOX.value)
+    while (true) {
+      val candidatesForMovingToInbox = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email,
+          MessageState.PENDING_MOVE_TO_INBOX.value)
 
-        if (candidatesForMovingToInbox.isEmpty()) {
-          break
-        } else {
-          val setOfFolders = candidatesForMovingToInbox.map { it.folder }.toSet()
-          for (srcFolder in setOfFolders) {
-            val filteredMsgs = candidatesForMovingToInbox.filter { it.folder == srcFolder }
-            if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
-              continue
-            }
+      if (candidatesForMovingToInbox.isEmpty()) {
+        break
+      } else {
+        val setOfFolders = candidatesForMovingToInbox.map { it.folder }.toSet()
+        for (srcFolder in setOfFolders) {
+          val filteredMsgs = candidatesForMovingToInbox.filter { it.folder == srcFolder }
+          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
+            continue
+          }
 
-            val uidList = filteredMsgs.map { it.uid }
-            action.invoke(srcFolder, uidList)
-            val movedMessages = candidatesForMovingToInbox.filter { it.uid in uidList }.map { it.copy(state = MessageState.NONE.value) }
-            if (srcFolder.equals(folderTrash?.fullName, true)) {
-              roomDatabase.msgDao().deleteSuspend(movedMessages)
-            } else {
-              roomDatabase.msgDao().updateSuspend(movedMessages)
-            }
+          val uidList = filteredMsgs.map { it.uid }
+          action.invoke(srcFolder, uidList)
+          val movedMessages = candidatesForMovingToInbox.filter { it.uid in uidList }.map { it.copy(state = MessageState.NONE.value) }
+          if (srcFolder.equals(folderTrash?.fullName, true)) {
+            roomDatabase.msgDao().deleteSuspend(movedMessages)
+          } else {
+            roomDatabase.msgDao().updateSuspend(movedMessages)
           }
         }
       }
-    } catch (e: Exception) {
-      e.printStackTrace()
     }
   }
 

@@ -67,14 +67,11 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
       saveLabels(context = context, account = account) {
         when (account.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            val result = GmailApiHelper.executeWithResult {
-              com.flowcrypt.email.api.retrofit.response.base.Result.success(GmailApiHelper.getLabels(context, account).map {
+            executeGMailAPICall(context) {
+              GmailApiHelper.getLabels(context, account).map {
                 FoldersManager.generateFolder(account.email, it)
-              })
+              }
             }
-
-            result.data ?: throw result.exception
-                ?: IllegalStateException(context.getString(R.string.unknown_error))
           }
 
           else -> {

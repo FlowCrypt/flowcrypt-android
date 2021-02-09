@@ -39,7 +39,6 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import com.google.api.client.googleapis.json.GoogleJsonError
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpHeaders
-import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
@@ -67,9 +66,6 @@ import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.*
-import java.util.logging.ConsoleHandler
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.mail.Flags
 import javax.mail.MessagingException
 import javax.mail.Part
@@ -146,12 +142,12 @@ class GmailApiHelper {
       val credential = generateGoogleAccountCredential(context, account)
 
       val transport = NetHttpTransport()
-      if (EmailUtil.hasEnabledDebug(context)) {
+      /*if (EmailUtil.hasEnabledDebug(context)) {
         Logger.getLogger(HttpTransport::class.java.name).apply {
           level = Level.CONFIG
           addHandler(object : ConsoleHandler() {}.apply { level = Level.CONFIG })
         }
-      }
+      }*/
 
       val factory = JacksonFactory.getDefaultInstance()
       val appName = context.getString(R.string.app_name)

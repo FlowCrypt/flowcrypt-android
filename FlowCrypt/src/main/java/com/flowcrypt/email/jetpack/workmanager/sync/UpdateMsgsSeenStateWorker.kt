@@ -59,21 +59,19 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
 
   private suspend fun changeMsgsReadState(account: AccountEntity, state: MessageState) = withContext(Dispatchers.IO) {
     changeMsgsReadStateInternal(account, state) { _, uidList ->
-      when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          if (state == MessageState.PENDING_MARK_READ) {
-            GmailApiHelper.changeLabels(
-                context = applicationContext,
-                accountEntity = account,
-                ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
-                removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
-          } else {
-            GmailApiHelper.changeLabels(
-                context = applicationContext,
-                accountEntity = account,
-                ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
-                addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
-          }
+      executeGMailAPICall(applicationContext) {
+        if (state == MessageState.PENDING_MARK_READ) {
+          GmailApiHelper.changeLabels(
+              context = applicationContext,
+              accountEntity = account,
+              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+              removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
+        } else {
+          GmailApiHelper.changeLabels(
+              context = applicationContext,
+              accountEntity = account,
+              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+              addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
         }
       }
     }
@@ -81,32 +79,27 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
 
   private suspend fun changeMsgsReadStateInternal(account: AccountEntity,
                                                   state: MessageState,
-                                                  action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
-  {
-    try {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-      val candidatesForMark = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, state.value)
+                                                  action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO) {
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+    val candidatesForMark = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, state.value)
 
-      if (candidatesForMark.isNotEmpty()) {
-        val setOfFolders = candidatesForMark.map { it.folder }.toSet()
+    if (candidatesForMark.isNotEmpty()) {
+      val setOfFolders = candidatesForMark.map { it.folder }.toSet()
 
-        for (folderName in setOfFolders) {
-          val filteredMsgs = candidatesForMark.filter { it.folder == folderName }
+      for (folderName in setOfFolders) {
+        val filteredMsgs = candidatesForMark.filter { it.folder == folderName }
 
-          if (filteredMsgs.isEmpty()) {
-            continue
-          }
-
-          val uidList = filteredMsgs.map { it.uid }
-          action.invoke(folderName, uidList)
-          val entities = roomDatabase.msgDao().getMsgsByUIDs(account.email, folderName, uidList)
-              .filter { it.msgState == state }
-              .map { it.copy(state = MessageState.NONE.value) }
-          roomDatabase.msgDao().updateSuspend(entities)
+        if (filteredMsgs.isEmpty()) {
+          continue
         }
+
+        val uidList = filteredMsgs.map { it.uid }
+        action.invoke(folderName, uidList)
+        val entities = roomDatabase.msgDao().getMsgsByUIDs(account.email, folderName, uidList)
+            .filter { it.msgState == state }
+            .map { it.copy(state = MessageState.NONE.value) }
+        roomDatabase.msgDao().updateSuspend(entities)
       }
-    } catch (e: Exception) {
-      e.printStackTrace()
     }
   }
 
