@@ -116,16 +116,18 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncW
           searchQuery = ""
       ))
 
-      if (foldersManager.folderAll == null) {
-        foldersManager.addFolder(LocalFolder(
-            account = email,
-            fullName = JavaEmailConstants.FOLDER_ALL_MAIL,
-            folderAlias = context.getString(R.string.all_mail),
-            attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
-            isCustom = false,
-            msgCount = 0,
-            searchQuery = ""
-        ))
+      if (account.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+        if (foldersManager.folderAll == null) {
+          foldersManager.addFolder(LocalFolder(
+              account = email,
+              fullName = JavaEmailConstants.FOLDER_ALL_MAIL,
+              folderAlias = context.getString(R.string.all_mail),
+              attributes = listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN),
+              isCustom = false,
+              msgCount = 0,
+              searchQuery = ""
+          ))
+        }
       }
 
       roomDatabase.labelDao().update(account, foldersManager.allFolders.map { LabelEntity.genLabel(account, it) })
