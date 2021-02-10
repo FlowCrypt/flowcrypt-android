@@ -76,8 +76,6 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
               }
             }
           }
-
-          emit(Result.success(keyDetailsList.toList()))
         } catch (e: Exception) {
           e.printStackTrace()
           emit(Result.exception<List<NodeKeyDetails>?>(e))
