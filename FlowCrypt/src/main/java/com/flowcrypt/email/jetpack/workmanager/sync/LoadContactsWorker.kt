@@ -48,24 +48,37 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
   }
 
   private suspend fun fetchContacts(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    if (account.areContactsLoaded == true) return@withContext
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-    val folderSent = foldersManager.findSentFolder() ?: return@withContext
+    fetchContactsInternal(account) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      val folderSent = foldersManager.findSentFolder() ?: return@fetchContactsInternal emptyArray()
 
-    store.getFolder(folderSent.fullName).use { folder ->
-      val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val msgs = imapFolder.messages
+      store.getFolder(folderSent.fullName).use { folder ->
+        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+        val msgs = imapFolder.messages
 
-      if (msgs.isNotEmpty()) {
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
-        fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
-        fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
-        imapFolder.fetch(msgs, fetchProfile)
+        if (msgs.isNotEmpty()) {
+          val fetchProfile = FetchProfile()
+          fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
+          fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
+          fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
+          imapFolder.fetch(msgs, fetchProfile)
 
-        updateContacts(msgs)
-        FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
+          return@fetchContactsInternal msgs
+        }
       }
+
+      return@fetchContactsInternal emptyArray()
+    }
+  }
+
+  private suspend fun fetchContactsInternal(account: AccountEntity,
+                                            action: suspend () -> Array<Message>) = withContext(Dispatchers.IO) {
+    if (account.areContactsLoaded == true) return@withContext
+    val msgs = action.invoke()
+
+    if (msgs.isNotEmpty()) {
+      updateContacts(msgs)
+      FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
     }
   }
 
