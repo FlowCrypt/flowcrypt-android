@@ -164,7 +164,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
           .getInstance(context.applicationContext)
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
+              ExistingWorkPolicy.KEEP,
               OneTimeWorkRequestBuilder<LoadContactsWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)

@@ -125,6 +125,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     updateLabels()
+    loadContactsIfNeeded()
     IdleService.bind(this, idleServiceConnection)
     initViews()
     setupLabelsViewModel()
