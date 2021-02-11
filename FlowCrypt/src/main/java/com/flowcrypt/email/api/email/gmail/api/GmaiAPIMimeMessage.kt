@@ -19,14 +19,14 @@ import javax.mail.internet.MimeMessage
  *         E-mail: DenBond7@gmail.com
  */
 class GmaiAPIMimeMessage(session: Session, message: Message) : MimeMessage(session) {
-  private val internalDate = Date(message.internalDate)
+  private val internalDate = Date(message.internalDate ?: System.currentTimeMillis())
 
   init {
     for (header in message.payload.headers) {
       setHeader(header.name, header.value)
     }
 
-    if (!message.labelIds.contains(GmailApiHelper.LABEL_UNREAD)) {
+    if (message.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) != true) {
       setFlag(Flags.Flag.SEEN, true)
     }
   }

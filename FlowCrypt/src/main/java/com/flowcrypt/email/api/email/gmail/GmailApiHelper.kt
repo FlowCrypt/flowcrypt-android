@@ -154,6 +154,29 @@ class GmailApiHelper {
       return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
     }
 
+    suspend fun <M> doOperationViaStepsSuspend(stepValue: Int = 50, list: List<M>,
+                                               block: suspend (list: List<M>) -> List<M>): List<M> = withContext(Dispatchers.IO) {
+      val resultList = mutableListOf<M>()
+      if (list.isNotEmpty()) {
+        if (list.size <= stepValue) {
+          resultList.addAll(block(list))
+        } else {
+          var i = 0
+          while (i < list.size) {
+            val tempList = if (list.size - i > stepValue) {
+              list.subList(i, i + stepValue)
+            } else {
+              list.subList(i, list.size)
+            }
+            resultList.addAll(block(tempList))
+            i += stepValue
+          }
+        }
+      }
+
+      return@withContext resultList
+    }
+
     suspend fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream = withContext(Dispatchers.IO) {
       val msgId = messageEntity.uidAsHEX
       val gmailApiService = generateGmailApiService(context, account)
@@ -223,7 +246,9 @@ class GmailApiHelper {
     }
 
     suspend fun loadMsgs(context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
-                         localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_FULL): List<Message> = withContext(Dispatchers.IO)
+                         localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+                         metadataHeaders: List<String>? = null, fields: List<String>? = null
+    ): List<Message> = withContext(Dispatchers.IO)
     {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
@@ -237,10 +262,19 @@ class GmailApiHelper {
             .messages()
             .get(DEFAULT_USER_ID, message.id)
             .setFormat(format)
+
+        metadataHeaders?.let { metadataHeaders ->
+          request.metadataHeaders = metadataHeaders
+        }
+
+        fields?.let { fields ->
+          request.fields = fields.joinToString(separator = ",")
+        }
+
         request.queue(batch, object : JsonBatchCallback<Message>() {
           override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
             t?.let {
-              if (isTrash || !it.labelIds.contains(LABEL_TRASH)) {
+              if (isTrash || it.labelIds?.contains(LABEL_TRASH) != true) {
                 listResult.add(it)
               }
             } ?: throw java.lang.NullPointerException()
