@@ -451,9 +451,10 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         try {
           database.execSQL("DROP TABLE IF EXISTS imap_labels;")
           database.execSQL("CREATE TABLE IF NOT EXISTS `labels` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, `next_page_token` TEXT DEFAULT NULL, `history_id` TEXT DEFAULT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_name_in_labels` ON `labels` (`email`, `account_type`, `name`)")
           database.execSQL("ALTER TABLE messages ADD COLUMN thread_id TEXT DEFAULT NULL;")
           database.execSQL("ALTER TABLE messages ADD COLUMN history_id TEXT DEFAULT NULL;")
-          database.execSQL("ALTER TABLE accounts ADD COLUMN use_api INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN use_api INTEGER NOT NULL DEFAULT 0;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
