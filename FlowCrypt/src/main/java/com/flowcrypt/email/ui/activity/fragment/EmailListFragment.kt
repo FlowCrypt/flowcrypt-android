@@ -100,7 +100,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
   private lateinit var adapter: MsgsPagedListAdapter
   private var listener: OnManageEmailsListener? = null
-  private var isEmptyViewAvailable = false
   private var keepSelectionInMemory = false
   private var isForceLoadNextMsgsEnabled = false
 
@@ -249,8 +248,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         context?.let { MessagesSenderWorker.enqueue(it) }
       }
     } else {
-      emptyView?.visibility = View.GONE
-
       if (GeneralUtil.isConnected(context)) {
         if (adapter.itemCount > 0) {
           refreshMsgs()
@@ -276,7 +273,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   }
 
   fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
-    isEmptyViewAvailable = false
     keepSelectionInMemory = false
     actionMode?.finish()
     tracker?.clearSelection()
@@ -493,8 +489,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     }
 
     if (GeneralUtil.isConnected(context)) {
-      showContent()
-
       footerProgressView?.visibility = View.VISIBLE
 
       if (localFolder == null) {
@@ -760,14 +754,16 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   }
 
   private fun setupMsgsViewModel() {
-    msgsViewModel.msgsLiveData?.observe(viewLifecycleOwner) {
-      if (it?.size ?: 0 == 0) {
-        if (isEmptyViewAvailable || isOutboxFolder) {
-          showEmptyView()
-        }
-
-        isEmptyViewAvailable = true
+    msgsViewModel.msgsCountLiveData.observe(viewLifecycleOwner) {
+      if (it ?: 0 == 0) {
+        showEmptyView()
       } else {
+        showContent()
+      }
+    }
+
+    msgsViewModel.msgsLiveData?.observe(viewLifecycleOwner) {
+      if (it?.size ?: 0 != 0) {
         showContent()
       }
 
@@ -815,14 +811,13 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
-          if (recyclerViewMsgs?.adapter?.itemCount == 0) {
-            showEmptyView()
-          }
+          showContent()
           baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           setActionProgress(100)
+          showContent()
           if (adapter.itemCount == 0) {
             if (it.exception is CommonConnectionException) {
               isForceLoadNextMsgsEnabled = true

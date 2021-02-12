@@ -89,6 +89,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = Transformations.switchMap(foldersLiveData) { localFolder ->
     liveData {
+      cancelActionsForPreviousFolder()
       val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: ""
       emitSource(
           roomDatabase.msgDao().getMessagesDataSourceFactory(account, localFolder.fullName)
@@ -105,6 +106,15 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   val loadMsgsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
   val refreshMsgsLiveData = MutableLiveData<Result<Boolean?>>()
+
+  val msgsCountLiveData = Transformations.switchMap(loadMsgsFromRemoteServerLiveData) {
+    liveData {
+      if (it.status != Result.Status.SUCCESS) return@liveData
+      val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: return@liveData
+      val folder = foldersLiveData.value ?: return@liveData
+      emit(roomDatabase.msgDao().countSuspend(account, folder.fullName))
+    }
+  }
 
   fun switchFolder(newFolder: LocalFolder, deleteAllMsgs: Boolean, forceClearFolderCache: Boolean) {
     if (foldersLiveData.value == newFolder) {
@@ -174,6 +184,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
 
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
+        loadMsgsFromRemoteServerLiveData.value = Result.loading(progress = 10.0, resultCode = R.id.progress_id_start_of_loading_new_messages)
         loadMsgsFromRemoteServerLiveData.value = controlledRunnerForLoadNextMessages.cancelPreviousThenRun {
           return@cancelPreviousThenRun if (accountEntity.useAPI) {
             GmailApiHelper.executeWithResult {
@@ -803,5 +814,14 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   private suspend fun clearHistoryIdForLabel(accountEntity: AccountEntity, label: String) {
     val labelEntity: LabelEntity? = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, label)
     labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(historyId = null)) }
+  }
+
+  private suspend fun cancelActionsForPreviousFolder() {
+    refreshMsgsLiveData.value = controlledRunnerForRefreshing.cancelPreviousThenRun {
+      return@cancelPreviousThenRun Result.none()
+    }
+    loadMsgsFromRemoteServerLiveData.value = controlledRunnerForLoadNextMessages.cancelPreviousThenRun {
+      return@cancelPreviousThenRun Result.none()
+    }
   }
 }
