@@ -25,8 +25,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.paging.PagedList
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -112,33 +110,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     get() {
       return JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
     }
-
-  private val msgsObserver = Observer<PagedList<MessageEntity>> {
-    if (it?.size ?: 0 == 0) {
-      if (isEmptyViewAvailable || isOutboxFolder) {
-        showEmptyView()
-      }
-
-      isEmptyViewAvailable = true
-    } else {
-      showContent()
-    }
-
-    adapter.submitList(it)
-    actionMode?.invalidate()
-  }
-
-  private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
-    override fun onZeroItemsLoaded() {
-      super.onZeroItemsLoaded()
-      loadNextMsgs(true)
-    }
-
-    override fun onItemAtEndLoaded(itemAtEnd: MessageEntity) {
-      super.onItemAtEndLoaded(itemAtEnd)
-      loadNextMsgs()
-    }
-  }
 
   private val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
     override fun onSelectionChanged() {
@@ -325,9 +296,12 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       isForceClearCacheNeeded = true
     }
 
-    msgsViewModel.loadMsgsFromLocalCache(this, localFolder = newFolder,
-        observer = msgsObserver, boundaryCallback = boundaryCallback,
-        forceClearFolderCache = isForceClearCacheNeeded, deleteAllMsgs = deleteAllMsgs)
+    newFolder?.let {
+      msgsViewModel.switchFolder(
+          newFolder = it,
+          forceClearFolderCache = isForceClearCacheNeeded,
+          deleteAllMsgs = deleteAllMsgs)
+    }
   }
 
   /**
@@ -509,10 +483,8 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
   /**
    * Try to load a next messages from an IMAP server.
-   *
-   * @param totalItemsCount The count of already loaded messages.
    */
-  private fun loadNextMsgs(isFreshLoading: Boolean = false) {
+  private fun loadNextMsgs() {
     isForceLoadNextMsgsEnabled = false
     val localFolder = listener?.currentFolder
 
@@ -521,11 +493,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     }
 
     if (GeneralUtil.isConnected(context)) {
-      if (isFreshLoading) {
-        showProgress()
-      } else {
-        showContent()
-      }
+      showContent()
 
       footerProgressView?.visibility = View.VISIBLE
 
@@ -533,15 +501,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         labelsViewModel.loadLabels()
       } else {
         adapter.changeProgress(true)
-        msgsViewModel.loadMsgsFromRemoteServer(localFolder)
+        msgsViewModel.loadMsgsFromRemoteServer()
       }
     } else {
       footerProgressView?.visibility = View.GONE
       isForceLoadNextMsgsEnabled = true
-
-      if (isFreshLoading) {
-        showStatus(msg = getString(R.string.there_was_syncing_problem))
-      }
 
       showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry), Snackbar.LENGTH_LONG) {
         loadNextMsgs()
@@ -796,6 +760,21 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   }
 
   private fun setupMsgsViewModel() {
+    msgsViewModel.msgsLiveData?.observe(viewLifecycleOwner) {
+      if (it?.size ?: 0 == 0) {
+        if (isEmptyViewAvailable || isOutboxFolder) {
+          showEmptyView()
+        }
+
+        isEmptyViewAvailable = true
+      } else {
+        showContent()
+      }
+
+      adapter.submitList(it)
+      actionMode?.invalidate()
+    }
+
     msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {

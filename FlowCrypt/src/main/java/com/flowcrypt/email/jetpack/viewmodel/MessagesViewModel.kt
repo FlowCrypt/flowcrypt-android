@@ -6,11 +6,10 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Config
 import androidx.paging.PagedList
@@ -40,6 +39,7 @@ import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
@@ -69,11 +69,36 @@ import kotlin.collections.ArrayList
  *         E-mail: DenBond7@gmail.com
  */
 class MessagesViewModel(application: Application) : AccountViewModel(application) {
-  private var currentLocalFolder: LocalFolder? = null
   private var searchNextPageToken: String? = null
+  private val controlledRunnerForRefreshing = ControlledRunner<Result<Boolean?>>()
+  private val controlledRunnerForLoadNextMessages = ControlledRunner<Result<Boolean?>>()
+
+  private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
+    override fun onZeroItemsLoaded() {
+      super.onZeroItemsLoaded()
+      loadMsgsFromRemoteServer()
+    }
+
+    override fun onItemAtEndLoaded(itemAtEnd: MessageEntity) {
+      super.onItemAtEndLoaded(itemAtEnd)
+      loadMsgsFromRemoteServer()
+    }
+  }
+
+  private val foldersLiveData = MutableLiveData<LocalFolder>()
+
+  var msgsLiveData: LiveData<PagedList<MessageEntity>>? = Transformations.switchMap(foldersLiveData) { localFolder ->
+    liveData {
+      val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: ""
+      emitSource(
+          roomDatabase.msgDao().getMessagesDataSourceFactory(account, localFolder.fullName)
+              .toLiveData(
+                  config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
+                  boundaryCallback = boundaryCallback))
+    }
+  }
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
-  var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
   var outboxMsgsLiveData: LiveData<List<MessageEntity>> = Transformations.switchMap(activeAccountLiveData) {
     roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
   }
@@ -81,84 +106,16 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   val loadMsgsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
   val refreshMsgsLiveData = MutableLiveData<Result<Boolean?>>()
 
-  fun refreshMsgs(localFolder: LocalFolder) {
-    viewModelScope.launch {
-      val accountEntity = getActiveAccountSuspend()
-      accountEntity?.let {
-        refreshMsgsLiveData.value = Result.loading()
-        if (accountEntity.useAPI) {
-          refreshMsgsLiveData.value = GmailApiHelper.executeWithResult {
-            refreshMsgsInternal(accountEntity, localFolder)
-          }
-        } else {
-          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-          if (connection == null) {
-            refreshMsgsLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
-          } else {
-            refreshMsgsLiveData.value = connection.executeWithResult {
-              refreshMsgsInternal(accountEntity, connection.store, localFolder)
-            }
-          }
-        }
-      }
+  fun switchFolder(newFolder: LocalFolder, deleteAllMsgs: Boolean, forceClearFolderCache: Boolean) {
+    if (foldersLiveData.value == newFolder) {
+      return
     }
-  }
 
-  fun loadMsgsFromRemoteServer(localFolder: LocalFolder) {
     viewModelScope.launch {
-      val accountEntity = getActiveAccountSuspend()
-      accountEntity?.let {
-        val totalItemsCount = roomDatabase.msgDao().getMsgsCount(accountEntity.email,
-            if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME)
-        if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
-
-        loadMsgsFromRemoteServerLiveData.value = Result.loading()
-        if (accountEntity.useAPI) {
-          loadMsgsFromRemoteServerLiveData.value = GmailApiHelper.executeWithResult {
-            if (localFolder.searchQuery.isNullOrEmpty()) {
-              loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
-            } else {
-              searchMsgsOnRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
-            }
-          }
-        } else {
-          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-          if (connection == null) {
-            loadMsgsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
-          } else {
-            loadMsgsFromRemoteServerLiveData.value = connection.executeWithResult {
-              if (localFolder.searchQuery.isNullOrEmpty()) {
-                loadMsgsFromRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
-              } else {
-                searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  fun loadMsgsFromLocalCache(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?,
-                             observer: Observer<PagedList<MessageEntity>>,
-                             boundaryCallback: PagedList.BoundaryCallback<MessageEntity>,
-                             forceClearFolderCache: Boolean = false,
-                             deleteAllMsgs: Boolean = false) {
-    viewModelScope.launch {
-      val label = if (localFolder?.searchQuery.isNullOrEmpty()) {
-        localFolder?.fullName ?: ""
+      val label = if (newFolder.searchQuery.isNullOrEmpty()) {
+        newFolder.fullName
       } else {
         SearchMessagesActivity.SEARCH_FOLDER_NAME
-      }
-
-      val resetObserver = {
-        val isSearchFolder = label == SearchMessagesActivity.SEARCH_FOLDER_NAME
-        (currentLocalFolder?.fullName == localFolder?.fullName).not() || isSearchFolder ||
-            deleteAllMsgs || forceClearFolderCache
-      }
-
-      if (resetObserver()) {
-        msgsLiveData?.removeObserver(observer)
       }
 
       val accountEntity = getActiveAccountSuspend()
@@ -166,7 +123,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         roomDatabase.msgDao().deleteAllExceptOutgoing(accountEntity?.email)
         when (accountEntity?.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            if (FoldersManager.FolderType.INBOX != localFolder?.getFolderType()) {
+            if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
               clearHistoryIdForLabel(accountEntity, label)
             }
           }
@@ -175,32 +132,69 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         roomDatabase.msgDao().delete(accountEntity?.email, label)
         when (accountEntity?.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            if (FoldersManager.FolderType.INBOX != localFolder?.getFolderType()) {
+            if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
               clearHistoryIdForLabel(accountEntity, label)
             }
           }
         }
       }
 
-      if (resetObserver()) {
-        msgsLiveData = Transformations.switchMap(activeAccountLiveData) {
-          val account = it?.email ?: ""
-          roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
-              .toLiveData(
-                  config = Config(
-                      pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
-                  boundaryCallback = boundaryCallback)
-        }
+      foldersLiveData.value = newFolder
+    }
+  }
 
-        msgsLiveData?.observe(lifecycleOwner, observer)
-        currentLocalFolder = localFolder
+  fun refreshMsgs(localFolder: LocalFolder) {
+    viewModelScope.launch {
+      val accountEntity = getActiveAccountSuspend()
+      accountEntity?.let {
+        refreshMsgsLiveData.value = Result.loading()
+        refreshMsgsLiveData.value = controlledRunnerForRefreshing.cancelPreviousThenRun {
+          return@cancelPreviousThenRun if (accountEntity.useAPI) {
+            GmailApiHelper.executeWithResult {
+              refreshMsgsInternal(accountEntity, localFolder)
+            }
+          } else {
+            IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
+              refreshMsgsInternal(accountEntity, store, localFolder)
+            }
+                ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+          }
+        }
       }
     }
   }
 
-  fun cleanFolderCache(folderName: String?) {
+  fun loadMsgsFromRemoteServer() {
     viewModelScope.launch {
-      roomDatabase.msgDao().delete(getActiveAccountSuspend()?.email, folderName)
+      val localFolder = foldersLiveData.value ?: return@launch
+      val accountEntity = getActiveAccountSuspend()
+      accountEntity?.let {
+        val totalItemsCount = roomDatabase.msgDao().getMsgsCount(accountEntity.email,
+            if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME)
+        if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
+
+        loadMsgsFromRemoteServerLiveData.value = Result.loading()
+        loadMsgsFromRemoteServerLiveData.value = controlledRunnerForLoadNextMessages.cancelPreviousThenRun {
+          return@cancelPreviousThenRun if (accountEntity.useAPI) {
+            GmailApiHelper.executeWithResult {
+              if (localFolder.searchQuery.isNullOrEmpty()) {
+                loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+              } else {
+                searchMsgsOnRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+              }
+            }
+          } else {
+            IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
+              if (localFolder.searchQuery.isNullOrEmpty()) {
+                loadMsgsFromRemoteServerAndStoreLocally(accountEntity, store, localFolder, totalItemsCount)
+              } else {
+                searchMsgsOnRemoteServerAndStoreLocally(accountEntity, store, localFolder, totalItemsCount)
+              }
+            }
+                ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+          }
+        }
+      }
     }
   }
 
