@@ -120,7 +120,7 @@ class GmailApiHelper {
         "payload/filename",
         "payload/headers",
         "payload/body",
-        "payload/parts(partId,mimeType,filename,headers,body/size)"
+        "payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)"
     )
 
     suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
