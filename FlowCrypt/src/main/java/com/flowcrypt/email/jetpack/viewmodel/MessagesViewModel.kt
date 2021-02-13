@@ -661,7 +661,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     } catch (e: Exception) {
       when (e) {
         is GoogleJsonResponseException -> {
-          if (e.statusCode == 404
+          if (localFolder.getFolderType() == FoldersManager.FolderType.INBOX
+              && e.statusCode == 404
               && e.details.errors.any { it.reason.equals("notFound", true) }) {
             //client must perform a full sync
             //https://developers.google.com/gmail/api/guides/sync#partial_synchronization
