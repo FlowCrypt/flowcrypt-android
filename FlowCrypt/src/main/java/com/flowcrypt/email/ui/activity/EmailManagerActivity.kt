@@ -245,14 +245,12 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       else -> {
         itemEmptyTrash.isVisible = currentFolder?.getFolderType() == FoldersManager.FolderType.TRASH
-        itemSwitch.isVisible = true
+        itemSwitch.isVisible = activeAccount?.useAPI != true
         itemSearch.isVisible = true
         itemForceSending.isVisible = false
         itemForceSending.isEnabled = isForceSendingEnabled
       }
     }
-
-    itemSwitch.isVisible = activeAccount?.useAPI != true
 
     return super.onPrepareOptionsMenu(menu)
   }
