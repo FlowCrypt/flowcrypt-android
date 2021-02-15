@@ -22,7 +22,7 @@ class GmaiAPIMimeMessage(session: Session, message: Message) : MimeMessage(sessi
   private val internalDate = Date(message.internalDate ?: System.currentTimeMillis())
 
   init {
-    for (header in message.payload.headers) {
+    for (header in message.payload?.headers ?: emptyList()) {
       setHeader(header.name, header.value)
     }
 
