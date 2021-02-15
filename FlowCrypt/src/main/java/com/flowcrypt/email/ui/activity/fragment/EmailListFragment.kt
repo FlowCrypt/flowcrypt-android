@@ -62,6 +62,11 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import me.everything.android.ui.overscroll.IOverScrollDecor
+import me.everything.android.ui.overscroll.IOverScrollState
+import me.everything.android.ui.overscroll.IOverScrollStateListener
+import me.everything.android.ui.overscroll.VerticalOverScrollBounceEffectDecorator
+import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorAdapter
 import javax.mail.AuthenticationFailedException
 
 /**
@@ -101,7 +106,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   private lateinit var adapter: MsgsPagedListAdapter
   private var listener: OnManageEmailsListener? = null
   private var keepSelectionInMemory = false
-  private var isForceLoadNextMsgsEnabled = false
 
   override val contentResourceId: Int = R.layout.fragment_email_list
 
@@ -394,7 +398,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   }
 
   private fun showConnLostHint(msgText: String = getString(R.string.can_not_connect_to_the_server)) {
-    isForceLoadNextMsgsEnabled = true
     showSnackbar(
         view = requireView(),
         msgText = msgText,
@@ -481,7 +484,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
    * Try to load a next messages from an IMAP server.
    */
   private fun loadNextMsgs() {
-    isForceLoadNextMsgsEnabled = false
     val localFolder = listener?.currentFolder
 
     if (isOutboxFolder) {
@@ -499,7 +501,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       }
     } else {
       footerProgressView?.visibility = View.GONE
-      isForceLoadNextMsgsEnabled = true
 
       showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry), Snackbar.LENGTH_LONG) {
         loadNextMsgs()
@@ -531,6 +532,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     recyclerViewMsgs?.adapter = adapter
     setupItemTouchHelper()
     setupSelectionTracker()
+    setupBottomOverScroll()
   }
 
   private fun setupSelectionTracker() {
@@ -666,6 +668,46 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     })
 
     itemTouchHelper.attachToRecyclerView(recyclerViewMsgs)
+  }
+
+  private fun setupBottomOverScroll() {
+    recyclerViewMsgs?.let { recyclerView ->
+      val overScrollAdapter = object : RecyclerViewOverScrollDecorAdapter(recyclerView) {
+        /**
+         * we disable OverScroll checking for top
+         */
+        override fun isInAbsoluteStart(): Boolean {
+          return false
+        }
+      }
+
+      VerticalOverScrollBounceEffectDecorator(overScrollAdapter).setOverScrollStateListener(
+          object : IOverScrollStateListener {
+            private val TIMEOUT_BETWEEN_ACTIONS = 100
+            private var lastCallTime = 0L
+
+            override fun onOverScrollStateChange(decor: IOverScrollDecor?, oldState: Int, newState: Int) {
+              when (newState) {
+                IOverScrollState.STATE_IDLE, IOverScrollState.STATE_DRAG_START_SIDE -> {
+                  lastCallTime = 0
+                }
+
+                IOverScrollState.STATE_DRAG_END_SIDE -> {
+                  lastCallTime = System.currentTimeMillis()
+                }
+
+                IOverScrollState.STATE_BOUNCE_BACK -> {
+                  if (oldState == IOverScrollState.STATE_DRAG_END_SIDE
+                      && System.currentTimeMillis() - lastCallTime >= TIMEOUT_BETWEEN_ACTIONS) {
+                    if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
+                      msgsViewModel.loadMsgsFromRemoteServer()
+                    }
+                  }
+                }
+              }
+            }
+          })
+    }
   }
 
   private fun genActionModeForMsgs(): ActionMode.Callback {
@@ -820,7 +862,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           showContent()
           if (adapter.itemCount == 0) {
             if (it.exception is CommonConnectionException) {
-              isForceLoadNextMsgsEnabled = true
               showStatus(msg = getString(R.string.can_not_connect_to_the_server))
             } else showStatus(msg = it.exception?.message
                 ?: getString(R.string.can_not_connect_to_the_server))
@@ -960,9 +1001,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
   private fun setupConnectionNotifier() {
     connectionLifecycleObserver.connectionLiveData.observe(this, {
-      if (isForceLoadNextMsgsEnabled && it) {
-        loadNextMsgs()
-      }
+      //do nothing yet
     })
   }
 
