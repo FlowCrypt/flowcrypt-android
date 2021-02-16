@@ -46,7 +46,6 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.util.MailConnectException
-import kotlinx.android.synthetic.main.fragment_screenshot_editor.*
 import java.net.SocketTimeoutException
 import java.util.*
 
@@ -261,7 +260,7 @@ class MainSignInFragment : BaseSingInFragment() {
                 title = getString(R.string.network_error)
               }
             } else if (exception is AccountAlreadyAddedException) {
-              showInfoSnackbar(rootView, exception.message, Snackbar.LENGTH_LONG)
+              showInfoSnackbar(view, exception.message, Snackbar.LENGTH_LONG)
               return@setFragmentResultListener
             }
 
