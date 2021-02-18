@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
@@ -60,6 +61,7 @@ class SettingsActivityTest : BaseTest() {
   }
 
   @Test
+  @CICandidateAnnotation
   @Ignore("need to change this test")
   fun testShowBackupsScreen() {
     checkIsScreenDisplaying(getResString(R.string.backups))

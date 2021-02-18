@@ -11,6 +11,8 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.DoesNotNeedMailserver
+import com.flowcrypt.email.ReadyForCIAnnotation
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -42,6 +44,8 @@ class MigrationTest {
   )
 
   @Test
+  @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   @Throws(IOException::class)
   fun testAllMigrations() {
     // Create earliest version of the database.
