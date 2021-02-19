@@ -28,6 +28,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -51,6 +52,7 @@ import com.sun.mail.imap.protocol.UIDSet
 import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -855,6 +857,46 @@ class EmailUtil {
           generateNonGmailSearchTerm(localFolder)
         }
       }
+    }
+
+    /**
+     * Check is the given [MimeBodyPart] allowed for downloading
+     *
+     * @param item the given [MimeBodyPart] that will be analysed
+     * @return true if the given part is allowed, otherwise - false
+     */
+    fun isPartAllowed(item: MimeBodyPart): Boolean {
+      var result = true
+      if (Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+        result = false
+
+        //match allowed files
+        if (item.fileName in MsgDetailsViewModel.ALLOWED_FILE_NAMES) {
+          result = true
+        }
+
+        //match private keys
+        if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()) == true) {
+          result = true
+        }
+
+        //match public keys
+        if (item.fileName?.matches("(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()) == true) {
+          result = true
+        }
+
+        //allow download keys less than 100kb
+        if (FilenameUtils.getExtension(item.fileName) in MsgDetailsViewModel.KEYS_EXTENSIONS && item.size < 102400) {
+          result = true
+        }
+
+        //match signature
+        if (item.isMimeType("application/pgp-signature")) {
+          result = true
+        }
+      }
+
+      return result
     }
 
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {

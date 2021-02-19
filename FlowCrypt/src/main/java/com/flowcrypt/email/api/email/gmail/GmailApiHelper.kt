@@ -605,8 +605,9 @@ class GmailApiHelper {
       return@withContext sentMsg.id == null
     }
 
-    suspend fun loadMsgFullInfoSuspend(context: Context, accountEntity: AccountEntity, msgId: String): Message = withContext(Dispatchers.IO) {
-      return@withContext loadMsgFullInfo(context, accountEntity, msgId)
+    suspend fun loadMsgFullInfoSuspend(context: Context, accountEntity: AccountEntity, msgId:
+    String, fields: List<String>? = FULL_INFO_WITHOUT_DATA): Message = withContext(Dispatchers.IO) {
+      return@withContext loadMsgFullInfo(context, accountEntity, msgId, fields)
     }
 
     /**
@@ -684,7 +685,7 @@ class GmailApiHelper {
       }
     }
 
-    fun loadMsgFullInfo(context: Context, accountEntity: AccountEntity, msgId: String): Message {
+    fun loadMsgFullInfo(context: Context, accountEntity: AccountEntity, msgId: String, fields: List<String>? = FULL_INFO_WITHOUT_DATA): Message {
       val gmailApiService = generateGmailApiService(context, accountEntity)
 
       return gmailApiService
@@ -692,7 +693,7 @@ class GmailApiHelper {
           .messages()
           .get(DEFAULT_USER_ID, msgId)
           .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
-          .setFields(FULL_INFO_WITHOUT_DATA.joinToString(separator = ","))
+          .setFields(fields?.joinToString(separator = ","))
           .execute()
     }
 

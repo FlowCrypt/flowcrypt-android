@@ -22,6 +22,9 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
+import com.flowcrypt.email.api.email.javamail.CustomMimeMessage
+import com.flowcrypt.email.api.email.javamail.CustomMimeMultipart
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -55,7 +58,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.spongycastle.bcpg.ArmoredInputStream
 import java.io.BufferedInputStream
@@ -70,12 +72,9 @@ import javax.mail.Folder
 import javax.mail.MessagingException
 import javax.mail.Multipart
 import javax.mail.Part
-import javax.mail.Session
 import javax.mail.Store
-import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimeMultipart
 
 /**
  * @author Denis Bondarenko
@@ -490,10 +489,17 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     if (accountEntity.useAPI) {
       if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
         val result = GmailApiHelper.executeWithResult {
-          val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(), accountEntity, messageEntity.uidAsHEX)
+          val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(),
+              accountEntity, messageEntity.uidAsHEX, null)
           msgSize = msgFullInfo.sizeEstimate
-          val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
-          MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+          val originalMsg = GmaiAPIMimeMessage(message = msgFullInfo)
+          if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            MsgsCacheManager.storeMsg(messageEntity.id.toString(), originalMsg)
+          } else {
+            val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
+            MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+          }
+
           Result.success(null)
         }
         if (result.status == Result.Status.SUCCESS) {
@@ -571,7 +577,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           val innerPart = getPart(innerMutlipart) ?: continue
           candidates.add(innerPart)
         } else {
-          if (isPartAllowed(item)) {
+          if (EmailUtil.isPartAllowed(item)) {
             candidates.add(MimeBodyPart(FetchingInputStream(item.mimeStream)))
           } else {
             if (item.size > 0) downloadedMsgSize += item.size
@@ -599,7 +605,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           val innerPart = getPart(item.content as Multipart)
           innerPart?.let { candidates.add(it) }
         } else {
-          if (isPartAllowed(item)) {
+          if (EmailUtil.isPartAllowed(item)) {
             candidates.add(MimeBodyPart(FetchingInputStream(item.mimeStream)))
           } else {
             if (item.size > 0) downloadedMsgSize += item.size
@@ -622,40 +628,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     bodyPart.setContent(newMultiPart)
 
     return bodyPart
-  }
-
-  private fun isPartAllowed(item: MimeBodyPart): Boolean {
-    var result = true
-    if (Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
-      result = false
-
-      //match allowed files
-      if (item.fileName in ALLOWED_FILE_NAMES) {
-        result = true
-      }
-
-      //match private keys
-      if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()) == true) {
-        result = true
-      }
-
-      //match public keys
-      if (item.fileName?.matches("(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()) == true) {
-        result = true
-      }
-
-      //allow download keys less than 100kb
-      if (FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 102400) {
-        result = true
-      }
-
-      //match signature
-      if (item.isMimeType("application/pgp-signature")) {
-        result = true
-      }
-    }
-
-    return result
   }
 
   private fun sendProgress() {
@@ -729,25 +701,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
       FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
     } catch (e: Exception) {
       e.printStackTrace()
-    }
-  }
-
-  /**
-   * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]
-   */
-  class CustomMimeMessage constructor(session: Session, rawHeaders: String?) : MimeMessage(session) {
-    init {
-      headers = InternetHeaders(ByteArrayInputStream(rawHeaders?.toByteArray() ?: "".toByteArray()))
-    }
-
-    fun setMessageId(msgId: String) {
-      setHeader("Message-ID", msgId)
-    }
-  }
-
-  class CustomMimeMultipart constructor(contentType: String) : MimeMultipart() {
-    init {
-      this.contentType = contentType
     }
   }
 
