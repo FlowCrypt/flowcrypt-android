@@ -298,7 +298,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
     newFolder?.let {
       msgsViewModel.switchFolder(
-          newFolder = it,
+          newFolder = it.copy(),
           forceClearFolderCache = isForceClearCacheNeeded,
           deleteAllMsgs = deleteAllMsgs)
     }

@@ -91,8 +91,15 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     liveData {
       cancelActionsForPreviousFolder()
       val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: ""
+
+      val label = if (localFolder.searchQuery.isNullOrEmpty()) {
+        localFolder.fullName
+      } else {
+        SearchMessagesActivity.SEARCH_FOLDER_NAME
+      }
+
       emitSource(
-          roomDatabase.msgDao().getMessagesDataSourceFactory(account, localFolder.fullName)
+          roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
               .toLiveData(
                   config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
                   boundaryCallback = boundaryCallback))
@@ -112,7 +119,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       if (it.status != Result.Status.SUCCESS) return@liveData
       val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: return@liveData
       val folder = foldersLiveData.value ?: return@liveData
-      emit(roomDatabase.msgDao().countSuspend(account, folder.fullName))
+      val label = if (folder.searchQuery.isNullOrEmpty()) {
+        folder.fullName
+      } else {
+        SearchMessagesActivity.SEARCH_FOLDER_NAME
+      }
+      emit(roomDatabase.msgDao().countSuspend(account, label))
     }
   }
 
