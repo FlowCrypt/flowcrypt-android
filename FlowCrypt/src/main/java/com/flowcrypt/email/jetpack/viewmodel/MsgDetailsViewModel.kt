@@ -492,7 +492,10 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(),
               accountEntity, messageEntity.uidAsHEX, null)
           msgSize = msgFullInfo.sizeEstimate
-          val originalMsg = GmaiAPIMimeMessage(message = msgFullInfo)
+          val originalMsg = GmaiAPIMimeMessage(
+              message = msgFullInfo,
+              context = getApplication(),
+              accountEntity = accountEntity)
           if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
             MsgsCacheManager.storeMsg(messageEntity.id.toString(), originalMsg)
           } else {

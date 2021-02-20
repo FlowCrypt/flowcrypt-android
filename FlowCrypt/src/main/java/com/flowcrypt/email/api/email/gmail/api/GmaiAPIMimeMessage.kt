@@ -5,13 +5,19 @@
 
 package com.flowcrypt.email.api.email.gmail.api
 
+import android.content.Context
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.javamail.CustomMimeBodyPart
 import com.flowcrypt.email.api.email.javamail.CustomMimeMultipart
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.rawMimeType
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
+import java.io.FilterInputStream
+import java.io.InputStream
 import java.util.*
 import javax.mail.Flags
 import javax.mail.Multipart
@@ -19,6 +25,7 @@ import javax.mail.Session
 import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
+import javax.mail.internet.SharedInputStream
 
 /**
  * @author Denis Bondarenko
@@ -26,8 +33,12 @@ import javax.mail.internet.MimeMessage
  *         Time: 3:12 PM
  *         E-mail: DenBond7@gmail.com
  */
-class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()), message: Message) : MimeMessage(session) {
+class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()),
+                         message: Message,
+                         private val context: Context? = null,
+                         private val accountEntity: AccountEntity? = null) : MimeMessage(session) {
   private val internalDate = Date(message.internalDate ?: System.currentTimeMillis())
+  private val msgId = message.id
 
   init {
     message.payload?.let { payload ->
@@ -63,7 +74,9 @@ class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()), m
         }
       } else {
         val generatedBodyPart = genMimeBodyPart(part)
-        parts.add(generatedBodyPart)
+        if (EmailUtil.isPartAllowed(generatedBodyPart)) {
+          parts.add(generatedBodyPart)
+        }
       }
     }
 
@@ -87,7 +100,17 @@ class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()), m
       headers.addHeader(header.name, header.value)
     }
 
-    return MimeBodyPart(headers, part.body.decodeData() ?: byteArrayOf())
+    return if (part.body?.attachmentId?.isNotEmpty() == true) {
+      if (context != null && accountEntity != null) {
+        val attInputStream = GmailApiHelper.getAttInputStream(context, accountEntity, msgId, part.body.attachmentId)
+        CustomMimeBodyPart(CustomSharedInputStream(attInputStream), headers)
+      } else MimeBodyPart(headers, byteArrayOf())
+    } else MimeBodyPart(headers, part.body.decodeData() ?: byteArrayOf())
+  }
+
+  class CustomSharedInputStream(inputStream: InputStream) : FilterInputStream(inputStream), SharedInputStream {
+    override fun getPosition(): Long = 0
+    override fun newStream(start: Long, end: Long) = this
   }
 
   override fun getReceivedDate(): Date {
