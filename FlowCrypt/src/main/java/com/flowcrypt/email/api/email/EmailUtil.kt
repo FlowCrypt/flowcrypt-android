@@ -28,7 +28,6 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -94,6 +93,25 @@ class EmailUtil {
   companion object {
     private const val PATTERN_FORWARDED_DATE = "EEE, MMM d, yyyy HH:mm:ss"
     private const val HTML_EMAIL_INTRO_TEMPLATE_HTM = "html/email_intro.template.htm"
+
+    private val ALLOWED_FILE_NAMES = arrayOf(
+        "PGPexch.htm.pgp",
+        "PGPMIME version identification",
+        "Version.txt",
+        "PGPMIME Versions Identification",
+        "signature.asc",
+        "msg.asc",
+        "message",
+        "message.asc",
+        "encrypted.asc",
+        "encrypted.eml.pgp",
+        "Message.pgp"
+    )
+
+    private val KEYS_EXTENSIONS = arrayOf(
+        "asc",
+        "key"
+    )
 
     /**
      * Generate an unique content id.
@@ -871,7 +889,7 @@ class EmailUtil {
         result = false
 
         //match allowed files
-        if (item.fileName in MsgDetailsViewModel.ALLOWED_FILE_NAMES) {
+        if (item.fileName in ALLOWED_FILE_NAMES) {
           result = true
         }
 
@@ -886,7 +904,7 @@ class EmailUtil {
         }
 
         //allow download keys less than 100kb
-        if (FilenameUtils.getExtension(item.fileName) in MsgDetailsViewModel.KEYS_EXTENSIONS && item.size < 102400) {
+        if (FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 102400) {
           result = true
         }
 

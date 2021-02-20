@@ -42,14 +42,20 @@ class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()),
 
   init {
     message.payload?.let { payload ->
+      var removeContentTransferEncoding = false
       generateMultipart(message)?.let { multipart ->
         setContent(multipart)
       } ?: message.payload?.body?.let { body ->
         setContent(body.decodeData(), message.payload.mimeType)
+        removeContentTransferEncoding = true
       }
 
       for (header in payload.headers ?: emptyList()) {
         setHeader(header.name, header.value)
+      }
+
+      if (removeContentTransferEncoding) {
+        removeHeader("Content-Transfer-Encoding")
       }
     }
 
@@ -102,10 +108,21 @@ class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()),
 
     return if (part.body?.attachmentId?.isNotEmpty() == true) {
       if (context != null && accountEntity != null) {
-        val attInputStream = GmailApiHelper.getAttInputStream(context, accountEntity, msgId, part.body.attachmentId)
+        //because we use users.messages.attachments.get that returns the body data of a MIME message part as a base64url encoded string
+        headers.setHeader("Content-Transfer-Encoding", "base64")
+        val attInputStream = GmailApiHelper.getAttInputStream(
+            context = context,
+            accountEntity = accountEntity,
+            msgId = msgId,
+            attId = part.body.attachmentId,
+            decodeBase64 = false)
         CustomMimeBodyPart(CustomSharedInputStream(attInputStream), headers)
       } else MimeBodyPart(headers, byteArrayOf())
-    } else MimeBodyPart(headers, part.body.decodeData() ?: byteArrayOf())
+    } else {
+      //because we use body.decodeData() that returns decoded base64url string
+      headers.removeHeader("Content-Transfer-Encoding")
+      MimeBodyPart(headers, part.body.decodeData() ?: byteArrayOf())
+    }
   }
 
   class CustomSharedInputStream(inputStream: InputStream) : FilterInputStream(inputStream), SharedInputStream {

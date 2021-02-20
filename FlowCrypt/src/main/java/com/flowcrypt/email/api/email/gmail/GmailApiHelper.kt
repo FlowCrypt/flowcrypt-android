@@ -759,7 +759,7 @@ class GmailApiHelper {
       }
     }
 
-    fun getAttInputStream(context: Context, accountEntity: AccountEntity, msgId: String, attId: String): InputStream {
+    fun getAttInputStream(context: Context, accountEntity: AccountEntity, msgId: String, attId: String, decodeBase64: Boolean = true): InputStream {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val request = gmailApiService
           .users()
@@ -769,7 +769,11 @@ class GmailApiHelper {
           .setPrettyPrint(false)
           .setFields("data")
 
-      return Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
+      return if (decodeBase64) {
+        Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
+      } else {
+        GMailRawAttachmentFilterInputStream(request.executeAsInputStream())
+      }
     }
 
     /**

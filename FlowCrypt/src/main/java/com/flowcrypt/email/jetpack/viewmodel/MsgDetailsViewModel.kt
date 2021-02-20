@@ -729,24 +729,5 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     private const val FILE_NAME_ENCRYPTED_MESSAGE = "temp_encrypted_msg.asc"
 
     private const val MIN_UPDATE_PROGRESS_INTERVAL = 500
-
-    val ALLOWED_FILE_NAMES = arrayOf(
-        "PGPexch.htm.pgp",
-        "PGPMIME version identification",
-        "Version.txt",
-        "PGPMIME Versions Identification",
-        "signature.asc",
-        "msg.asc",
-        "message",
-        "message.asc",
-        "encrypted.asc",
-        "encrypted.eml.pgp",
-        "Message.pgp"
-    )
-
-    val KEYS_EXTENSIONS = arrayOf(
-        "asc",
-        "key"
-    )
   }
 }
