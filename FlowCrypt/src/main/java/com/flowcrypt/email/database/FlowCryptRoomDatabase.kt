@@ -445,7 +445,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
      * Here we do preparation for https://github.com/FlowCrypt/flowcrypt-android/issues/932
      */
     @VisibleForTesting
-    private val MIGRATION_23_24 = object : Migration(23, 24) {
+    val MIGRATION_23_24 = object : Migration(23, 24) {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
