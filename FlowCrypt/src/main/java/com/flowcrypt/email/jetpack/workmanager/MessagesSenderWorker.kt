@@ -501,23 +501,20 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
         val sentLocalFolder = foldersManager.findSentFolder()
 
         if (sentLocalFolder != null) {
-          val sentRemoteFolder = store.getFolder(sentLocalFolder.fullName) as IMAPFolder
-
-          if (!sentRemoteFolder.exists()) {
-            throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
+          store.getFolder(sentLocalFolder.fullName).use { folder ->
+            val sentRemoteFolder = (folder as IMAPFolder).apply {
+              if (exists()) {
+                open(Folder.READ_WRITE)
+              } else throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
+            }
+            mimeMsg.setFlag(Flags.Flag.SEEN, true)
+            sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
+            return@withContext true
           }
-
-          sentRemoteFolder.open(Folder.READ_WRITE)
-          mimeMsg.setFlag(Flags.Flag.SEEN, true)
-          sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
-          sentRemoteFolder.close(false)
-          return@withContext true
-        } else {
-          throw CopyNotSavedInSentFolderException("An error occurred during saving a copy of the outgoing message. " +
-              "The SENT folder is not defined. Please contact the support: " +
-              applicationContext.getString(R.string.support_email) + "\n\nProvider: "
-              + account.email.substring(account.email.indexOf("@") + 1))
-        }
+        } else throw CopyNotSavedInSentFolderException("An error occurred during saving a copy of the outgoing message. " +
+            "The SENT folder is not defined. Please contact the support: " +
+            applicationContext.getString(R.string.support_email) + "\n\nProvider: "
+            + account.email.substring(account.email.indexOf("@") + 1))
       }
 
   /**

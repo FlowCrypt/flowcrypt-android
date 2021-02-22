@@ -308,11 +308,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         }
       } else {
         IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
-          try {
-            fetchAttachmentsInternal(accountEntity, store)
-          } catch (e: Exception) {
-            e.printStackTrace()
-          }
+          fetchAttachmentsInternal(accountEntity, store)
         }
       }
     }
@@ -664,30 +660,30 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   }
 
   private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
-    imapFolder.open(Folder.READ_ONLY)
     try {
-      val msg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage ?: return@withContext
+      store.getFolder(localFolder.fullName).use { folder ->
+        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+        val msg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
+            ?: return@withContext
 
-      val fetchProfile = FetchProfile()
-      fetchProfile.add(FetchProfile.Item.SIZE)
-      fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-      imapFolder.fetch(arrayOf(msg), fetchProfile)
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(FetchProfile.Item.SIZE)
+        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+        imapFolder.fetch(arrayOf(msg), fetchProfile)
 
-      val msgUid = messageEntity.uid
-      val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
-        AttachmentEntity.fromAttInfo(it.apply {
-          email = accountEntity.email
-          folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
-          uid = msgUid
-        })
+        val msgUid = messageEntity.uid
+        val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+          AttachmentEntity.fromAttInfo(it.apply {
+            email = accountEntity.email
+            this.folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+            uid = msgUid
+          })
+        }
+
+        FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
       }
-
-      FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
     } catch (e: Exception) {
       e.printStackTrace()
-    } finally {
-      imapFolder.close(false)
     }
   }
 
