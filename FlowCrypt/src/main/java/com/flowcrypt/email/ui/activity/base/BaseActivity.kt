@@ -251,6 +251,7 @@ abstract class BaseActivity : AppCompatActivity() {
           IdleService.restart(applicationContext)
           EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
         } else {
+          roomDatabase.contactsDao().deleteAll()
           stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
