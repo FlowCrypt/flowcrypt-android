@@ -8,7 +8,6 @@ package com.flowcrypt.email.database.entity
 import android.accounts.Account
 import android.os.Parcel
 import android.os.Parcelable
-import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
@@ -18,6 +17,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import java.util.*
 
@@ -103,7 +103,7 @@ data class AccountEntity constructor(
           uuid = uuid,
           domainRules = domainRules?.joinToString(),
           isRestoreAccessRequired = false,
-          useAPI = true
+          useAPI = FlavorSettings.isGMailAPIEnabled()
       )
 
   constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<String>? = null) :
