@@ -8,6 +8,7 @@ package com.flowcrypt.email.database.entity
 import android.accounts.Account
 import android.os.Parcel
 import android.os.Parcelable
+import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
