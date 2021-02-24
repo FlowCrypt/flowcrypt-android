@@ -14,12 +14,14 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Store
@@ -35,28 +37,61 @@ class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWor
     emptyTrash(accountEntity, store)
   }
 
-  private suspend fun emptyTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
-    val trash = foldersManager.folderTrash ?: return@withContext
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+    emptyTrash(accountEntity)
+  }
 
-    store.getFolder(trash.fullName).use { folder ->
-      val remoteTrashFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-      val msgs = remoteTrashFolder.messages
-
-      if (msgs.isNotEmpty()) {
-        roomDatabase.msgDao().changeMsgsStateSuspend(account.email, trash.fullName, MessageState.PENDING_EMPTY_TRASH.value)
-        try {
-          remoteTrashFolder.setFlags(msgs, Flags(Flags.Flag.DELETED), true)
-        } catch (e: Exception) {
-          roomDatabase.msgDao().changeMsgsStateSuspend(account.email, trash.fullName)
-          throw e
+  private suspend fun emptyTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
+    emptyTrashInternal(account) { folderName ->
+      roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
+      try {
+        executeGMailAPICall(applicationContext) {
+          val msgs = GmailApiHelper.loadTrashMsgs(applicationContext, account)
+          if (msgs.isNotEmpty()) {
+            GmailApiHelper.deleteMsgsPermanently(applicationContext, account, msgs.map { it.id })
+            //need to wait while the Gmail server will update labels
+            delay(2000)
+          }
         }
+      } catch (e: Exception) {
+        roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName)
+        throw e
+      }
 
-        val candidatesForDeleting = roomDatabase.msgDao().getMsgsSuspend(account.email, trash.fullName)
-        roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsSuspend(account.email, folderName)
+      roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
+    }
+  }
+
+
+  private suspend fun emptyTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    emptyTrashInternal(account) { folderName ->
+      store.getFolder(folderName).use { folder ->
+        val remoteTrashFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+        val msgs = remoteTrashFolder.messages
+
+        if (msgs.isNotEmpty()) {
+          roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
+          try {
+            remoteTrashFolder.setFlags(msgs, Flags(Flags.Flag.DELETED), true)
+          } catch (e: Exception) {
+            roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName)
+            throw e
+          }
+
+          val candidatesForDeleting = roomDatabase.msgDao().getMsgsSuspend(account.email, folderName)
+          roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
+        }
       }
     }
+  }
+
+  private suspend fun emptyTrashInternal(account: AccountEntity,
+                                         action: suspend (folderName: String) -> Unit) = withContext(Dispatchers.IO)
+  {
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+    val trash = foldersManager.folderTrash ?: return@withContext
+    action.invoke(trash.fullName)
   }
 
   companion object {

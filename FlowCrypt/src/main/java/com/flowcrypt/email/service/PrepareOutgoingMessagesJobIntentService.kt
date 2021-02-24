@@ -115,7 +115,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
       if (newMsgId > 0) {
-        updateOutgoingMsgCount(email, roomDatabase)
+        updateOutgoingMsgCount(email, accountEntity.accountType, roomDatabase)
 
         val hasAtts = outgoingMsgInfo.atts?.isNotEmpty() == true
             || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
@@ -180,7 +180,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     }
 
     if (newMsgId > 0) {
-      updateOutgoingMsgCount(email, roomDatabase)
+      updateOutgoingMsgCount(email, accountEntity.accountType, roomDatabase)
     }
   }
 
@@ -194,12 +194,12 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     return attsCacheDir
   }
 
-  private fun updateOutgoingMsgCount(email: String, roomDatabase: FlowCryptRoomDatabase) {
+  private fun updateOutgoingMsgCount(email: String, accountType: String?, roomDatabase: FlowCryptRoomDatabase) {
     val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgs(email).size
-    val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
+    val outboxLabel = roomDatabase.labelDao().getLabel(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {
-      roomDatabase.labelDao().update(it.copy(msgsCount = outgoingMsgCount))
+      roomDatabase.labelDao().update(it.copy(messagesTotal = outgoingMsgCount))
     }
   }
 
@@ -234,7 +234,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         it.apply {
           this.email = accountEntity.email
           this.folder = JavaEmailConstants.FOLDER_OUTBOX
-          this.uid = uid.toInt()
+          this.uid = uid
         }
       }
 
@@ -317,11 +317,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         }
 
         if (att.isEncryptionAllowed && msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid.toInt())
+          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid)
           encryptedAtt.name = encryptedAtt.name + Constants.PGP_FILE_EXT
           cachedAtts.add(encryptedAtt)
         } else {
-          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid.toInt()))
+          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid))
         }
       }
     }

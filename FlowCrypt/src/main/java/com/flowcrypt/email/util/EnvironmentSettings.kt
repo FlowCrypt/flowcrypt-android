@@ -16,4 +16,5 @@ import java.util.*
 interface EnvironmentSettings {
   fun sslTrustedDomains(): List<String>
   fun getFlavorPropertiesForSession(): Properties
+  fun isGMailAPIEnabled(): Boolean
 }

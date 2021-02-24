@@ -40,16 +40,20 @@ data class LocalFolder constructor(val account: String,
 
   constructor(source: LabelEntity) : this(
       source.email,
-      source.folderName,
-      source.folderAlias,
+      source.name,
+      source.alias,
       source.attributesList,
-      source.isCustomLabel ?: false,
-      source.msgsCount ?: 0,
+      source.isCustom,
+      source.messagesTotal,
       null
   )
 
   fun isOutbox(): Boolean {
     return JavaEmailConstants.FOLDER_OUTBOX.equals(fullName, ignoreCase = true)
+  }
+
+  fun isAll(): Boolean {
+    return JavaEmailConstants.FOLDER_ALL_MAIL.equals(fullName, ignoreCase = true)
   }
 
   fun getFolderType(): FoldersManager.FolderType? {

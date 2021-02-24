@@ -52,8 +52,11 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
             AccountAlreadyAddedException(context.getString(R.string.template_email_alredy_added, accountEntity.email))))
       } else {
         checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.connection)))
-        val result = checkAuthCreds(accountEntity)
-        checkEmailSettingsLiveData.postValue(result)
+        try {
+          checkEmailSettingsLiveData.postValue(checkAuthCreds(accountEntity))
+        } catch (e: Exception) {
+          checkEmailSettingsLiveData.postValue(Result.exception(e))
+        }
       }
     }
   }
@@ -112,11 +115,11 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
    * @throws MessagingException This operation can throw some exception.
    */
   private fun testImapConn(accountEntity: AccountEntity, authCreds: AuthCredentials, session: Session) {
-    val store = OpenStoreHelper.openStore(accountEntity, authCreds, session)
-    val folder = store.getFolder(JavaEmailConstants.FOLDER_INBOX)
-    folder.open(Folder.READ_ONLY)
-    folder.close(false)
-    store.close()
+    OpenStoreHelper.openStore(accountEntity, authCreds, session).use { store ->
+      store.getFolder(JavaEmailConstants.FOLDER_INBOX).use {
+        it.open(Folder.READ_ONLY)
+      }
+    }
   }
 
   /**

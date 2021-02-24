@@ -30,6 +30,15 @@ abstract class CustomNotificationManager(protected var context: Context) {
   abstract val groupId: Int
 
   /**
+   * Cancel a notification with the given tag.
+   *
+   * @param tag the string identifier of the notification.
+   */
+  fun cancel(tag: String) {
+    cancel(tag, -1)
+  }
+
+  /**
    * Cancel a previously shown notification.
    *
    * @param notificationId the ID of the notification

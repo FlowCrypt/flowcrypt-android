@@ -64,6 +64,7 @@ class Constants {
     const val PREF_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed"
     const val PREF_KEY_BACKUPS = "pref_key_backups"
     const val PREF_KEY_INSTALL_VERSION = "pref_key_install_version"
+    const val PREF_KEY_SERVER_SETTINGS = "pref_key_server_settings"
 
     /**
      * The max total size off all attachment which can be send via the app.
