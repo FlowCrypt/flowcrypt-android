@@ -49,7 +49,7 @@ object ExceptionResolver {
 
     if (e is UserRecoverableAuthException) {
       if ("BadAuthentication" == e.message) {
-        ExceptionUtil.handleError(e)
+        return true
       }
     }
 

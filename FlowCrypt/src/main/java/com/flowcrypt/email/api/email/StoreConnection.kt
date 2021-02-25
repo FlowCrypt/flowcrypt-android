@@ -45,7 +45,7 @@ interface StoreConnection {
   /**
    * That's a helper method that helps execute some code and returns [Result]
    */
-  suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T>
+  suspend fun <T> executeWithResult(action: suspend (store: Store) -> Result<T>): Result<T>
 
   @WorkerThread
   suspend fun executeIMAPAction(action: suspend (store: Store) -> Unit)

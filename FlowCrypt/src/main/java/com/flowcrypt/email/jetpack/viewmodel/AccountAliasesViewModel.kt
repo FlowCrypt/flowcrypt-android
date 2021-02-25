@@ -33,8 +33,7 @@ import kotlin.collections.ArrayList
 class AccountAliasesViewModel(application: Application) : AccountViewModel(application) {
 
   val accountAliasesLiveData: LiveData<List<AccountAliasesEntity>> = Transformations.switchMap(activeAccountLiveData) {
-    val account = it?.email ?: ""
-    roomDatabase.accountAliasesDao().getAliasesLD(account)
+    roomDatabase.accountAliasesDao().getAliasesLD(it?.email ?: "", it?.accountType ?: "")
   }
 
   private val freshAccountAliasesLiveData: LiveData<Collection<AccountAliasesEntity>> = Transformations
@@ -50,7 +49,7 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
   fun fetchUpdates(lifecycleOwner: LifecycleOwner) {
     freshAccountAliasesLiveData.observe(lifecycleOwner, Observer { freshAliases ->
       viewModelScope.launch {
-        roomDatabase.accountAliasesDao().updateAliases(activeAccountLiveData.value?.email, freshAliases)
+        roomDatabase.accountAliasesDao().updateAliases(activeAccountLiveData.value, freshAliases)
       }
     })
   }

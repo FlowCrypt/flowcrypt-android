@@ -72,7 +72,7 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
 
     LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "idle: attempt = $attempt")
     store.use {
-      val foldersManager = FoldersManager.fromDatabase(context, accountEntity.email)
+      val foldersManager = FoldersManager.fromDatabase(context, accountEntity)
       val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@use
 
       try {

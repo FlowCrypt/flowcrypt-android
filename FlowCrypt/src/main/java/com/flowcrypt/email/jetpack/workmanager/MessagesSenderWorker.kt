@@ -42,10 +42,10 @@ import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.CopyNotSavedInSentFolderException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
+import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.google.api.services.gmail.Gmail
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +61,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.net.SocketException
 import java.nio.charset.StandardCharsets
+import java.util.*
 import javax.activation.DataHandler
 import javax.activation.DataSource
 import javax.mail.AuthenticationFailedException
@@ -78,6 +79,7 @@ import javax.net.ssl.SSLException
 
 /**
  * @author Denis Bondarenko
+ *
  * Date: 11.09.2018
  * Time: 18:43
  * E-mail: DenBond7@gmail.com
@@ -110,14 +112,26 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
             setForeground(genForegroundInfo(account))
 
-            val session = OpenStoreHelper.getAccountSess(applicationContext, account)
-            OpenStoreHelper.openStore(applicationContext, account, session).use { store ->
-              if (!CollectionUtils.isEmpty(queuedMsgs)) {
-                sendQueuedMsgs(account, session, store, attsCacheDir)
-              }
+            if (account.useAPI) {
+              when (account.accountType) {
+                AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+                  if (!CollectionUtils.isEmpty(queuedMsgs)) {
+                    sendQueuedMsgs(account, attsCacheDir)
+                  }
+                }
 
-              if (!CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
-                saveCopyOfAlreadySentMsgs(account, session, store, attsCacheDir)
+                else -> throw ManualHandledException("Unsupported provider")
+              }
+            } else {
+              val session = OpenStoreHelper.getAccountSess(applicationContext, account)
+              OpenStoreHelper.openStore(applicationContext, account, session).use { store ->
+                if (!CollectionUtils.isEmpty(queuedMsgs)) {
+                  sendQueuedMsgs(account, attsCacheDir, session, store)
+                }
+
+                if (!CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
+                  saveCopyOfAlreadySentMsgs(account, session, store, attsCacheDir)
+                }
               }
             }
           }
@@ -171,7 +185,8 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
     return ForegroundInfo(NOTIFICATION_ID, notification)
   }
 
-  private suspend fun sendQueuedMsgs(account: AccountEntity, sess: Session, store: Store, attsCacheDir: File) =
+  private suspend fun sendQueuedMsgs(account: AccountEntity, attsCacheDir: File, sess: Session? =
+      null, store: Store? = null) =
       withContext(Dispatchers.IO) {
         var list: List<MessageEntity>
         var lastMsgUID = 0L
@@ -227,10 +242,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
               }
 
               val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(email).size
-              val outboxLabel = roomDatabase.labelDao().getLabelSuspend(email, JavaEmailConstants.FOLDER_OUTBOX)
+              val outboxLabel = roomDatabase.labelDao().getLabelSuspend(email, account.accountType, JavaEmailConstants.FOLDER_OUTBOX)
 
               outboxLabel?.let {
-                roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
+                roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
               }
             }
           } catch (e: Exception) {
@@ -357,14 +372,16 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
         details.attachmentsDirectory?.let { FileAndDirectoryUtils.deleteDir(File(attsCacheDir, it)) }
       }
 
-  private suspend fun sendMsg(account: AccountEntity, msgEntity: MessageEntity, atts: List<AttachmentEntity>, sess: Session, store: Store): Boolean =
+  private suspend fun sendMsg(account: AccountEntity, msgEntity: MessageEntity,
+                              atts: List<AttachmentEntity>, sess: Session?, store: Store?): Boolean =
       withContext(Dispatchers.IO) {
         val mimeMsg = createMimeMsg(sess, msgEntity, atts)
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
         when (account.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            if (account.email.equals(msgEntity.from.firstOrNull()?.address, ignoreCase = true)) {
+            if (!account.useAPI && account.email.equals(msgEntity.from.firstOrNull()?.address, ignoreCase = true)) {
+              sess ?: throw NullPointerException("Session == null")
               val transport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
               transport.sendMessage(mimeMsg, mimeMsg.allRecipients)
             } else {
@@ -372,17 +389,17 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
               val outputStream = ByteArrayOutputStream()
               mimeMsg.writeTo(outputStream)
 
-              var threadId: String? = null
-              val replyMsgId = mimeMsg.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null)
-
-              if (!TextUtils.isEmpty(replyMsgId)) {
-                threadId = getGmailMsgThreadID(gmail, replyMsgId)
+              val threadId = msgEntity.threadId ?: mimeMsg.getHeader(
+                  JavaEmailConstants.HEADER_IN_REPLY_TO, null)?.let { replyMsgId ->
+                GmailApiHelper.executeWithResult {
+                  com.flowcrypt.email.api.retrofit.response.base.Result.success(GmailApiHelper
+                      .getGmailMsgThreadID(gmail, replyMsgId))
+                }.data
               }
 
-              var sentMsg = com.google.api.services.gmail.model.Message()
-              sentMsg.raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
-              if (!TextUtils.isEmpty(threadId)) {
-                sentMsg.threadId = threadId
+              var sentMsg = com.google.api.services.gmail.model.Message().apply {
+                raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+                this.threadId = threadId
               }
 
               sentMsg = gmail
@@ -401,16 +418,19 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           }
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
+            sess ?: throw NullPointerException("Session == null")
             val outlookTransport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
             outlookTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
             roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENT.value))
           }
 
           else -> {
+            sess ?: throw NullPointerException("Session == null")
             val defaultTransport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
             defaultTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
             roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
 
+            store ?: throw NullPointerException("Store == null")
             if (saveCopyOfSentMsg(account, store, mimeMsg)) {
               roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENT.value))
             }
@@ -469,29 +489,6 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
   }
 
   /**
-   * Retrieve a Gmail message thread id.
-   *
-   * @param service          A [Gmail] reference.
-   * @param rfc822msgidValue An rfc822 Message-Id value of the input message.
-   * @return The input message thread id.
-   * @throws IOException
-   */
-  private suspend fun getGmailMsgThreadID(service: Gmail, rfc822msgidValue: String): String? =
-      withContext(Dispatchers.IO) {
-        val response = service
-            .users()
-            .messages()
-            .list(GmailApiHelper.DEFAULT_USER_ID)
-            .setQ("rfc822msgid:$rfc822msgidValue")
-            .execute()
-
-        return@withContext if (response.messages != null && response.messages.size == 1) {
-          response.messages[0].threadId
-        } else null
-
-      }
-
-  /**
    * Save a copy of the sent message to the account SENT folder.
    *
    * @param account The object which contains information about an email account.
@@ -500,27 +497,24 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
    */
   private suspend fun saveCopyOfSentMsg(account: AccountEntity, store: Store, mimeMsg: MimeMessage): Boolean =
       withContext(Dispatchers.IO) {
-        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
+        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
         val sentLocalFolder = foldersManager.findSentFolder()
 
         if (sentLocalFolder != null) {
-          val sentRemoteFolder = store.getFolder(sentLocalFolder.fullName) as IMAPFolder
-
-          if (!sentRemoteFolder.exists()) {
-            throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
+          store.getFolder(sentLocalFolder.fullName).use { folder ->
+            val sentRemoteFolder = (folder as IMAPFolder).apply {
+              if (exists()) {
+                open(Folder.READ_WRITE)
+              } else throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
+            }
+            mimeMsg.setFlag(Flags.Flag.SEEN, true)
+            sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
+            return@withContext true
           }
-
-          sentRemoteFolder.open(Folder.READ_WRITE)
-          mimeMsg.setFlag(Flags.Flag.SEEN, true)
-          sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
-          sentRemoteFolder.close(false)
-          return@withContext true
-        } else {
-          throw CopyNotSavedInSentFolderException("An error occurred during saving a copy of the outgoing message. " +
-              "The SENT folder is not defined. Please contact the support: " +
-              applicationContext.getString(R.string.support_email) + "\n\nProvider: "
-              + account.email.substring(account.email.indexOf("@") + 1))
-        }
+        } else throw CopyNotSavedInSentFolderException("An error occurred during saving a copy of the outgoing message. " +
+            "The SENT folder is not defined. Please contact the support: " +
+            applicationContext.getString(R.string.support_email) + "\n\nProvider: "
+            + account.email.substring(account.email.indexOf("@") + 1))
       }
 
   /**

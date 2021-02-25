@@ -106,13 +106,13 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
     }
   }
 
-  override suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
+  override suspend fun <T> executeWithResult(action: suspend (store: Store) -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
     return@withContext try {
       if (!isConnected()) {
         connect()
       }
 
-      action.invoke()
+      action.invoke(store)
     } catch (e: Exception) {
       when (val exception = processException(e)) {
         is CommonConnectionException -> Result.exception(exception)

@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
+import com.flowcrypt.email.database.dao.BaseDao.Companion.getEntitiesViaStepsSuspend
 import com.flowcrypt.email.database.entity.MessageEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -141,6 +142,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getLastUIDOfMsgForLabel(account: String?, folder: String?): Int
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY uid DESC LIMIT 1")
+  abstract suspend fun getNewestMsg(account: String?, folder: String?): MessageEntity?
+
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract suspend fun getLastUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int?
 
@@ -242,6 +246,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("DELETE FROM messages WHERE email = :email")
   abstract suspend fun deleteByEmailSuspend(email: String?): Int
 
+  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :label")
+  abstract suspend fun getMsgsCount(account: String, label: String): Int
+
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     doOperationViaSteps(list = ArrayList(msgsUID)) { stepUIDs: Collection<Long> ->
@@ -339,6 +346,12 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   open suspend fun setOldStatus(email: String?, label: String?, uidList: List<Long>) = withContext(Dispatchers.IO) {
     doOperationViaStepsSuspend(list = uidList) { stepUIDs: Collection<Long> ->
       markMsgsAsOld(email, label, stepUIDs)
+    }
+  }
+
+  open suspend fun getMsgsByUIDs(email: String, label: String, uidList: List<Long>): List<MessageEntity> = withContext(Dispatchers.IO) {
+    return@withContext getEntitiesViaStepsSuspend(list = uidList) { stepUIDs: Collection<Long> ->
+      getMsgsByUids(email, label, stepUIDs)
     }
   }
 

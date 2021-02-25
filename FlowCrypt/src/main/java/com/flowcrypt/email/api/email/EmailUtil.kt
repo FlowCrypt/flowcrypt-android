@@ -12,7 +12,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.TextUtils
-import android.util.Base64
 import android.util.SparseArray
 import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
@@ -22,28 +21,24 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeEncryptException
-import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
-import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.gms.security.ProviderInstaller
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.iap.Argument
@@ -56,8 +51,8 @@ import com.sun.mail.imap.protocol.UIDSet
 import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
-import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -76,8 +71,14 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
+import javax.mail.search.AndTerm
 import javax.mail.search.BodyTerm
+import javax.mail.search.FromStringTerm
+import javax.mail.search.OrTerm
+import javax.mail.search.RecipientStringTerm
 import javax.mail.search.SearchTerm
+import javax.mail.search.StringTerm
+import javax.mail.search.SubjectTerm
 import javax.mail.util.ByteArrayDataSource
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -92,6 +93,25 @@ class EmailUtil {
   companion object {
     private const val PATTERN_FORWARDED_DATE = "EEE, MMM d, yyyy HH:mm:ss"
     private const val HTML_EMAIL_INTRO_TEMPLATE_HTM = "html/email_intro.template.htm"
+
+    private val ALLOWED_FILE_NAMES = arrayOf(
+        "PGPexch.htm.pgp",
+        "PGPMIME version identification",
+        "Version.txt",
+        "PGPMIME Versions Identification",
+        "signature.asc",
+        "msg.asc",
+        "message",
+        "message.asc",
+        "encrypted.asc",
+        "encrypted.eml.pgp",
+        "Message.pgp"
+    )
+
+    private val KEYS_EXTENSIONS = arrayOf(
+        "asc",
+        "key"
+    )
 
     /**
      * Generate an unique content id.
@@ -267,7 +287,6 @@ class EmailUtil {
      */
     fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
       val account: Account = accountEntity.account
-          ?: throw NullPointerException("Account can't be a null!")
 
       return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
     }
@@ -282,82 +301,6 @@ class EmailUtil {
       return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(
           PreferenceManager.getDefaultSharedPreferences(context.applicationContext),
           Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED, BuildConfig.IS_MAIL_DEBUG_ENABLED)
-    }
-
-    /**
-     * Get a list of [NodeKeyDetails] using the **Gmail API**
-     *
-     * @param context context Interface to global information about an application environment;
-     * @param account An [AccountEntity] object.
-     * @return A list of [NodeKeyDetails]
-     * @throws MessagingException
-     * @throws IOException
-     */
-    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity): MutableCollection<NodeKeyDetails> {
-      try {
-        val list = mutableListOf<NodeKeyDetails>()
-
-        val searchQuery = NodeCallsExecutor.getGmailBackupSearch(account.email)
-        val gmailApiService = GmailApiHelper.generateGmailApiService(context, account)
-
-        var response = gmailApiService
-            .users()
-            .messages()
-            .list(GmailApiHelper.DEFAULT_USER_ID)
-            .setQ(searchQuery)
-            .execute()
-
-        val msgs = mutableListOf<com.google.api.services.gmail.model.Message>()
-
-        //Try to load all backups
-        while (response.messages != null) {
-          msgs.addAll(response.messages)
-          if (response.nextPageToken != null) {
-            response = gmailApiService
-                .users()
-                .messages()
-                .list(GmailApiHelper.DEFAULT_USER_ID)
-                .setQ(searchQuery)
-                .setPageToken(response.nextPageToken)
-                .execute()
-          } else {
-            break
-          }
-        }
-
-        for (origMsg in msgs) {
-          val message = gmailApiService
-              .users()
-              .messages()
-              .get(GmailApiHelper.DEFAULT_USER_ID, origMsg.id)
-              .setFormat(GmailApiHelper.MESSAGE_RESPONSE_FORMAT_RAW)
-              .execute()
-
-          val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
-          val msg = MimeMessage(Session.getInstance(Properties()), stream)
-          val backup = getKeyFromMimeMsg(msg)
-
-          if (TextUtils.isEmpty(backup)) {
-            continue
-          }
-
-          try {
-            list.addAll(NodeCallsExecutor.parseKeys(backup))
-          } catch (e: NodeException) {
-            e.printStackTrace()
-            ExceptionUtil.handleError(e)
-          }
-
-        }
-
-        return list
-      } catch (e: UserRecoverableAuthIOException) {
-        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
-        throw e
-      } catch (e: UserRecoverableAuthException) {
-        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
-        throw e
-      }
     }
 
     /**
@@ -650,7 +593,7 @@ class EmailUtil {
               val body = response.getItem(BODY::class.java)
               if (body != null && body.byteArrayInputStream != null) {
                 val rawMsg = ASCIIUtility.toString(body.byteArrayInputStream)
-                hashMap[uid.uid] = rawMsg.contains("-----BEGIN PGP MESSAGE-----")
+                hashMap[uid.uid] = hasEncryptedData(rawMsg)
               }
             }
           }
@@ -663,6 +606,8 @@ class EmailUtil {
       } as HashMap<Long, Boolean>
     }
 
+    fun hasEncryptedData(rawMsg: String) = rawMsg.contains("-----BEGIN PGP MESSAGE-----")
+
     /**
      * Generate a [SearchTerm] for encrypted messages which depends on an input [AccountEntity].
      *
@@ -671,8 +616,7 @@ class EmailUtil {
      */
     fun genEncryptedMsgsSearchTerm(account: AccountEntity): SearchTerm {
       return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
-        GmailRawSearchTerm(
-            "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg")
+        GmailRawSearchTerm(GmailApiHelper.PATTERN_SEARCH_ENCRYPTED_MESSAGES)
       } else {
         BodyTerm("-----BEGIN PGP MESSAGE-----")
       }
@@ -904,6 +848,84 @@ class EmailUtil {
       } catch (e: GooglePlayServicesNotAvailableException) {
         e.printStackTrace()
       }
+    }
+
+    /**
+     * Generate a [SearchTerm] depend on an input [AccountEntity].
+     *
+     * @param account An input [AccountEntity]
+     * @return A generated [SearchTerm].
+     */
+    fun generateSearchTerm(account: AccountEntity, localFolder: LocalFolder): SearchTerm {
+      val isEncryptedModeEnabled = account.isShowOnlyEncrypted
+
+      if (isEncryptedModeEnabled == true) {
+        val searchTerm = genEncryptedMsgsSearchTerm(account)
+
+        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+          val stringTerm = searchTerm as StringTerm
+          GmailRawSearchTerm(localFolder.searchQuery + " AND (" + stringTerm.pattern + ")")
+        } else {
+          AndTerm(searchTerm, generateNonGmailSearchTerm(localFolder))
+        }
+      } else {
+        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+          GmailRawSearchTerm(localFolder.searchQuery)
+        } else {
+          generateNonGmailSearchTerm(localFolder)
+        }
+      }
+    }
+
+    /**
+     * Check is the given [MimeBodyPart] allowed for downloading
+     *
+     * @param item the given [MimeBodyPart] that will be analysed
+     * @return true if the given part is allowed, otherwise - false
+     */
+    fun isPartAllowed(item: MimeBodyPart): Boolean {
+      var result = true
+      if (Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+        result = false
+
+        //match allowed files
+        if (item.fileName in ALLOWED_FILE_NAMES) {
+          result = true
+        }
+
+        //match private keys
+        if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()) == true) {
+          result = true
+        }
+
+        //match public keys
+        if (item.fileName?.matches("(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()) == true) {
+          result = true
+        }
+
+        //allow download keys less than 100kb
+        if (FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 102400) {
+          result = true
+        }
+
+        //match signature
+        if (item.isMimeType("application/pgp-signature")) {
+          result = true
+        }
+      }
+
+      return result
+    }
+
+    private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
+      return OrTerm(arrayOf(
+          SubjectTerm(localFolder.searchQuery),
+          BodyTerm(localFolder.searchQuery),
+          FromStringTerm(localFolder.searchQuery),
+          RecipientStringTerm(Message.RecipientType.TO, localFolder.searchQuery),
+          RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
+          RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
+      ))
     }
   }
 }

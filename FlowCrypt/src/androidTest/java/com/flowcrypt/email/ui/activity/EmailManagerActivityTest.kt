@@ -24,6 +24,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -86,6 +87,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testRunMsgDetailsActivity() {
     //need to add some timeout while database will be updated
     Thread.sleep(1000)
@@ -93,6 +95,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testForceLoadMsgs() {
     //need to add some timeout while database will be updated
     Thread.sleep(1000)
@@ -157,7 +160,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @CICandidateAnnotation
   fun testShowAnotherAccounts() {
     onView(withId(R.id.drawer_layout))
         .perform(open())
