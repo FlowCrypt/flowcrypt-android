@@ -125,6 +125,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     updateLabels()
+    loadContactsIfNeeded()
     IdleService.bind(this, idleServiceConnection)
     initViews()
     setupLabelsViewModel()
@@ -244,7 +245,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       else -> {
         itemEmptyTrash.isVisible = currentFolder?.getFolderType() == FoldersManager.FolderType.TRASH
-        itemSwitch.isVisible = true
+        itemSwitch.isVisible = activeAccount?.useAPI != true
         itemSearch.isVisible = true
         itemForceSending.isVisible = false
         itemForceSending.isEnabled = isForceSendingEnabled

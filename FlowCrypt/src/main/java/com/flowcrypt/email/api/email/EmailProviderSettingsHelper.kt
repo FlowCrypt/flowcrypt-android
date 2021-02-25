@@ -80,7 +80,7 @@ object EmailProviderSettingsHelper {
     }
   }
 
-  fun getBaseSettingsForProvider(email: String, provider: OAuth2Helper.Provider): AuthCredentials? {
+  fun getBaseSettingsForProvider(email: String, provider: OAuth2Helper.Provider): AuthCredentials {
     return when (provider) {
       OAuth2Helper.Provider.MICROSOFT -> getOutlookSettings(email, "")
     }
@@ -182,8 +182,8 @@ object EmailProviderSettingsHelper {
         username = email,
         password = password,
         imapServer = IMAP_SERVER_TESTS,
-        imapPort = JavaEmailConstants.DEFAULT_IMAP_PORT,
-        imapOpt = SecurityType.Option.STARTLS,
+        imapPort = JavaEmailConstants.SSL_IMAP_PORT,
+        imapOpt = SecurityType.Option.SSL_TLS,
         smtpServer = SMTP_SERVER_TESTS,
         smtpPort = JavaEmailConstants.STARTTLS_SMTP_PORT,
         smtpOpt = SecurityType.Option.STARTLS,

@@ -23,6 +23,7 @@ import java.security.GeneralSecurityException
 import java.security.Key
 import java.security.KeyStore
 import java.security.PrivateKey
+import java.util.concurrent.CountDownLatch
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
@@ -48,52 +49,37 @@ class CryptoMigrationUtil {
     }
   }
 
-  companion object {
-    private const val SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16
-    private const val PREFERENCE_KEY_SECRET = "preference_key_secret"
-    private const val TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING = "RSA/ECB/PKCS1Padding"
-    private const val TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding"
-    private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
-    private const val ANDROID_KEY_STORE_RSA_ALIAS = "flowcrypt_main"
-
-    /**
-     * Here we check is "flowcrypt_main" alias exist in AndroidKeyStore. If yes we do the
-     * following steps:
-     *  * Get the RSA private key from AndroidKeyStore
-     *  * Decrypt the AES private key using the RSA private key
-     *  * Decrypt Node certs via the AES private key and encrypt it via [KeyStoreCryptoManager.encrypt]
-     *  * Decrypt private keys and their passphrases via the AES private key and encrypt them via [KeyStoreCryptoManager.encrypt]
-     *  * Decrypt account passwords and uuid via the AES private key and encrypt this info via [KeyStoreCryptoManager.encrypt]
-     *  * Remove "flowcrypt_main" alias from AndroidKeyStore
-     */
-    fun doMigrationIfNeeded(context: Context) {
-      val globalContext = context.applicationContext
+  class MigrationWorker(private val context: Context, private val countDownLatch: CountDownLatch) : Runnable {
+    override fun run() {
       val keyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE)
       keyStore.load(null)
 
-      val isOldLogicUsed = keyStore.containsAlias(ANDROID_KEY_STORE_RSA_ALIAS)
+      try {
+        //We need to do that to force updating the local database if we have some migrations
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+        roomDatabase.accountDao().getAccounts()
 
-      if (isOldLogicUsed) {
-        try {
-          val privateKey = keyStore.getKey(ANDROID_KEY_STORE_RSA_ALIAS, null) as PrivateKey
-          val encryptedSecretKey = getSecretKeyFromSharedPreferences(context)
-          val decryptedSecretKey = decryptWithRSA(context, encryptedSecretKey, privateKey)
-          val secretKey = SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), KeyProperties.KEY_ALGORITHM_AES)
+        //now we work with updated database
+        val privateKey = keyStore.getKey(ANDROID_KEY_STORE_RSA_ALIAS, null) as PrivateKey
+        val encryptedSecretKey = getSecretKeyFromSharedPreferences(context)
+        val decryptedSecretKey = decryptWithRSA(context, encryptedSecretKey, privateKey)
+        val secretKey = SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), KeyProperties.KEY_ALGORITHM_AES)
 
-          val databaseOpenHelper = FlowCryptSQLiteOpenHelper(globalContext)
-          val database = databaseOpenHelper.writableDatabase
+        val databaseOpenHelper = FlowCryptSQLiteOpenHelper(context)
+        val database = databaseOpenHelper.writableDatabase
 
-          updateKeysUsage(database, secretKey)
-          updateAccountsUsage(globalContext, database, privateKey)
+        updateKeysUsage(database, secretKey)
+        updateAccountsUsage(context, database, privateKey)
 
-          databaseOpenHelper.close()
+        databaseOpenHelper.close()
 
-          keyStore.deleteEntry(ANDROID_KEY_STORE_RSA_ALIAS)
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-        }
+        keyStore.deleteEntry(ANDROID_KEY_STORE_RSA_ALIAS)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
       }
+
+      countDownLatch.countDown()
     }
 
     private fun updateKeysUsage(db: SQLiteDatabase, secretKey: SecretKeySpec) {
@@ -284,6 +270,39 @@ class CryptoMigrationUtil {
       } else {
         throw IllegalArgumentException("The rawString must be equals or longer then " +
             SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes")
+      }
+    }
+
+    companion object {
+      private const val SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16
+      private const val PREFERENCE_KEY_SECRET = "preference_key_secret"
+      private const val TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING = "RSA/ECB/PKCS1Padding"
+      private const val TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding"
+    }
+  }
+
+  companion object {
+    private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
+    private const val ANDROID_KEY_STORE_RSA_ALIAS = "flowcrypt_main"
+
+    /**
+     * Here we check is "flowcrypt_main" alias exist in AndroidKeyStore. If yes we do the
+     * following steps:
+     *  * Get the RSA private key from AndroidKeyStore
+     *  * Decrypt the AES private key using the RSA private key
+     *  * Decrypt Node certs via the AES private key and encrypt it via [KeyStoreCryptoManager.encrypt]
+     *  * Decrypt private keys and their passphrases via the AES private key and encrypt them via [KeyStoreCryptoManager.encrypt]
+     *  * Decrypt account passwords and uuid via the AES private key and encrypt this info via [KeyStoreCryptoManager.encrypt]
+     *  * Remove "flowcrypt_main" alias from AndroidKeyStore
+     */
+    fun doMigrationIfNeeded(context: Context) {
+      val keyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE)
+      keyStore.load(null)
+      val isOldLogicUsed = keyStore.containsAlias(ANDROID_KEY_STORE_RSA_ALIAS)
+      if (isOldLogicUsed) {
+        val countDownLatch = CountDownLatch(1)
+        Thread(MigrationWorker(context.applicationContext, countDownLatch)).start()
+        countDownLatch.await()
       }
     }
   }

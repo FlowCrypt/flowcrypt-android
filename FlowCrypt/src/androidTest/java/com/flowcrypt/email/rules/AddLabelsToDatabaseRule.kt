@@ -32,7 +32,7 @@ class AddLabelsToDatabaseRule(private val account: AccountEntity, private val fo
   private fun saveLabelsToDatabase() {
     val labels = mutableListOf<LabelEntity>()
     for (folder in folders) {
-      labels.add(LabelEntity.genLabel(account.email, folder))
+      labels.add(LabelEntity.genLabel(account, folder))
     }
 
     FlowCryptRoomDatabase.getDatabase(targetContext).labelDao().insert(labels)

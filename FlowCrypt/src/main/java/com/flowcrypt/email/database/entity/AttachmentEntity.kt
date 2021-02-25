@@ -34,14 +34,14 @@ data class AttachmentEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
     val email: String,
     val folder: String,
-    val uid: Int,
+    val uid: Long,
     val name: String,
     @ColumnInfo(name = "encodedSize", defaultValue = "0") val encodedSize: Long?,
     val type: String,
     @ColumnInfo(name = "attachment_id") val attachmentId: String?,
     @ColumnInfo(name = "file_uri") val fileUri: String?,
     @ColumnInfo(name = "forwarded_folder") val forwardedFolder: String?,
-    @ColumnInfo(name = "forwarded_uid", defaultValue = "-1") val forwardedUid: Int?,
+    @ColumnInfo(name = "forwarded_uid", defaultValue = "-1") val forwardedUid: Long?,
     val path: String) {
 
   fun toAttInfo(): AttachmentInfo {

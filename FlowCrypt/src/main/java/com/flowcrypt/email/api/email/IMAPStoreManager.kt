@@ -64,12 +64,14 @@ object IMAPStoreManager {
           }
           activeConnections.remove(key, existedActiveAccountIMAPStoreConnection)
 
-          val newActiveAccountIMAPStoreConnection = IMAPStoreConnection(applicationContext, it)
-          activeConnections[key] = newActiveAccountIMAPStoreConnection
-          try {
-            newActiveAccountIMAPStoreConnection.connect()
-          } catch (e: Exception) {
-            e.printStackTrace()
+          if (!activeAccount.useAPI) {
+            val newActiveAccountIMAPStoreConnection = IMAPStoreConnection(applicationContext, it)
+            activeConnections[key] = newActiveAccountIMAPStoreConnection
+            try {
+              newActiveAccountIMAPStoreConnection.connect()
+            } catch (e: Exception) {
+              e.printStackTrace()
+            }
           }
         }
       }

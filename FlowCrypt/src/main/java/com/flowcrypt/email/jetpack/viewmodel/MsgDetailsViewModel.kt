@@ -21,6 +21,10 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
+import com.flowcrypt.email.api.email.javamail.CustomMimeMessage
+import com.flowcrypt.email.api.email.javamail.CustomMimeMultipart
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -36,6 +40,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -53,7 +58,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.spongycastle.bcpg.ArmoredInputStream
 import java.io.BufferedInputStream
@@ -68,12 +72,9 @@ import javax.mail.Folder
 import javax.mail.MessagingException
 import javax.mail.Multipart
 import javax.mail.Part
-import javax.mail.Session
 import javax.mail.Store
-import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimeMultipart
 
 /**
  * @author Denis Bondarenko
@@ -280,13 +281,18 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
       viewModelScope.launch {
         roomDatabase.msgDao().deleteSuspend(msgEntity)
 
+        val accountEntity = getActiveAccountSuspend() ?: return@launch
+
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
           val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.email).size
-          val outboxLabel = roomDatabase.labelDao().getLabelSuspend(msgEntity.email,
-              JavaEmailConstants.FOLDER_OUTBOX)
+          val outboxLabel = roomDatabase.labelDao().getLabelSuspend(
+              account = accountEntity.email,
+              accountType = accountEntity.accountType,
+              label = JavaEmailConstants.FOLDER_OUTBOX
+          )
 
           outboxLabel?.let {
-            roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
+            roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
           }
         }
       }
@@ -296,11 +302,13 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   fun fetchAttachments() {
     viewModelScope.launch {
       val accountEntity = getActiveAccountSuspend() ?: return@launch
-      IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
-        try {
+      if (accountEntity.useAPI) {
+        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+          fetchAttachmentsInternal(accountEntity)
+        }
+      } else {
+        IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
           fetchAttachmentsInternal(accountEntity, store)
-        } catch (e: Exception) {
-          e.printStackTrace()
         }
       }
     }
@@ -473,6 +481,34 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot = withContext(Dispatchers.IO) {
     val accountEntity = getActiveAccountSuspend()
         ?: throw java.lang.NullPointerException("Account is null")
+    val context: Context = getApplication()
+    if (accountEntity.useAPI) {
+      if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+        val result = GmailApiHelper.executeWithResult {
+          val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(),
+              accountEntity, messageEntity.uidAsHEX, null)
+          msgSize = msgFullInfo.sizeEstimate
+          val originalMsg = GmaiAPIMimeMessage(
+              message = msgFullInfo,
+              context = getApplication(),
+              accountEntity = accountEntity)
+          if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            MsgsCacheManager.storeMsg(messageEntity.id.toString(), originalMsg)
+          } else {
+            val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
+            MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+          }
+
+          Result.success(null)
+        }
+        if (result.status == Result.Status.SUCCESS) {
+          return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+              ?: throw java.lang.NullPointerException("Message not found in the local cache")
+        } else throw result.exception ?: java.lang.IllegalStateException(context.getString(R
+            .string.unknown_error))
+      }
+    }
+
     val connection = IMAPStoreManager.activeConnections[accountEntity.id]
     if (connection == null) {
       throw java.lang.NullPointerException("There is no active connection for ${accountEntity.email}")
@@ -540,7 +576,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           val innerPart = getPart(innerMutlipart) ?: continue
           candidates.add(innerPart)
         } else {
-          if (isPartAllowed(item)) {
+          if (EmailUtil.isPartAllowed(item)) {
             candidates.add(MimeBodyPart(FetchingInputStream(item.mimeStream)))
           } else {
             if (item.size > 0) downloadedMsgSize += item.size
@@ -568,7 +604,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           val innerPart = getPart(item.content as Multipart)
           innerPart?.let { candidates.add(it) }
         } else {
-          if (isPartAllowed(item)) {
+          if (EmailUtil.isPartAllowed(item)) {
             candidates.add(MimeBodyPart(FetchingInputStream(item.mimeStream)))
           } else {
             if (item.size > 0) downloadedMsgSize += item.size
@@ -591,40 +627,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     bodyPart.setContent(newMultiPart)
 
     return bodyPart
-  }
-
-  private fun isPartAllowed(item: MimeBodyPart): Boolean {
-    var result = true
-    if (Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
-      result = false
-
-      //match allowed files
-      if (item.fileName in ALLOWED_FILE_NAMES) {
-        result = true
-      }
-
-      //match private keys
-      if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()) == true) {
-        result = true
-      }
-
-      //match public keys
-      if (item.fileName?.matches("(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()) == true) {
-        result = true
-      }
-
-      //allow download keys less than 100kb
-      if (FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 102400) {
-        result = true
-      }
-
-      //match signature
-      if (item.isMimeType("application/pgp-signature")) {
-        result = true
-      }
-    }
-
-    return result
   }
 
   private fun sendProgress() {
@@ -658,49 +660,46 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   }
 
   private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
-    imapFolder.open(Folder.READ_ONLY)
     try {
-      val msg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage ?: return@withContext
+      store.getFolder(localFolder.fullName).use { folder ->
+        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+        val msg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
+            ?: return@withContext
 
-      val fetchProfile = FetchProfile()
-      fetchProfile.add(FetchProfile.Item.SIZE)
-      fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-      imapFolder.fetch(arrayOf(msg), fetchProfile)
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(FetchProfile.Item.SIZE)
+        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+        imapFolder.fetch(arrayOf(msg), fetchProfile)
 
-      val msgUid = messageEntity.uid
-      val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+        val msgUid = messageEntity.uid
+        val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+          AttachmentEntity.fromAttInfo(it.apply {
+            email = accountEntity.email
+            this.folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+            uid = msgUid
+          })
+        }
+
+        FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+  }
+
+  private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity) = withContext(Dispatchers.IO) {
+    try {
+      val msg = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(), accountEntity, messageEntity.uidAsHEX)
+      val attachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
         AttachmentEntity.fromAttInfo(it.apply {
-          email = accountEntity.email
-          folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
-          uid = msgUid.toInt()
+          this.email = accountEntity.email
+          this.folder = localFolder.fullName
+          this.uid = msg.uid
         })
       }
-
       FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
     } catch (e: Exception) {
       e.printStackTrace()
-    } finally {
-      imapFolder.close(false)
-    }
-  }
-
-  /**
-   * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]
-   */
-  class CustomMimeMessage constructor(session: Session, rawHeaders: String?) : MimeMessage(session) {
-    init {
-      headers = InternetHeaders(ByteArrayInputStream(rawHeaders?.toByteArray() ?: "".toByteArray()))
-    }
-
-    fun setMessageId(msgId: String) {
-      setHeader("Message-ID", msgId)
-    }
-  }
-
-  class CustomMimeMultipart constructor(contentType: String) : MimeMultipart() {
-    init {
-      this.contentType = contentType
     }
   }
 
@@ -726,24 +725,5 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     private const val FILE_NAME_ENCRYPTED_MESSAGE = "temp_encrypted_msg.asc"
 
     private const val MIN_UPDATE_PROGRESS_INTERVAL = 500
-
-    val ALLOWED_FILE_NAMES = arrayOf(
-        "PGPexch.htm.pgp",
-        "PGPMIME version identification",
-        "Version.txt",
-        "PGPMIME Versions Identification",
-        "signature.asc",
-        "msg.asc",
-        "message",
-        "message.asc",
-        "encrypted.asc",
-        "encrypted.eml.pgp",
-        "Message.pgp"
-    )
-
-    val KEYS_EXTENSIONS = arrayOf(
-        "asc",
-        "key"
-    )
   }
 }

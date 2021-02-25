@@ -58,7 +58,8 @@
     <Preference
         android:key="@string/pref_key_server_settings"
         android:title="@string/server_settings"
-        app:iconSpaceReserved="false" />
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false" />
 
     <Preference
         android:title="@string/legal"

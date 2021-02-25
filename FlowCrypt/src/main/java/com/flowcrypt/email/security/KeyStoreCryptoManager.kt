@@ -79,9 +79,11 @@ object KeyStoreCryptoManager {
   @WorkerThread
   fun encrypt(plainData: String?): String {
     val input = (plainData ?: "").toByteArray(StandardCharsets.UTF_8)
-    val cipher = getCipherForEncryption()
-    val encryptedBytes = cipher.doFinal(input)
-    return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
+    synchronized(this) {
+      val cipher = getCipherForEncryption()
+      val encryptedBytes = cipher.doFinal(input)
+      return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
+    }
   }
 
   @WorkerThread
@@ -121,9 +123,11 @@ object KeyStoreCryptoManager {
       }
 
       val iv = encryptedData.substring(0, splitPosition)
-      val cipher = getCipherForDecryption(iv)
-      val decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
-      String(decodedBytes, StandardCharsets.UTF_8)
+      synchronized(this) {
+        val cipher = getCipherForDecryption(iv)
+        val decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
+        String(decodedBytes, StandardCharsets.UTF_8)
+      }
     }
   }
 

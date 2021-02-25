@@ -239,10 +239,8 @@ abstract class BaseActivity : AppCompatActivity() {
         removeAccountFromAccountManager(accountEntity)
 
         //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
-        roomDatabase.labelDao().deleteByEmailSuspend(accountEntity.email)
         roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
         roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
-        roomDatabase.accountAliasesDao().deleteByEmailSuspend(accountEntity.email)
 
         val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
         if (nonactiveAccounts.isNotEmpty()) {
@@ -253,6 +251,7 @@ abstract class BaseActivity : AppCompatActivity() {
           IdleService.restart(applicationContext)
           EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
         } else {
+          roomDatabase.contactsDao().deleteAll()
           stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
