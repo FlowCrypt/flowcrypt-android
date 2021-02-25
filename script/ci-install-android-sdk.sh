@@ -12,7 +12,7 @@ fi
 
 SDK_ARCHIVE=sdk-tools-linux-4333796.zip
 
-sudo apt-get -qq install adb qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
 sudo kvm-ok
 
 if [[ -d ~/Android ]]; then
