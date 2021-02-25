@@ -31,7 +31,7 @@ else
     (sdkmanager "extras;google;m2repository" | grep -v = || true)
     (sdkmanager "platform-tools" | grep -v = || true)
     (sdkmanager "emulator" | grep -v = || true)
-    (sdkmanager "ndk;21.2.6472646" | grep -v = || true)
+    (sdkmanager "ndk;22.0.7026061" | grep -v = || true)
     (sdkmanager "cmake;3.10.2.4988404" | grep -v = || true)
     (sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true)
 fi
