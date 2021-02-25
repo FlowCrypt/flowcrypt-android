@@ -89,6 +89,8 @@ blocks:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
             - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run logging
+            - adb logcat --buffer=crash > ~/logcat_log.txt
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
@@ -99,6 +101,8 @@ blocks:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
             - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run logging
+            - adb logcat --buffer=crash > ~/logcat_log.txt
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
       epilogue:
@@ -106,6 +110,8 @@ blocks:
           commands:
             # store errors log
             - echo "Store errors log"
+            - ls -a ~/
+            - artifact push job --expire-in 1w ~/logcat_log.txt
             - ls -a
             - artifact push job --expire-in 1w FlowCrypt/build/reports/androidTests/connected/flavors/devTestDebugAndroidTest/
             - echo "Store screenshots"
