@@ -274,6 +274,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
+  @CICandidateAnnotation
   @Ignore("failed on CI")
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()

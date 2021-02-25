@@ -5,14 +5,10 @@
 <network-security-config>
     <base-config cleartextTrafficPermitted="false" />
 
-    <!-- Remove cleartextTrafficPermitted="true" when we will migrate to use SSL connection-->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">localhost</domain>
+    <debug-overrides>
         <trust-anchors>
-            <!-- Trust a debug certificate in addition to the system certificates -->
-            <certificates src="system" />
             <certificates src="@raw/debug_certificate" />
         </trust-anchors>
-    </domain-config>
+    </debug-overrides>
 
 </network-security-config>

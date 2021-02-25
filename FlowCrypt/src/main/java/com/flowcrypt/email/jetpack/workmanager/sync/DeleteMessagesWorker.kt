@@ -15,13 +15,16 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.Store
@@ -41,8 +44,45 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
     moveMsgsToTrash(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+    moveMsgsToTrash(accountEntity)
+  }
+
+  private suspend fun moveMsgsToTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
+    moveMsgsToTrashInternal(account) { _, uidList ->
+      executeGMailAPICall(applicationContext) {
+        //todo-denbond7 need to improve this logic. We should delete local messages only if we'll
+        // success delete remote messages
+        GmailApiHelper.moveToTrash(applicationContext, account, uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+        //need to wait while the Gmail server will update labels
+        delay(2000)
+      }
+    }
+  }
+
   private suspend fun moveMsgsToTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
+    moveMsgsToTrashInternal(account) { folderName, uidList ->
+      store.getFolder(folderName).use { folder ->
+        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+        val trash = foldersManager.folderTrash ?: return@use
+        val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
+        val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+        if (msgs.isNotEmpty()) {
+          if ((store as IMAPStore).hasCapability("MOVE")) {
+            remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+          } else {
+            remoteSrcFolder.copyMessages(msgs.toTypedArray(), remoteDestFolder)
+          }
+        }
+      }
+    }
+  }
+
+  private suspend fun moveMsgsToTrashInternal(account: AccountEntity,
+                                              action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
+  {
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
@@ -54,28 +94,15 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
         break
       } else {
         val setOfFolders = candidatesForDeleting.map { it.folder }.toSet()
-        val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
 
         for (srcFolder in setOfFolders) {
           val filteredMsgs = candidatesForDeleting.filter { it.folder == srcFolder }
           if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
             continue
           }
-
-          store.getFolder(srcFolder).use { folder ->
-            val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-            val uidList = filteredMsgs.map { it.uid }
-            val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-            if (msgs.isNotEmpty()) {
-              if ((store as IMAPStore).hasCapability("MOVE")) {
-                remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-              } else {
-                remoteSrcFolder.copyMessages(msgs.toTypedArray(), remoteDestFolder)
-              }
-              roomDatabase.msgDao().deleteByUIDsSuspend(account.email, srcFolder, uidList)
-            }
-          }
+          val uidList = filteredMsgs.map { it.uid }
+          action.invoke(trash.fullName, uidList)
+          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, srcFolder, uidList)
         }
       }
     }

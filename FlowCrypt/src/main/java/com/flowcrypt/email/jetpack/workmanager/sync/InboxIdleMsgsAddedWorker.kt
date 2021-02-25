@@ -37,8 +37,12 @@ class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : Bas
     checkAndProcessNewMessages(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+
+  }
+
   private suspend fun checkAndProcessNewMessages(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
     val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
     val folderFullName = inboxLocalFolder.fullName
 

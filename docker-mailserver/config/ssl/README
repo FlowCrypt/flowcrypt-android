@@ -1,0 +1,17 @@
+#Instruction how to generate self-signed certs
+# password for CA = 'android'
+
+# generate CA
+./CA.pl -newca
+
+# Create a certificate authority
+openssl genrsa -out root-ca.privkey.pem 2048
+
+# Generate certificate for some host
+openssl req -new -nodes -keyout localhost-key.pem -out localhost-req.pem -days 3650 -subj "/C=UA/ST=Kirovograd region/L=Kropyvnytskyi/O=Bondarenko Denys Serhiiovych/OU=Android Team/CN=localhost/emailAddress=admin@denbond7.com"
+
+# Sign certificate for some host via CA
+openssl ca -days 3650 -out localhost-cert.pem -infiles localhost-req.pem
+
+# create DER format crt for Android
+openssl x509 -outform der -in localhost-cert.pem -out localhost_certificate.crt

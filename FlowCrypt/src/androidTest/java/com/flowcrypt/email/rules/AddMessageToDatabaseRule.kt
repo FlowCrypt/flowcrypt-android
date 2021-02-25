@@ -16,6 +16,7 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.io.IOException
 import javax.mail.FetchProfile
+import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.UIDFolder
@@ -31,23 +32,22 @@ class AddMessageToDatabaseRule(val account: AccountEntity, val localFolder: Loca
 
   init {
     try {
-      val session = OpenStoreHelper.getAccountSess(targetContext, account)
-      val store = OpenStoreHelper.openStore(targetContext, account, session)
+      OpenStoreHelper.openStore(targetContext, account, OpenStoreHelper.getAccountSess(targetContext, account)).use { store ->
+        store.getFolder(localFolder.fullName).use { folder ->
+          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+          val messages = arrayOf(imapFolder.getMessage(imapFolder.messageCount))
 
-      val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
-      imapFolder.open(javax.mail.Folder.READ_ONLY)
+          val fetchProfile = FetchProfile()
+          fetchProfile.add(FetchProfile.Item.ENVELOPE)
+          fetchProfile.add(FetchProfile.Item.FLAGS)
+          fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
 
-      val messages = arrayOf(imapFolder.getMessage(imapFolder.messageCount))
+          this.message = messages[0]
 
-      val fetchProfile = FetchProfile()
-      fetchProfile.add(FetchProfile.Item.ENVELOPE)
-      fetchProfile.add(FetchProfile.Item.FLAGS)
-      fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-      fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-
-      this.message = messages[0]
-
-      imapFolder.fetch(messages, fetchProfile)
+          imapFolder.fetch(messages, fetchProfile)
+        }
+      }
     } catch (e: MessagingException) {
       e.printStackTrace()
     } catch (e: IOException) {

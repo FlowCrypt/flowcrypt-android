@@ -10,6 +10,7 @@ import android.os.Parcelable
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 /**
  * This POJO object describes a base error from the API.
@@ -23,7 +24,7 @@ data class ApiError constructor(@Expose val code: Int? = null,
                                 @SerializedName("message") @Expose val msg: String? = null,
                                 @Expose val internal: String? = null,
                                 @Expose val stack: String? = null,
-                                @Expose val type: String? = null) : Parcelable {
+                                @Expose val type: String? = null) : Parcelable, Serializable {
   constructor(source: Parcel) : this(
       source.readValue(Int::class.java.classLoader) as Int?,
       source.readString(),

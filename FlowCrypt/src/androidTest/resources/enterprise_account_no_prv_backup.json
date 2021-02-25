@@ -5,7 +5,7 @@
   "givenName": "givenName",
   "familyName": "familyName",
   "photoUrl": "photoUrl",
-  "imapPort": 143,
+  "imapPort": 993,
   "imapServer": "10.0.2.2",
   "useCustomSignForSmtp": false,
   "password": "qwerty1234",

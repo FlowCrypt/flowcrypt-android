@@ -13,14 +13,11 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import javax.mail.Store
 
 /**
  * @author Denis Bondarenko
@@ -30,7 +27,7 @@ import javax.mail.Store
  */
 class LabelsViewModel(application: Application) : AccountViewModel(application) {
   val labelsLiveData: LiveData<List<LabelEntity>> = Transformations.switchMap(activeAccountLiveData) {
-    roomDatabase.labelDao().getLabelsLD(it?.email ?: "")
+    roomDatabase.labelDao().getLabelsLD(it?.email ?: "", it?.accountType)
   }
 
   val foldersManagerLiveData: LiveData<FoldersManager> = Transformations.switchMap(labelsLiveData) {
@@ -56,20 +53,23 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
         loadLabelsFromRemoteServerLiveData.value = Result.loading()
-        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-        if (connection == null) {
-          loadLabelsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+        if (accountEntity.useAPI) {
+          loadLabelsFromRemoteServerLiveData.value = GmailApiHelper.executeWithResult {
+            UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity)
+            Result.success(true)
+          }
         } else {
-          loadLabelsFromRemoteServerLiveData.value = connection.executeWithResult {
-            fetchLabels(accountEntity, connection.store)
+          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+          if (connection == null) {
+            loadLabelsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+          } else {
+            loadLabelsFromRemoteServerLiveData.value = connection.executeWithResult {
+              UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity, connection.store)
+              Result.success(true)
+            }
           }
         }
       }
     }
-  }
-
-  private suspend fun fetchLabels(accountEntity: AccountEntity, store: Store): Result<Boolean> = withContext(Dispatchers.IO) {
-    UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity, store)
-    return@withContext Result.success(true)
   }
 }

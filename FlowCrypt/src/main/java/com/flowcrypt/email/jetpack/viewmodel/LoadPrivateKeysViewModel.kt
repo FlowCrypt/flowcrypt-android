@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.SearchBackupsUtil
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -30,7 +31,7 @@ import java.util.*
 import javax.mail.Folder
 import javax.mail.MessagingException
 import javax.mail.Session
-import javax.mail.Store
+import kotlin.collections.ArrayList
 
 /**
  * This loader finds and returns a user backup of private keys from the mail.
@@ -58,19 +59,16 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
 
   private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>> =
       withContext(Dispatchers.IO) {
-        val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
-
         try {
-          val session = OpenStoreHelper.getAccountSess(getApplication(), accountEntity)
-
           when (accountEntity.accountType) {
-            AccountEntity.ACCOUNT_TYPE_GOOGLE ->
-              privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getApplication(), accountEntity))
+            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+              GmailApiHelper.executeWithResult {
+                Result.success(ArrayList(GmailApiHelper.getPrivateKeyBackups(getApplication(), accountEntity)))
+              }
+            }
 
-            else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session, accountEntity))
+            else -> Result.success(ArrayList(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity)))
           }
-
-          Result.success(privateKeyDetailsList)
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
@@ -87,53 +85,49 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session, accountEntity: AccountEntity): Collection<NodeKeyDetails> =
+  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(accountEntity: AccountEntity): Collection<NodeKeyDetails> =
       withContext(Dispatchers.IO) {
         val details = ArrayList<NodeKeyDetails>()
-        var store: Store? = null
-        try {
-          val context: Context = getApplication()
-          store = OpenStoreHelper.openStore(context, accountEntity, session)
-          val folders = store.defaultFolder.list("*")
+        OpenStoreHelper.openStore(getApplication(), accountEntity, OpenStoreHelper.getAccountSess(getApplication(), accountEntity)).use { store ->
+          try {
+            val context: Context = getApplication()
+            val folders = store.defaultFolder.list("*")
 
-          privateKeysLiveData.postValue(Result.loading(progressMsg = context.resources
-              .getQuantityString(R.plurals.found_folder, folders.size, folders.size)))
+            privateKeysLiveData.postValue(Result.loading(progressMsg = context.resources
+                .getQuantityString(R.plurals.found_folder, folders.size, folders.size)))
 
-          for ((index, folder) in folders.withIndex()) {
-            val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
-            if (!containsNoSelectAttr) {
-              folder.open(Folder.READ_ONLY)
+            for ((index, folder) in folders.withIndex()) {
+              val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
+              if (!containsNoSelectAttr) {
+                folder.open(Folder.READ_ONLY)
 
-              val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountEntity.email))
+                val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountEntity.email))
 
-              for (message in foundMsgs) {
-                val backup = EmailUtil.getKeyFromMimeMsg(message)
+                for (message in foundMsgs) {
+                  val backup = EmailUtil.getKeyFromMimeMsg(message)
 
-                if (TextUtils.isEmpty(backup)) {
-                  continue
+                  if (TextUtils.isEmpty(backup)) {
+                    continue
+                  }
+
+                  try {
+                    details.addAll(NodeCallsExecutor.parseKeys(backup))
+                  } catch (e: NodeException) {
+                    e.printStackTrace()
+                    ExceptionUtil.handleError(e)
+                  }
                 }
 
-                try {
-                  details.addAll(NodeCallsExecutor.parseKeys(backup))
-                } catch (e: NodeException) {
-                  e.printStackTrace()
-                  ExceptionUtil.handleError(e)
-                }
+                folder.close(false)
               }
 
-              folder.close(false)
+              privateKeysLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.searching_in_folders, index, folders.size)))
             }
-
-            privateKeysLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.searching_in_folders, index, folders.size)))
+          } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
           }
-
-          store.close()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          store?.close()
-          throw e
         }
-
         return@withContext details
       }
 }
