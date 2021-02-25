@@ -148,7 +148,9 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
-    activeAccount?.let { editTextUserEmail.visibility = View.GONE }
+    activeAccount?.let {
+      findViewById<View>(R.id.textInputLayoutUserEmail).visibility = View.GONE
+    }
   }
 
   private fun initViews() {

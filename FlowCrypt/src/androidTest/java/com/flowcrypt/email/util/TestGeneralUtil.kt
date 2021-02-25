@@ -15,6 +15,7 @@ import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 
 /**
@@ -39,6 +40,11 @@ class TestGeneralUtil {
     @JvmStatic
     fun readResourcesAsString(path: String): String {
       return IOUtils.toString(TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
+    }
+
+    @JvmStatic
+    fun readResourcesAsStream(path: String): InputStream {
+      return TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path)
     }
 
     @JvmStatic

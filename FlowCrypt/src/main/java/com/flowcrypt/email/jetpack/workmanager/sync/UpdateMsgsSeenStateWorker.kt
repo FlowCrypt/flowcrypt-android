@@ -13,12 +13,14 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message
@@ -38,38 +40,65 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
     changeMsgsReadState(accountEntity, store, MessageState.PENDING_MARK_READ)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+    changeMsgsReadState(accountEntity, MessageState.PENDING_MARK_UNREAD)
+    changeMsgsReadState(accountEntity, MessageState.PENDING_MARK_READ)
+  }
+
   private suspend fun changeMsgsReadState(account: AccountEntity, store: Store, state: MessageState) = withContext(Dispatchers.IO) {
+    changeMsgsReadStateInternal(account, state) { fullFolderName, uidList ->
+      store.getFolder(fullFolderName).use { folder ->
+        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+        val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+        if (msgs.isNotEmpty()) {
+          imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.SEEN), state == MessageState.PENDING_MARK_READ)
+        }
+      }
+    }
+  }
+
+  private suspend fun changeMsgsReadState(account: AccountEntity, state: MessageState) = withContext(Dispatchers.IO) {
+    changeMsgsReadStateInternal(account, state) { _, uidList ->
+      executeGMailAPICall(applicationContext) {
+        if (state == MessageState.PENDING_MARK_READ) {
+          GmailApiHelper.changeLabels(
+              context = applicationContext,
+              accountEntity = account,
+              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+              removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
+        } else {
+          GmailApiHelper.changeLabels(
+              context = applicationContext,
+              accountEntity = account,
+              ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+              addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD))
+        }
+      }
+    }
+  }
+
+  private suspend fun changeMsgsReadStateInternal(account: AccountEntity,
+                                                  state: MessageState,
+                                                  action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
     val candidatesForMark = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, state.value)
 
     if (candidatesForMark.isNotEmpty()) {
       val setOfFolders = candidatesForMark.map { it.folder }.toSet()
 
-      for (fullFolderName in setOfFolders) {
-        val filteredMsgs = candidatesForMark.filter { it.folder == fullFolderName }
+      for (folderName in setOfFolders) {
+        val filteredMsgs = candidatesForMark.filter { it.folder == folderName }
 
         if (filteredMsgs.isEmpty()) {
           continue
         }
 
-        store.getFolder(fullFolderName).use { folder ->
-          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-
-          val uidList = filteredMsgs.map { it.uid }
-          val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-          if (msgs.isNotEmpty()) {
-            val value = state == MessageState.PENDING_MARK_READ
-            imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.SEEN), value)
-            for (uid in uidList) {
-              val msgEntity = roomDatabase.msgDao().getMsgSuspend(account.email, fullFolderName, uid)
-
-              if (msgEntity?.msgState == state) {
-                roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.NONE.value))
-              }
-            }
-          }
-        }
+        val uidList = filteredMsgs.map { it.uid }
+        action.invoke(folderName, uidList)
+        val entities = roomDatabase.msgDao().getMsgsByUIDs(account.email, folderName, uidList)
+            .filter { it.msgState == state }
+            .map { it.copy(state = MessageState.NONE.value) }
+        roomDatabase.msgDao().updateSuspend(entities)
       }
     }
   }

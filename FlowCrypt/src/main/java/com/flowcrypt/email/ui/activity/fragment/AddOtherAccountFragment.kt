@@ -56,7 +56,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
-import kotlinx.android.synthetic.main.fragment_screenshot_editor.*
 import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
 import java.util.*
@@ -374,7 +373,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
                 title = getString(R.string.network_error)
               }
             } else if (exception is AccountAlreadyAddedException) {
-              showInfoSnackbar(rootView, exception.message, Snackbar.LENGTH_LONG)
+              showInfoSnackbar(view, exception.message, Snackbar.LENGTH_LONG)
               return@setFragmentResultListener
             }
 
@@ -606,7 +605,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   }
 
   private fun showLessSecurityWarning() {
-    showSnackbar(rootView, getString(R.string.less_secure_login_is_not_allowed),
+    showSnackbar(view, getString(R.string.less_secure_login_is_not_allowed),
         getString(android.R.string.ok), Snackbar.LENGTH_LONG) {
       parentFragmentManager.popBackStack()
     }

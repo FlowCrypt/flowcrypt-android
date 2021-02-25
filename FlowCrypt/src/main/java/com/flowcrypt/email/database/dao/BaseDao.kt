@@ -8,6 +8,7 @@ package com.flowcrypt.email.database.dao
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -75,6 +76,9 @@ interface BaseDao<T> {
   @Delete
   suspend fun deleteSuspend(entities: Iterable<T>): Int
 
+  @Query("SELECT sqlite_sequence.seq FROM sqlite_sequence WHERE name = :table")
+  suspend fun getLastAutoIncrementId(table: String?): Long?
+
 
   companion object {
     fun <M> doOperationViaSteps(stepValue: Int = 50, list: List<M>,
@@ -115,6 +119,30 @@ interface BaseDao<T> {
           }
         }
       }
+    }
+
+    suspend fun <M, F> getEntitiesViaStepsSuspend(stepValue: Int = 50,
+                                                  list: List<F>,
+                                                  step: suspend (list: Collection<F>) -> List<M>): List<M> = withContext(Dispatchers.IO) {
+      val results = mutableListOf<M>()
+      if (list.isNotEmpty()) {
+        if (list.size <= stepValue) {
+          results.addAll(step(list))
+        } else {
+          var i = 0
+          while (i < list.size) {
+            val tempList = if (list.size - i > stepValue) {
+              list.subList(i, i + stepValue)
+            } else {
+              list.subList(i, list.size)
+            }
+            results.addAll(step(tempList))
+            i += stepValue
+          }
+        }
+      }
+
+      return@withContext results
     }
   }
 }
