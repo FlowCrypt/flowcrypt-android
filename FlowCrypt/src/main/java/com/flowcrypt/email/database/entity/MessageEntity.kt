@@ -19,9 +19,13 @@ import androidx.room.PrimaryKey
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.toHex
+import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
@@ -31,6 +35,7 @@ import javax.mail.Flags
 import javax.mail.Message
 import javax.mail.MessageRemovedException
 import javax.mail.MessagingException
+import javax.mail.Session
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 import kotlin.collections.HashMap
@@ -42,7 +47,7 @@ import kotlin.collections.HashMap
  *         E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 need to add ForeignKey on account table
-@Entity(tableName = "messages",
+@Entity(tableName = MessageEntity.TABLE_NAME,
     indices = [
       Index(name = "email_in_messages", value = ["email"]),
       Index(name = "email_uid_folder_in_messages", value = ["email", "uid", "folder"], unique = true)
@@ -67,7 +72,9 @@ data class MessageEntity(
     @ColumnInfo(defaultValue = "-1") val state: Int? = null,
     @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
     @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
-    @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null
+    @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
+    @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
+    @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null
 ) : Parcelable {
 
   @Ignore
@@ -87,6 +94,9 @@ data class MessageEntity(
 
   @Ignore
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
+
+  @Ignore
+  val uidAsHEX: String = uid.toHex()
 
   /**
    * Generate a list of the all recipients.
@@ -127,6 +137,8 @@ data class MessageEntity(
       parcel.readValue(Int::class.java.classLoader) as? Int,
       parcel.readString(),
       parcel.readString(),
+      parcel.readString(),
+      parcel.readString(),
       parcel.readString())
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -149,6 +161,8 @@ data class MessageEntity(
     parcel.writeString(attachmentsDirectory)
     parcel.writeString(errorMsg)
     parcel.writeString(replyTo)
+    parcel.writeString(threadId)
+    parcel.writeString(historyId)
   }
 
   override fun describeContents(): Int {
@@ -169,6 +183,8 @@ data class MessageEntity(
   }
 
   companion object CREATOR : Parcelable.Creator<MessageEntity> {
+    const val TABLE_NAME = "messages"
+
     override fun createFromParcel(parcel: Parcel): MessageEntity {
       return MessageEntity(parcel)
     }
@@ -227,6 +243,55 @@ data class MessageEntity(
       return messageEntities
     }
 
+    fun genMessageEntities(context: Context, email: String, label: String, msgsList: List<com.google.api.services.gmail.model.Message>,
+                           isNew: Boolean, areAllMsgsEncrypted: Boolean): List<MessageEntity> {
+      val messageEntities = mutableListOf<MessageEntity>()
+      val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
+          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+
+      val onlyEncryptedMsgs = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
+          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+
+      for (msg in msgsList) {
+        try {
+          var isNewTemp = isNew
+
+          if (isNotificationDisabled) {
+            isNewTemp = false
+          }
+
+          val isEncrypted: Boolean = if (areAllMsgsEncrypted) {
+            true
+          } else {
+            EmailUtil.hasEncryptedData(msg.snippet)
+          }
+
+          if (onlyEncryptedMsgs && !isEncrypted) {
+            isNewTemp = false
+          }
+
+          val mimeMessage = GmaiAPIMimeMessage(Session.getInstance(Properties()), msg)
+          messageEntities.add(genMsgEntity(
+              email = email,
+              label = label,
+              msg = mimeMessage,
+              uid = msg.uid,
+              isNew = isNewTemp,
+              isEncrypted = isEncrypted,
+              hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
+          ).copy(threadId = msg.threadId, historyId = msg.historyId.toString()))
+        } catch (e: MessageRemovedException) {
+          e.printStackTrace()
+        } catch (e: AddressException) {
+          e.printStackTrace()
+        }
+      }
+
+      return messageEntities
+    }
+
     /**
      * Prepare the content values for insert to the database. This method must be called in the
      * non-UI thread.
@@ -240,7 +305,9 @@ data class MessageEntity(
      * @throws MessagingException This exception may be occured when we call methods of thr
      * [Message] object
      */
-    fun genMsgEntity(email: String, label: String, msg: Message, uid: Long, isNew: Boolean, isEncrypted: Boolean? = null): MessageEntity {
+    fun genMsgEntity(email: String, label: String, msg: Message, uid: Long, isNew: Boolean,
+                     isEncrypted: Boolean? = null, hasAttachments: Boolean? = null):
+        MessageEntity {
       return MessageEntity(email = email,
           folder = label,
           uid = uid,
@@ -252,7 +319,7 @@ data class MessageEntity(
           ccAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)),
           subject = msg.subject,
           flags = msg.flags.toString().toUpperCase(Locale.getDefault()),
-          hasAttachments = EmailUtil.hasAtt(msg),
+          hasAttachments = hasAttachments?.let { hasAttachments } ?: EmailUtil.hasAtt(msg),
           isNew = if (!msg.flags.contains(Flags.Flag.SEEN)) {
             isNew
           } else {

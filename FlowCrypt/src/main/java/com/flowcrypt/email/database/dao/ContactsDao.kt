@@ -50,4 +50,7 @@ interface ContactsDao : BaseDao<ContactEntity> {
 
   @Query("SELECT * FROM contacts WHERE email LIKE :searchPattern ORDER BY last_use DESC")
   fun getFilteredCursor(searchPattern: String): Cursor?
+
+  @Query("DELETE FROM contacts")
+  suspend fun deleteAll(): Int
 }

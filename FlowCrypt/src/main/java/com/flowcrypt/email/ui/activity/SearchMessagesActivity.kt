@@ -94,13 +94,14 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
-    this.initQuery = query
-
     if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
         && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }
+
+    if (this.initQuery == query) return false
+    this.initQuery = query
 
     currentFolder?.searchQuery = initQuery
     onFolderChanged(true)
@@ -108,7 +109,6 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   }
 
   override fun onQueryTextChange(newText: String): Boolean {
-    this.initQuery = newText
     return false
   }
 

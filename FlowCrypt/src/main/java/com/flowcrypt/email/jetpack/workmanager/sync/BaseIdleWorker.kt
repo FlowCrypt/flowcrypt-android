@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.toHex
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
@@ -32,10 +33,15 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) : Base
                                            msgs: Array<Message>, accountEntity: AccountEntity,
                                            folderFullName: String) = withContext(Dispatchers.IO) {
     val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(cachedUIDSet, remoteFolder, msgs)
+    processDeletedMsgs(accountEntity, folderFullName, deleteCandidatesUIDs)
+  }
+
+  protected suspend fun processDeletedMsgs(accountEntity: AccountEntity, folderFullName: String,
+                                           deleteCandidatesUIDs: Collection<Long>) {
     roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderFullName, deleteCandidatesUIDs)
     if (!GeneralUtil.isAppForegrounded()) {
       for (uid in deleteCandidatesUIDs) {
-        notificationManager.cancel(uid.toInt())
+        notificationManager.cancel(uid.toHex())
       }
     }
   }
@@ -46,14 +52,17 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) : Base
                                            accountEntity: AccountEntity, folderFullName: String) = withContext(Dispatchers.IO) {
     val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, msgs)
         .map { remoteFolder.getUID(it) to it.flags }.toMap()
+    processUpdatedMsgs(accountEntity, folderFullName, updateCandidates)
+  }
+
+  protected suspend fun processUpdatedMsgs(accountEntity: AccountEntity, folderFullName: String, updateCandidates: Map<Long, Flags>) {
     roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderFullName, updateCandidates)
 
     if (!GeneralUtil.isAppForegrounded()) {
       for (item in updateCandidates) {
         val uid = item.key
-        val flags = item.value
-        if (flags.contains(Flags.Flag.SEEN)) {
-          notificationManager.cancel(uid.toInt())
+        if (item.value.contains(Flags.Flag.SEEN)) {
+          notificationManager.cancel(uid.toHex())
         }
       }
     }
@@ -75,12 +84,16 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) : Base
           areAllMsgsEncrypted = false
       )
 
-      roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+      processNewMsgs(accountEntity, localFolder, msgEntities)
+    }
+  }
 
-      if (!GeneralUtil.isAppForegrounded()) {
-        val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, localFolder.fullName)
-        notificationManager.notify(applicationContext, accountEntity, localFolder, detailsList)
-      }
+  protected suspend fun processNewMsgs(accountEntity: AccountEntity, localFolder: LocalFolder, msgEntities: List<MessageEntity>) {
+    roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+
+    if (!GeneralUtil.isAppForegrounded()) {
+      val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, localFolder.fullName)
+      notificationManager.notify(applicationContext, accountEntity, localFolder, detailsList)
     }
   }
 }

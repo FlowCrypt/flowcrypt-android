@@ -34,6 +34,7 @@ import androidx.test.espresso.web.webdriver.DriverAtoms.getText
 import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
@@ -63,7 +64,6 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -184,8 +184,8 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
+  @CICandidateAnnotation
   //don't enable this one on CI. It takes too long
-  @Ignore("failed on CI")
   fun testEncryptedBigInlineAtt() {
     IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
     baseCheck(getMsgInfo("messages/info/encrypted_msg_big_inline_att.json",

@@ -18,8 +18,8 @@ import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.nulabinc.zxcvbn.Zxcvbn
-import org.apache.commons.codec.binary.Hex
-import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.codec.android.binary.Hex
+import org.apache.commons.codec.android.digest.DigestUtils
 import java.util.*
 
 /**

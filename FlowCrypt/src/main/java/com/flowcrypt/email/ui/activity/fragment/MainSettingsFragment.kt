@@ -42,5 +42,9 @@ class MainSettingsFragment : BasePreferenceFragment() {
     super.onAccountInfoRefreshed(accountEntity)
     findPreference<Preference>(Constants.PREF_KEY_BACKUPS)?.isVisible =
         !(accountEntity?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) ?: false)
+
+    if (accountEntity?.useAPI == false) {
+      findPreference<Preference>(Constants.PREF_KEY_SERVER_SETTINGS)?.isVisible = true
+    }
   }
 }
