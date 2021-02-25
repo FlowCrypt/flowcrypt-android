@@ -125,6 +125,7 @@ android {
 
     externalNativeBuild {
         cmake {
+            version "3.10.2.4988404"
             path "CMakeLists.txt"
         }
     }
@@ -295,7 +296,7 @@ android {
         }
     }
 
-    ndkVersion "21.2.6472646"
+    ndkVersion "22.0.7026061"
 }
 
 easylauncher {
