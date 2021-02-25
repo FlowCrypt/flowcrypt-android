@@ -90,7 +90,7 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run logging
-            - adb logcat --buffer=crash > ~/logcat_log.txt
+            - adb logcat --buffer=crash > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
@@ -102,7 +102,7 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run logging
-            - adb logcat --buffer=crash > ~/logcat_log.txt
+            - adb logcat --buffer=crash > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
       epilogue:
