@@ -16,17 +16,21 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
+import javax.mail.Session
 import javax.mail.Store
 import javax.mail.internet.InternetAddress
 
@@ -43,25 +47,95 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
     fetchContacts(accountEntity, store)
   }
 
+  override suspend fun runAPIAction(accountEntity: AccountEntity) {
+    fetchContacts(accountEntity)
+  }
+
   private suspend fun fetchContacts(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    if (account.areContactsLoaded == true) return@withContext
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
-    val folderSent = foldersManager.findSentFolder() ?: return@withContext
+    fetchContactsInternal(account) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      val folderSent = foldersManager.findSentFolder() ?: return@fetchContactsInternal emptyArray()
 
-    store.getFolder(folderSent.fullName).use { folder ->
-      val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val msgs = imapFolder.messages
+      store.getFolder(folderSent.fullName).use { folder ->
+        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+        val msgs = imapFolder.messages
 
-      if (msgs.isNotEmpty()) {
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
-        fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
-        fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
-        imapFolder.fetch(msgs, fetchProfile)
+        if (msgs.isNotEmpty()) {
+          val fetchProfile = FetchProfile()
+          fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
+          fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
+          fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
+          imapFolder.fetch(msgs, fetchProfile)
 
-        updateContacts(msgs)
-        FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
+          return@fetchContactsInternal msgs
+        }
       }
+
+      return@fetchContactsInternal emptyArray()
+    }
+  }
+
+  private suspend fun fetchContacts(account: AccountEntity) = withContext(Dispatchers.IO) {
+    fetchContactsInternal(account) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      val folderSent = foldersManager.findSentFolder() ?: return@fetchContactsInternal emptyArray()
+
+      executeGMailAPICall(applicationContext) {
+        val gmailApiService = GmailApiHelper.generateGmailApiService(applicationContext, account)
+
+        var response = gmailApiService
+            .users()
+            .messages()
+            .list(GmailApiHelper.DEFAULT_USER_ID)
+            .setLabelIds(listOf(GmailApiHelper.LABEL_SENT))
+            .execute()
+
+        val msgsBaseInfo = mutableListOf<com.google.api.services.gmail.model.Message>()
+
+        //Try to load the last 200 messages. Only base info
+        while (response.messages != null) {
+          //to prevent limit exception we can do it once per 1 seconds
+          delay(1000)
+          msgsBaseInfo.addAll(response.messages)
+          if (msgsBaseInfo.size < MAX_MSGS_COUNT && response.nextPageToken != null) {
+            response = gmailApiService
+                .users()
+                .messages()
+                .list(GmailApiHelper.DEFAULT_USER_ID)
+                .setPageToken(response.nextPageToken)
+                .execute()
+          } else {
+            break
+          }
+        }
+
+        val list = mutableListOf<com.google.api.services.gmail.model.Message>()
+        list.addAll(GmailApiHelper.doOperationViaStepsSuspend(stepValue = 50, list = msgsBaseInfo) { subList ->
+          //to prevent limit exception we can do it once per 1 seconds
+          delay(1000)
+          GmailApiHelper.loadMsgs(context = applicationContext,
+              accountEntity = account,
+              messages = subList,
+              localFolder = folderSent,
+              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_METADATA,
+              metadataHeaders = listOf("To", "Cc"),
+              fields = listOf("payload"))
+        })
+
+        val session = Session.getInstance(Properties())
+        list.map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
+      }
+    }
+  }
+
+  private suspend fun fetchContactsInternal(account: AccountEntity,
+                                            action: suspend () -> Array<Message>) = withContext(Dispatchers.IO) {
+    if (account.areContactsLoaded == true) return@withContext
+    val msgs = action.invoke()
+
+    if (msgs.isNotEmpty()) {
+      updateContacts(msgs)
+      FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
     }
   }
 
@@ -150,6 +224,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
 
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".FETCH_CONTACTS"
+    private const val MAX_MSGS_COUNT = 200
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -160,7 +235,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
           .getInstance(context.applicationContext)
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
+              ExistingWorkPolicy.KEEP,
               OneTimeWorkRequestBuilder<LoadContactsWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)

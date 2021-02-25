@@ -11,6 +11,7 @@ import android.util.Base64OutputStream
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
@@ -52,6 +53,7 @@ class KeyStoreCryptoManagerTest {
   }
 
   @Test
+  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testDataAsString() {
     val encryptedData = KeyStoreCryptoManager.encrypt(originalData)
@@ -62,6 +64,7 @@ class KeyStoreCryptoManagerTest {
   }
 
   @Test
+  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testDataAsStream() {
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
@@ -102,6 +105,7 @@ class KeyStoreCryptoManagerTest {
   }
 
   @Test
+  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testDataAsStreamFromCacheManager() {
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry

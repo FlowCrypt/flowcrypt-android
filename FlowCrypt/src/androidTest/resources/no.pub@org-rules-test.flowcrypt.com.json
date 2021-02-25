@@ -5,7 +5,7 @@
   "givenName": "no.pub",
   "familyName": "no.pub",
   "photoUrl": "https://lh3.googleusercontent.com/-KqfTq1IKkhw/AAAAAAAAAAI/AAAAAAAAAAA/ACLGyWBZ5bzZtjs2GmmC1ArEskmiLFQWQQ/mo/photo.jpg?sz=128",
-  "imapPort": 143,
+  "imapPort": 993,
   "imapServer": "imap.flowcrypt.com",
   "useCustomSignForSmtp": false,
   "password": "qwerty1234",

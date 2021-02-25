@@ -90,7 +90,6 @@
     <string name="edit">Edit</string>
     <string name="move_to_inbox">Move to Inbox</string>
     <string name="sending_message_must_not_be_empty">Message should not be empty</string>
-    <string name="there_was_syncing_problem">There was a syncing problem</string>
     <string name="error_occurred_while_receiving_private_keys">Could not retrieve your private key</string>
     <string name="no_subject">(no subject)</string>
     <string name="error_occurred_please_try_again">Error occurred, please try again</string>
@@ -133,7 +132,7 @@
     <string name="private_">Private</string>
     <string name="public_">Public</string>
     <string name="attachment">Attachment</string>
-    <string name="can_not_connect_to_the_imap_server">Cannot connect to the IMAP server</string>
+    <string name="can_not_connect_to_the_server">Cannot connect to the server</string>
     <string name="failed_load_message_from_email_server">Failed to load message from email server</string>
     <string name="cancel">Cancel</string>
     <string name="waiting_to_load">Waiting to load</string>
@@ -497,4 +496,5 @@
     <string name="connection_lost">Connection lost</string>
     <string name="loading_labels">Loading labels</string>
     <string name="could_not_load_oauth_server_configuration">Couldn\'t load OAuth server configuration</string>
+    <string name="all_mail">All Mail</string>
 </resources>

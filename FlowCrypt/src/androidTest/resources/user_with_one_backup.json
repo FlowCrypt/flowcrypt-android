@@ -1,6 +1,6 @@
 {
   "email": "user_with_one_backup@denbond7.com",
-  "imapPort": 143,
+  "imapPort": 993,
   "imapOpt": "NONE",
   "imapServer": "10.0.2.2",
   "hasCustomSignInForSmtp": false,

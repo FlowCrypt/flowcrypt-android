@@ -9,6 +9,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.LoadContactsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
@@ -29,6 +30,13 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun updateLabels() {
     UpdateLabelsWorker.enqueue(this)
+  }
+
+  /**
+   * Load information about contacts.
+   */
+  fun loadContactsIfNeeded() {
+    LoadContactsWorker.enqueue(this)
   }
 
   /**

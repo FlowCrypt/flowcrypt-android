@@ -29,6 +29,8 @@
     <item name="progress_id_fetching_message" type="id" />
     <item name="progress_id_processing" type="id" />
     <item name="progress_id_rendering" type="id" />
+    <item name="progress_id_gmail_list" type="id" />
+    <item name="progress_id_gmail_msgs_info" type="id" />
 
     <item name="live_data_id_fetch_keys" type="id" />
 

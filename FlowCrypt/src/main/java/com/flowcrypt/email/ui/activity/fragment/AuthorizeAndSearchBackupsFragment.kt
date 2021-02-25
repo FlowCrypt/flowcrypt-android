@@ -10,6 +10,7 @@ import android.view.View
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -55,7 +56,19 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   private fun fetchBackups() {
     if (arguments?.containsKey(KEY_ACCOUNT) == true) {
       accountEntity = arguments?.getParcelable(KEY_ACCOUNT) ?: return
-      checkEmailSettingsViewModel.checkAccount(accountEntity)
+      when (accountEntity.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          if (accountEntity.useAPI) {
+            loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity)
+          } else {
+            checkEmailSettingsViewModel.checkAccount(accountEntity)
+          }
+        }
+
+        else -> {
+          checkEmailSettingsViewModel.checkAccount(accountEntity)
+        }
+      }
     } else {
       toast("Account is null!")
       parentFragmentManager.popBackStack()
@@ -63,7 +76,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupCheckEmailSettingsViewModel() {
-    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner, {
+    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner, Observer {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -84,7 +97,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(it.progressMsg)

@@ -15,4 +15,8 @@
         <!-- Those issues are not relevant to our project, we can skip them -->
         <ignore path="**/SslUtils$1.class" />
     </issue>
+    <issue id="UnusedResources">
+        <!-- This file is needed for debug purposes -->
+        <ignore path="res/raw/debug_certificate.crt" />
+    </issue>
 </lint>

@@ -86,7 +86,6 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import kotlinx.android.synthetic.main.fragment_server_settings.*
 import java.io.File
 import java.nio.charset.StandardCharsets
 import javax.mail.AuthenticationFailedException
@@ -233,7 +232,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
     menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
 
-    args.localFolder.searchQuery.let {
+    args.localFolder.searchQuery?.let {
       menuItemArchiveMsg?.isVisible = false
       menuItemDeleteMsg?.isVisible = false
       menuActionMoveToInbox?.isVisible = false
