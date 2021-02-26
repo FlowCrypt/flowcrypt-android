@@ -28,5 +28,5 @@ if [[ ${varShardIndex} -ge ${varNumShards} ]]
  then
   echo "shardIndex should be lower than numShards"
  else
-  ANDROID_SERIAL=emulator-"${varEmulatorPort}" ./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}"
+  ANDROID_SERIAL=emulator-"${varEmulatorPort}" ./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}" -Pandroid.testInstrumentationRunnerArguments.clearPackageData=true
 fi
