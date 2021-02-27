@@ -125,6 +125,7 @@ android {
 
     externalNativeBuild {
         cmake {
+            version "3.10.2.4988404"
             path "CMakeLists.txt"
         }
     }
@@ -295,7 +296,7 @@ android {
         }
     }
 
-    ndkVersion "21.2.6472646"
+    ndkVersion "22.0.7026061"
 }
 
 easylauncher {
@@ -338,6 +339,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit-ktx:1.1.2'
     androidTestImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.okhttpVersion}"
     androidTestImplementation "com.squareup.okhttp3:okhttp-tls:${rootProject.ext.okhttpVersion}"
+    androidTestUtil 'androidx.test:orchestrator:1.3.0'
 
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
@@ -365,9 +367,9 @@ dependencies {
     implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
     implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'androidx.core:core-ktx:1.3.2'
-    implementation 'androidx.activity:activity-ktx:1.1.0'
+    implementation 'androidx.activity:activity-ktx:1.2.0'
     implementation 'androidx.fragment:fragment-ktx:1.3.0-rc01'
-    implementation 'androidx.work:work-runtime-ktx:2.4.0'
+    implementation 'androidx.work:work-runtime-ktx:2.5.0'
     implementation "androidx.navigation:navigation-fragment-ktx:${rootProject.ext.navVersion}"
     implementation "androidx.navigation:navigation-ui-ktx:${rootProject.ext.navVersion}"
     implementation "androidx.navigation:navigation-runtime-ktx:${rootProject.ext.navVersion}"
@@ -401,7 +403,7 @@ dependencies {
 
     implementation "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
     implementation 'com.hootsuite.android:nachos:1.2.0'
-    implementation 'com.nulab-inc:zxcvbn:1.3.1'
+    implementation 'com.nulab-inc:zxcvbn:1.4.0'
     implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
     implementation 'com.madgag.spongycastle:pg:1.54.0.0'
     implementation 'commons-io:commons-io:2.8.0'

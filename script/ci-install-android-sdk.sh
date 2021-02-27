@@ -12,7 +12,7 @@ fi
 
 SDK_ARCHIVE=sdk-tools-linux-4333796.zip
 
-sudo apt-get -qq install adb qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
 sudo kvm-ok
 
 if [[ -d ~/Android ]]; then
@@ -31,9 +31,9 @@ else
     (sdkmanager "extras;google;m2repository" | grep -v = || true)
     (sdkmanager "platform-tools" | grep -v = || true)
     (sdkmanager "emulator" | grep -v = || true)
-    (sdkmanager "ndk;21.2.6472646" | grep -v = || true)
+    (sdkmanager "ndk;22.0.7026061" | grep -v = || true)
     (sdkmanager "cmake;3.10.2.4988404" | grep -v = || true)
-    (sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true)
+    (sdkmanager "system-images;android-30;google_apis;x86_64" | grep -v = || true)
 fi
 
 #Uncomment this for debug
