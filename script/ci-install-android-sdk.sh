@@ -33,7 +33,7 @@ else
     (sdkmanager "emulator" | grep -v = || true)
     (sdkmanager "ndk;22.0.7026061" | grep -v = || true)
     (sdkmanager "cmake;3.10.2.4988404" | grep -v = || true)
-    (sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true)
+    (sdkmanager "system-images;android-30;google_apis;x86_64" | grep -v = || true)
 fi
 
 #Uncomment this for debug
