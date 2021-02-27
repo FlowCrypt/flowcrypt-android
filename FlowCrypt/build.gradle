@@ -343,7 +343,7 @@ dependencies {
 
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
-    testImplementation 'org.robolectric:robolectric:4.4'
+    testImplementation 'org.robolectric:robolectric:4.5.1'
     testImplementation 'io.github.classgraph:classgraph:4.8.71'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
@@ -410,7 +410,7 @@ dependencies {
     implementation 'ch.acra:acra:4.11.1'
     implementation 'ja.burhanrashid52:photoeditor:1.1.0'
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.4.30"
-    implementation 'net.openid:appauth:0.7.1'
+    implementation 'net.openid:appauth:0.7.1-14-ged7e194'
     implementation 'org.bitbucket.b_c:jose4j:0.7.6'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
 }
