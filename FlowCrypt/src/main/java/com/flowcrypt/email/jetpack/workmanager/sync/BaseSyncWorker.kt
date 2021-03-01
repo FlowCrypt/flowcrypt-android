@@ -12,7 +12,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.IMAPStoreConnection
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.BaseWorker
@@ -31,7 +30,6 @@ import javax.mail.Store
  */
 abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
   override val useIndependentConnection: Boolean = false
-  protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
   abstract suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store)
   abstract suspend fun runAPIAction(accountEntity: AccountEntity)
@@ -75,13 +73,7 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
         }
       }
 
-      val latestActiveAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-      if (latestActiveAccountEntity?.id == activeAccountEntity?.id) {
-        return@withContext Result.success()
-      } else {
-        //reschedule a task if the active account was changed
-        return@withContext Result.retry()
-      }
+      return@withContext rescheduleIfActiveAccountWasChanged(activeAccountEntity)
     } catch (e: Exception) {
       e.printStackTrace()
       return@withContext when (e) {

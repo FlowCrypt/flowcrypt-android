@@ -12,7 +12,6 @@ import android.text.TextUtils
 import android.util.Base64
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
-import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
@@ -84,15 +83,15 @@ import javax.net.ssl.SSLException
  * Time: 18:43
  * E-mail: DenBond7@gmail.com
  */
-class MessagesSenderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class MessagesSenderWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
+  override val useIndependentConnection: Boolean = false
+
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         LogsUtil.d(TAG, "doWork")
         if (isStopped) {
           return@withContext Result.success()
         }
-
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
         try {
           val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
@@ -136,7 +135,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
             }
           }
 
-          return@withContext Result.success()
+          return@withContext rescheduleIfActiveAccountWasChanged(account)
         } catch (e: Exception) {
           e.printStackTrace()
           when (e) {

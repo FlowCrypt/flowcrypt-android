@@ -59,9 +59,10 @@ import javax.mail.Store
  * Time: 11:48
  * E-mail: DenBond7@gmail.com
  */
-class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
   private val attCacheDir = File(applicationContext.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
   private val fwdAttsCacheDir = File(attCacheDir, Constants.FORWARDED_ATTACHMENTS_CACHE_DIR)
+  override val useIndependentConnection: Boolean = false
 
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
@@ -71,8 +72,6 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
         }
 
         try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-
           if (!attCacheDir.exists()) {
             if (!attCacheDir.mkdirs()) {
               throw IllegalStateException("Create cache directory " + attCacheDir.name + " filed!")
@@ -85,31 +84,32 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
             }
           }
 
-          AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(roomDatabase.accountDao()
-              .getActiveAccount())?.let { account ->
-            val newMsgs = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
-                account = account.email,
-                msgStates = listOf(MessageState.NEW_FORWARDED.value)
-            )
+          val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
+              roomDatabase.accountDao().getActiveAccountSuspend())
+              ?: return@withContext Result.success()
 
-            if (!CollectionUtils.isEmpty(newMsgs)) {
-              if (account.useAPI) {
-                when (account.accountType) {
-                  AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-                    downloadForwardedAtts(account)
-                  }
+          val newMsgs = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
+              account = account.email,
+              msgStates = listOf(MessageState.NEW_FORWARDED.value)
+          )
 
-                  else -> throw ManualHandledException("Unsupported provider")
+          if (!CollectionUtils.isEmpty(newMsgs)) {
+            if (account.useAPI) {
+              when (account.accountType) {
+                AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+                  downloadForwardedAtts(account)
                 }
-              } else {
-                OpenStoreHelper.openStore(applicationContext, account, OpenStoreHelper.getAccountSess(applicationContext, account)).use { store ->
-                  downloadForwardedAtts(account, store)
-                }
+
+                else -> throw ManualHandledException("Unsupported provider")
+              }
+            } else {
+              OpenStoreHelper.openStore(applicationContext, account, OpenStoreHelper.getAccountSess(applicationContext, account)).use { store ->
+                downloadForwardedAtts(account, store)
               }
             }
           }
 
-          return@withContext Result.success()
+          return@withContext rescheduleIfActiveAccountWasChanged(account)
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
