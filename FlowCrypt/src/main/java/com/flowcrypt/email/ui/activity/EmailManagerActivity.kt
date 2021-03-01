@@ -44,8 +44,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialogFragment
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
@@ -88,7 +86,7 @@ import kotlinx.coroutines.launch
  * E-mail: DenBond7@gmail.com
  */
 class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigationItemSelectedListener,
-    View.OnClickListener, SearchView.OnQueryTextListener, TwoWayDialogFragment.OnTwoWayDialogListener {
+    SearchView.OnQueryTextListener, TwoWayDialogFragment.OnTwoWayDialogListener {
 
   private lateinit var client: GoogleSignInClient
   private val labelsViewModel: LabelsViewModel by viewModels()
@@ -284,16 +282,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          countingIdlingResource.incrementSafely()
-          finish()
-          IdleService.restart(this@EmailManagerActivity)
-          runEmailManagerActivity(this@EmailManagerActivity)
-          countingIdlingResource.decrementSafely()
-        }
-      }
-
       REQUEST_CODE_SIGN_IN -> when (resultCode) {
         Activity.RESULT_OK -> {
           val signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
@@ -347,16 +335,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     drawerLayout?.closeDrawer(GravityCompat.START)
     return true
-  }
-
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.floatActionButtonCompose -> startActivity(CreateMessageActivity.generateIntent(this, null,
-          MessageEncryptionType.ENCRYPTED))
-
-      R.id.viewIdAddNewAccount -> startActivityForResult(Intent(this, SignInActivity::class.java)
-          .apply { action = SignInActivity.ACTION_ADD_ONE_MORE_ACCOUNT }, REQUEST_CODE_ADD_NEW_ACCOUNT)
-    }
   }
 
   override fun onRetryGoogleAuth() {
@@ -506,7 +484,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     accountManagementLayout?.visibility = View.GONE
     accountManagementLayout?.let { navigationView?.addHeaderView(it) }
 
-    findViewById<View>(R.id.floatActionButtonCompose)?.setOnClickListener(this)
+    findViewById<View>(R.id.floatActionButtonCompose)?.setOnClickListener {
+      startActivity(CreateMessageActivity.generateIntent(this, null, MessageEncryptionType.ENCRYPTED))
+    }
     activeAccount?.let { navigationView?.getHeaderView(0)?.let { view -> initUserProfileView(view) } }
   }
 
@@ -528,15 +508,16 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
       textViewUserEmail.text = it.email
 
-      if (it.photoUrl?.isNotEmpty() == true) {
-        GlideApp.with(this)
-            .load(it.photoUrl)
-            .apply(RequestOptions()
-                .centerCrop()
-                .transform(CircleTransformation())
-                .error(R.mipmap.ic_account_default_photo))
-            .into(imageViewUserPhoto)
-      }
+      val resource = if (it.photoUrl?.isNotEmpty() == true) {
+        it.photoUrl
+      } else R.mipmap.ic_account_default_photo
+      GlideApp.with(this)
+          .load(resource)
+          .apply(RequestOptions()
+              .centerCrop()
+              .transform(CircleTransformation())
+              .error(R.mipmap.ic_account_default_photo))
+          .into(imageViewUserPhoto)
     }
 
     currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails)
@@ -576,7 +557,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
 
     val addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account, accountManagementLayout, false)
-    addNewAccountView.setOnClickListener(this)
+    addNewAccountView.setOnClickListener {
+      startActivityForResult(Intent(this, SignInActivity::class.java)
+          .apply { action = SignInActivity.ACTION_ADD_ONE_MORE_ACCOUNT }, REQUEST_CODE_ADD_NEW_ACCOUNT)
+      drawerLayout?.closeDrawer(GravityCompat.START)
+    }
     accountManagementLayout?.addView(addNewAccountView)
 
     return accountManagementLayout as LinearLayout
@@ -612,9 +597,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
         roomDatabase.accountDao().switchAccountSuspend(account)
-        finish()
-        IdleService.restart(this@EmailManagerActivity)
-        runEmailManagerActivity(this@EmailManagerActivity)
+        currentAccountDetailsItem?.performClick()
+        drawerLayout?.closeDrawer(GravityCompat.START)
       }
     }
 
@@ -623,25 +607,25 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   private fun setupLabelsViewModel() {
     labelsViewModel.foldersManagerLiveData.observe(this, {
+      val differentAccount = foldersManager?.account != it.account
+
       this.foldersManager = it
 
-      if (foldersManager?.allFolders?.isNotEmpty() == true) {
-        val mailLabels = navigationView?.menu?.findItem(R.id.mailLabels)
-        mailLabels?.subMenu?.clear()
+      val mailLabels = navigationView?.menu?.findItem(R.id.mailLabels)
+      mailLabels?.subMenu?.clear()
 
-        foldersManager?.getSortedNames()?.forEach { name ->
-          mailLabels?.subMenu?.add(name)
-          if (JavaEmailConstants.FOLDER_OUTBOX == name) {
-            addOutboxLabel(mailLabels, name)
-          }
-        }
-
-        for (localFolder in foldersManager?.customLabels ?: emptyList()) {
-          mailLabels?.subMenu?.add(localFolder.folderAlias)
+      foldersManager?.getSortedNames()?.forEach { name ->
+        mailLabels?.subMenu?.add(name)
+        if (JavaEmailConstants.FOLDER_OUTBOX == name) {
+          addOutboxLabel(mailLabels, name)
         }
       }
 
-      if (currentFolder == null) {
+      for (localFolder in foldersManager?.customLabels ?: emptyList()) {
+        mailLabels?.subMenu?.add(localFolder.folderAlias)
+      }
+
+      if (differentAccount || currentFolder == null) {
         currentFolder = foldersManager?.folderInbox
         if (currentFolder == null) {
           currentFolder = foldersManager?.findInboxFolder()
