@@ -233,19 +233,16 @@ abstract class BaseActivity : AppCompatActivity() {
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-        //remove all info about the given account from the local db
-        roomDatabase.accountDao().deleteSuspend(accountEntity)
+        roomDatabase.accountDao().logout(accountEntity)
         removeAccountFromAccountManager(accountEntity)
 
         //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
+        //remove all info about the given account from the local db
         roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
         roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
 
-        val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
-        if (nonactiveAccounts.isNotEmpty()) {
-          val firstNonactiveAccount = nonactiveAccounts.first()
-          roomDatabase.accountDao().switchAccountSuspend(firstNonactiveAccount)
-        } else {
+        val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        if (newActiveAccount == null) {
           roomDatabase.contactsDao().deleteAll()
           stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)
