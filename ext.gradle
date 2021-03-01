@@ -24,20 +24,20 @@ ext {
     /* https://developer.android.com/jetpack/androidx/releases/paging#declaring_dependencies*/
     pagingVersion = '2.1.2'
     /*https://developer.android.com/jetpack/androidx/releases/navigation*/
-    navVersion = '2.3.2'
+    navVersion = '2.3.3'
     /* https://mvnrepository.com/artifact/androidx.test.espresso*/
     espressoVersion = '3.3.0'
     /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
     retrofitVersion = '2.9.0'
     /*https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor*/
-    okhttpVersion = '4.9.0'
+    okhttpVersion = '4.9.1'
     /*https://mvnrepository.com/artifact/com.squareup.okio/okio*/
-    okioVersion = '2.9.0'
+    okioVersion = '2.10.0'
     /*https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android*/
-    leakcanaryVersion = '2.5'
+    leakcanaryVersion = '2.6'
     /*https://mvnrepository.com/artifact/com.sun.mail/android-mail*/
     javaMailVersion = '1.6.5'
     /*https://mvnrepository.com/artifact/com.github.bumptech.glide/glide*/
-    glideVersion = '4.11.0'
-    junitVersion = '4.12'
+    glideVersion = '4.12.0'
+    junitVersion = '4.13'
 }
