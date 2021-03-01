@@ -75,7 +75,13 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
         }
       }
 
-      return@withContext Result.success()
+      val latestActiveAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
+      if (latestActiveAccountEntity?.id == activeAccountEntity?.id) {
+        return@withContext Result.success()
+      } else {
+        //reschedule a task if the active account was changed
+        return@withContext Result.retry()
+      }
     } catch (e: Exception) {
       e.printStackTrace()
       return@withContext when (e) {
