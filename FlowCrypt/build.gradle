@@ -244,7 +244,7 @@ android {
     }
 
     packagingOptions {
-        exclude 'META-INF/DEPENDENCIES'
+        pickFirst 'META-INF/*'
     }
 
     testOptions {
@@ -396,6 +396,7 @@ dependencies {
     implementation "com.squareup.leakcanary:leakcanary-object-watcher-android:${rootProject.ext.leakcanaryVersion}"
 
     implementation "com.sun.mail:android-mail:${rootProject.ext.javaMailVersion}"
+    implementation "com.sun.mail:android-activation:${rootProject.ext.javaMailVersion}"
     implementation("com.sun.mail:gimap:${rootProject.ext.javaMailVersion}") {
         //exclude group: 'com.sun.mail' because it exists in 'com.sun.mail:android-mail'
         exclude group: 'com.sun.mail'
