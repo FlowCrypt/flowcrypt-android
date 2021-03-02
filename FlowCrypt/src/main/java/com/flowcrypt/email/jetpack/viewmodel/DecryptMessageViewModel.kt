@@ -30,7 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
-import org.spongycastle.bcpg.ArmoredInputStream
+import org.bouncycastle.bcpg.ArmoredInputStream
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream

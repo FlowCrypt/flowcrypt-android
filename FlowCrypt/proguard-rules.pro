@@ -296,10 +296,10 @@
 -keep interface org.w3c.dom.** { *; }
 -dontwarn org.w3c.dom.**
 
-########################################## SPONGYCASTLE ###############################################################
--keep class org.spongycastle.** { *; }
--keep interface org.spongycastle.** { *; }
--dontwarn org.spongycastle.**
+########################################## BOUNCYCASTLE ###############################################################
+-keep class org.bouncycastle.** { *; }
+-keep interface org.bouncycastle.** { *; }
+-dontwarn org.bouncycastle.**
 
 ########################################## Play services ##############################################################
 -dontnote com.google.android.gms.**

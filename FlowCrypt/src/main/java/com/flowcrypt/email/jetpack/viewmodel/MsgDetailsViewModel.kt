@@ -59,7 +59,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
-import org.spongycastle.bcpg.ArmoredInputStream
+import org.bouncycastle.bcpg.ArmoredInputStream
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.File
