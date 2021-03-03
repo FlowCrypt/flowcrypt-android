@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -153,7 +152,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
             }
 
             try {
-              pgpApiRepository.fetchKeyDetails(ParseKeysRequest(backup)).data?.nodeKeyDetails?.let { keys -> keyDetailsList.addAll(keys) }
+              pgpApiRepository.fetchKeyDetails(backup).data?.nodeKeyDetails?.let { keys -> keyDetailsList.addAll(keys) }
             } catch (e: NodeException) {
               e.printStackTrace()
               ExceptionUtil.handleError(e)

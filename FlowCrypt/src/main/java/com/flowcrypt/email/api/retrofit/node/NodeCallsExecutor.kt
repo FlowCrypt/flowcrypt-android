@@ -40,7 +40,7 @@ class NodeCallsExecutor {
      */
     fun parseKeys(key: String?): List<NodeKeyDetails> {
       key ?: return emptyList()
-      return Pgp.parsePrvKeys(key).map { it.toNodeKeyDetails() }
+      return Pgp.parseKeys(key).map { it.toNodeKeyDetails() }
     }
 
     /**

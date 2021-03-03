@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -39,7 +38,6 @@ import java.util.*
  * Time: 15:13
  * E-mail: DenBond7@gmail.com
  */
-
 class AccountKeysInfoViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val pgpApiRepository: PgpApiRepository = NodeRepository()
@@ -100,14 +98,14 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       val emails = ArrayList<String>()
       emails.add(accountEntity.email)
 
-      if (accountEntity.account?.type == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+      if (accountEntity.account.type == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
         emails.addAll(getAvailableGmailAliases(accountEntity.account))
       }
 
       for (email in emails) {
         val pubResponseResult = apiRepository.getPub(context = getApplication(), identData = email)
         pubResponseResult.data?.pubkey?.let { key ->
-          pgpApiRepository.fetchKeyDetails(ParseKeysRequest(key)).data?.nodeKeyDetails?.let { keys -> results.addAll(keys) }
+          pgpApiRepository.fetchKeyDetails(key).data?.nodeKeyDetails?.let { keys -> results.addAll(keys) }
         }
       }
 

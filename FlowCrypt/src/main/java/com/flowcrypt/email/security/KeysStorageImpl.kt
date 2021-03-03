@@ -11,7 +11,6 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -56,7 +55,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> = Transformations.switchMap(keysLiveData) {
     liveData {
       val raw = it.joinToString { keyEntity -> keyEntity.privateKeyAsString }
-      val result = NodeRepository().fetchKeyDetails(ParseKeysRequest(raw))
+      val result = NodeRepository().fetchKeyDetails(raw)
       if (result.status == Result.Status.SUCCESS) {
         emit(result.data?.nodeKeyDetails ?: emptyList<NodeKeyDetails>())
       } else {

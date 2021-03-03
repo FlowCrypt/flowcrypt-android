@@ -173,8 +173,8 @@ object Pgp {
       return NodeKeyDetails(
           isFullyDecrypted = parsed.fullyDecrypted,
           isFullyEncrypted = true,
-          privateKey = asString(),
-          publicKey = parsePubFromPrv(armored).asString(),
+          privateKey = if (parsed.isPrivate) asString() else null,
+          publicKey = if (parsed.isPrivate) parsePubFromPrv(armored).asString() else asString(),
           users = parsed.uids.toList(),
           ids = parsed.allIds.map { KeyId(it, it, it, it) },
           created = parsed.created.toEpochMilli(),
@@ -229,8 +229,12 @@ object Pgp {
     return parse(armoredStr.toByteArray(StandardCharsets.UTF_8), expectPrivate)
   }
 
-  fun parsePrvKeys(armoredStr: String): Collection<ArmoredKey> {
-    return listOf(parse(armoredStr, true))
+  fun parseKeys(armoredStr: String): Collection<ArmoredKey> {
+    return try {
+      listOf(parse(armoredStr, true))
+    } catch (e: Exception) {
+      listOf(parse(armoredStr, false))
+    }
   }
 
   fun parse(armored: ByteArray, expectPrivate: Boolean): ArmoredKey {

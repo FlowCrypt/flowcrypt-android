@@ -27,7 +27,6 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
@@ -247,7 +246,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
         }
 
-        parseKeysLiveData.value = nodeRepository.fetchKeyDetails(ParseKeysRequest(armoredSource))
+        parseKeysLiveData.value = nodeRepository.fetchKeyDetails(armoredSource)
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)

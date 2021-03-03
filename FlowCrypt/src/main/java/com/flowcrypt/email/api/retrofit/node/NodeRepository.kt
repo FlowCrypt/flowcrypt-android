@@ -14,7 +14,6 @@ import com.flowcrypt.email.api.retrofit.request.node.GenerateKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
@@ -44,19 +43,15 @@ class NodeRepository : PgpApiRepository {
     getResult { apiService.decryptKey(DecryptKeyRequest(armoredKey, passphrases)) }
   }
 
-  override suspend fun fetchKeyDetails(request: ParseKeysRequest): Result<ParseKeysResult?> =
+  override suspend fun fetchKeyDetails(rawKey: String?): Result<ParseKeysResult?> =
       withContext(Dispatchers.IO) {
         return@withContext try {
-          val keys = Pgp.parsePrvKeys(request.rawKey ?: "").map { it.toNodeKeyDetails() }
+          val keys = Pgp.parseKeys(rawKey ?: "").map { it.toNodeKeyDetails() }
           Result.success(ParseKeysResult(nodeKeyDetails = keys.toMutableList()))
         } catch (e: Exception) {
           Result.exception(e)
         }
       }
-
-  override fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String?) {
-    load(requestCode, liveData, ParseKeysRequest(raw))
-  }
 
   override suspend fun parseDecryptMsg(requestCode: Int, request: ParseDecryptMsgRequest): Result<ParseDecryptedMsgResult?> =
       withContext(Dispatchers.IO) {
