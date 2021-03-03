@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.openpgp.Pgp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -45,8 +46,12 @@ class NodeRepository : PgpApiRepository {
 
   override suspend fun fetchKeyDetails(request: ParseKeysRequest): Result<ParseKeysResult?> =
       withContext(Dispatchers.IO) {
-        val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-        getResult(call = { apiService.parseKeysSuspend(request) })
+        return@withContext try {
+          val keys = Pgp.parsePrvKeys(request.rawKey ?: "").map { it.toNodeKeyDetails() }
+          Result.success(ParseKeysResult(nodeKeyDetails = keys.toMutableList()))
+        } catch (e: Exception) {
+          Result.exception(e)
+        }
       }
 
   override fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String?) {

@@ -5,6 +5,9 @@
 
 package com.flowcrypt.email.security.openpgp
 
+import com.flowcrypt.email.api.retrofit.response.model.node.Algo
+import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags
@@ -164,6 +167,26 @@ object Pgp {
     override fun toString(): String {
       return "ArmoredKey[@${Integer.toHexString(identityHashCode(this))}]"
     }
+
+    //need to review this code
+    fun toNodeKeyDetails(): NodeKeyDetails {
+      return NodeKeyDetails(
+          isFullyDecrypted = parsed.fullyDecrypted,
+          isFullyEncrypted = true,
+          privateKey = asString(),
+          publicKey = parsePubFromPrv(armored).asString(),
+          users = parsed.uids.toList(),
+          ids = parsed.allIds.map { KeyId(it, it, it, it) },
+          created = parsed.created.toEpochMilli(),
+          lastModified = parsed.lastModified.toEpochMilli(),
+          expiration = parsed.expiration?.toEpochMilli() ?: 0,
+          algo = Algo(algorithm = parsed.algorithmName,
+              algorithmId = parsed.algorithmId,
+              bits = parsed.bitStrength ?: 0,
+              curve = null),
+          passphrase = null,
+          errorMsg = null)
+    }
   }
 
   fun parseKeyPair(armoredPub: ByteArray, armoredPrv: ByteArray, expectedId: String?): Pair {
@@ -204,6 +227,10 @@ object Pgp {
 
   fun parse(armoredStr: String, expectPrivate: Boolean): ArmoredKey {
     return parse(armoredStr.toByteArray(StandardCharsets.UTF_8), expectPrivate)
+  }
+
+  fun parsePrvKeys(armoredStr: String): Collection<ArmoredKey> {
+    return listOf(parse(armoredStr, true))
   }
 
   fun parse(armored: ByteArray, expectPrivate: Boolean): ArmoredKey {

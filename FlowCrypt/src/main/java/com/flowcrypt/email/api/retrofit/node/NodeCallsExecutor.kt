@@ -8,15 +8,14 @@ package com.flowcrypt.email.api.retrofit.node
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
+import com.flowcrypt.email.security.openpgp.Pgp
 import com.flowcrypt.email.util.exception.NodeException
-import com.google.android.gms.common.util.CollectionUtils
 import java.io.IOException
 
 /**
@@ -41,18 +40,7 @@ class NodeCallsExecutor {
      */
     fun parseKeys(key: String?): List<NodeKeyDetails> {
       key ?: return emptyList()
-
-      val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-      val request = ParseKeysRequest(key)
-
-      val response = service.parseKeys(request).execute()
-      val result = response.body()
-
-      checkResult(result)
-
-      val details = result!!.nodeKeyDetails
-
-      return if (CollectionUtils.isEmpty(details)) emptyList() else details
+      return Pgp.parsePrvKeys(key).map { it.toNodeKeyDetails() }
     }
 
     /**
