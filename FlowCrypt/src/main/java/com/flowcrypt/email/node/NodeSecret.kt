@@ -206,7 +206,7 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String,
       if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
         Security.addProvider(BouncyCastleProvider()) // takes about 150ms and is not always needed
       }
-      val cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME)
+      val cf = CertificateFactory.getInstance("X.509")
       return cf.generateCertificate(inputStream) as X509Certificate
     }
   }
