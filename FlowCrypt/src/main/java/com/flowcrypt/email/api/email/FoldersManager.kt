@@ -234,25 +234,19 @@ class FoldersManager constructor(val account: String) {
     val sortedList = arrayOfNulls<String>(localFolders.size)
 
     val inbox = folderInbox?.let {
-      localFolders.remove(it)
       sortedList[0] = it.folderAlias
+      localFolders.remove(it)
       it
     }
 
-    folderTrash?.let {
-      localFolders.remove(it)
-      sortedList[localFolders.size + 1] = it.folderAlias
+    val moveFolder = fun(localFolder: LocalFolder) {
+      sortedList[localFolders.size] = localFolder.folderAlias
+      localFolders.remove(localFolder)
     }
 
-    folderSpam?.let {
-      localFolders.remove(it)
-      sortedList[localFolders.size + 1] = it.folderAlias
-    }
-
-    folderOutbox?.let {
-      localFolders.remove(it)
-      sortedList[localFolders.size + 1] = it.folderAlias
-    }
+    folderTrash?.let { moveFolder(it) }
+    folderSpam?.let { moveFolder(it) }
+    folderOutbox?.let { moveFolder(it) }
 
     for (i in localFolders.indices) {
       val localFolder = localFolders[i]
