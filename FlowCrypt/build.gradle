@@ -9,7 +9,6 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: "androidx.navigation.safeargs.kotlin"
-apply plugin: 'com.akaita.android.easylauncher'
 
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
@@ -239,8 +238,7 @@ android {
 
     lintOptions {
         warningsAsErrors true
-        //we disable 'IconLauncherShape' to prevent fails because of use easylauncher
-        disable 'NullSafeMutableLiveData', 'IconLauncherShape'
+        disable 'NullSafeMutableLiveData'
     }
 
     packagingOptions {
@@ -297,26 +295,6 @@ android {
     }
 
     ndkVersion "22.0.7026061"
-}
-
-easylauncher {
-    iconNames "@mipmap/ic_launcher_foreground"
-    foregroundIconNames "@mipmap/ic_launcher_foreground" // Foreground of adaptive launcher icon
-    buildTypes {
-        debug {
-            filters = [
-                    customColorRibbonFilter("debug", "#556600CC", "#FFFFFF", "top")
-            ]
-        }
-    }
-
-    variants {
-        devDebug {
-            filters = [
-                    customColorRibbonFilter("dev", "#55CC5F00", "#FFFFFF", "top")
-            ]
-        }
-    }
 }
 
 dependencies {
