@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.junit.filters
 
+import androidx.test.internal.runner.filters.ParentFilter
 import org.junit.runner.Description
-import org.junit.runner.manipulation.Filter
 
 /**
  * @author Denis Bondarenko
@@ -14,12 +14,12 @@ import org.junit.runner.manipulation.Filter
  *         Time: 10:42 AM
  *         E-mail: DenBond7@gmail.com
  */
-class OtherTestsFilter : Filter() {
+class OtherTestsFilter : ParentFilter() {
   private val dependsOnMailServerFilter = DependsOnMailServerFilter()
   private val doesNotNeedMailServerFilter = DoesNotNeedMailServerFilter()
 
-  override fun shouldRun(description: Description?): Boolean {
-    return description?.isTest == false || (!dependsOnMailServerFilter.shouldRun(description) && !doesNotNeedMailServerFilter.shouldRun(description))
+  override fun evaluateTest(description: Description?): Boolean {
+    return (!dependsOnMailServerFilter.shouldRun(description) && !doesNotNeedMailServerFilter.shouldRun(description))
   }
 
   override fun describe() = "Filter tests that are not related to any conditions"
