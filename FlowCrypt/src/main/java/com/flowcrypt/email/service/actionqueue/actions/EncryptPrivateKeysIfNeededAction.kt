@@ -38,7 +38,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
   override val type: Action.Type = Action.Type.ENCRYPT_PRIVATE_KEYS
 
   override fun run(context: Context) {
-    val keyEntities = KeysStorageImpl.getInstance(context).getAllPgpPrivateKeys()
+    val keyEntities = KeysStorageImpl.getInstance(context).getAllPgpPrivateKeys().map { it.copy() }
     val modifiedKeyEntities = mutableListOf<KeyEntity>()
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
