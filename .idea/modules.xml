@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/apk.iml" filepath="$PROJECT_DIR$/.idea/modules/apk.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FlowCrypt/apk.FlowCrypt.iml" filepath="$PROJECT_DIR$/.idea/modules/FlowCrypt/apk.FlowCrypt.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flowcrypt-android.iml" filepath="$PROJECT_DIR$/flowcrypt-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FlowCrypt/flowcrypt-android.FlowCrypt.iml" filepath="$PROJECT_DIR$/.idea/modules/FlowCrypt/flowcrypt-android.FlowCrypt.iml" />
     </modules>
   </component>
 </project>
