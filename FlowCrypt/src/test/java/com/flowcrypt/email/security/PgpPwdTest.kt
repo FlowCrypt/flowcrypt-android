@@ -56,6 +56,6 @@ class PgpPwdTest {
     @Test
     fun testRandom() {
         val password = PgpPwd.random()
-        assertTrue("Password structure mismatch", passwordRegex.matches(password));
+        assertTrue("Password structure mismatch", passwordRegex.matches(password))
     }
 }
