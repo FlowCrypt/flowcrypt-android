@@ -56,15 +56,26 @@ object PgpPwd {
         val bytes = ByteArray(16)
         val rnd = SecureRandom()
         rnd.nextBytes(bytes)
+        return bytesToPassword(bytes)
+    }
+
+    fun bytesToPassword(bytes: ByteArray): String {
+        val minLength = 16
+        if (bytes.size < minLength) {
+            throw IllegalArgumentException(
+                    "Source byte array is too short: required minimum length is $minLength, " +
+                            "but the actual length is ${bytes.size}"
+            )
+        }
         val s = StringBuilder()
         bytes.forEachIndexed { i, b0 ->
             if (i > 0 && i % 4 == 0) s.append('-')
-            val b = b0 % 36
-            s.append(if (b < 10) '0' + b else 'A' + (b - 10))
+            var b = b0 % 36
+            if (b < 0) b += 36
+            s.append(if (b < 10) '0' + b else 'A' + ((b as Int) - 10))
         }
         return s.toString()
     }
-
 
     // https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
     private fun readableCrackTime(totalSeconds: BigInteger): String {
