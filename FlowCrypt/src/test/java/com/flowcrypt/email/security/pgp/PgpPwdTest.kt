@@ -1,9 +1,9 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: ivan
  */
 
-package com.flowcrypt.email.security
+package com.flowcrypt.email.security.pgp
 
 import org.junit.Test
 import org.junit.Assert.assertEquals
