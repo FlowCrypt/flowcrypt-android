@@ -72,7 +72,7 @@ object PgpPwd {
             if (i > 0 && i % 4 == 0) s.append('-')
             var b = b0 % 36
             if (b < 0) b += 36
-            s.append(if (b < 10) '0' + b else 'A' + ((b as Int) - 10))
+            s.append(if (b < 10) '0' + b else 'A' + (b - 10))
         }
         return s.toString()
     }
