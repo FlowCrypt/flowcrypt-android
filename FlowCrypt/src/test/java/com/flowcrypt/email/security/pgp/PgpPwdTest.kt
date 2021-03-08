@@ -5,27 +5,26 @@
 
 package com.flowcrypt.email.security.pgp
 
-import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import java.lang.IllegalArgumentException
+import org.junit.Test
 import java.math.BigInteger
 
 class PgpPwdTest {
     @Test
     fun testEstimateStrength() {
         val actualResult = PgpPwd.estimateStrength(
-                BigInteger("88946283684264"), PgpPwd.PwdType.PASSPHRASE)
+            BigInteger("88946283684264"), PgpPwd.PwdType.PASSPHRASE)
         val expectedResult = PgpPwd.PwdStrengthResult(
-                word = PgpPwd.Word(
-                        match = "week",
-                        word =  "poor",
-                        bar = 30,
-                        color = "darkred",
-                        pass = false
-                ),
-                seconds = BigInteger.valueOf(1111829),
-                time = "2 weeks"
+            word = PgpPwd.Word(
+                match = "week",
+                word = "poor",
+                bar = 30,
+                color = "darkred",
+                pass = false
+            ),
+            seconds = BigInteger.valueOf(1111829),
+            time = "2 weeks"
         )
         assertEquals(expectedResult, actualResult)
     }
