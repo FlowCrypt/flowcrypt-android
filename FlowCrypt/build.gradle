@@ -419,7 +419,6 @@ dependencies {
         exclude group: 'org.bouncycastle'
     }
 
-    //we can't use a newer version yet
     implementation "org.bouncycastle:bcpg-jdk15on:${rootProject.ext.bouncycastleVersion}"
     implementation "org.bouncycastle:bcpkix-jdk15on:${rootProject.ext.bouncycastleVersion}"
 }

@@ -14,6 +14,7 @@
     <issue id="TrustAllX509TrustManager">
         <!-- Those issues are not relevant to our project, we can skip them -->
         <ignore path="**/SslUtils$1.class" />
+        <ignore path="**/JcaJceUtils**" />
     </issue>
     <issue id="UnusedResources">
         <!-- This file is needed for debug purposes -->
