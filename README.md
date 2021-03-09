@@ -6,8 +6,7 @@ Download on your Android device from https://flowcrypt.com/download
 
 
 ## Run tests
-This guide follows the Google recommendation of tests(https://developer.android.com/training
-/testing). There are JUnit and Instrumentation tests. To be able to run tests locally you should
+This guide follows the Google recommendation of tests(https://developer.android.com/training/testing). There are JUnit and Instrumentation tests. To be able to run tests locally you should
  use the [following](https://developer.android.com/training/testing/espresso/setup#set-up-environment) instruction. Every scenario described in this section was tested on Ubuntu.
 
 We have two types of tests which can be run:
