@@ -239,7 +239,6 @@ android {
 
     lintOptions {
         warningsAsErrors true
-        disable 'NullSafeMutableLiveData', 'ObsoleteSdkInt'
     }
 
     packagingOptions {
