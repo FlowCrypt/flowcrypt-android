@@ -51,6 +51,7 @@ blocks:
         - name: 'Build Project'
           commands:
             - cat /proc/cpuinfo # print debug info
+            - java -version # print Java version
             - ./gradlew assembleDevTestDebug # compile project
             - ./script/ci-lint-checks.sh # run Lint checks
       epilogue:
