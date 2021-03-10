@@ -113,6 +113,14 @@ abstract class AccountDao : BaseDao<AccountEntity> {
   }
 
   @Transaction
+  open suspend fun logout(accountEntity: AccountEntity) {
+    deleteSuspend(accountEntity)
+    getAllNonactiveAccountsSuspend().firstOrNull()?.let {
+      switchAccountSuspend(it)
+    }
+  }
+
+  @Transaction
   open fun updateAccount(entity: AccountEntity): Int {
     val existedAccount = getAccount(entity.email) ?: return 0
     return update(entity.copy(

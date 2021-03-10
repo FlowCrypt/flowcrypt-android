@@ -32,7 +32,6 @@ import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.IdleService
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -234,23 +233,16 @@ abstract class BaseActivity : AppCompatActivity() {
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-        //remove all info about the given account from the local db
-        roomDatabase.accountDao().deleteSuspend(accountEntity)
+        roomDatabase.accountDao().logout(accountEntity)
         removeAccountFromAccountManager(accountEntity)
 
         //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
+        //remove all info about the given account from the local db
         roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
         roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
 
-        val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
-        if (nonactiveAccounts.isNotEmpty()) {
-          val firstNonactiveAccount = nonactiveAccounts.first()
-          roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
-          roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
-          finish()
-          IdleService.restart(applicationContext)
-          EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
-        } else {
+        val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        if (newActiveAccount == null) {
           roomDatabase.contactsDao().deleteAll()
           stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)

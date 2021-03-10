@@ -12,6 +12,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.sun.mail.iap.ConnectionException
 import com.sun.mail.smtp.SMTPSendFailedException
 import com.sun.mail.util.MailConnectException
+import kotlinx.coroutines.CancellationException
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -143,6 +144,11 @@ object ExceptionResolver {
       if ("Not connected".equals(e.message, ignoreCase = true)) {
         return false
       }
+    }
+
+    if (e is CancellationException) {
+      //we can drop such an error because we always use [CoroutineScope]
+      return false
     }
 
     return true

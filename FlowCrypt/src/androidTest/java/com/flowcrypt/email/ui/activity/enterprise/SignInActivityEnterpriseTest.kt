@@ -15,6 +15,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
@@ -99,7 +100,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @CICandidateAnnotation
   fun testNoPrvCreateRule() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_WITH_NO_PRV_CREATE_RULE))
     intended(hasComponent(CreateOrImportKeyActivity::class.java.name))

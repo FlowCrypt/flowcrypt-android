@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment.preferences
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.preference.ListPreference
@@ -41,13 +40,10 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
   override fun onPreferenceClick(preference: Preference?): Boolean {
     return when (preference?.key) {
       Constants.PREF_KEY_MANAGE_NOTIFICATIONS -> {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          val intent = Intent()
-          intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
-          intent.putExtra(Settings.EXTRA_APP_PACKAGE, BuildConfig.APPLICATION_ID)
-          startActivity(intent)
-        }
-
+        val intent = Intent()
+        intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+        intent.putExtra(Settings.EXTRA_APP_PACKAGE, BuildConfig.APPLICATION_ID)
+        startActivity(intent)
         true
       }
 
@@ -95,11 +91,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
 
   private fun initPreferences(isEncryptedModeEnabled: Boolean) {
     val preferenceSettingsSecurity = findPreference<Preference>(Constants.PREF_KEY_MANAGE_NOTIFICATIONS)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      preferenceSettingsSecurity?.onPreferenceClickListener = this
-    } else {
-      preferenceSettingsSecurity?.isVisible = false
-    }
+    preferenceSettingsSecurity?.onPreferenceClickListener = this
 
     val filter = findPreference<Preference>(Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER) as ListPreference
     filter.entryValues = levels

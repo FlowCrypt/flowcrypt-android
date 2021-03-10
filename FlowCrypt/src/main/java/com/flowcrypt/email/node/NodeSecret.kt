@@ -6,18 +6,18 @@
 package com.flowcrypt.email.node
 
 import android.util.Base64
-import org.spongycastle.asn1.x500.X500Name
-import org.spongycastle.asn1.x509.Extension
-import org.spongycastle.asn1.x509.KeyUsage
-import org.spongycastle.asn1.x509.SubjectPublicKeyInfo
-import org.spongycastle.cert.X509v3CertificateBuilder
-import org.spongycastle.jce.provider.BouncyCastleProvider
-import org.spongycastle.openssl.PEMKeyPair
-import org.spongycastle.openssl.PEMParser
-import org.spongycastle.openssl.jcajce.JcaMiscPEMGenerator
-import org.spongycastle.openssl.jcajce.JcaPEMKeyConverter
-import org.spongycastle.operator.jcajce.JcaContentSignerBuilder
-import org.spongycastle.util.io.pem.PemWriter
+import org.bouncycastle.asn1.x500.X500Name
+import org.bouncycastle.asn1.x509.Extension
+import org.bouncycastle.asn1.x509.KeyUsage
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
+import org.bouncycastle.cert.X509v3CertificateBuilder
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.openssl.PEMKeyPair
+import org.bouncycastle.openssl.PEMParser
+import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+import org.bouncycastle.util.io.pem.PemWriter
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -206,7 +206,7 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String,
       if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
         Security.addProvider(BouncyCastleProvider()) // takes about 150ms and is not always needed
       }
-      val cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME)
+      val cf = CertificateFactory.getInstance("X.509")
       return cf.generateCertificate(inputStream) as X509Certificate
     }
   }

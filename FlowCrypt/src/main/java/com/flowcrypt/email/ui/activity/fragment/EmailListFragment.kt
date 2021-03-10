@@ -301,7 +301,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           newFolder = it.copy(),
           forceClearFolderCache = isForceClearCacheNeeded,
           deleteAllMsgs = deleteAllMsgs)
-    }
+    } ?: labelsViewModel.loadLabels()
   }
 
   /**

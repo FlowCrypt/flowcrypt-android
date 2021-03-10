@@ -21,14 +21,10 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class DebugTestingTest {
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun alwaysSuccessTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun alwaysSuccessTestSecond() {
   }
 }
