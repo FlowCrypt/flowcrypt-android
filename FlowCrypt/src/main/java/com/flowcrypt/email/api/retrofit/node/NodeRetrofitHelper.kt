@@ -13,15 +13,14 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.NodeSecret
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.gson.Gson
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.security.cert.X509Certificate
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.HostnameVerifier
 
@@ -37,6 +36,7 @@ import javax.net.ssl.HostnameVerifier
 object NodeRetrofitHelper {
   private const val TIMEOUT = 90
   private var okHttpClient: OkHttpClient? = null
+  private val countDownLatch: CountDownLatch = CountDownLatch(1)
 
   @Volatile
   private var retrofit: Retrofit? = null
@@ -52,11 +52,15 @@ object NodeRetrofitHelper {
         .client(okHttpClient!!)
 
     retrofit = retrofitBuilder.build()
+    countDownLatch.countDown()
   }
 
   @JvmStatic
   fun getRetrofit(): Retrofit? {
-    checkAndWaitNode()
+    if (retrofit == null) {
+      countDownLatch.await(60, TimeUnit.SECONDS)
+    }
+
     return retrofit
   }
 
@@ -90,40 +94,17 @@ object NodeRetrofitHelper {
     return builder
   }
 
-  /**
-   * This method does 5 attempts to check is Node.js server started.
-   */
-  private fun checkAndWaitNode() {
-    var attemptCount = 5
-
-    while (attemptCount != 0) {
-      if (retrofit == null) {
-        attemptCount--
-        try {
-          LogsUtil.d(NodeRetrofitHelper::class.java.simpleName, "Node.js server is not run yet. Trying to wait...")
-          Thread.sleep(1000)
-        } catch (e: InterruptedException) {
-          e.printStackTrace()
-        }
-      } else {
-        return
-      }
-    }
-  }
-
   private fun headersInterceptor(nodeSecret: NodeSecret): Interceptor {
-    return object : Interceptor {
-      override fun intercept(chain: Interceptor.Chain): Response {
-        var request: okhttp3.Request = chain.request()
-        val headers = request
-            .headers
-            .newBuilder()
-            .add("Authorization", nodeSecret.authHeader)
-            .add("Connection", "Keep-Alive")
-            .build()
-        request = request.newBuilder().headers(headers).build()
-        return chain.proceed(request)
-      }
+    return Interceptor { chain ->
+      var request: okhttp3.Request = chain.request()
+      val headers = request
+          .headers
+          .newBuilder()
+          .add("Authorization", nodeSecret.authHeader)
+          .add("Connection", "Keep-Alive")
+          .build()
+      request = request.newBuilder().headers(headers).build()
+      chain.proceed(request)
     }
   }
 
