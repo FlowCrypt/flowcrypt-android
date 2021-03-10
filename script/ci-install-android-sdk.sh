@@ -26,17 +26,17 @@ else
     unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
     rm $SDK_ARCHIVE
 
-    (echo "yes" | sdkmanager --licenses > /dev/null | grep -v = || true)
-    ( sleep 5; echo "y" ) | (sdkmanager "build-tools;29.0.2" "platforms;android-29" > /dev/null | grep -v = || true)
-    (sdkmanager "extras;google;m2repository" | grep -v = || true)
-    (sdkmanager "cmdline-tools;latest" | grep -v = || true)
-    (sdkmanager "platform-tools" | grep -v = || true)
-    (sdkmanager "emulator" | grep -v = || true)
-    (sdkmanager "ndk;22.0.7026061" | grep -v = || true)
-    (sdkmanager "cmake;3.10.2.4988404" | grep -v = || true)
-    (sdkmanager "system-images;android-30;google_apis;x86" | grep -v = || true)
+    (echo "yes" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --licenses > /dev/null | grep -v = || true)
+    ( sleep 5; echo "y" ) | (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" > /dev/null | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "extras;google;m2repository" | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "cmdline-tools;latest" | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "platform-tools" | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "emulator" | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "ndk;22.0.7026061" | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "cmake;3.10.2.4988404" | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "system-images;android-30;google_apis;x86" | grep -v = || true)
 fi
 
 #Uncomment this for debug
-#~/Android/Sdk/tools/bin/sdkmanager --list
+#~/Android/Sdk/tools/bin/${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --list
 
