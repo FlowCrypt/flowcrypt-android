@@ -63,7 +63,13 @@ interface MsgBlock : Parcelable {
     DECRYPTED_HTML,
 
     @SerializedName("decryptErr")
-    DECRYPT_ERROR;
+    DECRYPT_ERROR,
+
+    @SerializedName("certificate")
+    CERTIFICATE,
+
+    @SerializedName("signature")
+    SIGNATURE;
 
     override fun describeContents(): Int {
       return 0
@@ -80,5 +86,9 @@ interface MsgBlock : Parcelable {
         override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
       }
     }
+  }
+
+  companion object {
+    const val TAG_TYPE = "type"
   }
 }

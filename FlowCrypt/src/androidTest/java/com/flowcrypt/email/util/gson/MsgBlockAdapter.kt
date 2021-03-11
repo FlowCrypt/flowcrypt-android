@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.gson
 
-import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
@@ -31,7 +31,7 @@ class MsgBlockAdapter : JsonDeserializer<MsgBlock> {
 
       MsgBlock.Type.DECRYPT_ERROR -> return context.deserialize<MsgBlock>(json, DecryptErrorMsgBlock::class.java)
 
-      else -> return context.deserialize<MsgBlock>(json, BaseMsgBlock::class.java)
+      else -> return context.deserialize<MsgBlock>(json, GenericMsgBlock::class.java)
     }
   }
 }

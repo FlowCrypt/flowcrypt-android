@@ -9,7 +9,7 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
-import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.jfixture.MsgBlockGenerationCustomization
 import com.flowcrypt.email.jfixture.SelectConstructorCustomisation
@@ -39,7 +39,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     val fixture = JFixture()
     fixture.customise(SelectConstructorCustomisation(currentClass))
     fixture.customise(MsgBlockGenerationCustomization())
-    fixture.customise().sameInstance(BaseMsgBlock::class.java, BaseMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false))
+    fixture.customise().sameInstance(GenericMsgBlock::class.java, GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false))
     objectInstance = currentClass.kotlin.objectInstance ?: fixture.create(currentClass)
   }
 
