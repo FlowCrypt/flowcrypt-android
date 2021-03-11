@@ -14,6 +14,7 @@ object MsgBlockParser {
 
   const val ARMOR_HEADER_MAX_LENGTH = 50
 
+  @JvmStatic
   fun detectBlocks(text: String): Pair<List<MsgBlock>, String> {
     val blocks = mutableListOf<MsgBlock>()
     val normalized = normalize(text)
@@ -25,14 +26,13 @@ object MsgBlockParser {
     }
   }
 
+  @JvmStatic
   private fun detectBlockNext(text: String, startAt: Int, blocks: MutableList<MsgBlock>): Int {
-    // TODO translate
     val initialBlockCount = blocks.size
     var continueAt = -1
     val begin = text.indexOf(PgpArmor.ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!.begin, startAt)
     if (begin != -1) { // found
       val potentialBeginHeader = text.substring(begin, begin + ARMOR_HEADER_MAX_LENGTH)
-      // TODO recheck about replacing string due to format of hdr...Something
       for (blockHeaderKvp in PgpArmor.ARMOR_HEADER_DICT) {
         val blockHeaderDef = blockHeaderKvp.value
         if (!blockHeaderDef.replace) continue
@@ -57,17 +57,21 @@ object MsgBlockParser {
           }
         }
 
-        var endIndex = -1
-        var foundBlockEndHeaderLength = 0
-        if (blockHeaderDef.end != null) {
-          endIndex = text.indexOf(blockHeaderDef.end, begin + blockHeaderDef.begin.length)
-          foundBlockEndHeaderLength = blockHeaderDef.end.length
-        } else { // regexp
-          val found = blockHeaderDef.endRegexp!!.find(text.substring(begin))
+        val endIndex: Int
+        val foundBlockEndHeaderLength: Int
+        if (blockHeaderDef.endRegexp != null) {
+          val found = blockHeaderDef.endRegexp.find(text.substring(begin))
           if (found != null) {
             endIndex = begin + found.range.first
             foundBlockEndHeaderLength = found.range.last - found.range.first
+          } else {
+            endIndex = -1
+            foundBlockEndHeaderLength = 0
           }
+        } else { // string
+          val end = blockHeaderDef.end!!
+          endIndex = text.indexOf(end, begin + blockHeaderDef.begin.length)
+          foundBlockEndHeaderLength = if (endIndex == -1) 0 else end.length
         }
 
         if (endIndex != -1) {
