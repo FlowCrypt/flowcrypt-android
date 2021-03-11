@@ -24,20 +24,20 @@ import java.util.concurrent.TimeUnit
 fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
   val keyRingInfo = KeyRingInfo(this)
 
-  val bitStrength = if (keyRingInfo.publicKey.bitStrength != -1) {
-    keyRingInfo.publicKey.bitStrength
-  } else {
-    0
-  }
+  val algo = Algo(algorithm = keyRingInfo.algorithm.name,
+      algorithmId = keyRingInfo.algorithm.algorithmId,
+      bits = if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else 0,
+      curve = KeyInfo.getCurveName(publicKey))//fix me, don't show curve
 
   val ids = publicKeys.iterator().asSequence().toList()
       .map {
         val fingerprint = OpenPgpV4Fingerprint(it)
         KeyId(
             fingerprint = fingerprint.toString(),
-            longId = it.keyID.toString(),
-            shortId = "",
-            keywords = "")
+            longId = fingerprint.takeLast(16).toString(),
+            shortId = fingerprint.takeLast(8).toString(),
+            keywords = ""
+        )
       }
 
   return NodeKeyDetails(
@@ -46,15 +46,12 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
       privateKey = if (keyRingInfo.isSecretKey) PgpArmorUtils.toAsciiArmoredString(keyRingInfo.secretKey) else null,
       publicKey = PgpArmorUtils.toAsciiArmoredString(keyRingInfo.publicKey),
       users = keyRingInfo.userIds,
-      ids = ids,//fix me, longId, shortId, keywords
+      ids = ids,//fix keywords
       created = TimeUnit.SECONDS.convert(keyRingInfo.creationDate.time, TimeUnit.MILLISECONDS),
       lastModified = TimeUnit.SECONDS.convert(keyRingInfo.lastModified.time, TimeUnit.MILLISECONDS),
       expiration = TimeUnit.SECONDS.convert(keyRingInfo.expirationDate?.time
           ?: 0, TimeUnit.MILLISECONDS),
-      algo = Algo(algorithm = keyRingInfo.algorithm.name,
-          algorithmId = keyRingInfo.algorithm.algorithmId,
-          bits = bitStrength,
-          curve = KeyInfo.getCurveName(publicKey)),//fix me, don't show curve
+      algo = algo,
       passphrase = null,
       errorMsg = null)
 }
