@@ -16,8 +16,8 @@ object MsgBlockParser {
 
   @JvmStatic
   fun detectBlocks(text: String): Pair<List<MsgBlock>, String> {
-    val blocks = mutableListOf<MsgBlock>()
     val normalized = normalize(text)
+    val blocks = mutableListOf<MsgBlock>()
     var startAt = 0
     while (true) {
       val continueAt = detectBlockNext(normalized, startAt, blocks)
@@ -111,13 +111,16 @@ object MsgBlockParser {
 
   @JvmStatic
   private fun normalizeSpaces(str: String): String {
-    return str.replace(160.toChar(), ' ')
+    return str.replace(char160, ' ')
   }
 
   @JvmStatic
   private fun normalizeDashes(str: String): String {
     return str.replace(dashesRegex, "-----")
   }
+
+  @JvmStatic
+  private val char160 = 160.toChar()
 
   @JvmStatic
   private val dashesRegex = Regex("^—–|—–$")
