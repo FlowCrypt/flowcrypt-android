@@ -33,6 +33,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
+import com.flowcrypt.email.extensions.toNodeKeyDetails
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.model.PgpContact
@@ -51,6 +52,8 @@ import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.pgpainless.PGPainless
+import org.pgpainless.key.util.UserId
 import java.util.*
 
 /**
@@ -261,8 +264,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       createPrivateKeyLiveData.value = Result.loading()
       var nodeKeyDetails: NodeKeyDetails? = null
       try {
-        nodeKeyDetails = genPrivateKeyViaNode(passphrase, accountEntity)
-        requireNotNull(nodeKeyDetails)
+        nodeKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+            UserId.nameAndEmail(accountEntity.displayName
+                ?: accountEntity.email, accountEntity.email), passphrase).toNodeKeyDetails()
 
         val existedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
         if (existedAccount == null) {
@@ -305,28 +309,6 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         ExceptionUtil.handleError(e)
       }
     }
-  }
-
-  private suspend fun genPrivateKeyViaNode(passphrase: String, accountEntity: AccountEntity): NodeKeyDetails? {
-    val generateKeyResult = nodeRepository.createPrivateKey(getApplication(), passphrase, genContacts(accountEntity))
-    when (generateKeyResult.status) {
-      Result.Status.SUCCESS -> {
-        return generateKeyResult.data?.key
-      }
-
-      Result.Status.EXCEPTION -> {
-        generateKeyResult.exception?.let { exception -> throw exception }
-      }
-
-      Result.Status.ERROR -> {
-        generateKeyResult.data?.apiError?.let { apiError -> throw ApiException(apiError) }
-      }
-
-      else -> {
-        // all looks well
-      }
-    }
-    return null
   }
 
   private suspend fun savePrivateKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails, passphrase: String) {
