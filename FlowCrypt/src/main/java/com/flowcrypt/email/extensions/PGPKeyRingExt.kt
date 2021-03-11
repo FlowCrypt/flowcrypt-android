@@ -10,7 +10,9 @@ import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpArmorUtils
 import org.bouncycastle.openpgp.PGPKeyRing
+import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.info.KeyInfo
 import org.pgpainless.key.info.KeyRingInfo
 import java.util.concurrent.TimeUnit
@@ -21,13 +23,20 @@ import java.util.concurrent.TimeUnit
  *         Time: 10:08 AM
  *         E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to fix some moments
 fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
   val keyRingInfo = KeyRingInfo(this)
 
-  val algo = Algo(algorithm = keyRingInfo.algorithm.name,
+  val algo = Algo(
+      algorithm = keyRingInfo.algorithm.name,
       algorithmId = keyRingInfo.algorithm.algorithmId,
       bits = if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else 0,
-      curve = KeyInfo.getCurveName(publicKey))//fix me, don't show curve
+      curve = when (keyRingInfo.algorithm) {
+        PublicKeyAlgorithm.ECDSA, PublicKeyAlgorithm.ECDH -> KeyInfo.getCurveName(publicKey)
+        PublicKeyAlgorithm.EDDSA -> EdDSACurve._Ed25519.getName() // for EDDSA KeyInfo.getCurveName(publicKey) return null
+        else -> null
+      }
+  )
 
   val ids = publicKeys.iterator().asSequence().toList()
       .map {
@@ -36,7 +45,7 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
             fingerprint = fingerprint.toString(),
             longId = fingerprint.takeLast(16).toString(),
             shortId = fingerprint.takeLast(8).toString(),
-            keywords = ""
+            keywords = ""//fix me
         )
       }
 
@@ -46,7 +55,7 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
       privateKey = if (keyRingInfo.isSecretKey) PgpArmorUtils.toAsciiArmoredString(keyRingInfo.secretKey) else null,
       publicKey = PgpArmorUtils.toAsciiArmoredString(keyRingInfo.publicKey),
       users = keyRingInfo.userIds,
-      ids = ids,//fix keywords
+      ids = ids,
       created = TimeUnit.SECONDS.convert(keyRingInfo.creationDate.time, TimeUnit.MILLISECONDS),
       lastModified = TimeUnit.SECONDS.convert(keyRingInfo.lastModified.time, TimeUnit.MILLISECONDS),
       expiration = TimeUnit.SECONDS.convert(keyRingInfo.expirationDate?.time
