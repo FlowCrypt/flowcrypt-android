@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -90,7 +90,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
       source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
       source.readString(),
       source.readString(),
-      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) },
+      mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
       source.readString(),
       source.readParcelable(MessageEncryptionType::class.java.classLoader)!!
   )

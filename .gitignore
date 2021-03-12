@@ -19,7 +19,13 @@ local.properties
 /.idea/misc.xml
 /release
 /docker-mailserver/maildata_volume/
+
 # Keystore files
 *.jks
+
 # keystore info
 /FlowCrypt/keystore.properties
+
+# some runtime files
+.attach*
+
