@@ -11,7 +11,7 @@ import android.os.Parcelable
 import android.util.Base64
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -123,7 +123,7 @@ data class ParseDecryptedMsgResult constructor(
       source.readString()!!,
       source.readString(),
       source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
+      mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) }
   )
 
   override fun describeContents() = 0

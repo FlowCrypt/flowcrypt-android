@@ -8,11 +8,7 @@ package com.flowcrypt.email.jfixture
 import com.flextrade.jfixture.NoSpecimen
 import com.flextrade.jfixture.SpecimenBuilder
 import com.flextrade.jfixture.SpecimenContext
-import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.*
 
 /**
  * @author Denis Bondarenko
@@ -30,18 +26,13 @@ class MsgBlockTypeRelay : SpecimenBuilder {
       }
 
       else -> {
-        val msgBlockTypes = BaseMsgBlock.handledMsgBlockTypes
         val classForSpecimen: Class<*> =
-            when (msgBlockTypes.shuffled().first()) {
+            when (MsgBlockFactory.supportedMsgBlockTypes.shuffled().first()) {
               MsgBlock.Type.PUBLIC_KEY -> PublicKeyMsgBlock::class.java
-
               MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock::class.java
-
               MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock::class.java
-
-              else -> BaseMsgBlock::class.java
+              else -> GenericMsgBlock::class.java
             }
-
         context.resolve(classForSpecimen)
       }
     }
