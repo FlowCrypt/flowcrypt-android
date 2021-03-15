@@ -111,11 +111,14 @@ blocks:
           commands:
             # store errors log
             - echo "Store errors log"
-            - ls -a ~/
             - artifact push job --expire-in 1w ~/logcat_log.txt
-            - ls -a
-            - artifact push job --expire-in 1w FlowCrypt/build/reports/androidTests/connected/flavors/devTestDebugAndroidTest/
+
+            # store tests results
+            - echo "Store tests results"
+            - artifact push job --expire-in 1w FlowCrypt/build/reports/
+
+            # store screenshots
             - echo "Store screenshots"
-            - adb pull "/mnt/sdcard/Download"
-            - adb shell ls /mnt/sdcard/Download
-            - artifact push job --expire-in 1w Download
+            - adb pull "/mnt/sdcard/Pictures"
+            - adb shell ls /mnt/sdcard/Pictures
+            - artifact push job --expire-in 1w Pictures
