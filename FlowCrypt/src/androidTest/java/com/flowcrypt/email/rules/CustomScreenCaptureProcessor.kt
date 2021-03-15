@@ -6,6 +6,8 @@
 package com.flowcrypt.email.rules
 
 import android.content.ContentValues
+import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
@@ -23,6 +25,8 @@ import java.util.*
  */
 class CustomScreenCaptureProcessor : BasicScreenCaptureProcessor() {
   override fun process(capture: ScreenCapture?): String {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) return super.process(capture)
+
     capture ?: return ""
     try {
       val context = getInstrumentation().targetContext
@@ -34,11 +38,12 @@ class CustomScreenCaptureProcessor : BasicScreenCaptureProcessor() {
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {
-        put(MediaStore.DownloadColumns.DISPLAY_NAME, filename)
-        put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
+        put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+        put(MediaStore.Images.Media.MIME_TYPE, mimeType)
+        put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/screenshots")
       }
 
-      val imageUri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+      val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
           contentValues) ?: return ""
       val outputStream = contentResolver.openOutputStream(imageUri) ?: return ""
       BufferedOutputStream(outputStream).use { out ->
