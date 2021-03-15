@@ -58,7 +58,7 @@ blocks:
             # print Java version
             - java -version
             # compile project
-            - ./gradlew assembleDevTestDebug
+            - ./gradlew --console=plain assembleDevTestDebug
       epilogue:
         on_pass:
           commands:
