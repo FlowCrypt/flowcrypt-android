@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./gradlew --console=verbose :FlowCrypt:testDevTestDebugUnitTest
+./gradlew --console=plain :FlowCrypt:testDevTestDebugUnitTest

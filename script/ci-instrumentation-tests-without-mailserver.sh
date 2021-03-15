@@ -20,5 +20,5 @@ if [[ ${varShardIndex} -ge ${varNumShards} ]]
  then
   echo "shardIndex should be lower than numShards"
  else
-  ./gradlew --console=verbose :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}"
+  ./gradlew --console=plain :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}"
 fi
