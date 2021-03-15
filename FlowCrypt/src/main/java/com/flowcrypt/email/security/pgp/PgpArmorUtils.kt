@@ -7,12 +7,7 @@ package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
 import org.bouncycastle.bcpg.ArmoredOutputStream
-import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPPublicKeyRing
-import org.bouncycastle.openpgp.PGPSecretKey
-import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.bouncycastle.util.io.Streams
-import java.io.ByteArrayInputStream
+import org.bouncycastle.openpgp.PGPKeyRing
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
@@ -23,35 +18,21 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 object PgpArmorUtils {
-  @Throws(IOException::class)
-  fun toAsciiArmoredString(secretKeys: PGPSecretKeyRing): String {
-    return toAsciiArmoredString(secretKeys.encoded)
-  }
+  private const val HEADER_NAME_COMMENT = "Comment"
 
   @Throws(IOException::class)
-  fun toAsciiArmoredString(pgpSecretKey: PGPSecretKey): String {
-    return toAsciiArmoredString(pgpSecretKey.encoded)
-  }
-
-  @Throws(IOException::class)
-  fun toAsciiArmoredString(publicKeys: PGPPublicKeyRing): String {
-    return toAsciiArmoredString(publicKeys.encoded)
-  }
-
-  @Throws(IOException::class)
-  fun toAsciiArmoredString(pgpPublicKey: PGPPublicKey): String {
-    return toAsciiArmoredString(pgpPublicKey.encoded)
-  }
-
-  @Throws(IOException::class)
-  private fun toAsciiArmoredString(byteArray: ByteArray): String {
+  fun toAsciiArmoredString(pgpKeyRing: PGPKeyRing): String {
     ByteArrayOutputStream().use { out ->
-      ArmoredOutputStream(out).use {
-        it.setHeader(ArmoredOutputStream.VERSION_HDR, "FlowCrypt ${BuildConfig.VERSION_NAME} Gmail Encryption")
-        it.setHeader("Comment", "Seamlessly send and receive encrypted email")
-        Streams.pipeAll(ByteArrayInputStream(byteArray), it)
+      ArmoredOutputStream(out).use { armoredOut ->
+        addHeaders(armoredOut)
+        pgpKeyRing.encode(armoredOut)
       }
       return out.toString()
     }
+  }
+
+  private fun addHeaders(armoredOutputStream: ArmoredOutputStream) {
+    armoredOutputStream.setHeader(ArmoredOutputStream.VERSION_HDR, "FlowCrypt ${BuildConfig.VERSION_NAME} Gmail Encryption")
+    armoredOutputStream.setHeader(HEADER_NAME_COMMENT, "Seamlessly send and receive encrypted email")
   }
 }
