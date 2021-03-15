@@ -136,6 +136,6 @@ blocks:
 
             # store screenshots
             - echo "Store screenshots"
-            - adb pull "/mnt/sdcard/Pictures"
-            - adb shell ls /mnt/sdcard/Pictures
+            - adb pull "/sdcard/Pictures"
+            - adb shell ls /sdcard/Pictures
             - artifact push job --expire-in 1w Pictures
