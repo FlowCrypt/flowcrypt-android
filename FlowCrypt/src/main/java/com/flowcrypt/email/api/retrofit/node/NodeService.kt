@@ -11,7 +11,6 @@ import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest
-import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
@@ -22,7 +21,6 @@ import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult
-import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult
@@ -61,9 +59,6 @@ interface NodeService {
 
   @POST("/")
   suspend fun parseDecryptMsg(@Body request: ParseDecryptMsgRequest): Response<ParseDecryptedMsgResult>
-
-  @POST("/")
-  fun gmailBackupSearch(@Body request: GmailBackupSearchRequest): Call<GmailBackupSearchResult>
 
   @POST("/")
   fun parseKeys(@Body request: ParseKeysRequest): Call<ParseKeysResult>

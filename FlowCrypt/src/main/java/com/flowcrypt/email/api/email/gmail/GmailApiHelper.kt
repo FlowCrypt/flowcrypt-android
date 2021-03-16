@@ -623,7 +623,7 @@ class GmailApiHelper {
       try {
         val list = mutableListOf<NodeKeyDetails>()
 
-        val searchQuery = NodeCallsExecutor.getGmailBackupSearch(account.email)
+        val searchQuery = EmailUtil.getGmailBackupSearchQuery(account.email)
         val gmailApiService = generateGmailApiService(context, account)
 
         var response = gmailApiService

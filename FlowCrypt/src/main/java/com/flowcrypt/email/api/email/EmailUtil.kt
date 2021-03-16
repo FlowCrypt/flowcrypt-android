@@ -917,6 +917,32 @@ class EmailUtil {
       return result
     }
 
+    /**
+     * Get a special string which contains formatted template for the native Gmail search.
+     *
+     * See details here https://support.google.com/mail/answer/7190?hl=en
+     *
+     * @param email The account email
+     * @return A formatted template for the native Gmail search
+     */
+    fun getGmailBackupSearchQuery(email: String): String {
+      val subjects = listOf(
+          "Your FlowCrypt Backup",
+          "Your CryptUp Backup",
+          "All you need to know about CryptUP (contains a backup)",
+          "CryptUP Account Backup"
+      )
+
+      val parameters = listOf(
+          "from:${email}",
+          "to:${email}",
+          """(subject:"${subjects.joinToString(separator = """" OR subject: """")}")""",
+          "-is:spam"
+      )
+
+      return parameters.joinToString(separator = " ")
+    }
+
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
       return OrTerm(arrayOf(
           SubjectTerm(localFolder.searchQuery),
