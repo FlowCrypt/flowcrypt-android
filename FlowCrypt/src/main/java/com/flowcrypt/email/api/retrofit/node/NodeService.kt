@@ -11,7 +11,6 @@ import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest
-import com.flowcrypt.email.api.retrofit.request.node.GenerateKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
@@ -23,7 +22,6 @@ import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult
-import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
@@ -86,12 +84,6 @@ interface NodeService {
   @POST("/")
   @Streaming
   fun decryptFile(@Body request: DecryptFileRequest): Call<DecryptedFileResult>
-
-  @POST("/")
-  fun generateKey(@Body request: GenerateKeyRequest): Call<GenerateKeyResult>
-
-  @POST("/")
-  suspend fun generateKeySuspend(@Body request: GenerateKeyRequest): Response<GenerateKeyResult>
 
   @POST("/")
   fun zxcvbnStrengthBar(@Body request: ZxcvbnStrengthBarRequest): Call<ZxcvbnStrengthBarResult>
