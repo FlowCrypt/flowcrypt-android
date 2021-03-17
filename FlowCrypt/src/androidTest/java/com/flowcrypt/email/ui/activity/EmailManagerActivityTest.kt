@@ -120,7 +120,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowSplashActivityAfterLogout() {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
     val nonActiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
