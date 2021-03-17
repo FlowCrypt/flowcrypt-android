@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.retrofit.node
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest
-import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -53,26 +52,6 @@ class NodeCallsExecutor {
       val details = result!!.nodeKeyDetails
 
       return if (CollectionUtils.isEmpty(details)) emptyList() else details
-    }
-
-    /**
-     * Get a special string which contains formatted template for the native Gmail search.
-     *
-     * @param email The account email.
-     * @return A formatted template for the native Gmail search
-     * @throws IOException   Such exceptions can occur during network calls.
-     * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
-     */
-    fun getGmailBackupSearch(email: String): String? {
-      val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-      val request = GmailBackupSearchRequest(email)
-
-      val response = service.gmailBackupSearch(request).execute()
-      val result = response.body()
-
-      checkResult(result)
-
-      return result!!.query
     }
 
     /**
