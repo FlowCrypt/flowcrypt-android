@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.AsyncTask
 import androidx.lifecycle.LiveData
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
-import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
@@ -27,6 +26,7 @@ import com.flowcrypt.email.node.TestData
  */
 //todo-denbond7 It's old code. Need to remove this and replace with a better approach. We use it
 // only for debugging
+@Deprecated("We should drop this file")
 object RequestsManager {
   private var data: SingleLiveEvent<NodeResponseWrapper<*>> = SingleLiveEvent()
 
@@ -48,11 +48,11 @@ object RequestsManager {
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
-    load(requestCode, EncryptFileRequest(data, "file.txt", listOf(*TestData.mixedPubKeys)))
+    //load(requestCode, EncryptFileRequest(data, "file.txt", listOf(*TestData.mixedPubKeys)))
   }
 
   fun encryptFile(requestCode: Int, context: Context, fileUri: Uri) {
-    load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", listOf(*TestData.mixedPubKeys)))
+    //load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", listOf(*TestData.mixedPubKeys)))
   }
 
   fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<KeyEntity>) {
@@ -63,7 +63,7 @@ object RequestsManager {
     Worker(data).execute(NodeRequestWrapper(requestCode, nodeRequest))
   }
 
-  private class Worker internal constructor(
+  private class Worker(
       private val data: SingleLiveEvent<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void,
       NodeResponseWrapper<*>>() {
 
