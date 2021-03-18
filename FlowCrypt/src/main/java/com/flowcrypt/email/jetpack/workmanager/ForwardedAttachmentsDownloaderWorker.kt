@@ -18,12 +18,8 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
-import com.flowcrypt.email.api.retrofit.node.NodeService
-import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -32,6 +28,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -43,8 +40,6 @@ import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.FilenameUtils
-import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.InputStream
 import java.util.*
@@ -229,7 +224,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
         val inputStream = action.invoke(attachmentEntity)
         val tempFile = File(fwdAttsCacheDir, UUID.randomUUID().toString())
         if (inputStream != null) {
-          downloadFile(msgEntity, pubKeys, attInfo, tempFile, inputStream)
+          downloadFile(msgEntity, pubKeys, tempFile, inputStream)
 
           if (msgAttsDir.exists()) {
             FileUtils.moveFile(tempFile, attFile)
@@ -254,34 +249,14 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     return@withContext msgState
   }
 
-  private suspend fun downloadFile(msgEntity: MessageEntity, pubKeys: List<String>?, att: AttachmentInfo,
-                                   tempFile: File, inputStream: InputStream) =
+  private suspend fun downloadFile(msgEntity: MessageEntity, pubKeys: List<String>?,
+                                   destFile: File, srcInputStream: InputStream) =
       withContext(Dispatchers.IO) {
         if (msgEntity.isEncrypted == true) {
-          val originalBytes = IOUtils.toByteArray(inputStream)
-          val fileName = FilenameUtils.removeExtension(att.name)
-          val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-          val request = EncryptFileRequest(originalBytes, fileName, pubKeys!!)
-
-          val response = nodeService.encryptFile(request).execute()
-          val encryptedFileResult = response.body()
-
-          if (encryptedFileResult == null) {
-            ExceptionUtil.handleError(NullPointerException("encryptedFileResult == null"))
-            FileUtils.writeByteArrayToFile(tempFile, byteArrayOf())
-            return@withContext
-          }
-
-          if (encryptedFileResult.apiError != null) {
-            ExceptionUtil.handleError(Exception(encryptedFileResult.apiError.msg))
-            FileUtils.writeByteArrayToFile(tempFile, byteArrayOf())
-            return@withContext
-          }
-
-          val encryptedBytes = encryptedFileResult.encryptBytes
-          FileUtils.writeByteArrayToFile(tempFile, encryptedBytes!!)
+          requireNotNull(pubKeys)
+          PgpEncrypt.encryptFile(srcInputStream, destFile.outputStream(), pubKeys)
         } else {
-          FileUtils.copyInputStreamToFile(inputStream, tempFile)
+          FileUtils.copyInputStreamToFile(srcInputStream, destFile)
         }
       }
 

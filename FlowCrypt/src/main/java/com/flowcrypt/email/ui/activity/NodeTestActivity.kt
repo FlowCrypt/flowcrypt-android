@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
@@ -148,10 +147,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         }
 
         R.id.req_id_encrypt_file -> {
-          val encryptFileResult = responseWrapper.result as EncryptedFileResult?
+          /*val encryptFileResult = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file", encryptFileResult, responseWrapper.executionTime)
           encryptBytes = encryptFileResult!!.encryptBytes
-          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_ecc, encryptBytes!!, TestData.mixedPrvKeys)
+          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_ecc, encryptBytes!!, TestData.mixedPrvKeys)*/
         }
 
         R.id.req_id_decrypt_file_ecc -> {
@@ -176,11 +175,11 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         }
 
         R.id.req_id_encrypt_file_rsa_2048_1mb -> {
-          val encryptedFileResult1Mb = responseWrapper.result as EncryptedFileResult?
+          /*val encryptedFileResult1Mb = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file-" + 1 + "m" + "-rsa2048", encryptedFileResult1Mb,
               responseWrapper.executionTime)
           requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_1mb, encryptedFileResult1Mb!!.encryptBytes!!,
-              TestData.rsa2048PrvKeyInfo())
+              TestData.rsa2048PrvKeyInfo())*/
         }
 
         R.id.req_id_decrypt_file_rsa_2048_1mb -> {
@@ -191,11 +190,11 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         }
 
         R.id.req_id_encrypt_file_rsa_2048_3mb -> {
-          val encryptedFileResult3Mb = responseWrapper.result as EncryptedFileResult?
+          /*val encryptedFileResult3Mb = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file-" + 3 + "m" + "-rsa2048", encryptedFileResult3Mb,
               responseWrapper.executionTime)
           requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_3mb, encryptedFileResult3Mb!!
-              .encryptBytes!!, TestData.eccPrvKeyInfo())
+              .encryptBytes!!, TestData.eccPrvKeyInfo())*/
         }
 
         R.id.req_id_decrypt_file_rsa_2048_3mb -> {
@@ -206,11 +205,11 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         }
 
         R.id.req_id_encrypt_file_rsa_2048_5mb -> {
-          val encryptedFileResult5Mb = responseWrapper.result as EncryptedFileResult?
+          /*val encryptedFileResult5Mb = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file-" + 5 + "m" + "-rsa2048", encryptedFileResult5Mb,
               responseWrapper.executionTime)
           requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_5mb, encryptedFileResult5Mb!!
-              .encryptBytes!!, TestData.eccPrvKeyInfo())
+              .encryptBytes!!, TestData.eccPrvKeyInfo())*/
         }
 
         R.id.req_id_decrypt_file_rsa_2048_5mb -> {
@@ -226,10 +225,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         }
 
         R.id.req_id_encrypt_file_from_uri -> {
-          val encryptFileFromUriResult = responseWrapper.result as EncryptedFileResult?
+          /*val encryptFileFromUriResult = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file", encryptFileFromUriResult, responseWrapper.executionTime)
           requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_from_uri, encryptFileFromUriResult!!
-              .encryptBytes!!, TestData.rsa2048PrvKeyInfo())
+              .encryptBytes!!, TestData.rsa2048PrvKeyInfo())*/
         }
 
         R.id.req_id_decrypt_file_rsa_2048_from_uri -> {

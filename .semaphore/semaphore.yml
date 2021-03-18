@@ -124,18 +124,19 @@ blocks:
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
       epilogue:
-        on_fail:
+        always:
           commands:
-            # store errors log
-            - echo "Store errors log"
+            # store logcat log
+            - echo "Store logcat log"
             - artifact push job --expire-in 1w ~/logcat_log.txt
-
-            # store tests results
-            - echo "Store tests results"
-            - artifact push job --expire-in 1w FlowCrypt/build/reports/
 
             # store screenshots
             - echo "Store screenshots"
             - adb pull "/sdcard/Pictures"
             - adb shell ls /sdcard/Pictures
             - artifact push job --expire-in 1w Pictures
+        on_fail:
+          commands:
+            # store tests results
+            - echo "Store tests results"
+            - artifact push job --expire-in 1w FlowCrypt/build/reports/

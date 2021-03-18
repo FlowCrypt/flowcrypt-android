@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.NodeService
-import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -31,6 +30,7 @@ import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -39,7 +39,6 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -245,14 +244,14 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
         try {
           val origFileUri = att.uri
-          var inputStream: InputStream? = null
+          var originalFileInputStream: InputStream? = null
           if (origFileUri != null) {
-            inputStream = contentResolver.openInputStream(origFileUri)
+            originalFileInputStream = contentResolver.openInputStream(origFileUri)
           } else if (!TextUtils.isEmpty(att.rawData)) {
-            inputStream = ByteArrayInputStream(att.rawData!!.toByteArray())
+            originalFileInputStream = ByteArrayInputStream(att.rawData!!.toByteArray())
           }
 
-          if (inputStream == null) {
+          if (originalFileInputStream == null) {
             continue
           }
 
@@ -264,24 +263,9 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             if (encryptedTempFile.exists()) {
               encryptedTempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, encryptedTempFile.name)
             }
+            requireNotNull(pubKeys)
 
-            val request = EncryptFileRequest(this, origFileUri, FilenameUtils.getBaseName(encryptedTempFile.name), pubKeys!!)
-
-            val response = nodeService.encryptFile(request).execute()
-            val encryptedFileResult = response.body()
-
-            if (encryptedFileResult == null) {
-              ExceptionUtil.handleError(NullPointerException("encryptedFileResult == null"))
-              continue
-            }
-
-            if (encryptedFileResult.apiError != null) {
-              ExceptionUtil.handleError(Exception(encryptedFileResult.apiError.msg))
-              continue
-            }
-
-            val encryptedBytes = encryptedFileResult.encryptBytes
-            FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes!!)
+            PgpEncrypt.encryptFile(originalFileInputStream, encryptedTempFile.outputStream(), pubKeys)
             val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile)
             att.uri = uri
             att.name = encryptedTempFile.name
@@ -291,7 +275,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
               cachedAtt = FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
             }
 
-            FileUtils.copyInputStreamToFile(inputStream, cachedAtt)
+            FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
             val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
             att.uri = uri
           }
