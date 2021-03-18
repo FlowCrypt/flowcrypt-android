@@ -7,7 +7,6 @@ package com.flowcrypt.email.security.pgp
 
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
-import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -31,7 +30,7 @@ object PgpEncrypt {
             .usingSecureAlgorithms()
 
         builder.doNotSign().noArmor().use { encryptionStream ->
-          Streams.pipeAll(srcStream, encryptionStream)
+          srcStream.copyTo(encryptionStream)
         }
       }
     }

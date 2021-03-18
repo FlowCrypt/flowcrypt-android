@@ -8,12 +8,11 @@ package com.flowcrypt.email.security.pgp
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import org.bouncycastle.util.io.Streams
 import org.junit.Assert.assertArrayEquals
 import org.junit.BeforeClass
 import org.junit.Test
 import org.pgpainless.PGPainless
-import org.pgpainless.key.generation.type.rsa.RsaLength
+import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.Passphrase
@@ -34,17 +33,23 @@ class PgpEncryptTest {
     val senderPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing)
     val recipientPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(recipientPGPSecretKeyRing)
 
-    val sourceBytes = testMessage.toByteArray()
+    val sourceBytes = source.toByteArray()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
     PgpEncrypt.encryptFile(
         srcInputStream = ByteArrayInputStream(sourceBytes),
         destOutputStream = outputStreamForEncryptedSource,
-        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(senderPgpPublicKeyRing, recipientPgpPublicKeyRing)))
+        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(
+            senderPgpPublicKeyRing,
+            recipientPgpPublicKeyRing)
+        ))
     val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
 
     val decryptedBytesForSender = decrypt(
         inputStream = ByteArrayInputStream(encryptedBytes),
-        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(senderPgpPublicKeyRing, recipientPgpPublicKeyRing)),
+        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(
+            senderPgpPublicKeyRing,
+            recipientPgpPublicKeyRing)
+        ),
         pgpSecretKeyRing = senderPGPSecretKeyRing,
         passphrase = Passphrase.fromPassword(SENDER_PASSWORD))
         .toByteArray()
@@ -52,7 +57,10 @@ class PgpEncryptTest {
 
     val decryptedBytesForReceiver = decrypt(
         inputStream = ByteArrayInputStream(encryptedBytes),
-        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(senderPgpPublicKeyRing, recipientPgpPublicKeyRing)),
+        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(
+            senderPgpPublicKeyRing,
+            recipientPgpPublicKeyRing)
+        ),
         pgpSecretKeyRing = recipientPGPSecretKeyRing,
         passphrase = Passphrase.fromPassword(RECEIVER_PASSWORD))
         .toByteArray()
@@ -64,7 +72,16 @@ class PgpEncryptTest {
                       pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
                       pgpSecretKeyRing: PGPSecretKeyRing,
                       passphrase: Passphrase): ByteArrayOutputStream {
-    val protector = PasswordBasedSecretKeyRingProtector.forKey(pgpSecretKeyRing, passphrase)
+
+    val protector = PasswordBasedSecretKeyRingProtector(
+        KeyRingProtectionSettings.secureDefaultSettings()) { keyId ->
+      pgpSecretKeyRing.publicKeys.forEach { publicKey ->
+        if (publicKey.keyID == keyId) {
+          return@PasswordBasedSecretKeyRingProtector passphrase
+        }
+      }
+      return@PasswordBasedSecretKeyRingProtector null
+    }
 
     val decryptionStream = PGPainless.decryptAndOrVerify()
         .onInputStream(inputStream)
@@ -73,12 +90,10 @@ class PgpEncryptTest {
         .ignoreMissingPublicKeys()
         .build()
 
-    val decryptedSecretMessage = ByteArrayOutputStream()
-    decryptionStream.use {
-      Streams.pipeAll(it, decryptedSecretMessage)
-    }
+    val outputStreamWithDecryptedData = ByteArrayOutputStream()
+    decryptionStream.use { it.copyTo(outputStreamWithDecryptedData) }
 
-    return decryptedSecretMessage
+    return outputStreamWithDecryptedData
   }
 
   companion object {
@@ -88,7 +103,7 @@ class PgpEncryptTest {
     private const val SENDER_PASSWORD = "qwerty1234"
     private const val RECEIVER_PASSWORD = "password1234"
 
-    private val testMessage = """
+    private val source = """
     Meet the OS that’s optimized for how you use your phone.
     Helping you manage conversations. And organize your day.
     With even more tools and privacy controls that put you in charge.
@@ -97,8 +112,10 @@ class PgpEncryptTest {
     @BeforeClass
     @JvmStatic
     fun setUp() {
-      senderPGPSecretKeyRing = PGPainless.generateKeyRing().simpleRsaKeyRing("sender@encrypted.key", RsaLength._4096, SENDER_PASSWORD)
-      recipientPGPSecretKeyRing = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@encrypted.key", RsaLength._4096, RECEIVER_PASSWORD)
+      senderPGPSecretKeyRing = PGPainless.generateKeyRing()
+          .simpleEcKeyRing("sender@encrypted.key", SENDER_PASSWORD)
+      recipientPGPSecretKeyRing = PGPainless.generateKeyRing()
+          .simpleEcKeyRing("juliet@encrypted.key", RECEIVER_PASSWORD)
     }
   }
 }
