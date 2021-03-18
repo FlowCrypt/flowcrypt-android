@@ -64,7 +64,7 @@ class SelectContactsActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(AddContactsToDatabaseRule(CONTACTS))
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 

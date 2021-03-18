@@ -71,7 +71,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 

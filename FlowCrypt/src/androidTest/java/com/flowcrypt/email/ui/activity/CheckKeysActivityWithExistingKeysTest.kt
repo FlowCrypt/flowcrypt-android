@@ -68,7 +68,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
           passphrase = TestConstants.DEFAULT_PASSWORD,
           type = KeyDetails.Type.EMAIL
       ))
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 

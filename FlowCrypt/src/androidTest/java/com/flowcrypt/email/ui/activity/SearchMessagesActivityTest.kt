@@ -66,7 +66,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(accountRule)
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 

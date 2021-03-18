@@ -5,40 +5,58 @@
 
 package com.flowcrypt.email.rules
 
+import com.flowcrypt.email.rules.RetryRule.Companion.MAX_RETRY_VALUE
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * This rule can rerun a task a few times in it once failed. By default we have 3 attempts.
- *
- * P.S. Doesn't work with [LazyActivityScenarioRule]
+ * This rule can rerun a task a few times if it once failed.
+ * It uses [retryCount] value from the constructor or can be overridden with [RetryOnFailure] annotation.
+ * Max [retryCount] == [MAX_RETRY_VALUE]
  *
  * @author Denis Bondarenko
  *         Date: 9/26/20
  *         Time: 8:47 AM
  *         E-mail: DenBond7@gmail.com
  */
-class RetryRule(private val retryCount: Int = 3) : BaseRule() {
-  override fun apply(base: Statement, description: Description): Statement? {
+class RetryRule(private val retryCount: Int = 0) : BaseRule() {
+  override fun apply(base: Statement, description: Description): Statement {
     return statement(base, description)
   }
 
-  private fun statement(base: Statement, description: Description): Statement? {
+  private fun statement(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        var caughtThrowable: Throwable? = null
-        for (i in 0 until retryCount) {
-          try {
-            base.evaluate()
-            return
-          } catch (t: Throwable) {
-            caughtThrowable = t
-            System.err.println(description.displayName.toString() + ": run " + (i + 1) + " failed")
-          }
+        val fromAnnotation = description
+            .annotations
+            .filterIsInstance<RetryOnFailure>()
+            .firstOrNull()
+            ?.value
+
+        val attempts = if (fromAnnotation == null || fromAnnotation !in 1..MAX_RETRY_VALUE) {
+          if (retryCount in 1..MAX_RETRY_VALUE) retryCount else 1
+        } else {
+          fromAnnotation
         }
-        System.err.println(description.displayName.toString() + ": giving up after " + retryCount + " failures")
+
+        var caughtThrowable: Throwable? = null
+        repeat(attempts) { times ->
+          runCatching { base.evaluate() }
+              .onSuccess { return }
+              .onFailure {
+                caughtThrowable = it
+                System.err.println(description.displayName.toString() + ": run $times failed")
+              }
+        }
+        System.err.println(description.displayName.toString() + ": giving up after " + attempts + " failures")
         caughtThrowable?.let { throw it } ?: throw RuntimeException("Something went wrong")
       }
     }
+  }
+
+  companion object {
+    private const val DEFAULT_RETRY_VALUE = 3
+    private const val MAX_RETRY_VALUE = 100
+    val DEFAULT = RetryRule(DEFAULT_RETRY_VALUE)
   }
 }

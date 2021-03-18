@@ -51,6 +51,8 @@ class LazyActivityScenarioRule<A : Activity> : ExternalResource {
 
   override fun after() {
     scenario?.close()
+    scenario = null
+    scenarioLaunched = false
   }
 
   fun launch(newIntent: Intent? = null) {
