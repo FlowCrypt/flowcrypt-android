@@ -24,7 +24,7 @@ import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.acra.CustomReportSenderFactory
-import leakcanary.AppWatcher
+import leakcanary.LeakCanary
 import org.acra.ACRA
 import org.acra.ReportField
 import org.acra.annotation.ReportsCrashes
@@ -117,11 +117,11 @@ class FlowCryptApplication : Application(), Configuration.Provider {
    */
   private fun initLeakCanary() {
     if (GeneralUtil.isDebugBuild()) {
-      val isEnabled = SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
+      val isEnabled = SharedPreferencesHelper.getBoolean(
+          PreferenceManager.getDefaultSharedPreferences(this),
           Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)
-      AppWatcher.config = AppWatcher.config.copy(enabled = isEnabled)
-    } else {
-      AppWatcher.config = AppWatcher.config.copy(enabled = false)
+      LeakCanary.config = LeakCanary.config.copy(dumpHeap = isEnabled)
+      LeakCanary.showLeakDisplayActivityLauncherIcon(showLauncherIcon = isEnabled)
     }
   }
 

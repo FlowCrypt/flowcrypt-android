@@ -53,6 +53,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -105,6 +106,7 @@ class CreateMessageActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
+      .around(RetryRule.DEFAULT)
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
 

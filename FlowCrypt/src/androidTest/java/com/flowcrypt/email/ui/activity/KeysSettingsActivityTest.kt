@@ -85,7 +85,7 @@ class KeysSettingsActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 

@@ -50,7 +50,7 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(AddPrivateKeyToDatabaseRule())
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 

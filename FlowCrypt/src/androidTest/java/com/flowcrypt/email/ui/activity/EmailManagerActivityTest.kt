@@ -71,7 +71,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
       .around(AddAccountToDatabaseRule(userWithoutLetters))
       .around(AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
       .around(AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, LOCAL_FOLDERS))
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 

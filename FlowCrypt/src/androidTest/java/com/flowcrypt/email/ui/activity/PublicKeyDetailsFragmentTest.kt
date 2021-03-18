@@ -80,7 +80,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(AddContactsToDatabaseRule(listOf(PgpContact(EMAIL_DENBOND7, USER_DENBOND7,
           keyDetails.publicKey, true, null, null, null, null, 0))))
-      .around(RetryRule())
+      .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
