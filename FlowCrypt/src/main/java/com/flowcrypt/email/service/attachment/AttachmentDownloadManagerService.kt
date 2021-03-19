@@ -38,7 +38,7 @@ import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.toHex
+import com.flowcrypt.email.extensions.lang.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.FileAndDirectoryUtils

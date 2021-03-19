@@ -1,14 +1,22 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions
+package com.flowcrypt.email.extensions.pgp
 
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.security.pgp.PgpArmorUtils
+import com.flowcrypt.email.security.pgp.PgpArmor
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.algorithm.PublicKeyAlgorithm
@@ -16,8 +24,6 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.info.KeyInfo
 import org.pgpainless.key.info.KeyRingInfo
-import org.pgpainless.key.util.KeyRingUtils
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -50,11 +56,11 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
         )
       }
 
-  val privateKey = if (keyRingInfo.isSecretKey) PgpArmorUtils.toAsciiArmoredString(this) else null
+  val privateKey = if (keyRingInfo.isSecretKey) this.armor(PgpArmor.FLOWCRYPT_HEADERS) else null
   val publicKey = if (keyRingInfo.isSecretKey) {
-    PgpArmorUtils.toAsciiArmoredString(KeyRingUtils.publicKeyRingFrom(this as PGPSecretKeyRing?))
+    (this as PGPSecretKeyRing).toPublicKeyRing().armor(PgpArmor.FLOWCRYPT_HEADERS)
   } else {
-    PgpArmorUtils.toAsciiArmoredString(this)
+    this.armor(PgpArmor.FLOWCRYPT_HEADERS)
   }
 
   return NodeKeyDetails(
@@ -72,3 +78,28 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
       passphrase = null,
       errorMsg = null)
 }
+
+@Throws(IOException::class)
+fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = null): String {
+  ByteArrayOutputStream().use { out ->
+    ArmoredOutputStream(out).use { armoredOut ->
+      if (headers != null) {
+        for (header in headers) {
+          armoredOut.addHeader(header.first, header.second)
+        }
+      }
+      this.encode(armoredOut)
+    }
+    return String(out.toByteArray(), StandardCharsets.US_ASCII)
+  }
+}
+
+val PGPKeyRing.expiration: Instant?
+  get() {
+    val publicKey = this.publicKey
+    return if (publicKey.validSeconds == 0L) {
+      null
+    } else {
+      Instant.ofEpochMilli(publicKey.creationTime.time + publicKey.validSeconds * 1000)
+    }
+  }

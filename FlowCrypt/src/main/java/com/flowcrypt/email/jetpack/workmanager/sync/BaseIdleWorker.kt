@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.toHex
+import com.flowcrypt.email.extensions.lang.toHex
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder

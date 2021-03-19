@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: ivan
+ * Contributors: Ivan Pizhenko
  */
 
 package com.flowcrypt.email.core.msg
@@ -8,6 +8,7 @@ package com.flowcrypt.email.core.msg
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlockFactory
 import com.flowcrypt.email.security.pgp.PgpArmor
+import com.flowcrypt.email.extensions.lang.normalize
 
 @Suppress("unused")
 object MsgBlockParser {
@@ -16,7 +17,7 @@ object MsgBlockParser {
 
   @JvmStatic
   fun detectBlocks(text: String): List<MsgBlock> {
-    val normalized = normalize(text)
+    val normalized = text.normalize()
     val blocks = mutableListOf<MsgBlock>()
     var startAt = 0
     while (true) {
@@ -58,22 +59,9 @@ object MsgBlockParser {
           }
         }
 
-        val endHeaderIndex: Int
-        val endHeaderLength: Int
-        if (blockHeaderDef.endRegexp != null) {
-          val found = blockHeaderDef.endRegexp.find(text.substring(beginIndex))
-          if (found != null) {
-            endHeaderIndex = beginIndex + found.range.first
-            endHeaderLength = found.range.last - found.range.first
-          } else {
-            endHeaderIndex = -1
-            endHeaderLength = 0
-          }
-        } else { // string
-          val end = blockHeaderDef.end!!
-          endHeaderIndex = text.indexOf(end, beginIndex + blockHeaderDef.begin.length)
-          endHeaderLength = if (endHeaderIndex == -1) 0 else end.length
-        }
+        val end = blockHeaderDef.end
+        val endHeaderIndex = text.indexOf(end, beginIndex + blockHeaderDef.begin.length)
+        val endHeaderLength = if (endHeaderIndex == -1) 0 else end.length
 
         if (endHeaderIndex != -1) {
           // identified end of the same block
@@ -104,25 +92,4 @@ object MsgBlockParser {
 
     return continueAt
   }
-
-  @JvmStatic
-  fun normalize(str: String): String {
-    return normalizeSpaces(normalizeDashes(str))
-  }
-
-  @JvmStatic
-  private fun normalizeSpaces(str: String): String {
-    return str.replace(char160, ' ')
-  }
-
-  @JvmStatic
-  private fun normalizeDashes(str: String): String {
-    return str.replace(dashesRegex, "-----")
-  }
-
-  @JvmStatic
-  private val char160 = 160.toChar()
-
-  @JvmStatic
-  private val dashesRegex = Regex("^—–|—–$")
 }
