@@ -85,6 +85,14 @@ interface MsgBlock : Parcelable {
         override fun createFromParcel(source: Parcel): Type = values()[source.readInt()]
         override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
       }
+
+      val keyBlockTypes = setOf(PUBLIC_KEY, PRIVATE_KEY)
+      val replaceableBlockTypes = setOf(
+          PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
+      )
+      val fourBlockTypes = setOf(
+          PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
+      )
     }
   }
 

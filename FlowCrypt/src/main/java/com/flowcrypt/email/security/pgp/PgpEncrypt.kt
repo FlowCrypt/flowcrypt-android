@@ -5,13 +5,13 @@
 
 package com.flowcrypt.email.security.pgp
 
-import org.bouncycastle.bcpg.ArmoredInputStream
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
-import org.pgpainless.PGPainless
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import org.bouncycastle.bcpg.ArmoredInputStream
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
+import org.pgpainless.PGPainless
 
 /**
  * @author Denis Bondarenko
@@ -21,7 +21,8 @@ import java.io.OutputStream
  */
 object PgpEncrypt {
   @Throws(IOException::class)
-  fun encryptFile(srcInputStream: InputStream, destOutputStream: OutputStream, pgpPublicKeyRingCollection: PGPPublicKeyRingCollection) {
+  fun encryptFile(srcInputStream: InputStream, destOutputStream: OutputStream,
+                  pgpPublicKeyRingCollection: PGPPublicKeyRingCollection) {
     srcInputStream.use { srcStream ->
       destOutputStream.use { outStream ->
         val builder = PGPainless.encryptAndOrSign()

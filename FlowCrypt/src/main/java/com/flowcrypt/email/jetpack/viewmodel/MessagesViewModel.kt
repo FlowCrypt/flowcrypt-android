@@ -31,7 +31,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.toHex
+import com.flowcrypt.email.extensions.lang.toHex
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.service.EmailAndNameUpdaterService

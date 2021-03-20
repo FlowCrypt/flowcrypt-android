@@ -33,7 +33,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
-import com.flowcrypt.email.extensions.toNodeKeyDetails
+import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.model.PgpContact

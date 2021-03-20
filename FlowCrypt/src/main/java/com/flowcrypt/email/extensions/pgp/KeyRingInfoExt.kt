@@ -1,9 +1,11 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions
+package com.flowcrypt.email.extensions.pgp
 
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.key.info.KeyRingInfo
