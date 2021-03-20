@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.api.email.gmail
@@ -27,6 +29,7 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -668,7 +671,7 @@ class GmailApiHelper {
           }
 
           try {
-            list.addAll(NodeCallsExecutor.parseKeys(backup))
+            list.addAll(PgpKey.parseKeys(backup.toByteArray()).second)
           } catch (e: NodeException) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)

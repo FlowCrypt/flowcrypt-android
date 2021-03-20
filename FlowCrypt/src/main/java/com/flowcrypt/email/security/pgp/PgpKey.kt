@@ -8,6 +8,8 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.core.msg.MsgBlockParser
+import com.flowcrypt.email.extensions.pgp.armor
+import com.flowcrypt.email.extensions.pgp.armorWithFlowcryptHeaders
 import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
 import java.nio.charset.StandardCharsets
 import org.bouncycastle.bcpg.ArmoredInputStream
@@ -21,8 +23,37 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator
+import org.pgpainless.PGPainless
+import org.pgpainless.util.Passphrase
 
 object PgpKey {
+  fun encryptKey(armored: String, passphrase: String): String {
+    return try {
+      val keys = parse(armored)
+      PGPainless.modifyKeyRing(keys[0].keyRing!! as PGPSecretKeyRing)
+          .changePassphraseFromOldPassphrase(null)
+          .withSecureDefaultSettings()
+          .toNewPassphrase(Passphrase.fromPassword(passphrase))
+          .done()
+          .armorWithFlowcryptHeaders()
+    } catch (ex: Exception) {
+      ""
+    }
+  }
+
+  fun decryptKey(armored: String, passphrase: String): String {
+    return try {
+      val keys = parse(armored)
+      PGPainless.modifyKeyRing(keys[0].keyRing!! as PGPSecretKeyRing)
+          .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
+          .withSecureDefaultSettings()
+          .toNoPassphrase()
+          .done()
+          .armorWithFlowcryptHeaders()
+    } catch (ex: Exception) {
+      ""
+    }
+  }
 
   /**
    * Parses multiple keys, binary or armored.

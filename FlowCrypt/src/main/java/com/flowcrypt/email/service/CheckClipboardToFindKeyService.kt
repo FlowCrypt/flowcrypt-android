@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.service
@@ -21,6 +23,7 @@ import android.text.TextUtils
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
@@ -145,7 +148,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
         MESSAGE_WHAT -> {
           val clipboardText = msg.obj as String
           try {
-            val nodeKeyDetails = NodeCallsExecutor.parseKeys(clipboardText)
+            val nodeKeyDetails = PgpKey.parseKeys(clipboardText.toByteArray()).second
             if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
               sendReply(msg)
             }

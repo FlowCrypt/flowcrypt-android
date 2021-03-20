@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -19,6 +21,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
@@ -111,7 +114,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   }
 
                   try {
-                    details.addAll(NodeCallsExecutor.parseKeys(backup))
+                    details.addAll(PgpKey.parseKeys(backup.toByteArray()).second)
                   } catch (e: NodeException) {
                     e.printStackTrace()
                     ExceptionUtil.handleError(e)

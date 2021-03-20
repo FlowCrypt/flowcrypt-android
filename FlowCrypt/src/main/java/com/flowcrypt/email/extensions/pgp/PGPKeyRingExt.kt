@@ -56,11 +56,11 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
         )
       }
 
-  val privateKey = if (keyRingInfo.isSecretKey) this.armor(PgpArmor.FLOWCRYPT_HEADERS) else null
+  val privateKey = if (keyRingInfo.isSecretKey) this.armorWithFlowcryptHeaders() else null
   val publicKey = if (keyRingInfo.isSecretKey) {
-    (this as PGPSecretKeyRing).toPublicKeyRing().armor(PgpArmor.FLOWCRYPT_HEADERS)
+    (this as PGPSecretKeyRing).toPublicKeyRing().armorWithFlowcryptHeaders()
   } else {
-    this.armor(PgpArmor.FLOWCRYPT_HEADERS)
+    this.armorWithFlowcryptHeaders()
   }
 
   return NodeKeyDetails(
@@ -76,7 +76,8 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
           ?: 0, TimeUnit.MILLISECONDS),
       algo = algo,
       passphrase = null,
-      errorMsg = null)
+      errorMsg = null,
+      keyRing = this)
 }
 
 @Throws(IOException::class)
@@ -93,6 +94,9 @@ fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = null): String {
     return String(out.toByteArray(), StandardCharsets.US_ASCII)
   }
 }
+
+@Throws(IOException::class)
+fun PGPKeyRing.armorWithFlowcryptHeaders() = this.armor(PgpArmor.FLOWCRYPT_HEADERS)
 
 val PGPKeyRing.expiration: Instant?
   get() {
