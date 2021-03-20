@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *  DenBond7
+ *  Ivan Pizhenko
  */
 
 package com.flowcrypt.email.api.retrofit.response.api
@@ -22,19 +24,15 @@ import com.google.gson.annotations.SerializedName
  */
 data class LoginResponse constructor(@SerializedName("error")
                                      @Expose override val apiError: ApiError?,
-                                     @SerializedName("registered")
-                                     @Expose val isRegistered: Boolean?,
                                      @SerializedName("verified")
                                      @Expose val isVerified: Boolean?) : ApiResponse {
   constructor(parcel: Parcel) : this(
       parcel.readParcelable(ApiError::class.java.classLoader),
-      parcel.readValue(Boolean::class.java.classLoader) as Boolean?,
       parcel.readValue(Boolean::class.java.classLoader) as Boolean?)
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     with(parcel) {
       writeParcelable(apiError, flags)
-      writeValue(isRegistered)
       writeValue(isVerified)
     }
   }
