@@ -82,14 +82,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   @ReadyForCIAnnotation
   fun testSuccessLoginNotVerified() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_VERIFIED))
-    isToastDisplayed(decorView, getResString(R.string.user_not_registered_or_verified))
-  }
-
-  @Test
-  @ReadyForCIAnnotation
-  fun testSuccessLoginNotRegisteredNotVerified() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_REGISTERED_NOT_VERIFIED))
-    isToastDisplayed(decorView, getResString(R.string.user_not_registered_or_verified))
+    isToastDisplayed(decorView, getResString(R.string.user_not_verified))
   }
 
   @Test
@@ -113,7 +106,6 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@example.com"
     const val EMAIL_LOGIN_ERROR = "login_error@example.com"
     const val EMAIL_LOGIN_NOT_VERIFIED = "login_not_verified@example.com"
-    const val EMAIL_LOGIN_NOT_REGISTERED_NOT_VERIFIED = "login_not_registered_not_verified@example.com"
     const val EMAIL_DOMAIN_RULES_ERROR = "domain_rules_error@example.com"
 
     val LOGIN_API_ERROR_RESPONSE = LoginResponse(ApiError(400, "Something wrong happened.",
@@ -133,9 +125,6 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           when (model.account) {
             EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
-
-            EMAIL_LOGIN_NOT_REGISTERED_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
 
             EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LoginResponse(null, isVerified = false)))

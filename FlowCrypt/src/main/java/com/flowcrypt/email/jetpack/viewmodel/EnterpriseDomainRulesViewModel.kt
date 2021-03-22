@@ -57,7 +57,7 @@ class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidView
             domainRulesLiveData.value = domainRulesResult
           } else {
             domainRulesLiveData.value = Result.error(LoginResponse(ApiError(-1,
-                context.getString(R.string.user_not_registered_or_verified)), false))
+                context.getString(R.string.user_not_verified)), false))
           }
         }
 
