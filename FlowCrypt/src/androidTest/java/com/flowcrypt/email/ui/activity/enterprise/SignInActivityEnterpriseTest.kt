@@ -144,7 +144,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
                 .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
 
             EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, FisVerified = true)))
+                .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
           }
         }
 
