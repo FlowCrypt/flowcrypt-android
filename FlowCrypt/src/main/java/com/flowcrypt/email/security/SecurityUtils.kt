@@ -96,7 +96,7 @@ class SecurityUtils {
           else -> throw IllegalArgumentException(context.getString(R.string.missing_pass_phrase_strength_evaluation))
         }
 
-        val nodeKeyDetailsList = PgpKey.parseKeys(private.toByteArray()).second
+        val nodeKeyDetailsList = PgpKey.parseKeysC(private.toByteArray())
         val keyDetails = nodeKeyDetailsList.first()
 
         val encryptedKey = if (keyDetails.isFullyDecrypted == true) {

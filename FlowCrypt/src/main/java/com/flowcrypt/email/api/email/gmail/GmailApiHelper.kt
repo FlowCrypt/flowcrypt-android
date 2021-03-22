@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawAttachmentFilterInputStre
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -671,7 +670,7 @@ class GmailApiHelper {
           }
 
           try {
-            list.addAll(PgpKey.parseKeys(backup.toByteArray()).second)
+            list.addAll(PgpKey.parseKeysC(backup.toByteArray()))
           } catch (e: NodeException) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)

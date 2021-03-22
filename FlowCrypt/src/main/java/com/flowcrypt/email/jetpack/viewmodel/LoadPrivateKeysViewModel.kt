@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.SearchBackupsUtil
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -114,7 +113,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   }
 
                   try {
-                    details.addAll(PgpKey.parseKeys(backup.toByteArray()).second)
+                    details.addAll(PgpKey.parseKeysC(backup.toByteArray()))
                   } catch (e: NodeException) {
                     e.printStackTrace()
                     ExceptionUtil.handleError(e)

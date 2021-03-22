@@ -24,7 +24,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
@@ -222,7 +221,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
     private fun parseKeys(armoredKeys: String?): LoaderResult {
       try {
-        val details = PgpKey.parseKeys(armoredKeys!!.toByteArray()).second
+        val details = PgpKey.parseKeysC(armoredKeys!!.toByteArray())
 
         return if (!CollectionUtils.isEmpty(details)) {
           LoaderResult(parsePublicKeysInfo(details), null)

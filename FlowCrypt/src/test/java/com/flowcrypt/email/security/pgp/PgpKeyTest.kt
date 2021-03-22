@@ -8,6 +8,7 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -78,7 +79,7 @@ class PgpKeyTest {
         errorMsg = null
     )
     assertEquals(1, result.second.size)
-    assertEquals(expected, result.second[0])
+    assertEquals(expected, result.second[0].toNodeKeyDetails())
   }
 
   @Test
@@ -147,6 +148,6 @@ class PgpKeyTest {
         errorMsg = null
     )
     assertEquals(1, result.second.size)
-    assertEquals(expected, result.second[0])
+    assertEquals(expected, result.second[0].toNodeKeyDetails())
   }
 }

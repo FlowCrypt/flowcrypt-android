@@ -24,7 +24,6 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
@@ -378,7 +377,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                                                 newPassphrase: String,
                                                 originalPrivateKey: String?): NodeKeyDetails =
       withContext(Dispatchers.IO) {
-        val keyDetailsList = PgpKey.parseKeys(originalPrivateKey!!.toByteArray()).second
+        val keyDetailsList = PgpKey.parseKeysC(originalPrivateKey!!.toByteArray())
         if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }
@@ -402,7 +401,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           throw IllegalStateException("Can't encrypt key with longid " + longId!!)
         }
 
-        val modifiedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray()).second
+        val modifiedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray())
         if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }

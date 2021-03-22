@@ -20,7 +20,6 @@ import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 import android.text.TextUtils
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -114,7 +113,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private class ReplyHandler internal constructor(checkClipboardToFindKeyService: CheckClipboardToFindKeyService)
+  private class ReplyHandler(checkClipboardToFindKeyService: CheckClipboardToFindKeyService)
     : Handler() {
     private val weakRef: WeakReference<CheckClipboardToFindKeyService> = WeakReference(checkClipboardToFindKeyService)
 
@@ -141,14 +140,14 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
    * This handler will be used by the instance of [HandlerThread] to receive message from
    * the UI thread.
    */
-  private class ServiceWorkerHandler internal constructor(looper: Looper) : Handler(looper) {
+  private class ServiceWorkerHandler(looper: Looper) : Handler(looper) {
 
     override fun handleMessage(msg: Message) {
       when (msg.what) {
         MESSAGE_WHAT -> {
           val clipboardText = msg.obj as String
           try {
-            val nodeKeyDetails = PgpKey.parseKeys(clipboardText.toByteArray()).second
+            val nodeKeyDetails = PgpKey.parseKeysC(clipboardText.toByteArray())
             if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
               sendReply(msg)
             }

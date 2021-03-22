@@ -12,7 +12,6 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -52,7 +51,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     for (keyEntity in keyEntities) {
       val passphrase = keyEntity.passphrase ?: continue
 
-      val keyDetailsList = PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray()).second
+      val keyDetailsList = PgpKey.parseKeysC(keyEntity.privateKeyAsString.toByteArray())
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
             IllegalArgumentException("An error occurred during the key parsing| 1: "
@@ -74,7 +73,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
           continue
         }
 
-        val encryptedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray()).second
+        val encryptedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray())
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue

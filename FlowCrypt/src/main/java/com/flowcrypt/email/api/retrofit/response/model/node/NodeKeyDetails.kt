@@ -18,7 +18,6 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
 import com.flowcrypt.email.util.exception.FlowCryptException
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import org.bouncycastle.openpgp.PGPKeyRing
 import java.util.*
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
@@ -40,8 +39,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
                                       @Expose val expiration: Long,
                                       @Expose val algo: Algo?,
                                       var passphrase: String?,
-                                      var errorMsg: String?,
-                                      val keyRing: PGPKeyRing? = null) : Parcelable {
+                                      var errorMsg: String?) : Parcelable {
 
   val primaryPgpContact: PgpContact
     get() = determinePrimaryPgpContact()
