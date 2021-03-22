@@ -8,12 +8,10 @@ package com.flowcrypt.email.api.retrofit.node
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
-import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult
-import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.common.util.CollectionUtils
 import java.io.IOException
@@ -102,26 +100,6 @@ class NodeCallsExecutor {
       val request = EncryptKeyRequest(key, passphrase)
 
       val response = service.encryptKey(request).execute()
-      val result = response.body()
-
-      checkResult(result)
-
-      return result!!
-    }
-
-    /**
-     * Check the passphrase strength.
-     *
-     * @param guesses The given passphrase.
-     * @return An instance of [ZxcvbnStrengthBarResult]
-     * @throws IOException   Such exceptions can occur during network calls.
-     * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
-     */
-    fun zxcvbnStrengthBar(guesses: Double): ZxcvbnStrengthBarResult {
-      val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-      val request = ZxcvbnStrengthBarRequest(guesses)
-
-      val response = service.zxcvbnStrengthBar(request).execute()
       val result = response.body()
 
       checkResult(result)

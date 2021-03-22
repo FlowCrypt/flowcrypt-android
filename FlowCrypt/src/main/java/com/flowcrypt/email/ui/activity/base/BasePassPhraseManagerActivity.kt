@@ -27,11 +27,8 @@ import androidx.core.widget.addTextChangedListener
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.Word
-import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
+import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.UIUtil
@@ -68,7 +65,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   protected var isBackEnabled = true
 
   private val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
-  private var strengthBarResult: ZxcvbnStrengthBarResult? = null
+  private var pwdStrengthResult: PgpPwd.PwdStrengthResult? = null
 
   override val contentViewResourceId: Int = R.layout.activity_pass_phrase_manager
 
@@ -97,12 +94,13 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
           snackBar!!.dismiss()
         }
 
-        if (strengthBarResult != null && strengthBarResult!!.word != null) {
-          when (strengthBarResult!!.word!!.word) {
+        pwdStrengthResult?.word?.let { word ->
+          when (word.word) {
             Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> {
-              val infoDialogFragment = InfoDialogFragment.newInstance("",
-                  getString(R.string.select_stronger_pass_phrase))
-              infoDialogFragment.show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
+              InfoDialogFragment.newInstance(
+                  dialogTitle = "",
+                  dialogMsg = getString(R.string.select_stronger_pass_phrase)
+              ).show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
             }
 
             else -> UIUtil.exchangeViewVisibility(true, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
@@ -111,9 +109,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
       }
 
       R.id.imageButtonShowPasswordHint -> {
-        if (snackBar != null) {
-          snackBar!!.dismiss()
-        }
+        snackBar?.dismiss()
 
         try {
           val webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
@@ -187,13 +183,13 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   }
 
   private fun updateStrengthViews() {
-    if (strengthBarResult == null || strengthBarResult!!.word == null) {
+    if (pwdStrengthResult == null) {
       return
     }
 
-    val word = strengthBarResult!!.word
+    val word = pwdStrengthResult?.word
 
-    when (word!!.word) {
+    when (word?.word) {
       Constants.PASSWORD_QUALITY_WEAK,
       Constants.PASSWORD_QUALITY_POOR -> {
         val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
@@ -210,7 +206,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
 
     val color = parseColor()
 
-    progressBarPasswordQuality.progress = word.bar
+    progressBarPasswordQuality.progress = word?.bar?.toInt() ?: 0
     val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_IN)
     progressBarPasswordQuality.progressDrawable.colorFilter = colorFilter
 
@@ -225,7 +221,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     textViewPasswordQualityInfo.append(" ")
     textViewPasswordQualityInfo.append(getString(R.string.password_quality_subtext))
 
-    val timeSpannable = SpannableString(strengthBarResult!!.time)
+    val timeSpannable = SpannableString(pwdStrengthResult?.time ?: "")
     timeSpannable.setSpan(ForegroundColorSpan(color), 0, timeSpannable.length,
         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     textViewPasswordQualityInfo.append(" ")
@@ -235,11 +231,11 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
 
   private fun parseColor(): Int {
     return try {
-      Color.parseColor(strengthBarResult!!.word!!.color)
+      Color.parseColor(pwdStrengthResult?.word?.color)
     } catch (e: IllegalArgumentException) {
       e.printStackTrace()
 
-      when (strengthBarResult!!.word!!.color) {
+      when (pwdStrengthResult?.word?.color) {
         "orange" -> Color.parseColor("#FFA500")
 
         "darkorange" -> Color.parseColor("#FF8C00")
@@ -251,60 +247,30 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     }
   }
 
-  private fun getLocalizedPasswordQualityValue(passwordStrength: Word): String? {
-    var qualityValue = passwordStrength.word
-
-    if (qualityValue != null) {
-      when (qualityValue) {
-        Constants.PASSWORD_QUALITY_PERFECT -> qualityValue = getString(R.string.password_quality_perfect)
-
-        Constants.PASSWORD_QUALITY_GREAT -> qualityValue = getString(R.string.password_quality_great)
-
-        Constants.PASSWORD_QUALITY_GOOD -> qualityValue = getString(R.string.password_quality_good)
-
-        Constants.PASSWORD_QUALITY_REASONABLE -> qualityValue = getString(R.string.password_quality_reasonable)
-
-        Constants.PASSWORD_QUALITY_POOR -> qualityValue = getString(R.string.password_quality_poor)
-
-        Constants.PASSWORD_QUALITY_WEAK -> qualityValue = getString(R.string.password_quality_weak)
-      }
-
-      qualityValue = qualityValue.toUpperCase(Locale.getDefault())
-    }
-
-    return qualityValue
+  private fun getLocalizedPasswordQualityValue(word: PgpPwd.Word?): String? {
+    return when (word?.word) {
+      Constants.PASSWORD_QUALITY_PERFECT -> getString(R.string.password_quality_perfect)
+      Constants.PASSWORD_QUALITY_GREAT -> getString(R.string.password_quality_great)
+      Constants.PASSWORD_QUALITY_GOOD -> getString(R.string.password_quality_good)
+      Constants.PASSWORD_QUALITY_REASONABLE -> getString(R.string.password_quality_reasonable)
+      Constants.PASSWORD_QUALITY_POOR -> getString(R.string.password_quality_poor)
+      Constants.PASSWORD_QUALITY_WEAK -> getString(R.string.password_quality_weak)
+      else -> word?.word
+    }?.toUpperCase(Locale.getDefault())
   }
 
   private fun initPasswordStrengthViewModel() {
-    passwordStrengthViewModel.zxcvbnStrengthBarResultLiveData.observe(this) {
+    passwordStrengthViewModel.pwdStrengthResultLiveData.observe(this) {
       when (it.status) {
-        Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
-        }
-
         Result.Status.SUCCESS -> {
-          strengthBarResult = it.data
+          pwdStrengthResult = it.data
           updateStrengthViews()
-
-          countingIdlingResource.decrementSafely()
         }
 
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          val msg = when (it.status) {
-            Result.Status.ERROR -> {
-              it.data?.apiError?.msg ?: getString(R.string.unknown_error)
-            }
-
-            Result.Status.EXCEPTION -> {
-              it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error)
-            }
-
-            else -> it.exception?.javaClass?.simpleName ?: getString(R.string.unknown_error)
-          }
+        Result.Status.EXCEPTION -> {
+          val msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+          ?: getString(R.string.unknown_error)
           Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
-
-          countingIdlingResource.decrementSafely()
         }
       }
     }

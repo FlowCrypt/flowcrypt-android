@@ -8,13 +8,14 @@ package com.flowcrypt.email.security.pgp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.math.BigDecimal
 import java.math.BigInteger
 
 class PgpPwdTest {
   @Test
   fun testEstimateStrength() {
     val actualResult = PgpPwd.estimateStrength(
-        BigInteger("88946283684264"), PgpPwd.PwdType.PASSPHRASE)
+        BigDecimal("88946283684264"), PgpPwd.PwdType.PASSPHRASE)
     val expectedResult = PgpPwd.PwdStrengthResult(
         word = PgpPwd.Word(
             match = "week",

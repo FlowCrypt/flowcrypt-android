@@ -14,14 +14,12 @@ import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
-import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
-import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -54,17 +52,6 @@ class NodeRepository : PgpApiRepository {
       withContext(Dispatchers.IO) {
         val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
         getResult(call = { apiService.parseDecryptMsg(request) })
-      }
-
-  override fun checkPassphraseStrength(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
-                                       request: ZxcvbnStrengthBarRequest) {
-    load(requestCode, liveData, request)
-  }
-
-  override suspend fun zxcvbnStrengthBar(context: Context, guesses: Double): Result<ZxcvbnStrengthBarResult?> =
-      withContext(Dispatchers.IO) {
-        val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-        getResult(call = { apiService.zxcvbnStrengthBarSuspend(ZxcvbnStrengthBarRequest(guesses)) })
       }
 
   /**
