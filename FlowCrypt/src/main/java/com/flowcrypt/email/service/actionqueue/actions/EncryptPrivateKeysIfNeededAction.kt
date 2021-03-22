@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.service.actionqueue.actions
@@ -10,11 +12,11 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -49,7 +51,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     for (keyEntity in keyEntities) {
       val passphrase = keyEntity.passphrase ?: continue
 
-      val keyDetailsList = NodeCallsExecutor.parseKeys(keyEntity.privateKeyAsString)
+      val keyDetailsList = PgpKey.parseKeysC(keyEntity.privateKeyAsString.toByteArray())
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
             IllegalArgumentException("An error occurred during the key parsing| 1: "
@@ -64,14 +66,14 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
       }
 
       try {
-        val encryptedKeyResult = NodeCallsExecutor.encryptKey(keyDetails.privateKey!!, passphrase)
+        val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
 
-        if (encryptedKeyResult.encryptedKey.isNullOrEmpty()) {
+        if (encryptedKey.isEmpty()) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key encryption"))
           continue
         }
 
-        val encryptedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptedKeyResult.encryptedKey)
+        val encryptedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray())
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue

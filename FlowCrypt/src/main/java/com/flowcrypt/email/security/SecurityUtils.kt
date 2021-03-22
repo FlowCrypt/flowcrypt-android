@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.security
@@ -12,6 +14,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -93,12 +96,11 @@ class SecurityUtils {
           else -> throw IllegalArgumentException(context.getString(R.string.missing_pass_phrase_strength_evaluation))
         }
 
-        val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private)
+        val nodeKeyDetailsList = PgpKey.parseKeysC(private.toByteArray())
         val keyDetails = nodeKeyDetailsList.first()
 
         val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
-          val encryptKeResult = NodeCallsExecutor.encryptKey(private, passPhrase)
-          encryptKeResult.encryptedKey
+          PgpKey.encryptKey(private, passPhrase)
         } else {
           keyDetails.privateKey
         }

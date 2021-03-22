@@ -8,8 +8,8 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.core.msg.MsgBlockParser
+import com.flowcrypt.email.extensions.pgp.armor
 import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
-import java.nio.charset.StandardCharsets
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPObjectFactory
@@ -21,8 +21,38 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator
+import org.pgpainless.PGPainless
+import org.pgpainless.util.Passphrase
+import java.nio.charset.StandardCharsets
 
 object PgpKey {
+  fun encryptKey(armored: String, passphrase: String): String {
+    return try {
+      val keys = parseAndNormalizeKeyRings(armored)
+      PGPainless.modifyKeyRing(keys[0] as PGPSecretKeyRing)
+          .changePassphraseFromOldPassphrase(null)
+          .withSecureDefaultSettings()
+          .toNewPassphrase(Passphrase.fromPassword(passphrase))
+          .done()
+          .armor()
+    } catch (e: Exception) {
+      ""
+    }
+  }
+
+  fun decryptKey(armored: String, passphrase: String): String {
+    return try {
+      val keys = parseAndNormalizeKeyRings(armored)
+      PGPainless.modifyKeyRing(keys[0] as PGPSecretKeyRing)
+          .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
+          .withSecureDefaultSettings()
+          .toNoPassphrase()
+          .done()
+          .armor()
+    } catch (ex: Exception) {
+      ""
+    }
+  }
 
   /**
    * Parses multiple keys, binary or armored.
@@ -30,20 +60,20 @@ object PgpKey {
    * @return Pair.first  indicates armored (true) or binary (false) format
    *         Pair.second list of keys
    */
-  fun parseKeys(source: ByteArray): Pair<Boolean, List<NodeKeyDetails>> {
+  fun parseKeys(source: ByteArray): Pair<Boolean, List<PGPKeyRing>> {
     val blockType = PgpMsg.detectBlockType(source)
     if (blockType.second == MsgBlock.Type.UNKNOWN) {
       throw IllegalArgumentException("Unknown message type")
     }
 
-    val allKeys = mutableListOf<NodeKeyDetails>()
+    val allKeys = mutableListOf<PGPKeyRing>()
     if (blockType.first) {
       // armored text format
       val blocks = MsgBlockParser.detectBlocks(String(source, StandardCharsets.UTF_8))
       for (block in blocks) {
         val content = block.content
         if (content != null) {
-          val keys = parse(content)
+          val keys = parseAndNormalizeKeyRings(content)
           allKeys.addAll(keys)
         }
       }
@@ -53,7 +83,7 @@ object PgpKey {
       while (true) {
         val obj = objectFactory.nextObject() ?: break
         if (obj is PGPKeyRing) {
-          allKeys.add(obj.toNodeKeyDetails())
+          allKeys.add(obj)
         }
       }
     }
@@ -61,8 +91,17 @@ object PgpKey {
     return Pair(blockType.first, allKeys)
   }
 
-  fun parse(armored: String): List<NodeKeyDetails>
-    = parseAndNormalizeKeyRings(armored).map { it.toNodeKeyDetails() }.toList()
+  /**
+   * Parse a list of [NodeKeyDetails] from the given string. It can take one key or many keys, it can be
+   * private or public keys, it can be armored or binary... doesn't matter.
+   *
+   * This method should be dropped in the future. Currently it should be used just for compatibility.
+   *
+   * @return list of keys
+   */
+  fun parseKeysC(source: ByteArray): List<NodeKeyDetails> {
+    return parseKeys(source).second.map { it.toNodeKeyDetails() }
+  }
 
   private fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {
     val normalizedArmored = PgpArmor.normalize(armored, MsgBlock.Type.UNKNOWN)
@@ -70,7 +109,7 @@ object PgpKey {
     if (PgpArmor.ARMOR_HEADER_DICT_REGEX[MsgBlock.Type.PUBLIC_KEY]!!
             .beginRegexp.containsMatchIn(normalizedArmored)) {
       val keyRingCollection = JcaPGPPublicKeyRingCollection(
-        ArmoredInputStream(normalizedArmored.toByteArray(StandardCharsets.UTF_8).inputStream())
+          ArmoredInputStream(normalizedArmored.toByteArray(StandardCharsets.UTF_8).inputStream())
       )
       // We have to use reflection because BouncyCastle declares "order" list as a private field
       // https://stackoverflow.com/a/1196207/1540501

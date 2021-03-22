@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -22,7 +24,6 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
@@ -40,6 +41,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
@@ -375,7 +377,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                                                 newPassphrase: String,
                                                 originalPrivateKey: String?): NodeKeyDetails =
       withContext(Dispatchers.IO) {
-        val keyDetailsList = NodeCallsExecutor.parseKeys(originalPrivateKey!!)
+        val keyDetailsList = PgpKey.parseKeysC(originalPrivateKey!!.toByteArray())
         if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }
@@ -387,19 +389,19 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           throw IllegalStateException("Passphrase for key with longid $longId not found")
         }
 
-        val (decryptedKey) = NodeCallsExecutor.decryptKey(nodeKeyDetails.privateKey!!, oldPassphrase!!)
+        val decryptedKey = PgpKey.decryptKey(nodeKeyDetails.privateKey!!, oldPassphrase!!)
 
         if (TextUtils.isEmpty(decryptedKey)) {
           throw IllegalStateException("Can't decrypt key with longid " + longId!!)
         }
 
-        val (encryptedKey) = NodeCallsExecutor.encryptKey(decryptedKey!!, newPassphrase)
+        val encryptedKey = PgpKey.encryptKey(decryptedKey, newPassphrase)
 
         if (TextUtils.isEmpty(encryptedKey)) {
           throw IllegalStateException("Can't encrypt key with longid " + longId!!)
         }
 
-        val modifiedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptedKey!!)
+        val modifiedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray())
         if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }

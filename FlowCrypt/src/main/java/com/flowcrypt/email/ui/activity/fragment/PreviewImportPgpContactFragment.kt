@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -22,7 +24,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
@@ -30,6 +31,7 @@ import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.adapter.ImportPgpContactsRecyclerViewAdapter
 import com.flowcrypt.email.util.GeneralUtil
@@ -219,7 +221,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
     private fun parseKeys(armoredKeys: String?): LoaderResult {
       try {
-        val details = NodeCallsExecutor.parseKeys(armoredKeys!!)
+        val details = PgpKey.parseKeysC(armoredKeys!!.toByteArray())
 
         return if (!CollectionUtils.isEmpty(details)) {
           LoaderResult(parsePublicKeysInfo(details), null)

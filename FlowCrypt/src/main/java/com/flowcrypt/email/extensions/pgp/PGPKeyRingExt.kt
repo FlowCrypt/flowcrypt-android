@@ -11,11 +11,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpArmor
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.nio.charset.StandardCharsets
-import java.time.Instant
-import java.util.concurrent.TimeUnit
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -24,6 +19,11 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.info.KeyInfo
 import org.pgpainless.key.info.KeyRingInfo
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -56,11 +56,11 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
         )
       }
 
-  val privateKey = if (keyRingInfo.isSecretKey) this.armor(PgpArmor.FLOWCRYPT_HEADERS) else null
+  val privateKey = if (keyRingInfo.isSecretKey) armor() else null
   val publicKey = if (keyRingInfo.isSecretKey) {
-    (this as PGPSecretKeyRing).toPublicKeyRing().armor(PgpArmor.FLOWCRYPT_HEADERS)
+    (this as PGPSecretKeyRing).toPublicKeyRing().armor()
   } else {
-    this.armor(PgpArmor.FLOWCRYPT_HEADERS)
+    armor()
   }
 
   return NodeKeyDetails(
@@ -80,7 +80,7 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
 }
 
 @Throws(IOException::class)
-fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = null): String {
+fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS): String {
   ByteArrayOutputStream().use { out ->
     ArmoredOutputStream(out).use { armoredOut ->
       if (headers != null) {

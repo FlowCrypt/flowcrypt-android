@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.service.actionqueue.actions
@@ -16,6 +18,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -43,14 +46,12 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
-      val (encryptedKey) = NodeCallsExecutor.encryptKey(keyEntity.privateKeyAsString, keyEntity
-          .passphrase!!)
-
+      val encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
       if (TextUtils.isEmpty(encryptedKey)) {
         throw IllegalStateException("An error occurred during encrypting some key")
       }
 
-      val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey!!)
+      val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey)
       val message = EmailUtil.genMsgWithPrivateKeys(context, encryptedAccount, session, mimeBodyPart)
       transport.sendMessage(message, message.allRecipients)
     }

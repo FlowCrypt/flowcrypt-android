@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *   DenBond7
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.api.email.gmail
@@ -16,7 +18,6 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawAttachmentFilterInputStre
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -27,6 +28,7 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -668,7 +670,7 @@ class GmailApiHelper {
           }
 
           try {
-            list.addAll(NodeCallsExecutor.parseKeys(backup))
+            list.addAll(PgpKey.parseKeysC(backup.toByteArray()))
           } catch (e: NodeException) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)

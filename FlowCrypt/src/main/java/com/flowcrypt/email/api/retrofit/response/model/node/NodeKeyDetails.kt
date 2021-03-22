@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *  DenBond7
+ *  Ivan Pizhenko
  */
 
 package com.flowcrypt.email.api.retrofit.response.model.node

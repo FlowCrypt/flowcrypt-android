@@ -80,7 +80,6 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testImportKeyFromBackup() {
     useIntentionFromRunCheckKeysActivity()
 
