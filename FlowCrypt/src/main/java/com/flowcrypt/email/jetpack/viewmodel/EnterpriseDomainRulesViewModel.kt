@@ -1,6 +1,8 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors:
+ *  DenBond7
+ *  Ivan Pizhenko
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -49,18 +51,13 @@ class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidView
         }
 
         Result.Status.SUCCESS -> {
-          if (loginResult.data?.isRegistered == true && loginResult.data.isVerified == true) {
+          if (loginResult.data?.isVerified == true) {
             val domainRulesResult = repository.getDomainRules(context,
                 DomainRulesRequest(ApiName.POST_GET_DOMAIN_RULES, LoginModel(account, uuid)))
             domainRulesLiveData.value = domainRulesResult
-          } else when {
-            loginResult.data?.isRegistered == false && loginResult.data.isVerified == false ->
-              domainRulesLiveData.value = Result.error(LoginResponse(ApiError(-1,
-                  context.getString(R.string.user_not_registered_not_verified)), false, false))
-
-            loginResult.data?.isVerified == false ->
-              domainRulesLiveData.value = Result.error(LoginResponse(ApiError(-1,
-                  context.getString(R.string.user_not_verified)), true, false))
+          } else {
+            domainRulesLiveData.value = Result.error(LoginResponse(ApiError(-1,
+                context.getString(R.string.user_not_verified)), false))
           }
         }
 
