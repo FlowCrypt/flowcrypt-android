@@ -24,7 +24,7 @@ class PgpPwdTest {
             color = "darkred",
             pass = false
         ),
-        seconds = BigInteger.valueOf(1111829),
+        seconds = BigInteger.valueOf(1111828),
         time = "2 weeks"
     )
     assertEquals(expectedResult, actualResult)
