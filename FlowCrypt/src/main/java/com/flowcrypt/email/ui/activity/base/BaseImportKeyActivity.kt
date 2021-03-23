@@ -19,7 +19,6 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -213,7 +212,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.parseKeysLiveData.observe(this, Observer {
+    privateKeysViewModel.parseKeysLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -226,7 +225,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
           Result.Status.SUCCESS -> {
             isCheckingPrivateKeyNow = false
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            val keys = it.data?.nodeKeyDetails
+            val keys = it.data
 
             if (keys.isNullOrEmpty()) {
               val msg = when (keyImportModel?.type) {
@@ -250,20 +249,11 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             countingIdlingResource.decrementSafely()
           }
 
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          Result.Status.EXCEPTION -> {
             isCheckingPrivateKeyNow = false
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            var msg = when (it.status) {
-              Result.Status.ERROR -> {
-                val apiErrorMsg = it.data?.apiError?.msg
-                if ("Error: This key is only partially encrypted." == apiErrorMsg) {
-                  getString(R.string.partially_encrypted_private_key_error_msg)
-                } else it.data?.apiError?.msg ?: getString(R.string.unknown_error)
-              }
-
-              else -> it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error)
-            }
+            var msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: getString(R.string.unknown_error)
 
             if (it.exception is FileNotFoundException) {
               msg = getString(R.string.file_not_found)

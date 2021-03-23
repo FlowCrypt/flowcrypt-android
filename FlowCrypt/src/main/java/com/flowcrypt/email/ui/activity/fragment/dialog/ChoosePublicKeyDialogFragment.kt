@@ -116,8 +116,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         }
 
         Result.Status.SUCCESS -> {
-          val parseKeysResult = it.data
-          val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
+          val nodeKeyDetailsList = it.data ?: emptyList()
           if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
             textViewMsg?.text = getString(R.string.no_pub_keys)
           } else {
@@ -160,13 +159,6 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
               }
             }
           }
-          onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
-          baseActivity?.countingIdlingResource?.decrementSafely()
-        }
-
-        Result.Status.ERROR -> {
-          UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
-          textViewMsg?.text = it.data?.apiError?.toString()
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
           baseActivity?.countingIdlingResource?.decrementSafely()
         }

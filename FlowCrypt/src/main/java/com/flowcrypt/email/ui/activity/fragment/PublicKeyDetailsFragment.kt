@@ -22,15 +22,11 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.LoadingState
-import com.flowcrypt.email.api.retrofit.Status
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
-import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
@@ -54,7 +50,7 @@ import java.util.concurrent.TimeUnit
  *         Time: 8:54 AM
  *         E-mail: DenBond7@gmail.com
  */
-class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>> {
+class PublicKeyDetailsFragment : BaseFragment() {
   private val contactsViewModel: ContactsViewModel by viewModels()
   private val parseKeysViewModel: ParseKeysViewModel by viewModels()
 
@@ -68,13 +64,6 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   private var textViewCreated: TextView? = null
 
   override val contentResourceId: Int = R.layout.fragment_public_key_details
-
-  private val contactEntityObserver = Observer<ContactEntity?> {
-    contactEntity = it
-    if (baseActivity.isNodeReady) {
-      fetchKeyDetails(contactEntity)
-    }
-  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -90,8 +79,45 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     supportActionBar?.setTitle(R.string.pub_key)
     initViews(view)
 
+    setupContactsViewModel()
+    setupParseKeysViewModel()
+  }
+
+  private fun setupParseKeysViewModel() {
+    parseKeysViewModel.parseKeysLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          UIUtil.exchangeViewVisibility(true, progressBar, content)
+        }
+
+        Result.Status.SUCCESS -> {
+          val nodeKeyDetailsList = it.data
+          if (nodeKeyDetailsList.isNullOrEmpty()) {
+            Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
+            parentFragmentManager.popBackStack()
+          } else {
+            details = nodeKeyDetailsList.first()
+            updateViews()
+            UIUtil.exchangeViewVisibility(false, progressBar, content)
+          }
+        }
+
+        Result.Status.EXCEPTION -> {
+          val msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+          ?: getString(R.string.unknown_error)
+
+          Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        }
+      }
+    })
+  }
+
+  private fun setupContactsViewModel() {
     contactEntity?.let {
-      contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, contactEntityObserver)
+      contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, { contactEntity ->
+        this.contactEntity = contactEntity
+        parseKeysViewModel.fetchKeys(it.publicKey)
+      })
     }
   }
 
@@ -141,38 +167,6 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     when (requestCode) {
       REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
         Activity.RESULT_OK -> saveKey(data)
-      }
-    }
-  }
-
-  override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
-    when (nodeResponseWrapper.requestCode) {
-      R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
-        Status.LOADING -> {
-          nodeResponseWrapper.loadingState?.let {
-            if (LoadingState.PREPARE_REQUEST == it && layoutUsers?.childCount == 0) {
-              UIUtil.exchangeViewVisibility(true, progressBar, content)
-            }
-          }
-        }
-
-        Status.SUCCESS -> {
-          val parseKeysResult = nodeResponseWrapper.result as ParseKeysResult?
-          val nodeKeyDetailsList = parseKeysResult?.nodeKeyDetails
-          if (nodeKeyDetailsList.isNullOrEmpty()) {
-            Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
-          } else {
-            details = nodeKeyDetailsList.first()
-            updateViews()
-            UIUtil.exchangeViewVisibility(false, progressBar, content)
-          }
-        }
-
-        Status.ERROR -> Toast.makeText(context, nodeResponseWrapper.result?.apiError?.toString(),
-            Toast.LENGTH_SHORT).show()
-
-        Status.EXCEPTION -> Toast.makeText(context, nodeResponseWrapper.exception!!.message, Toast.LENGTH_SHORT).show()
       }
     }
   }
@@ -247,13 +241,6 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     textViewCreated?.text = getString(R.string.template_created,
         DateFormat.getMediumDateFormat(context).format(
             Date(TimeUnit.MILLISECONDS.convert(details?.created ?: 0, TimeUnit.SECONDS))))
-  }
-
-  private fun fetchKeyDetails(contactEntity: ContactEntity?) {
-    contactEntity?.let {
-      parseKeysViewModel.responsesLiveData.observe(viewLifecycleOwner, this)
-      parseKeysViewModel.fetchKeys(String(it.publicKey ?: byteArrayOf()))
-    }
   }
 
   private fun chooseDest() {

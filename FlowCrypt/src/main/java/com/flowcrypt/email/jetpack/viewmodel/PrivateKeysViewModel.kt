@@ -28,10 +28,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
@@ -75,16 +73,16 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupAsFileLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
-  val parseKeysLiveData = MutableLiveData<Result<ParseKeysResult?>>()
+  val parseKeysLiveData = MutableLiveData<Result<List<NodeKeyDetails>?>>()
   val createPrivateKeyLiveData = MutableLiveData<Result<NodeKeyDetails?>>()
   val nodeKeyDetailsLiveData = keysStorage.nodeKeyDetailsLiveData
   val deleteKeysLiveData = MutableLiveData<Result<Boolean>>()
 
-  val parseKeysResultLiveData: LiveData<Result<ParseKeysResult>> =
+  val parseKeysResultLiveData: LiveData<Result<List<NodeKeyDetails>>> =
       Transformations.switchMap(keysStorage.nodeKeyDetailsLiveData) { list ->
         liveData {
           emit(Result.loading())
-          emit(Result.success(ParseKeysResult(nodeKeyDetails = list.toMutableList())))
+          emit(Result.success(list))
         }
       }
 
@@ -226,7 +224,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         parseKeysLiveData.value = Result.loading()
 
         if (keyImportModel == null) {
-          parseKeysLiveData.value = Result.success(ParseKeysResult(format = "unknown"))
+          parseKeysLiveData.value = Result.exception(IllegalArgumentException("Unknown format"))
           return@launch
         }
 
@@ -252,7 +250,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
         }
 
-        parseKeysLiveData.value = nodeRepository.fetchKeyDetails(ParseKeysRequest(armoredSource))
+        parseKeysLiveData.value = Result.success(PgpKey.parseKeysC(armoredSource))
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)

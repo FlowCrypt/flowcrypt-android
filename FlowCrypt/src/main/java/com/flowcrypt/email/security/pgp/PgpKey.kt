@@ -99,6 +99,18 @@ object PgpKey {
    *
    * @return list of keys
    */
+  fun parseKeysC(source: String): List<NodeKeyDetails> {
+    return parseKeys(source.toByteArray()).second.map { it.toNodeKeyDetails() }
+  }
+
+  /**
+   * Parse a list of [NodeKeyDetails] from the given source. It can take one key or many keys, it can be
+   * private or public keys, it can be armored or binary... doesn't matter.
+   *
+   * This method should be dropped in the future. Currently it should be used just for compatibility.
+   *
+   * @return list of keys
+   */
   fun parseKeysC(source: ByteArray): List<NodeKeyDetails> {
     return parseKeys(source).second.map { it.toNodeKeyDetails() }
   }
