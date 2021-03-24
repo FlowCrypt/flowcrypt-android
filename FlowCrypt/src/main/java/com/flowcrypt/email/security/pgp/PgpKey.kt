@@ -28,8 +28,7 @@ import java.nio.charset.StandardCharsets
 @Suppress("unused")
 object PgpKey {
   fun encryptKey(armored: String, passphrase: String): String {
-    val keys = parseAndNormalizeKeyRings(armored)
-    return encryptKey(keys[0] as PGPSecretKeyRing, passphrase).armor()
+    return encryptKey(extractSecretKey(armored), passphrase).armor()
   }
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
@@ -41,8 +40,7 @@ object PgpKey {
   }
 
   fun decryptKey(armored: String, passphrase: String): String {
-    val keys = parseAndNormalizeKeyRings(armored)
-    return decryptKey(keys[0] as PGPSecretKeyRing, passphrase).armor()
+    return decryptKey(extractSecretKey(armored), passphrase).armor()
   }
 
   private fun decryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
@@ -58,8 +56,7 @@ object PgpKey {
       oldPassphrase: String,
       newPassphrase: String
   ): String {
-    val keys = parseAndNormalizeKeyRings(armored)
-    return changeKeyPassphrase(keys[0] as PGPSecretKeyRing, oldPassphrase, newPassphrase).armor()
+    return changeKeyPassphrase(extractSecretKey(armored), oldPassphrase, newPassphrase).armor()
   }
 
   private fun changeKeyPassphrase(
@@ -68,6 +65,15 @@ object PgpKey {
       newPassphrase: String
   ): PGPSecretKeyRing {
     return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
+  }
+
+  private fun extractSecretKey(armored: String): PGPSecretKeyRing {
+    val key = parseAndNormalizeKeyRings(armored).firstOrNull()
+        ?: throw IllegalArgumentException("Keys not found")
+    if (key is PGPSecretKeyRing)
+      return key
+    else
+      throw IllegalArgumentException("Key is not a secret key")
   }
 
   data class ParseKeyResult(val isArmored: Boolean, val keys: List<PGPKeyRing>)
