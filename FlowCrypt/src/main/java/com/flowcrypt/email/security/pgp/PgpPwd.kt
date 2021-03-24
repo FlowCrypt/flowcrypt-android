@@ -9,9 +9,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import java.security.SecureRandom
-import java.util.concurrent.TimeUnit.DAYS
-import java.util.concurrent.TimeUnit.HOURS
-import java.util.concurrent.TimeUnit.MINUTES
+import java.util.concurrent.TimeUnit
 
 object PgpPwd {
   data class Word(
@@ -33,19 +31,20 @@ object PgpPwd {
     PASSWORD
   }
 
-  fun estimateStrength(guesses: BigInteger, type: PwdType = PwdType.PASSPHRASE): PwdStrengthResult {
-    val timeToCrack = guesses.divideAndRemainder(CRACK_GUESSES_PER_SECOND)
-    if (timeToCrack[1] >= HALF_CRACK_GUESSES_PER_SECOND) {
-      timeToCrack[0] = timeToCrack[0].inc()
-    }
-    val readableTime = readableCrackTime(timeToCrack[0])
+  fun estimateStrength(guesses: Double, type: PwdType = PwdType.PASSPHRASE): PwdStrengthResult {
+    return estimateStrength(guesses.toBigDecimal(), type)
+  }
+
+  fun estimateStrength(guesses: BigDecimal, type: PwdType = PwdType.PASSPHRASE): PwdStrengthResult {
+    val timeToCrack = guesses.divide(CRACK_GUESSES_PER_SECOND)
+    val readableTime = readableCrackTime(timeToCrack)
     val words = when (type) {
       PwdType.PASSPHRASE -> CRACK_TIME_WORDS_PASSPHRASE
       PwdType.PASSWORD -> CRACK_TIME_WORDS_PASSWORD
     }
     for (word in words) {
       if (readableTime.contains(word.match)) {
-        return PwdStrengthResult(word, timeToCrack[0], readableTime)
+        return PwdStrengthResult(word, timeToCrack.toBigInteger(), readableTime)
       }
     }
     throw IllegalArgumentException("Can't estimate strength for the number of guesses $guesses")
@@ -81,50 +80,50 @@ object PgpPwd {
   }
 
   // https://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
-  private fun readableCrackTime(totalSeconds: BigInteger): String {
-    val n = BigDecimal(totalSeconds)
-    val millennia = n.div(SECONDS_PER_MILLENNIUM).setScale(0, RoundingMode.HALF_UP)
+  private fun readableCrackTime(totalSeconds: BigDecimal): String {
+    val millennia = totalSeconds.divide(SECONDS_PER_MILLENNIUM, 0, RoundingMode.HALF_UP)
     if (millennia > BigDecimal.ZERO) {
       return if (millennia == BigDecimal.ONE) "a millennium" else "millennia"
     }
 
-    val centuries = n.div(SECONDS_PER_CENTURY).setScale(0, RoundingMode.HALF_UP)
+    val centuries = totalSeconds.divide(SECONDS_PER_CENTURY, 0, RoundingMode.HALF_UP)
     if (centuries > BigDecimal.ZERO) {
-      return if (centuries == BigInteger.ONE) "a century" else "centuries"
+      return if (centuries == BigDecimal.ONE) "a century" else "centuries"
     }
 
-    val years = n.div(SECONDS_PER_YEAR).setScale(0, RoundingMode.HALF_UP)
+    val years = totalSeconds.divide(SECONDS_PER_YEAR, 0, RoundingMode.HALF_UP)
     if (years > BigDecimal.ZERO) {
       return "$years year${numberWordEnding(years)}"
     }
 
-    val months = n.div(SECONDS_PER_MONTH).setScale(0, RoundingMode.HALF_UP)
+    val months = totalSeconds.divide(SECONDS_PER_MONTH, 0, RoundingMode.HALF_UP)
     if (months > BigDecimal.ZERO) {
       return "$months month${numberWordEnding(months)}"
     }
 
-    val weeks = n.div(SECONDS_PER_WEEK).setScale(0, RoundingMode.HALF_UP)
+    val weeks = totalSeconds.divide(SECONDS_PER_WEEK, 0, RoundingMode.HALF_UP)
     if (weeks > BigDecimal.ZERO) {
       return "$weeks week${numberWordEnding(weeks)}"
     }
 
-    val days = n.div(SECONDS_PER_DAY).setScale(0, RoundingMode.HALF_UP)
+    val days = totalSeconds.divide(SECONDS_PER_DAY, 0, RoundingMode.HALF_UP)
     if (days > BigDecimal.ZERO) {
       return "$days day${numberWordEnding(days)}"
     }
 
-    val hours = n.div(SECONDS_PER_HOUR).setScale(0, RoundingMode.HALF_UP)
+    val hours = totalSeconds.divide(SECONDS_PER_HOUR, 0, RoundingMode.HALF_UP)
     if (hours > BigDecimal.ZERO) {
       return "$hours hour${numberWordEnding(hours)}"
     }
 
-    val minutes = n.div(SECONDS_PER_MINUTE).setScale(0, RoundingMode.HALF_UP)
+    val minutes = totalSeconds.divide(SECONDS_PER_MINUTE, 0, RoundingMode.HALF_UP)
     if (minutes > BigDecimal.ZERO) {
       return "$minutes minute${numberWordEnding(minutes)}"
     }
 
-    if (n > BigDecimal.ZERO) {
-      return "$n second${numberWordEnding(n)}"
+    val seconds = totalSeconds.divide(SECONDS_PER_SECONDS, 0, RoundingMode.HALF_UP)
+    if (seconds > BigDecimal.ZERO) {
+      return "$seconds second${numberWordEnding(seconds)}"
     }
 
     return "less than a second"
@@ -138,17 +137,17 @@ object PgpPwd {
   // https://www.abuse.ch/?p=3294
   // https://threatpost.com/how-much-does-botnet-cost-022813/77573/
   // https://www.abuse.ch/?p=3294
-  private val CRACK_GUESSES_PER_SECOND = BigInteger.valueOf(10000 * 2 * 4000)
-  private val HALF_CRACK_GUESSES_PER_SECOND = CRACK_GUESSES_PER_SECOND.div(BigInteger.valueOf(2))
+  private val CRACK_GUESSES_PER_SECOND = BigDecimal.valueOf(10000 * 2 * 4000)
 
-  private val SECONDS_PER_MILLENNIUM = DAYS.toSeconds(365 * 100 * 1000).toBigDecimal()
-  private val SECONDS_PER_CENTURY = DAYS.toSeconds(365 * 100).toBigDecimal()
-  private val SECONDS_PER_YEAR = DAYS.toSeconds(365).toBigDecimal()
-  private val SECONDS_PER_MONTH = DAYS.toSeconds(30).toBigDecimal()
-  private val SECONDS_PER_WEEK = DAYS.toSeconds(7).toBigDecimal()
-  private val SECONDS_PER_DAY = DAYS.toSeconds(1).toBigDecimal()
-  private val SECONDS_PER_HOUR = HOURS.toSeconds(1).toBigDecimal()
-  private val SECONDS_PER_MINUTE = MINUTES.toSeconds(1).toBigDecimal()
+  private val SECONDS_PER_MILLENNIUM = TimeUnit.DAYS.toSeconds(365 * 100 * 1000).toBigDecimal()
+  private val SECONDS_PER_CENTURY = TimeUnit.DAYS.toSeconds(365 * 100).toBigDecimal()
+  private val SECONDS_PER_YEAR = TimeUnit.DAYS.toSeconds(365).toBigDecimal()
+  private val SECONDS_PER_MONTH = TimeUnit.DAYS.toSeconds(30).toBigDecimal()
+  private val SECONDS_PER_WEEK = TimeUnit.DAYS.toSeconds(7).toBigDecimal()
+  private val SECONDS_PER_DAY = TimeUnit.DAYS.toSeconds(1).toBigDecimal()
+  private val SECONDS_PER_HOUR = TimeUnit.HOURS.toSeconds(1).toBigDecimal()
+  private val SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1).toBigDecimal()
+  private val SECONDS_PER_SECONDS = TimeUnit.SECONDS.toSeconds(1).toBigDecimal()
 
   private val CRACK_TIME_WORDS_PASSWORD = arrayOf(
       // the requirements for a one-time password are less strict

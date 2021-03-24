@@ -10,9 +10,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
+import com.flowcrypt.email.security.pgp.PgpPwd
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.nulabinc.zxcvbn.Zxcvbn
 import kotlinx.coroutines.launch
 import java.util.*
@@ -27,29 +27,17 @@ import java.util.*
  */
 class PasswordStrengthViewModel(application: Application) : BaseNodeApiViewModel(application) {
   private val zxcvbn: Zxcvbn = Zxcvbn()
-  private val pgpApiRepository = NodeRepository()
-  private var timer: Timer = Timer()
+  private val controlledRunnerForZxcvbn = ControlledRunner<Result<PgpPwd.PwdStrengthResult?>>()
 
-  val zxcvbnStrengthBarResultLiveData: MutableLiveData<Result<ZxcvbnStrengthBarResult?>> = MutableLiveData()
+  val pwdStrengthResultLiveData: MutableLiveData<Result<PgpPwd.PwdStrengthResult?>> = MutableLiveData()
 
   fun check(passphrase: String) {
-    zxcvbnStrengthBarResultLiveData.value = Result.loading()
-    timer.cancel()
-    timer = Timer()
-    timer.schedule(
-        object : TimerTask() {
-          override fun run() {
-            viewModelScope.launch {
-              val measure = zxcvbn.measure(passphrase, arrayListOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
-              zxcvbnStrengthBarResultLiveData.value = pgpApiRepository.zxcvbnStrengthBar(getApplication(), measure)
-            }
-          }
-        },
-        DELAY
-    )
-  }
-
-  companion object {
-    private const val DELAY: Long = 350
+    viewModelScope.launch {
+      pwdStrengthResultLiveData.value = Result.loading()
+      val measure = zxcvbn.measure(passphrase, arrayListOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
+      pwdStrengthResultLiveData.value = controlledRunnerForZxcvbn.cancelPreviousThenRun {
+        return@cancelPreviousThenRun Result.success(PgpPwd.estimateStrength(measure.toBigDecimal()))
+      }
+    }
   }
 }

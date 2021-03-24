@@ -11,10 +11,10 @@ import android.content.Context
 import android.text.TextUtils
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -82,9 +82,9 @@ class SecurityUtils {
 
         val zxcvbn = Zxcvbn()
         val measure = zxcvbn.measure(passPhrase!!, listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
-        val passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure)
+        val passwordStrength = PgpPwd.estimateStrength(measure)
 
-        when (passwordStrength.word?.word) {
+        when (passwordStrength.word.word) {
           Constants.PASSWORD_QUALITY_WEAK,
           Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException(context.getString(R.string.pass_phrase_too_weak))
 

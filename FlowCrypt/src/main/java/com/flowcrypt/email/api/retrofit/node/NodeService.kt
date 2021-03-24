@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
-import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
@@ -22,7 +21,6 @@ import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult
-import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -73,10 +71,4 @@ interface NodeService {
   @POST("/")
   @Streaming
   fun decryptFile(@Body request: DecryptFileRequest): Call<DecryptedFileResult>
-
-  @POST("/")
-  fun zxcvbnStrengthBar(@Body request: ZxcvbnStrengthBarRequest): Call<ZxcvbnStrengthBarResult>
-
-  @POST("/")
-  suspend fun zxcvbnStrengthBarSuspend(@Body request: ZxcvbnStrengthBarRequest): Response<ZxcvbnStrengthBarResult>
 }
