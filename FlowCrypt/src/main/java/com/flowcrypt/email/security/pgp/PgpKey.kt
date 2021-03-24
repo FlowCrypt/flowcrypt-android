@@ -25,42 +25,59 @@ import org.pgpainless.PGPainless
 import org.pgpainless.util.Passphrase
 import java.nio.charset.StandardCharsets
 
+@Suppress("unused")
 object PgpKey {
   fun encryptKey(armored: String, passphrase: String): String {
-    return try {
-      val keys = parseAndNormalizeKeyRings(armored)
-      PGPainless.modifyKeyRing(keys[0] as PGPSecretKeyRing)
-          .changePassphraseFromOldPassphrase(null)
-          .withSecureDefaultSettings()
-          .toNewPassphrase(Passphrase.fromPassword(passphrase))
-          .done()
-          .armor()
-    } catch (e: Exception) {
-      ""
-    }
+    val keys = parseAndNormalizeKeyRings(armored)
+    return encryptKey(keys[0] as PGPSecretKeyRing, passphrase).armor()
+  }
+
+  private fun encryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
+    return PGPainless.modifyKeyRing(key)
+        .changePassphraseFromOldPassphrase(null)
+        .withSecureDefaultSettings()
+        .toNewPassphrase(Passphrase.fromPassword(passphrase))
+        .done()
   }
 
   fun decryptKey(armored: String, passphrase: String): String {
-    return try {
-      val keys = parseAndNormalizeKeyRings(armored)
-      PGPainless.modifyKeyRing(keys[0] as PGPSecretKeyRing)
-          .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
-          .withSecureDefaultSettings()
-          .toNoPassphrase()
-          .done()
-          .armor()
-    } catch (ex: Exception) {
-      ""
-    }
+    val keys = parseAndNormalizeKeyRings(armored)
+    return decryptKey(keys[0] as PGPSecretKeyRing, passphrase).armor()
   }
+
+  private fun decryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
+    return PGPainless.modifyKeyRing(key)
+        .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
+        .withSecureDefaultSettings()
+        .toNoPassphrase()
+        .done()
+  }
+
+  fun changeKeyPassphrase(
+      armored: String,
+      oldPassphrase: String,
+      newPassphrase: String
+  ): String {
+    val keys = parseAndNormalizeKeyRings(armored)
+    return changeKeyPassphrase(keys[0] as PGPSecretKeyRing, oldPassphrase, newPassphrase).armor()
+  }
+
+  private fun changeKeyPassphrase(
+      key: PGPSecretKeyRing,
+      oldPassphrase: String,
+      newPassphrase: String
+  ): PGPSecretKeyRing {
+    return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
+  }
+
+  data class ParseKeyResult(val isArmored: Boolean, val keys: List<PGPKeyRing>)
 
   /**
    * Parses multiple keys, binary or armored.
    *
-   * @return Pair.first  indicates armored (true) or binary (false) format
-   *         Pair.second list of keys
+   * @return parsing result object
    */
-  fun parseKeys(source: ByteArray): Pair<Boolean, List<PGPKeyRing>> {
+  fun parseKeys(source: ByteArray): ParseKeyResult {
     val blockType = PgpMsg.detectBlockType(source)
     if (blockType.second == MsgBlock.Type.UNKNOWN) {
       throw IllegalArgumentException("Unknown message type")
@@ -88,7 +105,7 @@ object PgpKey {
       }
     }
 
-    return Pair(blockType.first, allKeys)
+    return ParseKeyResult(blockType.first, allKeys)
   }
 
   /**
@@ -100,7 +117,7 @@ object PgpKey {
    * @return list of keys
    */
   fun parseKeysC(source: ByteArray): List<NodeKeyDetails> {
-    return parseKeys(source).second.map { it.toNodeKeyDetails() }
+    return parseKeys(source).keys.map { it.toNodeKeyDetails() }
   }
 
   private fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {

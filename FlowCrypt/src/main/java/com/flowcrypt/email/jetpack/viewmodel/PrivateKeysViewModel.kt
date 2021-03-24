@@ -389,16 +389,16 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           throw IllegalStateException("Passphrase for key with longid $longId not found")
         }
 
-        val decryptedKey = PgpKey.decryptKey(nodeKeyDetails.privateKey!!, oldPassphrase!!)
-
-        if (TextUtils.isEmpty(decryptedKey)) {
-          throw IllegalStateException("Can't decrypt key with longid " + longId!!)
-        }
-
-        val encryptedKey = PgpKey.encryptKey(decryptedKey, newPassphrase)
-
-        if (TextUtils.isEmpty(encryptedKey)) {
-          throw IllegalStateException("Can't encrypt key with longid " + longId!!)
+        val encryptedKey: String
+        try {
+          encryptedKey = PgpKey.changeKeyPassphrase(
+              nodeKeyDetails.privateKey!!, oldPassphrase!!, newPassphrase
+          )
+        } catch (e: Exception) {
+          throw IllegalStateException(
+              "Can't change passphrase for the key with longid " + longId!!,
+              e
+          )
         }
 
         val modifiedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray())

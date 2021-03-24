@@ -66,10 +66,13 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
       }
 
       try {
-        val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
-
-        if (encryptedKey.isEmpty()) {
-          ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key encryption"))
+        val encryptedKey: String
+        try {
+          encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
+        } catch (e: Exception) {
+          ExceptionUtil.handleError(
+              IllegalArgumentException("An error occurred during the key encryption", e)
+          )
           continue
         }
 
