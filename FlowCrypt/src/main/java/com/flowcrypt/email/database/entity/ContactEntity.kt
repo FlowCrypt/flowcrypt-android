@@ -41,7 +41,7 @@ data class ContactEntity(
     @ColumnInfo(defaultValue = "NULL") val attested: Boolean? = null,
     @ColumnInfo(defaultValue = "NULL") val fingerprint: String? = null,
     @ColumnInfo(name = "long_id", defaultValue = "NULL") val longId: String? = null,
-    @ColumnInfo(defaultValue = "NULL") val keywords: String? = null,
+    @Deprecated("Unused") @ColumnInfo(defaultValue = "NULL") val keywords: String? = null,
     @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long = 0
 ) : Parcelable {
 
@@ -79,7 +79,6 @@ data class ContactEntity(
     if (attested != other.attested) return false
     if (fingerprint != other.fingerprint) return false
     if (longId != other.longId) return false
-    if (keywords != other.keywords) return false
     if (lastUse != other.lastUse) return false
 
     return true
@@ -95,7 +94,6 @@ data class ContactEntity(
     result = 31 * result + (attested?.hashCode() ?: 0)
     result = 31 * result + (fingerprint?.hashCode() ?: 0)
     result = 31 * result + (longId?.hashCode() ?: 0)
-    result = 31 * result + (keywords?.hashCode() ?: 0)
     result = 31 * result + lastUse.hashCode()
     return result
   }
@@ -110,7 +108,7 @@ data class ContactEntity(
     parcel.writeValue(attested)
     parcel.writeString(fingerprint)
     parcel.writeString(longId)
-    parcel.writeString(keywords)
+    parcel.writeString(null)
     parcel.writeLong(lastUse)
   }
 
@@ -127,7 +125,6 @@ data class ContactEntity(
         client = client,
         fingerprint = fingerprint,
         longid = longId,
-        keywords = keywords,
         lastUse = lastUse,
         nodeKeyDetails = nodeKeyDetails)
   }

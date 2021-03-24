@@ -18,7 +18,6 @@ data class PgpContact constructor(var email: String,
                                   var client: String? = null,
                                   var fingerprint: String? = null,
                                   var longid: String? = null,
-                                  var keywords: String? = null,
                                   var lastUse: Long = 0,
                                   var nodeKeyDetails: NodeKeyDetails? = null) : Parcelable {
 
@@ -27,7 +26,6 @@ data class PgpContact constructor(var email: String,
       source.readString(),
       source.readString(),
       source.readInt() == 1,
-      source.readString(),
       source.readString(),
       source.readString(),
       source.readString(),
@@ -52,7 +50,6 @@ data class PgpContact constructor(var email: String,
         writeString(client)
         writeString(fingerprint)
         writeString(longid)
-        writeString(keywords)
         writeLong(lastUse)
         writeParcelable(nodeKeyDetails, flags)
       }
@@ -66,7 +63,6 @@ data class PgpContact constructor(var email: String,
         client = client,
         fingerprint = fingerprint,
         longId = longid,
-        keywords = keywords,
         lastUse = lastUse,
         attested = false
     )

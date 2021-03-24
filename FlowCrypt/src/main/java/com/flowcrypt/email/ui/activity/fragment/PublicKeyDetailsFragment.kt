@@ -13,7 +13,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.format.DateFormat
-import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -229,12 +228,6 @@ class PublicKeyDetailsFragment : BaseFragment() {
       val textViewLongId = TextView(context)
       textViewLongId.text = getString(R.string.template_long_id, index + 1, s.longId)
       layoutLongIdsAndKeyWords?.addView(textViewLongId)
-
-      val textViewKeywords = TextView(context)
-      textViewKeywords.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-      textViewKeywords.text = s.keywords
-      textViewKeywords.setTextColor(resources.getColor(R.color.gray, context?.theme))
-      layoutLongIdsAndKeyWords?.addView(textViewKeywords)
     }
 
     textViewAlgorithm?.text = getString(R.string.template_algorithm, details?.algo?.algorithm)

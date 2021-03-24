@@ -753,10 +753,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       keyOwner.text = getString(R.string.template_message_part_public_key_owner, pgpContact.email)
     }
 
-    val keyWords = pubKeyView.findViewById<TextView>(R.id.textViewKeyWordsTemplate)
-    UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
-        keyDetails?.keywords), keyWords)
-
     val fingerprint = pubKeyView.findViewById<TextView>(R.id.textViewFingerprintTemplate)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
         GeneralUtil.doSectionsInText(" ", keyDetails?.fingerprint, 4)), fingerprint)

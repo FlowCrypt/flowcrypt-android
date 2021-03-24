@@ -95,7 +95,6 @@
     <string name="error_occurred_please_try_again">Error occurred, please try again</string>
     <string name="user_photo">The user photo</string>
     <string name="template_message_part_public_key_owner">Public Key for %1$s</string>
-    <string name="template_message_part_public_key_key_words" formatted="false"><![CDATA[KeyWords: <font color=\'#088447\'>%1$s</font>]]></string>
     <string name="template_message_part_public_key_fingerprint" formatted="false"><![CDATA[(Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
     <string name="show_the_public_key">Show the Public Key</string>
     <string name="hide_the_public_key">Hide the Public Key</string>
@@ -319,7 +318,6 @@
     <string name="save_to_file">Save to file</string>
     <string name="show_private_key">Show private key</string>
     <string name="template_fingerprint" formatted="false"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
-    <string name="template_key_words" formatted="false"><![CDATA[KeyWords: <font color=\'#088447\'>%1$s</font>]]></string>
     <string name="template_longid">Longid: %1$s</string>
     <string name="template_date">Date: %1$s</string>
     <string name="template_users">Users: %1$s</string>

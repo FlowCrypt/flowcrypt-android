@@ -185,9 +185,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
       emails.add(email)
     }
 
-    val textViewKeyWords = view.findViewById<TextView>(R.id.textViewKeyWords)
-    UIUtil.setHtmlTextToTextView(getString(R.string.template_key_words, details!!.keywords), textViewKeyWords)
-
     val textViewFingerprint = view.findViewById<TextView>(R.id.textViewFingerprint)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
         GeneralUtil.doSectionsInText(" ", details!!.fingerprint, 4)), textViewFingerprint)

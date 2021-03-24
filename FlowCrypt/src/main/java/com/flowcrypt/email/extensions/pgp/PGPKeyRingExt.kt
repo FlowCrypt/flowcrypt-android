@@ -52,7 +52,6 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
             fingerprint = fingerprint.toString(),
             longId = fingerprint.takeLast(16).toString(),
             shortId = fingerprint.takeLast(8).toString(),
-            keywords = ""//skipped as deprecated
         )
       }
 

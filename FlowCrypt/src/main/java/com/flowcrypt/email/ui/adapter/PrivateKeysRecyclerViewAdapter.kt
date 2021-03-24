@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
+import com.flowcrypt.email.util.GeneralUtil
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -47,7 +48,8 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     val email = nodeKeyDetails.primaryPgpContact.email
 
     viewHolder.textViewKeyOwner.text = email
-    viewHolder.textViewKeywords.text = nodeKeyDetails.keywords
+    viewHolder.textViewLongId.text = GeneralUtil.doSectionsInText(
+        originalString = nodeKeyDetails.fingerprint, groupSize = 4)
 
     val timestamp = nodeKeyDetails.created
     if (timestamp != -1L) {
@@ -91,7 +93,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     }
 
     val textViewKeyOwner: TextView = view.findViewById(R.id.textViewKeyOwner)
-    val textViewKeywords: TextView = view.findViewById(R.id.textViewKeywords)
+    val textViewLongId: TextView = view.findViewById(R.id.textViewLongId)
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
   }
 
