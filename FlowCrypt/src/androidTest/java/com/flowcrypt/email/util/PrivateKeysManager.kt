@@ -6,12 +6,12 @@
 package com.flowcrypt.email.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.pgp.PgpKey
 import java.util.*
 
 /**
@@ -44,10 +44,7 @@ class PrivateKeysManager {
     }
 
     fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
-      val gson = NodeGson.gson
-      val json =
-          TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, assetsPath)
-      return gson.fromJson(json, NodeKeyDetails::class.java)
+      return PgpKey.parseKeysC(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, assetsPath)).first()
     }
 
     fun getKeysFromAssets(keysPaths: Array<String>): ArrayList<NodeKeyDetails> {

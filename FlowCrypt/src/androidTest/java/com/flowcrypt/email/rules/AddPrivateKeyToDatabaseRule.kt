@@ -6,10 +6,10 @@
 package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -30,14 +30,13 @@ class AddPrivateKeyToDatabaseRule(val accountEntity: AccountEntity,
   lateinit var nodeKeyDetails: NodeKeyDetails
     private set
 
-  constructor() : this(AccountDaoManager.getDefaultAccountDao(), "node/default@denbond7.com_fisrtKey_prv_strong.json",
+  constructor() : this(AccountDaoManager.getDefaultAccountDao(), "pgp/default@denbond7.com_fisrtKey_prv_strong.asc",
       TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        nodeKeyDetails = NodeGson.gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString(
-            context, keyPath), NodeKeyDetails::class.java)
+        nodeKeyDetails = PgpKey.parseKeysC(TestGeneralUtil.readFileFromAssetsAsString(context, keyPath)).first()
         PrivateKeysManager.saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, type)
         base.evaluate()
       }

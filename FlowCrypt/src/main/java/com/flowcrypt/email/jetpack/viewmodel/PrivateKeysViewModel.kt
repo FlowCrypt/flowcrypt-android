@@ -250,7 +250,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
         }
 
-        parseKeysLiveData.value = Result.success(PgpKey.parseKeysC(armoredSource))
+        parseKeysLiveData.value = Result.success(PgpKey.parseKeysC(armoredSource, false))
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)

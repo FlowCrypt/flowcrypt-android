@@ -105,7 +105,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
 
     private lateinit var privateKey: String
     private var keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/no.pub@org-rules-test.flowcrypt.com_orv_default.json")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/no.pub@org-rules-test.flowcrypt.com_orv_default.asc")
 
     @BeforeClass
     @JvmStatic

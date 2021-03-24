@@ -65,8 +65,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -83,8 +83,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseTwoKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -103,8 +103,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseTwoKeysWithSamePasswordThirdCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -122,8 +122,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseTwoKeysFourthCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyC_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyC_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(1)
@@ -141,8 +141,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseTwoKeysFifthCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyC_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyC_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(1)
@@ -160,9 +160,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_default.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -180,9 +180,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -200,9 +200,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseThreeKeysThirdCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_default.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -222,9 +222,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseThreeKeysFourthCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -244,9 +244,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -264,9 +264,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseThreeKeysSixthCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyC_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyC_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -284,9 +284,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseThreeKeysSeventhCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -307,10 +307,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -329,10 +329,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @ReadyForCIAnnotation
   fun testUseFourKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "node/key_testing@denbond7.com_keyA_strong.json",
-        "node/key_testing@denbond7.com_keyB_default.json",
-        "node/key_testing@denbond7.com_keyC_default.json",
-        "node/key_testing@denbond7.com_keyC_strong.json")
+        "pgp/key_testing@denbond7.com_keyA_strong.asc",
+        "pgp/key_testing@denbond7.com_keyB_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_default.asc",
+        "pgp/key_testing@denbond7.com_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)

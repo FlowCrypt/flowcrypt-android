@@ -44,7 +44,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class CheckKeysActivityWithExistingKeysTest : BaseTest() {
-  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("node/default@denbond7.com_fisrtKey_prv_default.json"))
+  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@denbond7.com_fisrtKey_prv_default.asc"))
 
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
       CheckKeysActivity.newIntent(getTargetContext(),
@@ -64,7 +64,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
       .around(addAccountToDatabaseRule)
       .around(AddPrivateKeyToDatabaseRule(
           accountEntity = addAccountToDatabaseRule.account,
-          keyPath = "node/not_attester_user@denbond7.com_prv_default.json",
+          keyPath = "pgp/not_attester_user@denbond7.com_prv_default.asc",
           passphrase = TestConstants.DEFAULT_PASSWORD,
           type = KeyDetails.Type.EMAIL
       ))

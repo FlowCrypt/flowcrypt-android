@@ -159,7 +159,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     private lateinit var fileWithoutPrivateKey: File
     private lateinit var privateKey: String
     private var keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/attested_user@denbond7.com_prv_default_strong.json")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/attested_user@denbond7.com_prv_default_strong.asc")
 
     @BeforeClass
     @JvmStatic

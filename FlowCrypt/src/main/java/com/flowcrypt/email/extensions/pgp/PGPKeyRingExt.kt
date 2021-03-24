@@ -84,7 +84,7 @@ fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_H
     ArmoredOutputStream(out).use { armoredOut ->
       if (headers != null) {
         for (header in headers) {
-          armoredOut.addHeader(header.first, header.second)
+          armoredOut.setHeader(header.first, header.second)
         }
       }
       this.encode(armoredOut)

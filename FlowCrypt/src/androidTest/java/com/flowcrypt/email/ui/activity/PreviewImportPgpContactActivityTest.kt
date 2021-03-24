@@ -59,7 +59,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   private val singlePublicKeyForUnsavedContact: String? = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-      "node/default@denbond7.com_fisrtKey_pub.json").publicKey
+      "pgp/default@denbond7.com_fisrtKey_pub.asc").publicKey
 
   private val tenPubKeys: String =
       TestGeneralUtil.readFileFromAssetsAsString(getContext(), "pgp/pub_keys_2048_bits_10.asc")
@@ -76,7 +76,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   @ReadyForCIAnnotation
   fun testIsDisplayedSingleItem() {
     val pgpContact = PgpContact("default@denbond7.com", null,
-        singlePublicKeyForUnsavedContact, true, null, null, null, null, 0)
+        singlePublicKeyForUnsavedContact, true, null, null, null, 0)
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
     activeActivityRule.launch(PreviewImportPgpContactActivity.newIntent(getTargetContext(),
         singlePublicKeyForUnsavedContact))

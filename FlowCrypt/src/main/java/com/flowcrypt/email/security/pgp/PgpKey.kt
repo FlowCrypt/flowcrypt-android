@@ -60,10 +60,12 @@ object PgpKey {
    * @return Pair.first  indicates armored (true) or binary (false) format
    *         Pair.second list of keys
    */
-  fun parseKeys(source: ByteArray): Pair<Boolean, List<PGPKeyRing>> {
+  fun parseKeys(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): Pair<Boolean, List<PGPKeyRing>> {
     val blockType = PgpMsg.detectBlockType(source)
     if (blockType.second == MsgBlock.Type.UNKNOWN) {
-      throw IllegalArgumentException("Unknown message type")
+      if (throwExceptionIfUnknownSource) {
+        throw IllegalArgumentException("Unknown message type")
+      } else return Pair(blockType.first, emptyList())
     }
 
     val allKeys = mutableListOf<PGPKeyRing>()
@@ -99,8 +101,8 @@ object PgpKey {
    *
    * @return list of keys
    */
-  fun parseKeysC(source: String): List<NodeKeyDetails> {
-    return parseKeys(source.toByteArray()).second.map { it.toNodeKeyDetails() }
+  fun parseKeysC(source: String, throwExceptionIfUnknownSource: Boolean = true): List<NodeKeyDetails> {
+    return parseKeys(source.toByteArray(), throwExceptionIfUnknownSource).second.map { it.toNodeKeyDetails() }
   }
 
   /**
@@ -111,8 +113,8 @@ object PgpKey {
    *
    * @return list of keys
    */
-  fun parseKeysC(source: ByteArray): List<NodeKeyDetails> {
-    return parseKeys(source).second.map { it.toNodeKeyDetails() }
+  fun parseKeysC(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): List<NodeKeyDetails> {
+    return parseKeys(source, throwExceptionIfUnknownSource).second.map { it.toNodeKeyDetails() }
   }
 
   private fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {

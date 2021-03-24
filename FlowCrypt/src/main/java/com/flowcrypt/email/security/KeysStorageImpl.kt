@@ -53,7 +53,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> = Transformations.switchMap(keysLiveData) {
     liveData {
-      emit(PgpKey.parseKeysC(it.joinToString { keyEntity -> keyEntity.privateKeyAsString }))
+      emit(PgpKey.parseKeysC(it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }))
     }
   }
 
