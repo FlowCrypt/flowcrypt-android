@@ -21,7 +21,7 @@ class PgpKeyTest {
     val pubKey = TestKeys.KEYS["rsa1"]!!.publicKey
     val result = PgpKey.parseKeys(pubKey.toByteArray())
 
-    assertTrue("Armored format not recognized", result.first)
+    assertTrue("Armored format not recognized", result.isArmored)
 
     val expected = NodeKeyDetails(
         isFullyDecrypted = true,
@@ -77,8 +77,8 @@ class PgpKeyTest {
         passphrase = null,
         errorMsg = null
     )
-    assertEquals(1, result.second.size)
-    assertEquals(expected, result.second[0].toNodeKeyDetails())
+    assertEquals(1, result.keys.size)
+    assertEquals(expected, result.keys[0].toNodeKeyDetails())
   }
 
   @Test
@@ -86,7 +86,7 @@ class PgpKeyTest {
     val pubKey = TestKeys.KEYS["expired"]!!.publicKey
     val result = PgpKey.parseKeys(pubKey.toByteArray())
 
-    assertTrue("Armored format not recognized", result.first)
+    assertTrue("Armored format not recognized", result.isArmored)
 
     // TODO update from output
     val expected = NodeKeyDetails(
@@ -144,7 +144,7 @@ class PgpKeyTest {
         passphrase = null,
         errorMsg = null
     )
-    assertEquals(1, result.second.size)
-    assertEquals(expected, result.second[0].toNodeKeyDetails())
+    assertEquals(1, result.keys.size)
+    assertEquals(expected, result.keys[0].toNodeKeyDetails())
   }
 }

@@ -46,9 +46,11 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
-      val encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
-      if (TextUtils.isEmpty(encryptedKey)) {
-        throw IllegalStateException("An error occurred during encrypting some key")
+      val encryptedKey: String
+      try {
+        encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
+      } catch (e: Exception) {
+        throw IllegalStateException("An error occurred during encrypting some key", e)
       }
 
       val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey)

@@ -29,3 +29,8 @@ local.properties
 # some runtime files
 .attach*
 
+# some helper scripts copied into the repo root dir
+/compile.sh
+/ctest.sh
+/test.sh
+
