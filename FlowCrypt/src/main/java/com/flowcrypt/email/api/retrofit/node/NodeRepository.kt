@@ -5,17 +5,14 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
-import android.content.Context
 import android.os.AsyncTask
 import androidx.lifecycle.MutableLiveData
 import com.flowcrypt.email.api.retrofit.LoadingState
-import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
-import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import kotlinx.coroutines.Dispatchers
@@ -30,12 +27,6 @@ import kotlinx.coroutines.withContext
  * E-mail: DenBond7@gmail.com
  */
 class NodeRepository : PgpApiRepository {
-  override suspend fun decryptKey(context: Context, armoredKey: String, passphrases: List<String>):
-      Result<DecryptKeyResult> = withContext(Dispatchers.IO) {
-    val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeApiService::class.java)
-    getResult { apiService.decryptKey(DecryptKeyRequest(armoredKey, passphrases)) }
-  }
-
   override suspend fun parseDecryptMsg(requestCode: Int, request: ParseDecryptMsgRequest): Result<ParseDecryptedMsgResult?> =
       withContext(Dispatchers.IO) {
         val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)

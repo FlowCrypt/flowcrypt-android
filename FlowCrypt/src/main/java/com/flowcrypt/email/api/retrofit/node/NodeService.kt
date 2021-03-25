@@ -7,15 +7,11 @@ package com.flowcrypt.email.api.retrofit.node
 
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
-import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
-import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
 import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult
-import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
-import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult
@@ -48,12 +44,6 @@ interface NodeService {
 
   @POST("/")
   suspend fun parseDecryptMsg(@Body request: ParseDecryptMsgRequest): Response<ParseDecryptedMsgResult>
-
-  @POST("/")
-  fun decryptKey(@Body request: DecryptKeyRequest): Call<DecryptKeyResult>
-
-  @POST("/")
-  fun encryptKey(@Body request: EncryptKeyRequest): Call<EncryptKeyResult>
 
   @POST("/")
   @Streaming
