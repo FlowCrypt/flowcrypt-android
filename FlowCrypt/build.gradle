@@ -322,7 +322,7 @@ easylauncher {
 
 dependencies {
     kapt "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
-    kapt 'androidx.annotation:annotation:1.1.0'
+    kapt 'androidx.annotation:annotation:1.2.0'
     kapt "androidx.room:room-compiler:$roomVersion"
 
     debugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
