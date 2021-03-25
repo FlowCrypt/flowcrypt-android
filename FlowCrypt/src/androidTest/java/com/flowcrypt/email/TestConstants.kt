@@ -28,6 +28,6 @@ class TestConstants {
     const val DEFAULT_PASSWORD = "android"
 
 
-    const val DEFAULT_SECOND_KEY_PRV_STRONG = "node/default@denbond7.com_secondKey_prv_strong.json"
+    const val DEFAULT_SECOND_KEY_PRV_STRONG = "pgp/default@denbond7.com_secondKey_prv_strong.asc"
   }
 }

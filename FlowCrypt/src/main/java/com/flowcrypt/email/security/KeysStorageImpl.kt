@@ -10,15 +10,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
-import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.node.Node
+import com.flowcrypt.email.security.pgp.PgpKey
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -55,13 +53,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> = Transformations.switchMap(keysLiveData) {
     liveData {
-      val raw = it.joinToString { keyEntity -> keyEntity.privateKeyAsString }
-      val result = NodeRepository().fetchKeyDetails(ParseKeysRequest(raw))
-      if (result.status == Result.Status.SUCCESS) {
-        emit(result.data?.nodeKeyDetails ?: emptyList<NodeKeyDetails>())
-      } else {
-        emit(emptyList<NodeKeyDetails>())
-      }
+      emit(PgpKey.parseKeysC(it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }))
     }
   }
 

@@ -50,8 +50,6 @@ class ImportPgpContactsRecyclerViewAdapter
           publicKeyInfo.keyOwner)
     }
 
-    UIUtil.setHtmlTextToTextView(context.getString(R.string.template_message_part_public_key_key_words,
-        publicKeyInfo.keyWords), viewHolder.textViewKeyWordsTemplate)
     UIUtil.setHtmlTextToTextView(context.getString(R.string.template_message_part_public_key_fingerprint,
         GeneralUtil.doSectionsInText(" ", publicKeyInfo.fingerprint, 4)), viewHolder.textViewFingerprintTemplate)
 
@@ -82,7 +80,7 @@ class ImportPgpContactsRecyclerViewAdapter
 
   private fun saveContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
+        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, 0)
 
     contactActionsListener?.onSaveContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
@@ -93,7 +91,7 @@ class ImportPgpContactsRecyclerViewAdapter
 
   private fun updateContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
+        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, 0)
 
     contactActionsListener?.onUpdateContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
@@ -107,7 +105,6 @@ class ImportPgpContactsRecyclerViewAdapter
    */
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     var textViewKeyOwnerTemplate: TextView = itemView.findViewById(R.id.textViewKeyOwnerTemplate)
-    var textViewKeyWordsTemplate: TextView = itemView.findViewById(R.id.textViewKeyWordsTemplate)
     var textViewFingerprintTemplate: TextView = itemView.findViewById(R.id.textViewFingerprintTemplate)
     var textViewAlreadyImported: TextView = itemView.findViewById(R.id.textViewAlreadyImported)
     var buttonSaveContact: Button = itemView.findViewById(R.id.buttonSaveContact)

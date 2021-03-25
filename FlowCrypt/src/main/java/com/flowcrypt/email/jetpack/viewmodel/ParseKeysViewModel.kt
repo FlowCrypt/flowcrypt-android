@@ -6,11 +6,14 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
-import com.flowcrypt.email.security.KeysStorageImpl
+import androidx.lifecycle.liveData
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.pgp.PgpKey
 
 /**
  * This [ViewModel] implementation can be used to fetch details about the given keys.
@@ -20,13 +23,17 @@ import com.flowcrypt.email.security.KeysStorageImpl
  *         Time: 2:24 PM
  *         E-mail: DenBond7@gmail.com
  */
-//todo-denbond7 need to review this class
-class ParseKeysViewModel(application: Application) : BaseNodeApiViewModel(application) {
-  private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
-  private val apiRepository: PgpApiRepository = NodeRepository()
+class ParseKeysViewModel(application: Application) : AccountViewModel(application) {
+  private val keysSourceLiveData = MutableLiveData<ByteArray>()
+  val parseKeysLiveData: LiveData<Result<List<NodeKeyDetails>>> =
+      Transformations.switchMap(keysSourceLiveData) { source ->
+        liveData {
+          emit(Result.loading())
+          emit(Result.success(PgpKey.parseKeysC(source)))
+        }
+      }
 
-  fun fetchKeys(rawKey: String?) {
-    //todo-denbond7 need to change it to use the common approach with LiveData
-    apiRepository.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey)
+  fun fetchKeys(source: ByteArray?) {
+    keysSourceLiveData.value = source ?: byteArrayOf()
   }
 }

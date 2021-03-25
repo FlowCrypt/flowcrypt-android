@@ -60,10 +60,12 @@ object PgpKey {
    * @return Pair.first  indicates armored (true) or binary (false) format
    *         Pair.second list of keys
    */
-  fun parseKeys(source: ByteArray): Pair<Boolean, List<PGPKeyRing>> {
+  fun parseKeys(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): Pair<Boolean, List<PGPKeyRing>> {
     val blockType = PgpMsg.detectBlockType(source)
     if (blockType.second == MsgBlock.Type.UNKNOWN) {
-      throw IllegalArgumentException("Unknown message type")
+      if (throwExceptionIfUnknownSource) {
+        throw IllegalArgumentException("Unknown message type")
+      } else return Pair(blockType.first, emptyList())
     }
 
     val allKeys = mutableListOf<PGPKeyRing>()
@@ -99,8 +101,20 @@ object PgpKey {
    *
    * @return list of keys
    */
-  fun parseKeysC(source: ByteArray): List<NodeKeyDetails> {
-    return parseKeys(source).second.map { it.toNodeKeyDetails() }
+  fun parseKeysC(source: String, throwExceptionIfUnknownSource: Boolean = true): List<NodeKeyDetails> {
+    return parseKeys(source.toByteArray(), throwExceptionIfUnknownSource).second.map { it.toNodeKeyDetails() }
+  }
+
+  /**
+   * Parse a list of [NodeKeyDetails] from the given source. It can take one key or many keys, it can be
+   * private or public keys, it can be armored or binary... doesn't matter.
+   *
+   * This method should be dropped in the future. Currently it should be used just for compatibility.
+   *
+   * @return list of keys
+   */
+  fun parseKeysC(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): List<NodeKeyDetails> {
+    return parseKeys(source, throwExceptionIfUnknownSource).second.map { it.toNodeKeyDetails() }
   }
 
   private fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {

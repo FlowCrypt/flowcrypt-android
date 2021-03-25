@@ -117,7 +117,7 @@ class CreateMessageActivityTest : BaseTest() {
   private val pgpContact: PgpContact
     get() {
       val details =
-          PrivateKeysManager.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com_prv_default.json")
+          PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/not_attester_user@denbond7.com_prv_default.asc")
       return details.primaryPgpContact
     }
 
@@ -477,7 +477,7 @@ class CreateMessageActivityTest : BaseTest() {
     PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,
         addPrivateKeyToDatabaseRule.keyPath)
     val keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/key_testing@denbond7.com_keyB_default.json")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/key_testing@denbond7.com_keyB_default.asc")
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, keyDetails,
         TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
 

@@ -272,7 +272,7 @@ class BackupKeysActivityTest : BaseTest() {
   private fun addFirstKeyWithDefaultPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "node/default@denbond7.com_fisrtKey_prv_default.json",
+        keyPath = "pgp/default@denbond7.com_fisrtKey_prv_default.asc",
         passphrase = TestConstants.DEFAULT_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )
@@ -281,7 +281,7 @@ class BackupKeysActivityTest : BaseTest() {
   private fun addFirstKeyWithStrongPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "node/default@denbond7.com_fisrtKey_prv_strong.json",
+        keyPath = "pgp/default@denbond7.com_fisrtKey_prv_strong.asc",
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )
@@ -299,7 +299,7 @@ class BackupKeysActivityTest : BaseTest() {
   private fun addSecondKeyWithStrongSecondPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "node/default@denbond7.com_secondKey_prv_strong_second.json",
+        keyPath = "pgp/default@denbond7.com_secondKey_prv_strong_second.asc",
         passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )

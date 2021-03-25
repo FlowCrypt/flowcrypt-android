@@ -62,25 +62,13 @@
             app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
 
         <TextView
-            android:id="@+id/textViewKeyWords"
+            android:id="@+id/textViewFingerprint"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
             android:textIsSelectable="true"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/btnSaveToFile"
-            tools:text="KeyWords: TESTING TESTING TESTING TESTING TESTING TESTING" />
-
-        <TextView
-            android:id="@+id/textViewFingerprint"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:textIsSelectable="true"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewKeyWords"
             tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
         <TextView

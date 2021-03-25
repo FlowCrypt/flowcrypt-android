@@ -19,10 +19,8 @@ import com.google.gson.annotations.SerializedName
  */
 data class KeyId constructor(@Expose val fingerprint: String?,
                              @SerializedName("longid") @Expose val longId: String?,
-                             @SerializedName("shortid") @Expose val shortId: String?,
-                             @Expose val keywords: String?) : Parcelable {
+                             @SerializedName("shortid") @Expose val shortId: String?) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readString(),
       source.readString(),
       source.readString(),
       source.readString()
@@ -37,7 +35,6 @@ data class KeyId constructor(@Expose val fingerprint: String?,
         writeString(fingerprint)
         writeString(longId)
         writeString(shortId)
-        writeString(keywords)
       }
 
   companion object {
