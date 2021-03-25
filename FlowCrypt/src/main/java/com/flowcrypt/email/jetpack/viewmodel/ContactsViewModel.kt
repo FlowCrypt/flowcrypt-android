@@ -14,13 +14,13 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -141,8 +141,8 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
               cachedContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
             } else {
               cachedContactEntity.publicKey?.let {
-                val result = pgpApiRepository.fetchKeyDetails(ParseKeysRequest(String(it)))
-                cachedContactEntity?.nodeKeyDetails = result.data?.nodeKeyDetails?.firstOrNull()
+                val result = PgpKey.parseKeysC(it)
+                cachedContactEntity?.nodeKeyDetails = result.firstOrNull()
               }
             }
 
@@ -201,8 +201,8 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     val lastVersion = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
     lastVersion?.publicKey?.let {
-      val result = pgpApiRepository.fetchKeyDetails(ParseKeysRequest(String(it)))
-      lastVersion.nodeKeyDetails = result.data?.nodeKeyDetails?.firstOrNull()
+      val result = PgpKey.parseKeysC(it)
+      lastVersion.nodeKeyDetails = result.firstOrNull()
     }
 
     return lastVersion
@@ -302,7 +302,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
               val client = ContactEntity.CLIENT_PGP
 
               if (pubKeyString?.isNotEmpty() == true) {
-                pgpApiRepository.fetchKeyDetails(ParseKeysRequest(pubKeyString)).data?.nodeKeyDetails?.firstOrNull()?.let {
+                PgpKey.parseKeysC(pubKeyString).firstOrNull()?.let {
                   val pgpContact = it.primaryPgpContact
                   pgpContact.client = client
                   pgpContact.nodeKeyDetails = it

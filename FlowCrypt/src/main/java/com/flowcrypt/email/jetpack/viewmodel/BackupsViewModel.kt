@@ -16,15 +16,11 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.SearchBackupsUtil
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ManualHandledException
-import com.flowcrypt.email.util.exception.NodeException
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,15 +37,12 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 class BackupsViewModel(application: Application) : AccountViewModel(application) {
-  private val pgpApiRepository: PgpApiRepository = NodeRepository()
-
   val onlineBackupsLiveData: LiveData<Result<List<NodeKeyDetails>?>> = Transformations.switchMap(activeAccountLiveData) { accountEntity ->
     liveData {
       accountEntity?.let {
         emit(Result.loading())
 
         try {
-          val keyDetailsList = mutableListOf<NodeKeyDetails>()
           if (accountEntity.useAPI) {
             when (accountEntity.accountType) {
               AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
@@ -152,12 +145,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
               continue
             }
 
-            try {
-              pgpApiRepository.fetchKeyDetails(ParseKeysRequest(backup)).data?.nodeKeyDetails?.let { keys -> keyDetailsList.addAll(keys) }
-            } catch (e: NodeException) {
-              e.printStackTrace()
-              ExceptionUtil.handleError(e)
-            }
+            keyDetailsList.addAll(PgpKey.parseKeysC(backup))
           }
         } catch (e: Exception) {
           e.printStackTrace()

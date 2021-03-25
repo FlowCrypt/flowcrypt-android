@@ -17,24 +17,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:textIsSelectable="true"
-        app:layout_constraintBottom_toTopOf="@+id/textViewKeyWordsTemplate"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-        app:layout_constraintStart_toStartOf="@+id/textViewKeyWordsTemplate"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="spread_inside"
         tools:text="Public Key for ..........................." />
-
-    <TextView
-        android:id="@+id/textViewKeyWordsTemplate"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/default_margin_content"
-        android:textIsSelectable="true"
-        app:layout_constraintBottom_toTopOf="@+id/textViewFingerprintTemplate"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewKeyOwnerTemplate"
-        tools:text="KeyWords: TESTING TESTING TESTING TESTING TESTING TESTING" />
 
     <TextView
         android:id="@+id/textViewFingerprintTemplate"
@@ -42,10 +29,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:textIsSelectable="true"
-        app:layout_constraintBottom_toTopOf="@+id/switchShowPublicKey"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-        app:layout_constraintStart_toStartOf="@+id/textViewKeyWordsTemplate"
-        app:layout_constraintTop_toBottomOf="@+id/textViewKeyWordsTemplate"
+        app:layout_constraintStart_toStartOf="@+id/textViewKeyOwnerTemplate"
+        app:layout_constraintTop_toBottomOf="@+id/textViewKeyOwnerTemplate"
         tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
     <com.google.android.material.switchmaterial.SwitchMaterial

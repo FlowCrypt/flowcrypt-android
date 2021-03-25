@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -26,7 +27,7 @@ class PgpKeyTest {
         isFullyDecrypted = true,
         isFullyEncrypted = false, privateKey = null,
         publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
-            "Version: BCPG v1.68\n" +
+            "Version: FlowCrypt ${BuildConfig.VERSION_NAME} Gmail Encryption\n" +
             "Comment: Seamlessly send and receive encrypted email\n" +
             "\n" +
             "mQENBFwBWOEBB/9uIqBYIPDQbBqHMvGXhgnm+b2i5rNLXrrGoalrp7wYQ654Zln/\n" +
@@ -62,13 +63,11 @@ class PgpKeyTest {
                 fingerprint = "E76853E128A0D376CAE47C143A30F4CC0A9A8F10",
                 longId = "3A30F4CC0A9A8F10",
                 shortId = "0A9A8F10",
-                keywords = ""
             ),
             KeyId(
                 fingerprint = "9EF2F8F36A841C0D5FAB8B0F0BAB9C018B265D22",
                 longId = "0BAB9C018B265D22",
                 shortId = "8B265D22",
-                keywords = ""
             )
         ),
         created = 1543592161L,
@@ -94,7 +93,7 @@ class PgpKeyTest {
         isFullyDecrypted = true,
         isFullyEncrypted = false, privateKey = null,
         publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
-            "Version: BCPG v1.68\n" +
+            "Version: FlowCrypt ${BuildConfig.VERSION_NAME} Gmail Encryption\n" +
             "Comment: Seamlessly send and receive encrypted email\n" +
             "\n" +
             "mQENBF8PcdUBCADi8no6T4Bd9Ny5COpbheBuPWEyDOedT2EVeaPrfutB1D8iCP6R\n" +
@@ -131,13 +130,11 @@ class PgpKeyTest {
                 fingerprint = "6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9",
                 longId = "BEE3A42D9A9C8AC9",
                 shortId = "9A9C8AC9",
-                keywords = ""
             ),
             KeyId(
                 fingerprint = "0731F9992FE2152E101E0D37D16EE86BDB129956",
                 longId = "D16EE86BDB129956",
                 shortId = "DB129956",
-                keywords = ""
             )
         ),
         created = 1594847701L,

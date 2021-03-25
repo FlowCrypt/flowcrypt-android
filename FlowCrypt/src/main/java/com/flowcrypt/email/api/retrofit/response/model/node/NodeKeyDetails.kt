@@ -49,8 +49,6 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     get() = ids?.first()?.longId
   val fingerprint: String?
     get() = ids?.first()?.fingerprint
-  val keywords: String?
-    get() = ids?.first()?.keywords
   val isPrivate: Boolean
     get() = !TextUtils.isEmpty(privateKey)
 
@@ -101,7 +99,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     val address = users?.first()
 
     address?.let {
-      val (fingerprint1, longId1, _, keywords1) = ids!!.first()
+      val (fingerprint1, longId1) = ids!!.first()
       var email: String? = null
       var name: String? = null
       try {
@@ -129,8 +127,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
           hasPgp = !TextUtils.isEmpty(publicKey),
           client = null,
           fingerprint = fingerprint1,
-          longid = longId1,
-          keywords = keywords1
+          longid = longId1
       )
     }
 

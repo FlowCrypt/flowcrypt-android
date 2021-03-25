@@ -52,7 +52,6 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
             fingerprint = fingerprint.toString(),
             longId = fingerprint.takeLast(16).toString(),
             shortId = fingerprint.takeLast(8).toString(),
-            keywords = ""//skipped as deprecated
         )
       }
 
@@ -85,7 +84,7 @@ fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_H
     ArmoredOutputStream(out).use { armoredOut ->
       if (headers != null) {
         for (header in headers) {
-          armoredOut.addHeader(header.first, header.second)
+          armoredOut.setHeader(header.first, header.second)
         }
       }
       this.encode(armoredOut)

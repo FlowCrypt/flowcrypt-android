@@ -18,8 +18,7 @@ import java.util.*
  * Time: 10:22
  * E-mail: DenBond7@gmail.com
  */
-data class PublicKeyInfo constructor(val keyWords: String,
-                                     val fingerprint: String,
+data class PublicKeyInfo constructor(val fingerprint: String,
                                      val keyOwner: String,
                                      val longId: String,
                                      var pgpContact: PgpContact? = null,
@@ -35,7 +34,6 @@ data class PublicKeyInfo constructor(val keyWords: String,
       source.readString()!!,
       source.readString()!!,
       source.readString()!!,
-      source.readString()!!,
       source.readParcelable<PgpContact>(PgpContact::class.java.classLoader),
       source.readString()!!
   )
@@ -43,7 +41,6 @@ data class PublicKeyInfo constructor(val keyWords: String,
   override fun describeContents() = 0
 
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeString(keyWords)
     writeString(fingerprint)
     writeString(keyOwner)
     writeString(longId)
@@ -57,8 +54,7 @@ data class PublicKeyInfo constructor(val keyWords: String,
         publicKey = publicKey.toByteArray(),
         hasPgp = true,
         fingerprint = fingerprint,
-        longId = longId,
-        keywords = keyWords
+        longId = longId
     )
   }
 
@@ -71,7 +67,6 @@ data class PublicKeyInfo constructor(val keyWords: String,
         client = null,
         fingerprint = fingerprint,
         longid = longId,
-        keywords = keyWords,
         lastUse = 0
     )
   }

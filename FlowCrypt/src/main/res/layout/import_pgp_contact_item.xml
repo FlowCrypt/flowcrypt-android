@@ -20,14 +20,6 @@
         tools:text="Public Key for ..........................." />
 
     <TextView
-        android:id="@+id/textViewKeyWordsTemplate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/default_margin_content"
-        android:textIsSelectable="true"
-        tools:text="KeyWords: TESTING TESTING TESTING TESTING TESTING TESTING" />
-
-    <TextView
         android:id="@+id/textViewFingerprintTemplate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

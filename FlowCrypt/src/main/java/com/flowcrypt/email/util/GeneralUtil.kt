@@ -213,7 +213,7 @@ class GeneralUtil {
      * @param groupSize      Group size
      * @return The formatted string.
      */
-    fun doSectionsInText(template: String?, originalString: String?, groupSize: Int): String? {
+    fun doSectionsInText(template: String? = " ", originalString: String?, groupSize: Int): String? {
 
       if (template == null || originalString == null || groupSize <= 0 || originalString.length <= groupSize) {
         return originalString

@@ -49,7 +49,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
@@ -103,7 +102,7 @@ class KeysSettingsActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
-    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_default.json")
+    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@denbond7.com_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
         nodeKeyDetails = details,
@@ -145,7 +144,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnShowPubKey))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(withText(TestGeneralUtil.replaceVersionInKey(keyDetails.publicKey)))
+    onView(withText(keyDetails.publicKey))
   }
 
   @Test
@@ -158,7 +157,7 @@ class KeysSettingsActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
     isToastDisplayed(decorView, getResString(R.string.copied))
-    UiThreadStatement.runOnUiThread { checkClipboardText(TestGeneralUtil.replaceVersionInKey(details.publicKey)) }
+    UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey ?: "") }
   }
 
   @Test
@@ -177,9 +176,6 @@ class KeysSettingsActivityTest : BaseTest() {
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
-    onView(withId(R.id.textViewKeyWords))
-        .check(matches(withText(getHtmlString(getResString(R.string.template_key_words, details.keywords
-            ?: "")))))
 
     onView(withId(R.id.textViewFingerprint))
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,

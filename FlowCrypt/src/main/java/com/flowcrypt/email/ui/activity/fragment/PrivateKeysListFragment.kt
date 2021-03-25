@@ -169,8 +169,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
         }
 
         Result.Status.SUCCESS -> {
-          val parseKeysResult = it.data
-          val detailsList: List<NodeKeyDetails> = parseKeysResult?.nodeKeyDetails ?: emptyList()
+          val detailsList = it.data ?: emptyList()
           if (detailsList.isEmpty()) {
             recyclerViewAdapter.swap(emptyList())
             UIUtil.exchangeViewVisibility(true, emptyView, content)
@@ -178,11 +177,6 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
             recyclerViewAdapter.swap(detailsList)
             UIUtil.exchangeViewVisibility(false, progressBar, content)
           }
-          baseActivity.countingIdlingResource.decrementSafely()
-        }
-
-        Result.Status.ERROR -> {
-          Toast.makeText(context, it.data?.apiError?.toString(), Toast.LENGTH_SHORT).show()
           baseActivity.countingIdlingResource.decrementSafely()
         }
 

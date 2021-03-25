@@ -72,14 +72,14 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
 
-  private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
+  private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/denbond7@denbond7.com_pub.asc")
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(AddContactsToDatabaseRule(listOf(PgpContact(EMAIL_DENBOND7, USER_DENBOND7,
-          keyDetails.publicKey, true, null, null, null, null, 0))))
+          keyDetails.publicKey, true, null, null, null, 0))))
       .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
@@ -104,9 +104,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
     keyDetails.ids?.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_long_id, index + 1, s.longId!!)))
-          .check(matches(isDisplayed()))
-
-      onView(withText(s.keywords))
           .check(matches(isDisplayed()))
     }
 

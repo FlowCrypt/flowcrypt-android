@@ -27,24 +27,23 @@
         tools:text="human@flowcrypt.com" />
 
     <TextView
-        android:id="@+id/textViewKeywords"
+        android:id="@+id/textViewLongId"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="0dp"
         android:layout_marginTop="@dimen/margin_top_message_subject"
-        android:layout_marginRight="0dp"
-        android:layout_marginBottom="0dp"
-        android:ellipsize="end"
-        android:maxLines="2"
-        android:textColor="@color/colorPrimary"
-        android:textSize="@dimen/default_text_size_medium"
+        android:maxLines="1"
+        android:textColor="@color/nobel"
+        app:autoSizeMaxTextSize="@dimen/default_text_size_big"
+        app:autoSizeMinTextSize="@dimen/default_text_size_small"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
-        app:layout_constraintEnd_toStartOf="@+id/textViewCreationDate"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/textViewKeyOwner"
         app:layout_constraintVertical_bias="0.0"
-        tools:text="ask reform depend tower" />
+        tools:text="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
     <TextView
         android:id="@+id/textViewCreationDate"
