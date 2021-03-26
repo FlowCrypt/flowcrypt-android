@@ -634,15 +634,13 @@ class EmailUtil {
     fun genMessage(context: Context, info: OutgoingMessageInfo, pubKeys: List<String>?): Message {
       val session = Session.getInstance(Properties())
       return when (info.messageType) {
-        MessageType.NEW -> {
+        MessageType.NEW, MessageType.FORWARD -> {
           prepareNewMsg(session, info, pubKeys)
         }
 
         MessageType.REPLY, MessageType.REPLY_ALL -> {
           prepareReplyMsg(info, context, session, pubKeys)
         }
-
-        else -> MimeMessage(session)
       }
     }
 
