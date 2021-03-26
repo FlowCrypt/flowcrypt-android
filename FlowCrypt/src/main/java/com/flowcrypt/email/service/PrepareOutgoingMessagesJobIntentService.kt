@@ -43,7 +43,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
-import javax.mail.internet.MimeMessage
+import javax.mail.Message
 
 /**
  * This service creates a new outgoing message using the given [OutgoingMessageInfo].
@@ -100,20 +100,20 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         SecurityUtils.getRecipientsPubKeys(this, recipients, accountEntity, senderEmail)
       } else null
 
-      val mimeMsg = EmailUtil.genMimeMessage(outgoingMsgInfo, pubKeys)
+      val msg = EmailUtil.genMessage(applicationContext, outgoingMsgInfo, pubKeys)
 
       val attsCacheDir = getAttsCacheDir()
       val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
       val out = ByteArrayOutputStream()
-      mimeMsg.writeTo(out)
+      msg.writeTo(out)
 
       //todo-denbond7 need to think about that. It'll be better to store a message as a file
       val msgEntity = prepareMessageEntity(
           accountEntity = accountEntity,
           msgInfo = outgoingMsgInfo,
           generatedUID = uid,
-          mimeMsg = mimeMsg,
+          msg = msg,
           rawMsg = String(out.toByteArray()),
           attsCacheDir = msgAttsCacheDir)
       newMsgId = roomDatabase.msgDao().insert(msgEntity)
@@ -208,10 +208,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   }
 
   private fun prepareMessageEntity(accountEntity: AccountEntity, msgInfo: OutgoingMessageInfo, generatedUID: Long,
-                                   mimeMsg: MimeMessage, rawMsg: String, attsCacheDir: File): MessageEntity {
+                                   msg: Message, rawMsg: String, attsCacheDir: File): MessageEntity {
 
     val messageEntity = MessageEntity.genMsgEntity(accountEntity.email,
-        JavaEmailConstants.FOLDER_OUTBOX, mimeMsg, generatedUID, false)
+        JavaEmailConstants.FOLDER_OUTBOX, msg, generatedUID, false)
 
     val hasAtts = msgInfo.atts?.isNotEmpty() == true || msgInfo.forwardedAtts?.isNotEmpty() == true
     val isEncrypted = msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED

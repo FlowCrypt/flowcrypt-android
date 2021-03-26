@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.util.GeneralUtil
@@ -623,36 +624,24 @@ class EmailUtil {
     }
 
     /**
-     * Generate a MIME message. Don't call it in the main thread.
+     * Generate a message(new, reply or forward). Don't call it in the main thread.
      *
      * @param info    The given [OutgoingMessageInfo] which contains information about an outgoing
      * message.
      * @param pubKeys The public keys which will be used to generate an encrypted part.
      * @return The generated raw MIME message.
      */
-    fun genMimeMessage(info: OutgoingMessageInfo, pubKeys: List<String>?): MimeMessage {
+    fun genMessage(context: Context, info: OutgoingMessageInfo, pubKeys: List<String>?): Message {
       val session = Session.getInstance(Properties())
       return when (info.messageType) {
         MessageType.NEW -> {
-          val msg = MimeMessage(session)
-          msg.subject = info.subject
-          msg.setFrom(InternetAddress(info.from))
-          msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
-          msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
-          msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
-          val mimeMultipart = MimeMultipart()
-          val bodyPart = MimeBodyPart()
-          val content: String
-          if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
-            content = PgpEncrypt.encryptMsg(info.msg ?: "", pubKeys ?: emptyList())
-          } else {
-            content = info.msg ?: ""
-          }
-          bodyPart.setContent(content, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
-          mimeMultipart.addBodyPart(bodyPart)
-          msg.setContent(mimeMultipart)
-          msg
+          prepareNewMsg(session, info, pubKeys)
         }
+
+        MessageType.REPLY, MessageType.REPLY_ALL -> {
+          prepareReplyMsg(info, context, session, pubKeys)
+        }
+
         else -> MimeMessage(session)
       }
     }
@@ -970,6 +959,50 @@ class EmailUtil {
           RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
           RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
       ))
+    }
+
+    private fun prepareNewMsg(session: Session?, info: OutgoingMessageInfo,
+                              pubKeys: List<String>?): MimeMessage {
+      val msg = MimeMessage(session)
+      msg.subject = info.subject
+      msg.setFrom(InternetAddress(info.from))
+      msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
+      msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
+      val bodyPart = MimeBodyPart()
+      bodyPart.setText(prepareMsgContent(info, pubKeys))
+      val mimeMultipart = MimeMultipart()
+      mimeMultipart.addBodyPart(bodyPart)
+      msg.setContent(mimeMultipart)
+      return msg
+    }
+
+    private fun prepareReplyMsg(info: OutgoingMessageInfo, context: Context,
+                                session: Session?, pubKeys: List<String>?): Message {
+      val replyToMessageEntity = info.replyToMsgEntity
+          ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
+      val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
+          ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
+
+      val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
+      val input = context.contentResolver?.openInputStream(uri)
+          ?: throw IllegalArgumentException("InputStream not found")
+
+      val msg = MimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+      val reply = msg.reply(false)//we use replyToAll == false to use the own logic
+      reply.setText(prepareMsgContent(info, pubKeys))
+      reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
+      reply.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
+      return reply
+    }
+
+    private fun prepareMsgContent(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
+      return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
+        PgpEncrypt.encryptMsg(info.msg ?: "", pubKeys ?: emptyList())
+      } else {
+        info.msg ?: ""
+      }
     }
   }
 }
