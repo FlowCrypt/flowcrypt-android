@@ -59,7 +59,6 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
-import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -110,7 +109,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private lateinit var draftCacheDir: File
 
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val contactsViewModel: ContactsViewModel by viewModels()
 
   private var pgpContactsTo: MutableList<PgpContact>? = null
@@ -181,19 +179,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     attachments?.forEachIndexed { index, attachmentInfo -> attachmentInfo.path = index.toString() }
 
     return OutgoingMessageInfo(
-        accountViewModel.activeAccountLiveData.value?.email ?: "",
-        editTextEmailSubject?.text.toString(),
-        msg,
-        recipientsTo?.chipValues,
-        recipientsCc?.chipValues,
-        recipientsBcc?.chipValues,
-        editTextFrom?.text.toString(),
-        msgInfo?.origMsgHeaders,
-        attachments,
-        forwardedAtts,
-        listener.msgEncryptionType,
-        messageType === MessageType.FORWARD,
-        EmailUtil.genOutboxUID(context)
+        account = accountViewModel.activeAccountLiveData.value?.email ?: "",
+        subject = editTextEmailSubject?.text.toString(),
+        msg = msg,
+        toRecipients = recipientsTo?.chipValues?.map { InternetAddress(it) } ?: emptyList(),
+        ccRecipients = recipientsCc?.chipValues?.map { InternetAddress(it) },
+        bccRecipients = recipientsBcc?.chipValues?.map { InternetAddress(it) },
+        from = editTextFrom?.text.toString(),
+        atts = attachments,
+        forwardedAtts = forwardedAtts,
+        encryptionType = listener.msgEncryptionType,
+        messageType = messageType,
+        replyToMsgEntity = msgInfo?.msgEntity,
+        uid = EmailUtil.genOutboxUID(context)
     )
   }
 
@@ -1149,7 +1147,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     editTextEmailMsg?.setText(getString(R.string.forward_template,
-        originalMsgInfo.getFrom()?.first()?.address ?: "",
+        originalMsgInfo.getFrom().first().address ?: "",
         EmailUtil.genForwardedMsgDate(originalMsgInfo.getReceiveDate()), originalMsgInfo.getSubject(),
         prepareRecipientsLineForForwarding(originalMsgInfo.getTo())))
 
@@ -1181,7 +1179,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       val ccSet = HashSet<InternetAddress>()
 
       if (msgInfo?.getTo()?.isNotEmpty() == true) {
-        for (address in msgInfo!!.getTo()!!) {
+        for (address in msgInfo!!.getTo()) {
           if (!account?.email.equals(address.address, ignoreCase = true)) {
             ccSet.add(address)
           }
@@ -1201,7 +1199,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
 
       if (msgInfo?.getCc()?.isNotEmpty() == true) {
-        for (address in msgInfo!!.getCc()!!) {
+        for (address in msgInfo!!.getCc()) {
           if (!account?.email.equals(address.address, ignoreCase = true)) {
             ccSet.add(address)
           }

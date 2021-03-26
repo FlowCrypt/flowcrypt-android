@@ -23,16 +23,15 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
-import com.flowcrypt.email.api.retrofit.node.NodeService
-import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.NodeEncryptException
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
@@ -67,6 +66,7 @@ import javax.mail.Multipart
 import javax.mail.Part
 import javax.mail.Session
 import javax.mail.UIDFolder
+import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
@@ -623,28 +623,38 @@ class EmailUtil {
     }
 
     /**
-     * Generate a raw MIME message. Don't call it in the main thread.
+     * Generate a MIME message. Don't call it in the main thread.
      *
      * @param info    The given [OutgoingMessageInfo] which contains information about an outgoing
      * message.
      * @param pubKeys The public keys which will be used to generate an encrypted part.
      * @return The generated raw MIME message.
      */
-    fun genRawMsgWithoutAtts(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
-
-      val retrofit = NodeRetrofitHelper.getRetrofit() ?: return ""
-
-      val nodeService = retrofit.create(NodeService::class.java)
-      val request = ComposeEmailRequest(info, pubKeys)
-
-      val response = nodeService.composeEmail(request).execute()
-      val result = response.body() ?: throw NullPointerException("ComposeEmailResult == null")
-
-      if (result.apiError != null) {
-        throw NodeEncryptException(result.apiError)
+    fun genMimeMessage(info: OutgoingMessageInfo, pubKeys: List<String>?): MimeMessage {
+      val session = Session.getInstance(Properties())
+      return when (info.messageType) {
+        MessageType.NEW -> {
+          val msg = MimeMessage(session)
+          msg.subject = info.subject
+          msg.setFrom(InternetAddress(info.from))
+          msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+          msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
+          msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
+          val mimeMultipart = MimeMultipart()
+          val bodyPart = MimeBodyPart()
+          val content: String
+          if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
+            content = PgpEncrypt.encryptMsg(info.msg ?: "", pubKeys ?: emptyList())
+          } else {
+            content = info.msg ?: ""
+          }
+          bodyPart.setContent(content, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
+          mimeMultipart.addBodyPart(bodyPart)
+          msg.setContent(mimeMultipart)
+          msg
+        }
+        else -> MimeMessage(session)
       }
-
-      return result.mimeMsg
     }
 
     /**
@@ -941,6 +951,14 @@ class EmailUtil {
       )
 
       return parameters.joinToString(separator = " ")
+    }
+
+    fun parseAddresses(fromAddress: String?): List<InternetAddress> {
+      return try {
+        InternetAddress.parse(fromAddress ?: "").toList()
+      } catch (e: AddressException) {
+        emptyList()
+      }
     }
 
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {

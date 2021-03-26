@@ -7,7 +7,10 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import javax.mail.internet.InternetAddress
 
 /**
  * Simple POJO class which describe an outgoing message model.
@@ -21,15 +24,15 @@ data class OutgoingMessageInfo constructor(
     val account: String,
     val subject: String,
     val msg: String? = null,
-    val toRecipients: List<String>? = null,
-    val ccRecipients: List<String>? = null,
-    val bccRecipients: List<String>? = null,
+    val toRecipients: List<InternetAddress>,
+    val ccRecipients: List<InternetAddress>? = null,
+    val bccRecipients: List<InternetAddress>? = null,
     val from: String,
-    val origMsgHeaders: String? = null,
     val atts: List<AttachmentInfo>? = null,
     val forwardedAtts: List<AttachmentInfo>? = null,
     val encryptionType: MessageEncryptionType,
-    val isForwarded: Boolean = false,
+    val messageType: MessageType,
+    val replyToMsgEntity: MessageEntity? = null,
     val uid: Long = 0) : Parcelable {
 
   /**
@@ -38,26 +41,26 @@ data class OutgoingMessageInfo constructor(
    * @return A list of the all recipients
    */
   fun getAllRecipients(): List<String> {
-    val recipients = mutableListOf<String>()
-    toRecipients?.let { recipients.addAll(it) }
-    ccRecipients?.let { recipients.addAll(it) }
-    bccRecipients?.let { recipients.addAll(it) }
-    return recipients
+    val allRecipients = mutableListOf<String>()
+    allRecipients.addAll(toRecipients.map { address -> address.address })
+    ccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
+    bccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
+    return allRecipients
   }
 
   constructor(parcel: Parcel) : this(
       parcel.readString()!!,
       parcel.readString()!!,
       parcel.readString(),
-      parcel.createStringArrayList(),
-      parcel.createStringArrayList(),
-      parcel.createStringArrayList(),
+      mutableListOf<InternetAddress>().apply { parcel.readList(this as List<*>, InternetAddress::class.java.classLoader) },
+      mutableListOf<InternetAddress>().apply { parcel.readList(this as List<*>, InternetAddress::class.java.classLoader) },
+      mutableListOf<InternetAddress>().apply { parcel.readList(this as List<*>, InternetAddress::class.java.classLoader) },
       parcel.readString()!!,
-      parcel.readString(),
       mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
       mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
       parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
-      parcel.readByte() != 0.toByte(),
+      parcel.readParcelable<MessageType>(MessageType::class.java.classLoader)!!,
+      parcel.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader),
       parcel.readLong())
 
   override fun describeContents(): Int {
@@ -69,15 +72,15 @@ data class OutgoingMessageInfo constructor(
       writeString(account)
       writeString(subject)
       writeString(msg)
-      writeStringList(toRecipients)
-      writeStringList(ccRecipients)
-      writeStringList(bccRecipients)
+      writeList(toRecipients)
+      writeList(ccRecipients)
+      writeList(bccRecipients)
       writeString(from)
-      writeString(origMsgHeaders)
       writeTypedList(atts)
       writeTypedList(forwardedAtts)
       writeParcelable(encryptionType, flags)
-      writeByte(if (isForwarded) 1.toByte() else 0.toByte())
+      writeParcelable(messageType, flags)
+      writeParcelable(replyToMsgEntity, flags)
       writeLong(uid)
     }
   }
