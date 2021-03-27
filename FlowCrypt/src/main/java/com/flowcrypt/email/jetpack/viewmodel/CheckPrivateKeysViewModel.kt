@@ -10,10 +10,9 @@ import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.pgp.PgpKey
 import kotlinx.coroutines.launch
 
 /**
@@ -23,13 +22,12 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val repository: PgpApiRepository = NodeRepository()
   val liveData: MutableLiveData<Result<List<NodeKeyDetails>>> = MutableLiveData()
 
-  fun checkKeys(keys: List<NodeKeyDetails>, passphrases: List<String>) {
+  fun checkKeys(keys: List<NodeKeyDetails>, passphrase: String) {
     liveData.value = Result.loading()
 
-    if (passphrases.isEmpty()) {
+    if (passphrase.isEmpty()) {
       liveData.value = Result.error(emptyList())
       return
     }
@@ -45,26 +43,17 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
           val decryptedKey = if (copy.isFullyDecrypted == true) {
             prvKey
           } else {
-            val result = repository.decryptKey(context, prvKey, passphrases)
-            when (result.status) {
-              Result.Status.SUCCESS -> result.data?.decryptedKey ?: ""
-
-              Result.Status.ERROR -> {
-                copy.errorMsg = result.data?.apiError?.msg
-                ""
-              }
-
-              Result.Status.EXCEPTION -> {
-                copy.errorMsg = result.exception?.message
-                ""
-              }
-
-              Result.Status.LOADING, Result.Status.NONE -> ""
+            try {
+              PgpKey.decryptKey(prvKey, passphrase)
+            } catch (e: Exception) {
+              e.printStackTrace()
+              copy.errorMsg = e.message
+              ""
             }
           }
 
           if (decryptedKey.isNotEmpty()) {
-            copy.passphrase = passphrases.first()
+            copy.passphrase = passphrase
           } else {
             copy.errorMsg = context.getString(R.string.password_is_incorrect)
           }

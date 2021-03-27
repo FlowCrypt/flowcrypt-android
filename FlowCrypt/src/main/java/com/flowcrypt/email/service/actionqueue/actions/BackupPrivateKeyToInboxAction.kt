@@ -10,11 +10,9 @@ package com.flowcrypt.email.service.actionqueue.actions
 import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
-import android.text.TextUtils
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -42,15 +40,20 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
     val keysStorage = KeysStorageImpl.getInstance(context)
     val keyEntity = keysStorage.getPgpPrivateKey(privateKeyLongId) ?: return
-    if (!TextUtils.isEmpty(keyEntity.privateKeyAsString)) {
+    if (keyEntity.privateKey.isNotEmpty()) {
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
+      val key = PgpKey.parseKeysC(keyEntity.privateKey).first()
       val encryptedKey: String
-      try {
-        encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
-      } catch (e: Exception) {
-        throw IllegalStateException("An error occurred during encrypting some key", e)
+      if (key.isFullyEncrypted == true) {
+        encryptedKey = key.privateKey ?: throw IllegalArgumentException("empty key")
+      } else {
+        try {
+          encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
+        } catch (e: Exception) {
+          throw IllegalStateException("An error occurred during encrypting some key", e)
+        }
       }
 
       val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey)

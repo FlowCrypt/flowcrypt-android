@@ -5,11 +5,9 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
-import android.content.Context
 import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 
 /**
@@ -29,6 +27,4 @@ interface PgpApiRepository : BaseApiRepository {
    * @param request     An instance of [ParseDecryptMsgRequest] which contains information about a message.
    */
   suspend fun parseDecryptMsg(requestCode: Int = 0, request: ParseDecryptMsgRequest): Result<ParseDecryptedMsgResult?>
-
-  suspend fun decryptKey(context: Context, armoredKey: String, passphrases: List<String>): Result<DecryptKeyResult>
 }

@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
-import android.text.TextUtils
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -133,11 +132,12 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     when (v.id) {
       R.id.buttonPositiveAction -> {
         UIUtil.hideSoftInput(this, editTextKeyPassword)
-        if (TextUtils.isEmpty(editTextKeyPassword?.text.toString())) {
+        val passphrase = editTextKeyPassword?.text?.toString()
+        if (passphrase.isNullOrEmpty()) {
           showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty))
         } else {
           snackBar?.dismiss()
-          checkPrivateKeysViewModel.checkKeys(remainingKeys, listOf(editTextKeyPassword?.text.toString()))
+          checkPrivateKeysViewModel.checkKeys(remainingKeys, passphrase)
         }
       }
 
