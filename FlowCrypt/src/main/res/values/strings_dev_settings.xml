@@ -8,7 +8,6 @@
     <!-- Preference keys -->
     <string name="preferences_key_build_config_info">pref_key_build_config_info</string>
     <string name="preferences_key_is_write_logs_to_file_enabled">preferences_key_is_write_logs_to_file_enabled</string>
-    <string name="preferences_key_is_detect_memory_leak_enable" tools:ignore="UnusedResources">preferences_key_is_detect_memory_leak_enable</string>
     <string name="preferences_key_is_acra_enable" tools:ignore="UnusedResources">preferences_key_is_acra_enable</string>
     <string name="preferences_key_is_mail_debug_enabled">preferences_key_is_mail_debug_enabled</string>
     <string name="pref_key_is_http_log_enabled">pref_key_is_http_log_enabled</string>
@@ -16,7 +15,6 @@
     <string name="pref_key_is_node_http_debug_enabled">pref_key_is_node_http_debug_enabled</string>
     <string name="pref_key_node_http_log_level">pref_key_node_http_log_level</string>
     <string name="pref_key_is_native_node_debug_enabled">pref_key_is_native_node_debug_enabled</string>
-    <string name="pref_key_is_detect_memory_leak_enabled">pref_key_is_detect_memory_leak_enabled</string>
     <string name="pref_key_is_acra_enabled">pref_key_is_acra_enabled</string>
 
     <!-- Strings related to Settings -->
@@ -25,7 +23,6 @@
     <string name="pref_title_build_config_info">Build config info</string>
     <string name="toast_message_press_force_stop_to_apply_changes">Please press "Force stop" to apply changes</string>
     <string name="pref_title_write_api_logs_to_file">Write API logs to a file</string>
-    <string name="pref_title_enable_detect_memory_leak" tools:ignore="UnusedResources">Enable detect memory leak</string>
     <string name="pref_title_enable_acra" tools:ignore="UnusedResources">Enable ACRA(App Crash Reports)</string>
     <string name="pref_title_imap_debug">IMAP debug</string>
     <string name="action_dev_settings">Dev Settings</string>
@@ -38,6 +35,5 @@
     <string name="pref_summary_disabled">Disabled</string>
     <string name="pref_title_node_http">Node HTTP</string>
     <string name="pref_title_native_node_logs">Native Node logs</string>
-    <string name="pref_title_detect_memory_leaks">Detect memory leaks</string>
     <string name="pref_title_acra">Application Crash Reports</string>
 </resources>

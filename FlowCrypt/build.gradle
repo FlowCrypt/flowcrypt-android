@@ -302,6 +302,10 @@ android {
     ndkVersion "22.0.7026061"
 }
 
+configurations {
+    devDebugImplementation {}
+}
+
 easylauncher {
     buildTypes {
         debug {
@@ -325,7 +329,7 @@ dependencies {
     kapt 'androidx.annotation:annotation:1.2.0'
     kapt "androidx.room:room-compiler:$roomVersion"
 
-    debugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
+    devDebugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"

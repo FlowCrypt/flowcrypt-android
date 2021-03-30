@@ -45,7 +45,6 @@ class Constants {
      * The preference keys.
      */
     const val PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED = "preferences_key_is_write_logs_to_file_enabled"
-    const val PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED = "pref_key_is_detect_memory_leak_enabled"
     const val PREF_KEY_IS_ACRA_ENABLED = "pref_key_is_acra_enabled"
     const val PREF_KEY_IS_MAIL_DEBUG_ENABLED = "preferences_key_is_mail_debug_enabled"
     const val PREF_KEY_IS_HTTP_LOG_ENABLED = "pref_key_is_http_log_enabled"

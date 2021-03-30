@@ -60,7 +60,6 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
   override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
     when (key) {
       Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED,
-      Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED,
       Constants.PREF_KEY_IS_ACRA_ENABLED,
       Constants.PREF_KEY_IS_NODE_HTTP_DEBUG_ENABLED,
       Constants.PREF_KEY_NODE_HTTP_LOG_LEVEL,

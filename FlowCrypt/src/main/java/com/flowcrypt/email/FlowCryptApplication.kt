@@ -24,7 +24,6 @@ import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.acra.CustomReportSenderFactory
-import leakcanary.LeakCanary
 import org.acra.ACRA
 import org.acra.ReportField
 import org.acra.annotation.ReportsCrashes
@@ -79,7 +78,6 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     MsgsCacheManager.init(this)
     NotificationChannelManager.registerNotificationChannels(this)
     IMAPStoreManager.init(this)
-    initLeakCanary()
     SyncInboxWorker.enqueuePeriodic(this)
     enqueueMsgsCacheCleanerWorker()
   }
@@ -110,19 +108,6 @@ class FlowCryptApplication : Application(), Configuration.Provider {
         Constants.PREF_KEY_INSTALL_VERSION, "unknown")
     ACRA.getErrorReporter().putCustomData(
         Constants.PREF_KEY_INSTALL_VERSION.toUpperCase(Locale.getDefault()), installVersion)
-  }
-
-  /**
-   * Init the LeakCanary tools if the current build is debug and detect memory leaks enabled.
-   */
-  private fun initLeakCanary() {
-    if (GeneralUtil.isDebugBuild()) {
-      val isEnabled = SharedPreferencesHelper.getBoolean(
-          PreferenceManager.getDefaultSharedPreferences(this),
-          Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)
-      LeakCanary.config = LeakCanary.config.copy(dumpHeap = isEnabled)
-      LeakCanary.showLeakDisplayActivityLauncherIcon(showLauncherIcon = isEnabled)
-    }
   }
 
   private fun initPerInstallationSharedPrefs() {
