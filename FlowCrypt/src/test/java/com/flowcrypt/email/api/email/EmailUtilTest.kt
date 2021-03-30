@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.api.email
 
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
@@ -24,6 +24,6 @@ class EmailUtilTest {
         """OR subject: "All you need to know about CryptUP (contains a backup)" """ +
         """OR subject: "CryptUP Account Backup") -is:spam"""
     val gotString = EmailUtil.getGmailBackupSearchQuery(email)
-    assertTrue("\nExpected:\n$expectedString\nGot:\n$gotString", expectedString == gotString)
+    assertEquals(expectedString, gotString)
   }
 }

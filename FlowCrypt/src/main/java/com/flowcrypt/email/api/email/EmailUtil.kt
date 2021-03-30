@@ -699,7 +699,7 @@ class EmailUtil {
     }
 
     private fun genMsgWithBackupTemplate(context: Context, account: AccountEntity, session: Session): Message {
-      val msg = MimeMessage(session)
+      val msg = FlowCryptMimeMessage(session)
 
       msg.setFrom(InternetAddress(account.email))
       msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
@@ -959,9 +959,9 @@ class EmailUtil {
       ))
     }
 
-    private fun prepareNewMsg(session: Session?, info: OutgoingMessageInfo,
+    private fun prepareNewMsg(session: Session, info: OutgoingMessageInfo,
                               pubKeys: List<String>?): MimeMessage {
-      val msg = MimeMessage(session)
+      val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
       msg.setFrom(InternetAddress(info.from))
       msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
@@ -976,7 +976,7 @@ class EmailUtil {
     }
 
     private fun prepareReplyMsg(info: OutgoingMessageInfo, context: Context,
-                                session: Session?, pubKeys: List<String>?): Message {
+                                session: Session, pubKeys: List<String>?): Message {
       val replyToMessageEntity = info.replyToMsgEntity
           ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
       val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
@@ -986,7 +986,7 @@ class EmailUtil {
       val input = context.contentResolver?.openInputStream(uri)
           ?: throw IllegalArgumentException("InputStream not found")
 
-      val msg = MimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+      val msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
       val reply = msg.reply(false)//we use replyToAll == false to use the own logic
       reply.setText(prepareMsgContent(info, pubKeys))
       reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
