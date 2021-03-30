@@ -17,10 +17,11 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.NodeException
+import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.gson.annotations.SerializedName
 
@@ -51,7 +52,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     for (keyEntity in keyEntities) {
       val passphrase = keyEntity.passphrase ?: continue
 
-      val keyDetailsList = PgpKey.parseKeysC(keyEntity.privateKeyAsString.toByteArray())
+      val keyDetailsList = PgpKey.parseKeysC(keyEntity.privateKeyAsString.toByteArray(), false)
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
             IllegalArgumentException("An error occurred during the key parsing| 1: "
@@ -66,17 +67,10 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
       }
 
       try {
-        val encryptedKey: String
-        try {
-          encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
-        } catch (e: Exception) {
-          ExceptionUtil.handleError(
-              IllegalArgumentException("An error occurred during the key encryption", e)
-          )
-          continue
-        }
+        PgpPwd.checkForWeakPassphrase(passphrase)
+        val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
 
-        val encryptedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray())
+        val encryptedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray(), false)
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue
@@ -88,11 +82,10 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
             publicKey = keyDetailsWithPgpEncryptedInfo.publicKey?.toByteArray()
                 ?: keyEntity.publicKey)
         modifiedKeyEntities.add(modifiedKeyEntity)
-      } catch (e: NodeException) {
-        if (e.nodeError?.msg == "Error: Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.") {
-          val account = roomDatabase.accountDao().getActiveAccount() ?: return
-          SystemNotificationManager(context).showPassphraseTooLowNotification(account)
-        }
+      } catch (e: PrivateKeyStrengthException) {
+        val account = roomDatabase.accountDao().getActiveAccount() ?: return
+        SystemNotificationManager(context).showPassphraseTooLowNotification(account)
+        ExceptionUtil.handleError(e)
       }
     }
 
