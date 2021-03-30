@@ -171,7 +171,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     var msg = editTextEmailMsg?.text.toString()
     if (messageType == MessageType.REPLY || messageType == MessageType.REPLY_ALL) {
       if (iBShowQuotedText?.visibility == View.VISIBLE) {
-        msg += EmailUtil.prepareReplyQuotes(msgInfo)
+        msg += EmailUtil.genReplyContent(msgInfo)
       }
     }
 
@@ -593,9 +593,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       R.id.iBShowQuotedText -> {
         val currentCursorPosition = editTextEmailMsg?.selectionStart ?: 0
         if (editTextEmailMsg?.text?.isNotEmpty() == true) {
-          editTextEmailMsg?.append("\n" + EmailUtil.prepareReplyQuotes(msgInfo))
+          editTextEmailMsg?.append("\n" + EmailUtil.genReplyContent(msgInfo))
         } else {
-          editTextEmailMsg?.append(EmailUtil.prepareReplyQuotes(msgInfo))
+          editTextEmailMsg?.append(EmailUtil.genReplyContent(msgInfo))
         }
         editTextEmailMsg?.setSelection(currentCursorPosition)
         v.visibility = View.GONE
