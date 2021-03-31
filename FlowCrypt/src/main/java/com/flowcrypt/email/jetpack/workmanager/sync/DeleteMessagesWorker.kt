@@ -53,7 +53,10 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
       executeGMailAPICall(applicationContext) {
         //todo-denbond7 need to improve this logic. We should delete local messages only if we'll
         // success delete remote messages
-        GmailApiHelper.moveToTrash(applicationContext, account, uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+        GmailApiHelper.moveToTrash(
+            context = applicationContext,
+            accountEntity = account,
+            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
         //need to wait while the Gmail server will update labels
         delay(2000)
       }
@@ -82,8 +85,6 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
   private suspend fun moveMsgsToTrashInternal(account: AccountEntity,
                                               action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
   {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-    val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
@@ -101,7 +102,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
             continue
           }
           val uidList = filteredMsgs.map { it.uid }
-          action.invoke(trash.fullName, uidList)
+          action.invoke(srcFolder, uidList)
           roomDatabase.msgDao().deleteByUIDsSuspend(account.email, srcFolder, uidList)
         }
       }
