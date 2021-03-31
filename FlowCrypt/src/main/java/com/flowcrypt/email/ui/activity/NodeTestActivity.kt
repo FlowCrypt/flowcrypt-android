@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult
@@ -119,11 +118,11 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         }
 
         R.id.req_id_encrypt_msg -> {
-          val encryptMsgResult = responseWrapper.result as EncryptedMsgResult?
+          /*val encryptMsgResult = responseWrapper.result as EncryptedMsgResult?
           addResultLine("encrypt-msg", responseWrapper)
           encryptedMsg = encryptMsgResult!!.encryptedMsg
           requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_ecc, data = encryptedMsg!!.toByteArray()
-              , prvKeys = TestData.eccPrvKeyInfo())
+              , prvKeys = TestData.eccPrvKeyInfo())*/
         }
 
         R.id.req_id_decrypt_msg_ecc -> {
@@ -337,7 +336,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   private fun runAllTests() {
     resultText = ""
     hasTestFailure = false
-    requestsManager!!.encryptMsg(R.id.req_id_encrypt_msg, TEST_MSG_HTML)
+    //requestsManager!!.encryptMsg(R.id.req_id_encrypt_msg, TEST_MSG_HTML)
   }
 
   private fun chooseFile() {

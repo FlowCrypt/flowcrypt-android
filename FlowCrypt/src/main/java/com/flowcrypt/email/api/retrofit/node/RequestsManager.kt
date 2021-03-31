@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.AsyncTask
 import androidx.lifecycle.LiveData
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
-import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
@@ -19,7 +18,6 @@ import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
-import com.flowcrypt.email.node.TestData
 
 /**
  * @author DenBond7
@@ -39,7 +37,7 @@ object RequestsManager {
   }
 
   fun encryptMsg(requestCode: Int, msg: String) {
-    load(requestCode, EncryptMsgRequest(msg, listOf(*TestData.mixedPubKeys)))
+    //load(requestCode, EncryptMsgRequest(msg, listOf(*TestData.mixedPubKeys)))
   }
 
   fun decryptMsg(requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,

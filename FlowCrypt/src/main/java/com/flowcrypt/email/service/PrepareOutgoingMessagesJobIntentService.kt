@@ -16,9 +16,6 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
-import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -28,6 +25,7 @@ import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWor
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncrypt
@@ -39,14 +37,13 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.nio.charset.StandardCharsets
 import java.util.*
-import javax.mail.internet.MimeMessage
+import javax.mail.Message
 
 /**
  * This service creates a new outgoing message using the given [OutgoingMessageInfo].
@@ -80,7 +77,6 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         ?: return
     val accountEntity = roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.toLowerCase(Locale.US))
         ?: return
-    val sess = OpenStoreHelper.getAccountSess(applicationContext, accountEntity)
 
     val uid = outgoingMsgInfo.uid
     val email = accountEntity.email
@@ -104,13 +100,22 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         SecurityUtils.getRecipientsPubKeys(this, recipients, accountEntity, senderEmail)
       } else null
 
-      val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys)
-      val mimeMsg = MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8))
+      val msg = EmailUtil.genMessage(applicationContext, outgoingMsgInfo, pubKeys)
 
       val attsCacheDir = getAttsCacheDir()
       val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
-      val msgEntity = prepareMessageEntity(accountEntity, outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
+      val out = ByteArrayOutputStream()
+      msg.writeTo(out)
+
+      //todo-denbond7 need to think about that. It'll be better to store a message as a file
+      val msgEntity = prepareMessageEntity(
+          accountEntity = accountEntity,
+          msgInfo = outgoingMsgInfo,
+          generatedUID = uid,
+          msg = msg,
+          rawMsg = String(out.toByteArray()),
+          attsCacheDir = msgAttsCacheDir)
       newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
       if (newMsgId > 0) {
@@ -203,14 +208,14 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   }
 
   private fun prepareMessageEntity(accountEntity: AccountEntity, msgInfo: OutgoingMessageInfo, generatedUID: Long,
-                                   mimeMsg: MimeMessage, rawMsg: String, attsCacheDir: File): MessageEntity {
+                                   msg: Message, rawMsg: String, attsCacheDir: File): MessageEntity {
 
     val messageEntity = MessageEntity.genMsgEntity(accountEntity.email,
-        JavaEmailConstants.FOLDER_OUTBOX, mimeMsg, generatedUID, false)
+        JavaEmailConstants.FOLDER_OUTBOX, msg, generatedUID, false)
 
     val hasAtts = msgInfo.atts?.isNotEmpty() == true || msgInfo.forwardedAtts?.isNotEmpty() == true
     val isEncrypted = msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
-    val msgStateValue = if (msgInfo.isForwarded) MessageState.NEW_FORWARDED.value else MessageState.NEW.value
+    val msgStateValue = if (msgInfo.messageType == MessageType.FORWARD) MessageState.NEW_FORWARDED.value else MessageState.NEW.value
 
     return messageEntity.copy(
         hasAttachments = hasAtts,
@@ -227,7 +232,6 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
                              uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
     val cachedAtts = ArrayList<AttachmentInfo>()
 
-    val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
     if (msgInfo.atts?.isNotEmpty() == true) {
       val outgoingAtts = msgInfo.atts.map {
         it.apply {
@@ -265,7 +269,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             }
             requireNotNull(pubKeys)
 
-            PgpEncrypt.encryptFile(originalFileInputStream, encryptedTempFile.outputStream(), pubKeys)
+            PgpEncrypt.encrypt(originalFileInputStream, encryptedTempFile.outputStream(), pubKeys)
             val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile)
             att.uri = uri
             att.name = encryptedTempFile.name

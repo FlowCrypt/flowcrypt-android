@@ -70,13 +70,13 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
           // use the right classloader which we added above
           .ignoreParentClassLoaders()
           .enableAllInfo()
-          .blacklistPackages("androidx", "android")
-          .whitelistPackages("com.flowcrypt.email")
+          .rejectPackages("androidx", "android")
+          .acceptPackages("com.flowcrypt.email")
           .scan()
           .getClassesImplementing("android.os.Parcelable")
           .filter { (it.isInterface || it.isAbstract || it.typeSignature?.typeParameters?.size ?: 0 > 0).not() }
           .loadClasses()
-          .map { arrayOf<Any>(it.name, it) }
+          .map { arrayOf(it.name, it) }
     }
 
     @JvmStatic

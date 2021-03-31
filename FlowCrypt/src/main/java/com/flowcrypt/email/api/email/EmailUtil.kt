@@ -23,16 +23,16 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
-import com.flowcrypt.email.api.retrofit.node.NodeService
-import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.NodeEncryptException
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
@@ -53,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
+import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -67,6 +68,7 @@ import javax.mail.Multipart
 import javax.mail.Part
 import javax.mail.Session
 import javax.mail.UIDFolder
+import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
@@ -623,28 +625,24 @@ class EmailUtil {
     }
 
     /**
-     * Generate a raw MIME message. Don't call it in the main thread.
+     * Generate a message(new, reply or forward). Don't call it in the main thread.
      *
      * @param info    The given [OutgoingMessageInfo] which contains information about an outgoing
      * message.
      * @param pubKeys The public keys which will be used to generate an encrypted part.
      * @return The generated raw MIME message.
      */
-    fun genRawMsgWithoutAtts(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
+    fun genMessage(context: Context, info: OutgoingMessageInfo, pubKeys: List<String>? = null): Message {
+      val session = Session.getInstance(Properties())
+      return when (info.messageType) {
+        MessageType.NEW, MessageType.FORWARD -> {
+          prepareNewMsg(session, info, pubKeys)
+        }
 
-      val retrofit = NodeRetrofitHelper.getRetrofit() ?: return ""
-
-      val nodeService = retrofit.create(NodeService::class.java)
-      val request = ComposeEmailRequest(info, pubKeys)
-
-      val response = nodeService.composeEmail(request).execute()
-      val result = response.body() ?: throw NullPointerException("ComposeEmailResult == null")
-
-      if (result.apiError != null) {
-        throw NodeEncryptException(result.apiError)
+        MessageType.REPLY, MessageType.REPLY_ALL -> {
+          prepareReplyMsg(info, context, session, pubKeys)
+        }
       }
-
-      return result.mimeMsg
     }
 
     /**
@@ -702,7 +700,7 @@ class EmailUtil {
     }
 
     private fun genMsgWithBackupTemplate(context: Context, account: AccountEntity, session: Session): Message {
-      val msg = MimeMessage(session)
+      val msg = FlowCryptMimeMessage(session)
 
       msg.setFrom(InternetAddress(account.email))
       msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
@@ -804,11 +802,15 @@ class EmailUtil {
      * @return The reply quotes text
      */
     @SuppressLint("SimpleDateFormat") // for now we use iso format, regardles of locality
-    fun prepareReplyQuotes(msgInfo: IncomingMessageInfo?): String {
+    fun genReplyContent(msgInfo: IncomingMessageInfo?): String {
       val date = if (msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
       val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
-      val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: "(unknown content)"
+      val replyText = prepareReplyQuotes(msgInfo?.text)
       return "\n\nOn $date, $sender wrote:\n$replyText"
+    }
+
+    fun prepareReplyQuotes(originalText: String?): String {
+      return originalText?.replace("(?m)^".toRegex(), "> ") ?: "(unknown content)"
     }
 
     suspend fun patchingSecurityProviderSuspend(context: Context) = withContext(Dispatchers.IO) {
@@ -943,6 +945,41 @@ class EmailUtil {
       return parameters.joinToString(separator = " ")
     }
 
+    fun parseAddresses(fromAddress: String?): List<InternetAddress> {
+      return try {
+        InternetAddress.parse(fromAddress ?: "").toList()
+      } catch (e: AddressException) {
+        emptyList()
+      }
+    }
+
+    fun prepareNewMsg(session: Session, info: OutgoingMessageInfo,
+                      pubKeys: List<String>? = null): MimeMessage {
+      val msg = FlowCryptMimeMessage(session)
+      msg.subject = info.subject
+      msg.setFrom(InternetAddress(info.from))
+      msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
+      msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
+      val bodyPart = MimeBodyPart()
+      bodyPart.setText(prepareMsgContent(info, pubKeys))
+      val mimeMultipart = MimeMultipart()
+      mimeMultipart.addBodyPart(bodyPart)
+      msg.setContent(mimeMultipart)
+      return msg
+    }
+
+    fun genReplyMessage(replyToMsg: MimeMessage,
+                        info: OutgoingMessageInfo, pubKeys: List<String>? = null): Message {
+      val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
+      reply.setFrom(InternetAddress(info.from))
+      reply.setText(prepareMsgContent(info, pubKeys))
+      reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
+      reply.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
+      return reply
+    }
+
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
       return OrTerm(arrayOf(
           SubjectTerm(localFolder.searchQuery),
@@ -952,6 +989,40 @@ class EmailUtil {
           RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
           RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
       ))
+    }
+
+    private fun prepareReplyMsg(info: OutgoingMessageInfo, context: Context,
+                                session: Session, pubKeys: List<String>?): Message {
+      val replyToMessageEntity = info.replyToMsgEntity
+          ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
+      var msg: MimeMessage
+      if (replyToMessageEntity.rawMessageWithoutAttachments.isNullOrEmpty()) {
+        val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
+            ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
+
+        val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
+        val input = context.contentResolver?.openInputStream(uri)
+            ?: throw IllegalArgumentException("InputStream not found")
+        msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+      } else {
+        val input = ByteArrayInputStream(replyToMessageEntity.rawMessageWithoutAttachments.toByteArray())
+        try {
+          msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+        } catch (e: Exception) {
+          //added for compatibility to previous versions
+          msg = FlowCryptMimeMessage(session, input)
+        }
+      }
+
+      return genReplyMessage(msg, info, pubKeys)
+    }
+
+    private fun prepareMsgContent(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
+      return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
+        PgpEncrypt.encryptMsg(info.msg ?: "", pubKeys ?: emptyList())
+      } else {
+        info.msg ?: ""
+      }
     }
   }
 }

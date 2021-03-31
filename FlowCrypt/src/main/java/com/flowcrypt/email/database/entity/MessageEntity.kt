@@ -78,16 +78,16 @@ data class MessageEntity(
 ) : Parcelable {
 
   @Ignore
-  val from: List<InternetAddress> = parseAddresses(fromAddress)
+  val from: List<InternetAddress> = EmailUtil.parseAddresses(fromAddress)
 
   @Ignore
-  val replyToAddress: List<InternetAddress> = parseAddresses(replyTo)
+  val replyToAddress: List<InternetAddress> = EmailUtil.parseAddresses(replyTo)
 
   @Ignore
-  val to: List<InternetAddress> = parseAddresses(toAddress)
+  val to: List<InternetAddress> = EmailUtil.parseAddresses(toAddress)
 
   @Ignore
-  val cc: List<InternetAddress> = parseAddresses(ccAddress)
+  val cc: List<InternetAddress> = EmailUtil.parseAddresses(ccAddress)
 
   @Ignore
   val msgState: MessageState = MessageState.generate(state ?: MessageState.NONE.value)
@@ -171,15 +171,6 @@ data class MessageEntity(
 
   fun isOutboxMsg(): Boolean {
     return JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
-  }
-
-  private fun parseAddresses(fromAddress: String?):
-      List<InternetAddress> {
-    return try {
-      listOf(*InternetAddress.parse(fromAddress ?: ""))
-    } catch (e: AddressException) {
-      emptyList()
-    }
   }
 
   companion object CREATOR : Parcelable.Creator<MessageEntity> {

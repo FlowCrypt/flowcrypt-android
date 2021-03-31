@@ -29,19 +29,18 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
                                            var text: String? = null,
                                            var inlineSubject: String? = null,
                                            val msgBlocks: List<@JvmSuppressWildcards MsgBlock>? = null,
-                                           val origMsgHeaders: String? = null,
                                            val encryptionType: MessageEncryptionType) : Parcelable {
   fun getSubject(): String? = msgEntity.subject
 
-  fun getFrom(): List<InternetAddress>? = msgEntity.from
+  fun getFrom(): List<InternetAddress> = msgEntity.from
 
-  fun getReplyTo(): List<InternetAddress>? = msgEntity.replyToAddress
+  fun getReplyTo(): List<InternetAddress> = msgEntity.replyToAddress
 
   fun getReceiveDate(): Date = Date(msgEntity.receivedDate ?: 0)
 
-  fun getTo(): List<InternetAddress>? = msgEntity.to
+  fun getTo(): List<InternetAddress> = msgEntity.to
 
-  fun getCc(): List<InternetAddress>? = msgEntity.cc
+  fun getCc(): List<InternetAddress> = msgEntity.cc
 
   fun getHtmlMsgBlock(): MsgBlock? {
     for (part in msgBlocks ?: emptyList()) {
@@ -56,14 +55,13 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
   fun getUid(): Int = msgEntity.uid.toInt()
 
   constructor(msgEntity: MessageEntity, text: String?, subject: String?, msgBlocks: List<MsgBlock>,
-              origMsgHeaders: String?, encryptionType: MessageEncryptionType) : this(
+              encryptionType: MessageEncryptionType) : this(
       msgEntity,
       null,
       null,
       text,
       subject,
       msgBlocks,
-      origMsgHeaders,
       encryptionType)
 
   fun hasHtmlText(): Boolean {
@@ -91,7 +89,6 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
       source.readString(),
       source.readString(),
       mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
-      source.readString(),
       source.readParcelable(MessageEncryptionType::class.java.classLoader)!!
   )
 
@@ -104,7 +101,6 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
     writeString(text)
     writeString(inlineSubject)
     writeTypedList(msgBlocks)
-    writeString(origMsgHeaders)
     writeParcelable(encryptionType, flags)
   }
 

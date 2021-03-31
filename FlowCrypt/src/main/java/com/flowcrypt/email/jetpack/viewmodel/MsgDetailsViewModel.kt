@@ -48,20 +48,16 @@ import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ApiException
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPMessage
-import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.IOUtils
 import org.bouncycastle.bcpg.ArmoredInputStream
 import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -180,13 +176,11 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           val parseDecryptedMsgResult = it.data
           if (parseDecryptedMsgResult != null) {
             try {
-              val msgHeadersAsString = getMsgHeaders()
               val msgInfo = IncomingMessageInfo(
                   msgEntity = messageEntity,
                   text = parseDecryptedMsgResult.text,
                   subject = parseDecryptedMsgResult.subject,
                   msgBlocks = parseDecryptedMsgResult.msgBlocks ?: emptyList(),
-                  origMsgHeaders = msgHeadersAsString,
                   encryptionType = parseDecryptedMsgResult.getMsgEncryptionType()
               )
               Result.success(requestCode = it.requestCode, data = msgInfo)
@@ -440,42 +434,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         }
       }
     }
-  }
-
-  private suspend fun getMsgHeaders(): String? = withContext(Dispatchers.IO) {
-    return@withContext if (messageEntity.isOutboxMsg()) {
-      ByteArrayInputStream(messageEntity.rawMessageWithoutAttachments?.toByteArray()
-          ?: ByteArray(0)).use { parseHeaders(it) }
-    } else {
-      MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())?.getUri(0)?.let { uri ->
-        val context: Context = getApplication()
-        return@withContext context.contentResolver.openInputStream(uri)?.use { parseHeaders(it, true) }
-      }
-    }
-  }
-
-  /**
-   * We fetch the first 50Kb from the given input stream and extract headers.
-   */
-  private suspend fun parseHeaders(inputStream: InputStream?,
-                                   isDataEncrypted: Boolean = false): String = withContext(Dispatchers.IO) {
-    inputStream ?: return@withContext ""
-    val d = ByteArray(50000)
-    try {
-      if (isDataEncrypted) {
-        KeyStoreCryptoManager.getCipherInputStream(inputStream).use {
-          IOUtils.read(it, d)
-        }
-      } else {
-        inputStream.use {
-          IOUtils.read(it, d)
-        }
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-    EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(d))
   }
 
   private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot = withContext(Dispatchers.IO) {
