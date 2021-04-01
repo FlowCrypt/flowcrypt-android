@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -79,8 +78,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
   @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testImportKeyFromFile() {
-    val resultData = Intent()
-    resultData.data = Uri.fromFile(fileWithPublicKey)
+    val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPublicKey)
     intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT), allOf(hasAction(Intent
         .ACTION_OPEN_DOCUMENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
@@ -94,8 +92,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
   @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowErrorWhenImportingKeyFromFile() {
-    val resultData = Intent()
-    resultData.data = Uri.fromFile(fileWithoutPublicKey)
+    val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithoutPublicKey)
     intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT), allOf(hasAction(Intent
         .ACTION_OPEN_DOCUMENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))

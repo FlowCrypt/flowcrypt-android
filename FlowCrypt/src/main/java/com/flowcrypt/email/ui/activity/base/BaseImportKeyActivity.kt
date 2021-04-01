@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.base
 import android.app.Activity
 import android.content.ClipboardManager
 import android.content.ComponentName
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
@@ -131,9 +132,23 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
         isCheckingClipboardEnabled = false
 
         when (resultCode) {
-          Activity.RESULT_OK -> if (data != null) {
-            if (data.data != null) {
-              handleSelectedFile(data.data!!)
+          Activity.RESULT_OK -> {
+            val uri = data?.data
+            if (uri != null) {
+              try {
+                /**
+                 * we should call [ContentResolver.takePersistableUriPermission]
+                 * due to using the given [Uri] out of the current activity
+                 */
+                contentResolver?.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+              } catch (e: Exception) {
+                showInfoSnackbar(rootView,
+                    getString(R.string.please_use_another_app_to_choose_file), Snackbar.LENGTH_LONG)
+              }
+              handleSelectedFile(uri)
             } else {
               showInfoSnackbar(rootView, getString(R.string.please_use_another_app_to_choose_file),
                   Snackbar.LENGTH_LONG)

@@ -10,6 +10,7 @@ import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.TextUtils
@@ -427,18 +428,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
 
       REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
-        Activity.RESULT_OK -> if (data != null && data.data != null) {
-          val attachmentInfo = EmailUtil.getAttInfoFromUri(context, data.data)
-          if (hasAbilityToAddAtt(attachmentInfo)) {
-            attachmentInfo?.let { atts?.add(it) }
-            showAtts()
-          } else {
-            showInfoSnackbar(view, getString(R.string.template_warning_max_total_attachments_size,
-                FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong())),
-                Snackbar.LENGTH_LONG)
-          }
-        } else {
-          showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+        Activity.RESULT_OK -> {
+          addAttachmentInfoFromIntent(data)
         }
       }
 
@@ -1599,6 +1590,45 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         }
       }
     })
+  }
+
+  /**
+   * Add [AttachmentInfo] that was created from the given [Uri]
+   *
+   * Due to accessing to the [Uri] out of the current [Activity] we should use
+   * [ContentResolver.takePersistableUriPermission] in order to persist the
+   * permission.
+   *
+   * Because access to the uri is granted until the receiving Activity is
+   * finished. We can extend the lifetime of the permission grant by passing
+   * it along to another Android component. This is done by including the uri
+   * in the data field or the ClipData object of the Intent used to launch that
+   * component. Additionally, we need to add [Intent.FLAG_GRANT_READ_URI_PERMISSION] to the Intent.
+   */
+  private fun addAttachmentInfoFromIntent(intent: Intent?) {
+    val uri = intent?.data
+    if (uri != null) {
+      val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
+      if (hasAbilityToAddAtt(attachmentInfo)) {
+        try {
+          context?.contentResolver?.takePersistableUriPermission(
+              uri,
+              Intent.FLAG_GRANT_READ_URI_PERMISSION
+          )
+        } catch (e: Exception) {
+          showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+          return
+        }
+        attachmentInfo?.let { atts?.add(it) }
+        showAtts()
+      } else {
+        showInfoSnackbar(view, getString(R.string.template_warning_max_total_attachments_size,
+            FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong())),
+            Snackbar.LENGTH_LONG)
+      }
+    } else {
+      showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+    }
   }
 
   /**

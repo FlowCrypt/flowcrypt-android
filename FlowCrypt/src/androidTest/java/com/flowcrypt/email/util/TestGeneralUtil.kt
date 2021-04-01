@@ -6,9 +6,13 @@
 package com.flowcrypt.email.util
 
 import android.content.Context
+import android.content.Intent
 import android.os.Environment
+import androidx.core.content.FileProvider
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.Gson
 import org.apache.commons.io.IOUtils
@@ -98,13 +102,30 @@ class TestGeneralUtil {
     fun replaceVersionInKey(key: String?): String {
       val regex = "Version: FlowCrypt \\d*.\\d*.\\d* Gmail".toRegex()
       val version = BuildConfig.VERSION_NAME.split("_").first()
-      val replacement = "Version: FlowCrypt " + version + " Gmail"
+      val replacement = "Version: FlowCrypt $version Gmail"
 
       key?.let {
         return key.replaceFirst(regex, replacement)
       }
 
       return ""
+    }
+
+    /**
+     * Generate an [Intent] with [Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION]
+     * and [Intent.FLAG_GRANT_READ_URI_PERMISSION]
+     */
+    fun genIntentWithPersistedReadPermissionForFile(file: File): Intent {
+      return Intent().apply {
+        val context: Context = ApplicationProvider.getApplicationContext()
+        val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, file)
+        context.grantUriPermission(BuildConfig.APPLICATION_ID, uri,
+            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        data = uri
+        flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+            Intent.FLAG_GRANT_READ_URI_PERMISSION
+      }
     }
   }
 }

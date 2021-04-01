@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -134,9 +133,8 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     isDialogWithTextDisplayed(decorView, getResString(R.string.clipboard_has_wrong_structure, getResString(R.string.private_)))
   }
 
-  private fun useIntentionToRunActivityToSelectFile(file: File?) {
-    val resultData = Intent()
-    resultData.data = Uri.fromFile(file)
+  private fun useIntentionToRunActivityToSelectFile(file: File) {
+    val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(file)
     intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT), allOf(hasAction(Intent
         .ACTION_OPEN_DOCUMENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))

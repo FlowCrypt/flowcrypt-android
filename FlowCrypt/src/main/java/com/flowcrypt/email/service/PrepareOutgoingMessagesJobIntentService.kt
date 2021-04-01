@@ -294,7 +294,6 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
         }
-
       }
     }
 
