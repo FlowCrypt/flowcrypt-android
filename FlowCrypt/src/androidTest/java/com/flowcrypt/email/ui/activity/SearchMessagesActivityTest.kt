@@ -72,7 +72,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   @Before
   fun waitData() {
-    // Need to improve this code after espresso updates
+    //todo-denbond7 Need to improve this code after espresso updates
     Thread.sleep(2000)
   }
 
@@ -98,6 +98,8 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
+    //todo-denbond7 Need to improve this code
+    Thread.sleep(2000)
     onView(withId(R.id.rVMsgs))
         .check(matches(withRecyclerViewItemCount(2))).check(matches(isDisplayed()))
   }
@@ -110,6 +112,8 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
+    //todo-denbond7 Need to improve this code
+    Thread.sleep(2000)
     onView(withId(R.id.rVMsgs))
         .check(matches(withRecyclerViewItemCount(4))).check(matches(isDisplayed()))
   }
@@ -137,8 +141,13 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
         .check(matches(isDisplayed()))
         .perform(click())
     onView(isAssignableFrom(EditText::class.java))
-        .perform(clearText(), typeText("The string with no results"), pressImeActionButton())
-    onView(withId(R.id.emptyView))
+        .perform(
+            clearText(),
+            typeText("The string with no results"),
+            pressImeActionButton())
+    //todo-denbond7 Need to improve this code
+    Thread.sleep(2000)
+    onView(withId(R.id.tVEmpty))
         .check(matches(isDisplayed()))
   }
 

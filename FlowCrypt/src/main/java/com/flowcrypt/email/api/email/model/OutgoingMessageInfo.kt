@@ -48,16 +48,17 @@ data class OutgoingMessageInfo constructor(
     return allRecipients
   }
 
+  @Suppress("UNCHECKED_CAST")
   constructor(parcel: Parcel) : this(
       parcel.readString()!!,
       parcel.readString()!!,
       parcel.readString(),
-      mutableListOf<InternetAddress>().apply { parcel.readList(this as List<*>, InternetAddress::class.java.classLoader) },
-      mutableListOf<InternetAddress>().apply { parcel.readList(this as List<*>, InternetAddress::class.java.classLoader) },
-      mutableListOf<InternetAddress>().apply { parcel.readList(this as List<*>, InternetAddress::class.java.classLoader) },
+      parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>,
+      parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
+      parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
       parcel.readString()!!,
-      mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
-      mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
+      parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
+      parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
       parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
       parcel.readParcelable<MessageType>(MessageType::class.java.classLoader)!!,
       parcel.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader),
@@ -72,12 +73,12 @@ data class OutgoingMessageInfo constructor(
       writeString(account)
       writeString(subject)
       writeString(msg)
-      writeList(toRecipients)
-      writeList(ccRecipients)
-      writeList(bccRecipients)
+      writeValue(toRecipients)
+      writeValue(ccRecipients)
+      writeValue(bccRecipients)
       writeString(from)
-      writeTypedList(atts)
-      writeTypedList(forwardedAtts)
+      writeValue(atts)
+      writeValue(forwardedAtts)
       writeParcelable(encryptionType, flags)
       writeParcelable(messageType, flags)
       writeParcelable(replyToMsgEntity, flags)
