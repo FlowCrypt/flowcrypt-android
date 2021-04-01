@@ -429,7 +429,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
         Activity.RESULT_OK -> {
-          addAttachmentInfoFromUri(data?.data)
+          addAttachmentInfoFromIntent(data)
         }
       }
 
@@ -1605,14 +1605,20 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * in the data field or the ClipData object of the Intent used to launch that
    * component. Additionally, we need to add [Intent.FLAG_GRANT_READ_URI_PERMISSION] to the Intent.
    */
-  private fun addAttachmentInfoFromUri(uri: Uri?) {
+  private fun addAttachmentInfoFromIntent(intent: Intent?) {
+    val uri = intent?.data
     if (uri != null) {
       val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
       if (hasAbilityToAddAtt(attachmentInfo)) {
-        context?.contentResolver?.takePersistableUriPermission(
-            uri,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION
-        )
+        try {
+          context?.contentResolver?.takePersistableUriPermission(
+              uri,
+              Intent.FLAG_GRANT_READ_URI_PERMISSION
+          )
+        } catch (e: Exception) {
+          showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+          return
+        }
         attachmentInfo?.let { atts?.add(it) }
         showAtts()
       } else {

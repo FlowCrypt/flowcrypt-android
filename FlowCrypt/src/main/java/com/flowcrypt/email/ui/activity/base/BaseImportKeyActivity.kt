@@ -135,14 +135,19 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
           Activity.RESULT_OK -> {
             val uri = data?.data
             if (uri != null) {
-              /**
-               * we should call [ContentResolver.takePersistableUriPermission]
-               * due to using the given [Uri] out of the current activity
-               */
-              contentResolver?.takePersistableUriPermission(
-                  uri,
-                  Intent.FLAG_GRANT_READ_URI_PERMISSION
-              )
+              try {
+                /**
+                 * we should call [ContentResolver.takePersistableUriPermission]
+                 * due to using the given [Uri] out of the current activity
+                 */
+                contentResolver?.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+              } catch (e: Exception) {
+                showInfoSnackbar(rootView,
+                    getString(R.string.please_use_another_app_to_choose_file), Snackbar.LENGTH_LONG)
+              }
               handleSelectedFile(uri)
             } else {
               showInfoSnackbar(rootView, getString(R.string.please_use_another_app_to_choose_file),

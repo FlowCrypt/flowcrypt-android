@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
@@ -516,12 +515,19 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   private fun addAtt(att: File) {
-    val resultData = Intent()
-    resultData.data = Uri.fromFile(att)
-    intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT),
-        allOf(hasAction(Intent.ACTION_OPEN_DOCUMENT), hasType("*/*"),
-            hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))))))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+    val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
+    intending(
+        allOf(
+            hasAction(Intent.ACTION_CHOOSER),
+            hasExtra(`is`(Intent.EXTRA_INTENT),
+                allOf(
+                    hasAction(Intent.ACTION_OPEN_DOCUMENT),
+                    hasType("*/*"),
+                    hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))
+                )
+            )
+        )
+    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
     onView(withId(R.id.menuActionAttachFile))
         .check(matches(isDisplayed()))
         .perform(click())
