@@ -9,10 +9,13 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.jfixture.MsgBlockGenerationCustomization
 import com.flowcrypt.email.jfixture.SelectConstructorCustomisation
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
 import io.github.classgraph.ClassGraph
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
@@ -21,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.annotation.Config
+import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko
@@ -40,6 +44,26 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     fixture.customise(SelectConstructorCustomisation(currentClass))
     fixture.customise(MsgBlockGenerationCustomization())
     fixture.customise().sameInstance(GenericMsgBlock::class.java, GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false))
+    //todo-denbond7 improve that
+    fixture.customise().sameInstance(OutgoingMessageInfo::class.java,
+        OutgoingMessageInfo(
+            account = "account@test.com",
+            subject = "subject",
+            msg = "msg",
+            toRecipients = listOf(InternetAddress("to@test.com")),
+            ccRecipients = listOf(InternetAddress("cc@test.com")),
+            bccRecipients = listOf(
+                InternetAddress("bcc@test.com"),
+                InternetAddress("bcc1@test.com")),
+            from = "from@test.com",
+            atts = null,
+            forwardedAtts = listOf(),
+            encryptionType = MessageEncryptionType.STANDARD,
+            messageType = MessageType.NEW,
+            replyToMsgEntity = null,
+            uid = 1000
+        )
+    )
     objectInstance = currentClass.kotlin.objectInstance ?: fixture.create(currentClass)
   }
 
