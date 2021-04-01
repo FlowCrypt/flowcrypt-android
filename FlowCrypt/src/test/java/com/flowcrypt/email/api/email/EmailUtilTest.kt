@@ -16,7 +16,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -121,10 +120,6 @@ class EmailUtilTest {
 
     val replyMIME = EmailUtil.genReplyMessage(replyToMsg = replyToMIME, info = outgoingMessageInfo)
     replyMIME.saveChanges()
-
-    val out = ByteArrayOutputStream()
-    replyMIME.writeTo(out)
-    println(String(out.toByteArray()))
 
     assertEquals("Re: " + replyToMIME.subject, replyMIME.subject)
     assertEquals(replyToMIME.getRecipients(Message.RecipientType.TO).toList(),
