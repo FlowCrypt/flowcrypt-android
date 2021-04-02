@@ -305,10 +305,6 @@ android {
     }
 
     ndkVersion "22.0.7026061"
-
-    adbOptions {
-        timeOutInMs 60 * 1000 // Set timeout to 60 seconds. We need it for CI.
-    }
 }
 
 configurations {
