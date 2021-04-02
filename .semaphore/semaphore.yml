@@ -17,6 +17,8 @@ auto_cancel:
 
 global_job_config:
   env_vars:
+    - name: ADB_INSTALL_TIMEOUT #https://android.googlesource.com/platform/tools/base/+/bc733f18ec99fe5e14804ec062edc98039d67685/ddmlib/src/main/java/com/android/ddmlib/Device.java#88
+      value: "10"
     - name: SEMAPHORE_GIT_DIR
       value: /home/semaphore/git/flowcrypt-android
     - name: ANDROID_SDK_ROOT
