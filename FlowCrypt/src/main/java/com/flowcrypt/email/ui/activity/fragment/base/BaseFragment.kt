@@ -16,8 +16,6 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
@@ -38,7 +36,7 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderResult> {
+abstract class BaseFragment : Fragment() {
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
 
@@ -94,18 +92,6 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
   override fun onDetach() {
     super.onDetach()
     lifecycle.removeObserver(connectionLifecycleObserver)
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return Loader(baseActivity)
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    handleLoaderResult(loader.id, loaderResult)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-
   }
 
   open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -211,6 +197,7 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     }
   }
 
+  //todo-denbond7 remove me after improved PreviewImportPgpContactFragment
   protected fun handleLoaderResult(loaderId: Int, loaderResult: LoaderResult?) {
     if (loaderResult != null) {
       when {
