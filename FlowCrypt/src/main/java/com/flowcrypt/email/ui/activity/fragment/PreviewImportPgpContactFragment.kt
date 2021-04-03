@@ -50,6 +50,8 @@ import java.util.*
  * Time: 14:15
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 Improve this class.
+//Need to migrate to use LiveData and improve performance for the file parsing.
 class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     ImportPgpContactsRecyclerViewAdapter.ContactActionsListener {
 
