@@ -17,6 +17,8 @@ auto_cancel:
 
 global_job_config:
   env_vars:
+    - name: ADB_INSTALL_TIMEOUT #https://android.googlesource.com/platform/tools/base/+/bc733f18ec99fe5e14804ec062edc98039d67685/ddmlib/src/main/java/com/android/ddmlib/Device.java#88
+      value: "10"
     - name: SEMAPHORE_GIT_DIR
       value: /home/semaphore/git/flowcrypt-android
     - name: ANDROID_SDK_ROOT
@@ -126,6 +128,10 @@ blocks:
       epilogue:
         always:
           commands:
+            # print debug info about connected device
+            - echo "Print connected devices"
+            - adb devices
+
             # store logcat log
             - echo "Store logcat log"
             - artifact push job --expire-in 1w ~/logcat_log.txt
@@ -140,3 +146,9 @@ blocks:
             # store tests results
             - echo "Store tests results"
             - artifact push job --expire-in 1w FlowCrypt/build/reports/
+
+            # store the device's screenshot. it may help to debug a failure
+            - echo "Store the device's screenshot"
+            - adb shell screencap -p /sdcard/screencap.png
+            - adb pull "/sdcard/screencap.png"
+            - artifact push job --expire-in 1w screencap.png
