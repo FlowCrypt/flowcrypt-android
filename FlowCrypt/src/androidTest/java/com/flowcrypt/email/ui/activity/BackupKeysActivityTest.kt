@@ -30,7 +30,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -74,7 +73,6 @@ class BackupKeysActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
@@ -85,7 +83,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
@@ -96,7 +93,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
@@ -110,7 +106,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
@@ -143,7 +138,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
@@ -164,7 +158,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSuccessWithTwoKeysDownloadOption() {
     addSecondKeyWithStrongPassword()
@@ -172,7 +165,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
@@ -200,7 +192,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
@@ -248,7 +239,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()

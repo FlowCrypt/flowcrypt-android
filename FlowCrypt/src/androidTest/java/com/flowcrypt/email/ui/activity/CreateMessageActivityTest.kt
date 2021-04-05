@@ -41,7 +41,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.model.KeyDetails
@@ -121,7 +120,6 @@ class CreateMessageActivityTest : BaseTest() {
     }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testEmptyRecipient() {
     activeActivityRule.launch(intent)
@@ -136,7 +134,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testEmptyEmailSubject() {
     activeActivityRule.launch(intent)
@@ -157,7 +154,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testEmptyEmailMsg() {
     activeActivityRule.launch(intent)
@@ -181,7 +177,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testUsingStandardMsgEncryptionType() {
     activeActivityRule.launch(intent)
@@ -198,7 +193,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testUsingSecureMsgEncryptionType() {
     activeActivityRule.launch(intent)
@@ -214,7 +208,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSwitchBetweenEncryptionTypes() {
     activeActivityRule.launch(intent)
@@ -240,14 +233,12 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     activeActivityRule.launch(intent)
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testIsScreenOfComposeNewMsg() {
     activeActivityRule.launch(intent)
@@ -268,7 +259,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testWrongFormatOfRecipientEmailAddress() {
     activeActivityRule.launch(intent)
@@ -293,7 +283,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testAddingAtts() {
     activeActivityRule.launch(intent)
@@ -310,7 +299,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testDeletingAtts() {
     activeActivityRule.launch(intent)
@@ -337,7 +325,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule.launch(intent)
@@ -356,7 +343,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activeActivityRule.launch(intent)
@@ -373,7 +359,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule.launch(intent)
@@ -401,7 +386,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule.launch(intent)
@@ -422,7 +406,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSharePubKeySingle() {
     activeActivityRule.launch(intent)
@@ -440,7 +423,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
@@ -470,7 +452,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSharePubKeyNoOwnKeys() {
     PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,

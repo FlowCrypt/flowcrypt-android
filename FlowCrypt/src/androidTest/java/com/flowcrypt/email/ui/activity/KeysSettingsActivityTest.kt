@@ -36,7 +36,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
@@ -97,7 +96,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testAddNewKeys() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
@@ -120,7 +118,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testKeyExists() {
     onView(withId(R.id.recyclerViewKeys))
@@ -130,14 +127,12 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowKeyDetailsScreen() {
     selectFirstKey()
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
@@ -149,7 +144,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
@@ -173,7 +167,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
@@ -202,7 +195,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()

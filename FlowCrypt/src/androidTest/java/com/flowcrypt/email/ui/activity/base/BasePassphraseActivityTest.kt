@@ -17,7 +17,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.startsWith
@@ -32,7 +31,6 @@ import java.util.*
  */
 abstract class BasePassphraseActivityTest : BaseTest() {
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowDialogWithPasswordRecommendation() {
     onView(withId(R.id.imageButtonShowPasswordHint))
@@ -47,7 +45,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testEmptyFirstPassPhrase() {
     closeSoftKeyboard()
@@ -59,7 +56,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testEmptySecondPassPhrase() {
     testShowRepeatingPassPhraseScreen()
@@ -70,7 +66,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowRepeatingPassPhraseScreen() {
     onView(withId(R.id.editTextKeyPassword))
@@ -83,7 +78,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowMsgMismatchOfPassPhrase() {
     testShowRepeatingPassPhraseScreen()
@@ -100,7 +94,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testGoToUseAnotherPassPhrase() {
     testShowRepeatingPassPhraseScreen()
@@ -113,7 +106,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testCheckEraseOfRepeatingPassPhrase() {
     testShowRepeatingPassPhraseScreen()
@@ -133,7 +125,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testChangingQualityOfPassPhrase() {
     val passPhrases = arrayOf(WEAK_PASSWORD, POOR_PASSWORD, REASONABLE_PASSWORD, GOOD_PASSWORD,
@@ -159,7 +150,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowDialogAboutBadPassPhrase() {
     val badPassPhrases = arrayOf(WEAK_PASSWORD, POOR_PASSWORD)

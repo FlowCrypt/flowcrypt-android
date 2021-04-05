@@ -18,7 +18,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -62,7 +61,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowMsgEmptyWarning() {
     Espresso.closeSoftKeyboard()
@@ -72,7 +70,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testUseIncorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
@@ -83,7 +80,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
@@ -95,7 +91,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard()

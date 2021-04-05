@@ -11,7 +11,6 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import org.junit.Ignore
 import org.junit.Rule
@@ -46,7 +45,6 @@ class MigrationTest {
   )
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   @Throws(IOException::class)
   fun testAllMigrations() {

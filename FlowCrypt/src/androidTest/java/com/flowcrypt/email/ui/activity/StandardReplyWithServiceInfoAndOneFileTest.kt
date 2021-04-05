@@ -27,7 +27,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -96,7 +95,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testFrom() {
     onView(withId(R.id.editTextFrom))
@@ -106,7 +104,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testToRecipients() {
     val chipSeparator = SpanChipTokenizer.CHIP_SPAN_SEPARATOR.toString()
@@ -124,7 +121,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSubject() {
     onView(withId(R.id.editTextEmailSubject))
@@ -134,7 +130,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage))
@@ -151,7 +146,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testAvailabilityAddingAtts() {
     if (!serviceInfo.hasAbilityToAddNewAtt) {
@@ -161,7 +155,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testDisabledSwitchingBetweenEncryptionTypes() {
     if (!serviceInfo.isMsgTypeSwitchable) {
@@ -173,7 +166,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()

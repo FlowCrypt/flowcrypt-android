@@ -19,7 +19,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.assertions.RecyclerViewItemCountAssertion
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -44,7 +43,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class PreviewImportPgpContactActivityTest : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<PreviewImportPgpContactActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?

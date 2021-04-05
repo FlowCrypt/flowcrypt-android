@@ -23,7 +23,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -60,7 +59,6 @@ import java.util.*
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class ShareIntentsTest : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?

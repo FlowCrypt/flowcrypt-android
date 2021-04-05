@@ -24,7 +24,6 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.DomainRules
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -54,7 +53,6 @@ import java.io.InputStreamReader
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
-@DoesNotNeedMailserver
 @RunWith(AndroidJUnit4::class)
 class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true

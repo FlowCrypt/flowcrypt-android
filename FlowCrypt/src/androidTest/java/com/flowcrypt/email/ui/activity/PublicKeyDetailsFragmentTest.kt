@@ -33,7 +33,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -92,7 +91,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testPubKeyDetails() {
     chooseContact()
@@ -116,7 +114,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testActionCopy() {
     chooseContact()
@@ -131,7 +128,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testActionSave() {
     chooseContact()
@@ -162,7 +158,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testActionDelete() {
     chooseContact()
@@ -177,7 +172,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testActionHelp() {
     testHelpScreen()

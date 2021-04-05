@@ -19,7 +19,6 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -42,7 +41,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity.newIntent(getTargetContext(), AccountDaoManager.getDefaultAccountDao(), true))

@@ -18,7 +18,6 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -39,7 +38,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<HtmlViewFromAssetsRawActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
