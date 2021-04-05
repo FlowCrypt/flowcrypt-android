@@ -31,13 +31,11 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
-import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyDetails
@@ -96,8 +94,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testAddNewKeys() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -119,8 +115,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testKeyExists() {
     onView(withId(R.id.recyclerViewKeys))
         .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
@@ -129,15 +123,11 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowKeyDetailsScreen() {
     selectFirstKey()
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
     val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -148,8 +138,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -161,7 +149,7 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testKeyDetailsShowPrivateKey() {
     selectFirstKey()
     onView(withId(R.id.btnShowPrKey))
@@ -171,8 +159,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -200,8 +186,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails

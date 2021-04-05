@@ -30,9 +30,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.model.PgpContact
@@ -92,8 +90,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testPubKeyDetails() {
     chooseContact()
 
@@ -116,8 +112,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testActionCopy() {
     chooseContact()
 
@@ -131,8 +125,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testActionSave() {
     chooseContact()
 
@@ -162,8 +154,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testActionDelete() {
     chooseContact()
 
@@ -177,8 +167,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testActionHelp() {
     testHelpScreen()
   }

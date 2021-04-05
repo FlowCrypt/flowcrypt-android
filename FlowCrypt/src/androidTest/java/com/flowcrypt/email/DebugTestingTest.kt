@@ -7,6 +7,7 @@ package com.flowcrypt.email
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.flowcrypt.email.junit.annotations.DebugTest
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -17,7 +18,7 @@ import org.junit.runner.RunWith
  *         E-mail: DenBond7@gmail.com
  */
 @SmallTest
-@DebugTestAnnotation
+@DebugTest
 @RunWith(AndroidJUnit4::class)
 class DebugTestingTest {
   @Test

@@ -16,12 +16,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -59,15 +57,11 @@ class ContactsSettingsActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEmptyList() {
     onView(withId(R.id.recyclerViewContacts))
         .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))
@@ -76,7 +70,7 @@ class ContactsSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testDeleteContacts() {
     addContactsToDatabase()
     //todo-denbond7 improve this in the future. When we have a good solution for ROOM, coroutines and Espresso

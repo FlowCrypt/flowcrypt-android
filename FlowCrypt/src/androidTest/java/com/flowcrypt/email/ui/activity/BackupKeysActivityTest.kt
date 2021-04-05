@@ -26,11 +26,10 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -73,8 +72,6 @@ class BackupKeysActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -84,8 +81,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -95,8 +90,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -109,8 +102,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -123,7 +114,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testSuccessEmailOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -133,15 +124,13 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testSuccessWithTwoKeysEmailOption() {
     addSecondKeyWithStrongPassword()
     testSuccessEmailOption()
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -161,16 +150,12 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSuccessWithTwoKeysDownloadOption() {
     addSecondKeyWithStrongPassword()
     testSuccessDownloadOption()
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -185,7 +170,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testShowWeakPasswordHintForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -196,8 +181,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -215,7 +198,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testFixWeakPasswordForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -228,7 +211,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testDiffPassphrasesForEmailOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
@@ -242,8 +225,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()

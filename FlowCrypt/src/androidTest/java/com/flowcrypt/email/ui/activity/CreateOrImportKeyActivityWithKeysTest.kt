@@ -18,9 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -42,7 +40,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity.newIntent(getTargetContext(), AccountDaoManager.getDefaultAccountDao(), true))
@@ -55,7 +52,6 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testClickOnButtonCreateNewKey() {
     intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))

@@ -19,9 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
@@ -61,8 +59,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -79,8 +75,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys (all keys are different and have different pass phrases). All keys are checking in the queue.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseTwoKeysSecondCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -99,8 +93,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys with the same pass phrase. All keys will be imported per one transaction.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseTwoKeysWithSamePasswordThirdCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -118,8 +110,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * [TestConstants.DEFAULT_PASSWORD].
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseTwoKeysFourthCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyC_default.asc",
@@ -137,8 +127,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * [TestConstants.DEFAULT_STRONG_PASSWORD]
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseTwoKeysFifthCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyC_default.asc",
@@ -156,8 +144,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * key with a unique pass phrase.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -176,8 +162,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * with the same pass phrase.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -196,8 +180,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * with a unique pass phrase, and then the remaining keys.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseThreeKeysThirdCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -218,8 +200,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * keys with the same pass phrase, and then the remaining key.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseThreeKeysFourthCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -240,8 +220,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). Will be used one of the identical keys with a unique pass phrase.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyB_default.asc",
@@ -260,8 +238,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). All keys will be imported per one transaction using [TestConstants.DEFAULT_STRONG_PASSWORD].
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseThreeKeysSixthCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -280,8 +256,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). First will be used one key of the identical keys with a unique passphrase, and then the other keys.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseThreeKeysSeventhCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyB_default.asc",
@@ -303,8 +277,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * two keys with the same pass phrase.
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",
@@ -325,8 +297,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * keys per one pass phrase typing).
    */
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseFourKeysSecondCombination() {
     val keysPaths = arrayOf(
         "pgp/key_testing@denbond7.com_keyA_strong.asc",

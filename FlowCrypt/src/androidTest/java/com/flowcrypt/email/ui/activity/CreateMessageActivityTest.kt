@@ -34,9 +34,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -121,8 +119,6 @@ class CreateMessageActivityTest : BaseTest() {
     }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEmptyRecipient() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -136,8 +132,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEmptyEmailSubject() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -157,8 +151,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEmptyEmailMsg() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -181,8 +173,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUsingStandardMsgEncryptionType() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -198,8 +188,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUsingSecureMsgEncryptionType() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -214,8 +202,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSwitchBetweenEncryptionTypes() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -240,15 +226,11 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     activeActivityRule.launch(intent)
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testIsScreenOfComposeNewMsg() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -268,8 +250,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testWrongFormatOfRecipientEmailAddress() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -293,8 +273,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testAddingAtts() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -310,8 +288,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testDeletingAtts() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -337,8 +313,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -356,8 +330,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -373,8 +345,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -401,8 +371,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -422,8 +390,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSharePubKeySingle() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -440,8 +406,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
@@ -470,8 +434,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testSharePubKeyNoOwnKeys() {
     PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,
         addPrivateKeyToDatabaseRule.keyPath)

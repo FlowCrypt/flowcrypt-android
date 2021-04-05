@@ -3,16 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email
+package com.flowcrypt.email.junit.annotations
 
 /**
- * This annotation indicates that a whole class or a single method doesn't need an email server for successful
- * completion.
+ * This annotation was created for debugging purposes
  *
  * @author Denis Bondarenko
- *         Date: 7/11/19
- *         Time: 2:28 PM
+ *         Date: 7/27/19
+ *         Time: 3:55 PM
  *         E-mail: DenBond7@gmail.com
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class DoesNotNeedMailserver
+annotation class DebugTest

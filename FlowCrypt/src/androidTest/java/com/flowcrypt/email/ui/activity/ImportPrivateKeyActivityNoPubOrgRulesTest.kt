@@ -19,9 +19,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
@@ -77,8 +75,6 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testErrorWhenImportingKeyFromFile() {
     useIntentionFromRunCheckKeysActivity()
     addTextToClipboard("private key", privateKey)

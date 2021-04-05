@@ -16,9 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -39,7 +37,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<HtmlViewFromAssetsRawActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
@@ -53,7 +50,6 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowPrivacyTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.privacy))
     onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
@@ -61,7 +57,6 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowTermsTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.terms))
     onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar))))
@@ -69,7 +64,6 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowSecurityTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.security))
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))

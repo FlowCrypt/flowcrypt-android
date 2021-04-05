@@ -15,9 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.assertions.RecyclerViewItemCountAssertion
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -44,7 +42,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class PreviewImportPgpContactActivityTest : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<PreviewImportPgpContactActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
@@ -65,7 +62,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
       TestGeneralUtil.readFileFromAssetsAsString(getContext(), "pgp/pub_keys_2048_bits_10.asc")
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     activeActivityRule.launch(PreviewImportPgpContactActivity.newIntent(getTargetContext(), singlePublicKeyForUnsavedContact))
     registerAllIdlingResources()
@@ -73,7 +69,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testIsDisplayedSingleItem() {
     val pgpContact = PgpContact("default@denbond7.com", null,
         singlePublicKeyForUnsavedContact, true, null, null, null, 0)
@@ -88,7 +83,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testIsDisplayedLabelAlreadyImported() {
     activeActivityRule.launch(
         PreviewImportPgpContactActivity.newIntent(getTargetContext(), singlePublicKeyForUnsavedContact))
@@ -98,7 +92,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSaveButtonForSingleContact() {
     activeActivityRule.launch(
         PreviewImportPgpContactActivity.newIntent(getTargetContext(), singlePublicKeyForUnsavedContact))
@@ -112,7 +105,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testIsImportAllButtonDisplayed() {
     activeActivityRule.launch(PreviewImportPgpContactActivity.newIntent(getTargetContext(), tenPubKeys))
     registerAllIdlingResources()
@@ -121,7 +113,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testLoadLotOfContacts() {
     val countOfKeys = 10
 

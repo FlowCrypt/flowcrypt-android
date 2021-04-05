@@ -22,9 +22,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -90,8 +88,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowEmptyView() {
     clearContactsFromDatabase()
 
@@ -103,8 +99,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowListContacts() {
     onView(withId(R.id.emptyView))
         .check(matches(not(isDisplayed())))
@@ -121,8 +115,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
@@ -138,8 +130,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))

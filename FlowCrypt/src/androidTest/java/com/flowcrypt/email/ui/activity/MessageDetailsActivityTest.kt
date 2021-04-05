@@ -34,10 +34,7 @@ import androidx.test.espresso.web.webdriver.DriverAtoms.getText
 import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -47,6 +44,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails
@@ -115,8 +113,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testReplyButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyButton))
@@ -126,15 +122,11 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testTopReplyButton() {
     testTopReplyAction(getResString(R.string.reply))
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testReplyAllButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyAllButton))
@@ -144,8 +136,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testFwdButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutFwdButton))
@@ -155,38 +145,30 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testTopForwardButton() {
     testTopReplyAction(getResString(R.string.forward))
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testStandardMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text.json",
         "messages/mime/standard_msg_info_plain_text.txt"))
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testStandardMsgPlaneTextWithOneAttachment() {
     baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plain_text_with_one_att.json",
         "messages/mime/standard_msg_info_plain_text_with_one_att.txt", simpleAttInfo), simpleAttInfo)
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEncryptedMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   //don't enable this one on CI. It takes too long
   fun testEncryptedBigInlineAtt() {
     IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
@@ -195,8 +177,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testMissingKeyErrorImportKey() {
     testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt"))
@@ -228,16 +208,12 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testMissingPubKey() {
     testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_one_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_error_one_pub_key.txt"))
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testBadlyFormattedMsg() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_badly_formatted.json",
         "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt")
@@ -263,8 +239,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testMissingKeyErrorChooseSinglePubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -284,8 +258,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -317,8 +289,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
         "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo)
@@ -326,8 +296,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testEncryptedMsgPlaneTextWithPubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
@@ -368,8 +336,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun test8bitEncodingUtf8() {
     baseCheck(getMsgInfo("messages/info/msg_info_8bit-utf8.json",
         "messages/mime/8bit-utf8.txt"))

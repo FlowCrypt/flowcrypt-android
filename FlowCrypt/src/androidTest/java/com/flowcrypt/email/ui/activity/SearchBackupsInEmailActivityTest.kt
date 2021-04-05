@@ -16,9 +16,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -53,13 +53,13 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testIsBackupFound() {
     onView(withId(R.id.buttonSeeMoreBackupOptions))
         .check(matches(isDisplayed()))
@@ -68,7 +68,7 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testShowBackupOptions() {
     testIsBackupFound()
     onView(withId(R.id.buttonSeeMoreBackupOptions))
@@ -78,7 +78,7 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testSelectEmailForSavingBackup() {
     testShowBackupOptions()
     onView(withId(R.id.radioButtonEmail))
@@ -93,7 +93,7 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testSelectDownloadToFileForSavingBackup() {
     testShowBackupOptions()
     onView(withId(R.id.radioButtonDownload))

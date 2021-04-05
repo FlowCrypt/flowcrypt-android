@@ -17,9 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -53,8 +51,6 @@ class SignInActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseOtherEmailProviders() {
     onView(withId(R.id.buttonOtherEmailProvider))
         .check(matches(isDisplayed()))
@@ -64,8 +60,6 @@ class SignInActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testUseGmail() {
     onView(withId(R.id.buttonSignInWithGmail))
         .check(matches(isDisplayed()))
@@ -75,8 +69,6 @@ class SignInActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowSecurityScreen() {
     onView(withId(R.id.buttonSecurity))
         .check(matches(isDisplayed()))

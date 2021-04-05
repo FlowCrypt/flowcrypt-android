@@ -21,15 +21,14 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -82,8 +81,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testShowSnackBarIfFieldEmpty() {
     onView(withId(R.id.checkBoxAdvancedMode))
         .perform(scrollTo(), click())
@@ -109,8 +106,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword))
         .check(matches(withText(isEmptyString())))
@@ -122,8 +117,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testChangingImapPortWhenSelectSpinnerItem() {
     enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
@@ -135,8 +128,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testChangingSmtpPortWhenSelectSpinnerItem() {
     enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
@@ -148,7 +139,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testChangeFieldValuesWhenEmailChanged() {
     enableAdvancedMode()
 
@@ -190,8 +181,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testVisibilityOfSmtpAuthField() {
     enableAdvancedMode()
 
@@ -213,8 +202,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
   fun testFieldsAutoFilling() {
     enableAdvancedMode()
 
@@ -253,7 +240,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   fun testWrongFormatOfEmailAddress() {
     enableAdvancedMode()
     fillAllFields(authCreds)
@@ -274,7 +261,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @NotReadyForCI
   @Ignore("failed on CI")
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()
