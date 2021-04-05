@@ -20,6 +20,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -62,6 +63,7 @@ class SettingsActivityTest : BaseTest() {
 
   @Test
   @CICandidateAnnotation
+  @NotReadyForCI
   @Ignore("need to change this test")
   fun testShowBackupsScreen() {
     checkIsScreenDisplaying(getResString(R.string.backups))

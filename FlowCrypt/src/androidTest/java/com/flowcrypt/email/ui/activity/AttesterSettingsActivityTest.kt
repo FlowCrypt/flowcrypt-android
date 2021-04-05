@@ -17,6 +17,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -60,6 +61,7 @@ class AttesterSettingsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   @CICandidateAnnotation
+  @NotReadyForCI
   fun testKeysExistOnAttester() {
     onView(withId(R.id.rVAttester))
         .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))

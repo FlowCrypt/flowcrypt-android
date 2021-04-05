@@ -1,12 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Print other tests" type="AndroidTestRunConfigurationType" factoryName="Android Instrumented Tests">
+  <configuration default="false" name="Print not ready for CI tests" type="AndroidTestRunConfigurationType" factoryName="Android Instrumented Tests">
     <module name="flowcrypt-android.FlowCrypt" />
     <option name="TESTING_TYPE" value="0" />
     <option name="METHOD_NAME" value="" />
     <option name="CLASS_NAME" value="" />
     <option name="PACKAGE_NAME" value="com.flowcrypt.email" />
     <option name="INSTRUMENTATION_RUNNER_CLASS" value="" />
-    <option name="EXTRA_OPTIONS" value="-e filter com.flowcrypt.email.junit.filters.OtherTestsFilter -e log true" />
+    <option name="EXTRA_OPTIONS" value="-e filter com.flowcrypt.email.junit.filters.NotReadyForCIFilter -e log true" />
     <option name="INCLUDE_GRADLE_EXTRA_OPTIONS" value="true" />
     <option name="CLEAR_LOGCAT" value="true" />
     <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />

@@ -29,6 +29,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withToolBarText
@@ -125,6 +126,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @NotReadyForCI
   fun testShowSplashActivityAfterLogout() {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
     val nonActiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
@@ -167,6 +169,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @CICandidateAnnotation
+  @NotReadyForCI
   fun testShowAnotherAccounts() {
     onView(withId(R.id.drawer_layout))
         .perform(open())

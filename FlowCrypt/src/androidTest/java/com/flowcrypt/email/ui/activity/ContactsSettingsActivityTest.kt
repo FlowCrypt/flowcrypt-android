@@ -21,6 +21,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.model.PgpContact
@@ -77,6 +78,7 @@ class ContactsSettingsActivityTest : BaseTest() {
 
   @Test
   @CICandidateAnnotation
+  @NotReadyForCI
   fun testDeleteContacts() {
     addContactsToDatabase()
     //todo-denbond7 improve this in the future. When we have a good solution for ROOM, coroutines and Espresso

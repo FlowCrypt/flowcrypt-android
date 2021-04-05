@@ -28,6 +28,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -80,6 +81,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @NotReadyForCI
   fun testImportKeyFromBackup() {
     useIntentionFromRunCheckKeysActivity()
 
