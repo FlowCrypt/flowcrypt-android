@@ -18,7 +18,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -54,14 +53,12 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testIsBackupFound() {
     onView(withId(R.id.buttonSeeMoreBackupOptions))
@@ -71,7 +68,6 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testShowBackupOptions() {
     testIsBackupFound()
@@ -82,7 +78,6 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testSelectEmailForSavingBackup() {
     testShowBackupOptions()
@@ -98,7 +93,6 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testSelectDownloadToFileForSavingBackup() {
     testShowBackupOptions()

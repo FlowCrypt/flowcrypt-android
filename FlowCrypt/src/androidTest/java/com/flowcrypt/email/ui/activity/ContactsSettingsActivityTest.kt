@@ -19,7 +19,6 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.model.PgpContact
@@ -71,7 +70,6 @@ class ContactsSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testDeleteContacts() {
     addContactsToDatabase()

@@ -25,7 +25,6 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
@@ -78,7 +77,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testDefaultSearchQueryAtStart() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -90,7 +88,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testSearchQuery() {
     onView(withId(R.id.rVMsgs))
@@ -108,7 +105,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testSearchOverSubjectBodyFrom() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -123,7 +119,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testShowNotEmptyList() {
     onView(withId(R.id.rVMsgs))
@@ -133,7 +128,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testOpenSomeMsg() {
     testShowNotEmptyList()
@@ -141,7 +135,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testCheckNoResults() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -159,7 +152,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testClearSearchView() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))

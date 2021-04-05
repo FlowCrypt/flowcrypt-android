@@ -27,7 +27,6 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
@@ -241,7 +240,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   fun testWrongFormatOfEmailAddress() {
     enableAdvancedMode()
@@ -263,7 +261,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   @Ignore("failed on CI")
   fun testShowWarningIfAuthFail() {

@@ -44,7 +44,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
@@ -169,7 +168,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
   @NotReadyForCI
   //don't enable this one on CI. It takes too long
   fun testEncryptedBigInlineAtt() {
