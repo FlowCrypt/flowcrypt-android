@@ -26,6 +26,7 @@ else
     unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
     pwd
     cd $ANDROID_SDK_ROOT/cmdline-tools && mkdir latest && (ls | grep -v latest | xargs mv -t latest)
+    cd $SEMAPHORE_GIT_DIR
     rm $SDK_ARCHIVE
 
     # Install Android SDK
