@@ -6,7 +6,7 @@
 package com.flowcrypt.email.junit.filters
 
 import androidx.test.internal.runner.filters.ParentFilter
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import org.junit.runner.Description
 
 /**
@@ -17,8 +17,8 @@ import org.junit.runner.Description
  */
 open class ReadyForCIFilter : ParentFilter() {
   override fun evaluateTest(description: Description?): Boolean {
-    val annotationClass = ReadyForCIAnnotation::class.java
-    return (description?.testClass?.isAnnotationPresent(annotationClass) == true || description?.getAnnotation(annotationClass) != null)
+    val annotationClass = NotReadyForCI::class.java
+    return (description?.testClass?.isAnnotationPresent(annotationClass) == false && description.getAnnotation(annotationClass) == null)
   }
 
   override fun describe() = "Filter tests that are ready to be run on a CI server"
