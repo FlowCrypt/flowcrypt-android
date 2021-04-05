@@ -28,6 +28,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
@@ -149,6 +150,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testChangeFieldValuesWhenEmailChanged() {
     enableAdvancedMode()
 

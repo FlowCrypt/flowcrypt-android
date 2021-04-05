@@ -17,6 +17,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -56,6 +57,7 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))

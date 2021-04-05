@@ -27,6 +27,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -90,6 +91,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testImportKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithPrivateKey)
     useIntentionFromRunCheckKeysActivity()
@@ -102,6 +104,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testShowErrorWhenImportingKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithoutPrivateKey)
 
@@ -113,6 +116,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testImportKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()
 
@@ -125,6 +129,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not private key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))

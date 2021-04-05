@@ -29,6 +29,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.KeyDetails
@@ -124,6 +125,7 @@ class BackupKeysActivityTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testSuccessEmailOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -134,6 +136,7 @@ class BackupKeysActivityTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testSuccessWithTwoKeysEmailOption() {
     addSecondKeyWithStrongPassword()
     testSuccessEmailOption()
@@ -186,6 +189,7 @@ class BackupKeysActivityTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testShowWeakPasswordHintForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -216,6 +220,7 @@ class BackupKeysActivityTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testFixWeakPasswordForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -229,6 +234,7 @@ class BackupKeysActivityTest : BaseTest() {
 
   @Test
   @ReadyForCIAnnotation
+  @DependsOnMailServer
   fun testDiffPassphrasesForEmailOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
