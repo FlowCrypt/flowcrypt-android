@@ -26,7 +26,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddContactsToDatabaseRule
@@ -89,7 +88,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowEmptyView() {
     clearContactsFromDatabase()
 
@@ -101,7 +99,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowListContacts() {
     onView(withId(R.id.emptyView))
         .check(matches(not(isDisplayed())))
@@ -118,7 +115,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
@@ -134,7 +130,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))

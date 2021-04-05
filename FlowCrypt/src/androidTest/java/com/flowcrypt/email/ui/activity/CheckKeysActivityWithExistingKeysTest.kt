@@ -19,7 +19,6 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -72,7 +71,6 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowMsgEmptyPassPhrase() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonPositiveAction))
@@ -81,7 +79,6 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testUseIncorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText("some pass phrase"), closeSoftKeyboard())
@@ -91,7 +88,6 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard())
@@ -102,7 +98,6 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonNegativeAction))

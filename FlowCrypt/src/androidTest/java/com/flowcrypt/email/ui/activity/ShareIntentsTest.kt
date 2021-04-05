@@ -23,7 +23,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -76,7 +75,6 @@ class ShareIntentsTest : BaseTest() {
     get() = if (Random().nextBoolean()) Intent.ACTION_SENDTO else Intent.ACTION_VIEW
 
   @Test
-  @ReadyForCIAnnotation
   fun testEmptyUri() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, null))
     registerAllIdlingResources()
@@ -84,7 +82,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testToSubjectBody() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
         + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
@@ -93,7 +90,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testToParamSubjectBody() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
         + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
@@ -102,7 +98,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testToToParamSubjectBody() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
         + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
@@ -111,7 +106,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testToParamToSubjectBody() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
         + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
@@ -120,7 +114,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testMultiToSubjectBody() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
         + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
@@ -129,7 +122,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testMultiToParamSubjectBody() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
         + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
@@ -138,7 +130,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEmptyMailToSchema() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:"))
     registerAllIdlingResources()
@@ -146,7 +137,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendEmptyExtras() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 0))
     registerAllIdlingResources()
@@ -154,7 +144,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendExtSubject() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 0))
     registerAllIdlingResources()
@@ -162,7 +151,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendExtBody() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 0))
     registerAllIdlingResources()
@@ -170,7 +158,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendAtt() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 1))
     registerAllIdlingResources()
@@ -178,7 +165,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendExtSubjectExtBody() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, 0))
@@ -187,7 +173,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendExtSubjectAtt() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 1))
     registerAllIdlingResources()
@@ -195,7 +180,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendExtBodyAtt() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 1))
     registerAllIdlingResources()
@@ -203,7 +187,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendExtSubjectExtBodyAtt() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, 1))
@@ -212,7 +195,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendMultipleMultiAtt() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, null, null, atts.size))
     registerAllIdlingResources()
@@ -220,7 +202,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSendMultipleExtSubjectExtBodyMultiAtt() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, atts.size))
@@ -229,7 +210,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testDoNotSupportAttWithFileSchema() {
     activeActivityRule.launch(
         generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0).apply {

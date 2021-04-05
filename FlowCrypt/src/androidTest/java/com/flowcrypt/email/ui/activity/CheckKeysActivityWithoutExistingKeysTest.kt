@@ -18,7 +18,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -61,7 +60,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowMsgEmptyWarning() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonPositiveAction))
@@ -70,7 +68,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testUseIncorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText("some pass phrase"), closeSoftKeyboard())
@@ -80,7 +77,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText("android"), closeSoftKeyboard())
@@ -91,7 +87,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonNegativeAction))

@@ -30,7 +30,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -73,7 +72,6 @@ class BackupKeysActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -83,7 +81,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -93,7 +90,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -106,7 +102,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -119,7 +114,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   @DependsOnMailServer
   fun testSuccessEmailOption() {
     addFirstKeyWithStrongPassword()
@@ -130,7 +124,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   @DependsOnMailServer
   fun testSuccessWithTwoKeysEmailOption() {
     addSecondKeyWithStrongPassword()
@@ -138,7 +131,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -158,14 +150,12 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSuccessWithTwoKeysDownloadOption() {
     addSecondKeyWithStrongPassword()
     testSuccessDownloadOption()
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -180,7 +170,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   @DependsOnMailServer
   fun testShowWeakPasswordHintForEmailOption() {
     addFirstKeyWithDefaultPassword()
@@ -192,7 +181,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -210,7 +198,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   @DependsOnMailServer
   fun testFixWeakPasswordForEmailOption() {
     addFirstKeyWithDefaultPassword()
@@ -224,7 +211,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   @DependsOnMailServer
   fun testDiffPassphrasesForEmailOption() {
     addFirstKeyWithStrongPassword()
@@ -239,7 +225,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()

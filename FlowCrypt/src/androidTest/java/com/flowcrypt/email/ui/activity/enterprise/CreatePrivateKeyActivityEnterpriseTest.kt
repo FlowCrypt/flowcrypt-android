@@ -24,7 +24,6 @@ import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
@@ -68,7 +67,6 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testFailAttesterSubmit() {
     onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))

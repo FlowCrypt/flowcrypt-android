@@ -27,7 +27,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -95,7 +94,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testFrom() {
     onView(withId(R.id.editTextFrom))
         .perform(scrollTo())
@@ -104,7 +102,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testToRecipients() {
     val chipSeparator = SpanChipTokenizer.CHIP_SPAN_SEPARATOR.toString()
     val autoCorrectSeparator = SpanChipTokenizer.AUTOCORRECT_SEPARATOR.toString()
@@ -121,7 +118,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSubject() {
     onView(withId(R.id.editTextEmailSubject))
         .perform(scrollTo())
@@ -130,7 +126,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage))
         .perform(scrollTo())
@@ -146,7 +141,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testAvailabilityAddingAtts() {
     if (!serviceInfo.hasAbilityToAddNewAtt) {
       onView(withId(R.id.menuActionAttachFile))
@@ -155,7 +149,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testDisabledSwitchingBetweenEncryptionTypes() {
     if (!serviceInfo.isMsgTypeSwitchable) {
       onView(withText(R.string.switch_to_standard_email))
@@ -166,7 +159,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()
   }

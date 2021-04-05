@@ -19,7 +19,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import org.hamcrest.Matchers.allOf
@@ -38,7 +37,6 @@ import org.junit.runner.RunWith
 abstract class BaseCreateOrImportKeyActivityTest : BaseTest() {
 
   @Test
-  @ReadyForCIAnnotation
   fun testClickOnButtonImportMyKey() {
     intending(allOf(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
@@ -53,7 +51,6 @@ abstract class BaseCreateOrImportKeyActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testClickOnButtonSelectAnotherAccount() {
     onView(withId(R.id.buttonSelectAnotherAccount))
         .perform(scrollTo(), click())

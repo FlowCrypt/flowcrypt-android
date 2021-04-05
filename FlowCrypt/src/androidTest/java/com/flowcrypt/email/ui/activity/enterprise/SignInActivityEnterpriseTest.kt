@@ -25,7 +25,6 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.DomainRules
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
@@ -71,21 +70,18 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testErrorLogin() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_ERROR))
     isToastDisplayed(decorView, LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSuccessLoginNotVerified() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_VERIFIED))
     isToastDisplayed(decorView, getResString(R.string.user_not_verified))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testErrorGetDomainRules() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_RULES_ERROR))
     isToastDisplayed(decorView, DOMAIN_RULES_ERROR_RESPONSE.apiError?.msg!!)

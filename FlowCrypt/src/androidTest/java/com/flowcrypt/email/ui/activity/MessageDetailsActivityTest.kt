@@ -46,7 +46,6 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails
@@ -115,7 +114,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testReplyButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyButton))
@@ -125,13 +123,11 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testTopReplyButton() {
     testTopReplyAction(getResString(R.string.reply))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testReplyAllButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyAllButton))
@@ -141,7 +137,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testFwdButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutFwdButton))
@@ -151,27 +146,23 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testTopForwardButton() {
     testTopReplyAction(getResString(R.string.forward))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testStandardMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text.json",
         "messages/mime/standard_msg_info_plain_text.txt"))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testStandardMsgPlaneTextWithOneAttachment() {
     baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plain_text_with_one_att.json",
         "messages/mime/standard_msg_info_plain_text_with_one_att.txt", simpleAttInfo), simpleAttInfo)
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEncryptedMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
@@ -188,7 +179,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testMissingKeyErrorImportKey() {
     testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt"))
@@ -220,14 +210,12 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testMissingPubKey() {
     testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_one_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_error_one_pub_key.txt"))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testBadlyFormattedMsg() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_badly_formatted.json",
         "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt")
@@ -253,7 +241,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testMissingKeyErrorChooseSinglePubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -273,7 +260,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -305,7 +291,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
         "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo)
@@ -313,7 +298,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEncryptedMsgPlaneTextWithPubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
@@ -354,7 +338,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun test8bitEncodingUtf8() {
     baseCheck(getMsgInfo("messages/info/msg_info_8bit-utf8.json",
         "messages/mime/8bit-utf8.txt"))

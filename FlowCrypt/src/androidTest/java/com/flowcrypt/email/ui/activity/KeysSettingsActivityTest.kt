@@ -37,7 +37,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyDetails
@@ -96,7 +95,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testAddNewKeys() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -118,7 +116,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testKeyExists() {
     onView(withId(R.id.recyclerViewKeys))
         .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
@@ -127,13 +124,11 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowKeyDetailsScreen() {
     selectFirstKey()
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
     val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -144,7 +139,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -167,7 +161,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -195,7 +188,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails

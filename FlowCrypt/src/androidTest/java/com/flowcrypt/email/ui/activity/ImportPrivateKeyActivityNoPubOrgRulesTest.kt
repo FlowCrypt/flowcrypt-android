@@ -26,7 +26,6 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
@@ -76,7 +75,6 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testErrorWhenImportingKeyFromFile() {
     useIntentionFromRunCheckKeysActivity()
     addTextToClipboard("private key", privateKey)

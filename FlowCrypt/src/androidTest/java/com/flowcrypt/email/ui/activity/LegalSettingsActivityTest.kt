@@ -19,7 +19,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -58,7 +57,6 @@ class LegalSettingsActivityTest : BaseTest() {
       getResString(R.string.sources))
 
   @Test
-  @ReadyForCIAnnotation
   fun testClickToTitleViewPager() {
     for (titleName in titleNames) {
       onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
@@ -70,13 +68,11 @@ class LegalSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSwipeInViewPager() {
     onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[0])))
         .check(matches(isDisplayed())).check(matches(isSelected()))

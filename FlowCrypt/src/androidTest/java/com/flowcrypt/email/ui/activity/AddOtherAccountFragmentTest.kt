@@ -30,7 +30,6 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -83,7 +82,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowSnackBarIfFieldEmpty() {
     onView(withId(R.id.checkBoxAdvancedMode))
         .perform(scrollTo(), click())
@@ -109,7 +107,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword))
         .check(matches(withText(isEmptyString())))
@@ -121,7 +118,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testChangingImapPortWhenSelectSpinnerItem() {
     enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
@@ -133,7 +129,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testChangingSmtpPortWhenSelectSpinnerItem() {
     enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
@@ -145,7 +140,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   @DependsOnMailServer
   fun testChangeFieldValuesWhenEmailChanged() {
     enableAdvancedMode()
@@ -188,7 +182,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testVisibilityOfSmtpAuthField() {
     enableAdvancedMode()
 
@@ -210,7 +203,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testFieldsAutoFilling() {
     enableAdvancedMode()
 

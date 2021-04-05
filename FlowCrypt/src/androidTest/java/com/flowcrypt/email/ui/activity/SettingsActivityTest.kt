@@ -20,7 +20,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -54,7 +53,6 @@ class SettingsActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()
   }
@@ -68,31 +66,26 @@ class SettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowSecurityScreen() {
     checkIsScreenDisplaying(getResString(R.string.security_and_privacy))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowContactsScreen() {
     checkIsScreenDisplaying(getResString(R.string.contacts))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowKeysScreen() {
     checkIsScreenDisplaying(getResString(R.string.keys))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowAttesterScreen() {
     checkIsScreenDisplaying(getResString(R.string.attester))
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowLegalScreen() {
     checkIsScreenDisplaying(getResString(R.string.experimental), getResString(R.string.experimental_settings))
   }

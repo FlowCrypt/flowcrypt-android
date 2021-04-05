@@ -25,7 +25,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -74,7 +73,6 @@ class ImportPublicKeyActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testImportKeyFromFile() {
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPublicKey)
     intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT), allOf(hasAction(Intent
@@ -87,7 +85,6 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowErrorWhenImportingKeyFromFile() {
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithoutPublicKey)
     intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT), allOf(hasAction(Intent
@@ -100,7 +97,6 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))
@@ -110,7 +106,6 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not public key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))

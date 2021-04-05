@@ -8,7 +8,6 @@ package com.flowcrypt.email
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.junit.annotations.DebugTestAnnotation
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -23,12 +22,10 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class DebugTestingTest {
   @Test
-  @NotReadyForCI
   fun alwaysSuccessTest() {
   }
 
   @Test
-  @NotReadyForCI
   fun alwaysSuccessTestSecond() {
   }
 }

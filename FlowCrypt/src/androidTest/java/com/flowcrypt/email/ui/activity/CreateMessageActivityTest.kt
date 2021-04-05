@@ -41,7 +41,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -120,7 +119,6 @@ class CreateMessageActivityTest : BaseTest() {
     }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEmptyRecipient() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -134,7 +132,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEmptyEmailSubject() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -154,7 +151,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testEmptyEmailMsg() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -177,7 +173,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testUsingStandardMsgEncryptionType() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -193,7 +188,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testUsingSecureMsgEncryptionType() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -208,7 +202,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSwitchBetweenEncryptionTypes() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -233,13 +226,11 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     activeActivityRule.launch(intent)
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testIsScreenOfComposeNewMsg() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -259,7 +250,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testWrongFormatOfRecipientEmailAddress() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -283,7 +273,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testAddingAtts() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -299,7 +288,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testDeletingAtts() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -325,7 +313,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -343,7 +330,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -359,7 +345,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -386,7 +371,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -406,7 +390,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSharePubKeySingle() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -423,7 +406,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
@@ -452,7 +434,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @ReadyForCIAnnotation
   fun testSharePubKeyNoOwnKeys() {
     PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,
         addPrivateKeyToDatabaseRule.keyPath)

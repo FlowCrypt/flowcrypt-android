@@ -13,7 +13,6 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -52,7 +51,6 @@ class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTes
       .around(ScreenshotTestRule())
 
   @Test
-  @ReadyForCIAnnotation
   fun testCreateNewKeyNotExist() {
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(not(isDisplayed())))
