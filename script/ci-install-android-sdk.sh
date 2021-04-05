@@ -24,6 +24,7 @@ else
     # download, unpack and remove sdk archive
     wget https://dl.google.com/android/repository/$SDK_ARCHIVE
     unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
+    pwd
     cd $ANDROID_SDK_ROOT/cmdline-tools && mkdir latest && (ls | grep -v latest | xargs mv -t latest)
     rm $SDK_ARCHIVE
 
