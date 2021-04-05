@@ -14,4 +14,4 @@ package com.flowcrypt.email.junit.annotations
  *         E-mail: DenBond7@gmail.com
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class DebugTestAnnotation
+annotation class DebugTest
