@@ -23,12 +23,9 @@ else
 
     # download, unpack and remove sdk archive
     wget https://dl.google.com/android/repository/$SDK_ARCHIVE
-    unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT/temp
+    unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
+    cd $ANDROID_SDK_ROOT/cmdline-tools && mkdir latest && (ls | grep -v latest | xargs mv -t latest)
     rm $SDK_ARCHIVE
-
-    # Install latest 'cmdline-tools'
-    (echo "yes" | ${ANDROID_SDK_ROOT}/temp/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses > /dev/null | grep -v = || true)
-    (${ANDROID_SDK_ROOT}/temp/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "cmdline-tools;latest" | grep -v = || true)
 
     # Install Android SDK
     (echo "yes" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null | grep -v = || true)
