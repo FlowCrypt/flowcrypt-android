@@ -24,22 +24,19 @@ else
     # download, unpack and remove sdk archive
     wget https://dl.google.com/android/repository/$SDK_ARCHIVE
     unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
-    pwd
     cd $ANDROID_SDK_ROOT/cmdline-tools && mkdir latest && (ls | grep -v latest | xargs mv -t latest)
     cd $SEMAPHORE_GIT_DIR
     rm $SDK_ARCHIVE
 
     # Install Android SDK
     (echo "yes" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null | grep -v = || true)
-    ( sleep 5; echo "y" ) | (${ANDROID_SDK_ROOT}/temp/cmdline-tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" > /dev/null | grep -v = || true)
+    ( sleep 5; echo "y" ) | (${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" > /dev/null | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "extras;google;m2repository" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platform-tools" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "emulator" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "ndk;22.0.7026061" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.10.2.4988404" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "system-images;android-30;google_apis;x86" | grep -v = || true)
-
-    rm $ANDROID_SDK_ROOT/temp
 fi
 
 #Uncomment this for debug
