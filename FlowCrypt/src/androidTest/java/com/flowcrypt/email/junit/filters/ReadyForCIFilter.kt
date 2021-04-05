@@ -6,7 +6,7 @@
 package com.flowcrypt.email.junit.filters
 
 import androidx.test.internal.runner.filters.ParentFilter
-import com.flowcrypt.email.ReadyForCIAnnotation
+import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import org.junit.runner.Description
 
 /**

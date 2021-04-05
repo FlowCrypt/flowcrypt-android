@@ -15,10 +15,10 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
+import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.startsWith
 import org.junit.Test

@@ -23,9 +23,9 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.junit.annotations.CICandidateAnnotation
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule

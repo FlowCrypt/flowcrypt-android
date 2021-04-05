@@ -18,14 +18,14 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
+import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule

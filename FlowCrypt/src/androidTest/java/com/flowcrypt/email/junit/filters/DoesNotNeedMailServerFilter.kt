@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.junit.filters
 
-import com.flowcrypt.email.DoesNotNeedMailserver
+import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
 import org.junit.runner.Description
 
 /**

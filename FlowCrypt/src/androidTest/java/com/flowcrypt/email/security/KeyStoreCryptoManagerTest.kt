@@ -11,9 +11,9 @@ import android.util.Base64OutputStream
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.DoesNotNeedMailserver
-import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.junit.annotations.DoesNotNeedMailserver
+import com.flowcrypt.email.junit.annotations.ReadyForCIAnnotation
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import okio.buffer
 import org.apache.commons.io.IOUtils
