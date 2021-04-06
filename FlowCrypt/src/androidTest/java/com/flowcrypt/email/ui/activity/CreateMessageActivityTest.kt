@@ -34,6 +34,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
@@ -59,6 +60,7 @@ import com.flowcrypt.email.util.UIUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.apache.commons.io.FileUtils
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
@@ -68,12 +70,12 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
+import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
@@ -97,12 +99,14 @@ class CreateMessageActivityTest : BaseTest() {
 
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
+  private val temporaryFolderRule = TemporaryFolder()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
+      .around(temporaryFolderRule)
       .around(RetryRule.DEFAULT)
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
@@ -283,8 +287,33 @@ class CreateMessageActivityTest : BaseTest() {
         .perform(closeSoftKeyboard())
 
     for (att in atts) {
-      addAtt(att)
+      addAttAndCheck(att)
     }
+  }
+
+  @Test
+  fun testMaxTotalAttachmentSize() {
+    activeActivityRule.launch(intent)
+    registerAllIdlingResources()
+
+    onView(withId(R.id.layoutTo))
+        .perform(scrollTo())
+    onView(withId(R.id.editTextRecipientTo))
+        .perform(closeSoftKeyboard())
+
+    val fileWithBiggerSize = TestGeneralUtil.createFileWithGivenSize(
+        Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule)
+    addAtt(fileWithBiggerSize)
+
+    val sizeWarningMsg = getResString(R.string.template_warning_max_total_attachments_size,
+        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES))
+
+    onView(withText(sizeWarningMsg))
+        .check(matches(isDisplayed()))
+
+    val fileWithLowerSize = TestGeneralUtil.createFileWithGivenSize(
+        Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES - 1024, temporaryFolderRule)
+    addAttAndCheck(fileWithLowerSize)
   }
 
   @Test
@@ -298,7 +327,7 @@ class CreateMessageActivityTest : BaseTest() {
         .perform(closeSoftKeyboard())
 
     for (att in atts) {
-      addAtt(att)
+      addAttAndCheck(att)
     }
 
     //Need to wait while the layout will be updated. Some emulators work fast and fail this place
@@ -493,6 +522,10 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withId(R.id.menuActionAttachFile))
         .check(matches(isDisplayed()))
         .perform(click())
+  }
+
+  private fun addAttAndCheck(att: File) {
+    addAtt(att)
     onView(withText(att.name))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
   }
@@ -539,6 +572,10 @@ class CreateMessageActivityTest : BaseTest() {
 
     @get:ClassRule
     @JvmStatic
+    val temporaryFolderRule = TemporaryFolder()
+
+    @get:ClassRule
+    @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
@@ -562,18 +599,13 @@ class CreateMessageActivityTest : BaseTest() {
     @BeforeClass
     @JvmStatic
     fun setUp() {
-      createFilesForAtts()
+      createFilesForCommonAtts()
     }
 
-    @AfterClass
-    @JvmStatic
-    fun cleanResources() {
-      TestGeneralUtil.deleteFiles(atts)
-    }
-
-    private fun createFilesForAtts() {
+    private fun createFilesForCommonAtts() {
       for (i in 0 until ATTACHMENTS_COUNT) {
-        atts.add(TestGeneralUtil.createFile("$i.txt", "Text for filling the attached file"))
+        atts.add(TestGeneralUtil.createFileAndFillWithContent(temporaryFolderRule,
+            "$i.txt", "Text for filling the attached file"))
       }
     }
   }

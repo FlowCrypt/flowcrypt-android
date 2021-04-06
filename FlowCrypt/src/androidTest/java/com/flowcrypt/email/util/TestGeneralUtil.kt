@@ -16,11 +16,14 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.Gson
 import org.apache.commons.io.IOUtils
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.io.RandomAccessFile
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -71,7 +74,7 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
-    fun createFile(fileName: String, fileText: String): File {
+    fun createFileAndFillWithContent(fileName: String, fileText: String): File {
       val file = File(InstrumentationRegistry.getInstrumentation().targetContext
           .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
       try {
@@ -81,6 +84,29 @@ class TestGeneralUtil {
       }
 
       return file
+    }
+
+    @JvmStatic
+    fun createFileAndFillWithContent(temporaryFolder: TemporaryFolder,
+                                     fileName: String, fileText: String): File {
+      val file = temporaryFolder.newFile(fileName)
+      try {
+        FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
+
+      return file
+    }
+
+    @JvmStatic
+    fun createFileWithGivenSize(fileSizeInBytes: Long, temporaryFolder: TemporaryFolder,
+                                fileName: String = UUID.randomUUID().toString()): File {
+      return temporaryFolder.newFile(fileName).apply {
+        RandomAccessFile(this, "rw").apply {
+          setLength(fileSizeInBytes)
+        }
+      }
     }
 
     @JvmStatic

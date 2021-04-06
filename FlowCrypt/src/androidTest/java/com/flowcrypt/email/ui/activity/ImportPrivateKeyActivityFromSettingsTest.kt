@@ -166,9 +166,9 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     fun createResources() {
       keyDetails.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD
       privateKey = keyDetails.privateKey!!
-      fileWithPrivateKey = TestGeneralUtil.createFile(
+      fileWithPrivateKey = TestGeneralUtil.createFileAndFillWithContent(
           TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + "_sec.asc", privateKey)
-      fileWithoutPrivateKey = TestGeneralUtil.createFile(
+      fileWithoutPrivateKey = TestGeneralUtil.createFileAndFillWithContent(
           TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + ".txt", SOME_TEXT)
     }
 

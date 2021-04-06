@@ -125,9 +125,9 @@ class ImportPublicKeyActivityTest : BaseTest() {
     fun createResources() {
       publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context,
           "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc")
-      fileWithPublicKey = TestGeneralUtil.createFile(
+      fileWithPublicKey = TestGeneralUtil.createFileAndFillWithContent(
           TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc", publicKey)
-      fileWithoutPublicKey = TestGeneralUtil.createFile(
+      fileWithoutPublicKey = TestGeneralUtil.createFileAndFillWithContent(
           TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + ".txt", SOME_TEXT)
     }
 
