@@ -1339,8 +1339,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    return atts?.map { it.encodedSize.toInt() }?.sum() ?: 0 + (newAttInfo?.encodedSize?.toInt()
-        ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+    val existedAttsSize = (atts?.map { it.encodedSize.toInt() }?.sum() ?: 0)
+    val newAttSize = newAttInfo?.encodedSize?.toInt() ?: 0
+    return (existedAttsSize + newAttSize) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
 
