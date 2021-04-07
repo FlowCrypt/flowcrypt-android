@@ -9,7 +9,6 @@ import android.accounts.AuthenticatorException
 import android.content.Context
 import android.net.Uri
 import android.text.TextUtils
-import android.util.Base64
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -45,6 +44,7 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.client.http.FileContent
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
@@ -52,9 +52,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import java.io.BufferedInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -385,30 +385,41 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : BaseWor
               transport.sendMessage(mimeMsg, mimeMsg.allRecipients)
             } else {
               val gmail = GmailApiHelper.generateGmailApiService(applicationContext, account)
-              val outputStream = ByteArrayOutputStream()
-              mimeMsg.writeTo(outputStream)
+              val copyOfMimeMsg = File.createTempFile("tmp", null, applicationContext.cacheDir)
+              try {
+                //todo-denbond7 it will be a temporary solution until we will migrate to a new logic
+                FileOutputStream(copyOfMimeMsg).use { out ->
+                  mimeMsg.writeTo(out)
+                }
 
-              val threadId = msgEntity.threadId ?: mimeMsg.getHeader(
-                  JavaEmailConstants.HEADER_IN_REPLY_TO, null)?.let { replyMsgId ->
-                GmailApiHelper.executeWithResult {
-                  com.flowcrypt.email.api.retrofit.response.base.Result.success(GmailApiHelper
-                      .getGmailMsgThreadID(gmail, replyMsgId))
-                }.data
-              }
+                val threadId = msgEntity.threadId
+                    ?: mimeMsg.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null)
+                        ?.let { replyMsgId ->
+                          GmailApiHelper.executeWithResult {
+                            com.flowcrypt.email.api.retrofit.response.base.Result.success(
+                                GmailApiHelper.getGmailMsgThreadID(gmail, replyMsgId))
+                          }.data
+                        }
 
-              var sentMsg = com.google.api.services.gmail.model.Message().apply {
-                raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
-                this.threadId = threadId
-              }
+                var gmailMsg = com.google.api.services.gmail.model.Message().apply {
+                  this.threadId = threadId
+                }
 
-              sentMsg = gmail
-                  .users()
-                  .messages()
-                  .send(GmailApiHelper.DEFAULT_USER_ID, sentMsg)
-                  .execute()
+                val mediaContent = FileContent("message/rfc822", copyOfMimeMsg)
 
-              if (sentMsg.id == null) {
-                return@withContext false
+                gmailMsg = gmail
+                    .users()
+                    .messages()
+                    .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
+                    .execute()
+
+                if (gmailMsg.id == null) {
+                  return@withContext false
+                }
+              } finally {
+                if (copyOfMimeMsg.exists()) {
+                  copyOfMimeMsg.delete()
+                }
               }
             }
 
@@ -541,11 +552,11 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : BaseWor
      * If a content type is unknown we return "application/octet-stream".
      * http://www.rfc-editor.org/rfc/rfc2046.txt (section 4.5.1.  Octet-Stream Subtype)
      */
-    override fun getContentType(): String? {
+    override fun getContentType(): String {
       return if (TextUtils.isEmpty(att.type)) Constants.MIME_TYPE_BINARY_DATA else att.type
     }
 
-    override fun getName(): String? {
+    override fun getName(): String {
       return att.getSafeName()
     }
   }
