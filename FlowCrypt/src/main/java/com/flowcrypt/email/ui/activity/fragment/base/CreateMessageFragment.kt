@@ -686,7 +686,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private fun addAtts() {
     val sizeWarningMsg = getString(R.string.template_warning_max_total_attachments_size,
-        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong()))
+        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES))
 
     extraActionInfo?.atts?.forEach { attachmentInfo ->
       if (ContentResolver.SCHEME_FILE.equals(attachmentInfo.uri?.scheme, ignoreCase = true)) {
@@ -1131,7 +1131,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           atts?.add(att)
         } else {
           showInfoSnackbar(requireView(), getString(R.string.template_warning_max_total_attachments_size,
-              FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong())),
+              FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
               Snackbar.LENGTH_LONG)
         }
       }
@@ -1339,8 +1339,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    return atts?.map { it.encodedSize.toInt() }?.sum() ?: 0 + (newAttInfo?.encodedSize?.toInt()
-        ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+    val existedAttsSize = (atts?.map { it.encodedSize.toInt() }?.sum() ?: 0)
+    val newAttSize = newAttInfo?.encodedSize?.toInt() ?: 0
+    return (existedAttsSize + newAttSize) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
 
@@ -1623,7 +1624,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         showAtts()
       } else {
         showInfoSnackbar(view, getString(R.string.template_warning_max_total_attachments_size,
-            FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong())),
+            FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
             Snackbar.LENGTH_LONG)
       }
     } else {

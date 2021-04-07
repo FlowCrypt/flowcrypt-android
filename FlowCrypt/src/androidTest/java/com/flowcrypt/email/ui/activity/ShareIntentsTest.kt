@@ -376,7 +376,7 @@ class ShareIntentsTest : BaseTest() {
       atts = mutableListOf()
 
       for (i in 0 until ATTACHMENTS_COUNT) {
-        atts.add(TestGeneralUtil.createFile("$i.txt", UUID.randomUUID().toString()))
+        atts.add(TestGeneralUtil.createFileAndFillWithContent("$i.txt", UUID.randomUUID().toString()))
       }
     }
   }

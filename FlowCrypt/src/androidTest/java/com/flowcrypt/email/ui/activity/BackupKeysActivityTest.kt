@@ -137,7 +137,7 @@ class BackupKeysActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    val file = TestGeneralUtil.createFile("key.asc", "")
+    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
 
     intendingFileChoose(file)
     onView(withId(R.id.buttonBackupAction))
