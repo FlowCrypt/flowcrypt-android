@@ -637,20 +637,21 @@ class EmailUtil {
     fun genMessage(context: Context, accountEntity: AccountEntity,
                    outgoingMsgInfo: OutgoingMessageInfo): Message {
       val session = Session.getInstance(Properties())
+      val senderEmail = outgoingMsgInfo.from
+      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(context, accountEntity, senderEmail)
+      var pubKeys: List<String>? = null
+      var prvKeys: List<String>? = null
+      var ringProtector: SecretKeyRingProtector? = null
 
-      val pubKeys = if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-        val senderEmail = outgoingMsgInfo.from
+      if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-        SecurityUtils.getRecipientsPubKeys(context, recipients, accountEntity, senderEmail)
-      } else null
-
-      val prvKeys = if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-        KeysStorageImpl.getInstance(context).getAllPgpPrivateKeys().map { it.privateKeyAsString }
-      } else null
-
-      val ringProtector = if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-        KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
-      } else null
+        pubKeys = SecurityUtils.getRecipientsPubKeys(context, recipients)
+        pubKeys.add(senderKeyDetails.publicKey
+            ?: throw NullPointerException("Sender pub key not found"))
+        prvKeys = listOf(senderKeyDetails.privateKey
+            ?: throw NullPointerException("Sender private key not found"))
+        ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
+      }
 
       return when (outgoingMsgInfo.messageType) {
         MessageType.NEW, MessageType.FORWARD -> {

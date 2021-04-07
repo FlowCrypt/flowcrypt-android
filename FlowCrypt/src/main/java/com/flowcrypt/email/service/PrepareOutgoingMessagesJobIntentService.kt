@@ -229,12 +229,17 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
                              outgoingMsgInfo: OutgoingMessageInfo,
                              uid: Long, attsCacheDir: File) {
     val cachedAtts = ArrayList<AttachmentInfo>()
+    var pubKeys: List<String>? = null
 
-    val pubKeys = if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+    if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
       val senderEmail = outgoingMsgInfo.from
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-      SecurityUtils.getRecipientsPubKeys(applicationContext, recipients, accountEntity, senderEmail)
-    } else null
+      pubKeys = SecurityUtils.getRecipientsPubKeys(applicationContext, recipients)
+      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(applicationContext,
+          accountEntity, senderEmail)
+      pubKeys.add(senderKeyDetails.publicKey
+          ?: throw NullPointerException("Sender pub key not found"))
+    }
 
     if (outgoingMsgInfo.atts?.isNotEmpty() == true) {
       val outgoingAtts = outgoingMsgInfo.atts.map {
