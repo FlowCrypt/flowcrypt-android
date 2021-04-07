@@ -254,7 +254,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       withContext(Dispatchers.IO) {
         if (msgEntity.isEncrypted == true) {
           requireNotNull(pubKeys)
-          PgpEncrypt.encrypt(srcInputStream, destFile.outputStream(), pubKeys)
+          PgpEncrypt.encryptAndOrSign(srcInputStream, destFile.outputStream(), pubKeys)
         } else {
           FileUtils.copyInputStreamToFile(srcInputStream, destFile)
         }

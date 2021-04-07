@@ -94,13 +94,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     try {
       updateContactsLastUseDateTime(outgoingMsgInfo)
 
-      val pubKeys: List<String>? = if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-        val senderEmail = outgoingMsgInfo.from
-        val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-        SecurityUtils.getRecipientsPubKeys(this, recipients, accountEntity, senderEmail)
-      } else null
-
-      val msg = EmailUtil.genMessage(applicationContext, outgoingMsgInfo, pubKeys)
+      val msg = EmailUtil.genMessage(
+          context = applicationContext,
+          accountEntity = accountEntity,
+          outgoingMsgInfo = outgoingMsgInfo
+      )
 
       val attsCacheDir = getAttsCacheDir()
       val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
@@ -131,7 +129,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             }
           }
 
-          addAttsToCache(roomDatabase, accountEntity, outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
+          addAttsToCache(roomDatabase, accountEntity, outgoingMsgInfo, uid, msgAttsCacheDir)
         }
 
         if (outgoingMsgInfo.forwardedAtts?.isEmpty() == true) {
@@ -228,12 +226,18 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   }
 
   private fun addAttsToCache(roomDatabase: FlowCryptRoomDatabase, accountEntity: AccountEntity,
-                             msgInfo: OutgoingMessageInfo,
-                             uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
+                             outgoingMsgInfo: OutgoingMessageInfo,
+                             uid: Long, attsCacheDir: File) {
     val cachedAtts = ArrayList<AttachmentInfo>()
 
-    if (msgInfo.atts?.isNotEmpty() == true) {
-      val outgoingAtts = msgInfo.atts.map {
+    val pubKeys = if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+      val senderEmail = outgoingMsgInfo.from
+      val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
+      SecurityUtils.getRecipientsPubKeys(applicationContext, recipients, accountEntity, senderEmail)
+    } else null
+
+    if (outgoingMsgInfo.atts?.isNotEmpty() == true) {
+      val outgoingAtts = outgoingMsgInfo.atts.map {
         it.apply {
           this.email = accountEntity.email
           this.folder = JavaEmailConstants.FOLDER_OUTBOX
@@ -260,7 +264,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           }
 
           if (att.isEncryptionAllowed &&
-              msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+              outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
             val fileName = att.getSafeName() + Constants.PGP_FILE_EXT
             var encryptedTempFile = File(attsCacheDir, fileName)
 
@@ -269,7 +273,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             }
             requireNotNull(pubKeys)
 
-            PgpEncrypt.encrypt(originalFileInputStream, encryptedTempFile.outputStream(), pubKeys)
+            PgpEncrypt.encryptAndOrSign(originalFileInputStream, encryptedTempFile.outputStream(), pubKeys)
             val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile)
             att.uri = uri
             att.name = encryptedTempFile.name
@@ -297,13 +301,13 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       }
     }
 
-    if (msgInfo.forwardedAtts?.isNotEmpty() == true) {
-      for (att in msgInfo.forwardedAtts) {
+    if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
+      for (att in outgoingMsgInfo.forwardedAtts) {
         if (att.type.isEmpty()) {
           att.type = Constants.MIME_TYPE_BINARY_DATA
         }
 
-        if (att.isEncryptionAllowed && msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+        if (att.isEncryptionAllowed && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
           val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid)
           encryptedAtt.name = encryptedAtt.name + Constants.PGP_FILE_EXT
           cachedAtts.add(encryptedAtt)
