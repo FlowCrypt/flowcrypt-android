@@ -238,7 +238,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val senderKeyDetails = SecurityUtils.getSenderKeyDetails(applicationContext,
           accountEntity, senderEmail)
       pubKeys.add(senderKeyDetails.publicKey
-          ?: throw NullPointerException("Sender pub key not found"))
+          ?: throw IllegalStateException("Sender pub key not found"))
     }
 
     if (outgoingMsgInfo.atts?.isNotEmpty() == true) {

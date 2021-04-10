@@ -208,7 +208,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       val senderKeyDetails = SecurityUtils.getSenderKeyDetails(applicationContext,
           account, senderEmail)
       pubKeys.add(senderKeyDetails.publicKey
-          ?: throw NullPointerException("Sender pub key not found"))
+          ?: throw IllegalStateException("Sender pub key not found"))
     }
 
     for (attachmentEntity in atts) {

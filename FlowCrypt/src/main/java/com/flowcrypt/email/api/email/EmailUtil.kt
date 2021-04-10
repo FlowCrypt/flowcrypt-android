@@ -647,9 +647,9 @@ class EmailUtil {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
         pubKeys = SecurityUtils.getRecipientsPubKeys(context, recipients)
         pubKeys.add(senderKeyDetails.publicKey
-            ?: throw NullPointerException("Sender pub key not found"))
+            ?: throw IllegalStateException("Sender pub key not found"))
         prvKeys = listOf(senderKeyDetails.privateKey
-            ?: throw NullPointerException("Sender private key not found"))
+            ?: throw IllegalStateException("Sender private key not found"))
         ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
       }
 
