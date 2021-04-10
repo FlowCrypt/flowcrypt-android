@@ -14,9 +14,18 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.org.pgpainless.key.longId
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.pgp.PgpKey
+import org.bouncycastle.bcpg.ArmoredInputStream
+import org.pgpainless.PGPainless
+import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.protection.KeyRingProtectionSettings
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.util.Passphrase
+import java.io.ByteArrayInputStream
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -70,7 +79,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   }
 
   override fun getPgpPrivateKey(longId: String?): KeyEntity? {
-    return keys.firstOrNull { it.longId == longId }
+    return keys.firstOrNull { it.longId.equals(longId, true) }
   }
 
   override fun getFilteredPgpPrivateKeys(longIds: Array<String>): List<KeyEntity> {
@@ -103,6 +112,34 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
 
     return list
+  }
+
+  override fun getSecretKeyRingProtector(): SecretKeyRingProtector {
+    val prvKeys = keys.map { it.privateKeyAsString }
+    val inputStream = ByteArrayInputStream(prvKeys.joinToString(separator = "\n").toByteArray())
+    val pgpSecretKeyRingCollection = inputStream.use {
+      ArmoredInputStream(it).use { armoredInputStream ->
+        PGPainless.readKeyRing().secretKeyRingCollection(armoredInputStream)
+      }
+    }
+
+    val keyRingProtectionSettings = KeyRingProtectionSettings.secureDefaultSettings()
+    return PasswordBasedSecretKeyRingProtector(keyRingProtectionSettings) { keyId ->
+      for (pgpSecretKeyRing in pgpSecretKeyRingCollection) {
+        val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
+        if (keyIDs.contains(keyId)) {
+          for (secretKey in pgpSecretKeyRing.secretKeys) {
+            val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
+            val key = getPgpPrivateKey(openPgpV4Fingerprint.longId)
+            if (key != null) {
+              return@PasswordBasedSecretKeyRingProtector Passphrase.fromPassword(key.passphrase)
+            }
+          }
+        }
+      }
+
+      return@PasswordBasedSecretKeyRingProtector null
+    }
   }
 
   override fun getAllPgpPrivateKeys(): List<KeyEntity> {

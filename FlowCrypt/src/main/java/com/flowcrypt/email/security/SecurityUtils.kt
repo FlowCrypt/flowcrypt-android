@@ -9,6 +9,7 @@ package com.flowcrypt.email.security
 
 import android.content.Context
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -95,19 +96,16 @@ class SecurityUtils {
     }
 
     /**
-     * Get public keys for recipients + keys of the sender;
+     * Get public keys for recipients;
      *
      * @param context     Interface to global information about an application environment.
      * @param emails      A list which contains recipients
-     * @param account     The given account
-     * @param senderEmail The sender email
      * @return A list of public keys.
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getRecipientsPubKeys(context: Context, emails: MutableList<String>,
-                             account: AccountEntity, senderEmail: String): List<String> {
-      val publicKeys = ArrayList<String>()
+    fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): MutableList<String> {
+      val publicKeys = mutableListOf<String>()
       val contacts = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
           .getContactsByEmails(emails)
 
@@ -116,8 +114,6 @@ class SecurityUtils {
           contact.publicKey.let { publicKeys.add(String(it)) }
         }
       }
-
-      getSenderPublicKey(context, account, senderEmail)?.let { publicKeys.add(it) }
 
       return publicKeys
     }
@@ -132,7 +128,7 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderPublicKey(context: Context, account: AccountEntity, senderEmail: String): String? {
+    fun getSenderKeyDetails(context: Context, account: AccountEntity, senderEmail: String): NodeKeyDetails {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
       val keys = keysStorage.getNodeKeyDetailsListByEmail(senderEmail)
 
@@ -144,7 +140,7 @@ class SecurityUtils {
         }
       }
 
-      return keys.first().publicKey
+      return keys.first()
     }
 
     /**

@@ -8,6 +8,7 @@ package com.flowcrypt.email.model
 import androidx.annotation.Keep
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.KeyEntity
+import org.pgpainless.key.protection.SecretKeyRingProtector
 
 @Keep
 interface KeysStorage {
@@ -34,6 +35,8 @@ interface KeysStorage {
    * Note: this method returns a list of not-expired [NodeKeyDetails] only
    */
   fun getNodeKeyDetailsListByEmail(email: String?): List<NodeKeyDetails>
+
+  fun getSecretKeyRingProtector(): SecretKeyRingProtector
 }
 
 

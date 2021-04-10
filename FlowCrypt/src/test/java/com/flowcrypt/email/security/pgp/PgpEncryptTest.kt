@@ -35,7 +35,7 @@ class PgpEncryptTest {
 
     val sourceBytes = source.toByteArray()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
-    PgpEncrypt.encrypt(
+    PgpEncrypt.encryptAndOrSign(
         srcInputStream = ByteArrayInputStream(sourceBytes),
         destOutputStream = outputStreamForEncryptedSource,
         pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(

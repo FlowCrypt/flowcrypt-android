@@ -28,6 +28,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.util.GeneralUtil
@@ -53,6 +54,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -627,20 +629,37 @@ class EmailUtil {
     /**
      * Generate a message(new, reply or forward). Don't call it in the main thread.
      *
-     * @param info    The given [OutgoingMessageInfo] which contains information about an outgoing
-     * message.
+     * @param outgoingMsgInfo  The given [OutgoingMessageInfo] which contains information about
+     * an outgoing message.
      * @param pubKeys The public keys which will be used to generate an encrypted part.
      * @return The generated raw MIME message.
      */
-    fun genMessage(context: Context, info: OutgoingMessageInfo, pubKeys: List<String>? = null): Message {
+    fun genMessage(context: Context, accountEntity: AccountEntity,
+                   outgoingMsgInfo: OutgoingMessageInfo): Message {
       val session = Session.getInstance(Properties())
-      return when (info.messageType) {
+      val senderEmail = outgoingMsgInfo.from
+      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(context, accountEntity, senderEmail)
+      var pubKeys: List<String>? = null
+      var prvKeys: List<String>? = null
+      var ringProtector: SecretKeyRingProtector? = null
+
+      if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+        val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
+        pubKeys = SecurityUtils.getRecipientsPubKeys(context, recipients)
+        pubKeys.add(senderKeyDetails.publicKey
+            ?: throw IllegalStateException("Sender pub key not found"))
+        prvKeys = listOf(senderKeyDetails.privateKey
+            ?: throw IllegalStateException("Sender private key not found"))
+        ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
+      }
+
+      return when (outgoingMsgInfo.messageType) {
         MessageType.NEW, MessageType.FORWARD -> {
-          prepareNewMsg(session, info, pubKeys)
+          prepareNewMsg(session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
         }
 
         MessageType.REPLY, MessageType.REPLY_ALL -> {
-          prepareReplyMsg(info, context, session, pubKeys)
+          prepareReplyMsg(context, session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
         }
       }
     }
@@ -953,8 +972,11 @@ class EmailUtil {
       }
     }
 
-    fun prepareNewMsg(session: Session, info: OutgoingMessageInfo,
-                      pubKeys: List<String>? = null): MimeMessage {
+    fun prepareNewMsg(session: Session,
+                      info: OutgoingMessageInfo,
+                      pubKeys: List<String>? = null,
+                      prvKeys: List<String>? = null,
+                      protector: SecretKeyRingProtector? = null): MimeMessage {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
       msg.setFrom(InternetAddress(info.from))
@@ -962,7 +984,7 @@ class EmailUtil {
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       val bodyPart = MimeBodyPart()
-      bodyPart.setText(prepareMsgContent(info, pubKeys))
+      bodyPart.setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
       val mimeMultipart = MimeMultipart()
       mimeMultipart.addBodyPart(bodyPart)
       msg.setContent(mimeMultipart)
@@ -970,10 +992,13 @@ class EmailUtil {
     }
 
     fun genReplyMessage(replyToMsg: MimeMessage,
-                        info: OutgoingMessageInfo, pubKeys: List<String>? = null): Message {
+                        info: OutgoingMessageInfo,
+                        pubKeys: List<String>? = null,
+                        prvKeys: List<String>? = null,
+                        protector: SecretKeyRingProtector? = null): Message {
       val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
       reply.setFrom(InternetAddress(info.from))
-      reply.setText(prepareMsgContent(info, pubKeys))
+      reply.setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
       reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
       reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       reply.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
@@ -991,8 +1016,13 @@ class EmailUtil {
       ))
     }
 
-    private fun prepareReplyMsg(info: OutgoingMessageInfo, context: Context,
-                                session: Session, pubKeys: List<String>?): Message {
+    private fun prepareReplyMsg(
+        context: Context,
+        session: Session,
+        info: OutgoingMessageInfo,
+        pubKeys: List<String>?,
+        prvKeys: List<String>? = null,
+        protector: SecretKeyRingProtector? = null): Message {
       val replyToMessageEntity = info.replyToMsgEntity
           ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
       var msg: MimeMessage
@@ -1005,7 +1035,8 @@ class EmailUtil {
             ?: throw IllegalArgumentException("InputStream not found")
         msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
       } else {
-        val input = ByteArrayInputStream(replyToMessageEntity.rawMessageWithoutAttachments.toByteArray())
+        val input = ByteArrayInputStream(
+            replyToMessageEntity.rawMessageWithoutAttachments.toByteArray())
         try {
           msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
         } catch (e: Exception) {
@@ -1014,12 +1045,18 @@ class EmailUtil {
         }
       }
 
-      return genReplyMessage(msg, info, pubKeys)
+      return genReplyMessage(msg, info, pubKeys, prvKeys, protector)
     }
 
-    private fun prepareMsgContent(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
+    private fun prepareMsgContent(info: OutgoingMessageInfo, pubKeys: List<String>? = null,
+                                  prvKeys: List<String>? = null,
+                                  protector: SecretKeyRingProtector? = null): String {
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
-        PgpEncrypt.encryptMsg(info.msg ?: "", pubKeys ?: emptyList())
+        PgpEncrypt.encryptAndOrSignMsg(
+            msg = info.msg ?: "",
+            pubKeys = pubKeys ?: emptyList(),
+            prvKeys = prvKeys,
+            secretKeyRingProtector = protector)
       } else {
         info.msg ?: ""
       }

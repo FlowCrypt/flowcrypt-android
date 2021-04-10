@@ -199,11 +199,17 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
                                       action: suspend (attachmentEntity: AttachmentEntity)
                                       -> InputStream?): MessageState = withContext(Dispatchers.IO) {
     var msgState = MessageState.QUEUED
+    var pubKeys: List<String>? = null
 
-    val pubKeys = if (msgEntity.isEncrypted == true) {
-      SecurityUtils.getRecipientsPubKeys(applicationContext, msgEntity.allRecipients.toMutableList(),
-          account, EmailUtil.getFirstAddressString(msgEntity.from))
-    } else null
+    if (msgEntity.isEncrypted == true) {
+      val senderEmail = EmailUtil.getFirstAddressString(msgEntity.from)
+      val recipients = msgEntity.allRecipients.toMutableList()
+      pubKeys = SecurityUtils.getRecipientsPubKeys(applicationContext, recipients)
+      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(applicationContext,
+          account, senderEmail)
+      pubKeys.add(senderKeyDetails.publicKey
+          ?: throw IllegalStateException("Sender pub key not found"))
+    }
 
     for (attachmentEntity in atts) {
       val attInfo = attachmentEntity.toAttInfo()
@@ -254,7 +260,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       withContext(Dispatchers.IO) {
         if (msgEntity.isEncrypted == true) {
           requireNotNull(pubKeys)
-          PgpEncrypt.encrypt(srcInputStream, destFile.outputStream(), pubKeys)
+          PgpEncrypt.encryptAndOrSign(srcInputStream, destFile.outputStream(), pubKeys)
         } else {
           FileUtils.copyInputStreamToFile(srcInputStream, destFile)
         }
