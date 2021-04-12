@@ -39,6 +39,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
 import java.io.IOException
+import java.io.InputStream
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -188,12 +189,12 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       get() = R.string.parsing_public_keys
 
     override fun doInBackground(vararg uris: Void): LoaderResult {
-      var armoredKeys: String? = publicKeysString
+      var keysInputStream: InputStream? = publicKeysString.toByteArray().inputStream()
 
       try {
         if (publicKeysFileUri != null && weakRef.get() != null) {
           weakRef.get()?.context?.let {
-            armoredKeys = GeneralUtil.readFileFromUriToString(it, publicKeysFileUri)
+            keysInputStream = it.contentResolver.openInputStream(publicKeysFileUri)
           }
         }
       } catch (e: IOException) {
@@ -201,10 +202,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         return LoaderResult(null, e)
       }
 
-      return if (!TextUtils.isEmpty(armoredKeys) && weakRef.get() != null) {
-        parseKeys(armoredKeys)
+      return if (keysInputStream != null) {
+        parseKeys(keysInputStream!!)
       } else {
-        LoaderResult(null, NullPointerException("An input string is null!"))
+        LoaderResult(null, IllegalStateException("Source is null"))
       }
     }
 
@@ -221,9 +222,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       }
     }
 
-    private fun parseKeys(armoredKeys: String?): LoaderResult {
+    private fun parseKeys(inputStream: InputStream): LoaderResult {
       try {
-        val details = PgpKey.parseKeysC(armoredKeys!!.toByteArray())
+        val details = PgpKey.parseKeys(inputStream).toNodeKeyDetailsList()
 
         return if (!CollectionUtils.isEmpty(details)) {
           LoaderResult(parsePublicKeysInfo(details), null)

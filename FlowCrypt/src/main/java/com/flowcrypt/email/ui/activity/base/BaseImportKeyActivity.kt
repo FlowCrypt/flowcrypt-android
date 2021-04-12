@@ -85,7 +85,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
 
-  abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>)
+  abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -240,9 +240,9 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
           Result.Status.SUCCESS -> {
             isCheckingPrivateKeyNow = false
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            val keys = it.data
+            val parseKeyResult = it.data
 
-            if (keys.isNullOrEmpty()) {
+            if (parseKeyResult == null || parseKeyResult.pgpKeyRingCollection.size() == 0) {
               val msg = when (keyImportModel?.type) {
                 KeyDetails.Type.FILE ->
                   getString(R.string.file_has_wrong_pgp_structure,
@@ -258,7 +258,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               }
               showInfoDialogFragment(dialogMsg = msg)
             } else {
-              keyImportModel?.type?.let { type -> onKeyFound(type, ArrayList(keys)) }
+              keyImportModel?.type?.let { type -> onKeyFound(type, parseKeyResult.toNodeKeyDetailsList()) }
             }
 
             countingIdlingResource.decrementSafely()

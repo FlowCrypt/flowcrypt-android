@@ -44,7 +44,9 @@ class PrivateKeysManager {
     }
 
     fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
-      return PgpKey.parseKeysC(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, assetsPath)).first()
+      return PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsString(
+          InstrumentationRegistry.getInstrumentation().context, assetsPath))
+          .toNodeKeyDetailsList().first()
     }
 
     fun getKeysFromAssets(keysPaths: Array<String>): ArrayList<NodeKeyDetails> {

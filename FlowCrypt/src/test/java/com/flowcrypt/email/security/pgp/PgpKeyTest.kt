@@ -9,9 +9,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PgpKeyTest {
@@ -20,8 +18,6 @@ class PgpKeyTest {
   fun testParseKeysWithNormalKey() {
     val pubKey = TestKeys.KEYS["rsa1"]!!.publicKey
     val result = PgpKey.parseKeys(pubKey.toByteArray())
-
-    assertTrue("Armored format not recognized", result.isArmored)
 
     val expected = NodeKeyDetails(
         isFullyDecrypted = true,
@@ -77,16 +73,14 @@ class PgpKeyTest {
         passphrase = null,
         errorMsg = null
     )
-    assertEquals(1, result.keys.size)
-    assertEquals(expected, result.keys[0].toNodeKeyDetails())
+    assertEquals(1, result.getAllKeys().size)
+    assertEquals(expected, result.toNodeKeyDetailsList().first())
   }
 
   @Test
   fun testParseKeysWithExpiredKey() {
     val pubKey = TestKeys.KEYS["expired"]!!.publicKey
     val result = PgpKey.parseKeys(pubKey.toByteArray())
-
-    assertTrue("Armored format not recognized", result.isArmored)
 
     // TODO update from output
     val expected = NodeKeyDetails(
@@ -144,7 +138,7 @@ class PgpKeyTest {
         passphrase = null,
         errorMsg = null
     )
-    assertEquals(1, result.keys.size)
-    assertEquals(expected, result.keys[0].toNodeKeyDetails())
+    assertEquals(1, result.getAllKeys())
+    assertEquals(expected, result.toNodeKeyDetailsList().first())
   }
 }
