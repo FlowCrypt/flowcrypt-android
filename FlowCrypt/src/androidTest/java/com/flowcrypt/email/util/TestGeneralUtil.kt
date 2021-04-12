@@ -65,6 +65,11 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
+    fun readFileFromAssetsAsStream(context: Context, filePath: String): InputStream {
+      return context.assets.open(filePath)
+    }
+
+    @JvmStatic
     fun deleteFiles(files: List<File>) {
       files.forEach { file ->
         if (!file.delete()) {

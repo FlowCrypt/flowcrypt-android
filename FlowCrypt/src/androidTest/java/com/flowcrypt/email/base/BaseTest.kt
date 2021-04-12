@@ -217,6 +217,10 @@ abstract class BaseTest : BaseActivityTestImplementation {
     return getTargetContext().getString(resId, *formatArgs)
   }
 
+  protected fun getQuantityString(resId: Int, quantity: Int, vararg formatArgs: Any?): String {
+    return getTargetContext().resources.getQuantityString(resId, quantity, *formatArgs)
+  }
+
   protected fun getHtmlString(html: String): String {
     return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
   }

@@ -87,6 +87,7 @@ object PgpKey {
   /**
    * Parses multiple keys, binary or armored. It can take one key or many keys, it can be
    * private or public keys, it can be armored or binary... doesn't matter.
+   * Cannot contain binary and armored at the same time.
    *
    * @return parsing result object
    */

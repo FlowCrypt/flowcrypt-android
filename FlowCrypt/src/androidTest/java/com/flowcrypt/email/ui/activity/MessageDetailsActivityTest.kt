@@ -249,7 +249,7 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
     onView(withId(R.id.textViewMessage)).check(
-        matches(withText(getTargetContext().resources.getQuantityString(R.plurals
+        matches(withText(getQuantityString(R.plurals
             .tell_sender_to_update_their_settings, 1))))
     onView(withId(R.id.buttonOk))
         .check(matches(isDisplayed()))
@@ -273,7 +273,7 @@ class MessageDetailsActivityTest : BaseTest() {
         TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
 
 
-    val msg = getTargetContext().resources.getQuantityString(R.plurals
+    val msg = getQuantityString(R.plurals
         .tell_sender_to_update_their_settings, 2)
 
     onView(withId(R.id.textViewMessage))

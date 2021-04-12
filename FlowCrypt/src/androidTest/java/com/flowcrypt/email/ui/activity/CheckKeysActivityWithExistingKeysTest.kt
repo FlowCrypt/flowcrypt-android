@@ -48,7 +48,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
       CheckKeysActivity.newIntent(getTargetContext(),
           privateKeys = privateKeys,
           type = KeyDetails.Type.EMAIL,
-          subTitle = getTargetContext().resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          subTitle = getQuantityString(R.plurals.found_backup_of_your_account_key,
               privateKeys.size, privateKeys.size),
           positiveBtnTitle = getTargetContext().getString(R.string.continue_),
           negativeBtnTitle = getTargetContext().getString(R.string.use_another_account))

@@ -51,6 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.PGPainless
+import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.key.util.UserId
 import java.util.*
 
@@ -214,7 +215,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   /**
    * Parse keys from the given resource (string or file).
    */
-  fun parseKeys(keyImportModel: KeyImportModel?, isCheckSizeEnabled: Boolean) {
+  fun parseKeys(keyImportModel: KeyImportModel?, isCheckSizeEnabled: Boolean,
+                filterOnlyPrivate: Boolean = false) {
     viewModelScope.launch {
       val context: Context = getApplication()
       try {
@@ -225,7 +227,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           return@launch
         }
 
-        val parseKeyResult: PgpKey.ParseKeyResult
+        var parseKeyResult: PgpKey.ParseKeyResult
         val sourceNotAvailableMsg = context.getString(R.string.source_is_empty_or_not_available)
         when (keyImportModel.type) {
           KeyDetails.Type.FILE -> {
@@ -248,6 +250,12 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
             parseKeyResult = PgpKey.parseKeys(source, false)
           }
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
+        }
+
+        if (filterOnlyPrivate) {
+          parseKeyResult = PgpKey.ParseKeyResult(
+              PGPKeyRingCollection(parseKeyResult.pgpKeyRingCollection
+                  .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), true))
         }
 
         parseKeysLiveData.value = Result.success(parseKeyResult)

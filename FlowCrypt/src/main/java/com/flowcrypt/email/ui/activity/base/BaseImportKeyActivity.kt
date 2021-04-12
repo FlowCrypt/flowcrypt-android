@@ -102,14 +102,14 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     initViews()
 
     setupPrivateKeysViewModel()
-    keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
+    keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
   }
 
   override fun onResume() {
     super.onResume()
     if (isClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckingClipboardEnabled) {
       keyImportModel = checkClipboardToFindKeyService.keyImportModel
-      keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
+      keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
     }
   }
 
@@ -188,7 +188,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
               keyImportModel = KeyImportModel(null, privateKeyFromClipboard.toString(),
                   isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
-              keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
+              keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
             } else {
               showClipboardIsEmptyInfoDialog()
             }
@@ -207,7 +207,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
    */
   protected open fun handleSelectedFile(uri: Uri) {
     keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyDetails.Type.FILE)
-    privateKeysViewModel.parseKeys(keyImportModel, true)
+    privateKeysViewModel.parseKeys(keyImportModel, true, isPrivateKeyMode)
   }
 
   protected open fun initViews() {
