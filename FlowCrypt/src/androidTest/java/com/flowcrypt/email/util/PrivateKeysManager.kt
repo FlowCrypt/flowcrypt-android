@@ -44,25 +44,29 @@ class PrivateKeysManager {
       Thread.sleep(3000)
     }
 
-    fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
-      return getNodeKeyDetailsListFromAssets(assetsPath).first()
+    fun getNodeKeyDetailsFromAssets(assetsPath: String, onlyPrivate: Boolean = false): NodeKeyDetails {
+      return getNodeKeyDetailsListFromAssets(assetsPath, onlyPrivate).first()
     }
 
-    fun getNodeKeyDetailsListFromAssets(assetsPath: String): List<NodeKeyDetails> {
+    fun getNodeKeyDetailsListFromAssets(assetsPath: String, onlyPrivate: Boolean = false): List<NodeKeyDetails> {
       val parsedCollections = PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(
           InstrumentationRegistry.getInstrumentation().context, assetsPath))
 
-      val onlyPrivateKeysCollection = PgpKey.ParseKeyResult(
-          PGPKeyRingCollection(parsedCollections.pgpKeyRingCollection
-              .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), false))
+      if (onlyPrivate) {
+        val onlyPrivateKeysCollection = PgpKey.ParseKeyResult(
+            PGPKeyRingCollection(parsedCollections.pgpKeyRingCollection
+                .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), false))
 
-      return onlyPrivateKeysCollection.toNodeKeyDetailsList()
+        return onlyPrivateKeysCollection.toNodeKeyDetailsList()
+      } else {
+        return parsedCollections.toNodeKeyDetailsList()
+      }
     }
 
-    fun getKeysFromAssets(keysPaths: Array<String>): ArrayList<NodeKeyDetails> {
+    fun getKeysFromAssets(keysPaths: Array<String>, onlyPrivate: Boolean = false): ArrayList<NodeKeyDetails> {
       val privateKeys = ArrayList<NodeKeyDetails>()
       keysPaths.forEach { path ->
-        privateKeys.addAll(getNodeKeyDetailsListFromAssets(path))
+        privateKeys.addAll(getNodeKeyDetailsListFromAssets(path, onlyPrivate))
       }
       return privateKeys
     }

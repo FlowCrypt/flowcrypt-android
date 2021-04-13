@@ -473,7 +473,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   }
 
   private fun getStartCheckKeysActivityIntent(keysPaths: Array<String>, type: KeyDetails.Type = KeyDetails.Type.EMAIL): Intent {
-    val keyDetailsList = PrivateKeysManager.getKeysFromAssets(keysPaths)
+    val keyDetailsList = PrivateKeysManager.getKeysFromAssets(keysPaths, true)
 
     val bottomTitle: String
     when (type) {
