@@ -21,23 +21,27 @@ object MsgBlockParser {
     val blocks = mutableListOf<MsgBlock>()
     var startAt = 0
     while (true) {
-      val continueAt = detectBlockNext(normalized, startAt, blocks)
+      val continueAt = detectNextBlock(normalized, startAt, blocks)
       if (startAt >= continueAt) return blocks
       startAt = continueAt
     }
   }
 
   @JvmStatic
-  private fun detectBlockNext(text: String, startAt: Int, blocks: MutableList<MsgBlock>): Int {
+  private fun detectNextBlock(text: String, startAt: Int, blocks: MutableList<MsgBlock>): Int {
     val initialBlockCount = blocks.size
     var continueAt = -1
     val beginIndex = text.indexOf(
-        PgpArmor.ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!.begin, startAt)
+        PgpArmor.ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!.begin, startAt
+    )
     if (beginIndex != -1) { // found
-      val potentialBeginHeader = text.substring(beginIndex, beginIndex + ARMOR_HEADER_MAX_LENGTH)
+      val potentialHeaderBegin = text.substring(
+          beginIndex,
+          (beginIndex + ARMOR_HEADER_MAX_LENGTH).coerceAtMost(text.length)
+      )
       for (blockHeaderKvp in PgpArmor.ARMOR_HEADER_DICT) {
         val blockHeaderDef = blockHeaderKvp.value
-        if (!blockHeaderDef.replace || potentialBeginHeader.indexOf(blockHeaderDef.begin) != 0) {
+        if (!blockHeaderDef.replace || potentialHeaderBegin.indexOf(blockHeaderDef.begin) != 0) {
           continue
         }
 

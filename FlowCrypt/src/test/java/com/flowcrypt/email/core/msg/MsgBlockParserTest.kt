@@ -15,6 +15,11 @@ import org.junit.Test
 
 class MsgBlockParserTest {
   @Test
+  fun testNoStringIndexOutOfBoundsExceptionInParser() {
+    checkForSinglePlaintextBlock("-----BEGIN FOO-----\n")
+  }
+
+  @Test
   fun testDetectBlocksDoesNotGetTrippedOnBlocksWithUnknownHeaders() {
     checkForSinglePlaintextBlock(
         "This text breaks email and Gmail web app.\n\n" +
@@ -273,9 +278,7 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
     val blocks = MsgBlockParser.detectBlocks(input)
     assertEquals(1, blocks.size)
     assertTrue(blocks[0] is GenericMsgBlock)
-    assertEquals(
-        GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, input, true),
-        blocks[0] as GenericMsgBlock
-    )
+    val expectedBlock = GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, input.trimEnd(), true)
+    assertEquals(expectedBlock, blocks[0] as GenericMsgBlock)
   }
 }
