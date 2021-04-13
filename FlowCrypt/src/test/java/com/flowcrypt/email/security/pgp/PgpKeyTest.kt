@@ -138,7 +138,7 @@ class PgpKeyTest {
         passphrase = null,
         errorMsg = null
     )
-    assertEquals(1, result.getAllKeys())
+    assertEquals(1, result.getAllKeys().size)
     assertEquals(expected, result.toNodeKeyDetailsList().first())
   }
 }
