@@ -12,6 +12,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.pgp.PgpKey
+import org.pgpainless.key.collection.PGPKeyRingCollection
 import java.util.*
 
 /**
@@ -43,14 +44,29 @@ class PrivateKeysManager {
       Thread.sleep(3000)
     }
 
-    fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
-      return PgpKey.parseKeysC(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, assetsPath)).first()
+    fun getNodeKeyDetailsFromAssets(assetsPath: String, onlyPrivate: Boolean = false): NodeKeyDetails {
+      return getNodeKeyDetailsListFromAssets(assetsPath, onlyPrivate).first()
     }
 
-    fun getKeysFromAssets(keysPaths: Array<String>): ArrayList<NodeKeyDetails> {
+    fun getNodeKeyDetailsListFromAssets(assetsPath: String, onlyPrivate: Boolean = false): List<NodeKeyDetails> {
+      val parsedCollections = PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(
+          InstrumentationRegistry.getInstrumentation().context, assetsPath))
+
+      if (onlyPrivate) {
+        val onlyPrivateKeysCollection = PgpKey.ParseKeyResult(
+            PGPKeyRingCollection(parsedCollections.pgpKeyRingCollection
+                .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), false))
+
+        return onlyPrivateKeysCollection.toNodeKeyDetailsList()
+      } else {
+        return parsedCollections.toNodeKeyDetailsList()
+      }
+    }
+
+    fun getKeysFromAssets(keysPaths: Array<String>, onlyPrivate: Boolean = false): ArrayList<NodeKeyDetails> {
       val privateKeys = ArrayList<NodeKeyDetails>()
       keysPaths.forEach { path ->
-        privateKeys.add(getNodeKeyDetailsFromAssets(path))
+        privateKeys.addAll(getNodeKeyDetailsListFromAssets(path, onlyPrivate))
       }
       return privateKeys
     }

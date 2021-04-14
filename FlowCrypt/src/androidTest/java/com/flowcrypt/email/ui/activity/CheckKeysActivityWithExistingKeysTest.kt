@@ -42,13 +42,13 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class CheckKeysActivityWithExistingKeysTest : BaseTest() {
-  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@denbond7.com_fisrtKey_prv_default.asc"))
+  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@denbond7.com_fisrtKey_prv_default.asc"), true)
 
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
       CheckKeysActivity.newIntent(getTargetContext(),
           privateKeys = privateKeys,
           type = KeyDetails.Type.EMAIL,
-          subTitle = getTargetContext().resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          subTitle = getQuantityString(R.plurals.found_backup_of_your_account_key,
               privateKeys.size, privateKeys.size),
           positiveBtnTitle = getTargetContext().getString(R.string.continue_),
           negativeBtnTitle = getTargetContext().getString(R.string.use_another_account))

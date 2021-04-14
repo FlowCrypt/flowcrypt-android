@@ -99,7 +99,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
+  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
     if (type == KeyDetails.Type.CLIPBOARD) {
       if (keyDetailsList.isNotEmpty()) {
         UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)

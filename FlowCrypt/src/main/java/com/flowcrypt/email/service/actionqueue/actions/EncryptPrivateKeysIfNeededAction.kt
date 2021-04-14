@@ -52,7 +52,8 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     for (keyEntity in keyEntities) {
       val passphrase = keyEntity.passphrase ?: continue
 
-      val keyDetailsList = PgpKey.parseKeysC(keyEntity.privateKeyAsString.toByteArray(), false)
+      val keyDetailsList = PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray(), false)
+          .toNodeKeyDetailsList()
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
             IllegalArgumentException("An error occurred during the key parsing| 1: "
@@ -70,7 +71,8 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
         PgpPwd.checkForWeakPassphrase(passphrase)
         val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
 
-        val encryptedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray(), false)
+        val encryptedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray(), false)
+            .toNodeKeyDetailsList()
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue

@@ -4,6 +4,8 @@
  */
 
 import com.android.ddmlib.DdmPreferences
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 import java.text.SimpleDateFormat
 
@@ -257,6 +259,31 @@ android {
 
     testOptions {
         animationsDisabled = true
+        unitTests.all {
+            testLogging {
+                events TestLogEvent.FAILED,
+                        TestLogEvent.PASSED,
+                        TestLogEvent.SKIPPED,
+                        TestLogEvent.STANDARD_ERROR
+                exceptionFormat TestExceptionFormat.FULL
+                showStandardStreams true
+                showCauses true
+                showExceptions true
+                showStackTraces true
+            }
+
+            afterSuite { desc, result ->
+                if (!desc.parent) {
+                    def output = "Results: ${result.resultType} (${result.testCount} tests," +
+                            " ${result.successfulTestCount} passed, ${result.failedTestCount}" +
+                            " failed, ${result.skippedTestCount} skipped)"
+                    def startItem = '|  ', endItem = '  |'
+                    def repeatLength = startItem.length() + output.length() + endItem.length()
+                    println('\n' + ('-' * repeatLength) + '\n' + startItem + output
+                            + endItem + '\n' + ('-' * repeatLength))
+                }
+            }
+        }
     }
 
     tasks.register('renameReleaseBuilds') {
@@ -422,10 +449,10 @@ dependencies {
     implementation 'org.bitbucket.b_c:jose4j:0.7.6'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.0-alpha8') {
+    /*implementation ('org.pgpainless:pgpainless-core:0.2.0-alpha8') {
         //exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
-    }
+    }*/
 
     implementation "org.bouncycastle:bcpg-jdk15on:${rootProject.ext.bouncycastleVersion}"
     implementation "org.bouncycastle:bcpkix-jdk15on:${rootProject.ext.bouncycastleVersion}"

@@ -80,7 +80,7 @@ class SecurityUtils {
 
         PgpPwd.checkForWeakPassphrase(passPhrase)
 
-        val nodeKeyDetailsList = PgpKey.parseKeysC(private.toByteArray())
+        val nodeKeyDetailsList = PgpKey.parseKeys(private).toNodeKeyDetailsList()
         val keyDetails = nodeKeyDetailsList.first()
 
         val encryptedKey = if (keyDetails.isFullyDecrypted == true) {

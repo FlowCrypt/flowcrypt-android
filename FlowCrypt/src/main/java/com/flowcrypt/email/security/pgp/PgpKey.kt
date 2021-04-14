@@ -6,8 +6,6 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.core.msg.MsgBlockParser
 import com.flowcrypt.email.extensions.pgp.armor
 import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
 import org.bouncycastle.bcpg.ArmoredInputStream
@@ -22,7 +20,9 @@ import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator
 import org.pgpainless.PGPainless
+import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.util.Passphrase
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 
 @Suppress("unused")
@@ -76,68 +76,23 @@ object PgpKey {
       throw IllegalArgumentException("Key is not a secret key")
   }
 
-  data class ParseKeyResult(val isArmored: Boolean, val keys: List<PGPKeyRing>)
+  fun parseKeys(source: String, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
+    return parseKeys(source.toByteArray().inputStream(), throwExceptionIfUnknownSource)
+  }
+
+  fun parseKeys(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
+    return parseKeys(source.inputStream(), throwExceptionIfUnknownSource)
+  }
 
   /**
-   * Parses multiple keys, binary or armored.
+   * Parses multiple keys, binary or armored. It can take one key or many keys, it can be
+   * private or public keys, it can be armored or binary... doesn't matter.
+   * Cannot contain binary and armored at the same time.
    *
    * @return parsing result object
    */
-  fun parseKeys(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
-    val blockType = PgpMsg.detectBlockType(source)
-    if (blockType.second == MsgBlock.Type.UNKNOWN) {
-      if (throwExceptionIfUnknownSource) {
-        throw IllegalArgumentException("Unknown message type")
-      } else return ParseKeyResult(blockType.first, emptyList())
-    }
-
-    val allKeys = mutableListOf<PGPKeyRing>()
-    if (blockType.first) {
-      // armored text format
-      val blocks = MsgBlockParser.detectBlocks(String(source, StandardCharsets.UTF_8))
-      for (block in blocks) {
-        val content = block.content
-        if (content != null) {
-          val keys = parseAndNormalizeKeyRings(content)
-          allKeys.addAll(keys)
-        }
-      }
-    } else {
-      // binary format
-      val objectFactory = PGPObjectFactory(source.inputStream(), JcaKeyFingerprintCalculator())
-      while (true) {
-        val obj = objectFactory.nextObject() ?: break
-        if (obj is PGPKeyRing) {
-          allKeys.add(obj)
-        }
-      }
-    }
-
-    return ParseKeyResult(blockType.first, allKeys)
-  }
-
-  /**
-   * Parse a list of [NodeKeyDetails] from the given string. It can take one key or many keys, it can be
-   * private or public keys, it can be armored or binary... doesn't matter.
-   *
-   * This method should be dropped in the future. Currently it should be used just for compatibility.
-   *
-   * @return list of keys
-   */
-  fun parseKeysC(source: String, throwExceptionIfUnknownSource: Boolean = true): List<NodeKeyDetails> {
-    return parseKeys(source.toByteArray(), throwExceptionIfUnknownSource).keys.map { it.toNodeKeyDetails() }
-  }
-
-  /**
-   * Parse a list of [NodeKeyDetails] from the given source. It can take one key or many keys, it can be
-   * private or public keys, it can be armored or binary... doesn't matter.
-   *
-   * This method should be dropped in the future. Currently it should be used just for compatibility.
-   *
-   * @return list of keys
-   */
-  fun parseKeysC(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): List<NodeKeyDetails> {
-    return parseKeys(source, throwExceptionIfUnknownSource).keys.map { it.toNodeKeyDetails() }
+  fun parseKeys(source: InputStream, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
+    return ParseKeyResult(PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource))
   }
 
   private fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {
@@ -230,5 +185,13 @@ object PgpKey {
     }
 
     return keys
+  }
+
+  data class ParseKeyResult(val pgpKeyRingCollection: PGPKeyRingCollection) {
+    fun getAllKeys(): List<PGPKeyRing> =
+        pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
+            pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
+
+    fun toNodeKeyDetailsList() = getAllKeys().map { it.toNodeKeyDetails() }
   }
 }

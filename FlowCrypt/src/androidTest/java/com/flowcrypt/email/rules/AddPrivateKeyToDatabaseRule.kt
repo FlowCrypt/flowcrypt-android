@@ -12,7 +12,6 @@ import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
@@ -36,7 +35,7 @@ class AddPrivateKeyToDatabaseRule(val accountEntity: AccountEntity,
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        nodeKeyDetails = PgpKey.parseKeysC(TestGeneralUtil.readFileFromAssetsAsString(context, keyPath)).first()
+        nodeKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).toNodeKeyDetailsList().first()
         PrivateKeysManager.saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, type)
         base.evaluate()
       }

@@ -138,7 +138,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
+  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
     var areFreshKeysExisted = false
     var arePrivateKeysExisted = false
 
@@ -180,7 +180,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         val posBtnTitle = getString(R.string.continue_)
         val intent = CheckKeysActivity.newIntent(
             context = this,
-            privateKeys = keyDetailsList,
+            privateKeys = ArrayList(keyDetailsList),
             type = keyDetailsType,
             subTitle = bottomTitle,
             positiveBtnTitle = posBtnTitle,
@@ -198,7 +198,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             keyDetailsList.size, keyDetailsList.size)
         val clipboardIntent = CheckKeysActivity.newIntent(
             context = this,
-            privateKeys = keyDetailsList,
+            privateKeys = ArrayList(keyDetailsList),
             type = keyDetailsType,
             subTitle = title,
             positiveBtnTitle = getString(R.string.continue_),

@@ -25,7 +25,6 @@ import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.UpdatePublicKeyOfContactDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
-import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -57,7 +56,7 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
     isCheckingClipboardEnabled = false
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
+  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
     if (keyDetailsList.size > 1) {
       showInfoDialogFragment(dialogMsg = getString(R.string.more_than_one_public_key_found))
       return

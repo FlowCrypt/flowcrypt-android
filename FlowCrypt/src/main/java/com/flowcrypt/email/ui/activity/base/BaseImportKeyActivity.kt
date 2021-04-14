@@ -85,7 +85,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
 
-  abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>)
+  abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -102,14 +102,14 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     initViews()
 
     setupPrivateKeysViewModel()
-    keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
+    keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
   }
 
   override fun onResume() {
     super.onResume()
     if (isClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckingClipboardEnabled) {
       keyImportModel = checkClipboardToFindKeyService.keyImportModel
-      keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
+      keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
     }
   }
 
@@ -188,7 +188,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
               keyImportModel = KeyImportModel(null, privateKeyFromClipboard.toString(),
                   isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
-              keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
+              keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
             } else {
               showClipboardIsEmptyInfoDialog()
             }
@@ -207,7 +207,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
    */
   protected open fun handleSelectedFile(uri: Uri) {
     keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyDetails.Type.FILE)
-    privateKeysViewModel.parseKeys(keyImportModel, true)
+    privateKeysViewModel.parseKeys(keyImportModel, true, isPrivateKeyMode)
   }
 
   protected open fun initViews() {
@@ -240,9 +240,9 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
           Result.Status.SUCCESS -> {
             isCheckingPrivateKeyNow = false
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            val keys = it.data
+            val parseKeyResult = it.data
 
-            if (keys.isNullOrEmpty()) {
+            if (parseKeyResult == null || parseKeyResult.pgpKeyRingCollection.size() == 0) {
               val msg = when (keyImportModel?.type) {
                 KeyDetails.Type.FILE ->
                   getString(R.string.file_has_wrong_pgp_structure,
@@ -258,7 +258,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               }
               showInfoDialogFragment(dialogMsg = msg)
             } else {
-              keyImportModel?.type?.let { type -> onKeyFound(type, ArrayList(keys)) }
+              keyImportModel?.type?.let { type -> onKeyFound(type, parseKeyResult.toNodeKeyDetailsList()) }
             }
 
             countingIdlingResource.decrementSafely()

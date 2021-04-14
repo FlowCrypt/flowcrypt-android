@@ -62,7 +62,9 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> = Transformations.switchMap(keysLiveData) {
     liveData {
-      emit(PgpKey.parseKeysC(it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }))
+      emit(PgpKey.parseKeys(
+          it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString })
+          .toNodeKeyDetailsList())
     }
   }
 
@@ -132,7 +134,14 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
             val key = getPgpPrivateKey(openPgpV4Fingerprint.longId)
             if (key != null) {
-              return@PasswordBasedSecretKeyRingProtector Passphrase.fromPassword(key.passphrase)
+              val passphrase: Passphrase
+              if (key.passphrase.isNullOrEmpty()) {
+                passphrase = Passphrase.emptyPassphrase()
+              } else {
+                passphrase = Passphrase.fromPassword(key.passphrase)
+              }
+
+              return@PasswordBasedSecretKeyRingProtector passphrase
             }
           }
         }

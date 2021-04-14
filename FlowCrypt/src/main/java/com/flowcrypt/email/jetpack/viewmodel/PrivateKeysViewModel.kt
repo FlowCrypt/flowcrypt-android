@@ -24,8 +24,6 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -53,6 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.PGPainless
+import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.key.util.UserId
 import java.util.*
 
@@ -66,14 +65,13 @@ import java.util.*
  */
 class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
-  private val nodeRepository: PgpApiRepository = NodeRepository()
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupAsFileLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
-  val parseKeysLiveData = MutableLiveData<Result<List<NodeKeyDetails>?>>()
+  val parseKeysLiveData = MutableLiveData<Result<PgpKey.ParseKeyResult?>>()
   val createPrivateKeyLiveData = MutableLiveData<Result<NodeKeyDetails?>>()
   val nodeKeyDetailsLiveData = keysStorage.nodeKeyDetailsLiveData
   val deleteKeysLiveData = MutableLiveData<Result<Boolean>>()
@@ -217,7 +215,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   /**
    * Parse keys from the given resource (string or file).
    */
-  fun parseKeys(keyImportModel: KeyImportModel?, isCheckSizeEnabled: Boolean) {
+  fun parseKeys(keyImportModel: KeyImportModel?, isCheckSizeEnabled: Boolean,
+                filterOnlyPrivate: Boolean = false) {
     viewModelScope.launch {
       val context: Context = getApplication()
       try {
@@ -228,7 +227,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           return@launch
         }
 
-        val armoredSource: String
+        var parseKeyResult: PgpKey.ParseKeyResult
+        val sourceNotAvailableMsg = context.getString(R.string.source_is_empty_or_not_available)
         when (keyImportModel.type) {
           KeyDetails.Type.FILE -> {
             if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.fileUri)) {
@@ -239,18 +239,26 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
               throw NullPointerException("Uri is null!")
             }
 
-            armoredSource = GeneralUtil.readFileFromUriToString(context, keyImportModel.fileUri)
-                ?: throw NullPointerException(context.getString(R.string.source_is_empty_or_not_available))
+            val source = context.contentResolver.openInputStream(keyImportModel.fileUri)
+                ?: throw java.lang.IllegalStateException(sourceNotAvailableMsg)
+            parseKeyResult = PgpKey.parseKeys(source, false)
           }
 
           KeyDetails.Type.CLIPBOARD, KeyDetails.Type.EMAIL, KeyDetails.Type.MANUAL_ENTERING -> {
-            armoredSource = keyImportModel.keyString
-                ?: throw NullPointerException(context.getString(R.string.source_is_empty_or_not_available))
+            val source = keyImportModel.keyString
+                ?: throw IllegalStateException(sourceNotAvailableMsg)
+            parseKeyResult = PgpKey.parseKeys(source, false)
           }
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
         }
 
-        parseKeysLiveData.value = Result.success(PgpKey.parseKeysC(armoredSource, false))
+        if (filterOnlyPrivate) {
+          parseKeyResult = PgpKey.ParseKeyResult(
+              PGPKeyRingCollection(parseKeyResult.pgpKeyRingCollection
+                  .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), true))
+        }
+
+        parseKeysLiveData.value = Result.success(parseKeyResult)
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
@@ -375,7 +383,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                                                 newPassphrase: String,
                                                 originalPrivateKey: String?): NodeKeyDetails =
       withContext(Dispatchers.IO) {
-        val keyDetailsList = PgpKey.parseKeysC(originalPrivateKey!!.toByteArray())
+        val keyDetailsList = PgpKey.parseKeys(originalPrivateKey!!.toByteArray())
+            .toNodeKeyDetailsList()
         if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }
@@ -399,7 +408,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           )
         }
 
-        val modifiedKeyDetailsList = PgpKey.parseKeysC(encryptedKey.toByteArray())
+        val modifiedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray())
+            .toNodeKeyDetailsList()
         if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }

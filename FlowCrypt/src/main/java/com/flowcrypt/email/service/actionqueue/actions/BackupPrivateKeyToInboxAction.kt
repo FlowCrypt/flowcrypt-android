@@ -44,7 +44,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
-      val key = PgpKey.parseKeysC(keyEntity.privateKey).first()
+      val key = PgpKey.parseKeys(keyEntity.privateKey).toNodeKeyDetailsList().first()
       val encryptedKey: String
       if (key.isFullyEncrypted == true) {
         encryptedKey = key.privateKey ?: throw IllegalArgumentException("empty key")
