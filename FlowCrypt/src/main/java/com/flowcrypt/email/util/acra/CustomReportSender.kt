@@ -7,9 +7,8 @@ package com.flowcrypt.email.util.acra
 
 import android.content.Context
 import org.acra.ReportField
-import org.acra.collector.CrashReportData
-import org.acra.config.ACRAConfiguration
-import org.acra.model.StringElement
+import org.acra.config.CoreConfiguration
+import org.acra.data.CrashReportData
 import org.acra.sender.HttpSender
 
 /**
@@ -20,24 +19,12 @@ import org.acra.sender.HttpSender
  *         Time: 3:15 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CustomReportSender(config: ACRAConfiguration,
-                         method: Method,
-                         type: Type,
-                         formUri: String? = null,
-                         mapping: MutableMap<ReportField, String>? = null)
-  : HttpSender(config, method, type, formUri, mapping) {
+class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, null) {
   override fun send(context: Context, report: CrashReportData) {
-
-    val iterator = report.iterator()
-    while (iterator.hasNext()) {
-      val item = iterator.next()
-      when (item.key) {
-        ReportField.LOGCAT, ReportField.STACK_TRACE -> {
-          val element = item.value as? StringElement
-          report.put(item.key, StringElement(filterFileNames(element.toString())))
-        }
-        else -> {
-        }
+    for (entry in report.toMap()) {
+      if (entry.key == ReportField.LOGCAT.name || entry.key == ReportField.STACK_TRACE.name) {
+        val element = (entry.value as? String) ?: continue
+        report.put(entry.key, filterFileNames(element))
       }
     }
 
