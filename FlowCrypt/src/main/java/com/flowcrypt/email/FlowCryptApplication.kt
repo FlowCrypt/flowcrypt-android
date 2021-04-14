@@ -26,7 +26,9 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.acra.CustomReportSenderFactory
 import org.acra.ACRA
 import org.acra.ReportField
-import org.acra.annotation.ReportsCrashes
+import org.acra.annotation.AcraCore
+import org.acra.annotation.AcraHttpSender
+import org.acra.data.StringFormat
 import org.acra.sender.HttpSender
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -39,34 +41,42 @@ import java.util.concurrent.TimeUnit
  * Time: 16:43
  * E-mail: DenBond7@gmail.com
  */
-@ReportsCrashes(reportSenderFactoryClasses = [CustomReportSenderFactory::class],
-    formUri = "https://flowcrypt.com/api/help/acra", customReportContent = [
-  ReportField.ANDROID_VERSION,
-  ReportField.APP_VERSION_CODE,
-  ReportField.APP_VERSION_NAME,
-  ReportField.AVAILABLE_MEM_SIZE,
-  ReportField.BRAND,
-  ReportField.BUILD,
-  ReportField.BUILD_CONFIG,
-  ReportField.CRASH_CONFIGURATION,
-  ReportField.CUSTOM_DATA,
-  ReportField.DEVICE_FEATURES,
-  ReportField.DISPLAY,
-  ReportField.DUMPSYS_MEMINFO,
-  ReportField.ENVIRONMENT,
-  ReportField.FILE_PATH,
-  ReportField.INITIAL_CONFIGURATION,
-  ReportField.INSTALLATION_ID,
-  ReportField.IS_SILENT,
-  ReportField.PACKAGE_NAME,
-  ReportField.PHONE_MODEL,
-  ReportField.PRODUCT,
-  ReportField.REPORT_ID,
-  ReportField.STACK_TRACE,
-  ReportField.TOTAL_MEM_SIZE,
-  ReportField.USER_APP_START_DATE,
-  ReportField.USER_CRASH_DATE,
-  ReportField.USER_EMAIL], httpMethod = HttpSender.Method.POST, reportType = HttpSender.Type.JSON, buildConfigClass = BuildConfig::class)
+@AcraCore(
+    reportSenderFactoryClasses = [CustomReportSenderFactory::class],
+    buildConfigClass = BuildConfig::class,
+    reportFormat = StringFormat.JSON,
+    reportContent = [
+      ReportField.ANDROID_VERSION,
+      ReportField.APP_VERSION_CODE,
+      ReportField.APP_VERSION_NAME,
+      ReportField.AVAILABLE_MEM_SIZE,
+      ReportField.BRAND,
+      ReportField.BUILD,
+      ReportField.BUILD_CONFIG,
+      ReportField.CRASH_CONFIGURATION,
+      ReportField.CUSTOM_DATA,
+      ReportField.DEVICE_FEATURES,
+      ReportField.DISPLAY,
+      ReportField.DUMPSYS_MEMINFO,
+      ReportField.ENVIRONMENT,
+      ReportField.FILE_PATH,
+      ReportField.INITIAL_CONFIGURATION,
+      ReportField.INSTALLATION_ID,
+      ReportField.IS_SILENT,
+      ReportField.PACKAGE_NAME,
+      ReportField.PHONE_MODEL,
+      ReportField.PRODUCT,
+      ReportField.REPORT_ID,
+      ReportField.STACK_TRACE,
+      ReportField.TOTAL_MEM_SIZE,
+      ReportField.USER_APP_START_DATE,
+      ReportField.USER_CRASH_DATE,
+      ReportField.USER_EMAIL]
+)
+@AcraHttpSender(
+    uri = "https://flowcrypt.com/api/help/acra",
+    httpMethod = HttpSender.Method.POST
+)
 class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun onCreate() {

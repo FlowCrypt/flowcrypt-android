@@ -6,7 +6,7 @@
 package com.flowcrypt.email.util.acra
 
 import android.content.Context
-import org.acra.config.ACRAConfiguration
+import org.acra.config.CoreConfiguration
 import org.acra.sender.ReportSender
 import org.acra.sender.ReportSenderFactory
 
@@ -19,7 +19,7 @@ import org.acra.sender.ReportSenderFactory
  *         E-mail: DenBond7@gmail.com
  */
 class CustomReportSenderFactory : ReportSenderFactory {
-  override fun create(context: Context, config: ACRAConfiguration): ReportSender {
-    return CustomReportSender(config, config.httpMethod(), config.reportType())
+  override fun create(context: Context, config: CoreConfiguration): ReportSender {
+    return CustomReportSender(config)
   }
 }
