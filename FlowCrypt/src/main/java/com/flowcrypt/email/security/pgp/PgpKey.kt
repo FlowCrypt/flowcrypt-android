@@ -27,53 +27,31 @@ import java.nio.charset.StandardCharsets
 
 @Suppress("unused")
 object PgpKey {
+  /**
+   * Encrypt the given key.
+   *
+   * @param armored Should be a single private key.
+   */
   fun encryptKey(armored: String, passphrase: String): String {
-    return encryptKey(extractSecretKey(armored), passphrase).armor()
+    return encryptKey(extractSecretKeyRing(armored), passphrase).armor()
   }
 
-  private fun encryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
-    return PGPainless.modifyKeyRing(key)
-        .changePassphraseFromOldPassphrase(null)
-        .withSecureDefaultSettings()
-        .toNewPassphrase(Passphrase.fromPassword(passphrase))
-        .done()
-  }
-
+  /**
+   * Decrypt the given key.
+   *
+   * @param armored Should be a single private key.
+   */
   fun decryptKey(armored: String, passphrase: String): String {
-    return decryptKey(extractSecretKey(armored), passphrase).armor()
+    return decryptKey(extractSecretKeyRing(armored), passphrase).armor()
   }
 
-  private fun decryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
-    return PGPainless.modifyKeyRing(key)
-        .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
-        .withSecureDefaultSettings()
-        .toNoPassphrase()
-        .done()
-  }
-
-  fun changeKeyPassphrase(
-      armored: String,
-      oldPassphrase: String,
-      newPassphrase: String
-  ): String {
-    return changeKeyPassphrase(extractSecretKey(armored), oldPassphrase, newPassphrase).armor()
-  }
-
-  private fun changeKeyPassphrase(
-      key: PGPSecretKeyRing,
-      oldPassphrase: String,
-      newPassphrase: String
-  ): PGPSecretKeyRing {
-    return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
-  }
-
-  private fun extractSecretKey(armored: String): PGPSecretKeyRing {
-    val key = parseAndNormalizeKeyRings(armored).firstOrNull()
-        ?: throw IllegalArgumentException("Keys not found")
-    if (key is PGPSecretKeyRing)
-      return key
-    else
-      throw IllegalArgumentException("Key is not a secret key")
+  /**
+   * Change a passphrase for the given key.
+   *
+   * @param armored Should be a single private key.
+   */
+  fun changeKeyPassphrase(armored: String, oldPassphrase: String, newPassphrase: String): String {
+    return changeKeyPassphrase(extractSecretKeyRing(armored), oldPassphrase, newPassphrase).armor()
   }
 
   fun parseKeys(source: String, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
@@ -93,6 +71,41 @@ object PgpKey {
    */
   fun parseKeys(source: InputStream, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
     return ParseKeyResult(PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource))
+  }
+
+  private fun decryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
+    return PGPainless.modifyKeyRing(key)
+        .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
+        .withSecureDefaultSettings()
+        .toNoPassphrase()
+        .done()
+  }
+
+  private fun encryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
+    return PGPainless.modifyKeyRing(key)
+        .changePassphraseFromOldPassphrase(null)
+        .withSecureDefaultSettings()
+        .toNewPassphrase(Passphrase.fromPassword(passphrase))
+        .done()
+  }
+
+  private fun changeKeyPassphrase(
+      key: PGPSecretKeyRing,
+      oldPassphrase: String,
+      newPassphrase: String
+  ): PGPSecretKeyRing {
+    return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
+  }
+
+  private fun extractSecretKeyRing(armored: String): PGPSecretKeyRing {
+    val parseKeyResult = parseKeys(armored)
+    if (parseKeyResult.getAllKeys().isEmpty()) {
+      throw IllegalArgumentException("Keys not found")
+    }
+    if (parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.first() is PGPSecretKeyRing)
+      return parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.first()
+    else
+      throw IllegalArgumentException("Key is not a secret key")
   }
 
   private fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {
