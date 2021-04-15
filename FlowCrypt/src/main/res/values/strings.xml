@@ -492,4 +492,8 @@
     <string name="loading_labels">Loading labels</string>
     <string name="could_not_load_oauth_server_configuration">Couldn\'t load OAuth server configuration</string>
     <string name="all_mail">All Mail</string>
+    <string name="stored_pass_phrase_loading">Stored pass phrase: loading &#8230;</string>
+    <string name="stored_pass_phrase_matched">Stored pass phrase: matched</string>
+    <string name="stored_pass_phrase_mismatch">Stored pass phrase: mismatch</string>
+    <string name="could_not_check_pass_phrase">Could not check the pass phrase</string>
 </resources>

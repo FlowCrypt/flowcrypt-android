@@ -41,7 +41,7 @@ val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
   get() = navController?.previousBackStackEntry?.savedStateHandle
 
 fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
-  text?.let { activity?.toast(text, duration) }
+  text?.let { context?.toast(text, duration) }
 }
 
 fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T) {

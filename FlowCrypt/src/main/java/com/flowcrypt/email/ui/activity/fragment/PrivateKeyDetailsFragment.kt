@@ -30,7 +30,10 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -50,10 +53,11 @@ import java.util.concurrent.TimeUnit
  * Time: 12:43
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
+class PrivateKeyDetailsFragment : BaseFragment() {
+  private var tVPassPhraseVerification: TextView? = null
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-
-  private var details: NodeKeyDetails? = null
+  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
+  private var nodeKeyDetails: NodeKeyDetails? = null
 
   override val contentResourceId: Int = R.layout.fragment_private_key_details
 
@@ -63,11 +67,18 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
     val args = arguments
     if (args != null) {
-      details = args.getParcelable(KEY_NODE_KEY_DETAILS)
+      nodeKeyDetails = args.getParcelable(KEY_NODE_KEY_DETAILS)
     }
 
-    if (details == null) {
+    if (nodeKeyDetails == null) {
       parentFragmentManager.popBackStack()
+    } else {
+      nodeKeyDetails?.let {
+        val context = context ?: return@let
+        val passPhrase = KeysStorageImpl.getInstance(context)
+            .getPgpPrivateKey(it.longId)?.passphrase ?: ""
+        checkPrivateKeysViewModel.checkKeys(listOf(it), passPhrase)
+      }
     }
   }
 
@@ -95,13 +106,10 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    supportActionBar?.setTitle(R.string.key_details)
     initViews(view)
     setupPrivateKeysViewModel()
-  }
-
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
-    supportActionBar?.setTitle(R.string.key_details)
+    setupCheckPrivateKeysViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -115,7 +123,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
       REQUEST_CODE_DELETE_KEY_DIALOG -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
-            details?.let {
+            nodeKeyDetails?.let {
               account?.let { accountEntity -> privateKeysViewModel.deleteKeys(accountEntity, listOf(it)) }
             }
           }
@@ -126,29 +134,9 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     }
   }
 
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.btnShowPubKey -> {
-        val dialogFragment = InfoDialogFragment.newInstance("", details!!.publicKey!!)
-        dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
-      }
-
-      R.id.btnCopyToClipboard -> {
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
-        Toast.makeText(context, getString(R.string.copied), Toast.LENGTH_SHORT).show()
-      }
-
-      R.id.btnSaveToFile -> chooseDest()
-
-      R.id.btnShowPrKey -> Toast.makeText(context, getString(R.string.see_backups_to_save_your_private_keys),
-          Toast.LENGTH_SHORT).show()
-    }
-  }
-
   private fun saveKey(data: Intent) {
     try {
-      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, details!!.publicKey!!)
+      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, nodeKeyDetails!!.publicKey!!)
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -178,7 +166,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
   }
 
   private fun initViews(view: View) {
-    val pgpContacts = details!!.pgpContacts
+    val pgpContacts = nodeKeyDetails?.pgpContacts ?: emptyList()
     val emails = ArrayList<String>()
 
     for ((email) in pgpContacts) {
@@ -187,33 +175,47 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
     val textViewFingerprint = view.findViewById<TextView>(R.id.textViewFingerprint)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
-        GeneralUtil.doSectionsInText(" ", details!!.fingerprint, 4)), textViewFingerprint)
+        GeneralUtil.doSectionsInText(" ", nodeKeyDetails?.fingerprint, 4)), textViewFingerprint)
 
     val textViewLongId = view.findViewById<TextView>(R.id.textViewLongId)
-    textViewLongId?.text = getString(R.string.template_longid, details!!.longId)
+    textViewLongId?.text = getString(R.string.template_longid, nodeKeyDetails?.longId)
 
     val textViewDate = view.findViewById<TextView>(R.id.textViewDate)
     textViewDate?.text = getString(R.string.template_date, DateFormat.getMediumDateFormat(context).format(
-        Date(TimeUnit.MILLISECONDS.convert(details?.created ?: 0, TimeUnit.SECONDS))))
+        Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
 
     val textViewUsers = view.findViewById<TextView>(R.id.textViewUsers)
     textViewUsers.text = getString(R.string.template_users, TextUtils.join(", ", emails))
+
+    tVPassPhraseVerification = view.findViewById(R.id.tVPassPhraseVerification)
 
     initButtons(view)
   }
 
   private fun initButtons(view: View) {
-    view.findViewById<View>(R.id.btnShowPubKey)?.setOnClickListener(this)
-    view.findViewById<View>(R.id.btnCopyToClipboard)?.setOnClickListener(this)
-    view.findViewById<View>(R.id.btnSaveToFile)?.setOnClickListener(this)
-    view.findViewById<View>(R.id.btnShowPrKey)?.setOnClickListener(this)
+    view.findViewById<View>(R.id.btnShowPubKey)?.setOnClickListener {
+      val dialogFragment = InfoDialogFragment.newInstance("", nodeKeyDetails!!.publicKey!!)
+      dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
+    }
+
+    view.findViewById<View>(R.id.btnCopyToClipboard)?.setOnClickListener {
+      val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+      clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", nodeKeyDetails?.publicKey))
+      Toast.makeText(context, getString(R.string.copied), Toast.LENGTH_SHORT).show()
+    }
+    view.findViewById<View>(R.id.btnSaveToFile)?.setOnClickListener {
+      chooseDest()
+    }
+    view.findViewById<View>(R.id.btnShowPrKey)?.setOnClickListener {
+      toast(getString(R.string.see_backups_to_save_your_private_keys), Toast.LENGTH_SHORT)
+    }
   }
 
   private fun chooseDest() {
     val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = Constants.MIME_TYPE_PGP_KEY
-    intent.putExtra(Intent.EXTRA_TITLE, "0x" + details!!.longId + ".asc")
+    intent.putExtra(Intent.EXTRA_TITLE, "0x" + nodeKeyDetails!!.longId + ".asc")
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
   }
 
@@ -233,9 +235,51 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showInfoDialog(
               dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't delete a key with id = {${details?.longId ?: ""}}")
+              ?: "Couldn't delete a key with id = {${nodeKeyDetails?.longId ?: ""}}")
           baseActivity.countingIdlingResource.decrementSafely()
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
+        }
+      }
+    })
+  }
+
+  private fun setupCheckPrivateKeysViewModel() {
+    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner, { it ->
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+        }
+
+        Result.Status.SUCCESS -> {
+          val checkResult = it.data?.firstOrNull()
+          val verificationMsg: String?
+          if (checkResult != null) {
+            if (checkResult.nodeKeyDetails.isPrivate) {
+              if (checkResult.e == null) {
+                verificationMsg = getString(R.string.stored_pass_phrase_matched)
+              } else {
+                verificationMsg = getString(R.string.stored_pass_phrase_mismatch)
+                context?.let {
+                  tVPassPhraseVerification?.setTextColor(UIUtil.getColor(it, R.color.red))
+                }
+              }
+            } else verificationMsg = getString(R.string.not_private_key)
+          } else {
+            verificationMsg = getString(R.string.could_not_check_pass_phrase)
+            context?.let {
+              tVPassPhraseVerification?.setTextColor(UIUtil.getColor(it, R.color.red))
+            }
+          }
+
+          tVPassPhraseVerification?.text = verificationMsg
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showInfoDialog(dialogMsg = it.exception?.message
+              ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.could_not_check_pass_phrase))
+          baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })

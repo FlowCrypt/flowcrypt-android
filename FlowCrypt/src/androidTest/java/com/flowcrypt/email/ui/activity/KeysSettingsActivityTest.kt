@@ -24,6 +24,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
+import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -175,6 +176,9 @@ class KeysSettingsActivityTest : BaseTest() {
             DateFormat.getMediumDateFormat(getTargetContext()).format(
                 Date(TimeUnit.MILLISECONDS.convert(details.created, TimeUnit.SECONDS))))))))
 
+    onView(withId(R.id.tVPassPhraseVerification))
+        .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
+
     val emails = ArrayList<String>()
 
     for (pgpContact in details.pgpContacts) {
@@ -183,6 +187,25 @@ class KeysSettingsActivityTest : BaseTest() {
 
     onView(withId(R.id.textViewUsers))
         .check(matches(withText(getResString(R.string.template_users, TextUtils.join(", ", emails)))))
+  }
+
+  @Test
+  fun testKeyDetailsTestPassPhraseMismatch() {
+    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+        "pgp/default@denbond7.com_secondKey_prv_default.asc")
+    PrivateKeysManager.saveKeyToDatabase(
+        accountEntity = addAccountToDatabaseRule.account,
+        nodeKeyDetails = details,
+        passphrase = "wrong passphrase",
+        type = KeyDetails.Type.EMAIL
+    )
+
+    onView(withId(R.id.recyclerViewKeys))
+        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
+
+    onView(withId(R.id.tVPassPhraseVerification))
+        .check(matches(withText(getResString(R.string.stored_pass_phrase_mismatch))))
+        .check(matches(hasTextColor(R.color.red)))
   }
 
   @Test
