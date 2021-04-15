@@ -30,7 +30,8 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
+import com.flowcrypt.email.extensions.kotlin.toByteArray
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toNodeKeyDetails
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.model.PgpContact
@@ -53,6 +54,7 @@ import kotlinx.coroutines.withContext
 import org.pgpainless.PGPainless
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.key.util.UserId
+import java.nio.CharBuffer
 import java.util.*
 
 /**
@@ -84,7 +86,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         }
       }
 
-  fun changePassphrase(newPassphrase: String) {
+  fun changePassphrase(newPassphrase: CharArray) {
     viewModelScope.launch {
       try {
         changePassphraseLiveData.value = Result.loading()
@@ -98,7 +100,11 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         }
 
         roomDatabase.keysDao().updateSuspend(list.map { keyEntity ->
-          with(getModifiedNodeKeyDetails(keyEntity.passphrase, newPassphrase, keyEntity.privateKeyAsString)) {
+          with(
+              getModifiedNodeKeyDetails(
+                keyEntity.passphrase?.toCharArray(), newPassphrase, keyEntity.privateKeyAsString
+              )
+          ) {
             if (isFullyDecrypted == true) {
               throw IllegalArgumentException("Error. The key is decrypted!")
             }
@@ -107,7 +113,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                 privateKey = KeyStoreCryptoManager.encryptSuspend(privateKey).toByteArray(),
                 publicKey = publicKey?.toByteArray()
                     ?: throw NullPointerException("NodeKeyDetails.publicKey == null"),
-                passphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase)
+                passphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.toByteArray())
             )
           }
         })
@@ -379,8 +385,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  private suspend fun getModifiedNodeKeyDetails(oldPassphrase: String?,
-                                                newPassphrase: String,
+  private suspend fun getModifiedNodeKeyDetails(oldPassphrase: CharArray?,
+                                                newPassphrase: CharArray,
                                                 originalPrivateKey: String?): NodeKeyDetails =
       withContext(Dispatchers.IO) {
         val keyDetailsList = PgpKey.parseKeys(originalPrivateKey!!.toByteArray())
@@ -392,7 +398,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         val nodeKeyDetails = keyDetailsList[0]
         val longId = nodeKeyDetails.longId
 
-        if (TextUtils.isEmpty(oldPassphrase)) {
+        if (TextUtils.isEmpty(CharBuffer.wrap(oldPassphrase))) {
           throw IllegalStateException("Passphrase for key with longid $longId not found")
         }
 

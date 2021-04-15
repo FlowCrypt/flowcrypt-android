@@ -1,11 +1,10 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors:
- *   DenBond7
  *   Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions.lang
+package com.flowcrypt.email.extensions.kotlin
 
 import java.util.Locale
 

@@ -21,6 +21,7 @@ import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import org.apache.commons.codec.android.binary.Hex
 import org.apache.commons.codec.android.digest.DigestUtils
+import java.nio.CharBuffer
 import java.util.*
 
 /**
@@ -60,31 +61,31 @@ class SecurityUtils {
         throw NoPrivateKeysAvailableException(context, account.email)
       }
 
-      var firstPassPhrase: String? = null
+      var firstPassPhrase: CharArray? = null
 
       for (i in keys.indices) {
         val key = keys[i]
 
-        val passPhrase = key.passphrase
+        val passPhrase = key.passphrase?.toCharArray()
         val private = key.privateKeyAsString
 
         if (i == 0) {
           firstPassPhrase = passPhrase
-        } else if (passPhrase != firstPassPhrase) {
+        } else if (!passPhrase.contentEquals(firstPassPhrase)) {
           throw DifferentPassPhrasesException(context.getString(R.string.keys_have_different_pass_phrase))
         }
 
-        if (passPhrase.isNullOrEmpty()) {
+        if (CharBuffer.wrap(passPhrase).isEmpty()) {
           throw PrivateKeyStrengthException(context.getString(R.string.empty_pass_phrase))
         }
 
-        PgpPwd.checkForWeakPassphrase(passPhrase)
+        PgpPwd.checkForWeakPassphrase(passPhrase ?: "".toCharArray())
 
         val nodeKeyDetailsList = PgpKey.parseKeys(private).toNodeKeyDetailsList()
         val keyDetails = nodeKeyDetailsList.first()
 
         val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
-          PgpKey.encryptKey(private, passPhrase)
+          if (passPhrase != null) PgpKey.encryptKey(private, passPhrase) else private
         } else {
           keyDetails.privateKey
         }

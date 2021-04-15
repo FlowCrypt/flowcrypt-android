@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
 
-  fun checkKeys(keys: List<NodeKeyDetails>, passphrase: String) {
+  fun checkKeys(keys: List<NodeKeyDetails>, passphrase: CharArray) {
     viewModelScope.launch {
       checkPrvKeysLiveData.value = Result.loading()
       if (passphrase.isEmpty()) {

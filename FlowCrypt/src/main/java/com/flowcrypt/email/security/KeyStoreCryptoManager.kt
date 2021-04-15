@@ -69,6 +69,18 @@ object KeyStoreCryptoManager {
   }
 
   /**
+   * This method encrypts an input bytes via AES symmetric algorithm and returns encrypted data.
+   * It can be used with coroutines.
+   *
+   * @param plainData The input text which will be encrypted.
+   * @return A base64 encoded encrypted result.
+   * @throws Exception The encryption process can throw a lot of exceptions.
+   */
+  suspend fun encryptSuspend(plainData: ByteArray): String = withContext(Dispatchers.IO) {
+    return@withContext encrypt(plainData)
+  }
+
+  /**
    * This method encrypts an input text via AES symmetric algorithm and returns encrypted data.
    * Don't call it from the main thread.
    *
@@ -82,6 +94,23 @@ object KeyStoreCryptoManager {
     synchronized(this) {
       val cipher = getCipherForEncryption()
       val encryptedBytes = cipher.doFinal(input)
+      return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
+    }
+  }
+
+  /**
+   * This method encrypts an input bytes via AES symmetric algorithm and returns encrypted data.
+   * Don't call it from the main thread.
+   *
+   * @param plainData The bytes which will be encrypted.
+   * @return A base64 encoded encrypted result.
+   * @throws Exception The encryption process can throw a lot of exceptions.
+   */
+  @WorkerThread
+  fun encrypt(plainData: ByteArray): String {
+    synchronized(this) {
+      val cipher = getCipherForEncryption()
+      val encryptedBytes = cipher.doFinal(plainData)
       return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
     }
   }

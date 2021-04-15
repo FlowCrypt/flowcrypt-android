@@ -5,16 +5,16 @@
 
 package com.flowcrypt.email.security.pgp
 
-import org.bouncycastle.bcpg.ArmoredInputStream
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import org.bouncycastle.bcpg.ArmoredInputStream
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
+import org.pgpainless.PGPainless
 
 /**
  * @author Denis Bondarenko

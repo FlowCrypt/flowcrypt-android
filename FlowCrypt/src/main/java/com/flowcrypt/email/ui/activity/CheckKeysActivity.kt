@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.kotlin.toCharArray
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -132,8 +133,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     when (v.id) {
       R.id.buttonPositiveAction -> {
         UIUtil.hideSoftInput(this, editTextKeyPassword)
-        val passphrase = editTextKeyPassword?.text?.toString()
-        if (passphrase.isNullOrEmpty()) {
+        val passphrase = editTextKeyPassword?.text?.toCharArray() ?: "".toCharArray()
+        if (passphrase.isEmpty()) {
           showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty))
         } else {
           snackBar?.dismiss()

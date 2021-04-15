@@ -1,11 +1,10 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors:
- *   DenBond7
  *   Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions.pgp
+package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
@@ -66,7 +65,7 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
 
   return NodeKeyDetails(
       isFullyDecrypted = keyRingInfo.isFullyDecrypted,
-      isFullyEncrypted = keyRingInfo.isFullyEncrypted(),
+      isFullyEncrypted = isFullyEncrypted(),
       privateKey = privateKey,
       publicKey = publicKey,
       users = keyRingInfo.userIds,
@@ -78,6 +77,14 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
       algo = algo,
       passphrase = null,
       errorMsg = null)
+}
+
+fun PGPKeyRing.isFullyDecrypted(): Boolean {
+  return if (this is PGPSecretKeyRing) isFullyDecrypted() else true
+}
+
+fun PGPKeyRing.isFullyEncrypted(): Boolean {
+  return if (this is PGPSecretKeyRing) isFullyEncrypted() else false
 }
 
 @Throws(IOException::class)

@@ -1,27 +1,35 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors = Ivan Pizhenko
+ * Contributors:
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.extensions.lang.countOfMatchesZeroOneOrMore
-import com.flowcrypt.email.extensions.lang.normalize
-import java.lang.IllegalArgumentException
+import com.flowcrypt.email.extensions.kotlin.countOfMatchesZeroOneOrMore
+import com.flowcrypt.email.extensions.kotlin.isWhiteSpace
+import com.flowcrypt.email.extensions.kotlin.normalize
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.bcpg.ArmoredOutputStream
+import org.bouncycastle.util.Strings
+
 
 @Suppress("unused")
 object PgpArmor {
-  data class CryptoArmorStringHeaderDefinition (
+  data class CryptoArmorStringHeaderDefinition(
       val begin: String,
       val middle: String? = null,
       val end: String,
       val replace: Boolean
   )
 
-  data class CryptoArmorRegexHeaderDefinition (
+  data class CryptoArmorRegexHeaderDefinition(
       val beginRegexp: Regex,
       val middleRegexp: Regex? = null,
       val endRegexp: Regex,
@@ -134,6 +142,181 @@ object PgpArmor {
     }
 
     return result
+  }
+
+  data class PreparedForDecrypt(
+      val isArmored: Boolean,
+      val message: PgpMessage,
+      val cleartext: ByteArray?
+  ) {
+    val isCleartext = cleartext != null
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as PreparedForDecrypt
+
+      if (isArmored != other.isArmored) return false
+      if (message != other.message) return false
+      if (cleartext != null) {
+        if (other.cleartext == null) return false
+        if (!cleartext.contentEquals(other.cleartext)) return false
+      } else if (other.cleartext != null) return false
+      if (isCleartext != other.isCleartext) return false
+
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = isArmored.hashCode()
+      result = 31 * result + message.hashCode()
+      result = 31 * result + (cleartext?.contentHashCode() ?: 0)
+      result = 31 * result + isCleartext.hashCode()
+      return result
+    }
+  }
+
+  @JvmStatic
+  fun cryptoMsgPrepareForDecrypt(data: ByteArray): PreparedForDecrypt {
+    if (data.isEmpty()) throw IllegalArgumentException("Can't decrypt empty message")
+    val chunk = data.copyOfRange(0, data.size.coerceAtMost(50)).toString(StandardCharsets.US_ASCII)
+    return if (chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.SIGNED_MSG]!!.begin)) {
+      val signedMessage = readSignedClearTextMessage(data)
+      PreparedForDecrypt(
+          isArmored = true,
+          message = signedMessage.signature,
+          cleartext = signedMessage.content
+      )
+    } else {
+      val isArmored = chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.ENCRYPTED_MSG]!!.begin)
+      val inputStream = data.inputStream()
+      PreparedForDecrypt(
+          isArmored = isArmored,
+          message = PgpMessage.read(
+              if (isArmored) ArmoredInputStream(inputStream) else inputStream
+          ),
+          cleartext = null
+      )
+    }
+  }
+
+  private val lineSeparatorBytes = Strings.lineSeparator().toByteArray()
+
+  data class CleartextSignedMessage(
+      val content: ByteArray,
+      val signature: PgpMessage
+  ) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as CleartextSignedMessage
+
+      if (!content.contentEquals(other.content)) return false
+      if (signature != other.signature) return false
+
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = content.contentHashCode()
+      result = 31 * result + signature.hashCode()
+      return result
+    }
+  }
+
+  // Based on this example:
+  // https://github.com/bcgit/bc-java/blob/bc3b92f1f0e78b82e2584c5fb4b226a13e7f8b3b/pg/src/main/java/org/bouncycastle/openpgp/examples/ClearSignedFileProcessor.java
+  @JvmStatic
+  fun readSignedClearTextMessage(data: ByteArray): CleartextSignedMessage {
+    data.inputStream().use { byteInput ->
+      ArmoredInputStream(byteInput).use { armoredInput ->
+        val out = ByteArrayOutputStream()
+        val lineOut = ByteArrayOutputStream()
+        var lookAhead = readInputLine(lineOut, armoredInput)
+
+        if (lookAhead != -1 && armoredInput.isClearText) {
+          var line = lineOut.toByteArray()
+          out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
+          out.write(lineSeparatorBytes)
+          while (lookAhead != -1 && armoredInput.isClearText) {
+            lookAhead = readInputLine(lineOut, lookAhead, armoredInput)
+            line = lineOut.toByteArray()
+            out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
+            out.write(lineSeparatorBytes)
+          }
+        } else {
+          // a single line file
+          if (lookAhead != -1) {
+            val line: ByteArray = lineOut.toByteArray()
+            out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
+            out.write(lineSeparatorBytes)
+          }
+        }
+
+        out.close()
+        return CleartextSignedMessage(out.toByteArray(), PgpMessage.read(armoredInput))
+      }
+    }
+  }
+
+  @Throws(IOException::class)
+  @JvmStatic
+  private fun readInputLine(output: ByteArrayOutputStream, input: InputStream): Int {
+    output.reset()
+    var lookAhead = -1
+    var ch: Int
+    while (input.read().also { ch = it } >= 0) {
+      output.write(ch)
+      if (ch == '\r'.toInt() || ch == '\n'.toInt()) {
+        lookAhead = readPassedEOL(output, ch, input)
+        break
+      }
+    }
+    return lookAhead
+  }
+
+  @Throws(IOException::class)
+  @JvmStatic
+  private fun readInputLine(
+      output: ByteArrayOutputStream,
+      initialLookAhead: Int,
+      input: InputStream
+  ): Int {
+    var lookAhead = initialLookAhead
+    output.reset()
+    var ch = lookAhead
+    do {
+      output.write(ch)
+      if (ch == '\r'.toInt() || ch == '\n'.toInt()) {
+        lookAhead = readPassedEOL(output, ch, input)
+        break
+      }
+    } while (input.read().also { ch = it } >= 0)
+    if (ch < 0) {
+      lookAhead = -1
+    }
+    return lookAhead
+  }
+
+  @Throws(IOException::class)
+  @JvmStatic
+  private fun readPassedEOL(output: ByteArrayOutputStream, lastCh: Int, input: InputStream): Int {
+    var lookAhead: Int = input.read()
+    if (lastCh == '\r'.toInt() && lookAhead == '\n'.toInt()) {
+      output.write(lookAhead)
+      lookAhead = input.read()
+    }
+    return lookAhead
+  }
+
+  @JvmStatic
+  private fun getLengthWithoutSeparatorOrTrailingWhitespace(line: ByteArray): Int {
+    var end = line.size - 1
+    while (end >= 0 && line[end].isWhiteSpace) {
+      end--
+    }
+    return end + 1
   }
 
   @JvmStatic

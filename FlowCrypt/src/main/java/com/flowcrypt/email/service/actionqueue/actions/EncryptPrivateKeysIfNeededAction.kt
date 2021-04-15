@@ -50,7 +50,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     }
 
     for (keyEntity in keyEntities) {
-      val passphrase = keyEntity.passphrase ?: continue
+      val passphrase = keyEntity.passphrase?.toCharArray() ?: continue
 
       val keyDetailsList = PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray(), false)
           .toNodeKeyDetailsList()

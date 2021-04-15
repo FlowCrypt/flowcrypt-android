@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.kotlin.toCharArray
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
@@ -36,7 +37,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override fun onConfirmPassPhraseSuccess() {
-    privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())
+    privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toCharArray())
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {

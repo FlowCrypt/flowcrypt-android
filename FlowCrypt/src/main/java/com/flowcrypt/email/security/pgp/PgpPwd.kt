@@ -11,6 +11,7 @@ import com.nulabinc.zxcvbn.Zxcvbn
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.nio.CharBuffer
 import java.security.SecureRandom
 import java.util.concurrent.TimeUnit
 
@@ -39,13 +40,16 @@ object PgpPwd {
    * @throws [PrivateKeyStrengthException] if the given passphrase is weak
    * @throws [IllegalArgumentException] if missing passphrase strength evaluation
    */
-  fun checkForWeakPassphrase(passphrase: String) {
-    val measure = Zxcvbn().measure(passphrase, listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
+  fun checkForWeakPassphrase(passphrase: CharArray) {
+    val measure = Zxcvbn().measure(
+        CharBuffer.wrap(passphrase), listOf(*Constants.PASSWORD_WEAK_WORDS)
+    ).guesses
     val passwordStrength = estimateStrength(measure)
-
     when (passwordStrength.word.word) {
       Constants.PASSWORD_QUALITY_WEAK,
-      Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
+      Constants.PASSWORD_QUALITY_POOR -> {
+        throw PrivateKeyStrengthException("Pass phrase is too weak")
+      }
 
       Constants.PASSWORD_QUALITY_REASONABLE,
       Constants.PASSWORD_QUALITY_GOOD,
@@ -54,7 +58,7 @@ object PgpPwd {
         //everything looks good
       }
 
-      else -> throw IllegalArgumentException("Missed passphrase strength evaluation found")
+      else -> throw IllegalArgumentException("Passphrase strength could not be evaluated")
     }
   }
 

@@ -40,7 +40,7 @@ data class KeyEntity(
   val privateKeyAsString = String(privateKey)
 
   @Ignore
-  val publicKeyAsString = String(privateKey)
+  val publicKeyAsString = String(publicKey)
 
   override fun toString(): String {
     return "KeyEntity(id=$id," +

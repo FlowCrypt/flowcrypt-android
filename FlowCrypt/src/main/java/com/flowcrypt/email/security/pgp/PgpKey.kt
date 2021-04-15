@@ -5,13 +5,15 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.extensions.pgp.armor
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.changePassphrase
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.decrypt
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.encrypt
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toNodeKeyDetails
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
 import org.pgpainless.key.collection.PGPKeyRingCollection
-import org.pgpainless.util.Passphrase
 import java.io.InputStream
 
 @Suppress("unused")
@@ -21,8 +23,8 @@ object PgpKey {
    *
    * @param armored Should be a single private key.
    */
-  fun encryptKey(armored: String, passphrase: String): String {
-    return encryptKey(extractSecretKeyRing(armored), passphrase).armor()
+  fun encryptKey(armored: String, passphrase: CharArray): String {
+    return extractSecretKeyRing(armored).encrypt(passphrase).armor()
   }
 
   /**
@@ -30,8 +32,8 @@ object PgpKey {
    *
    * @param armored Should be a single private key.
    */
-  fun decryptKey(armored: String, passphrase: String): String {
-    return decryptKey(extractSecretKeyRing(armored), passphrase).armor()
+  fun decryptKey(armored: String, passphrase: CharArray): String {
+    return extractSecretKeyRing(armored).decrypt(passphrase).armor()
   }
 
   /**
@@ -39,8 +41,12 @@ object PgpKey {
    *
    * @param armored Should be a single private key.
    */
-  fun changeKeyPassphrase(armored: String, oldPassphrase: String, newPassphrase: String): String {
-    return changeKeyPassphrase(extractSecretKeyRing(armored), oldPassphrase, newPassphrase).armor()
+  fun changeKeyPassphrase(
+      armored: String,
+      oldPassphrase: CharArray,
+      newPassphrase: CharArray
+  ): String {
+    return extractSecretKeyRing(armored).changePassphrase(oldPassphrase, newPassphrase).armor()
   }
 
   fun parseKeys(source: String, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
@@ -58,43 +64,23 @@ object PgpKey {
    *
    * @return parsing result object
    */
-  fun parseKeys(source: InputStream, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
-    return ParseKeyResult(PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource))
-  }
-
-  private fun decryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
-    return PGPainless.modifyKeyRing(key)
-        .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
-        .withSecureDefaultSettings()
-        .toNoPassphrase()
-        .done()
-  }
-
-  private fun encryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
-    return PGPainless.modifyKeyRing(key)
-        .changePassphraseFromOldPassphrase(null)
-        .withSecureDefaultSettings()
-        .toNewPassphrase(Passphrase.fromPassword(passphrase))
-        .done()
-  }
-
-  private fun changeKeyPassphrase(
-      key: PGPSecretKeyRing,
-      oldPassphrase: String,
-      newPassphrase: String
-  ): PGPSecretKeyRing {
-    return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
+  fun parseKeys(
+      source: InputStream,
+      throwExceptionIfUnknownSource: Boolean = true
+  ): ParseKeyResult {
+    return ParseKeyResult(
+        PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource)
+    )
   }
 
   private fun extractSecretKeyRing(armored: String): PGPSecretKeyRing {
     val parseKeyResult = parseKeys(armored)
-    if (parseKeyResult.getAllKeys().isEmpty()) {
-      throw IllegalArgumentException("Keys not found")
-    }
-    if (parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.firstOrNull() is PGPSecretKeyRing)
+    if (parseKeyResult.getAllKeys().isEmpty()) throw IllegalArgumentException("Keys not found")
+    if (parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.firstOrNull()
+            is PGPSecretKeyRing) {
       return parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.first()
-    else
-      throw IllegalArgumentException("Key is not a secret key")
+    }
+    throw IllegalArgumentException("Key is not a secret key")
   }
 
   data class ParseKeyResult(val pgpKeyRingCollection: PGPKeyRingCollection) {

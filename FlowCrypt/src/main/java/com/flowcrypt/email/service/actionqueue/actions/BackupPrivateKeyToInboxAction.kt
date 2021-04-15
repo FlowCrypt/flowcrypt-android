@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.kotlin.decodeToCharArray
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -45,12 +46,13 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
       val key = PgpKey.parseKeys(keyEntity.privateKey).toNodeKeyDetailsList().first()
-      val encryptedKey: String
-      if (key.isFullyEncrypted == true) {
-        encryptedKey = key.privateKey ?: throw IllegalArgumentException("empty key")
+      val encryptedKey = if (key.isFullyEncrypted == true) {
+        key.privateKey ?: throw IllegalArgumentException("empty key")
       } else {
         try {
-          encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
+          PgpKey.encryptKey(
+              keyEntity.privateKeyAsString, keyEntity.passphrase!!.toCharArray()
+          )
         } catch (e: Exception) {
           throw IllegalStateException("An error occurred during encrypting some key", e)
         }
