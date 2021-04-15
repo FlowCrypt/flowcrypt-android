@@ -104,6 +104,17 @@
             app:layout_constraintTop_toBottomOf="@+id/textViewDate"
             tools:text="Users: email@domain.com, email2@domain.com" />
 
+        <TextView
+            android:id="@+id/tVPassPhraseVerification"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:text="@string/stored_pass_phrase_loading"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUsers" />
+
         <Button
             android:id="@+id/btnShowPrKey"
             style="@style/AppWidget.Button.Red"
@@ -114,7 +125,7 @@
             android:theme="@style/AppWidget.Button.Red"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewUsers" />
+            app:layout_constraintTop_toBottomOf="@+id/tVPassPhraseVerification" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLeft"

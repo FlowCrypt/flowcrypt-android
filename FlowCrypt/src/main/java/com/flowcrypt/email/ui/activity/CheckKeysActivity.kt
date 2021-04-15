@@ -215,7 +215,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
 
   private fun setupCheckPrivateKeysViewModel() {
     checkPrivateKeysViewModel = ViewModelProvider(this).get(CheckPrivateKeysViewModel::class.java)
-    val observer = Observer<Result<List<NodeKeyDetails>>> {
+    val observer = Observer<Result<List<CheckPrivateKeysViewModel.CheckResult>>> {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -228,7 +228,10 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
             when (it.status) {
               Result.Status.SUCCESS -> {
                 val resultKeys = it.data ?: emptyList()
-                val sessionUnlockedKeys = resultKeys.filter { keyDetails -> keyDetails.passphrase?.isNotEmpty() == true }
+                val sessionUnlockedKeys = resultKeys
+                    .filter { checkResult ->
+                      checkResult.nodeKeyDetails.passphrase?.isNotEmpty() == true
+                    }.map { checkResult -> checkResult.nodeKeyDetails }
                 if (sessionUnlockedKeys.isNotEmpty()) {
                   unlockedKeys.addAll(sessionUnlockedKeys)
 
@@ -253,7 +256,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
 
                 } else {
                   if (resultKeys.size == 1) {
-                    showInfoSnackbar(rootView, resultKeys.first().errorMsg)
+                    showInfoSnackbar(rootView, resultKeys.first().e?.message)
                   } else {
                     showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
                   }
@@ -269,7 +272,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
       }
     }
 
-    checkPrivateKeysViewModel.liveData.observe(this, observer)
+    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(this, observer)
   }
 
   private fun checkExistingOfPartiallyEncryptedPrivateKeys() {
