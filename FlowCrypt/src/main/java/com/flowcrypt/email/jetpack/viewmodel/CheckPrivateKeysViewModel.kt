@@ -40,7 +40,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
   }
 
   private suspend fun checkKeysInternal(keys: List<NodeKeyDetails>,
-                                        passphrase: String): List<CheckResult> =
+                                        passphrase: CharArray): List<CheckResult> =
       withContext(Dispatchers.IO) {
         val context: Context = getApplication()
         val resultList = mutableListOf<CheckResult>()
@@ -53,11 +53,11 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
               e = IllegalArgumentException("Empty source")
             } else {
               if (copy.isFullyDecrypted == true) {
-                copy.passphrase = passphrase
+                copy.passphrase = String(passphrase)
               } else {
                 try {
                   PgpKey.decryptKey(prvKey, passphrase)
-                  copy.passphrase = passphrase
+                  copy.passphrase = String(passphrase)
                 } catch (ex: Exception) {
                   //to prevent leak sensitive info we skip printing stack trace for release builds
                   if (GeneralUtil.isDebugBuild()) {
@@ -78,5 +78,25 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
       }
 
   data class CheckResult(val nodeKeyDetails: NodeKeyDetails,
-                         val passphrase: String, val e: Exception? = null)
+                         val passphrase: CharArray, val e: Exception? = null) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as CheckResult
+
+      if (nodeKeyDetails != other.nodeKeyDetails) return false
+      if (!passphrase.contentEquals(other.passphrase)) return false
+      if (e != other.e) return false
+
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = nodeKeyDetails.hashCode()
+      result = 31 * result + passphrase.contentHashCode()
+      result = 31 * result + (e?.hashCode() ?: 0)
+      return result
+    }
+  }
 }

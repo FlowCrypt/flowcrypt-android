@@ -98,7 +98,11 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
           is PGPSecretKeyRing -> SecretKeyPacketWrapper(obj)
           is PGPPublicKeyRing -> PublicKeyPacketWrapper(obj)
           is PGPPublicKey -> PublicSubKeyPacketWrapper(obj)
-          is PGPCompressedData -> CompressedDataPacketWrapper(obj)
+          is PGPCompressedData -> {
+            val uncompressed = read(obj.dataStream)
+            packets.addAll(uncompressed.packets)
+            null
+          }
           is PGPLiteralData -> LiteralDataPacketWrapper(obj)
           is PGPOnePassSignatureList -> OnePassSignaturePacketWrapper(obj)
           is PGPEncryptedDataList -> {
@@ -113,13 +117,13 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
             throw IllegalArgumentException("Unsupported PGP object of type ${obj.javaClass.name}")
           }
         }
-        packets.add(p)
+        if ( p!= null) packets.add(p)
       }
       return PgpMessage(packets)
     }
   }
 
-  class DecryptionError(message: String) : RuntimeException(message)
+  class DecryptionError(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
   private val digestCalculatorProvider = BcPGPDigestCalculatorProvider()
 
@@ -133,7 +137,7 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
   fun decrypt(
       secretKeys: List<PGPSecretKeyRing>?,
       passwords: List<CharArray>?
-  ): List<Pair<AbstractPacketWrapper, InputStream>> {
+  ): List<Pair<AbstractPacketWrapper, PGPLiteralData>> {
     return when {
       passwords != null -> decryptSym(passwords)
       secretKeys != null -> decryptPk(secretKeys)
@@ -143,15 +147,16 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
 
   private fun decryptSym(
       passwords: List<CharArray>
-  ): List<Pair<AbstractPacketWrapper, InputStream>> {
+  ): List<Pair<AbstractPacketWrapper, PGPLiteralData>> {
     val encrypted = packets.filter { it.packetType == PacketTags.SYMMETRIC_KEY_ENC_SESSION }
         .map { it as SymmetricKeyEncSessionPacketWrapper }.toList()
     if (encrypted.isEmpty()) {
       throw DecryptionError("No symmetrically encrypted session key packet found")
     }
 
-    val result = mutableListOf<Pair<AbstractPacketWrapper, InputStream>>()
+    val result = mutableListOf<Pair<AbstractPacketWrapper, PGPLiteralData>>()
     val decrypted = BooleanArray(encrypted.size)
+    var lastException: Exception? = null
 
     for (password in passwords) {
       val decryptorFactory = BcPBEDataDecryptorFactory(password, digestCalculatorProvider)
@@ -163,14 +168,16 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
                 "Unsupported encryption method in the symmetrically encrypted packet"
             )
           }
-          val dataStream: InputStream
+          val plainText: PGPLiteralData
           try {
-            dataStream = method.getDataStream(decryptorFactory)
+            plainText = extractLiteralData(method.getDataStream(decryptorFactory))
           } catch (ex: Exception) {
+            lastException = ex
             // likely password didn't match
+            ex.printStackTrace()
             continue
           }
-          result.add(Pair(item.value, dataStream))
+          result.add(Pair(item.value, plainText))
           decrypted[item.index] = true
           break
         }
@@ -178,7 +185,7 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
     }
 
     if (result.isEmpty()) {
-      throw DecryptionError("Decryption failed")
+      throw DecryptionError("Decryption failed", lastException)
     }
 
     return result
@@ -186,17 +193,17 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
 
   private fun decryptPk(
       secretKeys: List<PGPSecretKeyRing>
-  ): List<Pair<AbstractPacketWrapper, InputStream>> {
-    var exception: Exception? = null
-
+  ): List<Pair<AbstractPacketWrapper, PGPLiteralData>> {
     val encrypted = packets.filter { it.packetType == PacketTags.PUBLIC_KEY_ENC_SESSION }
         .map { it as PublicKeyEncSessionPacketWrapper }.toList()
     if (encrypted.isEmpty()) {
       throw DecryptionError("No public key encrypted session key packet found")
     }
 
-    val result = mutableListOf<Pair<AbstractPacketWrapper, InputStream>>()
+    val result = mutableListOf<Pair<AbstractPacketWrapper, PGPLiteralData>>()
     val decrypted = BooleanArray(encrypted.size)
+    var exception: Exception? = null
+    var lastException: Exception? = null
 
     for (secretKey in secretKeys) {
       val publicKey = secretKey.publicKey
@@ -224,19 +231,21 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
             }
             val privateKey = decryptionKey.extractPrivateKey(null)
             val decryptorFactory = BcPublicKeyDataDecryptorFactory(privateKey)
-            val dataStream: InputStream
+            val plainText: PGPLiteralData
             try {
               val alg = method.getSymmetricAlgorithm(decryptorFactory)
               if (!algorithms.contains(alg)) {
                 exception = DecryptionError("A non-preferred symmetric algorithm was used")
                 continue
               }
-              dataStream = method.getDataStream(decryptorFactory)
+              plainText = extractLiteralData(method.getDataStream(decryptorFactory))
             } catch (ex: Exception) {
+              lastException = ex
               // likely private key didn't match
+              ex.printStackTrace()
               continue
             }
-            result.add(Pair(item.value, dataStream))
+            result.add(Pair(item.value, plainText))
             decrypted[item.index] = true
             break
           }
@@ -246,9 +255,22 @@ class PgpMessage(val packets: List<AbstractPacketWrapper>) {
     }
 
     if (result.isEmpty()) {
-      throw exception ?: DecryptionError("Decryption failed")
+      throw exception ?: DecryptionError("Decryption failed", lastException)
     }
 
     return result
+  }
+
+  private fun extractLiteralData(dataStream: InputStream): PGPLiteralData {
+    val objFactory = PGPObjectFactory(dataStream, JcaKeyFingerprintCalculator())
+    return when (val obj = objFactory.nextObject()) {
+      is PGPLiteralData -> obj
+      is PGPCompressedData -> {
+        val objFactory2 = PGPObjectFactory(obj.dataStream, JcaKeyFingerprintCalculator())
+        val obj2 = objFactory2.nextObject()
+        obj2 as PGPLiteralData
+      }
+      else -> throw RuntimeException("Unsupported PGP object")
+    }
   }
 }

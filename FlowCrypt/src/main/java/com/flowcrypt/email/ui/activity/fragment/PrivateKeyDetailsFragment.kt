@@ -75,8 +75,8 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     } else {
       nodeKeyDetails?.let {
         val context = context ?: return@let
-        val passPhrase = KeysStorageImpl.getInstance(context)
-            .getPgpPrivateKey(it.longId)?.passphrase ?: ""
+        val passPhrase = (KeysStorageImpl.getInstance(context)
+            .getPgpPrivateKey(it.longId)?.passphrase ?: "").toCharArray()
         checkPrivateKeysViewModel.checkKeys(listOf(it), passPhrase)
       }
     }

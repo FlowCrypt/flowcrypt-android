@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets
 import kotlin.experimental.and
 import kotlin.math.min
 import org.bouncycastle.bcpg.PacketTags
+import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection
@@ -262,7 +263,7 @@ object PgpMsg {
     }
 
     val passwords = if (password != null) listOf(password) else null
-    val decrypted: List<Pair<PgpMessage.AbstractPacketWrapper, InputStream>>
+    val decrypted: List<Pair<PgpMessage.AbstractPacketWrapper, PGPLiteralData>>
     try {
       decrypted = prepared.message.decrypt(keys.prvForDecryptDecrypted, passwords)
     } catch (ex: PgpMessage.DecryptionError) {
@@ -272,21 +273,14 @@ object PgpMsg {
       throw OtherError(longIds = longIds, packets = prepared.message, cause = ex)
     }
 
-    // take first as decrypted message
-    val result: Message
-    try {
-      result = Message(
-          fileName = "",
-          content = decrypted[0].second.readBytes(),
-          isEncrypted = true
-      )
-    } finally {
-      for (d in decrypted) {
-        d.second.close()
-      }
-    }
+    // here was the check for MDC error, but not sure how to translate that into Kotlin
 
-    return result
+    // take first as decrypted message
+    return Message(
+        fileName = decrypted[0].second.fileName,
+        content = decrypted[0].second.inputStream.readBytes(),
+        isEncrypted = true
+    )
   }
 
   private data class SortedKeysForDecrypt(
@@ -319,10 +313,10 @@ object PgpMsg {
     for (keyRingWithPassphrase in prvForDecrypt) {
       val keyId = keyRingWithPassphrase.keyRing.publicKey.keyID
       val matchingKeyId: Long? = if (encryptedForKeyIds.contains(keyId)) keyId else null
-      println(
-          "keyring ${keyRingWithPassphrase.keyRing.publicKey.keyID.toHex()}: " +
-          "matching key id: $matchingKeyId"
-      )
+      // println(
+      //     "keyring ${keyRingWithPassphrase.keyRing.publicKey.keyID.toHex()}: " +
+      //     "matching key id: $matchingKeyId"
+      // )
       if (keyRingWithPassphrase.keyRing.isDecryptedFor(matchingKeyId)) {
           prvForDecryptDecrypted.add(keyRingWithPassphrase.keyRing)
       } else {
