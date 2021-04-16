@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncInboxWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
-import com.flowcrypt.email.security.CryptoMigrationUtil
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.CacheManager
@@ -81,7 +80,6 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun onCreate() {
     super.onCreate()
-    CryptoMigrationUtil.doMigrationIfNeeded(this)
     KeysStorageImpl.getInstance(this)
     initPerInstallationSharedPrefs()
     CacheManager.init(this)
