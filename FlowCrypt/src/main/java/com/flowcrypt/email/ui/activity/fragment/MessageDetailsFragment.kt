@@ -660,7 +660,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun setupWebView(block: MsgBlock) {
     emailWebView?.configure()
 
-    val text = clipLargeText(block.content)
+    val text = clipLargeText(block.content) ?: ""
 
     emailWebView?.loadDataWithBaseURL(null, text, "text/html", StandardCharsets.UTF_8.displayName(), null)
     emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {

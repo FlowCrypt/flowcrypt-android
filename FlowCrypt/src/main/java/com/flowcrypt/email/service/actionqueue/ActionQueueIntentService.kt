@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.service.actionqueue
 
-import android.app.IntentService
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
@@ -19,7 +18,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import java.util.*
 
 /**
- * An [IntentService] subclass for handling asynchronous task requests ([Action]) in
+ * An [JobIntentService] subclass for handling asynchronous task requests ([Action]) in
  * a service on a separate handler thread.
  *
  * @author Denis Bondarenko

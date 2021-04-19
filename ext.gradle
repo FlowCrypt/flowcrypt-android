@@ -8,9 +8,9 @@ ext {
     /*Global*/
     appVersionCode = 116
     appVersionName = '1.1.6'
-    buildToolsVersion = '29.0.2'
-    compileSdkVersion = 29
-    targetSdkVersion = 29
+    buildToolsVersion = '30.0.3'
+    compileSdkVersion = 30
+    targetSdkVersion = 30
     minSdkVersion = 26
     javaSourceCompatibility = '1.8'
     /*https://developer.android.com/jetpack/androidx/androidx-rn*/
