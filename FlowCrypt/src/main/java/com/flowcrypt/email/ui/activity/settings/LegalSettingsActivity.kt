@@ -90,7 +90,7 @@ class LegalSettingsActivity : BaseSettingsActivity() {
       if (isRefreshEnabled) {
         swipeRefreshLayout?.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
         swipeRefreshLayout.setOnRefreshListener {
-          webView?.loadUrl(assetsPath)
+          assetsPath?.let { webView?.loadUrl(it) }
         }
       } else {
         swipeRefreshLayout.isEnabled = false
@@ -112,7 +112,7 @@ class LegalSettingsActivity : BaseSettingsActivity() {
           swipeRefreshLayout.isRefreshing = false
         }
       }
-      webView?.loadUrl(assetsPath)
+      assetsPath?.let { webView?.loadUrl(it) }
     }
 
     companion object {
@@ -158,7 +158,7 @@ class LegalSettingsActivity : BaseSettingsActivity() {
   /**
    * The adapter which contains information about tabs.
    */
-  private inner class TabPagerAdapter internal constructor(fragmentManager: FragmentManager)
+  private inner class TabPagerAdapter(fragmentManager: FragmentManager)
     : FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     override fun getItem(i: Int): Fragment {

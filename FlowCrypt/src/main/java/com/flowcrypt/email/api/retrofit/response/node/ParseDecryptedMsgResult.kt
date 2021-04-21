@@ -11,8 +11,8 @@ import android.os.Parcelable
 import android.util.Base64
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.util.CacheManager
@@ -81,7 +81,7 @@ data class ParseDecryptedMsgResult constructor(
                     val decryptedAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
                     val fileName = FileAndDirectoryUtils.normalizeFileName(decryptedAtt.attMeta.name)
                     val file = if (fileName.isNullOrEmpty()) {
-                      createTempFile(directory = tempDir)
+                      File.createTempFile("tmp", null, tempDir)
                     } else {
                       val file = File(tempDir, fileName)
                       if (file.exists()) {

@@ -50,7 +50,10 @@ class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
     rootView.findViewById<View>(R.id.buttonOk).setOnClickListener(this)
 
     val webView = rootView.findViewById<WebView>(R.id.webView)
-    webView.loadDataWithBaseURL(null, dialogMsg, "text/html", StandardCharsets.UTF_8.displayName(), null)
+    dialogMsg?.let {
+      webView.loadDataWithBaseURL(null, it, "text/html",
+          StandardCharsets.UTF_8.displayName(), null)
+    }
     dialog.setView(rootView)
     return dialog.create()
   }
