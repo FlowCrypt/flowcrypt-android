@@ -93,7 +93,8 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class CreateMessageActivityTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+  override val activeActivityRule =
+      lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
@@ -117,8 +118,8 @@ class CreateMessageActivityTest : BaseTest() {
 
   private val pgpContact: PgpContact
     get() {
-      val details =
-          PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/not_attester_user@denbond7.com_prv_default.asc")
+      val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+          "pgp/not_attester_user@denbond7.com_prv_default.asc")
       return details.primaryPgpContact
     }
 
@@ -131,7 +132,8 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withId(R.id.menuActionSend))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(withText(getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_recipients_to))))
+    onView(withText(
+        getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_recipients_to))))
         .check(matches(isDisplayed()))
   }
 
@@ -145,7 +147,7 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withId(R.id.editTextRecipientTo))
         .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
     onView(withId(R.id.editTextEmailSubject))
-        .perform(scrollTo(), typeText("subject"), clearText())
+        .perform(scrollTo(), click(), typeText("subject"), clearText())
         .check(matches(withText(isEmptyString())))
     onView(withId(R.id.menuActionSend))
         .check(matches(isDisplayed()))
@@ -165,7 +167,7 @@ class CreateMessageActivityTest : BaseTest() {
         .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
     onView(withId(R.id.editTextEmailSubject))
         .check(matches(isDisplayed()))
-        .perform(scrollTo(), typeText(EMAIL_SUBJECT))
+        .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT))
     onView(withId(R.id.editTextEmailMessage))
         .perform(scrollTo())
         .check(matches(withText(isEmptyString())))
@@ -381,10 +383,13 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withId(R.id.layoutTo))
         .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard())
+        .perform(
+            typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+            closeSoftKeyboard())
     //move the focus to the next view
     onView(withId(R.id.editTextEmailMessage))
-        .perform(scrollTo(), typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard())
+        .perform(scrollTo(), click(),
+            typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard())
     onView(withId(R.id.menuActionSend))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -396,7 +401,8 @@ class CreateMessageActivityTest : BaseTest() {
         .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
-        .check(matches(withText(not(containsString(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))))
+        .check(matches(withText(not(containsString(
+            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))))
   }
 
   @Test
@@ -466,8 +472,8 @@ class CreateMessageActivityTest : BaseTest() {
   fun testSharePubKeyNoOwnKeys() {
     PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,
         addPrivateKeyToDatabaseRule.keyPath)
-    val keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/key_testing@denbond7.com_keyB_default.asc")
+    val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+        "pgp/key_testing@denbond7.com_keyB_default.asc")
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, keyDetails,
         TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
 
@@ -485,15 +491,38 @@ class CreateMessageActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
   }
 
+  @Test
+  fun testShowWarningIfFoundExpiredKey() {
+    val keyDetails =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_pubkey.asc")
+    val contact = keyDetails.primaryPgpContact
+    FlowCryptRoomDatabase.getDatabase(getTargetContext())
+        .contactsDao().insert(contact.toContactEntity())
+
+    activeActivityRule.launch(intent)
+    registerAllIdlingResources()
+
+    fillInAllFields(contact.email)
+
+    onView(withId(R.id.menuActionSend))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(R.string.warning_one_of_pub_keys_is_expired))
+        .check(matches(isDisplayed()))
+        .perform(click())
+  }
+
   private fun checkIsDisplayedEncryptedAttributes() {
     onView(withId(R.id.underToolbarTextTextView))
         .check(doesNotExist())
     onView(withId(R.id.appBarLayout))
-        .check(matches(withAppBarLayoutBackgroundColor(UIUtil.getColor(getTargetContext(), R.color.colorPrimary))))
+        .check(matches(withAppBarLayoutBackgroundColor(
+            UIUtil.getColor(getTargetContext(), R.color.colorPrimary))))
   }
 
   private fun savePublicKeyInDatabase() {
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
+    FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
+        .insert(pgpContact.toContactEntity())
   }
 
   private fun deleteAtt(att: File) {
@@ -532,9 +561,11 @@ class CreateMessageActivityTest : BaseTest() {
 
   private fun checkIsDisplayedStandardAttributes() {
     onView(withId(R.id.underToolbarTextTextView))
-        .check(matches(isDisplayed())).check(matches(withText(R.string.this_message_will_not_be_encrypted)))
+        .check(matches(isDisplayed()))
+        .check(matches(withText(R.string.this_message_will_not_be_encrypted)))
     onView(withId(R.id.appBarLayout))
-        .check(matches(withAppBarLayoutBackgroundColor(UIUtil.getColor(getTargetContext(), R.color.red))))
+        .check(matches(withAppBarLayoutBackgroundColor(
+            UIUtil.getColor(getTargetContext(), R.color.red))))
   }
 
   private fun fillInAllFields(recipient: String) {
@@ -542,8 +573,9 @@ class CreateMessageActivityTest : BaseTest() {
         .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
         .perform(typeText(recipient), closeSoftKeyboard())
+    //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
-        .perform(scrollTo(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
+        .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
     onView(withId(R.id.editTextEmailMessage))
         .perform(scrollTo(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
   }
@@ -576,25 +608,32 @@ class CreateMessageActivityTest : BaseTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
-          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+        object : Dispatcher() {
+          override fun dispatch(request: RecordedRequest): MockResponse {
+            if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+              val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
-          when {
-            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-              return MockResponse().setResponseCode(404).setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+              when {
+                TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
+                    lastSegment, true) -> {
+                  return MockResponse()
+                      .setResponseCode(404)
+                      .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+                }
+
+                TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
+                    lastSegment, true) -> {
+                  return MockResponse()
+                      .setResponseCode(200)
+                      .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+                }
+              }
             }
 
-            TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-              return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
-            }
+            return MockResponse().setResponseCode(404)
           }
-        }
-
-        return MockResponse().setResponseCode(404)
-      }
-    })
+        })
 
     @BeforeClass
     @JvmStatic
