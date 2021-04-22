@@ -42,7 +42,9 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.pgp.expiration
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -54,6 +56,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -70,6 +73,7 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
+import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Rule
@@ -79,6 +83,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
+import java.time.Instant
 
 /**
  * A test for [CreateMessageActivity]. By default, this test describes running an activity with type
@@ -494,7 +499,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_pubkey.asc")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@denbond7.com-expired-pub.asc")
     val contact = keyDetails.primaryPgpContact
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
         .contactsDao().insert(contact.toContactEntity())
@@ -504,12 +509,43 @@ class CreateMessageActivityTest : BaseTest() {
 
     fillInAllFields(contact.email)
 
+    onView(withId(R.id.editTextRecipientTo))
+        .check(matches(withChipsBackgroundColor(contact.email,
+            UIUtil.getColor(getTargetContext(), R.color.orange))))
+
     onView(withId(R.id.menuActionSend))
         .check(matches(isDisplayed()))
         .perform(click())
     onView(withText(R.string.warning_one_of_pub_keys_is_expired))
         .check(matches(isDisplayed()))
         .perform(click())
+  }
+
+  @Test
+  fun testKeepPublicKeysFresh() {
+    val keyDetailsFromAssets =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_fixed@denbond7.com-expired-pub.asc")
+    val contact = keyDetailsFromAssets.primaryPgpContact
+    val contactsDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
+    contactsDao.insert(contact.toContactEntity())
+    val existedContact = contactsDao.getContactByEmail(contact.email)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existedKeyExpiration = PgpKey.parseKeys(
+        existedContact.publicKey ?: throw IllegalArgumentException("Empty pub key"))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
+        ?: throw IllegalArgumentException("No expiration date")
+
+    Assert.assertTrue(existedKeyExpiration.isBefore(Instant.now()))
+
+    activeActivityRule.launch(intent)
+    registerAllIdlingResources()
+
+    fillInAllFields(contact.email)
+
+    onView(withId(R.id.editTextRecipientTo))
+        .check(matches(withChipsBackgroundColor(contact.email,
+            UIUtil.getColor(getTargetContext(), R.color.colorPrimary))))
   }
 
   private fun checkIsDisplayedEncryptedAttributes() {
@@ -627,6 +663,13 @@ class CreateMessageActivityTest : BaseTest() {
                   return MockResponse()
                       .setResponseCode(200)
                       .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+                }
+
+                "B9D1AD05A2A329630DCF2A279ABFF9E583B49BF6".equals(lastSegment, true) -> {
+                  return MockResponse()
+                      .setResponseCode(200)
+                      .setBody(TestGeneralUtil.readFileFromAssetsAsString(
+                          "pgp/expired_fixed@denbond7.com-not_expired-pub.asc"))
                 }
               }
             }

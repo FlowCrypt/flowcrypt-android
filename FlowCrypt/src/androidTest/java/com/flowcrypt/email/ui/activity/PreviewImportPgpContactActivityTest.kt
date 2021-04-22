@@ -59,7 +59,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
       "pgp/default@denbond7.com_fisrtKey_pub.asc").publicKey
 
   private val tenPubKeys: String =
-      TestGeneralUtil.readFileFromAssetsAsString(getContext(), "pgp/pub_keys_2048_bits_10.asc")
+      TestGeneralUtil.readFileFromAssetsAsString("pgp/pub_keys_2048_bits_10.asc")
 
   @Test
   fun testShowHelpScreen() {
