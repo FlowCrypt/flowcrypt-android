@@ -49,8 +49,8 @@ class PrivateKeysManager {
     }
 
     fun getNodeKeyDetailsListFromAssets(assetsPath: String, onlyPrivate: Boolean = false): List<NodeKeyDetails> {
-      val parsedCollections = PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(
-          InstrumentationRegistry.getInstrumentation().context, assetsPath))
+      val parsedCollections =
+          PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(assetsPath))
 
       if (onlyPrivate) {
         val onlyPrivateKeysCollection = PgpKey.ParseKeyResult(

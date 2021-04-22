@@ -301,7 +301,7 @@ class MessageDetailsActivityTest : BaseTest() {
         "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
-    val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/denbond7@denbond7.com_pub.asc")
+    val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@denbond7.com-expired-pub.asc")
     val pgpContact = nodeKeyDetails.primaryPgpContact
 
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(matches(withText(

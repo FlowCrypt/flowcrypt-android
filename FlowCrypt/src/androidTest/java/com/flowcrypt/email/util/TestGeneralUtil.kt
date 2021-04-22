@@ -55,17 +55,23 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
-    fun readFileFromAssetsAsString(context: Context, filePath: String): String {
+    fun readFileFromAssetsAsString(
+        filePath: String,
+        context: Context = InstrumentationRegistry.getInstrumentation().context): String {
       return IOUtils.toString(context.assets.open(filePath), "UTF-8")
     }
 
     @JvmStatic
-    fun readFileFromAssetsAsByteArray(context: Context, filePath: String): ByteArray {
-      return IOUtils.toByteArray(context.assets.open(filePath))
+    fun readFileFromAssetsAsByteArray(
+        filePath: String,
+        context: Context = InstrumentationRegistry.getInstrumentation().context): ByteArray {
+      return context.assets.open(filePath).readBytes()
     }
 
     @JvmStatic
-    fun readFileFromAssetsAsStream(context: Context, filePath: String): InputStream {
+    fun readFileFromAssetsAsStream(
+        filePath: String,
+        context: Context = InstrumentationRegistry.getInstrumentation().context): InputStream {
       return context.assets.open(filePath)
     }
 
@@ -119,7 +125,7 @@ class TestGeneralUtil {
       try {
         if (jsonPathInAssets != null) {
           val gson = GsonHelper.gson
-          val json = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, jsonPathInAssets)
+          val json = readFileFromAssetsAsString(jsonPathInAssets)
           return gson.fromJson(json, classOfT)
         }
       } catch (e: IOException) {
