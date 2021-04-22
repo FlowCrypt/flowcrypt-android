@@ -92,7 +92,6 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
               publicKey = contactEntity.publicKey,
               fingerprint = contactEntity.fingerprint,
               longId = contactEntity.longId,
-              keywords = contactEntity.keywords,
               hasPgp = true))
     }
   }

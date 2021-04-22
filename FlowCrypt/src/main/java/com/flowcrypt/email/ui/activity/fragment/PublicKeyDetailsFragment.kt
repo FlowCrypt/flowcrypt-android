@@ -58,7 +58,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
   private var progressBar: View? = null
   private var content: View? = null
   private var layoutUsers: ViewGroup? = null
-  private var layoutLongIdsAndKeyWords: ViewGroup? = null
+  private var layoutLongIds: ViewGroup? = null
   private var textViewAlgorithm: TextView? = null
   private var textViewCreated: TextView? = null
 
@@ -210,7 +210,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
     progressBar = view.findViewById(R.id.progressBar)
     content = view.findViewById(R.id.layoutContent)
     layoutUsers = view.findViewById(R.id.layoutUsers)
-    layoutLongIdsAndKeyWords = view.findViewById(R.id.layoutLongIdsAndKeyWords)
+    layoutLongIds = view.findViewById(R.id.layoutLongIds)
     textViewAlgorithm = view.findViewById(R.id.textViewAlgorithm)
     textViewCreated = view.findViewById(R.id.textViewCreated)
   }
@@ -223,11 +223,11 @@ class PublicKeyDetailsFragment : BaseFragment() {
       layoutUsers?.addView(textView)
     }
 
-    layoutLongIdsAndKeyWords?.removeAllViews()
+    layoutLongIds?.removeAllViews()
     details?.ids?.forEachIndexed { index, s ->
       val textViewLongId = TextView(context)
       textViewLongId.text = getString(R.string.template_long_id, index + 1, s.longId)
-      layoutLongIdsAndKeyWords?.addView(textViewLongId)
+      layoutLongIds?.addView(textViewLongId)
     }
 
     textViewAlgorithm?.text = getString(R.string.template_algorithm, details?.algo?.algorithm)
