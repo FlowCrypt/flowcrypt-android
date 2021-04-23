@@ -67,7 +67,9 @@ class ImportPgpContactActivityTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ImportPgpContactActivity>(
-      intent = ImportPgpContactActivity.newIntent(getTargetContext(), addAccountToDatabaseRule.account))
+      intent = ImportPgpContactActivity.newIntent(
+          context = getTargetContext(),
+          accountEntity = addAccountToDatabaseRule.account))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
