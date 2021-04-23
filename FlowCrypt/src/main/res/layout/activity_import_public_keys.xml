@@ -39,8 +39,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="0dp"
-                android:layout_marginRight="0dp"
                 android:layout_marginTop="@dimen/default_margin_very_big"
+                android:layout_marginRight="0dp"
                 android:text="@string/evaluating"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -75,10 +75,11 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginTop="@dimen/margin_top_main_screen_button"
+                    android:layout_marginEnd="@dimen/default_margin_content_small"
                     android:layout_weight="1"
                     android:hint="@string/search_by_key_id_or_email"
                     android:orientation="horizontal"
-                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintEnd_toStartOf="@+id/iBSearchKey"
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/textViewTitle">
 
@@ -91,6 +92,17 @@
                         android:inputType="text" />
 
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <ImageButton
+                    android:id="@+id/iBSearchKey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/search_by_key_id_or_email"
+                    app:layout_constraintBottom_toBottomOf="@+id/textInputLayoutKeyIdOrEmail"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintTop_toTopOf="@+id/textInputLayoutKeyIdOrEmail"
+                    app:srcCompat="@drawable/ic_person_search_green_24dp" />
 
                 <Button
                     android:id="@+id/buttonLoadFromFile"
@@ -141,9 +153,9 @@
                 android:id="@+id/buttonImportAll"
                 style="@style/AppWidget.Button"
                 android:layout_width="0dp"
-                android:layout_marginEnd="@dimen/default_margin_content_small"
                 android:layout_marginStart="@dimen/default_margin_content_small"
                 android:layout_marginTop="@dimen/default_margin_small"
+                android:layout_marginEnd="@dimen/default_margin_content_small"
                 android:text="@string/import_all"
                 android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -154,8 +166,8 @@
                 android:id="@+id/recyclerViewContacts"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_marginBottom="@dimen/default_margin_content_small"
                 android:layout_marginTop="@dimen/default_margin_content_small"
+                android:layout_marginBottom="@dimen/default_margin_content_small"
                 android:scrollbars="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
