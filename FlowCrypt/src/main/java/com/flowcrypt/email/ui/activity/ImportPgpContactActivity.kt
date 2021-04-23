@@ -10,12 +10,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.lifecycle.Observer
@@ -41,7 +40,7 @@ import java.util.*
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener {
+class ImportPgpContactActivity : BaseImportKeyActivity() {
   private val contactsViewModel: ContactsViewModel by viewModels()
   private var editTextEmailOrId: EditText? = null
 
@@ -117,34 +116,39 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
   }
 
-  override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
-    when (actionId) {
-      EditorInfo.IME_ACTION_SEARCH -> {
-        UIUtil.hideSoftInput(this@ImportPgpContactActivity, v)
-
-        if (v?.text.isNullOrEmpty()) {
-          Toast.makeText(this, R.string.please_type_key_id_or_email, Toast.LENGTH_SHORT).show()
-          return true
-        }
-
-        if (GeneralUtil.isConnected(this)) {
-          editTextEmailOrId?.text?.toString()?.let {
-            fetchPubKeysRequestCode = System.currentTimeMillis()
-            contactsViewModel.fetchPubKeys(it, fetchPubKeysRequestCode)
-          }
-        } else {
-          showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
-        }
-      }
-    }
-
-    return true
-  }
-
   override fun initViews() {
     super.initViews()
     this.editTextEmailOrId = findViewById(R.id.editTextKeyIdOrEmail)
-    this.editTextEmailOrId?.setOnEditorActionListener(this)
+    this.editTextEmailOrId?.setOnEditorActionListener { _, actionId, _ ->
+      if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+        fetchPubKey()
+      }
+      return@setOnEditorActionListener true
+    }
+
+    findViewById<View>(R.id.iBSearchKey).setOnClickListener {
+      editTextEmailOrId?.let { fetchPubKey() }
+    }
+  }
+
+  private fun fetchPubKey() {
+    val v = editTextEmailOrId ?: return
+    UIUtil.hideSoftInput(this@ImportPgpContactActivity, v)
+
+    if (v.text.isNullOrEmpty()) {
+      Toast.makeText(this, R.string.please_type_key_id_or_email, Toast.LENGTH_SHORT).show()
+      v.requestFocus()
+      return
+    }
+
+    if (GeneralUtil.isConnected(this)) {
+      editTextEmailOrId?.text?.toString()?.let {
+        fetchPubKeysRequestCode = System.currentTimeMillis()
+        contactsViewModel.fetchPubKeys(it, fetchPubKeysRequestCode)
+      }
+    } else {
+      showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
+    }
   }
 
   private fun setupContactsViewModel() {
