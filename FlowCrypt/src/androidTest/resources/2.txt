@@ -1,1 +1,1 @@
-Public key not found for: not_attested_user@denbond7.com
+Public key not found

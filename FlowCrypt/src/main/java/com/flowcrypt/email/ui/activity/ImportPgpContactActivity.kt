@@ -23,6 +23,8 @@ import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -158,12 +160,14 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
       when (it.status) {
         Result.Status.LOADING -> {
           this.isSearchingActiveNow = true
+          countingIdlingResource.incrementSafely()
           UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         }
 
         Result.Status.SUCCESS -> {
           this.isSearchingActiveNow = false
           it.data?.let { pubResponse -> handlePubResponse(pubResponse) }
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -174,6 +178,8 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
           Toast.makeText(this, if (exception.message.isNullOrEmpty()) {
             exception.javaClass.simpleName
           } else exception.message, Toast.LENGTH_SHORT).show()
+
+          countingIdlingResource.decrementSafely()
         }
       }
     })
