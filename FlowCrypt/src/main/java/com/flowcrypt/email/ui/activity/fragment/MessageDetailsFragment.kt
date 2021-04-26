@@ -628,32 +628,41 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     tVTo?.text = prepareToText()
 
-    val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>()
+    val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
+      add(MsgDetailsRecyclerViewAdapter.Header(
+          name = getString(R.string.from),
+          value = formatAddresses(args.messageEntity.from)
+      ))
 
-    headers.add(MsgDetailsRecyclerViewAdapter.Header(
-        name = getString(R.string.from),
-        value = formatAddresses(args.messageEntity.from)
-    ))
+      if (args.messageEntity.replyToAddress.isNotEmpty()) {
+        add(MsgDetailsRecyclerViewAdapter.Header(
+            name = getString(R.string.reply_to),
+            value = formatAddresses(args.messageEntity.replyToAddress)
+        ))
+      }
 
-    if (args.messageEntity.replyToAddress.isNotEmpty()) {
-      headers.add(MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.reply_to),
-          value = formatAddresses(args.messageEntity.replyToAddress)
+      add(MsgDetailsRecyclerViewAdapter.Header(
+          name = getString(R.string.to),
+          value = formatAddresses(args.messageEntity.to)
+      ))
+
+      if (args.messageEntity.cc.isNotEmpty()) {
+        add(MsgDetailsRecyclerViewAdapter.Header(
+            name = getString(R.string.cc),
+            value = formatAddresses(args.messageEntity.cc)
+        ))
+      }
+
+      add(MsgDetailsRecyclerViewAdapter.Header(
+          name = getString(R.string.date),
+          value = prepareDateHeaderValue()
       ))
     }
 
-    headers.add(MsgDetailsRecyclerViewAdapter.Header(
-        name = getString(R.string.to),
-        value = formatAddresses(args.messageEntity.to)
-    ))
+    msgDetailsAdapter.submitList(headers)
+  }
 
-    if (args.messageEntity.cc.isNotEmpty()) {
-      headers.add(MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.cc),
-          value = formatAddresses(args.messageEntity.cc)
-      ))
-    }
-
+  private fun prepareDateHeaderValue(): String {
     val dateInMilliseconds: Long
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
       dateInMilliseconds = args.messageEntity.sentDate ?: 0
@@ -663,14 +672,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
         DateUtils.FORMAT_SHOW_YEAR
-    val datetime = DateUtils.formatDateTime(context, dateInMilliseconds, flags)
-
-    headers.add(MsgDetailsRecyclerViewAdapter.Header(
-        name = getString(R.string.date),
-        value = datetime
-    ))
-
-    msgDetailsAdapter.submitList(headers)
+    return DateUtils.formatDateTime(context, dateInMilliseconds, flags)
   }
 
   private fun prepareToText(): String {
