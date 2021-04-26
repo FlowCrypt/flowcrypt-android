@@ -9,6 +9,7 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.text.format.Formatter
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
@@ -18,9 +19,11 @@ import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollToHolder
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
@@ -54,10 +57,13 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.Description
+import org.hamcrest.Matcher
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
@@ -153,6 +159,8 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testStandardMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text.json",
         "messages/mime/standard_msg_info_plain_text.txt"))
+    onView(withId(R.id.tVTo))
+        .check(matches(withText(getResString(R.string.to_receiver, getResString(R.string.me)))))
   }
 
   @Test
@@ -341,6 +349,63 @@ class MessageDetailsActivityTest : BaseTest() {
         "messages/mime/8bit-utf8.txt"))
   }
 
+  @Test
+  fun testToLabelForTwoRecipients() {
+    baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text_to_2_recipients.json",
+        "messages/mime/standard_msg_info_plain_text_to_2_recipients.txt"))
+
+    val subText = getResString(R.string.me) + ", User"
+
+    onView(withId(R.id.tVTo))
+        .check(matches(withText(getResString(R.string.to_receiver, subText))))
+  }
+
+  @Test
+  fun testMsgDetailsSingleToReplyToCC() {
+    val msgInfo = getMsgInfo("messages/info/standard_msg_info_plain_text_single_to_replyto_cc.json",
+        "messages/mime/standard_msg_info_plain_text_single_to_replyto_to_cc.txt")
+    baseCheck(msgInfo)
+
+    onView(withId(R.id.rVMsgDetails))
+        .check(matches(not(isDisplayed())))
+    onView(withId(R.id.iBShowDetails))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.rVMsgDetails))
+        .check(matches(isDisplayed()))
+        .check(matches(CustomMatchers.withRecyclerViewItemCount(5)))
+
+    onView(withId(R.id.rVMsgDetails))
+        .perform(scrollToHolder(
+            withHeaderInfo(MsgDetailsRecyclerViewAdapter.Header(
+                name = getResString(R.string.from),
+                value = "Denis Bondarenko <denbond7@denbond7.com>"
+            ))))
+    onView(withId(R.id.rVMsgDetails))
+        .perform(scrollToHolder(withHeaderInfo(
+            MsgDetailsRecyclerViewAdapter.Header(
+                name = getResString(R.string.reply_to),
+                value = "Denis Bondarenko <denbond7@denbond7.com>"
+            ))))
+    onView(withId(R.id.rVMsgDetails))
+        .perform(scrollToHolder(withHeaderInfo(
+            MsgDetailsRecyclerViewAdapter.Header(
+                name = getResString(R.string.to),
+                value = "default@denbond7.com"
+            ))))
+    onView(withId(R.id.rVMsgDetails))
+        .perform(scrollToHolder(withHeaderInfo(
+            MsgDetailsRecyclerViewAdapter.Header(
+                name = getResString(R.string.cc),
+                value = "ccuser@test"
+            ))))
+    onView(withId(R.id.rVMsgDetails))
+        .perform(scrollToHolder(withHeaderInfo(
+            MsgDetailsRecyclerViewAdapter.Header(
+                name = getResString(R.string.date),
+                value = "October 5, 2020, 11:32 AM"
+            ))))
+  }
+
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 
@@ -491,5 +556,21 @@ class MessageDetailsActivityTest : BaseTest() {
 
     onView(withId(R.id.toolbar))
         .check(matches(CustomMatchers.withToolBarText(title)))
+  }
+
+  private fun withHeaderInfo(header: MsgDetailsRecyclerViewAdapter.Header):
+      Matcher<RecyclerView.ViewHolder> {
+    return object : BoundedMatcher<RecyclerView.ViewHolder,
+        MsgDetailsRecyclerViewAdapter.ViewHolder>(
+        MsgDetailsRecyclerViewAdapter.ViewHolder::class.java) {
+      override fun matchesSafely(holder: MsgDetailsRecyclerViewAdapter.ViewHolder): Boolean {
+        return holder.tVHeaderName.text.toString() == header.name
+            && holder.tVHeaderValue.text.toString() == header.value
+      }
+
+      override fun describeTo(description: Description) {
+        description.appendText("with: $header")
+      }
+    }
   }
 }

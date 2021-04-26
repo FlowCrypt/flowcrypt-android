@@ -34,8 +34,8 @@ class MsgDetailsRecyclerViewAdapter :
   }
 
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    private val tVHeaderName: TextView = itemView.findViewById(R.id.tVHeaderName)
-    private val tVHeaderValue: TextView = itemView.findViewById(R.id.tVHeaderValue)
+    val tVHeaderName: TextView = itemView.findViewById(R.id.tVHeaderName)
+    val tVHeaderValue: TextView = itemView.findViewById(R.id.tVHeaderValue)
 
     fun bindTo(item: Header?) {
       tVHeaderName.text = item?.name
