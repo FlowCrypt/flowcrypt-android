@@ -60,6 +60,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
+import com.flowcrypt.email.extensions.javax.mail.internet.getPersonalElseEmail
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -676,19 +677,30 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun prepareToText(): String {
-    val receiver: String
-    val currentAccount = account?.email
-    if (currentAccount != null) {
-      if (args.messageEntity.toAddress?.contains(currentAccount, true) == true) {
-        receiver = getString(R.string.to_receiver, getString(R.string.me))
-      } else {
-        receiver = getString(R.string.to_receiver, args.messageEntity.to.firstOrNull()?.address
-            ?: "")
-      }
-    } else {
-      receiver = getString(R.string.to_receiver, getString(R.string.me))
+    val stringBuilder = SpannableStringBuilder()
+    val meAddress = args.messageEntity.to.firstOrNull {
+      it.address.equals(args.messageEntity.email, true)
     }
-    return receiver
+    val leftAddresses: List<InternetAddress>
+    if (meAddress == null) {
+      leftAddresses = args.messageEntity.to
+    } else {
+      stringBuilder.append(getString(R.string.me))
+      leftAddresses = ArrayList(args.messageEntity.to) - meAddress
+      if (leftAddresses.isNotEmpty()) {
+        stringBuilder.append(", ")
+      }
+    }
+
+    val to = leftAddresses.foldIndexed(stringBuilder) { index, builder, it ->
+      builder.append(it.getPersonalElseEmail())
+      if (index != leftAddresses.size - 1) {
+        builder.append(",")
+      }
+      builder
+    }.toSpannable()
+
+    return getString(R.string.to_receiver, to)
   }
 
   private fun formatAddresses(addresses: List<InternetAddress>) =

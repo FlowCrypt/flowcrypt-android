@@ -72,4 +72,5 @@
     <dimen name="padding_recipients_to">48dp</dimen>
     <dimen name="height_screenshot">150dp</dimen>
     <dimen name="width_screenshot">100dp</dimen>
+    <dimen name="max_width_field_to">200dp</dimen>
 </resources>

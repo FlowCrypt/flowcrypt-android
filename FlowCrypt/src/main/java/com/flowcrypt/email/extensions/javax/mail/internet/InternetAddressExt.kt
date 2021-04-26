@@ -29,3 +29,7 @@ fun InternetAddress.getFormattedString(): CharSequence {
     }
   }
 }
+
+fun InternetAddress.getPersonalElseEmail(): CharSequence {
+  return if (personal.isNullOrEmpty()) address else personal
+}
