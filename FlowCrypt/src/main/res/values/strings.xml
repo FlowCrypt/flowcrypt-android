@@ -502,4 +502,5 @@
     <string name="cc">Cc</string>
     <string name="date">Date</string>
     <string name="to_receiver">To %1$s</string>
+    <string name="and_others">and others&#8230;</string>
 </resources>

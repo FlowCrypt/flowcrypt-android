@@ -705,9 +705,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun formatAddresses(addresses: List<InternetAddress>) =
       addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
-        builder.append(it.getFormattedString())
-        if (index != addresses.size - 1) {
-          builder.append("\n")
+        if (index < MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE) {
+          builder.append(it.getFormattedString())
+          if (index != addresses.size - 1) {
+            builder.append("\n")
+          }
+        } else if (index == MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE + 1) {
+          builder.append(getString(R.string.and_others))
         }
         builder
       }.toSpannable()
@@ -1226,5 +1230,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
+    private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
   }
 }
