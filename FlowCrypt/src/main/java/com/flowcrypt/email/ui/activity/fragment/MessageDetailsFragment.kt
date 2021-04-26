@@ -12,8 +12,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.text.SpannableStringBuilder
 import android.text.TextUtils
-import android.text.format.DateFormat
+import android.text.format.DateUtils
 import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.Menu
@@ -32,6 +33,8 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.text.toSpannable
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -56,8 +59,10 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
@@ -75,7 +80,9 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -88,7 +95,10 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.util.*
 import javax.mail.AuthenticationFailedException
+import javax.mail.internet.InternetAddress
+import kotlin.collections.ArrayList
 
 /**
  * This fragment describe msgEntity of some message.
@@ -131,11 +141,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var textViewSenderAddress: TextView? = null
   private var textViewDate: TextView? = null
   private var textViewSubject: TextView? = null
+  private var tVTo: TextView? = null
   private var viewFooterOfHeader: View? = null
   private var layoutMsgParts: ViewGroup? = null
   private var layoutContent: View? = null
   private var imageBtnReplyAll: ImageButton? = null
   private var imageBtnMoreOptions: View? = null
+  private var iBShowDetails: View? = null
   private var layoutReplyButton: View? = null
   private var layoutFwdButton: View? = null
   private var layoutReplyBtns: View? = null
@@ -144,12 +156,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var textViewActionProgress: TextView? = null
   private var progressBarActionProgress: ProgressBar? = null
   private var rVAttachments: RecyclerView? = null
+  private var rVMsgDetails: RecyclerView? = null
 
-  private var dateFormat: java.text.DateFormat? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val contactsViewModel: ContactsViewModel by viewModels()
+  private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
@@ -163,8 +176,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    dateFormat = DateFormat.getTimeFormat(requireContext())
-
     updateActionsVisibility(args.localFolder, null)
   }
 
@@ -551,6 +562,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress)
     textViewDate = view.findViewById(R.id.textViewDate)
     textViewSubject = view.findViewById(R.id.textViewSubject)
+    tVTo = view.findViewById(R.id.tVTo)
     viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader)
     layoutMsgParts = view.findViewById(R.id.layoutMessageParts)
     layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons)
@@ -561,15 +573,27 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     imageBtnReplyAll?.setOnClickListener(this)
     imageBtnMoreOptions = view.findViewById(R.id.imageButtonMoreOptions)
     imageBtnMoreOptions?.setOnClickListener(this)
+    iBShowDetails = view.findViewById(R.id.iBShowDetails)
 
     rVAttachments = view.findViewById(R.id.rVAttachments)
+    rVMsgDetails = view.findViewById(R.id.rVMsgDetails)
   }
 
   private fun updateViews() {
-    rVAttachments?.layoutManager = LinearLayoutManager(requireContext())
-    rVAttachments?.adapter = attachmentsRecyclerViewAdapter
-    rVAttachments?.addItemDecoration(
-        MarginItemDecoration(marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)))
+    iBShowDetails?.setOnClickListener {
+      rVMsgDetails?.visibleOrGone(!(rVMsgDetails?.isVisible ?: false))
+      textViewDate?.visibleOrGone(!(rVMsgDetails?.isVisible ?: false))
+    }
+
+    updateMsgDetails()
+
+    rVAttachments?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(MarginItemDecoration(
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small))
+      )
+      adapter = attachmentsRecyclerViewAdapter
+    }
 
     val subject = if (TextUtils.isEmpty(args.messageEntity.subject)) getString(R.string.no_subject) else
       args.messageEntity.subject
@@ -581,14 +605,98 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
     textViewSubject?.text = subject
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-      textViewDate?.text = DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
+      textViewDate?.text =
+          DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
     } else {
-      textViewDate?.text = DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate
-          ?: 0)
+      textViewDate?.text =
+          DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate ?: 0)
     }
 
     updateMsgBody()
   }
+
+  private fun updateMsgDetails() {
+    rVMsgDetails?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(VerticalSpaceMarginItemDecoration(
+          marginTop = 0,
+          marginBottom = 0,
+          marginInternal = resources.getDimensionPixelSize(R.dimen.default_margin_content_small))
+      )
+      adapter = msgDetailsAdapter
+    }
+
+    tVTo?.text = prepareToText()
+
+    val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>()
+
+    headers.add(MsgDetailsRecyclerViewAdapter.Header(
+        name = getString(R.string.from),
+        value = formatAddresses(args.messageEntity.from)
+    ))
+
+    if (args.messageEntity.replyToAddress.isNotEmpty()) {
+      headers.add(MsgDetailsRecyclerViewAdapter.Header(
+          name = getString(R.string.reply_to),
+          value = formatAddresses(args.messageEntity.replyToAddress)
+      ))
+    }
+
+    headers.add(MsgDetailsRecyclerViewAdapter.Header(
+        name = getString(R.string.to),
+        value = formatAddresses(args.messageEntity.to)
+    ))
+
+    if (args.messageEntity.cc.isNotEmpty()) {
+      headers.add(MsgDetailsRecyclerViewAdapter.Header(
+          name = getString(R.string.cc),
+          value = formatAddresses(args.messageEntity.cc)
+      ))
+    }
+
+    val dateInMilliseconds: Long
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
+      dateInMilliseconds = args.messageEntity.sentDate ?: 0
+    } else {
+      dateInMilliseconds = args.messageEntity.receivedDate ?: 0
+    }
+
+    val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
+        DateUtils.FORMAT_SHOW_YEAR
+    val datetime = DateUtils.formatDateTime(context, dateInMilliseconds, flags)
+
+    headers.add(MsgDetailsRecyclerViewAdapter.Header(
+        name = getString(R.string.date),
+        value = datetime
+    ))
+
+    msgDetailsAdapter.submitList(headers)
+  }
+
+  private fun prepareToText(): String {
+    val receiver: String
+    val currentAccount = account?.email
+    if (currentAccount != null) {
+      if (args.messageEntity.toAddress?.contains(currentAccount, true) == true) {
+        receiver = getString(R.string.to_receiver, getString(R.string.me))
+      } else {
+        receiver = getString(R.string.to_receiver, args.messageEntity.to.firstOrNull()?.address
+            ?: "")
+      }
+    } else {
+      receiver = getString(R.string.to_receiver, getString(R.string.me))
+    }
+    return receiver
+  }
+
+  private fun formatAddresses(addresses: List<InternetAddress>) =
+      addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
+        builder.append(it.getFormattedString())
+        if (index != addresses.size - 1) {
+          builder.append("\n")
+        }
+        builder
+      }.toSpannable()
 
   private fun updateMsgView() {
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()

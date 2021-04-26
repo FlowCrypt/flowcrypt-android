@@ -496,4 +496,10 @@
     <string name="stored_pass_phrase_matched">Stored pass phrase: matched</string>
     <string name="stored_pass_phrase_mismatch">Stored pass phrase: mismatch</string>
     <string name="could_not_check_pass_phrase">Could not check the pass phrase</string>
+    <string name="details">Details</string>
+    <string name="reply_to">Reply To</string>
+    <string name="to">To</string>
+    <string name="cc">Cc</string>
+    <string name="date">Date</string>
+    <string name="to_receiver">To %1$s</string>
 </resources>

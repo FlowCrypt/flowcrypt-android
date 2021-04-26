@@ -24,3 +24,24 @@ fun View.hideKeyboard() {
   val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
   imm.hideSoftInputFromWindow(windowToken, 0)
 }
+
+fun View.gone() {
+  if (visibility != View.GONE) {
+    visibility = View.GONE
+  }
+}
+
+
+fun View.visible() {
+  if (visibility != View.VISIBLE) {
+    visibility = View.VISIBLE
+  }
+}
+
+fun View.visibleOrGone(isVisible: Boolean) {
+  if (isVisible) {
+    visible()
+  } else {
+    gone()
+  }
+}
