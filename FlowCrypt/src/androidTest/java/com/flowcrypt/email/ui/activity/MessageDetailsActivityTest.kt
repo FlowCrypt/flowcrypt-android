@@ -164,13 +164,13 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  fun testStandardMsgplaintextWithOneAttachment() {
+  fun testStandardMsgPlaintextWithOneAttachment() {
     baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plaintext_with_one_att.json",
         "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo), simpleAttInfo)
   }
 
   @Test
-  fun testEncryptedMsgplaintext() {
+  fun testEncryptedMsgPlaintext() {
     baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
   }
@@ -297,14 +297,14 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  fun testEncryptedMsgplaintextWithOneAttachment() {
+  fun testEncryptedMsgPlaintextWithOneAttachment() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
         "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo)
     baseCheckWithAtt(msgInfo, encryptedAttInfo)
   }
 
   @Test
-  fun testEncryptedMsgplaintextWithPubKey() {
+  fun testEncryptedMsgPlaintextWithPubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
