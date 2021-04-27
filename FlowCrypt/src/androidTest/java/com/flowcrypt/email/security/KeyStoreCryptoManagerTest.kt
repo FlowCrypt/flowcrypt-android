@@ -39,8 +39,8 @@ import javax.mail.internet.MimeMessage
 @RunWith(AndroidJUnit4::class)
 class KeyStoreCryptoManagerTest {
   private val originalData = IOUtils.toString(InstrumentationRegistry
-      .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text" +
-          ".txt"), StandardCharsets.UTF_8)
+      .getInstrumentation().context.assets.open(
+          "messages/mime/standard_msg_info_plaintext.txt"), StandardCharsets.UTF_8)
 
   @Before
   fun setUp() {
@@ -61,25 +61,30 @@ class KeyStoreCryptoManagerTest {
 
   @Test
   fun testDataAsStream() {
-    val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
-        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plaintext.txt"))
+    val msg = MimeMessage(Session.getInstance(Properties()),
+        InstrumentationRegistry.getInstrumentation().context.assets.open(
+            "messages/mime/standard_msg_info_plaintext.txt"))
 
     val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
     val byteArrayOutputStream = ByteArrayOutputStream()
-    val base64OutputStream = Base64OutputStream(byteArrayOutputStream, KeyStoreCryptoManager.BASE64_FLAGS)
+    val base64OutputStream = Base64OutputStream(byteArrayOutputStream,
+        KeyStoreCryptoManager.BASE64_FLAGS)
     val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
 
     outputStream.use {
-      byteArrayOutputStream.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+      byteArrayOutputStream.write(Base64.encodeToString(cipherForEncryption.iv,
+          KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
       byteArrayOutputStream.write("\n".toByteArray())
       msg.writeTo(outputStream)
 
       it.flush()
     }
 
-    val cipherForDecryption = KeyStoreCryptoManager.getCipherForDecryption(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS))
+    val cipherForDecryption = KeyStoreCryptoManager.getCipherForDecryption(
+        Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS))
     val byteArrayInputStream = ByteArrayInputStream(byteArrayOutputStream.toByteArray())
-    val base64InputStream = Base64InputStream(byteArrayInputStream, KeyStoreCryptoManager.BASE64_FLAGS)
+    val base64InputStream = Base64InputStream(byteArrayInputStream,
+        KeyStoreCryptoManager.BASE64_FLAGS)
     val inputStream = CipherInputStream(base64InputStream, cipherForDecryption)
 
     val outputStreamFoResult = ByteArrayOutputStream()
@@ -95,25 +100,29 @@ class KeyStoreCryptoManagerTest {
     inputStream.copyTo(outputStreamFoResult)
 
     val decodedDataAsString = String(outputStreamFoResult.toByteArray())
-    assertTrue(originalData.replace("\r\n".toRegex(), "\n") == decodedDataAsString.replace("\r\n".toRegex(), "\n"))
+    assertTrue(originalData.replace("\r\n".toRegex(), "\n") ==
+        decodedDataAsString.replace("\r\n".toRegex(), "\n"))
   }
 
   @Test
   fun testDataAsStreamFromCacheManager() {
-    val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
-        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plaintext.txt"))
+    val msg = MimeMessage(Session.getInstance(Properties()),
+        InstrumentationRegistry.getInstrumentation().context.assets.open(
+            "messages/mime/standard_msg_info_plaintext.txt"))
     val key = "temp"
     val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
 
     val bufferedSink = editor.newSink(0).buffer()
     val outputStreamOfBufferedSink = bufferedSink.outputStream()
     val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
-    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink,
+        KeyStoreCryptoManager.BASE64_FLAGS)
     val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
 
     try {
       outputStream.use {
-        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv,
+            KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
         outputStreamOfBufferedSink.write("\n".toByteArray())
         msg.writeTo(it)
         bufferedSink.flush()
@@ -125,12 +134,15 @@ class KeyStoreCryptoManagerTest {
     }
 
     val snapshot = MsgsCacheManager.getMsgSnapshot(key) ?: throw IllegalArgumentException()
-    val inputStreamFromUri = InstrumentationRegistry.getInstrumentation().targetContext?.contentResolver?.openInputStream(snapshot.getUri(0)
-        ?: throw NullPointerException()) ?: throw   java.lang.NullPointerException()
+    val inputStreamFromUri = InstrumentationRegistry.getInstrumentation()
+        .targetContext?.contentResolver?.openInputStream(snapshot.getUri(0)
+            ?: throw NullPointerException()) ?: throw   java.lang.NullPointerException()
 
-    val cipherForDecryption = KeyStoreCryptoManager.getCipherForDecryption(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS))
+    val cipherForDecryption = KeyStoreCryptoManager.getCipherForDecryption(
+        Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS))
     val byteArrayInputStream = ByteArrayInputStream(inputStreamFromUri.readBytes())
-    val base64InputStream = Base64InputStream(byteArrayInputStream, KeyStoreCryptoManager.BASE64_FLAGS)
+    val base64InputStream = Base64InputStream(byteArrayInputStream,
+        KeyStoreCryptoManager.BASE64_FLAGS)
     val inputStream = CipherInputStream(base64InputStream, cipherForDecryption)
 
     val outputStreamFoResult = ByteArrayOutputStream()
@@ -146,6 +158,7 @@ class KeyStoreCryptoManagerTest {
     inputStream.copyTo(outputStreamFoResult)
 
     val decodedDataAsString = String(outputStreamFoResult.toByteArray())
-    assertTrue(originalData.replace("\r\n".toRegex(), "\n") == decodedDataAsString.replace("\r\n".toRegex(), "\n"))
+    assertTrue(originalData.replace("\r\n".toRegex(), "\n") ==
+        decodedDataAsString.replace("\r\n".toRegex(), "\n"))
   }
 }
