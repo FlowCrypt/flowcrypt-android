@@ -157,16 +157,16 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testStandardMsgPlaneText() {
-    baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text.json",
-        "messages/mime/standard_msg_info_plain_text.txt"))
+    baseCheck(getMsgInfo("messages/info/standard_msg_info_plaintext.json",
+        "messages/mime/standard_msg_info_plaintext.txt"))
     onView(withId(R.id.tVTo))
         .check(matches(withText(getResString(R.string.to_receiver, getResString(R.string.me)))))
   }
 
   @Test
   fun testStandardMsgPlaneTextWithOneAttachment() {
-    baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plain_text_with_one_att.json",
-        "messages/mime/standard_msg_info_plain_text_with_one_att.txt", simpleAttInfo), simpleAttInfo)
+    baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plaintext_with_one_att.json",
+        "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo), simpleAttInfo)
   }
 
   @Test
@@ -351,8 +351,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testToLabelForTwoRecipients() {
-    baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text_to_2_recipients.json",
-        "messages/mime/standard_msg_info_plain_text_to_2_recipients.txt"))
+    baseCheck(getMsgInfo("messages/info/standard_msg_info_plaintext_to_2_recipients.json",
+        "messages/mime/standard_msg_info_plaintext_to_2_recipients.txt"))
 
     val subText = getResString(R.string.me) + ", User"
 
@@ -362,8 +362,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMsgDetailsSingleToReplyToCC() {
-    val msgInfo = getMsgInfo("messages/info/standard_msg_info_plain_text_single_to_replyto_cc.json",
-        "messages/mime/standard_msg_info_plain_text_single_to_replyto_to_cc.txt")
+    val msgInfo = getMsgInfo("messages/info/standard_msg_info_plaintext_single_to_replyto_cc.json",
+        "messages/mime/standard_msg_info_plaintext_single_to_replyto_to_cc.txt")
     baseCheck(msgInfo)
 
     onView(withId(R.id.rVMsgDetails))

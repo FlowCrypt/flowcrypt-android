@@ -62,7 +62,7 @@ class KeyStoreCryptoManagerTest {
   @Test
   fun testDataAsStream() {
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
-        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text.txt"))
+        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plaintext.txt"))
 
     val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
     val byteArrayOutputStream = ByteArrayOutputStream()
@@ -101,7 +101,7 @@ class KeyStoreCryptoManagerTest {
   @Test
   fun testDataAsStreamFromCacheManager() {
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
-        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text.txt"))
+        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plaintext.txt"))
     val key = "temp"
     val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
 

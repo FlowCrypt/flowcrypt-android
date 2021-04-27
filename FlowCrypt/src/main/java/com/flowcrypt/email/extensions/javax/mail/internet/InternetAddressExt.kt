@@ -20,6 +20,9 @@ import javax.mail.internet.InternetAddress
 val InternetAddress.domain: String
   get() = address.substring(address.indexOf('@') + 1)
 
+val InternetAddress.personalOrEmail: CharSequence
+  get() = if (personal.isNullOrEmpty()) address else personal
+
 fun InternetAddress.getFormattedString(): CharSequence {
   return if (personal.isNullOrEmpty()) {
     SpannableString(address)
@@ -28,8 +31,4 @@ fun InternetAddress.getFormattedString(): CharSequence {
       setSpan(StyleSpan(Typeface.BOLD), 0, personal.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
   }
-}
-
-fun InternetAddress.getPersonalElseEmail(): CharSequence {
-  return if (personal.isNullOrEmpty()) address else personal
 }

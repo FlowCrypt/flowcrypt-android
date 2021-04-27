@@ -60,7 +60,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
-import com.flowcrypt.email.extensions.javax.mail.internet.getPersonalElseEmail
+import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -693,7 +693,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
 
     val to = leftAddresses.foldIndexed(stringBuilder) { index, builder, it ->
-      builder.append(it.getPersonalElseEmail())
+      builder.append(it.personalOrEmail)
       if (index != leftAddresses.size - 1) {
         builder.append(",")
       }
