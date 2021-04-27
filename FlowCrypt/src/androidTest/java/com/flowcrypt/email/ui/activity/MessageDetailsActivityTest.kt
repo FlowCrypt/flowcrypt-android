@@ -120,7 +120,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testReplyButton() {
-    testStandardMsgPlaneText()
+    testStandardMsgPlaintext()
     onView(withId(R.id.layoutReplyButton))
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
@@ -134,7 +134,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testReplyAllButton() {
-    testStandardMsgPlaneText()
+    testStandardMsgPlaintext()
     onView(withId(R.id.layoutReplyAllButton))
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
@@ -143,7 +143,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testFwdButton() {
-    testStandardMsgPlaneText()
+    testStandardMsgPlaintext()
     onView(withId(R.id.layoutFwdButton))
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
@@ -156,7 +156,7 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  fun testStandardMsgPlaneText() {
+  fun testStandardMsgPlaintext() {
     baseCheck(getMsgInfo("messages/info/standard_msg_info_plaintext.json",
         "messages/mime/standard_msg_info_plaintext.txt"))
     onView(withId(R.id.tVTo))
@@ -164,13 +164,13 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  fun testStandardMsgPlaneTextWithOneAttachment() {
+  fun testStandardMsgplaintextWithOneAttachment() {
     baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plaintext_with_one_att.json",
         "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo), simpleAttInfo)
   }
 
   @Test
-  fun testEncryptedMsgPlaneText() {
+  fun testEncryptedMsgplaintext() {
     baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
   }
@@ -297,14 +297,14 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  fun testEncryptedMsgPlaneTextWithOneAttachment() {
+  fun testEncryptedMsgplaintextWithOneAttachment() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
         "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo)
     baseCheckWithAtt(msgInfo, encryptedAttInfo)
   }
 
   @Test
-  fun testEncryptedMsgPlaneTextWithPubKey() {
+  fun testEncryptedMsgplaintextWithPubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
@@ -542,7 +542,7 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   private fun testTopReplyAction(title: String) {
-    testStandardMsgPlaneText()
+    testStandardMsgPlaintext()
 
     onView(withId(R.id.imageButtonMoreOptions))
         .check(matches(isDisplayed()))

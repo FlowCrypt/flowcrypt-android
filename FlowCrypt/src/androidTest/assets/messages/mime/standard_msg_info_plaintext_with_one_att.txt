@@ -29,7 +29,7 @@ Content-Type: multipart/alternative;
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-It's a standard message with plane text and one attachment
+It's a standard message with plaintext and one attachment
 
 
 --------------9BD0A609717171AC93BCB3E4
@@ -44,7 +44,7 @@ Content-Transfer-Encoding: quoted-printable
   </head>
   <body>
     <pre style=3D"background-color:#ffffff;color:#000000;font-family:'Dej=
-aVu Sans Mono';font-size:12.0pt;">It's a standard message with plane text=
+aVu Sans Mono';font-size:12.0pt;">It's a standard message with plaintext=
  and one attachment</pre>
   </body>
 </html>
