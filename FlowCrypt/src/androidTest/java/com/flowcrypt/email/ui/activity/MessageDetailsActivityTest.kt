@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
+import android.text.format.DateUtils
 import android.text.format.Formatter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -54,6 +55,7 @@ import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -101,7 +103,7 @@ class MessageDetailsActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(AddPrivateKeyToDatabaseRule())
-      //.around(RetryRule.DEFAULT)
+      .around(RetryRule.DEFAULT)
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
 
@@ -397,11 +399,17 @@ class MessageDetailsActivityTest : BaseTest() {
                 name = getResString(R.string.cc),
                 value = "ccuser@test"
             ))))
+
+    val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
+        DateUtils.FORMAT_SHOW_YEAR
+    val datetime = DateUtils.formatDateTime(getTargetContext(),
+        msgInfo?.msgEntity?.receivedDate ?: 0, flags)
+
     onView(withId(R.id.rVMsgDetails))
         .perform(scrollToHolder(withHeaderInfo(
             MsgDetailsRecyclerViewAdapter.Header(
                 name = getResString(R.string.date),
-                value = "October 5, 2020, 11:32 AM"
+                value = datetime
             ))))
   }
 
