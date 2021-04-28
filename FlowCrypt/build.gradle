@@ -444,7 +444,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.8.0'
     implementation 'ch.acra:acra-http:5.7.0'
     implementation 'ja.burhanrashid52:photoeditor:1.1.1'
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.4.32"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.5.0"
     implementation 'net.openid:appauth:0.8.1'
     implementation 'org.bitbucket.b_c:jose4j:0.7.7'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
