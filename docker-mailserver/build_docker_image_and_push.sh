@@ -2,5 +2,12 @@
 
 # build docker image
 
-docker build -t flowcrypt/flowcrypt-email-server .
-docker push flowcrypt/flowcrypt-email-server
+if [ $# -eq 0 ]
+  then
+    tag='latest'
+  else
+    tag=$1
+fi
+
+docker build -t flowcrypt/flowcrypt-email-server:$tag .
+docker push flowcrypt/flowcrypt-email-server:$tag

@@ -5,6 +5,10 @@
 
 package com.flowcrypt.email.extensions.javax.mail.internet
 
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.StyleSpan
 import javax.mail.internet.InternetAddress
 
 /**
@@ -15,3 +19,16 @@ import javax.mail.internet.InternetAddress
  */
 val InternetAddress.domain: String
   get() = address.substring(address.indexOf('@') + 1)
+
+val InternetAddress.personalOrEmail: CharSequence
+  get() = if (personal.isNullOrEmpty()) address else personal
+
+fun InternetAddress.getFormattedString(): CharSequence {
+  return if (personal.isNullOrEmpty()) {
+    SpannableString(address)
+  } else {
+    SpannableString("$personal <$address>").apply {
+      setSpan(StyleSpan(Typeface.BOLD), 0, personal.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+  }
+}

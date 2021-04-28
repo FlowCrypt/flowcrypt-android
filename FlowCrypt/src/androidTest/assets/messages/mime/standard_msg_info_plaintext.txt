@@ -1,14 +1,20 @@
-2 M1e C607eda32
-N          000000000000045C
+Return-Path: <denbond7@denbond7.com>
+Delivered-To: default@denbond7.com
+Received: from mail.denbond7.com
+	by mail.denbond7.com with LMTP
+	id WF4PDSLael+dCQAAZlazJA
+	(envelope-from <denbond7@denbond7.com>)
+	for <default@denbond7.com>; Mon, 05 Oct 2020 08:32:34 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.denbond7.com (Postfix) with ESMTP id 347E7A20940
+	for <default@denbond7.com>; Mon,  5 Oct 2020 08:32:34 +0000 (UTC)
 To: default@denbond7.com
 From: Denis Bondarenko <denbond7@denbond7.com>
 X-Pep-Version: 2.0
 Message-ID: <8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@denbond7.com>
 Date: Mon, 5 Oct 2020 11:32:34 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-Subject: Standard message - plane text
+Mime-Version: 1.0
+Subject: Standard message - plaintext
 Content-Type: multipart/alternative;
  boundary="------------D3F69D95534F587EC1BE35A3"
 Content-Language: en-US
@@ -18,7 +24,7 @@ This is a multi-part message in MIME format.
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-It's a standard message with plane text
+It's a standard message with plaintext
 
 
 --------------D3F69D95534F587EC1BE35A3
@@ -33,15 +39,9 @@ Content-Transfer-Encoding: quoted-printable
   </head>
   <body>
     <pre style=3D"background-color:#ffffff;color:#000000;font-family:'Dej=
-aVu Sans Mono';font-size:12.0pt;">It's a standard message with plane text=
+aVu Sans Mono';font-size:12.0pt;">It's a standard message with plaintext=
 </pre>
   </body>
 </html>
 
 --------------D3F69D95534F587EC1BE35A3--
-
-
-R60586566
-V483
-G1601886754.M203623P2529.mail,S=1116,W=1155
-

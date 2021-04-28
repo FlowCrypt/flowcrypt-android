@@ -1,59 +1,47 @@
-2 M1e C607eda21
-N          00000000000013FD
-Return-Path: <denbond7@denbond7.com>
-Delivered-To: default@denbond7.com
-Received: from mail.denbond7.com
-	by mail.denbond7.com with LMTP
-	id YISlMxbcel9GEwAAZlazJA
-	(envelope-from <denbond7@denbond7.com>)
-	for <default@denbond7.com>; Mon, 05 Oct 2020 08:40:54 +0000
-Received: from localhost (localhost [127.0.0.1])
-	by mail.denbond7.com (Postfix) with ESMTP id D03A0A2098A
-	for <default@denbond7.com>; Mon,  5 Oct 2020 08:40:54 +0000 (UTC)
+2 M1e C6087c71f
+N          000000000000127C
 To: default@denbond7.com
 From: Denis Bondarenko <denbond7@denbond7.com>
-X-Pep-Version: 2.0
-Message-ID: <facd4f6d-9e74-977b-3f11-abbe7cd467eb@denbond7.com>
-Date: Mon, 5 Oct 2020 11:40:54 +0300
-Mime-Version: 1.0
 Subject: Standard message + one attachment
+Message-ID: <34e7a58b-09ef-8d70-d96d-77ca6dd96570@denbond7.com>
+Date: Tue, 27 Apr 2021 11:11:11 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
+MIME-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------9575DD1DBF2C2FFA08F4568A"
+ boundary="------------F8FEAF85A0D60741A73A616F"
 Content-Language: en-US
 
 This is a multi-part message in MIME format.
---------------9575DD1DBF2C2FFA08F4568A
+--------------F8FEAF85A0D60741A73A616F
 Content-Type: multipart/alternative;
- boundary="------------9BD0A609717171AC93BCB3E4"
+ boundary="------------257E7C9D6EB40410955F57EB"
 
 
---------------9BD0A609717171AC93BCB3E4
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+--------------257E7C9D6EB40410955F57EB
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-It's a standard message with plane text and one attachment
+It's a standard message with plaintext and one attachment
 
 
---------------9BD0A609717171AC93BCB3E4
+--------------257E7C9D6EB40410955F57EB
 Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
 <html>
   <head>
 
-    <meta http-equiv=3D"content-type" content=3D"text/html; charset=3DUTF=
--8">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   </head>
   <body>
-    <pre style=3D"background-color:#ffffff;color:#000000;font-family:'Dej=
-aVu Sans Mono';font-size:12.0pt;">It's a standard message with plane text=
- and one attachment</pre>
+    <pre style="background-color:#ffffff;color:#080808;font-family:'DejaVu Sans Mono',monospace;font-size:12.0pt;">It's a standard message with plaintext and one attachment</pre>
   </body>
 </html>
 
---------------9BD0A609717171AC93BCB3E4--
+--------------257E7C9D6EB40410955F57EB--
 
---------------9575DD1DBF2C2FFA08F4568A
+--------------F8FEAF85A0D60741A73A616F
 Content-Type: image/png;
  name="android.png"
 Content-Transfer-Encoding: base64
@@ -105,10 +93,10 @@ ZAB8ztK9d+JFudK7IvlZ+LwRAD7+RFzCJcnj+4E4gRhA8oD4SEoQla1UkZQggNID4+MvRRGk
 8jWSmfB5+8rNB/IR3W5L54rn14LnjZZRSYHxKVOoXYberfIKOyvPGEDTcwXIx88nDaOAH3Zv
 nt9F/GnE6AWi7FRA+fj+6sJ5TBghnE90Xvay4JyUz8ecf5mtcVMB5+P70/1m/ZOGK93FxdNV
 mP6sN3vtxcgaQPqMAfQZN+gzbv4Htx68Wm+jVTYAAAAASUVORK5CYII=
---------------9575DD1DBF2C2FFA08F4568A--
+--------------F8FEAF85A0D60741A73A616F--
 
 
-R5f7adc16
-V1467
-G1601887254.M867655P4934.mail,S=5117,W=5223
+R6087c71f
+V12da
+G8a84040a1fc78760ba0500006656b324
 

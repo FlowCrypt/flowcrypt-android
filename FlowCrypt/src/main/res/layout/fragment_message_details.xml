@@ -26,23 +26,22 @@
                 android:id="@+id/layoutHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/default_margin_medium"
-                android:layout_marginTop="@dimen/margin_top_bottom_message"
-                android:layout_marginRight="@dimen/default_margin_medium">
+                android:layout_marginStart="@dimen/default_margin_medium"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:layout_marginEnd="@dimen/default_margin_medium"
+                android:animateLayoutChanges="true">
 
                 <TextView
                     android:id="@+id/textViewSenderAddress"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/default_margin_content"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textColor="@color/gray"
+                    android:textColor="@color/black"
                     android:textSize="@dimen/default_text_size_big"
-                    app:layout_constraintEnd_toStartOf="@+id/imageButtonReplyAll"
-                    app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/view"
                     app:layout_goneMarginLeft="@dimen/default_margin_medium"
                     tools:text="sender@flowcrypt.com" />
 
@@ -50,12 +49,13 @@
                     android:id="@+id/imageButtonReplyAll"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:layout_marginEnd="@dimen/default_margin_content_small"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/reply_all"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toStartOf="@+id/imageButtonMoreOptions"
-                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/view"
                     app:layout_goneMarginRight="@dimen/default_margin_medium"
                     app:srcCompat="@mipmap/ic_reply_all_red"
                     tools:visibility="visible" />
@@ -64,11 +64,12 @@
                     android:id="@+id/imageButtonMoreOptions"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/reply_all"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/view"
                     app:layout_goneMarginRight="@dimen/default_margin_medium"
                     app:srcCompat="@drawable/ic_more_vert_gray_32dp"
                     tools:visibility="visible" />
@@ -77,29 +78,79 @@
                     android:id="@+id/textViewSubject"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/margin_top_message_subject"
-                    android:layout_marginEnd="@dimen/default_margin_medium"
                     android:ellipsize="end"
-                    android:maxLines="2"
-                    android:textColor="@color/gray"
-                    android:textSize="@dimen/default_text_size_medium"
-                    app:layout_constraintEnd_toStartOf="@+id/textViewDate"
-                    app:layout_constraintHorizontal_bias="0.0"
+                    android:maxLines="5"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/dark"
+                    android:textSize="@dimen/default_text_size_very_big"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.487"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:layout_goneMarginLeft="@dimen/default_margin_medium"
-                    tools:text="Lorem ipsum subject subject subject subject subject" />
+                    tools:text="[FlowCrypt/flowcrypt-security] Unlimited unauthenticated file storage via password protected attachments (#126)" />
+
+                <View
+                    android:id="@+id/view"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:background="@color/aluminum"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSubject" />
 
                 <TextView
                     android:id="@+id/textViewDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/default_margin_medium"
                     android:textColor="@color/gray"
                     android:textSize="@dimen/default_text_size_medium"
+                    app:layout_constraintBottom_toBottomOf="@+id/tVTo"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/textViewSubject"
+                    app:layout_constraintTop_toTopOf="@+id/tVTo"
                     tools:text="1:05 PM" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rVMsgDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_mime_headers"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    android:padding="@dimen/default_margin_content_small"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/iBShowDetails"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/item_mime_header"
+                    tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/iBShowDetails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/details"
+                    android:src="@mipmap/ic_arrow_drop_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/tVTo"
+                    app:layout_constraintStart_toEndOf="@+id/tVTo"
+                    app:layout_constraintTop_toTopOf="@+id/tVTo" />
+
+                <TextView
+                    android:id="@+id/tVTo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    app:layout_constraintWidth_max="@dimen/max_width_field_to"
+                    android:textAlignment="textStart"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
+                    tools:text="To me" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
