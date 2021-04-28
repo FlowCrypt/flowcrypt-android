@@ -335,6 +335,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
+  @DependsOnMailServer
   fun testWhenNoAccountsAndHasBackup() {
     val prvKey = PrivateKeysManager.getNodeKeyDetailsFromAssets(
         "pgp/default@denbond7.com_fisrtKey_prv_default.asc")
@@ -357,6 +358,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
+  @DependsOnMailServer
   fun testWhenHasAccountsHasBackup() {
     val user = AccountDaoManager.getUserWithMoreThan21Letters()
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(user)
