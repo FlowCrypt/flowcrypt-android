@@ -63,7 +63,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   override val activityScenarioRule = activityScenarioRule<EmailManagerActivity>()
 
   private val userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json")
-  private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWitMoreThan21Letters()
+  private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWithMoreThan21Letters()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -185,7 +185,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   companion object {
     private val LOCAL_FOLDERS: MutableList<LocalFolder>
-    private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWitMoreThan21Letters()
+    private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWithMoreThan21Letters()
     private val INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT = LocalFolder(
         account = userWithMoreThan21LettersAccount.email,
         fullName = "INBOX",

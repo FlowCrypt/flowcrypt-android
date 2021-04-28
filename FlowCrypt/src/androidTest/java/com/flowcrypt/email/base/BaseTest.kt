@@ -170,9 +170,15 @@ abstract class BaseTest : BaseActivityTestImplementation {
   /**
    * Test is a [Snackbar] displayed.
    */
-  protected fun checkIsSnackBarDisplayed() {
-    onView(withId(com.google.android.material.R.id.snackbar_action))
-        .check(matches(isDisplayed()))
+  protected fun checkIsSnackBarDisplayed(text: String? = null) {
+    if (text.isNullOrEmpty()) {
+      onView(withId(com.google.android.material.R.id.snackbar_action))
+          .check(matches(isDisplayed()))
+    } else {
+      onView(withId(com.google.android.material.R.id.snackbar_text))
+          .check(matches(isDisplayed()))
+          .check(matches(withText(text)))
+    }
   }
 
   /**

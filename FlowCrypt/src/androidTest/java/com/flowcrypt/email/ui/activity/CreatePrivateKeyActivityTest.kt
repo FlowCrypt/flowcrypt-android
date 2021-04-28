@@ -41,7 +41,7 @@ import org.junit.runner.RunWith
 class CreatePrivateKeyActivityTest : BasePassphraseActivityTest() {
 
   override val activityScenarioRule = activityScenarioRule<CreatePrivateKeyActivity>(
-      CreatePrivateKeyActivity.newIntent(this@CreatePrivateKeyActivityTest.getTargetContext(), AccountDaoManager.getUserWitMoreThan21Letters())
+      CreatePrivateKeyActivity.newIntent(this@CreatePrivateKeyActivityTest.getTargetContext(), AccountDaoManager.getUserWithMoreThan21Letters())
   )
 
   @get:Rule

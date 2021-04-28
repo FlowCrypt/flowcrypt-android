@@ -49,7 +49,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
 
       if (existedAccount != null && failIfDuplicateFound) {
         checkEmailSettingsLiveData.postValue(Result.exception(
-            AccountAlreadyAddedException(context.getString(R.string.template_email_alredy_added, accountEntity.email))))
+            AccountAlreadyAddedException(context.getString(R.string.template_email_already_added, accountEntity.email))))
       } else {
         checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.connection)))
         try {

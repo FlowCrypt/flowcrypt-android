@@ -14,6 +14,8 @@ import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
@@ -80,15 +82,18 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
             showProgress(it.progressMsg)
           }
 
           Result.Status.SUCCESS -> {
             loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity)
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           else -> {
             setFragmentResult(REQUEST_KEY_CHECK_ACCOUNT_SETTINGS, bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it))
+            baseActivity.countingIdlingResource.decrementSafely()
             parentFragmentManager.popBackStack()
           }
         }
@@ -100,11 +105,13 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
     loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
           showProgress(it.progressMsg)
         }
 
         else -> {
           setFragmentResult(REQUEST_KEY_SEARCH_BACKUPS, bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it))
+          baseActivity.countingIdlingResource.decrementSafely()
           parentFragmentManager.popBackStack()
         }
       }
