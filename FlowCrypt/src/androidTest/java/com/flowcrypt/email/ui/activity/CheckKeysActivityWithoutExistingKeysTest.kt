@@ -40,7 +40,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
 
-  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@denbond7.com_fisrtKey_prv_default.asc"), true)
+  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc"), true)
 
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
       CheckKeysActivity.newIntent(getTargetContext(),

@@ -310,7 +310,7 @@ class MessageDetailsActivityTest : BaseTest() {
         "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
-    val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/denbond7@denbond7.com_pub.asc")
+    val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
     val pgpContact = nodeKeyDetails.primaryPgpContact
 
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(matches(withText(
@@ -379,19 +379,19 @@ class MessageDetailsActivityTest : BaseTest() {
         .perform(scrollToHolder(
             withHeaderInfo(MsgDetailsRecyclerViewAdapter.Header(
                 name = getResString(R.string.from),
-                value = "Denis Bondarenko <denbond7@denbond7.com>"
+                value = "Denis Bondarenko <denbond7@flowcrypt.test>"
             ))))
     onView(withId(R.id.rVMsgDetails))
         .perform(scrollToHolder(withHeaderInfo(
             MsgDetailsRecyclerViewAdapter.Header(
                 name = getResString(R.string.reply_to),
-                value = "Denis Bondarenko <denbond7@denbond7.com>"
+                value = "Denis Bondarenko <denbond7@flowcrypt.test>"
             ))))
     onView(withId(R.id.rVMsgDetails))
         .perform(scrollToHolder(withHeaderInfo(
             MsgDetailsRecyclerViewAdapter.Header(
                 name = getResString(R.string.to),
-                value = "default@denbond7.com"
+                value = "default@flowcrypt.test"
             ))))
     onView(withId(R.id.rVMsgDetails))
         .perform(scrollToHolder(withHeaderInfo(

@@ -10,37 +10,37 @@
   ],
   "msgEntity": {
     "cc": [],
-    "email": "default@denbond7.com",
+    "email": "default@flowcrypt.test",
     "flags": "\\SEEN",
     "folder": "INBOX",
     "from": [
       {
-        "address": "denbond7@denbond7.com"
+        "address": "denbond7@flowcrypt.test"
       }
     ],
-    "fromAddress": "denbond7@denbond7.com",
+    "fromAddress": "denbond7@flowcrypt.test",
     "hasAttachments": false,
     "id": 9,
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1601913590000,
-    "replyTo": "denbond7@denbond7.com",
+    "replyTo": "denbond7@flowcrypt.test",
     "replyToAddress": [
       {
-        "address": "denbond7@denbond7.com"
+        "address": "denbond7@flowcrypt.test"
       }
     ],
     "sentDate": 1601913585000,
     "subject": "Simple encrypted message",
     "to": [
       {
-        "address": "default@denbond7.com"
+        "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@denbond7.com",
+    "toAddress": "default@flowcrypt.test",
     "uid": 13,
     "isEncrypted": true
   },
-  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com\r\n\tby mail.denbond7.com with LMTP\r\n\tid HBliJvZCe19mBwAAZlazJA\r\n\t(envelope-from \u003cdenbond7@denbond7.com\u003e)\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon, 05 Oct 2020 15:59:50 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 99865B20589\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon,  5 Oct 2020 15:59:50 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-16019135859960.4371023548713371\"\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: Simple encrypted message\r\nDate: Mon, 05 Oct 2020 15:59:45 +0000\r\nMessage-Id: \u003c1601913586004-0767ceb7-48bd4f66-fc1565bd@denbond7.com\u003e\r\nMime-Version: 1.0",
+  "origMsgHeaders": "Return-Path: \u003cdenbond7@flowcrypt.test\u003e\r\nDelivered-To: default@flowcrypt.test\r\nReceived: from mail.flowcrypt.test\r\n\tby mail.flowcrypt.test with LMTP\r\n\tid HBliJvZCe19mBwAAZlazJA\r\n\t(envelope-from \u003cdenbond7@flowcrypt.test\u003e)\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon, 05 Oct 2020 15:59:50 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.flowcrypt.test (Postfix) with ESMTP id 99865B20589\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon,  5 Oct 2020 15:59:50 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-16019135859960.4371023548713371\"\r\nTo: default@flowcrypt.test\r\nFrom: denbond7@flowcrypt.test\r\nSubject: Simple encrypted message\r\nDate: Mon, 05 Oct 2020 15:59:45 +0000\r\nMessage-Id: \u003c1601913586004-0767ceb7-48bd4f66-fc1565bd@flowcrypt.test\u003e\r\nMime-Version: 1.0",
   "text": "Simple encrypted text"
 }

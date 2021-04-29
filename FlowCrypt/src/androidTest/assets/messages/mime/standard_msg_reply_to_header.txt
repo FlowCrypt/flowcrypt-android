@@ -1,11 +1,11 @@
-Return-Path: <denbond7@denbond7.com>
-Delivered-To: default@denbond7.com
-Received: from mail.denbond7.com (localhost [127.0.0.1])
-	by mail.denbond7.com (Postfix) with ESMTP id E24B021EE5
-	for <default@denbond7.com>; Tue,  1 Oct 2019 11:25:36 +0000 (UTC)
-Authentication-Results: mail.denbond7.com (amavisd-new); dkim=pass
-	reason="pass (just generated, assumed good)" header.d=denbond7.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=denbond7.com; h=
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id E24B021EE5
+	for <default@flowcrypt.test>; Tue,  1 Oct 2019 11:25:36 +0000 (UTC)
+Authentication-Results: mail.flowcrypt.test (amavisd-new); dkim=pass
+	reason="pass (just generated, assumed good)" header.d=flowcrypt.test
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flowcrypt.test; h=
 	user-agent:message-id:reply-to:subject:subject:to:from:from:date
 	:date:content-transfer-encoding:content-type:content-type
 	:mime-version; s=dkim; t=1569929122; x=1570793123; bh=x1bgGo2MG/
@@ -13,25 +13,25 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=denbond7.com; h=
 	oCJrkHjltgdAUnwvCA7gmFG0rOH366G57fQME7Vv0KtjodHoG3ijNotoJUw+66VS
 	ww9CjSWXadPriTIXN/cRzJBnNN9Lvp5qEcg93MI0kTvX5kJHZEAG7jbZZUXX3LUw
 	XWKNohPwqcECOM8fI=
-X-Virus-Scanned: Debian amavisd-new at mail.denbond7.com
-Received: from mail.denbond7.com ([127.0.0.1])
-	by mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id 640VPIOx-Lcz for <default@denbond7.com>;
+X-Virus-Scanned: Debian amavisd-new at mail.flowcrypt.test
+Received: from mail.flowcrypt.test ([127.0.0.1])
+	by mail.flowcrypt.test (mail.flowcrypt.test [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id 640VPIOx-Lcz for <default@flowcrypt.test>;
 	Tue,  1 Oct 2019 11:25:22 +0000 (UTC)
-Received: from denbond7.com (localhost [127.0.0.1])
-	by mail.denbond7.com (Postfix) with ESMTPSA id 6D12421ED6
-	for <default@denbond7.com>; Tue,  1 Oct 2019 11:25:22 +0000 (UTC)
+Received: from flowcrypt.test (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTPSA id 6D12421ED6
+	for <default@flowcrypt.test>; Tue,  1 Oct 2019 11:25:22 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Date: Tue, 01 Oct 2019 14:25:21 +0300
-From: denbond7@denbond7.com
-To: Default <default@denbond7.com>
+From: denbond7@flowcrypt.test
+To: Default <default@flowcrypt.test>
 Subject: Honor reply-to address
-Reply-To: android@denbond7.com
-Mail-Reply-To: android@denbond7.com
-Message-ID: <8b50eeb45d3b6cd88be8d06907b171de@denbond7.com>
-X-Sender: denbond7@denbond7.com
+Reply-To: android@flowcrypt.test
+Mail-Reply-To: android@flowcrypt.test
+Message-ID: <8b50eeb45d3b6cd88be8d06907b171de@flowcrypt.test>
+X-Sender: denbond7@flowcrypt.test
 User-Agent: Roundcube Webmail
 
 Some message with some text. See details here

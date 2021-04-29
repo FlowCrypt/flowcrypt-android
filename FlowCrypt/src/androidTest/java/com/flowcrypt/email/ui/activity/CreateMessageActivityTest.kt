@@ -124,7 +124,7 @@ class CreateMessageActivityTest : BaseTest() {
   private val pgpContact: PgpContact
     get() {
       val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-          "pgp/not_attester_user@denbond7.com_prv_default.asc")
+          "pgp/not_attester_user@flowcrypt.test_prv_default.asc")
       return details.primaryPgpContact
     }
 
@@ -265,7 +265,7 @@ class CreateMessageActivityTest : BaseTest() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
 
-    val invalidEmailAddresses = arrayOf("test", "test@", "test@@denbond7.com", "@denbond7.com")
+    val invalidEmailAddresses = arrayOf("test", "test@", "test@@flowcrypt.test", "@flowcrypt.test")
 
     for (invalidEmailAddress in invalidEmailAddresses) {
       onView(withId(R.id.layoutTo))
@@ -478,7 +478,7 @@ class CreateMessageActivityTest : BaseTest() {
     PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,
         addPrivateKeyToDatabaseRule.keyPath)
     val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-        "pgp/key_testing@denbond7.com_keyB_default.asc")
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc")
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, keyDetails,
         TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
 
@@ -499,7 +499,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@denbond7.com-expired-pub.asc")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test-expired-pub.asc")
     val contact = keyDetails.primaryPgpContact
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
         .contactsDao().insert(contact.toContactEntity())
@@ -524,7 +524,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_fixed@denbond7.com-expired-pub.asc")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test-expired-pub.asc")
     val contact = keyDetailsFromAssets.primaryPgpContact
     val contactsDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
     contactsDao.insert(contact.toContactEntity())
@@ -669,7 +669,7 @@ class CreateMessageActivityTest : BaseTest() {
                   return MockResponse()
                       .setResponseCode(200)
                       .setBody(TestGeneralUtil.readFileFromAssetsAsString(
-                          "pgp/expired_fixed@denbond7.com-not_expired-pub.asc"))
+                          "pgp/expired_fixed@flowcrypt.test-not_expired-pub.asc"))
                 }
               }
             }

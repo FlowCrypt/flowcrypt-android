@@ -62,8 +62,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -78,8 +78,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -96,8 +96,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysWithSamePasswordThirdCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -113,8 +113,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysFourthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(1)
@@ -130,8 +130,8 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysFifthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(1)
@@ -147,9 +147,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -165,9 +165,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -183,9 +183,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysThirdCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -203,9 +203,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysFourthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -223,9 +223,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -241,9 +241,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysSixthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -259,9 +259,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysSeventhCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -280,10 +280,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -300,10 +300,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseFourKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+        "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+        "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+        "pgp/key_testing@flowcrypt.test_keyC_strong.asc")
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)

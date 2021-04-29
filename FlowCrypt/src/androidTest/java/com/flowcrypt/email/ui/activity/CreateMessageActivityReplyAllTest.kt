@@ -47,7 +47,7 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
   private val accountAliasesEntity = AccountAliasesEntity(
       email = account.email,
       accountType = account.accountType ?: "",
-      sendAsEmail = "alias@denbond7.com",
+      sendAsEmail = "alias@flowcrypt.test",
       displayName = "Alias",
       isDefault = true,
       verificationStatus = "accepted")

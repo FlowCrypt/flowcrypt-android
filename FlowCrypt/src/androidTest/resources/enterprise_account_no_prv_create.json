@@ -1,6 +1,6 @@
 {
-  "email": "default@denbond7.com",
-  "accountType": "denbond7.com",
+  "email": "default@flowcrypt.test",
+  "accountType": "flowcrypt.test",
   "displayName": "displayName",
   "givenName": "givenName",
   "familyName": "familyName",
@@ -11,6 +11,6 @@
   "password": "qwerty1234",
   "smtpPort": 587,
   "smtpServer": "10.0.2.2",
-  "username": "default@denbond7.com",
+  "username": "default@flowcrypt.test",
   "domainRules": "NO_PRV_CREATE"
 }

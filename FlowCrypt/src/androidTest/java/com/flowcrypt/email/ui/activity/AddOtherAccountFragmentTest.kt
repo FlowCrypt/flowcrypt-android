@@ -257,7 +257,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
     enableAdvancedMode()
     fillAllFields(authCreds)
 
-    val invalidEmailAddresses = arrayOf("default", "default@", "default@@denbond7.com", "@denbond7.com", "    ")
+    val invalidEmailAddresses = arrayOf("default", "default@", "default@@flowcrypt.test", "@flowcrypt.test", "    ")
 
     for (invalidEmailAddress in invalidEmailAddresses) {
       onView(withId(R.id.editTextEmail))
@@ -338,7 +338,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   @DependsOnMailServer
   fun testWhenNoAccountsAndHasBackup() {
     val prvKey = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-        "pgp/default@denbond7.com_fisrtKey_prv_default.asc")
+        "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc")
 
     intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().apply {
@@ -364,7 +364,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(user)
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = user,
-        keyPath = "pgp/key_testing@denbond7.com_keyB_default.asc",
+        keyPath = "pgp/key_testing@flowcrypt.test_keyB_default.asc",
         passphrase = TestConstants.DEFAULT_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )
@@ -378,7 +378,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(existedUser)
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = existedUser,
-        keyPath = "pgp/default@denbond7.com_fisrtKey_prv_default.asc",
+        keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc",
         passphrase = TestConstants.DEFAULT_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )

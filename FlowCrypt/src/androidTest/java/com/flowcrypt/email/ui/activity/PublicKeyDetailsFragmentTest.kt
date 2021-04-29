@@ -70,7 +70,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
 
-  private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@denbond7.com-expired-pub.asc")
+  private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test-expired-pub.asc")
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -194,7 +194,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   companion object {
-    private const val EMAIL_DENBOND7 = "denbond7@denbond7.com"
+    private const val EMAIL_DENBOND7 = "denbond7@flowcrypt.test"
     private const val USER_DENBOND7 = "DenBond7"
 
     @AfterClass
