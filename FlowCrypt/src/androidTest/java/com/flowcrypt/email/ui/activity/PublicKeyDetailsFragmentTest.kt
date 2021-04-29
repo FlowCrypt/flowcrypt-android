@@ -70,7 +70,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
 
-  private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test-expired-pub.asc")
+  private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

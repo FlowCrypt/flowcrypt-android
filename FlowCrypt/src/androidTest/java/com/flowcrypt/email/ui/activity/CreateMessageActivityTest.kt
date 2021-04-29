@@ -499,7 +499,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test-expired-pub.asc")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
     val contact = keyDetails.primaryPgpContact
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
         .contactsDao().insert(contact.toContactEntity())
@@ -524,7 +524,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test-expired-pub.asc")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
     val contact = keyDetailsFromAssets.primaryPgpContact
     val contactsDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
     contactsDao.insert(contact.toContactEntity())
@@ -669,7 +669,7 @@ class CreateMessageActivityTest : BaseTest() {
                   return MockResponse()
                       .setResponseCode(200)
                       .setBody(TestGeneralUtil.readFileFromAssetsAsString(
-                          "pgp/expired_fixed@flowcrypt.test-not_expired-pub.asc"))
+                          "pgp/expired_fixed@flowcrypt.test_not_expired_pub.asc"))
                 }
               }
             }
