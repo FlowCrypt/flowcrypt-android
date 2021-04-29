@@ -1,2 +1,3 @@
-V	410124093129Z		7B295716B7AFF0A5CF942BDC416A3A5A11EFE10C	unknown	/C=UA/ST=Kirovograd region/O=Bondarenko Denys Serhiiovych/OU=CA/CN=denbond7.com/emailAddress=admin@denbond7.com
-V	310127112644Z		7B295716B7AFF0A5CF942BDC416A3A5A11EFE10D	unknown	/C=UA/ST=Kirovograd region/O=Bondarenko Denys Serhiiovych/OU=Android Team/CN=mail.denbond7.com/emailAddress=admin@denbond7.com
+V	410424082027Z		09B710B7712C10360154F96D1B21D47E36F1E951	unknown	/C=UA/ST=Debug/O=FlowCrypt/CN=flowcrypt.test/emailAddress=admin@flowcrypt.test
+V	310427082528Z		09B710B7712C10360154F96D1B21D47E36F1E952	unknown	/C=UA/ST=Debug/O=FlowCrypt/CN=localhost/emailAddress=admin@flowcrypt.test
+V	310427090343Z		09B710B7712C10360154F96D1B21D47E36F1E953	unknown	/C=UA/ST=Debug/O=FlowCrypt/CN=mail.flowcrypt.test/emailAddress=admin@flowcrypt.test
