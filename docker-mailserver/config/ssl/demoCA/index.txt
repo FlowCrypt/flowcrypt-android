@@ -1,3 +1,2 @@
 V	410424082027Z		09B710B7712C10360154F96D1B21D47E36F1E951	unknown	/C=UA/ST=Debug/O=FlowCrypt/CN=flowcrypt.test/emailAddress=admin@flowcrypt.test
-V	310427082528Z		09B710B7712C10360154F96D1B21D47E36F1E952	unknown	/C=UA/ST=Debug/O=FlowCrypt/CN=localhost/emailAddress=admin@flowcrypt.test
-V	310427090343Z		09B710B7712C10360154F96D1B21D47E36F1E953	unknown	/C=UA/ST=Debug/O=FlowCrypt/CN=mail.flowcrypt.test/emailAddress=admin@flowcrypt.test
+V	310427132542Z		09B710B7712C10360154F96D1B21D47E36F1E954	unknown	/C=UA/ST=Debug/O=FlowCrypt/CN=localhost
