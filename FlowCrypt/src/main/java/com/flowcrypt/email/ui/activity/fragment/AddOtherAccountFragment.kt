@@ -488,7 +488,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
               return@let
             } else {
               showContent()
-              showInfoSnackbar(msgText = getString(R.string.template_email_alredy_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
+              showInfoSnackbar(msgText = getString(R.string.template_email_already_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
             }
           }
         }

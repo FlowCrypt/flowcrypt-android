@@ -26,7 +26,7 @@ class AccountDaoManager {
     }
 
     @JvmStatic
-    fun getUserWitMoreThan21Letters(): AccountEntity {
+    fun getUserWithMoreThan21Letters(): AccountEntity {
       return TestGeneralUtil.readObjectFromResources("user_with_more_than_21_letters_account.json",
           AccountEntity::class.java)
     }

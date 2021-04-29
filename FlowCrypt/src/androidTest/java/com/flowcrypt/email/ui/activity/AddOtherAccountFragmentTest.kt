@@ -5,6 +5,10 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.ComponentName
+import android.content.Intent
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -13,6 +17,9 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
@@ -27,13 +34,17 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
+import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.AuthCredentialsManager
+import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
@@ -63,6 +74,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class AddOtherAccountFragmentTest : BaseTest() {
+  override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SignInActivity>()
 
   @get:Rule
@@ -320,6 +332,65 @@ class AddOtherAccountFragmentTest : BaseTest() {
       onView(withId(fieldIdentifiersWithIncorrectData[i]))
           .perform(scrollTo(), clearText(), typeText(correctData[i]), closeSoftKeyboard())
     }
+  }
+
+  @Test
+  @DependsOnMailServer
+  fun testWhenNoAccountsAndHasBackup() {
+    val prvKey = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+        "pgp/default@denbond7.com_fisrtKey_prv_default.asc")
+
+    intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().apply {
+          putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, ArrayList(listOf(prvKey)))
+        }))
+
+    val creds = AuthCredentialsManager.getAuthCredentials()
+
+    onView(withId(R.id.editTextEmail))
+        .perform(clearText(), typeText(creds.email), closeSoftKeyboard())
+    onView(withId(R.id.editTextPassword))
+        .perform(clearText(), typeText(creds.password), closeSoftKeyboard())
+    onView(withId(R.id.buttonTryToConnect))
+        .perform(scrollTo(), click())
+
+    intended(hasComponent(EmailManagerActivity::class.java.name))
+  }
+
+  @Test
+  @DependsOnMailServer
+  fun testWhenHasAccountsHasBackup() {
+    val user = AccountDaoManager.getUserWithMoreThan21Letters()
+    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(user)
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = user,
+        keyPath = "pgp/key_testing@denbond7.com_keyB_default.asc",
+        passphrase = TestConstants.DEFAULT_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
+
+    testWhenNoAccountsAndHasBackup()
+  }
+
+  @Test
+  fun testAddingExistedAccount() {
+    val existedUser = AccountDaoManager.getDefaultAccountDao()
+    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(existedUser)
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = existedUser,
+        keyPath = "pgp/default@denbond7.com_fisrtKey_prv_default.asc",
+        passphrase = TestConstants.DEFAULT_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
+
+    onView(withId(R.id.editTextEmail))
+        .perform(clearText(), typeText(existedUser.email), closeSoftKeyboard())
+    onView(withId(R.id.editTextPassword))
+        .perform(clearText(), typeText(existedUser.password), closeSoftKeyboard())
+    onView(withId(R.id.buttonTryToConnect))
+        .perform(scrollTo(), click())
+
+    checkIsSnackBarDisplayed(getResString(R.string.template_email_already_added, existedUser.email))
   }
 
   private fun checkSecurityTypeOpt(portViewId: Int, spinnerViewId: Int, option: SecurityType.Option,
