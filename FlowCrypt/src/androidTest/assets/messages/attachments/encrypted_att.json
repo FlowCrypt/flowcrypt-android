@@ -1,13 +1,16 @@
 {
   "email": "default@flowcrypt.test",
-  "encodedSize": 4138,
+  "encodedSize": 3666,
   "folder": "INBOX",
   "fwdUid": 0,
-  "id": "<4a2934f5-6f04-4ad4-a376-9497db95ea5c@flowcrypt>",
+  "id": "\u003c5ba91c02-76ad-4172-b7c4-b2ea2b13e50a@flowcrypt\u003e",
+  "isDecrypted": false,
+  "isEncryptionAllowed": true,
   "isForwarded": false,
   "isProtected": false,
   "name": "android.png.pgp",
   "orderNumber": 0,
-  "type": "image/png; name=android.png.pgp",
-  "uid": 16
+  "path": "0/1",
+  "type": "image/png; name\u003dandroid.png.pgp",
+  "uid": 12
 }

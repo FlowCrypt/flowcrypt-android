@@ -66,7 +66,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
       id = EmailUtil.generateContentId(),
       isProtected = true)
 
-  private val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plain_text.json", IncomingMessageInfo::class.java)!!
+  private val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_text.json", IncomingMessageInfo::class.java)!!
   private val serviceInfo = ServiceInfo(isToFieldEditable = false,
       isFromFieldEditable = false,
       isMsgEditable = false,

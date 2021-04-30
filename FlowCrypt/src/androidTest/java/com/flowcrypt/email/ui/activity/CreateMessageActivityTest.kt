@@ -665,7 +665,7 @@ class CreateMessageActivityTest : BaseTest() {
                       .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
                 }
 
-                "B9D1AD05A2A329630DCF2A279ABFF9E583B49BF6".equals(lastSegment, true) -> {
+                "95FC072E853C9C333C68EDD34B9CA2FBCA5B5FE7".equals(lastSegment, true) -> {
                   return MockResponse()
                       .setResponseCode(200)
                       .setBody(TestGeneralUtil.readFileFromAssetsAsString(

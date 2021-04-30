@@ -65,6 +65,7 @@ import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
@@ -172,7 +173,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testEncryptedMsgPlaintext() {
-    baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
+    baseCheck(getMsgInfo("messages/info/encrypted_msg_info_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
   }
 
@@ -187,8 +188,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorImportKey() {
-    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
-        "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt"))
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_text_with_missing_key.txt"))
 
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -205,7 +206,7 @@ class MessageDetailsActivityTest : BaseTest() {
     )
 
     val incomingMsgInfoFixed =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plain_text_with_missing_key_fixed.json",
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_text_with_missing_key_fixed.json",
             IncomingMessageInfo::class.java)
 
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
@@ -218,13 +219,13 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingPubKey() {
-    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_one_pub_key.json",
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_text_error_one_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_error_one_pub_key.txt"))
   }
 
   @Test
   fun testBadlyFormattedMsg() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_badly_formatted.json",
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_text_error_badly_formatted.json",
         "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt")
         ?: throw NullPointerException()
 
@@ -233,7 +234,7 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = msgInfo.msgEntity
 
     launchActivity(details)
-    matchHeader(details)
+    matchHeader(msgInfo)
 
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val decryptError = block.error
@@ -249,8 +250,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseSinglePubKey() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
-        "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_text_with_missing_key.txt")
 
     testMissingKey(msgInfo)
 
@@ -268,8 +269,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseFromFewPubKeys() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
-        "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_text_with_missing_key.txt")
 
     testMissingKey(msgInfo)
 
@@ -298,16 +299,16 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  fun testEncryptedMsgPlaintextWithOneAttachment() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
+  fun testEncryptedMsgTextWithOneAttachment() {
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_text_with_one_att.json",
         "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo)
     baseCheckWithAtt(msgInfo, encryptedAttInfo)
   }
 
   @Test
   fun testEncryptedMsgPlaintextWithPubKey() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
-        "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_text_with_pub_key.json",
+        "messages/mime/encrypted_msg_info_text_with_pub_key.txt", pubKeyAttInfo)
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
     val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
@@ -419,7 +420,7 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.msgEntity
 
     launchActivity(details)
-    matchHeader(details)
+    matchHeader(incomingMsgInfo)
 
     val block = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val errorMsg = getResString(R.string.decrypt_error_current_key_cannot_open_message)
@@ -453,7 +454,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     val details = incomingMsgInfo!!.msgEntity
     launchActivity(details)
-    matchHeader(details)
+    matchHeader(incomingMsgInfo)
 
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
@@ -467,7 +468,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     val msgEntity = incomingMsgInfo!!.msgEntity
     launchActivity(msgEntity)
-    matchHeader(msgEntity)
+    matchHeader(incomingMsgInfo)
 
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
@@ -479,13 +480,16 @@ class MessageDetailsActivityTest : BaseTest() {
     matchReplyButtons(msgEntity)
   }
 
-  private fun matchHeader(msgEntity: MessageEntity) {
+  private fun matchHeader(incomingMsgInfo: IncomingMessageInfo?) {
+    val msgEntity = incomingMsgInfo?.msgEntity
+    requireNotNull(msgEntity)
+
     onView(withId(R.id.textViewSenderAddress))
         .check(matches(withText(EmailUtil.getFirstAddressString(msgEntity.from))))
     onView(withId(R.id.textViewDate))
         .check(matches(withText(DateTimeUtil.formatSameDayTime(getTargetContext(), msgEntity.receivedDate))))
     onView(withId(R.id.textViewSubject))
-        .check(matches(withText(msgEntity.subject)))
+        .check(matches(anyOf(withText(msgEntity.subject), withText(incomingMsgInfo.inlineSubject))))
   }
 
   private fun matchAtt(att: AttachmentInfo?) {

@@ -201,7 +201,7 @@ class KeysSettingsActivityTest : BaseTest() {
     )
 
     onView(withId(R.id.recyclerViewKeys))
-        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
+        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
 
     onView(withId(R.id.tVPassPhraseVerification))
         .check(matches(withText(getResString(R.string.stored_pass_phrase_mismatch))))

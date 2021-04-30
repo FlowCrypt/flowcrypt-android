@@ -1,13 +1,16 @@
 {
   "email": "default@flowcrypt.test",
-  "encodedSize": 1761,
+  "encodedSize": 720,
   "folder": "INBOX",
   "fwdUid": 0,
-  "id": "<inner_91551353-0f2b-4cbf-b05c-7c23ce56a584@flowcrypt>",
+  "id": "\u003cdc309bed-5b1f-4004-a948-51e272472f6a@flowcrypt\u003e",
+  "isDecrypted": false,
+  "isEncryptionAllowed": true,
   "isForwarded": false,
   "isProtected": false,
-  "name": "0x6A150653F1800874.asc",
+  "name": "0xC32089CD6AF8D6CE.asc",
   "orderNumber": 0,
-  "type": "application/pgp-keys; name=0x6A150653F1800874.asc",
-  "uid": 15
+  "path": "0/1",
+  "type": "application/pgp-keys; name\u003d0xC32089CD6AF8D6CE.asc",
+  "uid": 13
 }
