@@ -432,9 +432,21 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
    *
    * @return true if message was send.
    */
-  private suspend fun saveCreatedPrivateKeyAsBackupToInbox(accountEntity: AccountEntity, keyDetails: NodeKeyDetails): Boolean =
+  private suspend fun saveCreatedPrivateKeyAsBackupToInbox(accountEntity: AccountEntity,
+                                                           keyDetails: NodeKeyDetails): Boolean =
       withContext(Dispatchers.IO) {
-        return@withContext false
+        try {
+          val context: Context = getApplication()
+          val session = OpenStoreHelper.getAccountSess(context, accountEntity)
+          val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, accountEntity)
+          val msg = EmailUtil.genMsgWithPrivateKeys(context, accountEntity, session,
+              EmailUtil.genBodyPartWithPrivateKey(accountEntity, keyDetails.privateKey!!))
+          transport.sendMessage(msg, msg.allRecipients)
+          return@withContext true
+        } catch (e: Exception) {
+          e.printStackTrace()
+          return@withContext false
+        }
       }
 
   private suspend fun genContacts(accountEntity: AccountEntity): List<PgpContact> = withContext(Dispatchers.IO) {
