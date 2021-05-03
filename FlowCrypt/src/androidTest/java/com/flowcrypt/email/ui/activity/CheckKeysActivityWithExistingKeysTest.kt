@@ -42,7 +42,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class CheckKeysActivityWithExistingKeysTest : BaseTest() {
-  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@denbond7.com_fisrtKey_prv_default.asc"), true)
+  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc"), true)
 
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
       CheckKeysActivity.newIntent(getTargetContext(),
@@ -62,7 +62,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
       .around(addAccountToDatabaseRule)
       .around(AddPrivateKeyToDatabaseRule(
           accountEntity = addAccountToDatabaseRule.account,
-          keyPath = "pgp/not_attester_user@denbond7.com_prv_default.asc",
+          keyPath = "pgp/not_attester_user@flowcrypt.test_prv_default.asc",
           passphrase = TestConstants.DEFAULT_PASSWORD,
           type = KeyDetails.Type.EMAIL
       ))

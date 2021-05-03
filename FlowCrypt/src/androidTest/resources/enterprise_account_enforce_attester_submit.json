@@ -1,6 +1,6 @@
 {
-  "email": "default@denbond7.com",
-  "accountType": "denbond7.com",
+  "email": "default@flowcrypt.test",
+  "accountType": "flowcrypt.test",
   "displayName": "displayName",
   "givenName": "givenName",
   "familyName": "familyName",
@@ -13,6 +13,6 @@
   "smtpPort": 587,
   "smtpOpt": "NONE",
   "smtpServer": "10.0.2.2",
-  "username": "default@denbond7.com",
+  "username": "default@flowcrypt.test",
   "domainRules": "ENFORCE_ATTESTER_SUBMIT"
 }

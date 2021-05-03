@@ -29,7 +29,7 @@ class AddPrivateKeyToDatabaseRule(val accountEntity: AccountEntity,
   lateinit var nodeKeyDetails: NodeKeyDetails
     private set
 
-  constructor() : this(AccountDaoManager.getDefaultAccountDao(), "pgp/default@denbond7.com_fisrtKey_prv_strong.asc",
+  constructor() : this(AccountDaoManager.getDefaultAccountDao(), "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
       TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
 
   override fun apply(base: Statement, description: Description): Statement {

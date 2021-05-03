@@ -56,10 +56,10 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   private val singlePublicKeyForUnsavedContact: String? = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-      "pgp/default@denbond7.com_fisrtKey_pub.asc").publicKey
+      "pgp/default@flowcrypt.test_fisrtKey_pub.asc").publicKey
 
   private val tenPubKeys: String =
-      TestGeneralUtil.readFileFromAssetsAsString("pgp/pub_keys_2048_bits_10.asc")
+      TestGeneralUtil.readFileFromAssetsAsString("pgp/keys/10_pub_keys_armored_own_header.asc")
 
   @Test
   fun testShowHelpScreen() {
@@ -70,7 +70,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
 
   @Test
   fun testIsDisplayedSingleItem() {
-    val pgpContact = PgpContact("default@denbond7.com", null,
+    val pgpContact = PgpContact("default@flowcrypt.test", null,
         singlePublicKeyForUnsavedContact, true, null, null, null, 0)
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
     activeActivityRule.launch(PreviewImportPgpContactActivity.newIntent(getTargetContext(),
@@ -78,7 +78,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
     registerAllIdlingResources()
     onView(withId(R.id.recyclerViewContacts))
         .check(RecyclerViewItemCountAssertion(1))
-    onView(withText(getResString(R.string.template_message_part_public_key_owner, "default@denbond7.com")))
+    onView(withText(getResString(R.string.template_message_part_public_key_owner, "default@flowcrypt.test")))
         .check(matches(isDisplayed()))
   }
 

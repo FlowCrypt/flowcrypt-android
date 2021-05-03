@@ -52,7 +52,7 @@ object EmailProviderSettingsHelper {
   private const val FAQ_URL_UKR_NET = "https://wiki.ukr.net/IMAP_enable_ua"
 
   /*********************** Account for internal testing **********************/
-  private const val PROVIDER_TESTS = "denbond7.com"
+  private const val PROVIDER_TESTS = "flowcrypt.test"
   private const val IMAP_SERVER_TESTS = "10.0.2.2"//local machine where an emulator works
   private const val SMTP_SERVER_TESTS = "10.0.2.2"//local machine where an emulator works
 

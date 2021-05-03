@@ -123,7 +123,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
     @JvmStatic
     fun createResources() {
       publicKey = TestGeneralUtil.readFileFromAssetsAsString(
-          "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc")
+          "pgp/not_attested_user@flowcrypt.test-pub.asc")
       fileWithPublicKey = TestGeneralUtil.createFileAndFillWithContent(
           TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc", publicKey)
       fileWithoutPublicKey = TestGeneralUtil.createFileAndFillWithContent(

@@ -202,8 +202,8 @@ android {
             buildConfigField 'String', 'API_URL', "\"https://localhost:1212/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
-            resValue 'string', 'gradle_is_http_log_enabled', 'false'
-            resValue 'string', 'gradle_http_log_level', 'NONE'
+            resValue 'string', 'gradle_is_http_log_enabled', 'true'
+            resValue 'string', 'gradle_http_log_level', 'BODY'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
             resValue 'string', 'gradle_node_http_log_level', 'NONE'
         }

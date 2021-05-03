@@ -1,0 +1,29 @@
+###############################################
+# Remaining options below  should not be edited
+###############################################
+
+[ req ]
+default_bits = 2048
+distinguished_name  = req_distinguished_name
+req_extensions     = req_ext
+
+[ req_distinguished_name ]
+countryName                  = Country Name (2 letter code)
+countryName_default          = CZ
+organizationName             = Organization Name (eg, company)
+organizationName_default     = FlowCrypt
+commonName                   = Common Name (eg, YOUR name or FQDN)
+commonName_max               = 64
+commonName_default           = localhost
+
+[ req_ext ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+
+###############################################
+# Edit this line to set subjectAltName contents
+###############################################
+subjectAltName          = DNS:localhost
+
+[ CA_default ]
+default_days      = 3650

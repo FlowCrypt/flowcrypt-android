@@ -99,7 +99,7 @@ class KeysSettingsActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
-    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@denbond7.com_secondKey_prv_default.asc")
+    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
         nodeKeyDetails = details,
@@ -192,7 +192,7 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsTestPassPhraseMismatch() {
     val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-        "pgp/default@denbond7.com_secondKey_prv_default.asc")
+        "pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
         nodeKeyDetails = details,
@@ -201,7 +201,7 @@ class KeysSettingsActivityTest : BaseTest() {
     )
 
     onView(withId(R.id.recyclerViewKeys))
-        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
+        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
 
     onView(withId(R.id.tVPassPhraseVerification))
         .check(matches(withText(getResString(R.string.stored_pass_phrase_mismatch))))
