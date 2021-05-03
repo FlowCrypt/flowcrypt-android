@@ -26,7 +26,8 @@
 openssl genrsa -out root-ca.privkey.pem 2048
 
 # Generate certificate for some host
-openssl req -new -nodes -keyout mail.flowcrypt.test-key.pem -out mail.flowcrypt.test-req.pem -days 3650 -subj "/C=UA/ST=Debug/O=FlowCrypt/CN=mail.flowcrypt.test/emailAddress=admin@flowcrypt.test"
+openssl req -new -nodes -keyout mail.flowcrypt.test-key.pem -out mail.flowcrypt.test-req.pem \
+-days 3650 -subj "/C=CZ/ST=Debug/O=FlowCrypt/CN=mail.flowcrypt.test/emailAddress=admin@flowcrypt.test"
 
 # Sign certificate for some host via CA
 openssl ca -days 3650 -out mail.flowcrypt.test-cert.pem -infiles mail.flowcrypt.test-req.pem
