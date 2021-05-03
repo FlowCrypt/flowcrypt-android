@@ -14,7 +14,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
@@ -136,7 +136,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
           Result.Status.SUCCESS -> {
             if (it.data == true) {
-              if (activeAccount?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
+              if (activeAccount?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
                 isBackEnabled = true
                 Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
                 setResult(Activity.RESULT_OK)

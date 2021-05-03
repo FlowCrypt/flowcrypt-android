@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -331,7 +332,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   }
 
   private suspend fun doAdditionalOperationsAfterKeyCreation(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails) {
-    if (accountEntity.isRuleExist(AccountEntity.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+    if (accountEntity.isRuleExist(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
       val model = InitialLegacySubmitModel(accountEntity.email, nodeKeyDetails.publicKey!!)
       val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
 
@@ -349,7 +350,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         }
       }
 
-      if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
+      if (!accountEntity.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
               accountEntity.email, 0, nodeKeyDetails.longId!!))
@@ -357,7 +358,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         }
       }
     } else {
-      if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
+      if (!accountEntity.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
               accountEntity.email, 0, nodeKeyDetails.longId!!))

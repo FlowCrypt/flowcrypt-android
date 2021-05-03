@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -59,7 +60,7 @@ class MainSignInFragment : BaseSingInFragment() {
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var uuid: String? = null
-  private var domainRules: List<String>? = null
+  private var domainRules: List<OrgRules.DomainRule>? = null
 
   private val enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel by viewModels()
 
@@ -221,7 +222,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
     if (existedAccount == null) {
       getTempAccount()?.let {
-        if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
+        if (domainRules?.first { rule -> rule == OrgRules.DomainRule.NO_PRV_BACKUP } != null) {
           requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
           val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
           startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
@@ -341,7 +342,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
           Result.Status.SUCCESS -> {
             val result = it.data as? DomainRulesResponse
-            domainRules = result?.domainRules?.flags ?: emptyList()
+            domainRules = result?.orgRules?.flags ?: emptyList()
             onSignSuccess(googleSignInAccount)
             enterpriseDomainRulesViewModel.domainRulesLiveData.value = null
           }

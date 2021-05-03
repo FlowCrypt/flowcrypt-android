@@ -22,7 +22,7 @@ import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.api.retrofit.response.model.DomainRules
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -137,8 +137,19 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
                 .setBody(gson.toJson(DOMAIN_RULES_ERROR_RESPONSE))
 
             EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(DomainRulesResponse(null, DomainRules(listOf
-                ("NO_PRV_CREATE", "NO_PRV_BACKUP")))))
+                .setBody(gson.toJson(
+                    DomainRulesResponse(
+                        apiError = null,
+                        orgRules = OrgRules(
+                            flags = listOf(
+                                OrgRules.DomainRule.NO_PRV_CREATE,
+                                OrgRules.DomainRule.NO_PRV_BACKUP),
+                            customKeyserverUrl = null,
+                            keyManagerUrl = null,
+                            disallowAttesterSearchForDomains = null,
+                            enforceKeygenAlgo = null,
+                            enforceKeygenExpireMonths = null)
+                    )))
           }
         }
 

@@ -13,6 +13,7 @@ import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
@@ -39,7 +40,7 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
       cancel(NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
     }
 
-    val intent = if (account?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
+    val intent = if (account?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
       Intent(context, EmailManagerActivity::class.java)
     } else {
       ChangePassPhraseActivity.newIntent(context)
