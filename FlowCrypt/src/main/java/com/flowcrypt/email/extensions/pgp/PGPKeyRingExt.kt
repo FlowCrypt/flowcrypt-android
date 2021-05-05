@@ -66,14 +66,14 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
 
   return NodeKeyDetails(
       isFullyDecrypted = keyRingInfo.isFullyDecrypted,
-      isFullyEncrypted = keyRingInfo.isFullyEncrypted(),
+      isFullyEncrypted = keyRingInfo.isFullyEncrypted,
       privateKey = privateKey,
       publicKey = publicKey,
       users = keyRingInfo.userIds,
       ids = ids,
       created = TimeUnit.SECONDS.convert(keyRingInfo.creationDate.time, TimeUnit.MILLISECONDS),
       lastModified = TimeUnit.SECONDS.convert(keyRingInfo.lastModified.time, TimeUnit.MILLISECONDS),
-      expiration = TimeUnit.SECONDS.convert(keyRingInfo.expirationDate?.time
+      expiration = TimeUnit.SECONDS.convert(keyRingInfo.primaryKeyExpirationDate?.time
           ?: 0, TimeUnit.MILLISECONDS),
       algo = algo,
       passphrase = null,
