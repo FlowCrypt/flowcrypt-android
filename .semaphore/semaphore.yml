@@ -47,6 +47,8 @@ global_job_config:
       - cache restore android-build-cache
       # Install Android dependencies if needed
       - ./script/ci-install-android-sdk.sh
+      # Install ninja
+      - sudo apt install -y ninja-build
 blocks:
   - name: 'Build'
     execution_time_limit:
