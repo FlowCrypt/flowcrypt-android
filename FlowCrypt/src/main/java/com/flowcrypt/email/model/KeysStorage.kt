@@ -37,6 +37,8 @@ interface KeysStorage {
   fun getNodeKeyDetailsListByEmail(email: String?): List<NodeKeyDetails>
 
   fun getSecretKeyRingProtector(): SecretKeyRingProtector
+
+  fun updateStateOfPassPhrasesInRAM()
 }
 
 

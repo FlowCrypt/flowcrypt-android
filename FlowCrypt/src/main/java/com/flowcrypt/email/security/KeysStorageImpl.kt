@@ -26,6 +26,7 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
+import java.time.Instant
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -41,6 +42,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   private val nodeLiveData = Node.getInstance(context.applicationContext).liveData
   private var keys = mutableListOf<KeyEntity>()
   private var nodeKeyDetailsList = mutableListOf<NodeKeyDetails>()
+  private val storeInRAMTimeoutPassPhraseMap = mutableMapOf<String, PassPhraseInRAM>()
 
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> = Transformations.switchMap(nodeLiveData) {
     roomDatabase.accountDao().getActiveAccountLD()
@@ -72,6 +74,8 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     keysLiveData.observeForever {
       keys.clear()
       keys.addAll(it)
+
+      updateDataRelatesToPassPhrasesInRAM(it)
     }
 
     nodeKeyDetailsLiveData.observeForever {
@@ -151,6 +155,21 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
+  override fun updateStateOfPassPhrasesInRAM() {
+    for (key in keys) {
+      if (key.passphrase == null) {
+        val id = key.longId
+        if (storeInRAMTimeoutPassPhraseMap.containsKey(id)) {
+          val now = Instant.now()
+          val entry = storeInRAMTimeoutPassPhraseMap[id] ?: continue
+          if (entry.validUntil == now || entry.validUntil.isBefore(now)) {
+            storeInRAMTimeoutPassPhraseMap[id] = PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
+          }
+        }
+      }
+    }
+  }
+
   override fun getAllPgpPrivateKeys(): List<KeyEntity> {
     return keys
   }
@@ -181,16 +200,39 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return emptyList()
   }
 
-  private fun getDecryptedKeyEntity(keyEntity: KeyEntity): KeyEntity {
-    val privateKey = KeyStoreCryptoManager.decrypt(keyEntity.privateKeyAsString)
-    val passphrase = KeyStoreCryptoManager.decrypt(keyEntity.passphrase)
+  private fun updateDataRelatesToPassPhrasesInRAM(keyDetailsList: List<KeyEntity>) {
+    val existedIdList = storeInRAMTimeoutPassPhraseMap.keys
+    val refreshedIdList = keyDetailsList.map { it.longId }
+    val removeCandidates = existedIdList - refreshedIdList
+    val addCandidates = refreshedIdList - existedIdList
+    val updateCandidates = refreshedIdList - addCandidates
 
-    return keyEntity.copy(privateKey = privateKey.toByteArray(), passphrase = passphrase)
+    for (id in removeCandidates) {
+      storeInRAMTimeoutPassPhraseMap.remove(id)
+    }
+
+    for (keyDetails in keyDetailsList) {
+      val id = keyDetails.longId
+      if (id in updateCandidates) {
+        if (keyDetails.passphrase != null) {
+          storeInRAMTimeoutPassPhraseMap.remove(id)
+        }
+      }
+
+      if (id in addCandidates) {
+        if (keyDetails.passphrase == null) {
+          storeInRAMTimeoutPassPhraseMap[id] =
+              PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
+        }
+      }
+    }
   }
 
   interface OnKeysUpdatedListener {
     fun onKeysUpdated()
   }
+
+  private data class PassPhraseInRAM(val passphrase: Passphrase, val validUntil: Instant)
 
   companion object {
     @Volatile
