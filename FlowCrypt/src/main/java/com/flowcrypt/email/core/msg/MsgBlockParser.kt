@@ -8,7 +8,7 @@ package com.flowcrypt.email.core.msg
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlockFactory
 import com.flowcrypt.email.security.pgp.PgpArmor
-import com.flowcrypt.email.extensions.lang.normalize
+import com.flowcrypt.email.extensions.kotlin.normalize
 
 @Suppress("unused")
 object MsgBlockParser {

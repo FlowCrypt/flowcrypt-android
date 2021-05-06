@@ -19,7 +19,7 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.lang.toHex
+import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsAddedWorker
