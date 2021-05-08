@@ -40,7 +40,7 @@ data class ContactEntity(
     @ColumnInfo(defaultValue = "NULL") val client: String? = null,
     @ColumnInfo(defaultValue = "NULL") val attested: Boolean? = null,
     @ColumnInfo(defaultValue = "NULL") val fingerprint: String? = null,
-    @ColumnInfo(name = "long_id", defaultValue = "NULL") val longId: String? = null,
+    @Deprecated("Unused") @ColumnInfo(name = "long_id", defaultValue = "NULL") val longId: String? = null,
     @Deprecated("Unused") @ColumnInfo(defaultValue = "NULL") val keywords: String? = null,
     @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long = 0
 ) : Parcelable {
@@ -124,7 +124,6 @@ data class ContactEntity(
         hasPgp = hasPgp,
         client = client,
         fingerprint = fingerprint,
-        longid = longId,
         lastUse = lastUse,
         nodeKeyDetails = nodeKeyDetails)
   }

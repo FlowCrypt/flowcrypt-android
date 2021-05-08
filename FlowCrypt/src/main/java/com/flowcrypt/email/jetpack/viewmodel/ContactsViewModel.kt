@@ -91,7 +91,6 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
           originalContactEntity.copy(
               publicKey = contactEntity.publicKey,
               fingerprint = contactEntity.fingerprint,
-              longId = contactEntity.longId,
               hasPgp = true))
     }
   }
@@ -114,7 +113,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    *  1. save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
    *  1. look up the email on `flowcrypt.com/attester/pub/EMAIL>`
    *  1. if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
-   * client);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
+   * client);`. The PgpContact constructor will define has_pgp, fingerprint, etc
    * for you. Then save that object into database.
    *  1. if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
    * means we know they don't currently have PGP

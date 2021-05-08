@@ -27,12 +27,14 @@ abstract class KeysDao : BaseDao<KeyEntity> {
   @Query("SELECT * FROM keys WHERE account = :account")
   abstract fun getAllKeysByAccountLD(account: String): LiveData<List<KeyEntity>>
 
-  @Query("DELETE FROM keys WHERE account = :account AND long_id = :longId")
-  abstract fun deleteByAccountAndLongId(account: String, longId: String): Int
+  @Query("DELETE FROM keys WHERE account = :account AND fingerprint = :fingerprint")
+  abstract fun deleteByAccountAndFingerprint(account: String, fingerprint: String): Int
 
-  @Query("DELETE FROM keys WHERE account = :account AND long_id = :longId")
-  abstract suspend fun deleteByAccountAndLongIdSuspend(account: String, longId: String): Int
+  @Query("DELETE FROM keys WHERE account = :account AND fingerprint = :fingerprint")
+  abstract suspend fun deleteByAccountAndFingerprintSuspend(
+      account: String, fingerprint: String): Int
 
-  @Query("SELECT * FROM keys WHERE account = :account AND long_id = :longId")
-  abstract suspend fun getKeyByAccountAndLongIdSuspend(account: String, longId: String): KeyEntity?
+  @Query("SELECT * FROM keys WHERE account = :account AND fingerprint = :fingerprint")
+  abstract suspend fun getKeyByAccountAndFingerprintSuspend(
+      account: String, fingerprint: String): KeyEntity?
 }

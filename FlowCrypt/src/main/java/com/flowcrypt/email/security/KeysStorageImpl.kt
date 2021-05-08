@@ -14,7 +14,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.extensions.org.pgpainless.key.longId
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -84,12 +83,12 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
-  override fun getPgpPrivateKey(longId: String?): KeyEntity? {
-    return keys.firstOrNull { it.longId.equals(longId, true) }
+  override fun getPgpPrivateKey(fingerprint: String?): KeyEntity? {
+    return keys.firstOrNull { it.fingerprint.equals(fingerprint, true) }
   }
 
-  override fun getFilteredPgpPrivateKeys(longIds: Array<String>): List<KeyEntity> {
-    return keys.filter { longIds.contains(it.longId) }
+  override fun getFilteredPgpPrivateKeys(fingerprints: Array<String>): List<KeyEntity> {
+    return keys.filter { fingerprints.contains(it.fingerprint) }
   }
 
   override fun getPgpPrivateKeysByEmail(email: String?): List<KeyEntity> {
@@ -98,7 +97,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     nodeKeyDetailsList.forEach { nodeKeyDetails ->
       for (contact in nodeKeyDetails.pgpContacts) {
         if (email?.equals(contact.email, true) == true && !nodeKeyDetails.isExpired) {
-          getPgpPrivateKey(nodeKeyDetails.longId)?.let { keyEntity -> keys.add(keyEntity) }
+          getPgpPrivateKey(nodeKeyDetails.fingerprint)?.let { keyEntity -> keys.add(keyEntity) }
         }
       }
     }
@@ -136,7 +135,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
         if (keyIDs.contains(keyId)) {
           for (secretKey in pgpSecretKeyRing.secretKeys) {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
-            val key = getPgpPrivateKey(openPgpV4Fingerprint.longId)
+            val key = getPgpPrivateKey(openPgpV4Fingerprint.toString())
             if (key != null) {
               val passphrase: Passphrase
               if (key.passphrase.isNullOrEmpty()) {
@@ -158,7 +157,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   override fun updateStateOfPassPhrasesInRAM() {
     for (key in keys) {
       if (key.passphrase == null) {
-        val id = key.longId
+        val id = key.fingerprint
         if (storeInRAMTimeoutPassPhraseMap.containsKey(id)) {
           val now = Instant.now()
           val entry = storeInRAMTimeoutPassPhraseMap[id] ?: continue
@@ -182,11 +181,15 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     val account = pureActiveAccountLiveData.value
         ?: roomDatabase.accountDao().getActiveAccountSuspend()
     account?.let { accountEntity ->
-      val cachedKeysLongIds = keys.map { it.longId }.toSet()
-      val latestEncryptedKeys = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
-      val latestKeysLongIds = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email).map { it.longId }.toSet()
+      val cachedKeysFingerprints = keys.map { it.fingerprint }.toSet()
+      val latestEncryptedKeys =
+          roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
+      val latestKeysFingerprints = roomDatabase.keysDao()
+          .getAllKeysByAccountSuspend(accountEntity.email)
+          .map { it.fingerprint }
+          .toSet()
 
-      if (cachedKeysLongIds == latestKeysLongIds) {
+      if (cachedKeysFingerprints == latestKeysFingerprints) {
         return keys
       }
 
@@ -202,7 +205,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   private fun updateDataRelatesToPassPhrasesInRAM(keyDetailsList: List<KeyEntity>) {
     val existedIdList = storeInRAMTimeoutPassPhraseMap.keys
-    val refreshedIdList = keyDetailsList.map { it.longId }
+    val refreshedIdList = keyDetailsList.map { it.fingerprint }
     val removeCandidates = existedIdList - refreshedIdList
     val addCandidates = refreshedIdList - existedIdList
     val updateCandidates = refreshedIdList - addCandidates
@@ -212,7 +215,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
 
     for (keyDetails in keyDetailsList) {
-      val id = keyDetails.longId
+      val id = keyDetails.fingerprint
       if (id in updateCandidates) {
         if (keyDetails.passphrase != null) {
           storeInRAMTimeoutPassPhraseMap.remove(id)

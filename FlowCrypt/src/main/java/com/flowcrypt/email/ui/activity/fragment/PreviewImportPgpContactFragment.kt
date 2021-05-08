@@ -277,7 +277,6 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
     private fun getPublicKeyInfo(nodeKeyDetails: NodeKeyDetails, emails: MutableSet<String>): PublicKeyInfo? {
       val fingerprint = nodeKeyDetails.fingerprint
-      val longId = nodeKeyDetails.longId
       var keyOwner: String? = nodeKeyDetails.primaryPgpContact.email
 
       if (keyOwner != null) {
@@ -292,7 +291,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         if (weakRef.get() != null) {
           val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
               .contactsDao().getContactByEmail(keyOwner)?.toPgpContact()
-          return PublicKeyInfo(fingerprint!!, keyOwner, longId!!, contact, nodeKeyDetails.publicKey!!)
+          return PublicKeyInfo(fingerprint!!, keyOwner, contact, nodeKeyDetails.publicKey!!)
         }
       }
       return null
@@ -312,7 +311,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
       for (publicKeyInfo in publicKeyInfoList) {
         val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey,
-            true, null, publicKeyInfo.fingerprint, publicKeyInfo.longId, 0)
+            true, null, publicKeyInfo.fingerprint, 0)
 
         if (publicKeyInfo.hasPgpContact()) {
           if (publicKeyInfo.isUpdateEnabled) {

@@ -48,7 +48,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     val email = nodeKeyDetails.primaryPgpContact.email
 
     viewHolder.textViewKeyOwner.text = email
-    viewHolder.textViewLongId.text = GeneralUtil.doSectionsInText(
+    viewHolder.textViewFingerprint.text = GeneralUtil.doSectionsInText(
         originalString = nodeKeyDetails.fingerprint, groupSize = 4)
 
     val timestamp = nodeKeyDetails.created
@@ -93,7 +93,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     }
 
     val textViewKeyOwner: TextView = view.findViewById(R.id.textViewKeyOwner)
-    val textViewLongId: TextView = view.findViewById(R.id.textViewLongId)
+    val textViewFingerprint: TextView = view.findViewById(R.id.textViewFingerprint)
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
   }
 
@@ -102,7 +102,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val old = oldList[oldItemPosition]
       val new = newList[newItemPosition]
-      return old.longId == new.longId
+      return old.fingerprint == new.fingerprint
     }
 
     override fun getOldListSize(): Int = oldList.size

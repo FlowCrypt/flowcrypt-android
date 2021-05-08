@@ -10,8 +10,6 @@ package com.flowcrypt.email.extensions.pgp
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.extensions.org.pgpainless.key.longId
-import com.flowcrypt.email.extensions.org.pgpainless.key.shortId
 import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.openpgp.PGPKeyRing
@@ -51,9 +49,7 @@ fun PGPKeyRing.toNodeKeyDetails(): NodeKeyDetails {
       .map {
         val fingerprint = OpenPgpV4Fingerprint(it)
         KeyId(
-            fingerprint = fingerprint.toString(),
-            longId = fingerprint.longId,
-            shortId = fingerprint.shortId,
+            fingerprint = fingerprint.toString()
         )
       }
 

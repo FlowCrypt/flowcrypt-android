@@ -171,9 +171,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       savePrivateKeysLiveData.value = Result.loading()
       try {
         for (keyDetails in keys) {
-          val longId = keyDetails.longId
-          requireNotNull(longId)
-          if (roomDatabase.keysDao().getKeyByAccountAndLongIdSuspend(accountEntity.email.toLowerCase(Locale.US), longId) == null) {
+          val fingerprint = keyDetails.fingerprint
+          requireNotNull(fingerprint)
+          if (roomDatabase.keysDao().getKeyByAccountAndFingerprintSuspend(accountEntity.email.toLowerCase(Locale.US), fingerprint) == null) {
             if (addAccountIfNotExist) {
               val existedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
               if (existedAccount == null) {
@@ -286,8 +286,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         createPrivateKeyLiveData.value = Result.success(nodeKeyDetails)
       } catch (e: Exception) {
         e.printStackTrace()
-        nodeKeyDetails?.longId?.let {
-          roomDatabase.keysDao().deleteByAccountAndLongIdSuspend(accountEntity.email, it)
+        nodeKeyDetails?.fingerprint?.let {
+          roomDatabase.keysDao().deleteByAccountAndFingerprintSuspend(accountEntity.email, it)
         }
         createPrivateKeyLiveData.value = Result.exception(e)
         ExceptionUtil.handleError(e)
@@ -300,9 +300,14 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       deleteKeysLiveData.value = Result.loading()
       try {
         val context: Context = getApplication()
-        val allKeyEntitiesOfAccount = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
-        val longIdListOfDeleteCandidates = keys.mapNotNull { it.longId?.toLowerCase(Locale.US) }
-        val deleteCandidates = allKeyEntitiesOfAccount.filter { longIdListOfDeleteCandidates.contains(it.longId.toLowerCase(Locale.US)) }
+        val allKeyEntitiesOfAccount =
+            roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
+        val fingerprintListOfDeleteCandidates = keys.mapNotNull {
+          it.fingerprint?.toLowerCase(Locale.US)
+        }
+        val deleteCandidates = allKeyEntitiesOfAccount.filter {
+          fingerprintListOfDeleteCandidates.contains(it.fingerprint.toLowerCase(Locale.US))
+        }
 
         if (keys.size == allKeyEntitiesOfAccount.size) {
           throw IllegalArgumentException(context.getString(R.string.please_leave_at_least_one_key))
@@ -352,7 +357,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
-              accountEntity.email, 0, nodeKeyDetails.longId!!))
+              accountEntity.email, 0, nodeKeyDetails.fingerprint!!))
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
         }
       }
@@ -360,7 +365,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
-              accountEntity.email, 0, nodeKeyDetails.longId!!))
+              accountEntity.email, 0, nodeKeyDetails.fingerprint!!))
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
         }
       }
@@ -390,10 +395,10 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         }
 
         val nodeKeyDetails = keyDetailsList[0]
-        val longId = nodeKeyDetails.longId
+        val fingerprint = nodeKeyDetails.fingerprint
 
         if (TextUtils.isEmpty(oldPassphrase)) {
-          throw IllegalStateException("Passphrase for key with longid $longId not found")
+          throw IllegalStateException("Passphrase for key with fingerprint $fingerprint not found")
         }
 
         val encryptedKey: String
@@ -403,7 +408,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           )
         } catch (e: Exception) {
           throw IllegalStateException(
-              "Can't change passphrase for the key with longid " + longId!!,
+              "Can't change passphrase for the key with fingerprint " + fingerprint!!,
               e
           )
         }

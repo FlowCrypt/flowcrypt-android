@@ -20,15 +20,23 @@ import androidx.room.PrimaryKey
  *         E-mail: DenBond7@gmail.com
  */
 @Entity(tableName = "keys",
-    indices = [Index(name = "long_id_account_account_type_in_keys", value = ["long_id", "account", "account_type"], unique = true)],
+    indices = [
+      Index(
+          name = "fingerprint_account_account_type_in_keys",
+          value = ["fingerprint", "account", "account_type"],
+          unique = true)
+    ],
     foreignKeys = [
-      ForeignKey(entity = AccountEntity::class, parentColumns = ["email", "account_type"],
-          childColumns = ["account", "account_type"], onDelete = ForeignKey.CASCADE)
+      ForeignKey(
+          entity = AccountEntity::class,
+          parentColumns = ["email", "account_type"],
+          childColumns = ["account", "account_type"],
+          onDelete = ForeignKey.CASCADE)
     ]
 )
 data class KeyEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
-    @ColumnInfo(name = "long_id") val longId: String,
+    @ColumnInfo(name = "fingerprint") val fingerprint: String,
     val account: String,
     @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
     val source: String,
@@ -40,11 +48,11 @@ data class KeyEntity(
   val privateKeyAsString = String(privateKey)
 
   @Ignore
-  val publicKeyAsString = String(privateKey)
+  val publicKeyAsString = String(publicKey)
 
   override fun toString(): String {
     return "KeyEntity(id=$id," +
-        " longId='$longId'," +
+        " fingerprint='$fingerprint'," +
         " account='$account'," +
         " account_type='$accountType'," +
         " source='$source'," +
@@ -60,7 +68,7 @@ data class KeyEntity(
     other as KeyEntity
 
     if (id != other.id) return false
-    if (longId != other.longId) return false
+    if (fingerprint != other.fingerprint) return false
     if (account != other.account) return false
     if (accountType != other.accountType) return false
     if (source != other.source) return false
@@ -73,7 +81,7 @@ data class KeyEntity(
 
   override fun hashCode(): Int {
     var result = id?.hashCode() ?: 0
-    result = 31 * result + longId.hashCode()
+    result = 31 * result + fingerprint.hashCode()
     result = 31 * result + account.hashCode()
     result = 31 * result + accountType.hashCode()
     result = 31 * result + source.hashCode()

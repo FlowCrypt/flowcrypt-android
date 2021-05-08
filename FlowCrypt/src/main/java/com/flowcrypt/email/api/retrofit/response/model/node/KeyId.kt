@@ -7,9 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model.node
 
 import android.os.Parcel
 import android.os.Parcelable
-
 import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
 
 /**
  * @author Denis Bondarenko
@@ -17,14 +15,8 @@ import com.google.gson.annotations.SerializedName
  * Time: 1:38 PM
  * E-mail: DenBond7@gmail.com
  */
-data class KeyId constructor(@Expose val fingerprint: String?,
-                             @SerializedName("longid") @Expose val longId: String?,
-                             @SerializedName("shortid") @Expose val shortId: String?) : Parcelable {
-  constructor(source: Parcel) : this(
-      source.readString(),
-      source.readString(),
-      source.readString()
-  )
+data class KeyId constructor(@Expose val fingerprint: String) : Parcelable {
+  constructor(source: Parcel) : this(source.readString()!!)
 
   override fun describeContents(): Int {
     return 0
@@ -33,8 +25,6 @@ data class KeyId constructor(@Expose val fingerprint: String?,
   override fun writeToParcel(dest: Parcel, flags: Int) =
       with(dest) {
         writeString(fingerprint)
-        writeString(longId)
-        writeString(shortId)
       }
 
   companion object {

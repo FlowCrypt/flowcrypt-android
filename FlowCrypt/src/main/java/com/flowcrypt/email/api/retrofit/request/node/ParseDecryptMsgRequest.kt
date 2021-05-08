@@ -31,7 +31,7 @@ class ParseDecryptMsgRequest @JvmOverloads constructor(
 
   @Expose
   private val keys: List<PrivateKeyInfo> = keyEntities.map {
-    PrivateKeyInfo(it.privateKeyAsString, it.longId, it.passphrase)
+    PrivateKeyInfo(it.privateKeyAsString, it.fingerprint, it.passphrase)
   }
 
   override val endpoint: String = "parseDecryptMsg"

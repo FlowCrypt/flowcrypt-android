@@ -46,7 +46,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private var originalKeys: MutableList<NodeKeyDetails> = mutableListOf()
   private val unlockedKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private val remainingKeys: ArrayList<NodeKeyDetails> = ArrayList()
-  private var keyDetailsAndLongIdsMap: MutableMap<NodeKeyDetails, String>? = null
+  private var keyDetailsAndFingerprintsMap: MutableMap<NodeKeyDetails, String>? = null
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
 
   private var editTextKeyPassword: EditText? = null
@@ -78,15 +78,15 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     getExtras()
 
     if (originalKeys.isNotEmpty()) {
-      this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(originalKeys)
-      this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
+      this.keyDetailsAndFingerprintsMap = prepareMapFromKeyDetailsList(originalKeys)
+      this.uniqueKeysCount = getUniqueFingerprintsCount(keyDetailsAndFingerprintsMap)
 
       if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
         if (intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)) {
           removeAlreadyImportedKeys()
         }
-        this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
-        this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
+        this.uniqueKeysCount = getUniqueFingerprintsCount(keyDetailsAndFingerprintsMap)
+        this.originalKeys = ArrayList(keyDetailsAndFingerprintsMap?.keys ?: emptyList())
 
         when (uniqueKeysCount) {
           0 -> {
@@ -100,9 +100,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
           }
 
           else -> {
-            if (originalKeys.size != keyDetailsAndLongIdsMap?.size) {
+            if (originalKeys.size != keyDetailsAndFingerprintsMap?.size) {
               val map = prepareMapFromKeyDetailsList(originalKeys)
-              val remainingKeyCount = getUniqueKeysLongIdsCount(map)
+              val remainingKeyCount = getUniqueFingerprintsCount(map)
 
               this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
                   uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
@@ -237,7 +237,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
 
                   for (key in sessionUnlockedKeys) {
                     remainingKeys.removeAll(remainingKeys.filter { details ->
-                      (details.longId == key.longId)
+                      (details.fingerprint == key.fingerprint)
                     })
                   }
 
@@ -245,7 +245,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
                     initButton(R.id.buttonSkipRemainingBackups, text = getString(R.string.skip_remaining_backups))
                     editTextKeyPassword?.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
-                    val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
+                    val remainingKeyCount = getUniqueFingerprintsCount(mapOfRemainingBackups)
 
                     textViewSubTitle?.text = resources.getQuantityString(
                         R.plurals.not_recovered_all_keys, remainingKeyCount,
@@ -294,15 +294,15 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
    * Remove the already imported keys from the list of found backups.
    */
   private fun removeAlreadyImportedKeys() {
-    val longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap!!)
+    val fingerprints = getUniqueKeysFingerprints(keyDetailsAndFingerprintsMap!!)
     val keysStorage = KeysStorageImpl.getInstance(this)
 
-    for (longId in longIds) {
-      if (keysStorage.getPgpPrivateKey(longId) != null) {
-        val iterator = keyDetailsAndLongIdsMap!!.entries.iterator()
+    for (fingerprint in fingerprints) {
+      if (keysStorage.getPgpPrivateKey(fingerprint) != null) {
+        val iterator = keyDetailsAndFingerprintsMap!!.entries.iterator()
         while (iterator.hasNext()) {
           val entry = iterator.next()
-          if (longId == entry.value) {
+          if (fingerprint == entry.value) {
             iterator.remove()
           }
         }
@@ -311,28 +311,28 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   }
 
   /**
-   * Get a count of unique longIds.
+   * Get a count of unique fingerprints.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of [NodeKeyDetails].
-   * @return A count of unique longIds.
+   * @param mapOfKeyDetailsAndFingerprints An input map of [NodeKeyDetails].
+   * @return A count of unique fingerprints.
    */
-  private fun getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>?): Int {
-    return HashSet(mapOfKeyDetailsAndLongIds?.values ?: emptyList()).size
+  private fun getUniqueFingerprintsCount(mapOfKeyDetailsAndFingerprints: Map<NodeKeyDetails, String>?): Int {
+    return HashSet(mapOfKeyDetailsAndFingerprints?.values ?: emptyList()).size
   }
 
   /**
-   * Get a set of unique longIds.
+   * Get a set of unique fingerprints.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of [NodeKeyDetails].
-   * @return A list of unique longIds.
+   * @param mapOfKeyDetailsAndFingerprints An input map of [NodeKeyDetails].
+   * @return A list of unique fingerprints.
    */
-  private fun getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>): Set<String> {
-    return HashSet(mapOfKeyDetailsAndLongIds.values)
+  private fun getUniqueKeysFingerprints(mapOfKeyDetailsAndFingerprints: Map<NodeKeyDetails, String>): Set<String> {
+    return HashSet(mapOfKeyDetailsAndFingerprints.values)
   }
 
   /**
    * Generate a map of incoming list of [NodeKeyDetails] objects where values will be a [NodeKeyDetails]
-   * longId.
+   * fingerprint.
    *
    * @param keys An incoming list of [NodeKeyDetails] objects.
    * @return A generated map.
@@ -342,7 +342,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
 
     keys?.let {
       for (keyDetails in it) {
-        map[keyDetails] = keyDetails.longId ?: ""
+        map[keyDetails] = keyDetails.fingerprint ?: ""
       }
     }
     return map

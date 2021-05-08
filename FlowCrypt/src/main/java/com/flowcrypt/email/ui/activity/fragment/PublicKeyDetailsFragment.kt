@@ -58,7 +58,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
   private var progressBar: View? = null
   private var content: View? = null
   private var layoutUsers: ViewGroup? = null
-  private var layoutLongIds: ViewGroup? = null
+  private var layoutFingerprints: ViewGroup? = null
   private var textViewAlgorithm: TextView? = null
   private var textViewCreated: TextView? = null
 
@@ -210,7 +210,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
     progressBar = view.findViewById(R.id.progressBar)
     content = view.findViewById(R.id.layoutContent)
     layoutUsers = view.findViewById(R.id.layoutUsers)
-    layoutLongIds = view.findViewById(R.id.layoutLongIds)
+    layoutFingerprints = view.findViewById(R.id.layoutFingerprints)
     textViewAlgorithm = view.findViewById(R.id.textViewAlgorithm)
     textViewCreated = view.findViewById(R.id.textViewCreated)
   }
@@ -223,11 +223,11 @@ class PublicKeyDetailsFragment : BaseFragment() {
       layoutUsers?.addView(textView)
     }
 
-    layoutLongIds?.removeAllViews()
+    layoutFingerprints?.removeAllViews()
     details?.ids?.forEachIndexed { index, s ->
-      val textViewLongId = TextView(context)
-      textViewLongId.text = getString(R.string.template_long_id, index + 1, s.longId)
-      layoutLongIds?.addView(textViewLongId)
+      val textViewFingerprint = TextView(context)
+      textViewFingerprint.text = getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
+      layoutFingerprints?.addView(textViewFingerprint)
     }
 
     textViewAlgorithm?.text = getString(R.string.template_algorithm, details?.algo?.algorithm)
@@ -242,7 +242,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
     intent.type = Constants.MIME_TYPE_PGP_KEY
 
     val sanitizedEmail = contactEntity?.email?.replace("[^a-z0-9]".toRegex(), "")
-    val fileName = "0x" + details?.longId + "-" + sanitizedEmail + "-publickey" + ".asc"
+    val fileName = "0x" + details?.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     intent.putExtra(Intent.EXTRA_TITLE, fileName)
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)

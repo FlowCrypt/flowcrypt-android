@@ -80,7 +80,7 @@ class ImportPgpContactsRecyclerViewAdapter
 
   private fun saveContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, 0)
+        null, publicKeyInfo.fingerprint, 0)
 
     contactActionsListener?.onSaveContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
@@ -91,7 +91,7 @@ class ImportPgpContactsRecyclerViewAdapter
 
   private fun updateContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, 0)
+        null, publicKeyInfo.fingerprint, 0)
 
     contactActionsListener?.onUpdateContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()

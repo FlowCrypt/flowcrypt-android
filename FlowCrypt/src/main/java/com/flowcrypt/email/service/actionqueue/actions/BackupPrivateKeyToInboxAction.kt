@@ -30,7 +30,7 @@ import com.google.gson.annotations.SerializedName
 data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var id: Long = 0,
                                                                    override var email: String,
                                                                    override val version: Int = 0,
-                                                                   private val privateKeyLongId: String) : Action {
+                                                                   private val privateKeyFingerprint: String) : Action {
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
@@ -39,7 +39,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
     val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
     val keysStorage = KeysStorageImpl.getInstance(context)
-    val keyEntity = keysStorage.getPgpPrivateKey(privateKeyLongId) ?: return
+    val keyEntity = keysStorage.getPgpPrivateKey(privateKeyFingerprint) ?: return
     if (keyEntity.privateKey.isNotEmpty()) {
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
@@ -78,7 +78,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
         writeLong(id)
         writeString(email)
         writeInt(version)
-        writeString(privateKeyLongId)
+        writeString(privateKeyFingerprint)
       }
 
   companion object {

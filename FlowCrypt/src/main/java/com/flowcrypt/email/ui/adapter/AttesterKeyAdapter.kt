@@ -74,14 +74,15 @@ class AttesterKeyAdapter(
   }
 
   /**
-   * Check is public key found, and the longid does not match any longids of saved keys.
+   * Check is public key found, and the fingerprint does not match any fingerprints of saved keys.
    *
    * @param context Interface to global information about an application environment.
    * @param nodeKeyDetails The [NodeKeyDetails] object which contains info about a public key.
-   * @return true if public key found, and the longid does not match any longids of saved keys, otherwise false.
+   * @return true if public key found, and the fingerprint does not match any
+   * fingerprints of saved keys, otherwise false.
    */
   private fun isPublicKeyMatched(context: Context, nodeKeyDetails: NodeKeyDetails): Boolean {
-    return KeysStorageImpl.getInstance(context).getPgpPrivateKey(nodeKeyDetails.longId) != null
+    return KeysStorageImpl.getInstance(context).getPgpPrivateKey(nodeKeyDetails.fingerprint) != null
   }
 
   /**
@@ -97,7 +98,7 @@ class AttesterKeyAdapter(
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldProduct = oldList[oldItemPosition]
       val newProduct = newList[newItemPosition]
-      return oldProduct.longId == newProduct.longId
+      return oldProduct.fingerprint == newProduct.fingerprint
     }
 
     override fun getOldListSize(): Int = oldList.size

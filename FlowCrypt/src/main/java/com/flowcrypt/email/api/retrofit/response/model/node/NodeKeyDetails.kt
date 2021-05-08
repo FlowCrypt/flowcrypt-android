@@ -45,8 +45,6 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     get() = determinePrimaryPgpContact()
   val pgpContacts: ArrayList<PgpContact>
     get() = determinePgpContacts()
-  val longId: String?
-    get() = ids?.first()?.longId
   val fingerprint: String?
     get() = ids?.first()?.fingerprint
   val isPrivate: Boolean
@@ -99,7 +97,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     val address = users?.first()
 
     address?.let {
-      val (fingerprint1, longId1) = ids!!.first()
+      val fingerprintFromKeyId = ids?.first()?.fingerprint
       var email: String? = null
       var name: String? = null
       try {
@@ -126,8 +124,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
           pubkey = publicKey,
           hasPgp = !TextUtils.isEmpty(publicKey),
           client = null,
-          fingerprint = fingerprint1,
-          longid = longId1
+          fingerprint = fingerprintFromKeyId
       )
     }
 
@@ -173,7 +170,8 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
 
   fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
     return KeyEntity(
-        longId = longId ?: throw NullPointerException("nodeKeyDetails.longId == null"),
+        fingerprint = fingerprint
+            ?: throw NullPointerException("nodeKeyDetails.fingerprint == null"),
         account = accountEntity.email.toLowerCase(Locale.US),
         accountType = accountEntity.accountType,
         source = PrivateKeySourceType.BACKUP.toString(),

@@ -198,7 +198,7 @@ class EmailUtil {
      */
     fun genAttInfoFromPubKey(nodeKeyDetails: NodeKeyDetails?): AttachmentInfo? {
       if (nodeKeyDetails != null) {
-        val fileName = "0x" + nodeKeyDetails.longId?.toUpperCase(Locale.getDefault()) + ".asc"
+        val fileName = "0x" + nodeKeyDetails.fingerprint?.toUpperCase(Locale.getDefault()) + ".asc"
 
         return if (!TextUtils.isEmpty(nodeKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()
@@ -631,7 +631,6 @@ class EmailUtil {
      *
      * @param outgoingMsgInfo  The given [OutgoingMessageInfo] which contains information about
      * an outgoing message.
-     * @param pubKeys The public keys which will be used to generate an encrypted part.
      * @return The generated raw MIME message.
      */
     fun genMessage(context: Context, accountEntity: AccountEntity,

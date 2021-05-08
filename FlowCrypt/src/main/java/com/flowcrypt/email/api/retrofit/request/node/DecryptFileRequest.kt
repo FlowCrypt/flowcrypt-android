@@ -23,7 +23,7 @@ class DecryptFileRequest(override val data: ByteArray, keyEntities: List<KeyEnti
 
   @Expose
   private val keys: List<PrivateKeyInfo> = keyEntities.map {
-    PrivateKeyInfo(it.privateKeyAsString, it.longId, it.passphrase)
+    PrivateKeyInfo(it.privateKeyAsString, it.fingerprint, it.passphrase)
   }
 
   override val endpoint: String = "decryptFile"

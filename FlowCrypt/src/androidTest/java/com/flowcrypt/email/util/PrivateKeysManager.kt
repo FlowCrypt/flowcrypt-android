@@ -75,8 +75,8 @@ class PrivateKeysManager {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      nodeKeyDetails.longId?.let {
-        roomDatabase.keysDao().deleteByAccountAndLongId(accountEntity.email, it)
+      nodeKeyDetails.fingerprint?.let {
+        roomDatabase.keysDao().deleteByAccountAndFingerprint(accountEntity.email, it)
       }
 
       // Added timeout for a better sync between threads.

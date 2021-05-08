@@ -76,7 +76,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
       nodeKeyDetails?.let {
         val context = context ?: return@let
         val passPhrase = KeysStorageImpl.getInstance(context)
-            .getPgpPrivateKey(it.longId)?.passphrase ?: ""
+            .getPgpPrivateKey(it.fingerprint)?.passphrase ?: ""
         checkPrivateKeysViewModel.checkKeys(listOf(it), passPhrase)
       }
     }
@@ -177,9 +177,6 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
         GeneralUtil.doSectionsInText(" ", nodeKeyDetails?.fingerprint, 4)), textViewFingerprint)
 
-    val textViewLongId = view.findViewById<TextView>(R.id.textViewLongId)
-    textViewLongId?.text = getString(R.string.template_longid, nodeKeyDetails?.longId)
-
     val textViewDate = view.findViewById<TextView>(R.id.textViewDate)
     textViewDate?.text = getString(R.string.template_date, DateFormat.getMediumDateFormat(context).format(
         Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
@@ -215,7 +212,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = Constants.MIME_TYPE_PGP_KEY
-    intent.putExtra(Intent.EXTRA_TITLE, "0x" + nodeKeyDetails!!.longId + ".asc")
+    intent.putExtra(Intent.EXTRA_TITLE, "0x" + nodeKeyDetails!!.fingerprint + ".asc")
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
   }
 
@@ -235,7 +232,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showInfoDialog(
               dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't delete a key with id = {${nodeKeyDetails?.longId ?: ""}}")
+              ?: "Couldn't delete a key with fingerprint = {${nodeKeyDetails?.fingerprint ?: ""}}")
           baseActivity.countingIdlingResource.decrementSafely()
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }

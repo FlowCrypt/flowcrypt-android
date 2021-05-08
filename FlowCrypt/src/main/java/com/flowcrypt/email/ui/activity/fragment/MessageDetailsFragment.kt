@@ -890,8 +890,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     if (button != null) {
       if (existingPgpContact == null) {
         initSaveContactButton(block, button)
-      } else if (TextUtils.isEmpty(existingPgpContact.longid)
-          || keyDetails?.longId?.equals(existingPgpContact.longid!!, ignoreCase = true) == true) {
+      } else if (TextUtils.isEmpty(existingPgpContact.fingerprint)
+          || keyDetails?.fingerprint?.equals(
+              existingPgpContact.fingerprint!!, ignoreCase = true) == true) {
         initUpdateContactButton(block, button)
       } else {
         initReplaceContactButton(block, button)

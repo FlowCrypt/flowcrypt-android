@@ -168,8 +168,8 @@ class KeysSettingsActivityTest : BaseTest() {
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
             GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)!!)))))
 
-    onView(withId(R.id.textViewLongId)).check(
-        matches(withText(getResString(R.string.template_longid, details.longId ?: ""))))
+    onView(withId(R.id.textViewFingerprint)).check(
+        matches(withText(getResString(R.string.template_fingerprint_3, details.fingerprint ?: ""))))
 
     onView(withId(R.id.textViewDate))
         .check(matches(withText(getHtmlString(getResString(R.string.template_date,
@@ -214,7 +214,8 @@ class KeysSettingsActivityTest : BaseTest() {
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
 
     val file =
-        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "0x" + details.longId + ".asc")
+        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+            "0x" + details.fingerprint + ".asc")
 
     if (file.exists()) {
       file.delete()

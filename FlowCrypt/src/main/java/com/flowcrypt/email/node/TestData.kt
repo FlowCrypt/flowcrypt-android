@@ -323,7 +323,7 @@ class TestData internal constructor() {
     @JvmStatic
     fun eccPrvKeyInfo(): Array<KeyEntity> {
       return arrayOf(KeyEntity(
-          longId = "063635B3E33EB14C",
+          fingerprint = "063635B3E33EB14C",
           account = "usr@usr.com",
           source = "TEST",
           privateKey = ECC_PRV_KEY.toByteArray(),
@@ -335,7 +335,7 @@ class TestData internal constructor() {
     @JvmStatic
     fun rsa2048PrvKeyInfo(): Array<KeyEntity> {
       return arrayOf(KeyEntity(
-          longId = "3A30F4CC0A9A8F10",
+          fingerprint = "3A30F4CC0A9A8F10",
           account = "t@est.com",
           source = "TEST",
           privateKey = RSA_2048_PRV_KEY.toByteArray(),
@@ -347,7 +347,7 @@ class TestData internal constructor() {
     @JvmStatic
     fun rsa4096PrvKeyInfo(): Array<KeyEntity> {
       return arrayOf(KeyEntity(
-          longId = "7C307E6F2092962D",
+          fingerprint = "7C307E6F2092962D",
           account = "usr@usr.com",
           source = "TEST",
           privateKey = RSA_4096_PRV_KEY.toByteArray(),

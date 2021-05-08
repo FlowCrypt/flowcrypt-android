@@ -147,8 +147,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         arePrivateKeysExisted = true
       }
 
-      val longId = key.longId ?: continue
-      if (KeysStorageImpl.getInstance(application).getPgpPrivateKey(longId) == null) {
+      val fingerprint = key.fingerprint ?: continue
+      if (KeysStorageImpl.getInstance(application).getPgpPrivateKey(fingerprint) == null) {
         areFreshKeysExisted = true
       }
     }
@@ -244,17 +244,17 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     val connector = KeysStorageImpl.getInstance(this)
 
     val iterator = privateKeysFromEmailBackups.iterator()
-    val uniqueKeysLongIds = HashSet<String>()
+    val uniqueKeysFingerprints = HashSet<String>()
 
     while (iterator.hasNext()) {
       val privateKey = iterator.next()
-      uniqueKeysLongIds.add(privateKey.longId!!)
-      if (connector.getPgpPrivateKey(privateKey.longId!!) != null) {
+      uniqueKeysFingerprints.add(privateKey.fingerprint!!)
+      if (connector.getPgpPrivateKey(privateKey.fingerprint!!) != null) {
         iterator.remove()
-        uniqueKeysLongIds.remove(privateKey.longId!!)
+        uniqueKeysFingerprints.remove(privateKey.fingerprint!!)
       }
     }
-    return uniqueKeysLongIds
+    return uniqueKeysFingerprints
   }
 
   private fun setupSubmitPubKeyViewModel() {
@@ -349,13 +349,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             if (keys.isNotEmpty()) {
               privateKeysFromEmailBackups.addAll(keys)
 
-              val uniqueKeysLongIds = filterKeys()
+              val uniqueKeysFingerprints = filterKeys()
 
               if (privateKeysFromEmailBackups.isEmpty()) {
                 hideImportButton()
               } else {
-                buttonImportBackup?.text = resources.getQuantityString(R.plurals.import_keys, uniqueKeysLongIds.size)
-                textViewTitle.text = resources.getQuantityString(R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size)
+                buttonImportBackup?.text = resources.getQuantityString(R.plurals.import_keys, uniqueKeysFingerprints.size)
+                textViewTitle.text = resources.getQuantityString(R.plurals.you_have_backups_that_was_not_imported, uniqueKeysFingerprints.size)
               }
             } else {
               hideImportButton()

@@ -15,12 +15,12 @@ interface KeysStorage {
 
   fun getAllPgpPrivateKeys(): List<KeyEntity>
 
-  fun getPgpPrivateKey(longId: String?): KeyEntity?
+  fun getPgpPrivateKey(fingerprint: String?): KeyEntity?
 
   /**
    * if 2 keys requested and only one found, will return list of 1: [KeyEntity]
    */
-  fun getFilteredPgpPrivateKeys(longIds: Array<String>): List<KeyEntity>
+  fun getFilteredPgpPrivateKeys(fingerprints: Array<String>): List<KeyEntity>
 
   /**
    * Get [List] of [KeyEntity] where each key has [PgpContact] with the given email.

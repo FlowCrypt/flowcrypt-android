@@ -56,14 +56,10 @@ class PgpKeyTest {
         users = listOf("Test <t@est.com>"),
         ids = listOf(
             KeyId(
-                fingerprint = "E76853E128A0D376CAE47C143A30F4CC0A9A8F10",
-                longId = "3A30F4CC0A9A8F10",
-                shortId = "0A9A8F10",
+                fingerprint = "E76853E128A0D376CAE47C143A30F4CC0A9A8F10"
             ),
             KeyId(
-                fingerprint = "9EF2F8F36A841C0D5FAB8B0F0BAB9C018B265D22",
-                longId = "0BAB9C018B265D22",
-                shortId = "8B265D22",
+                fingerprint = "9EF2F8F36A841C0D5FAB8B0F0BAB9C018B265D22"
             )
         ),
         created = 1543592161L,
@@ -121,14 +117,10 @@ class PgpKeyTest {
         users = listOf("<auto.refresh.expired.key@recipient.com>"),
         ids = listOf(
             KeyId(
-                fingerprint = "6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9",
-                longId = "BEE3A42D9A9C8AC9",
-                shortId = "9A9C8AC9",
+                fingerprint = "6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9"
             ),
             KeyId(
-                fingerprint = "0731F9992FE2152E101E0D37D16EE86BDB129956",
-                longId = "D16EE86BDB129956",
-                shortId = "DB129956",
+                fingerprint = "0731F9992FE2152E101E0D37D16EE86BDB129956"
             )
         ),
         created = 1594847701L,
