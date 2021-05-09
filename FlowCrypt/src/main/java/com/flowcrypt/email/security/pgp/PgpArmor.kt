@@ -12,6 +12,7 @@ import com.flowcrypt.email.extensions.kotlin.isWhiteSpace
 import com.flowcrypt.email.extensions.kotlin.normalize
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.bcpg.ArmoredOutputStream
+import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.util.Strings
 import java.lang.IllegalArgumentException
 import java.io.ByteArrayOutputStream
@@ -164,31 +165,37 @@ object PgpArmor {
   // https://github.com/bcgit/bc-java/blob/bc3b92f1f0e78b82e2584c5fb4b226a13e7f8b3b/pg/src/main/java/org/bouncycastle/openpgp/examples/ClearSignedFileProcessor.java
   @JvmStatic
   fun readSignedClearTextMessage(input: InputStream): CleartextSignedMessage {
-    ArmoredInputStream(input).use { armoredInput ->
-      val out = ByteArrayOutputStream()
-      out.use {
-        val lineOut = ByteArrayOutputStream()
-        var lookAhead = readInputLine(lineOut, armoredInput)
-        if (lookAhead != -1 && armoredInput.isClearText) {
-          var line = lineOut.toByteArray()
-          out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
-          out.write(lineSeparatorBytes)
-          while (lookAhead != -1 && armoredInput.isClearText) {
-            lookAhead = readInputLine(lineOut, lookAhead, armoredInput)
-            line = lineOut.toByteArray()
+    try {
+      ArmoredInputStream(input).use { armoredInput ->
+        val out = ByteArrayOutputStream()
+        out.use {
+          val lineOut = ByteArrayOutputStream()
+          var lookAhead = readInputLine(lineOut, armoredInput)
+          if (lookAhead != -1 && armoredInput.isClearText) {
+            var line = lineOut.toByteArray()
             out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
             out.write(lineSeparatorBytes)
-          }
-        } else {
-          // a single line file
-          if (lookAhead != -1) {
-            val line = lineOut.toByteArray()
-            out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
-            out.write(lineSeparatorBytes)
+            while (lookAhead != -1 && armoredInput.isClearText) {
+              lookAhead = readInputLine(lineOut, lookAhead, armoredInput)
+              line = lineOut.toByteArray()
+              out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
+              out.write(lineSeparatorBytes)
+            }
+          } else {
+            // a single line file
+            if (lookAhead != -1) {
+              val line = lineOut.toByteArray()
+              out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line))
+              out.write(lineSeparatorBytes)
+            }
           }
         }
+        return CleartextSignedMessage(out, null)
       }
-      return CleartextSignedMessage(out, null)
+    } catch (ex: PGPException) {
+      throw PGPException("Cleartext format error", ex)
+    } catch (ex: IOException) {
+      throw PGPException("Cleartext format error", ex)
     }
   }
 

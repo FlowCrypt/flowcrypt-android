@@ -15,11 +15,10 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
 import org.pgpainless.exception.ModificationDetectionException
-import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.protection.UnprotectedKeysProtector
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayOutputStream
@@ -48,23 +47,24 @@ object PgpMsg {
           // This does not 100% mean it's OpenPGP message
           // But it's a good indication that it may be
           return Pair(
-              false,
-              if (messageTypes.contains(tagNumber)) {
-                MsgBlock.Type.ENCRYPTED_MSG
-              } else {
-                MsgBlock.Type.PUBLIC_KEY
-              }
+            false,
+            if (messageTypes.contains(tagNumber)) {
+              MsgBlock.Type.ENCRYPTED_MSG
+            } else {
+              MsgBlock.Type.PUBLIC_KEY
+            }
           )
         }
       }
 
       val blocks = MsgBlockParser.detectBlocks(
-          // only interested in the first 50 bytes
-          // use ASCII, it never fails
-          String(source.copyOfRange(0, min(50, source.size)), StandardCharsets.US_ASCII).trim()
+        // only interested in the first 50 bytes
+        // use ASCII, it never fails
+        String(source.copyOfRange(0, min(50, source.size)), StandardCharsets.US_ASCII).trim()
       )
       if (blocks.size == 1 && !blocks[0].complete
-          && MsgBlock.Type.fourBlockTypes.contains(blocks[0].type)) {
+        && MsgBlock.Type.fourBlockTypes.contains(blocks[0].type)
+      ) {
         return Pair(true, blocks[0].type)
       }
 
@@ -73,114 +73,78 @@ object PgpMsg {
   }
 
   private val messageTypes = intArrayOf(
-      PacketTags.SYM_ENC_INTEGRITY_PRO,
-      PacketTags.MOD_DETECTION_CODE,
-      20, // SymEncryptedAEADProtected - no BouncyCastle constant for this one
-      PacketTags.SYMMETRIC_KEY_ENC,
-      PacketTags.COMPRESSED_DATA
+    PacketTags.SYM_ENC_INTEGRITY_PRO,
+    PacketTags.MOD_DETECTION_CODE,
+    20, // SymEncryptedAEADProtected - no BouncyCastle constant for this one
+    PacketTags.SYMMETRIC_KEY_ENC,
+    PacketTags.COMPRESSED_DATA
   )
 
   private val maxTagNumber = 20
 
   enum class DecryptionErrorType {
     KEY_MISMATCH,
-
-    // skip, effective for symmetric encryption
-    // USE_PASSWORD,
-
-    WRONG_PASSWORD,
+    WRONG_PASSPHRASE,
     NO_MDC,
     BAD_MDC,
-
-    // a passphrase was not provided for the key which requires it,
-    // not sure how to detect this in the PGPainless.
     NEED_PASSPHRASE,
-
     FORMAT,
     OTHER
   }
 
   data class DecryptionError(
-      val type: DecryptionErrorType,
-      val message: String,
-      val cause: Throwable? = null
+    val type: DecryptionErrorType,
+    val message: String,
+    val cause: Throwable? = null
   )
 
   data class DecryptionResult(
-      // provided if decryption was successful
-      val content: ByteArrayOutputStream?,
+    // provided if decryption was successful
+    val content: ByteArrayOutputStream? = null,
 
-      // true if message was encrypted.
-      // Alternatively false (because it could have also been plaintext signed,
-      // or wrapped in PGP armor as plaintext packet without encrypting,
-      val isEncrypted: Boolean,
+    // true if message was encrypted.
+    // Alternatively false (because it could have also been plaintext signed,
+    // or wrapped in PGP armor as plaintext packet without encrypting)
+    // also false when error happens.
+    val isEncrypted: Boolean = false,
 
-      // pgp messages may include original filename in them
-      val filename: String?,
+    // pgp messages may include original filename in them
+    val filename: String? = null,
 
-      // todo later - signature verification not supported on Android yet
-      val signature: Any?,
+    // todo later - signature verification not supported on Android yet
+    val signature: Any? = null,
 
-      // provided if error happens
-      val error: DecryptionError?
+    // provided if error happens
+    val error: DecryptionError? = null
   ) {
     companion object {
       fun withError(
-          type: DecryptionErrorType,
-          message: String,
-          cause: Throwable? = null
+        type: DecryptionErrorType,
+        message: String,
+        cause: Throwable? = null
       ): DecryptionResult {
-        return DecryptionResult(
-            content = null,
-            isEncrypted = false,
-            filename = null,
-            signature = null,
-            error = DecryptionError(type, message, cause)
-        )
+        return DecryptionResult(error = DecryptionError(type, message, cause))
       }
 
       fun withCleartext(cleartext: ByteArrayOutputStream, signature: Any?): DecryptionResult {
-        return DecryptionResult(
-            content = cleartext,
-            isEncrypted = false,
-            filename = null,
-            signature = signature,
-            error = null
-        )
+        return DecryptionResult(content = cleartext, signature = signature)
       }
 
       fun withDecrypted(content: ByteArrayOutputStream, filename: String?): DecryptionResult {
-        return DecryptionResult(
-            content = content,
-            isEncrypted = false,
-            filename = null,
-            signature = null,
-            error = null
-        )
+        return DecryptionResult(content = content, isEncrypted = true, filename = filename)
       }
     }
   }
 
-  @Suppress("ArrayInDataClass")
-  data class SecretKeyInfo(
-      val armored: String? = null,
-      val keyRing: PGPSecretKeyRing = readArmored(armored!!),
-      val passphrase: CharArray? = null
-  ) {
-    companion object {
-      private fun readArmored(armored: String): PGPSecretKeyRing {
-        return JcaPGPSecretKeyRingCollection(
-            ArmoredInputStream(armored.toByteArray().inputStream())
-        ).keyRings.asSequence().first()
-      }
-    }
-  }
+  data class KeyWithPassPhrase(
+    val keyRing: PGPSecretKeyRing,
+    val passphrase: Passphrase?
+  )
 
   fun decrypt(
-      data: ByteArray,
-      pgpSecretKeyRing: PGPSecretKeyRing, // for decryption
-      passphrase: Passphrase?, // for decryption of secret keys
-      pgpPublicKeyRingCollection: PGPPublicKeyRingCollection? // for verification
+    data: ByteArray,
+    keys: List<KeyWithPassPhrase>,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection? // for verification
   ): DecryptionResult {
     if (data.isEmpty()) {
       return DecryptionResult.withError(DecryptionErrorType.FORMAT, "Can't decrypt empty message")
@@ -190,23 +154,63 @@ object PgpMsg {
     var input = data.inputStream() as InputStream
 
     if (chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.SIGNED_MSG]!!.begin)) {
-      val msg = PgpArmor.readSignedClearTextMessage(input)
+      val msg: PgpArmor.CleartextSignedMessage
+      try {
+        msg = PgpArmor.readSignedClearTextMessage(input)
+      } catch (ex: Exception) {
+        return if (
+          ex is PGPException && ex.message != null && ex.message == "Cleartext format error"
+        ) {
+          DecryptionResult.withError(
+            type = DecryptionErrorType.FORMAT,
+            message = ex.message!!,
+            cause = ex.cause
+          )
+        } else {
+          DecryptionResult.withError(
+            type = DecryptionErrorType.OTHER,
+            message = "Decode cleartext error",
+            cause = ex
+          )
+        }
+      }
       return DecryptionResult.withCleartext(msg.content, msg.signature)
     }
 
     val isArmored = chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.ENCRYPTED_MSG]!!.begin)
     if (isArmored) input = ArmoredInputStream(input)
 
-    val protector = if (passphrase != null) {
-      PasswordBasedSecretKeyRingProtector.forKey(pgpSecretKeyRing, passphrase)
-    } else {
-      UnprotectedKeysProtector()
+    val keyList: List<PGPSecretKeyRing>
+    try {
+      keyList = keys.map {
+        if (it.passphrase != null) {
+          PgpKey.decryptKey(it.keyRing, it.passphrase)
+        } else {
+          if (KeyRingInfo(it.keyRing).isFullyDecrypted) {
+            throw PGPException("flowcrypt: need passphrase")
+          }
+          it.keyRing
+        }
+      }.toList()
+    } catch (ex: PGPException) {
+      if (ex.message == "flowcrypt: need passphrase") {
+        return DecryptionResult.withError(
+          type = DecryptionErrorType.NEED_PASSPHRASE,
+          message = "Need passphrase"
+        )
+      }
+      return DecryptionResult.withError(
+        type = DecryptionErrorType.WRONG_PASSPHRASE,
+        message = "Wrong passphrase",
+        cause = ex
+      )
     }
 
+    var exception: Exception? = null
     try {
       val d = PGPainless.decryptAndOrVerify()
-          .onInputStream(input)
-          .decryptWith(protector, PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)))
+        .onInputStream(input)
+        .decryptWith(UnprotectedKeysProtector(), PGPSecretKeyRingCollection(keyList))
 
       val decryptionStream = if (pgpPublicKeyRingCollection != null) {
         d.verifyWith(pgpPublicKeyRingCollection).ignoreMissingPublicKeys().build()
@@ -220,59 +224,47 @@ object PgpMsg {
       val streamResult = decryptionStream.result
       return DecryptionResult.withDecrypted(output, streamResult.fileInfo?.fileName)
     } catch (ex: MessageNotIntegrityProtectedException) {
-      return DecryptionResult(
-        content = null,
-        isEncrypted = true,
-        filename = null,
-        signature = null,
-        error = DecryptionError(
-          DecryptionErrorType.NO_MDC,
-          "Security threat! Message is missing integrity checks (MDC). The sender should " +
-          "update their outdated software."
-        )
+      return DecryptionResult.withError(
+        type = DecryptionErrorType.NO_MDC,
+        message = "Security threat! Message is missing integrity checks (MDC)." +
+            " The sender should update their outdated software.",
+        cause = ex
       )
     } catch (ex: ModificationDetectionException) {
-      return DecryptionResult(
-          content = null,
-          isEncrypted = true,
-          filename = null,
-          signature = null,
-          error = DecryptionError(
-              DecryptionErrorType.BAD_MDC,
-              "Security threat! Integrity check failed."
-          )
+      return DecryptionResult.withError(
+        type = DecryptionErrorType.BAD_MDC,
+        message = "Security threat! Integrity check failed.",
+        cause = ex
       )
-    } catch (ex: Exception) {
-      if (ex is PGPDataValidationException || (ex is PGPException
-              && (
-                ex.message?.contains("exception decrypting session info") == true
-                || ex.message?.contains("encoded length out of range") == true
-                || ex.message?.contains("Invalid Curve25519 public key") == true
-                || ex.message?.contains("Exception recovering session info") == true
-                || ex.message?.contains("ECDH requires use of PGPPrivateKey for decryption") == true
-              )
-          )
+    } catch (ex: PGPDataValidationException) {
+      return DecryptionResult.withError(
+        type = DecryptionErrorType.KEY_MISMATCH,
+        message = "There is no matching key",
+        cause = ex
+      )
+    } catch (ex: PGPException) {
+      if (
+        ex.message?.contains("exception decrypting session info") == true
+        || ex.message?.contains("encoded length out of range") == true
+        || ex.message?.contains("Exception recovering session info") == true
       ) {
-        return if (passphrase != null) {
-          DecryptionResult.withError(
-              type = DecryptionErrorType.WRONG_PASSWORD,
-              message = "Wrong password",
-              cause = ex
-          )
-        } else {
-          DecryptionResult.withError(
-              type = DecryptionErrorType.KEY_MISMATCH,
-              message = "There is no matching key",
-              cause = ex
-          )
-        }
-      } else {
-        return DecryptionResult.withError(
-            type = DecryptionErrorType.OTHER,
-            message = "There is no matching key",
-            cause = ex
+        DecryptionResult.withError(
+          type = DecryptionErrorType.KEY_MISMATCH,
+          message = "There is no matching key",
+          cause = ex
         )
+      } else {
+        exception = ex
       }
+    } catch (ex: Exception) {
+      exception = ex
     }
+    return DecryptionResult.withError(
+      type = DecryptionErrorType.OTHER,
+      message = "Decryption failed",
+      cause = exception
+    )
   }
 }
+//                   || ex.message?.contains("Invalid Curve25519 public key") == true
+//               || ex.message?.contains("ECDH requires use of PGPPrivateKey for decryption") == true
