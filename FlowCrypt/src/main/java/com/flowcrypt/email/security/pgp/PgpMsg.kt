@@ -63,13 +63,13 @@ object PgpMsg {
         String(source.copyOfRange(0, min(50, source.size)), StandardCharsets.US_ASCII).trim()
       )
       if (blocks.size == 1 && !blocks[0].complete
-        && MsgBlock.Type.fourBlockTypes.contains(blocks[0].type)
+        && MsgBlock.Type.wellKnownBlockTypes.contains(blocks[0].type)
       ) {
         return Pair(true, blocks[0].type)
       }
-
       return Pair(false, MsgBlock.Type.UNKNOWN)
-    } else return Pair(false, null)
+    }
+    return Pair(false, null)
   }
 
   private val messageTypes = intArrayOf(
@@ -183,13 +183,10 @@ object PgpMsg {
     val keyList: List<PGPSecretKeyRing>
     try {
       keyList = keys.map {
-        if (it.passphrase != null) {
-          PgpKey.decryptKey(it.keyRing, it.passphrase)
-        } else {
-          if (KeyRingInfo(it.keyRing).isFullyDecrypted) {
-            throw PGPException("flowcrypt: need passphrase")
-          }
-          it.keyRing
+        when {
+          KeyRingInfo(it.keyRing).isFullyDecrypted -> it.keyRing
+          it.passphrase == null -> throw PGPException("flowcrypt: need passphrase")
+          else -> PgpKey.decryptKey(it.keyRing, it.passphrase) // may throw PGPException
         }
       }.toList()
     } catch (ex: PGPException) {
@@ -247,10 +244,11 @@ object PgpMsg {
         ex.message?.contains("exception decrypting session info") == true
         || ex.message?.contains("encoded length out of range") == true
         || ex.message?.contains("Exception recovering session info") == true
+        || ex.message?.contains("No suitable decryption key") == true
       ) {
-        DecryptionResult.withError(
+        return DecryptionResult.withError(
           type = DecryptionErrorType.KEY_MISMATCH,
-          message = "There is no matching key",
+          message = "There is no suitable decryption key",
           cause = ex
         )
       } else {

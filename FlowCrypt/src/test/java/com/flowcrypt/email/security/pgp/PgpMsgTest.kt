@@ -144,7 +144,7 @@ class PgpMsgTest {
   }
 
   @Test // ok
-  fun decryptionTest1() {
+  fun missingMdcTest() {
     val r = processMessage("decrypt - [security] mdc - missing - error")
     assertTrue("Message is returned when should not", r.content == null)
     assertTrue("Error not returned", r.error != null)
@@ -152,7 +152,7 @@ class PgpMsgTest {
   }
 
   @Test // ok
-  fun decryptionTest2() {
+  fun badMdcTest() {
     val r = processMessage("decrypt - [security] mdc - modification detected - error")
     assertTrue("Message is returned when should not", r.content == null)
     assertTrue("Error not returned", r.error != null)
@@ -160,23 +160,75 @@ class PgpMsgTest {
   }
 
   // TODO: Should there be any error?
+  // https://github.com/FlowCrypt/flowcrypt-android/issues/1214
   @Test
   fun decryptionTest3() {
     val r = processMessage(
-      "decrypt - [everdesk] message encrypted for sub but claims " +
-          "encryptedFor-primary,sub"
+      "decrypt - [everdesk] message encrypted for sub but claims encryptedFor-primary,sub"
     )
-
     assertTrue("Message not returned", r.content != null)
     assertTrue("Error returned", r.error == null)
   }
 
-  // TODO: missing checksum not detected (is it same as MDC?), and should there be an error at all?
   @Test
-  fun decryptionTest4() {
+  fun missingArmorChecksumTest() {
+    // This is a test for the message with missing armor checksum - different from MDC.
+    // Usually the four digits at the and like p3Fc=.
+    // Such messages are still valid if this is missing,
+    // and should decrypt correctly - so it's good as is.
     val r = processMessage("decrypt - encrypted missing checksum")
     assertTrue("Message not returned", r.content != null)
     assertTrue("Error returned", r.error == null)
+  }
+
+  @Test
+  fun wrongPassphraseTest() {
+    val messageInfo = findMessage("decrypt - without a subject")
+    val wrongPassphrase = Passphrase.fromPassword("this is wrong passphrase for sure")
+    val privateKeysWithWrongPassPhrases = privateKeys.map {
+      PgpMsg.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = wrongPassphrase)
+    }
+    val r = PgpMsg.decrypt(
+      messageInfo.armored.toByteArray(), privateKeysWithWrongPassPhrases, null
+    )
+    assertTrue("Message returned", r.content == null)
+    assertTrue("Error not returned", r.error != null)
+    assertTrue(
+      "Wrong passphrase not detected",
+      r.error!!.type == PgpMsg.DecryptionErrorType.WRONG_PASSPHRASE
+    )
+  }
+
+  @Test
+  fun missingPassphraseTest() {
+    val messageInfo = findMessage("decrypt - without a subject")
+    val privateKeysWithMissingPassphrases = privateKeys.map {
+      PgpMsg.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = null)
+    }
+    val r = PgpMsg.decrypt(
+      messageInfo.armored.toByteArray(), privateKeysWithMissingPassphrases, null
+    )
+    assertTrue("Message returned", r.content == null)
+    assertTrue("Error not returned", r.error != null)
+    assertTrue(
+      "Missing passphrase not detected",
+      r.error!!.type == PgpMsg.DecryptionErrorType.NEED_PASSPHRASE
+    )
+  }
+
+  @Test
+  fun wrongKeyTest() {
+    val messageInfo = findMessage("decrypt - without a subject")
+    val wrongKey = listOf(privateKeys[1])
+    val r = PgpMsg.decrypt(
+      messageInfo.armored.toByteArray(), wrongKey, null
+    )
+    assertTrue("Message returned", r.content == null)
+    assertTrue("Error not returned", r.error != null)
+    assertTrue(
+      "Key mismatch not detected",
+      r.error!!.type == PgpMsg.DecryptionErrorType.KEY_MISMATCH
+    )
   }
 
   // -------------------------------------------------------------------------------------------
@@ -214,4 +266,11 @@ class PgpMsgTest {
       assertTrue("Text '$s' not found", z.indexOf(s) != -1)
     }
   }
+
+  // TODO: add later
+
+  // wrong key provided
+  // wrong pass phrase provided
+  // key missing pass phrase
+
 }
