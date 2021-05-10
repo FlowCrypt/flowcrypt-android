@@ -71,7 +71,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   @Test
   fun testIsDisplayedSingleItem() {
     val pgpContact = PgpContact("default@flowcrypt.test", null,
-        singlePublicKeyForUnsavedContact, true, null, null, null, 0)
+        singlePublicKeyForUnsavedContact, true, null, null, 0)
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
     activeActivityRule.launch(PreviewImportPgpContactActivity.newIntent(getTargetContext(),
         singlePublicKeyForUnsavedContact))
