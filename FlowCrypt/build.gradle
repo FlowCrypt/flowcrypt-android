@@ -416,7 +416,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:19.0.0'
 
     //https://mvnrepository.com/artifact/com.google.android.material/material
-    implementation 'com.google.android.material:material:1.4.0-alpha02'
+    implementation 'com.google.android.material:material:1.4.0-beta01'
 
     //https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.8.6'
