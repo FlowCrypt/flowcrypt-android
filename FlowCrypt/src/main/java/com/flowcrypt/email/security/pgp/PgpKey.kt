@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.extensions.pgp.armor
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toNodeKeyDetails
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
@@ -21,7 +21,7 @@ object PgpKey {
    *
    * @param armored Should be a single private key.
    */
-  fun encryptKey(armored: String, passphrase: String): String {
+  fun encryptKey(armored: String, passphrase: Passphrase): String {
     return encryptKey(extractSecretKeyRing(armored), passphrase).armor()
   }
 
@@ -30,7 +30,7 @@ object PgpKey {
    *
    * @param armored Should be a single private key.
    */
-  fun decryptKey(armored: String, passphrase: String): String {
+  fun decryptKey(armored: String, passphrase: Passphrase): String {
     return decryptKey(extractSecretKeyRing(armored), passphrase).armor()
   }
 
@@ -39,7 +39,7 @@ object PgpKey {
    *
    * @param armored Should be a single private key.
    */
-  fun changeKeyPassphrase(armored: String, oldPassphrase: String, newPassphrase: String): String {
+  fun changeKeyPassphrase(armored: String, oldPassphrase: Passphrase, newPassphrase: Passphrase): String {
     return changeKeyPassphrase(extractSecretKeyRing(armored), oldPassphrase, newPassphrase).armor()
   }
 
@@ -62,26 +62,26 @@ object PgpKey {
     return ParseKeyResult(PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource))
   }
 
-  private fun decryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
+  fun decryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
     return PGPainless.modifyKeyRing(key)
-        .changePassphraseFromOldPassphrase(Passphrase.fromPassword(passphrase))
+        .changePassphraseFromOldPassphrase(passphrase)
         .withSecureDefaultSettings()
         .toNoPassphrase()
         .done()
   }
 
-  private fun encryptKey(key: PGPSecretKeyRing, passphrase: String): PGPSecretKeyRing {
+  fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
     return PGPainless.modifyKeyRing(key)
         .changePassphraseFromOldPassphrase(null)
         .withSecureDefaultSettings()
-        .toNewPassphrase(Passphrase.fromPassword(passphrase))
+        .toNewPassphrase(passphrase)
         .done()
   }
 
-  private fun changeKeyPassphrase(
+  fun changeKeyPassphrase(
       key: PGPSecretKeyRing,
-      oldPassphrase: String,
-      newPassphrase: String
+      oldPassphrase: Passphrase,
+      newPassphrase: Passphrase
   ): PGPSecretKeyRing {
     return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
   }

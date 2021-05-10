@@ -21,6 +21,7 @@ import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import org.apache.commons.codec.android.binary.Hex
 import org.apache.commons.codec.android.digest.DigestUtils
+import org.pgpainless.util.Passphrase
 import java.util.*
 
 /**
@@ -84,7 +85,7 @@ class SecurityUtils {
         val keyDetails = nodeKeyDetailsList.first()
 
         val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
-          PgpKey.encryptKey(private, passPhrase)
+          PgpKey.encryptKey(private, Passphrase.fromPassword(passPhrase))
         } else {
           keyDetails.privateKey
         }

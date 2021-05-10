@@ -18,6 +18,7 @@ import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.pgpainless.util.Passphrase
 
 /**
  * @author Denis Bondarenko
@@ -56,7 +57,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
                 copy.passphrase = passphrase
               } else {
                 try {
-                  PgpKey.decryptKey(prvKey, passphrase)
+                  PgpKey.decryptKey(prvKey, Passphrase.fromPassword(passphrase))
                   copy.passphrase = passphrase
                 } catch (ex: Exception) {
                   //to prevent leak sensitive info we skip printing stack trace for release builds

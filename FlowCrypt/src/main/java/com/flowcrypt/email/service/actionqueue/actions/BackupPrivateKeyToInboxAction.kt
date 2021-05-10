@@ -18,6 +18,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.google.gson.annotations.SerializedName
+import org.pgpainless.util.Passphrase
 
 /**
  * This action describes a task which backups a private key to INBOX.
@@ -50,7 +51,10 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
         encryptedKey = key.privateKey ?: throw IllegalArgumentException("empty key")
       } else {
         try {
-          encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
+          encryptedKey = PgpKey.encryptKey(
+            keyEntity.privateKeyAsString,
+            Passphrase.fromPassword(keyEntity.passphrase!!)
+          )
         } catch (e: Exception) {
           throw IllegalStateException("An error occurred during encrypting some key", e)
         }

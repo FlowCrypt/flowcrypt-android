@@ -30,7 +30,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toNodeKeyDetails
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.model.PgpContact
@@ -53,6 +53,7 @@ import kotlinx.coroutines.withContext
 import org.pgpainless.PGPainless
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.key.util.UserId
+import org.pgpainless.util.Passphrase
 import java.util.*
 
 /**
@@ -399,7 +400,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         val encryptedKey: String
         try {
           encryptedKey = PgpKey.changeKeyPassphrase(
-              nodeKeyDetails.privateKey!!, oldPassphrase!!, newPassphrase
+              nodeKeyDetails.privateKey!!,
+              Passphrase.fromPassword(oldPassphrase!!),
+              Passphrase.fromPassword(newPassphrase)
           )
         } catch (e: Exception) {
           throw IllegalStateException(

@@ -1,9 +1,9 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: ivan
  */
 
-package com.flowcrypt.email.extensions.pgp
+package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
