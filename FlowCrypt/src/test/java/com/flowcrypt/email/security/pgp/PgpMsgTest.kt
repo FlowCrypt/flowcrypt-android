@@ -266,11 +266,4 @@ class PgpMsgTest {
       assertTrue("Text '$s' not found", z.indexOf(s) != -1)
     }
   }
-
-  // TODO: add later
-
-  // wrong key provided
-  // wrong pass phrase provided
-  // key missing pass phrase
-
 }
