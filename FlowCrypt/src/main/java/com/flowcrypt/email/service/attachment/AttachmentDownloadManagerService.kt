@@ -37,6 +37,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -633,7 +634,7 @@ class AttachmentDownloadManagerService : Service() {
     }
 
     /**
-     * Do decryption of the downloaded file if it need.
+     * Do decryption of the downloaded file if needed.
      *
      * @param context Interface to global information about an application environment;
      * @param file    The downloaded file which can be encrypted.
@@ -649,15 +650,30 @@ class AttachmentDownloadManagerService : Service() {
       }
 
       FileInputStream(file).use { inputStream ->
-        val decryptedFileResult = getDecryptedFileResult(context, inputStream)
-
         val decryptedFile = File.createTempFile("tmp", null, context.externalCacheDir)
         att.name = FilenameUtils.getBaseName(att.name)
 
-        FileUtils.openOutputStream(decryptedFile).use { outputStream ->
-          IOUtils.write(decryptedFileResult.content?.toByteArray(), outputStream)
-          deleteTempFile(file)
+        val combinedSource = KeysStorageImpl.getInstance(context)
+          .getAllPgpPrivateKeys()
+          .joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
+        val parseKeyResult = PgpKey.parseKeys(combinedSource)
+        val keys = parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection
+        val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
+
+        try {
+          PgpDecrypt.decrypt(
+            srcInputStream = inputStream,
+            destOutputStream = decryptedFile.outputStream(),
+            pgpSecretKeyRingCollection = keys,
+            protector = protector
+          )
+
           return decryptedFile
+        } catch (e: java.lang.Exception) {
+          deleteTempFile(decryptedFile)
+          throw e
+        } finally {
+          deleteTempFile(file)
         }
       }
     }
