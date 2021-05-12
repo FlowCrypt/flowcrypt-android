@@ -6,6 +6,7 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.extensions.createFileWithGivenSizeAndRandomData
+import com.flowcrypt.email.util.exception.DecryptionException
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -22,6 +23,7 @@ import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -56,7 +58,39 @@ class PgpDecryptTest {
 
   @Test
   fun testDecryptionErrorWrongPassphrase() {
+    val srcFile = temporaryFolder.createFileWithGivenSizeAndRandomData(FileUtils.ONE_MB)
+    val sourceBytes = srcFile.readBytes()
+    val outputStreamForEncryptedSource = ByteArrayOutputStream()
+    PgpEncrypt.encryptAndOrSign(
+      srcInputStream = ByteArrayInputStream(sourceBytes),
+      destOutputStream = outputStreamForEncryptedSource,
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+        listOf(
+          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
+          KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
+        )
+      ),
+      doArmor = false
+    )
 
+    val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
+    val outputStreamWithDecryptedData = ByteArrayOutputStream()
+    val exception = Assert.assertThrows(DecryptionException::class.java) {
+      PgpDecrypt.decrypt(
+        srcInputStream = ByteArrayInputStream(encryptedBytes),
+        destOutputStream = outputStreamWithDecryptedData,
+        pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),
+        protector = PasswordBasedSecretKeyRingProtector.forKey(
+          receiverPGPSecretKeyRing,
+          Passphrase.fromPassword(UUID.randomUUID().toString())
+        )
+      )
+    }
+
+    Assert.assertEquals(
+      exception.decryptionErrorType,
+      PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE
+    )
   }
 
   @Test
@@ -80,8 +114,6 @@ class PgpDecryptTest {
   }
 
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {
-    val senderPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing)
-    val receiverPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
     val srcFile = temporaryFolder.createFileWithGivenSizeAndRandomData(FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
@@ -90,8 +122,8 @@ class PgpDecryptTest {
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
         listOf(
-          senderPgpPublicKeyRing,
-          receiverPgpPublicKeyRing
+          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
+          KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
         )
       ),
       doArmor = shouldSrcBeArmored
