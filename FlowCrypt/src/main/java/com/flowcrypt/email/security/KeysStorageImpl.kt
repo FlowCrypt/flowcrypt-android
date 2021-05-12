@@ -139,7 +139,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
               if (key.passphrase == null) {
                 throw PGPException("flowcrypt: need passphrase")
               } else {
-                passphrase = Passphrase.fromPassword(key.passphrase + 12)
+                passphrase = Passphrase.fromPassword(key.passphrase)
               }
 
               return@PasswordBasedSecretKeyRingProtector passphrase
