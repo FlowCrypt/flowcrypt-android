@@ -554,7 +554,12 @@ class AttachmentDownloadManagerService : Service() {
       }
       cursor?.close()
 
-      IOUtils.copy(attFile.inputStream(), resolver.openOutputStream(imageUri))
+      val srcInputStream = attFile.inputStream()
+      val destOutputStream = resolver.openOutputStream(imageUri)
+        ?: throw IllegalArgumentException("provided URI could not be opened")
+      srcInputStream.use { srcStream ->
+        destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
+      }
 
       //notify the system that the file is ready
       resolver.update(imageUri, ContentValues().apply {
@@ -579,7 +584,11 @@ class AttachmentDownloadManagerService : Service() {
       }
 
       att.name = sharedFile.name
-      IOUtils.copy(attFile.inputStream(), FileUtils.openOutputStream(sharedFile))
+      val srcInputStream = attFile.inputStream()
+      val destOutputStream = FileUtils.openOutputStream(sharedFile)
+      srcInputStream.use { srcStream ->
+        destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
+      }
       return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
     }
 
@@ -666,7 +675,11 @@ class AttachmentDownloadManagerService : Service() {
             protector = protector
           )
 
-          result.fileInfo?.fileName?.let { fileName -> att.name = fileName }
+          result.fileInfo?.fileName?.let { fileName ->
+            if (att.name == null) {
+              att.name = fileName
+            }
+          }
 
           return decryptedFile
         } catch (e: Exception) {
