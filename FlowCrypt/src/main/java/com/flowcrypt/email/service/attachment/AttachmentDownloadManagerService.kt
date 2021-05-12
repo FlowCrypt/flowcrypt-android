@@ -39,7 +39,6 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -50,7 +49,6 @@ import com.sun.mail.imap.IMAPFolder
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
-import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -661,46 +659,23 @@ class AttachmentDownloadManagerService : Service() {
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
 
         try {
-          PgpDecrypt.decrypt(
+          val result = PgpDecrypt.decrypt(
             srcInputStream = inputStream,
             destOutputStream = decryptedFile.outputStream(),
             pgpSecretKeyRingCollection = keys,
             protector = protector
           )
 
+          result.fileInfo?.fileName?.let { fileName -> att.name = fileName }
+
           return decryptedFile
-        } catch (e: java.lang.Exception) {
+        } catch (e: Exception) {
           deleteTempFile(decryptedFile)
           throw e
         } finally {
           deleteTempFile(file)
         }
       }
-    }
-
-    private fun getDecryptedFileResult(
-      context: Context,
-      inputStream: InputStream
-    ): PgpMsg.DecryptionResult {
-      val keysStorage = KeysStorageImpl.getInstance(context)
-      val privateKeys = keysStorage.getAllPgpPrivateKeys().map {
-        PgpMsg.KeyWithPassPhrase(
-          PgpKey.parseKeys(it.privateKey).pgpKeyRingCollection.pgpSecretKeyRingCollection.first(),
-          if (it.passphrase == null) Passphrase.emptyPassphrase() else Passphrase.fromPassword(it.passphrase)
-        )
-      }
-      val encryptedBytes = IOUtils.toByteArray(inputStream)
-      val result = PgpMsg.decrypt(encryptedBytes, privateKeys, null)
-      if (result.error != null) {
-        var exceptionMsg = result.error.message
-        if (PgpMsg.DecryptionErrorType.NEED_PASSPHRASE == result.error.type) {
-          exceptionMsg =
-            context.getString(R.string.opening_password_encrypted_msg_not_implemented_yet)
-        }
-        throw Exception(exceptionMsg)
-      }
-
-      return result
     }
 
     /**

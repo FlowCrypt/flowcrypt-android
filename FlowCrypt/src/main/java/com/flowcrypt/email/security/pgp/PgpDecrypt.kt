@@ -10,6 +10,7 @@ import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
+import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
 import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -29,7 +30,7 @@ object PgpDecrypt {
     destOutputStream: OutputStream,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
-  ) {
+  ): OpenPgpMetadata {
     srcInputStream.use { srcStream ->
       destOutputStream.use { outStream ->
         try {
@@ -40,49 +41,50 @@ object PgpDecrypt {
             .build()
 
           decryptionStream.use { it.copyTo(outStream) }
+          return decryptionStream.result
         } catch (e: Exception) {
-          processDecryptionException(e)
+          throw processDecryptionException(e)
         }
       }
     }
   }
 
-  private fun processDecryptionException(e: Exception) {
-    when (e) {
+  private fun processDecryptionException(e: Exception): Exception {
+    return when (e) {
       is PGPException -> {
         when {
           e.message == "flowcrypt: need passphrase" -> {
-            throw DecryptionException(DecryptionErrorType.NEED_PASSPHRASE, e)
+            DecryptionException(DecryptionErrorType.NEED_PASSPHRASE, e)
           }
 
           e.message == "checksum mismatch at 0 of 20" -> {
-            throw DecryptionException(DecryptionErrorType.WRONG_PASSPHRASE, e)
+            DecryptionException(DecryptionErrorType.WRONG_PASSPHRASE, e)
           }
 
           e.message?.contains("exception decrypting session info") == true
               || e.message?.contains("encoded length out of range") == true
               || e.message?.contains("Exception recovering session info") == true
               || e.message?.contains("No suitable decryption key") == true -> {
-            throw DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
+            DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
           }
 
-          else -> throw DecryptionException(DecryptionErrorType.OTHER, e)
+          else -> DecryptionException(DecryptionErrorType.OTHER, e)
         }
       }
 
       is MessageNotIntegrityProtectedException -> {
-        throw DecryptionException(DecryptionErrorType.NO_MDC, e)
+        DecryptionException(DecryptionErrorType.NO_MDC, e)
       }
 
       is ModificationDetectionException -> {
-        throw DecryptionException(DecryptionErrorType.BAD_MDC, e)
+        DecryptionException(DecryptionErrorType.BAD_MDC, e)
       }
 
       is PGPDataValidationException -> {
-        throw DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
+        DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
       }
 
-      else -> throw DecryptionException(DecryptionErrorType.OTHER, e)
+      else -> DecryptionException(DecryptionErrorType.OTHER, e)
     }
   }
 
