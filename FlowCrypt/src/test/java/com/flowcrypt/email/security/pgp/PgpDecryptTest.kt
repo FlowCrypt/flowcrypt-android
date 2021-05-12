@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.extensions.createFileWithGivenSize
+import com.flowcrypt.email.extensions.createFileWithGivenSizeAndRandomData
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -82,7 +82,7 @@ class PgpDecryptTest {
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {
     val senderPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing)
     val receiverPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
-    val srcFile = temporaryFolder.createFileWithGivenSize(FileUtils.ONE_MB)
+    val srcFile = temporaryFolder.createFileWithGivenSizeAndRandomData(FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
     PgpEncrypt.encryptAndOrSign(
