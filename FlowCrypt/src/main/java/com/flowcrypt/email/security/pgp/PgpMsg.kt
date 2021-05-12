@@ -28,21 +28,11 @@ import kotlin.experimental.and
 import kotlin.math.min
 
 object PgpMsg {
-  private const val MAX_TAG_NUMBER = 20
-
   /**
    * @return Pair.first  indicates armored (true) or binary (false) format
    *         Pair.second block type or null if the source is empty
    */
   fun detectBlockType(source: ByteArray): Pair<Boolean, MsgBlock.Type?> {
-    val messageTypes = intArrayOf(
-      PacketTags.SYM_ENC_INTEGRITY_PRO,
-      PacketTags.MOD_DETECTION_CODE,
-      20, // SymEncryptedAEADProtected - no BouncyCastle constant for this one
-      PacketTags.SYMMETRIC_KEY_ENC,
-      PacketTags.COMPRESSED_DATA
-    )
-
     if (source.isNotEmpty()) {
       val firstByte = source[0]
       if (firstByte and (0x80.toByte()) == 0x80.toByte()) {
@@ -52,7 +42,7 @@ object PgpMsg {
         } else { // 10XX XXXX - potential old pgp packet tag
           (firstByte and 0x3c).toInt() ushr (2) // 10TTTTLL where T is tag number bit.
         }
-        if (tagNumber <= MAX_TAG_NUMBER) {
+        if (tagNumber <= maxTagNumber) {
           // Indeed a valid OpenPGP packet tag number
           // This does not 100% mean it's OpenPGP message
           // But it's a good indication that it may be
@@ -82,9 +72,79 @@ object PgpMsg {
     return Pair(false, null)
   }
 
+  private val messageTypes = intArrayOf(
+    PacketTags.SYM_ENC_INTEGRITY_PRO,
+    PacketTags.MOD_DETECTION_CODE,
+    20, // SymEncryptedAEADProtected - no BouncyCastle constant for this one
+    PacketTags.SYMMETRIC_KEY_ENC,
+    PacketTags.COMPRESSED_DATA
+  )
+
+  private val maxTagNumber = 20
+
+  enum class DecryptionErrorType {
+    KEY_MISMATCH,
+    WRONG_PASSPHRASE,
+    NO_MDC,
+    BAD_MDC,
+    NEED_PASSPHRASE,
+    FORMAT,
+    OTHER
+  }
+
+  data class DecryptionError(
+    val type: DecryptionErrorType,
+    val message: String,
+    val cause: Throwable? = null
+  )
+
+  data class DecryptionResult(
+    // provided if decryption was successful
+    val content: ByteArrayOutputStream? = null,
+
+    // true if message was encrypted.
+    // Alternatively false (because it could have also been plaintext signed,
+    // or wrapped in PGP armor as plaintext packet without encrypting)
+    // also false when error happens.
+    val isEncrypted: Boolean = false,
+
+    // pgp messages may include original filename in them
+    val filename: String? = null,
+
+    // todo later - signature verification not supported on Android yet
+    val signature: Any? = null,
+
+    // provided if error happens
+    val error: DecryptionError? = null
+  ) {
+    companion object {
+      fun withError(
+        type: DecryptionErrorType,
+        message: String,
+        cause: Throwable? = null
+      ): DecryptionResult {
+        return DecryptionResult(error = DecryptionError(type, message, cause))
+      }
+
+      fun withCleartext(cleartext: ByteArrayOutputStream, signature: Any?): DecryptionResult {
+        return DecryptionResult(content = cleartext, signature = signature)
+      }
+
+      fun withDecrypted(content: ByteArrayOutputStream, filename: String?): DecryptionResult {
+        return DecryptionResult(content = content, isEncrypted = true, filename = filename)
+      }
+    }
+  }
+
+  data class KeyWithPassPhrase(
+    val keyRing: PGPSecretKeyRing,
+    val passphrase: Passphrase?
+  )
+
   fun decrypt(
-    data: ByteArray, keys: List<KeyWithPassPhrase>,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection?
+    data: ByteArray,
+    keys: List<KeyWithPassPhrase>,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection? // for verification
   ): DecryptionResult {
     if (data.isEmpty()) {
       return DecryptionResult.withError(DecryptionErrorType.FORMAT, "Can't decrypt empty message")
@@ -94,7 +154,27 @@ object PgpMsg {
     var input = data.inputStream() as InputStream
 
     if (chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.SIGNED_MSG]!!.begin)) {
-      return handleSignedClearTextMsg(input)
+      val msg: PgpArmor.CleartextSignedMessage
+      try {
+        msg = PgpArmor.readSignedClearTextMessage(input)
+      } catch (ex: Exception) {
+        return if (
+          ex is PGPException && ex.message != null && ex.message == "Cleartext format error"
+        ) {
+          DecryptionResult.withError(
+            type = DecryptionErrorType.FORMAT,
+            message = ex.message!!,
+            cause = ex.cause
+          )
+        } else {
+          DecryptionResult.withError(
+            type = DecryptionErrorType.OTHER,
+            message = "Decode cleartext error",
+            cause = ex
+          )
+        }
+      }
+      return DecryptionResult.withCleartext(msg.content, msg.signature)
     }
 
     val isArmored = chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.ENCRYPTED_MSG]!!.begin)
@@ -183,95 +263,6 @@ object PgpMsg {
       cause = exception
     )
   }
-
-  private fun handleSignedClearTextMsg(input: InputStream): DecryptionResult {
-    val msg: PgpArmor.CleartextSignedMessage
-    try {
-      msg = PgpArmor.readSignedClearTextMessage(input)
-    } catch (ex: Exception) {
-      return if (
-        ex is PGPException && ex.message != null && ex.message == "Cleartext format error"
-      ) {
-        DecryptionResult.withError(
-          type = DecryptionErrorType.FORMAT,
-          message = ex.message!!,
-          cause = ex.cause
-        )
-      } else {
-        DecryptionResult.withError(
-          type = DecryptionErrorType.OTHER,
-          message = "Decode cleartext error",
-          cause = ex
-        )
-      }
-    }
-    return DecryptionResult.withCleartext(msg.content, msg.signature)
-  }
-
-  data class KeyWithPassPhrase(
-    val keyRing: PGPSecretKeyRing,
-    val passphrase: Passphrase?
-  )
-
-  enum class DecryptionErrorType {
-    KEY_MISMATCH,
-    WRONG_PASSPHRASE,
-    NO_MDC,
-    BAD_MDC,
-    NEED_PASSPHRASE,
-    FORMAT,
-    OTHER
-  }
-
-  data class DecryptionError(
-    val type: DecryptionErrorType,
-    val message: String,
-    val cause: Throwable? = null
-  )
-
-  data class DecryptionResult(
-    /**
-     * provided if decryption was successful
-     */
-    val content: ByteArrayOutputStream? = null,
-
-    /**
-     * true if message was encrypted.
-     * Alternatively false (because it could have also been plaintext signed,
-     * or wrapped in PGP armor as plaintext packet without encrypting)
-     * also false when error happens.
-     */
-    val isEncrypted: Boolean = false,
-
-    /**
-     * pgp messages may include original filename in them
-     */
-    val filename: String? = null,
-
-    // todo later - signature verification not supported on Android yet
-    val signature: Any? = null,
-
-    /**
-     * provided if error happens
-     */
-    val error: DecryptionError? = null
-  ) {
-    companion object {
-      fun withError(
-        type: DecryptionErrorType,
-        message: String,
-        cause: Throwable? = null
-      ): DecryptionResult {
-        return DecryptionResult(error = DecryptionError(type, message, cause))
-      }
-
-      fun withCleartext(cleartext: ByteArrayOutputStream, signature: Any?): DecryptionResult {
-        return DecryptionResult(content = cleartext, signature = signature)
-      }
-
-      fun withDecrypted(content: ByteArrayOutputStream, filename: String?): DecryptionResult {
-        return DecryptionResult(content = content, isEncrypted = true, filename = filename)
-      }
-    }
-  }
 }
+//                   || ex.message?.contains("Invalid Curve25519 public key") == true
+//               || ex.message?.contains("ECDH requires use of PGPPrivateKey for decryption") == true
