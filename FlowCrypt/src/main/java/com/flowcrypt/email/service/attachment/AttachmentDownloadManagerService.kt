@@ -652,7 +652,8 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      if (!"pgp".equals(FilenameUtils.getExtension(att.name), ignoreCase = true)) {
+      val regex = PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN
+      if (regex.find(att.name ?: "") == null) {
         return file
       }
 

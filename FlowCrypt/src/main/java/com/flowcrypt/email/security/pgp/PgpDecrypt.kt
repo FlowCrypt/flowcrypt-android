@@ -24,6 +24,8 @@ import java.io.OutputStream
  *         E-mail: DenBond7@gmail.com
  */
 object PgpDecrypt {
+  val DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN =
+    "(?i)(\\.pgp$)|(\\.gpg$)|(\\.[a-zA-Z0-9]{3,4}\\.asc$)".toRegex()
 
   fun decrypt(
     srcInputStream: InputStream,

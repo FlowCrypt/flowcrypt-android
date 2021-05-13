@@ -12,6 +12,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.junit.Assert
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Rule
@@ -118,6 +120,27 @@ class PgpDecryptTest {
   @Ignore("need to add realization")
   fun testDecryptionErrorOther() {
 
+  }
+
+  @Test
+  fun testPatternToDetectEncryptedAtts() {
+    //"(?i)(\\.pgp$)|(\\.gpg$)|(\\.[a-zA-Z0-9]{3,4}\\.asc$)"
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.pgp"))
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.PgP"))
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gpg"))
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gPg"))
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.asc"))
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.ASC"))
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12.asc"))
+    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2.ASC"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filepgp"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filePgP"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegpg"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegPg"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12asc"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12ASC"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12asc"))
+    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2ASC"))
   }
 
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {
