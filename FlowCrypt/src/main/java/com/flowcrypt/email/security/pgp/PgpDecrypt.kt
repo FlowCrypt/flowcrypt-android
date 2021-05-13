@@ -53,10 +53,6 @@ object PgpDecrypt {
     return when (e) {
       is PGPException -> {
         when {
-          e.message == "flowcrypt: need passphrase" -> {
-            DecryptionException(DecryptionErrorType.NEED_PASSPHRASE, e)
-          }
-
           e.message == "checksum mismatch at 0 of 20" -> {
             DecryptionException(DecryptionErrorType.WRONG_PASSPHRASE, e)
           }
@@ -83,6 +79,8 @@ object PgpDecrypt {
       is PGPDataValidationException -> {
         DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
       }
+
+      is DecryptionException -> e
 
       else -> DecryptionException(DecryptionErrorType.OTHER, e)
     }

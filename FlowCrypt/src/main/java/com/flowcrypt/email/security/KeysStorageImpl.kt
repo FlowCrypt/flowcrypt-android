@@ -17,7 +17,9 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.key.longId
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.node.Node
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPException
 import org.pgpainless.PGPainless
@@ -43,31 +45,37 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   private var keys = mutableListOf<KeyEntity>()
   private var nodeKeyDetailsList = mutableListOf<NodeKeyDetails>()
 
-  private val pureActiveAccountLiveData: LiveData<AccountEntity?> = Transformations.switchMap(nodeLiveData) {
-    roomDatabase.accountDao().getActiveAccountLD()
-  }
+  private val pureActiveAccountLiveData: LiveData<AccountEntity?> =
+    Transformations.switchMap(nodeLiveData) {
+      roomDatabase.accountDao().getActiveAccountLD()
+    }
 
-  private val encryptedKeysLiveData: LiveData<List<KeyEntity>> = Transformations.switchMap(pureActiveAccountLiveData) {
-    roomDatabase.keysDao().getAllKeysByAccountLD(it?.email ?: "")
-  }
+  private val encryptedKeysLiveData: LiveData<List<KeyEntity>> =
+    Transformations.switchMap(pureActiveAccountLiveData) {
+      roomDatabase.keysDao().getAllKeysByAccountLD(it?.email ?: "")
+    }
 
   private val keysLiveData = encryptedKeysLiveData.switchMap { list ->
     liveData {
       emit(list.map {
         it.copy(
-            privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
-            passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase))
+          privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
+          passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase)
+        )
       })
     }
   }
 
-  val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> = Transformations.switchMap(keysLiveData) {
-    liveData {
-      emit(PgpKey.parseKeys(
-          it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString })
-          .toNodeKeyDetailsList())
+  val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> =
+    Transformations.switchMap(keysLiveData) {
+      liveData {
+        emit(
+          PgpKey.parseKeys(
+            it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString })
+            .toNodeKeyDetailsList()
+        )
+      }
     }
-  }
 
   init {
     keysLiveData.observeForever {
@@ -137,7 +145,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
             if (key != null) {
               val passphrase: Passphrase
               if (key.passphrase == null) {
-                throw PGPException("flowcrypt: need passphrase")
+                throw DecryptionException(
+                  decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
+                  e = PGPException("flowcrypt: need passphrase")
+                )
               } else {
                 passphrase = Passphrase.fromPassword(key.passphrase)
               }
@@ -162,11 +173,14 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
    */
   suspend fun getLatestAllPgpPrivateKeys(): List<KeyEntity> {
     val account = pureActiveAccountLiveData.value
-        ?: roomDatabase.accountDao().getActiveAccountSuspend()
+      ?: roomDatabase.accountDao().getActiveAccountSuspend()
     account?.let { accountEntity ->
       val cachedKeysLongIds = keys.map { it.longId }.toSet()
-      val latestEncryptedKeys = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
-      val latestKeysLongIds = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email).map { it.longId }.toSet()
+      val latestEncryptedKeys =
+        roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
+      val latestKeysLongIds =
+        roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email).map { it.longId }
+          .toSet()
 
       if (cachedKeysLongIds == latestKeysLongIds) {
         return keys
@@ -174,8 +188,9 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
       return latestEncryptedKeys.map {
         it.copy(
-            privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
-            passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase))
+          privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
+          passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase)
+        )
       }
     }
 

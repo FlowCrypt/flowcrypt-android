@@ -13,6 +13,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.junit.Assert
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -37,6 +38,7 @@ class PgpDecryptTest {
   val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
+  @Ignore("need to add realization")
   fun testDecryptJustSignedFile() {
 
   }
@@ -52,6 +54,7 @@ class PgpDecryptTest {
   }
 
   @Test
+  @Ignore("need to add realization")
   fun testDecryptionErrorKeyMismatch() {
 
   }
@@ -94,21 +97,25 @@ class PgpDecryptTest {
   }
 
   @Test
+  @Ignore("need to add realization")
   fun testDecryptionErrorNoMdc() {
 
   }
 
   @Test
+  @Ignore("need to add realization")
   fun testDecryptionErrorBadMdc() {
 
   }
 
   @Test
+  @Ignore("need to add realization")
   fun testDecryptionErrorFormat() {
 
   }
 
   @Test
+  @Ignore("need to add realization")
   fun testDecryptionErrorOther() {
 
   }
