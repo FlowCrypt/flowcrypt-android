@@ -39,7 +39,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * This fragment shows the given public key details
@@ -232,8 +231,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
 
     textViewAlgorithm?.text = getString(R.string.template_algorithm, details?.algo?.algorithm)
     textViewCreated?.text = getString(R.string.template_created,
-        DateFormat.getMediumDateFormat(context).format(
-            Date(TimeUnit.MILLISECONDS.convert(details?.created ?: 0, TimeUnit.SECONDS))))
+        DateFormat.getMediumDateFormat(context).format(Date(details?.created ?: 0)))
   }
 
   private fun chooseDest() {

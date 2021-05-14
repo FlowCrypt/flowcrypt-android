@@ -56,7 +56,6 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -93,22 +92,22 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   fun testPubKeyDetails() {
     chooseContact()
 
-    keyDetails.users?.forEachIndexed { index, s ->
+    keyDetails.users.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_user, index + 1, s)))
           .check(matches(isDisplayed()))
     }
 
-    keyDetails.ids?.forEachIndexed { index, s ->
+    keyDetails.ids.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_fingerprint_2, index + 1, s.fingerprint)))
           .check(matches(isDisplayed()))
     }
 
     onView(withId(R.id.textViewAlgorithm))
-        .check(matches(withText(getResString(R.string.template_algorithm, keyDetails.algo!!.algorithm!!))))
+        .check(matches(withText(getResString(R.string.template_algorithm, keyDetails.algo.algorithm!!))))
     onView(withId(R.id.textViewCreated))
         .check(matches(withText(getResString(R.string.template_created,
             DateFormat.getMediumDateFormat(getTargetContext()).format(
-                Date(TimeUnit.MILLISECONDS.convert(keyDetails.created, TimeUnit.SECONDS)))))))
+                Date(keyDetails.created))))))
   }
 
   @Test

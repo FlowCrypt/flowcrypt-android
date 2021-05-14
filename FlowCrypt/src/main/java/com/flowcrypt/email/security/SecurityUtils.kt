@@ -11,7 +11,7 @@ import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
+import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
@@ -82,7 +82,7 @@ class SecurityUtils {
 
         PgpPwd.checkForWeakPassphrase(passPhrase)
 
-        val keyDetails = key.toNodeKeyDetails()
+        val keyDetails = key.toPgpKeyDetails()
         val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
           PgpKey.encryptKey(keyDetails.privateKey ?: throw IllegalStateException(), passPhrase)
         } else {
@@ -140,7 +140,7 @@ class SecurityUtils {
         }
       }
 
-      return keys.first().toNodeKeyDetails()
+      return keys.first().toPgpKeyDetails()
     }
 
     /**

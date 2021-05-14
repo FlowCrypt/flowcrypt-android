@@ -6,7 +6,7 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.extensions.pgp.armor
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
+import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
@@ -104,6 +104,6 @@ object PgpKey {
         pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
             pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
 
-    fun toNodeKeyDetailsList() = getAllKeys().map { it.toNodeKeyDetails() }
+    fun toNodeKeyDetailsList() = getAllKeys().map { it.toPgpKeyDetails() }
   }
 }

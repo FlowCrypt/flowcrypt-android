@@ -43,7 +43,6 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import java.io.FileNotFoundException
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * This [Fragment] helps to show details about the given key.
@@ -76,7 +75,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
       pgpKeyDetails?.let {
         val context = context ?: return@let
         val passPhrase = KeysStorageImpl.getInstance(context)
-            .getPassphraseByFingerprint(it.fingerprint ?: throw IllegalArgumentException())
+            .getPassphraseByFingerprint(it.fingerprint)
             ?: return@let
         checkPrivateKeysViewModel.checkKeys(listOf(it), passPhrase)
       }
@@ -137,7 +136,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
   private fun saveKey(data: Intent) {
     try {
-      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, pgpKeyDetails!!.publicKey!!)
+      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, pgpKeyDetails!!.publicKey)
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -179,8 +178,8 @@ class PrivateKeyDetailsFragment : BaseFragment() {
         GeneralUtil.doSectionsInText(" ", pgpKeyDetails?.fingerprint, 4)), textViewFingerprint)
 
     val textViewDate = view.findViewById<TextView>(R.id.textViewDate)
-    textViewDate?.text = getString(R.string.template_date, DateFormat.getMediumDateFormat(context).format(
-        Date(TimeUnit.MILLISECONDS.convert(pgpKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
+    textViewDate?.text = getString(R.string.template_date,
+        DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.created ?: 0)))
 
     val textViewUsers = view.findViewById<TextView>(R.id.textViewUsers)
     textViewUsers.text = getString(R.string.template_users, TextUtils.join(", ", emails))
@@ -192,7 +191,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
   private fun initButtons(view: View) {
     view.findViewById<View>(R.id.btnShowPubKey)?.setOnClickListener {
-      val dialogFragment = InfoDialogFragment.newInstance("", pgpKeyDetails!!.publicKey!!)
+      val dialogFragment = InfoDialogFragment.newInstance("", pgpKeyDetails!!.publicKey)
       dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
     }
 

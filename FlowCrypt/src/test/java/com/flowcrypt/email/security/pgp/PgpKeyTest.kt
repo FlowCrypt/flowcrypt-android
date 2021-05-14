@@ -6,8 +6,8 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.api.retrofit.response.model.node.Algo
-import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
+import com.flowcrypt.email.security.model.Algo
+import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -62,9 +62,8 @@ class PgpKeyTest {
                 fingerprint = "9EF2F8F36A841C0D5FAB8B0F0BAB9C018B265D22"
             )
         ),
-        created = 1543592161L,
-        lastModified = 1543592161L,
-        expiration = 0L,
+        created = 1543592161000L,
+        lastModified = 1543592161000L,
         algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
         passphrase = null,
         errorMsg = null
@@ -123,9 +122,9 @@ class PgpKeyTest {
                 fingerprint = "0731F9992FE2152E101E0D37D16EE86BDB129956"
             )
         ),
-        created = 1594847701L,
-        lastModified = 1594847701L,
-        expiration = 1594847702L,
+        created = 1594847701000L,
+        lastModified = 1594847701000L,
+        expiration = 1594847702000L,
         algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
         passphrase = null,
         errorMsg = null

@@ -60,7 +60,6 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -146,7 +145,7 @@ class KeysSettingsActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
     isToastDisplayed(decorView, getResString(R.string.copied))
-    UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey ?: "") }
+    UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey) }
   }
 
   @Test
@@ -169,12 +168,11 @@ class KeysSettingsActivityTest : BaseTest() {
             GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)!!)))))
 
     onView(withId(R.id.textViewFingerprint)).check(
-        matches(withText(getResString(R.string.template_fingerprint_3, details.fingerprint ?: ""))))
+        matches(withText(getResString(R.string.template_fingerprint_3, details.fingerprint))))
 
     onView(withId(R.id.textViewDate))
         .check(matches(withText(getHtmlString(getResString(R.string.template_date,
-            DateFormat.getMediumDateFormat(getTargetContext()).format(
-                Date(TimeUnit.MILLISECONDS.convert(details.created, TimeUnit.SECONDS))))))))
+            DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created)))))))
 
     onView(withId(R.id.tVPassPhraseVerification))
         .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))

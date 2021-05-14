@@ -20,7 +20,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * This adapter will be used to show a list of private keys.
@@ -53,8 +52,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
 
     val timestamp = nodeKeyDetails.created
     if (timestamp != -1L) {
-      viewHolder.textViewCreationDate.text = dateFormat.format(
-          Date(TimeUnit.MILLISECONDS.convert(timestamp, TimeUnit.SECONDS)))
+      viewHolder.textViewCreationDate.text = dateFormat.format(Date(timestamp))
     } else {
       viewHolder.textViewCreationDate.text = null
     }

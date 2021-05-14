@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node
+package com.flowcrypt.email.security.model
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -16,7 +16,8 @@ import com.google.gson.annotations.Expose
  * E-mail: DenBond7@gmail.com
  */
 data class KeyId constructor(@Expose val fingerprint: String) : Parcelable {
-  constructor(source: Parcel) : this(source.readString()!!)
+  constructor(source: Parcel) : this(source.readString()
+      ?: throw IllegalArgumentException("fingerprint can't be null"))
 
   override fun describeContents(): Int {
     return 0

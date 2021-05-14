@@ -29,7 +29,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
-import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
+import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.model.PgpContact
@@ -80,7 +80,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       keysStorage.secretKeyRingsLiveData.switchMap { list ->
         liveData {
           emit(Result.loading())
-          emit(Result.success(list.map { it.toNodeKeyDetails() }))
+          emit(Result.success(list.map { it.toPgpKeyDetails() }))
         }
       }
 
@@ -105,8 +105,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
             keyEntity.copy(
                 privateKey = KeyStoreCryptoManager.encryptSuspend(privateKey).toByteArray(),
-                publicKey = publicKey?.toByteArray()
-                    ?: throw NullPointerException("NodeKeyDetails.publicKey == null"),
+                publicKey = publicKey.toByteArray(),
                 storedPassphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.asString)
             )
           }
@@ -274,7 +273,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       try {
         pgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
             UserId.nameAndEmail(accountEntity.displayName
-                ?: accountEntity.email, accountEntity.email), passphrase).toNodeKeyDetails()
+                ?: accountEntity.email, accountEntity.email), passphrase).toPgpKeyDetails()
 
         val existedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
         if (existedAccount == null) {
@@ -303,7 +302,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         val allKeyEntitiesOfAccount =
             roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
         val fingerprintListOfDeleteCandidates = keys.mapNotNull {
-          it.fingerprint?.toLowerCase(Locale.US)
+          it.fingerprint.toLowerCase(Locale.US)
         }
         val deleteCandidates = allKeyEntitiesOfAccount.filter {
           fingerprintListOfDeleteCandidates.contains(it.fingerprint.toLowerCase(Locale.US))
@@ -337,7 +336,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   private suspend fun doAdditionalOperationsAfterKeyCreation(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails) {
     if (accountEntity.isRuleExist(AccountEntity.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
-      val model = InitialLegacySubmitModel(accountEntity.email, pgpKeyDetails.publicKey!!)
+      val model = InitialLegacySubmitModel(accountEntity.email, pgpKeyDetails.publicKey)
       val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
 
       when (initialLegacySubmitResult.status) {
@@ -357,7 +356,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
-              accountEntity.email, 0, pgpKeyDetails.fingerprint!!))
+              accountEntity.email, 0, pgpKeyDetails.fingerprint))
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
         }
       }
@@ -365,21 +364,21 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
-              accountEntity.email, 0, pgpKeyDetails.fingerprint!!))
+              accountEntity.email, 0, pgpKeyDetails.fingerprint))
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
         }
       }
 
       if (!registerUserPublicKey(accountEntity, pgpKeyDetails)) {
         val registerAction = ActionQueueEntity.fromAction(RegisterUserPublicKeyAction(0,
-            accountEntity.email, 0, pgpKeyDetails.publicKey!!))
+            accountEntity.email, 0, pgpKeyDetails.publicKey))
         registerAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
       }
     }
 
     if (!requestingTestMsgWithNewPublicKey(accountEntity, pgpKeyDetails)) {
       val welcomeEmailAction = ActionQueueEntity.fromAction(SendWelcomeTestEmailAction(0,
-          accountEntity.email, 0, pgpKeyDetails.publicKey!!))
+          accountEntity.email, 0, pgpKeyDetails.publicKey))
       welcomeEmailAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
     }
   }
@@ -408,7 +407,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           )
         } catch (e: Exception) {
           throw IllegalStateException(
-              "Can't change passphrase for the key with fingerprint " + fingerprint!!,
+              "Can't change passphrase for the key with fingerprint " + fingerprint,
               e
           )
         }
@@ -488,7 +487,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
    */
   private suspend fun registerUserPublicKey(accountEntity: AccountEntity, keyDetails: PgpKeyDetails): Boolean = withContext(Dispatchers.IO) {
     return@withContext try {
-      val model = InitialLegacySubmitModel(accountEntity.email, keyDetails.publicKey!!)
+      val model = InitialLegacySubmitModel(accountEntity.email, keyDetails.publicKey)
       val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
       when (initialLegacySubmitResult.status) {
         Result.Status.SUCCESS -> {
@@ -515,7 +514,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   private suspend fun requestingTestMsgWithNewPublicKey(accountEntity: AccountEntity, keyDetails: PgpKeyDetails): Boolean =
       withContext(Dispatchers.IO) {
         return@withContext try {
-          val model = TestWelcomeModel(accountEntity.email, keyDetails.publicKey!!)
+          val model = TestWelcomeModel(accountEntity.email, keyDetails.publicKey)
           val testWelcomeResult = apiRepository.postTestWelcome(getApplication(), model)
           when (testWelcomeResult.status) {
             Result.Status.SUCCESS -> {

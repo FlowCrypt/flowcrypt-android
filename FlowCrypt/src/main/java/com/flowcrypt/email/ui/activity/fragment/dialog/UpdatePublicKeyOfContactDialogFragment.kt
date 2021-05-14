@@ -24,7 +24,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -109,17 +108,15 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
       getString(R.string.template_algorithm_bits, pgpKeyDetails?.algo?.bits.toString())
     }
 
-    tVCreated?.text = getString(R.string.template_created, DateFormat.getMediumDateFormat(context).format(
-        Date(TimeUnit.MILLISECONDS.convert(pgpKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
-    tVModified?.text = getString(R.string.template_modified, DateFormat.getMediumDateFormat(context)
-        .format(Date(TimeUnit.MILLISECONDS.convert(pgpKeyDetails?.lastModified
-            ?: 0, TimeUnit.SECONDS))))
+    tVCreated?.text = getString(R.string.template_created,
+        DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.created ?: 0)))
+    tVModified?.text = getString(R.string.template_modified,
+        DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.lastModified ?: 0)))
 
     if (pgpKeyDetails?.isExpired == true) {
       tVWarning.visibility = View.VISIBLE
-      val warningText = getString(R.string.warning_key_expired, DateFormat.getMediumDateFormat(context)
-          .format(Date(TimeUnit.MILLISECONDS.convert(pgpKeyDetails?.expiration
-              ?: 0, TimeUnit.SECONDS))))
+      val warningText = getString(R.string.warning_key_expired,
+          DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.expiration ?: 0)))
       if (tVWarning.text.isNullOrEmpty()) {
         tVWarning?.text = warningText
       } else tVWarning.append("\n\n" + warningText)

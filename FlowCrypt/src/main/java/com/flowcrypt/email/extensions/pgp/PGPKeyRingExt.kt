@@ -7,8 +7,8 @@
 
 package com.flowcrypt.email.extensions.pgp
 
-import com.flowcrypt.email.api.retrofit.response.model.node.Algo
-import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
+import com.flowcrypt.email.security.model.Algo
+import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.bcpg.ArmoredOutputStream
@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -31,7 +30,7 @@ import java.util.concurrent.TimeUnit
  *         Time: 10:08 AM
  *         E-mail: DenBond7@gmail.com
  */
-fun PGPKeyRing.toNodeKeyDetails(): PgpKeyDetails {
+fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
   val keyRingInfo = KeyRingInfo(this)
 
   val algo = Algo(
@@ -45,13 +44,17 @@ fun PGPKeyRing.toNodeKeyDetails(): PgpKeyDetails {
       }
   )
 
-  val ids = publicKeys.iterator().asSequence().toList()
+  val keyIdList = publicKeys.iterator().asSequence().toList()
       .map {
         val fingerprint = OpenPgpV4Fingerprint(it)
         KeyId(
             fingerprint = fingerprint.toString()
         )
       }
+
+  if (keyIdList.isEmpty()) {
+    throw IllegalArgumentException("There are no fingerprints")
+  }
 
   val privateKey = if (keyRingInfo.isSecretKey) armor() else null
   val publicKey = if (keyRingInfo.isSecretKey) {
@@ -66,11 +69,10 @@ fun PGPKeyRing.toNodeKeyDetails(): PgpKeyDetails {
       privateKey = privateKey,
       publicKey = publicKey,
       users = keyRingInfo.userIds,
-      ids = ids,
-      created = TimeUnit.SECONDS.convert(keyRingInfo.creationDate.time, TimeUnit.MILLISECONDS),
-      lastModified = TimeUnit.SECONDS.convert(keyRingInfo.lastModified.time, TimeUnit.MILLISECONDS),
-      expiration = TimeUnit.SECONDS.convert(keyRingInfo.primaryKeyExpirationDate?.time
-          ?: 0, TimeUnit.MILLISECONDS),
+      ids = keyIdList,
+      created = keyRingInfo.creationDate.time,
+      lastModified = keyRingInfo.lastModified.time,
+      expiration = keyRingInfo.primaryKeyExpirationDate?.time,
       algo = algo,
       passphrase = null,
       errorMsg = null)
