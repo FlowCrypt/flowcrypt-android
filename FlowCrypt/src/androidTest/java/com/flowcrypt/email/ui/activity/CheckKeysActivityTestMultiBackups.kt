@@ -22,7 +22,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -320,9 +320,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleSingleBinaryKeyFromFile() {
     val keysPaths = arrayOf("pgp/keys/single_prv_key_binary.key")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(1, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(1, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -331,9 +331,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyBinaryKeysFromFile() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_binary.key")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -342,9 +342,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyBinaryKeysPrvAndPubFromFile() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_binary.key")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(5, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(5, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -353,9 +353,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleSingleArmoredKeyFromFile() {
     val keysPaths = arrayOf("pgp/keys/single_prv_key_armored.asc")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(1, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(1, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -365,9 +365,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileOwnHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_own_header.asc")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -377,9 +377,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileSingleHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_single_header.asc")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -390,9 +390,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileOwnWithSingleHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_own_with_single_header.asc")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -402,9 +402,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredPrvPubKeysFromFileOwnHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_armored_own_header.asc")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(6, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(6, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -415,12 +415,12 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredPrvPubKeysFromFileOwnWithSingleHeaderdd() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_armored_own_with_single_header.asc")
-    launchActivity(keysPaths, KeyDetails.SourceType.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(4, keysPaths, KeyDetails.SourceType.FILE)
+    checkKeysTitleAtStart(4, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
-  private fun launchActivity(keysPaths: Array<String>, sourceType: KeyDetails.SourceType = KeyDetails.SourceType.EMAIL) {
+  private fun launchActivity(keysPaths: Array<String>, sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL) {
     activeActivityRule.launch(getStartCheckKeysActivityIntent(keysPaths, sourceType))
     registerAllIdlingResources()
   }
@@ -452,10 +452,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   }
 
   private fun checkKeysTitleAtStart(expectedKeyCount: Int, keysPaths: Array<String>? = null,
-                                    sourceType: KeyDetails.SourceType = KeyDetails.SourceType.EMAIL) {
+                                    sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL) {
     val text: String
     when (sourceType) {
-      KeyDetails.SourceType.FILE -> {
+      KeyImportDetails.SourceType.FILE -> {
         assert(keysPaths?.size == 1)
         val fileName = FilenameUtils.getName(keysPaths?.first())
         text = getQuantityString(R.plurals.file_contains_some_amount_of_keys,
@@ -472,12 +472,12 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
         .check(matches(withText(text)))
   }
 
-  private fun getStartCheckKeysActivityIntent(keysPaths: Array<String>, sourceType: KeyDetails.SourceType = KeyDetails.SourceType.EMAIL): Intent {
+  private fun getStartCheckKeysActivityIntent(keysPaths: Array<String>, sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL): Intent {
     val keyDetailsList = PrivateKeysManager.getKeysFromAssets(keysPaths, true)
 
     val bottomTitle: String
     when (sourceType) {
-      KeyDetails.SourceType.FILE -> {
+      KeyImportDetails.SourceType.FILE -> {
         assert(keysPaths.size == 1)
         val fileName = FilenameUtils.getName(keysPaths.first())
         bottomTitle = getQuantityString(R.plurals.file_contains_some_amount_of_keys,
@@ -496,7 +496,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
         subTitle = bottomTitle,
         positiveBtnTitle = getTargetContext().getString(R.string.continue_),
         negativeBtnTitle = getTargetContext().getString(R.string.choose_another_key),
-        isExtraImportOpt = sourceType != KeyDetails.SourceType.EMAIL
+        isExtraImportOpt = sourceType != KeyImportDetails.SourceType.EMAIL
     )
   }
 }

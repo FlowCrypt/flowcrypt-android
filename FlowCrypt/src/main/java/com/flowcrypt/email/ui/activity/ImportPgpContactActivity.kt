@@ -25,7 +25,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -100,8 +100,8 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
-    if (sourceType == KeyDetails.SourceType.CLIPBOARD) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
+    if (sourceType == KeyImportDetails.SourceType.CLIPBOARD) {
       if (keyDetailsList.isNotEmpty()) {
         UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyImportModel!!

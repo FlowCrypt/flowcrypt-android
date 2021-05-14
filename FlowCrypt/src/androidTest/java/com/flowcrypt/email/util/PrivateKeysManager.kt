@@ -8,7 +8,7 @@ package com.flowcrypt.email.util
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -26,13 +26,13 @@ import java.util.*
 class PrivateKeysManager {
   companion object {
     fun saveKeyFromAssetsToDatabase(accountEntity: AccountEntity, keyPath: String,
-                                    passphrase: String, sourceType: KeyDetails.SourceType) {
+                                    passphrase: String, sourceType: KeyImportDetails.SourceType) {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
       saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, sourceType)
     }
 
     fun saveKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails,
-                          passphrase: String, sourceType: KeyDetails.SourceType) {
+                          passphrase: String, sourceType: KeyImportDetails.SourceType) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity).copy(

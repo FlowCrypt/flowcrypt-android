@@ -13,7 +13,7 @@ import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -48,7 +48,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
     if (keyDetailsList.isNotEmpty()) {
       if (keyDetailsList.size == 1) {
         val key = keyDetailsList.first()

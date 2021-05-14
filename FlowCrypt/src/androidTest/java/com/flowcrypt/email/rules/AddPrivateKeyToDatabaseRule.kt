@@ -7,7 +7,7 @@ package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.AccountDaoManager
@@ -24,13 +24,13 @@ import org.junit.runners.model.Statement
 class AddPrivateKeyToDatabaseRule(val accountEntity: AccountEntity,
                                   val keyPath: String,
                                   val passphrase: String,
-                                  val sourceType: KeyDetails.SourceType) : BaseRule() {
+                                  val sourceType: KeyImportDetails.SourceType) : BaseRule() {
 
   lateinit var nodeKeyDetails: NodeKeyDetails
     private set
 
   constructor() : this(AccountDaoManager.getDefaultAccountDao(), "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
-      TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.SourceType.EMAIL)
+      TestConstants.DEFAULT_STRONG_PASSWORD, KeyImportDetails.SourceType.EMAIL)
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {

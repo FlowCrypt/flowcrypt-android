@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -56,7 +56,7 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
     isCheckingClipboardEnabled = false
   }
 
-  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
     if (keyDetailsList.size > 1) {
       showInfoDialogFragment(dialogMsg = getString(R.string.more_than_one_public_key_found))
       return
@@ -76,7 +76,7 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
 
     buttonCheck?.setOnClickListener {
       dismissSnackBar()
-      keyImportModel = KeyImportModel(null, editTextNewPubKey?.text.toString(), isPrivateKeyMode, KeyDetails.SourceType.MANUAL_ENTERING)
+      keyImportModel = KeyImportModel(null, editTextNewPubKey?.text.toString(), isPrivateKeyMode, KeyImportDetails.SourceType.MANUAL_ENTERING)
       keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
     }
   }

@@ -20,7 +20,7 @@ import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 import android.text.TextUtils
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.LogsUtil
@@ -125,7 +125,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
           val key = message.obj as String
 
           checkClipboardToFindKeyService?.keyImportModel = KeyImportModel(null, key,
-              weakRef.get()!!.isPrivateKeyMode, KeyDetails.SourceType.CLIPBOARD)
+              weakRef.get()!!.isPrivateKeyMode, KeyImportDetails.SourceType.CLIPBOARD)
           LogsUtil.d(TAG, "Found a valid private key in clipboard")
         }
       }

@@ -39,7 +39,7 @@ import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
@@ -432,7 +432,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
               val intent = CheckKeysActivity.newIntent(
                   context = requireContext(),
                   privateKeys = keyDetailsList ?: ArrayList(),
-                  sourceType = KeyDetails.SourceType.EMAIL,
+                  sourceType = KeyImportDetails.SourceType.EMAIL,
                   subTitle = subTitle,
                   positiveBtnTitle = getString(R.string.continue_),
                   negativeBtnTitle = getString(R.string.use_another_account)

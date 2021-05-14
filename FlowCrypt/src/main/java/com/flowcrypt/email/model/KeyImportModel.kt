@@ -20,12 +20,12 @@ import android.os.Parcelable
 data class KeyImportModel constructor(val fileUri: Uri? = null,
                                       val keyString: String? = null,
                                       val isPrivateKey: Boolean = false,
-                                      val sourceType: KeyDetails.SourceType) : Parcelable {
+                                      val sourceType: KeyImportDetails.SourceType) : Parcelable {
   constructor(source: Parcel) : this(
       source.readParcelable<Uri>(Uri::class.java.classLoader),
       source.readString(),
       source.readInt() == 1,
-      source.readParcelable(KeyDetails.SourceType::class.java.classLoader)!!
+      source.readParcelable(KeyImportDetails.SourceType::class.java.classLoader)!!
   )
 
   override fun describeContents(): Int {

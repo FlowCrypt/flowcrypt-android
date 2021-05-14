@@ -18,7 +18,7 @@ import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
@@ -73,7 +73,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                   duration = Snackbar.LENGTH_INDEFINITE,
                   onClickListener = {
                     getTempAccount()?.let { accountEntity ->
-                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyDetails.SourceType.EMAIL)
+                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyImportDetails.SourceType.EMAIL)
                     }
                   }
               )
@@ -101,7 +101,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
             context?.let { context -> WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC) }
 
             getTempAccount()?.let { accountEntity ->
-              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.SourceType.EMAIL)
+              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyImportDetails.SourceType.EMAIL)
             }
           }
         }

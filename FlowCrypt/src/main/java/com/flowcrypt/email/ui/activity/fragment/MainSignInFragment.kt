@@ -22,7 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
@@ -325,7 +325,7 @@ class MainSignInFragment : BaseSingInFragment() {
       val positiveBtnTitle = getString(R.string.continue_)
       val negativeBtnTitle = getString(R.string.use_another_account)
       val intent = CheckKeysActivity.newIntent(context = requireContext(), privateKeys = keyDetailsList,
-          sourceType = KeyDetails.SourceType.EMAIL, subTitle = subTitle, positiveBtnTitle = positiveBtnTitle,
+          sourceType = KeyImportDetails.SourceType.EMAIL, subTitle = subTitle, positiveBtnTitle = positiveBtnTitle,
           negativeBtnTitle = negativeBtnTitle)
       startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
     }

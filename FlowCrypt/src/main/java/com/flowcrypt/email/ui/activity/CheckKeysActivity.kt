@@ -22,7 +22,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
@@ -58,7 +58,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private var positiveBtnTitle: String? = null
   private var negativeBtnTitle: String? = null
   private var uniqueKeysCount: Int = 0
-  private var sourceType: KeyDetails.SourceType? = null
+  private var sourceType: KeyImportDetails.SourceType? = null
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -186,7 +186,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     initButton(R.id.buttonNegativeAction, text = negativeBtnTitle)
 
     val imageButtonHint = findViewById<View>(R.id.imageButtonHint)
-    if (originalKeys.isNotEmpty() && sourceType === KeyDetails.SourceType.EMAIL) {
+    if (originalKeys.isNotEmpty() && sourceType === KeyImportDetails.SourceType.EMAIL) {
       imageButtonHint?.visibility = View.VISIBLE
       imageButtonHint?.setOnClickListener(this)
     } else {
@@ -372,7 +372,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_SKIP_IMPORTED_KEYS", CheckKeysActivity::class.java)
 
     fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>,
-                  sourceType: KeyDetails.SourceType? = null, subTitle: String? = null, positiveBtnTitle:
+                  sourceType: KeyImportDetails.SourceType? = null, subTitle: String? = null, positiveBtnTitle:
                   String? = null, negativeBtnTitle: String? = null,
                   isExtraImportOpt: Boolean = false,
                   skipImportedKeys: Boolean = false): Intent {

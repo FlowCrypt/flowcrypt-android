@@ -39,7 +39,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -104,7 +104,7 @@ class KeysSettingsActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         nodeKeyDetails = details,
         passphrase = TestConstants.DEFAULT_PASSWORD,
-        sourceType = KeyDetails.SourceType.EMAIL
+        sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.floatActionButtonAddKey))
@@ -197,7 +197,7 @@ class KeysSettingsActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         nodeKeyDetails = details,
         passphrase = "wrong passphrase",
-        sourceType = KeyDetails.SourceType.EMAIL
+        sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.recyclerViewKeys))

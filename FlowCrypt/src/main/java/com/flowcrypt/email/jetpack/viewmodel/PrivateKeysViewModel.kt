@@ -30,7 +30,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -164,7 +164,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   }
 
   fun encryptAndSaveKeysToDatabase(accountEntity: AccountEntity?, keys: List<NodeKeyDetails>,
-                                   sourceType: KeyDetails.SourceType, addAccountIfNotExist: Boolean = false) {
+                                   sourceType: KeyImportDetails.SourceType, addAccountIfNotExist: Boolean = false) {
     requireNotNull(accountEntity)
 
     viewModelScope.launch {
@@ -230,7 +230,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         var parseKeyResult: PgpKey.ParseKeyResult
         val sourceNotAvailableMsg = context.getString(R.string.source_is_empty_or_not_available)
         when (keyImportModel.sourceType) {
-          KeyDetails.SourceType.FILE -> {
+          KeyImportDetails.SourceType.FILE -> {
             if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.fileUri)) {
               throw IllegalArgumentException(context.getString(R.string.file_is_too_big))
             }
@@ -244,7 +244,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
             parseKeyResult = PgpKey.parseKeys(source, false)
           }
 
-          KeyDetails.SourceType.CLIPBOARD, KeyDetails.SourceType.EMAIL, KeyDetails.SourceType.MANUAL_ENTERING -> {
+          KeyImportDetails.SourceType.CLIPBOARD, KeyImportDetails.SourceType.EMAIL, KeyImportDetails.SourceType.MANUAL_ENTERING -> {
             val source = keyImportModel.keyString
                 ?: throw IllegalStateException(sourceNotAvailableMsg)
             parseKeyResult = PgpKey.parseKeys(source, false)
@@ -326,7 +326,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   private suspend fun savePrivateKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails, passphrase: String) {
     val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity).copy(
-        source = KeyDetails.SourceType.NEW.toPrivateKeySourceTypeString(),
+        source = KeyImportDetails.SourceType.NEW.toPrivateKeySourceTypeString(),
         privateKey = KeyStoreCryptoManager.encryptSuspend(nodeKeyDetails.privateKey).toByteArray(),
         storedPassphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
 

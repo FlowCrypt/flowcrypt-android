@@ -23,7 +23,7 @@ import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.NodeKeyDetails
@@ -47,7 +47,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private val backupsViewModel: BackupsViewModel by viewModels()
   private var privateKeysFromEmailBackups = mutableListOf<NodeKeyDetails>()
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
-  private var sourceType: KeyDetails.SourceType = KeyDetails.SourceType.EMAIL
+  private var sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
 
   private var layoutSyncStatus: View? = null
   private var buttonImportBackup: Button? = null
@@ -85,11 +85,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       R.id.buttonImportBackup -> {
         unlockedKeys.clear()
         if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
-          sourceType = KeyDetails.SourceType.EMAIL
+          sourceType = KeyImportDetails.SourceType.EMAIL
           startActivityForResult(CheckKeysActivity.newIntent(
               context = this,
               privateKeys = ArrayList(privateKeysFromEmailBackups),
-              sourceType = KeyDetails.SourceType.EMAIL,
+              sourceType = KeyImportDetails.SourceType.EMAIL,
               positiveBtnTitle = getString(R.string.continue_),
               negativeBtnTitle = getString(R
                   .string.choose_another_key),
@@ -138,7 +138,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
   }
 
-  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
     var areFreshKeysExisted = false
     var arePrivateKeysExisted = false
 
@@ -173,8 +173,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
 
     when (sourceType) {
-      KeyDetails.SourceType.FILE -> {
-        sourceType = KeyDetails.SourceType.FILE
+      KeyImportDetails.SourceType.FILE -> {
+        sourceType = KeyImportDetails.SourceType.FILE
         val fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel!!.fileUri)
         val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size, fileName, keyDetailsList.size)
@@ -193,8 +193,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
-      KeyDetails.SourceType.CLIPBOARD -> {
-        sourceType = KeyDetails.SourceType.CLIPBOARD
+      KeyImportDetails.SourceType.CLIPBOARD -> {
+        sourceType = KeyImportDetails.SourceType.CLIPBOARD
         val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size, keyDetailsList.size)
         val clipboardIntent = CheckKeysActivity.newIntent(
@@ -322,7 +322,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             if (e is SavePrivateKeyToDatabaseException) {
               showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
                   getString(R.string.retry), Snackbar.LENGTH_INDEFINITE) {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyDetails.SourceType.EMAIL)
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyImportDetails.SourceType.EMAIL)
               }
             } else {
               showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName

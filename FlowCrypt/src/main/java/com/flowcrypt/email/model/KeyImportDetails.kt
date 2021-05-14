@@ -13,9 +13,9 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  * This class describes a details about the key. The key can be one of three
  * different types:
  *
- *  * [KeyDetails.SourceType.EMAIL]
- *  * [KeyDetails.SourceType.FILE]
- *  * [KeyDetails.SourceType.CLIPBOARD]
+ *  * [KeyImportDetails.SourceType.EMAIL]
+ *  * [KeyImportDetails.SourceType.FILE]
+ *  * [KeyImportDetails.SourceType.CLIPBOARD]
  *
  *
  * @author Denis Bondarenko
@@ -23,11 +23,11 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  * Time: 12:56
  * E-mail: DenBond7@gmail.com
  */
-data class KeyDetails constructor(val keyName: String? = null,
-                                  val value: String,
-                                  val sourceType: SourceType,
-                                  val isPrivateKey: Boolean = false,
-                                  val pgpContact: PgpContact? = null) : Parcelable {
+data class KeyImportDetails constructor(val keyName: String? = null,
+                                        val value: String,
+                                        val sourceType: SourceType,
+                                        val isPrivateKey: Boolean = false,
+                                        val pgpContact: PgpContact? = null) : Parcelable {
 
   constructor(value: String, sourceType: SourceType) : this(null, value, sourceType, true)
   constructor(value: String, sourceType: SourceType, isPrivateKey: Boolean) : this(null, value, sourceType, isPrivateKey, null)
@@ -86,9 +86,9 @@ data class KeyDetails constructor(val keyName: String? = null,
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<KeyDetails> = object : Parcelable.Creator<KeyDetails> {
-      override fun createFromParcel(source: Parcel): KeyDetails = KeyDetails(source)
-      override fun newArray(size: Int): Array<KeyDetails?> = arrayOfNulls(size)
+    val CREATOR: Parcelable.Creator<KeyImportDetails> = object : Parcelable.Creator<KeyImportDetails> {
+      override fun createFromParcel(source: Parcel): KeyImportDetails = KeyImportDetails(source)
+      override fun newArray(size: Int): Array<KeyImportDetails?> = arrayOfNulls(size)
     }
   }
 }
