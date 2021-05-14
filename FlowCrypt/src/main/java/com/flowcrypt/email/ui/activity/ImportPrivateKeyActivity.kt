@@ -147,7 +147,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         arePrivateKeysExisted = true
       }
 
-      val fingerprint = key.fingerprint ?: continue
+      val fingerprint = key.fingerprint
       if (KeysStorageImpl.getInstance(application)
               .getPGPSecretKeyRingByFingerprint(fingerprint) == null) {
         areFreshKeysExisted = true
@@ -174,7 +174,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
     when (sourceType) {
       KeyImportDetails.SourceType.FILE -> {
-        sourceType = KeyImportDetails.SourceType.FILE
+        this.sourceType = KeyImportDetails.SourceType.FILE
         val fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel!!.fileUri)
         val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size, fileName, keyDetailsList.size)
@@ -194,7 +194,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       }
 
       KeyImportDetails.SourceType.CLIPBOARD -> {
-        sourceType = KeyImportDetails.SourceType.CLIPBOARD
+        this.sourceType = KeyImportDetails.SourceType.CLIPBOARD
         val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size, keyDetailsList.size)
         val clipboardIntent = CheckKeysActivity.newIntent(
@@ -249,10 +249,10 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
     while (iterator.hasNext()) {
       val privateKey = iterator.next()
-      uniqueKeysFingerprints.add(privateKey.fingerprint!!)
-      if (connector.getPGPSecretKeyRingByFingerprint(privateKey.fingerprint!!) != null) {
+      uniqueKeysFingerprints.add(privateKey.fingerprint)
+      if (connector.getPGPSecretKeyRingByFingerprint(privateKey.fingerprint) != null) {
         iterator.remove()
-        uniqueKeysFingerprints.remove(privateKey.fingerprint!!)
+        uniqueKeysFingerprints.remove(privateKey.fingerprint)
       }
     }
     return uniqueKeysFingerprints
