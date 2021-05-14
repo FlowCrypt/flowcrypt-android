@@ -255,7 +255,7 @@ class BackupKeysActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc",
         passphrase = TestConstants.DEFAULT_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
   }
 
@@ -264,7 +264,7 @@ class BackupKeysActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
   }
 
@@ -273,7 +273,7 @@ class BackupKeysActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
   }
 
@@ -282,7 +282,7 @@ class BackupKeysActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc",
         passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
   }
 }

@@ -100,8 +100,8 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
-    if (type == KeyDetails.Type.CLIPBOARD) {
+  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
+    if (sourceType == KeyDetails.SourceType.CLIPBOARD) {
       if (keyDetailsList.isNotEmpty()) {
         UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyImportModel!!

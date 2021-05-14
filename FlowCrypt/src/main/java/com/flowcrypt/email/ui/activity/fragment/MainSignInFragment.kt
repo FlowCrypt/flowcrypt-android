@@ -325,7 +325,7 @@ class MainSignInFragment : BaseSingInFragment() {
       val positiveBtnTitle = getString(R.string.continue_)
       val negativeBtnTitle = getString(R.string.use_another_account)
       val intent = CheckKeysActivity.newIntent(context = requireContext(), privateKeys = keyDetailsList,
-          type = KeyDetails.Type.EMAIL, subTitle = subTitle, positiveBtnTitle = positiveBtnTitle,
+          sourceType = KeyDetails.SourceType.EMAIL, subTitle = subTitle, positiveBtnTitle = positiveBtnTitle,
           negativeBtnTitle = negativeBtnTitle)
       startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
     }

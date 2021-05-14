@@ -58,7 +58,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private var positiveBtnTitle: String? = null
   private var negativeBtnTitle: String? = null
   private var uniqueKeysCount: Int = 0
-  private var type: KeyDetails.Type? = null
+  private var sourceType: KeyDetails.SourceType? = null
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -175,7 +175,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private fun getExtras() {
     val keys: List<NodeKeyDetails>? = intent?.getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS)
     keys?.let { originalKeys.addAll(it) }
-    this.type = intent?.getParcelableExtra(KEY_EXTRA_TYPE)
+    this.sourceType = intent?.getParcelableExtra(KEY_EXTRA_TYPE)
     this.subTitle = intent?.getStringExtra(KEY_EXTRA_SUB_TITLE)
     this.positiveBtnTitle = intent?.getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE)
     this.negativeBtnTitle = intent?.getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE)
@@ -186,7 +186,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     initButton(R.id.buttonNegativeAction, text = negativeBtnTitle)
 
     val imageButtonHint = findViewById<View>(R.id.imageButtonHint)
-    if (originalKeys.isNotEmpty() && type === KeyDetails.Type.EMAIL) {
+    if (originalKeys.isNotEmpty() && sourceType === KeyDetails.SourceType.EMAIL) {
       imageButtonHint?.visibility = View.VISIBLE
       imageButtonHint?.setOnClickListener(this)
     } else {
@@ -372,13 +372,13 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_SKIP_IMPORTED_KEYS", CheckKeysActivity::class.java)
 
     fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>,
-                  type: KeyDetails.Type? = null, subTitle: String? = null, positiveBtnTitle:
+                  sourceType: KeyDetails.SourceType? = null, subTitle: String? = null, positiveBtnTitle:
                   String? = null, negativeBtnTitle: String? = null,
                   isExtraImportOpt: Boolean = false,
                   skipImportedKeys: Boolean = false): Intent {
       val intent = Intent(context, CheckKeysActivity::class.java)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys)
-      intent.putExtra(KEY_EXTRA_TYPE, type as Parcelable)
+      intent.putExtra(KEY_EXTRA_TYPE, sourceType as Parcelable)
       intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle)
       intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle)
       intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeBtnTitle)

@@ -13,9 +13,9 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  * This class describes a details about the key. The key can be one of three
  * different types:
  *
- *  * [KeyDetails.Type.EMAIL]
- *  * [KeyDetails.Type.FILE]
- *  * [KeyDetails.Type.CLIPBOARD]
+ *  * [KeyDetails.SourceType.EMAIL]
+ *  * [KeyDetails.SourceType.FILE]
+ *  * [KeyDetails.SourceType.CLIPBOARD]
  *
  *
  * @author Denis Bondarenko
@@ -25,24 +25,24 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  */
 data class KeyDetails constructor(val keyName: String? = null,
                                   val value: String,
-                                  val bornType: Type,
+                                  val sourceType: SourceType,
                                   val isPrivateKey: Boolean = false,
                                   val pgpContact: PgpContact? = null) : Parcelable {
 
-  constructor(value: String, bornType: Type) : this(null, value, bornType, true)
-  constructor(value: String, bornType: Type, isPrivateKey: Boolean) : this(null, value, bornType, isPrivateKey, null)
+  constructor(value: String, sourceType: SourceType) : this(null, value, sourceType, true)
+  constructor(value: String, sourceType: SourceType, isPrivateKey: Boolean) : this(null, value, sourceType, isPrivateKey, null)
 
   /**
    * The key available types.
    */
-  enum class Type : Parcelable {
+  enum class SourceType : Parcelable {
     EMAIL, FILE, CLIPBOARD, NEW, MANUAL_ENTERING;
 
     companion object {
       @JvmField
-      val CREATOR: Parcelable.Creator<Type> = object : Parcelable.Creator<Type> {
-        override fun createFromParcel(source: Parcel): Type = values()[source.readInt()]
-        override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
+      val CREATOR: Parcelable.Creator<SourceType> = object : Parcelable.Creator<SourceType> {
+        override fun createFromParcel(source: Parcel): SourceType = values()[source.readInt()]
+        override fun newArray(size: Int): Array<SourceType?> = arrayOfNulls(size)
       }
     }
 
@@ -66,7 +66,7 @@ data class KeyDetails constructor(val keyName: String? = null,
   constructor(source: Parcel) : this(
       source.readString(),
       source.readString()!!,
-      source.readParcelable(Type::class.java.classLoader)!!,
+      source.readParcelable(SourceType::class.java.classLoader)!!,
       source.readInt() == 1,
       source.readParcelable(PgpContact::class.java.classLoader)!!
   )
@@ -79,7 +79,7 @@ data class KeyDetails constructor(val keyName: String? = null,
       with(dest) {
         writeString(keyName)
         writeString(value)
-        writeParcelable(bornType, flags)
+        writeParcelable(sourceType, flags)
         writeInt((if (isPrivateKey) 1 else 0))
         writeParcelable(pgpContact, flags)
       }

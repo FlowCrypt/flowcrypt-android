@@ -47,7 +47,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private val backupsViewModel: BackupsViewModel by viewModels()
   private var privateKeysFromEmailBackups = mutableListOf<NodeKeyDetails>()
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
-  private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
+  private var sourceType: KeyDetails.SourceType = KeyDetails.SourceType.EMAIL
 
   private var layoutSyncStatus: View? = null
   private var buttonImportBackup: Button? = null
@@ -85,11 +85,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       R.id.buttonImportBackup -> {
         unlockedKeys.clear()
         if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
-          keyDetailsType = KeyDetails.Type.EMAIL
+          sourceType = KeyDetails.SourceType.EMAIL
           startActivityForResult(CheckKeysActivity.newIntent(
               context = this,
               privateKeys = ArrayList(privateKeysFromEmailBackups),
-              type = KeyDetails.Type.EMAIL,
+              sourceType = KeyDetails.SourceType.EMAIL,
               positiveBtnTitle = getString(R.string.continue_),
               negativeBtnTitle = getString(R
                   .string.choose_another_key),
@@ -138,7 +138,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
     var areFreshKeysExisted = false
     var arePrivateKeysExisted = false
 
@@ -172,9 +172,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       return
     }
 
-    when (type) {
-      KeyDetails.Type.FILE -> {
-        keyDetailsType = KeyDetails.Type.FILE
+    when (sourceType) {
+      KeyDetails.SourceType.FILE -> {
+        sourceType = KeyDetails.SourceType.FILE
         val fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel!!.fileUri)
         val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size, fileName, keyDetailsList.size)
@@ -182,7 +182,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         val intent = CheckKeysActivity.newIntent(
             context = this,
             privateKeys = ArrayList(keyDetailsList),
-            type = keyDetailsType,
+            sourceType = sourceType,
             subTitle = bottomTitle,
             positiveBtnTitle = posBtnTitle,
             negativeBtnTitle = getString
@@ -193,14 +193,14 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
-      KeyDetails.Type.CLIPBOARD -> {
-        keyDetailsType = KeyDetails.Type.CLIPBOARD
+      KeyDetails.SourceType.CLIPBOARD -> {
+        sourceType = KeyDetails.SourceType.CLIPBOARD
         val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size, keyDetailsList.size)
         val clipboardIntent = CheckKeysActivity.newIntent(
             context = this,
             privateKeys = ArrayList(keyDetailsList),
-            type = keyDetailsType,
+            sourceType = sourceType,
             subTitle = title,
             positiveBtnTitle = getString(R.string.continue_),
             negativeBtnTitle = getString(R
@@ -322,7 +322,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             if (e is SavePrivateKeyToDatabaseException) {
               showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
                   getString(R.string.retry), Snackbar.LENGTH_INDEFINITE) {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyDetails.Type.EMAIL)
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyDetails.SourceType.EMAIL)
               }
             } else {
               showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
@@ -384,7 +384,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
   private fun handleSuccessSubmit() {
     textViewProgressText.setText(R.string.saving_prv_keys)
-    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, keyDetailsType, intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false))
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, sourceType, intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false))
   }
 
   companion object {

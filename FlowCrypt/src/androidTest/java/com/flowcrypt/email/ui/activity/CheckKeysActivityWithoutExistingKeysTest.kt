@@ -45,7 +45,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
       CheckKeysActivity.newIntent(getTargetContext(),
           privateKeys,
-          KeyDetails.Type.EMAIL,
+          KeyDetails.SourceType.EMAIL,
           getQuantityString(R.plurals.found_backup_of_your_account_key,
               privateKeys.size, privateKeys.size),
           getTargetContext().getString(R.string.continue_),

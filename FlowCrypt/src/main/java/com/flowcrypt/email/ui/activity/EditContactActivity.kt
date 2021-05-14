@@ -56,7 +56,7 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
     isCheckingClipboardEnabled = false
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
     if (keyDetailsList.size > 1) {
       showInfoDialogFragment(dialogMsg = getString(R.string.more_than_one_public_key_found))
       return
@@ -76,7 +76,7 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
 
     buttonCheck?.setOnClickListener {
       dismissSnackBar()
-      keyImportModel = KeyImportModel(null, editTextNewPubKey?.text.toString(), isPrivateKeyMode, KeyDetails.Type.MANUAL_ENTERING)
+      keyImportModel = KeyImportModel(null, editTextNewPubKey?.text.toString(), isPrivateKeyMode, KeyDetails.SourceType.MANUAL_ENTERING)
       keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
     }
   }

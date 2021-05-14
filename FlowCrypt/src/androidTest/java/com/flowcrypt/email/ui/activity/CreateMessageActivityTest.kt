@@ -450,7 +450,7 @@ class CreateMessageActivityTest : BaseTest() {
     val secondKeyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, secondKeyDetails,
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.SourceType.EMAIL)
     val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
 
     activeActivityRule.launch(intent)
@@ -480,7 +480,7 @@ class CreateMessageActivityTest : BaseTest() {
     val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets(
         "pgp/key_testing@flowcrypt.test_keyB_default.asc")
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, keyDetails,
-        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+        TestConstants.DEFAULT_PASSWORD, KeyDetails.SourceType.EMAIL)
 
     activeActivityRule.launch(intent)
     registerAllIdlingResources()

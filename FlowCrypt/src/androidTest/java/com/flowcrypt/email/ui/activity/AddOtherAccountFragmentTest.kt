@@ -366,7 +366,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
         accountEntity = user,
         keyPath = "pgp/key_testing@flowcrypt.test_keyB_default.asc",
         passphrase = TestConstants.DEFAULT_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
 
     testWhenNoAccountsAndHasBackup()
@@ -380,7 +380,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
         accountEntity = existedUser,
         keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc",
         passphrase = TestConstants.DEFAULT_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.editTextEmail))

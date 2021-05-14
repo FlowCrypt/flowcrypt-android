@@ -104,7 +104,7 @@ class KeysSettingsActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         nodeKeyDetails = details,
         passphrase = TestConstants.DEFAULT_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.floatActionButtonAddKey))
@@ -197,7 +197,7 @@ class KeysSettingsActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         nodeKeyDetails = details,
         passphrase = "wrong passphrase",
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.recyclerViewKeys))

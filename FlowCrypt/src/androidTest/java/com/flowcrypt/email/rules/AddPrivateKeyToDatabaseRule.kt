@@ -24,19 +24,19 @@ import org.junit.runners.model.Statement
 class AddPrivateKeyToDatabaseRule(val accountEntity: AccountEntity,
                                   val keyPath: String,
                                   val passphrase: String,
-                                  val type: KeyDetails.Type) : BaseRule() {
+                                  val sourceType: KeyDetails.SourceType) : BaseRule() {
 
   lateinit var nodeKeyDetails: NodeKeyDetails
     private set
 
   constructor() : this(AccountDaoManager.getDefaultAccountDao(), "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
-      TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+      TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.SourceType.EMAIL)
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
         nodeKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).toNodeKeyDetailsList().first()
-        PrivateKeysManager.saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, type)
+        PrivateKeysManager.saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, sourceType)
         base.evaluate()
       }
     }

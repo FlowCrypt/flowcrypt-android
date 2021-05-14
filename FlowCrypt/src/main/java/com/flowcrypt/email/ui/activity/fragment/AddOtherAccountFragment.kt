@@ -432,7 +432,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
               val intent = CheckKeysActivity.newIntent(
                   context = requireContext(),
                   privateKeys = keyDetailsList ?: ArrayList(),
-                  type = KeyDetails.Type.EMAIL,
+                  sourceType = KeyDetails.SourceType.EMAIL,
                   subTitle = subTitle,
                   positiveBtnTitle = getString(R.string.continue_),
                   negativeBtnTitle = getString(R.string.use_another_account)

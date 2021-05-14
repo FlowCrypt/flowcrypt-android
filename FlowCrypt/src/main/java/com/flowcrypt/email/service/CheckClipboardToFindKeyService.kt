@@ -125,7 +125,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
           val key = message.obj as String
 
           checkClipboardToFindKeyService?.keyImportModel = KeyImportModel(null, key,
-              weakRef.get()!!.isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
+              weakRef.get()!!.isPrivateKeyMode, KeyDetails.SourceType.CLIPBOARD)
           LogsUtil.d(TAG, "Found a valid private key in clipboard")
         }
       }

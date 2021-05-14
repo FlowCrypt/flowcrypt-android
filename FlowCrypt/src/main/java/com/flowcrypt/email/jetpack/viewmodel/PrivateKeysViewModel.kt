@@ -164,7 +164,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   }
 
   fun encryptAndSaveKeysToDatabase(accountEntity: AccountEntity?, keys: List<NodeKeyDetails>,
-                                   type: KeyDetails.Type, addAccountIfNotExist: Boolean = false) {
+                                   sourceType: KeyDetails.SourceType, addAccountIfNotExist: Boolean = false) {
     requireNotNull(accountEntity)
 
     viewModelScope.launch {
@@ -184,7 +184,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
             val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
                 ?: ""
             val keyEntity = keyDetails.toKeyEntity(accountEntity)
-                .copy(source = type.toPrivateKeySourceTypeString(),
+                .copy(source = sourceType.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),
                     storedPassphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
             val isAdded = roomDatabase.keysDao().insertSuspend(keyEntity) > 0
@@ -229,8 +229,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
         var parseKeyResult: PgpKey.ParseKeyResult
         val sourceNotAvailableMsg = context.getString(R.string.source_is_empty_or_not_available)
-        when (keyImportModel.type) {
-          KeyDetails.Type.FILE -> {
+        when (keyImportModel.sourceType) {
+          KeyDetails.SourceType.FILE -> {
             if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.fileUri)) {
               throw IllegalArgumentException(context.getString(R.string.file_is_too_big))
             }
@@ -244,12 +244,12 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
             parseKeyResult = PgpKey.parseKeys(source, false)
           }
 
-          KeyDetails.Type.CLIPBOARD, KeyDetails.Type.EMAIL, KeyDetails.Type.MANUAL_ENTERING -> {
+          KeyDetails.SourceType.CLIPBOARD, KeyDetails.SourceType.EMAIL, KeyDetails.SourceType.MANUAL_ENTERING -> {
             val source = keyImportModel.keyString
                 ?: throw IllegalStateException(sourceNotAvailableMsg)
             parseKeyResult = PgpKey.parseKeys(source, false)
           }
-          else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
+          else -> throw IllegalStateException("Unsupported : ${keyImportModel.sourceType}")
         }
 
         if (filterOnlyPrivate) {
@@ -326,7 +326,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   private suspend fun savePrivateKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails, passphrase: String) {
     val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity).copy(
-        source = KeyDetails.Type.NEW.toPrivateKeySourceTypeString(),
+        source = KeyDetails.SourceType.NEW.toPrivateKeySourceTypeString(),
         privateKey = KeyStoreCryptoManager.encryptSuspend(nodeKeyDetails.privateKey).toByteArray(),
         storedPassphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
 

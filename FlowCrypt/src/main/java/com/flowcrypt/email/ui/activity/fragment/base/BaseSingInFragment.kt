@@ -73,7 +73,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                   duration = Snackbar.LENGTH_INDEFINITE,
                   onClickListener = {
                     getTempAccount()?.let { accountEntity ->
-                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyDetails.Type.EMAIL)
+                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyDetails.SourceType.EMAIL)
                     }
                   }
               )
@@ -101,7 +101,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
             context?.let { context -> WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC) }
 
             getTempAccount()?.let { accountEntity ->
-              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)
+              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.SourceType.EMAIL)
             }
           }
         }

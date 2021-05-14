@@ -47,7 +47,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
       CheckKeysActivity.newIntent(getTargetContext(),
           privateKeys = privateKeys,
-          type = KeyDetails.Type.EMAIL,
+          sourceType = KeyDetails.SourceType.EMAIL,
           subTitle = getQuantityString(R.plurals.found_backup_of_your_account_key,
               privateKeys.size, privateKeys.size),
           positiveBtnTitle = getTargetContext().getString(R.string.continue_),
@@ -64,7 +64,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
           accountEntity = addAccountToDatabaseRule.account,
           keyPath = "pgp/not_attester_user@flowcrypt.test_prv_default.asc",
           passphrase = TestConstants.DEFAULT_PASSWORD,
-          type = KeyDetails.Type.EMAIL
+          sourceType = KeyDetails.SourceType.EMAIL
       ))
       .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)

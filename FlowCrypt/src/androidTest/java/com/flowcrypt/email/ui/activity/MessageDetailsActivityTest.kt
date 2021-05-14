@@ -202,7 +202,7 @@ class MessageDetailsActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyDetails.SourceType.EMAIL
     )
 
     val incomingMsgInfoFixed =
@@ -280,7 +280,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase(addAccountToDatabaseRule
         .account, TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.SourceType.EMAIL)
 
 
     val msg = getQuantityString(R.plurals

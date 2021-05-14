@@ -26,17 +26,17 @@ import java.util.*
 class PrivateKeysManager {
   companion object {
     fun saveKeyFromAssetsToDatabase(accountEntity: AccountEntity, keyPath: String,
-                                    passphrase: String, type: KeyDetails.Type) {
+                                    passphrase: String, sourceType: KeyDetails.SourceType) {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
-      saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, type)
+      saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, sourceType)
     }
 
     fun saveKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails,
-                          passphrase: String, type: KeyDetails.Type) {
+                          passphrase: String, sourceType: KeyDetails.SourceType) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity).copy(
-          source = type.toString(),
+          source = sourceType.toString(),
           privateKey = KeyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey).toByteArray(),
           passphrase = KeyStoreCryptoManager.encrypt(passphrase))
       roomDatabase.keysDao().insertWithReplace(keyEntity)

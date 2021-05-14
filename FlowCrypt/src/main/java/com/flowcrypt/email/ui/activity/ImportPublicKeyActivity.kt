@@ -48,7 +48,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
     if (keyDetailsList.isNotEmpty()) {
       if (keyDetailsList.size == 1) {
         val key = keyDetailsList.first()
