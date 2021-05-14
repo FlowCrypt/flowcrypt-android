@@ -6,9 +6,9 @@
 package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager

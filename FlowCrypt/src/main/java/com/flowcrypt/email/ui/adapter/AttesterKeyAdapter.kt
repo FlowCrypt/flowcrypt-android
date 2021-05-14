@@ -13,8 +13,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.util.UIUtil
 
 

@@ -13,8 +13,8 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.model.NodeKeyDetails
 
 /**
  * @author Denis Bondarenko

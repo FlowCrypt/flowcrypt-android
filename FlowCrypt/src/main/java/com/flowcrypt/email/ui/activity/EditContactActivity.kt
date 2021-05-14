@@ -14,7 +14,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.extensions.showDialogFragment
@@ -22,6 +21,7 @@ import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.UpdatePublicKeyOfContactDialogFragment
 import com.flowcrypt.email.util.GeneralUtil

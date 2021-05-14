@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStr
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
@@ -28,6 +27,7 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException

@@ -13,13 +13,13 @@ import androidx.fragment.app.viewModels
 import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.EmailManagerActivity

@@ -26,7 +26,6 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
@@ -37,6 +36,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction

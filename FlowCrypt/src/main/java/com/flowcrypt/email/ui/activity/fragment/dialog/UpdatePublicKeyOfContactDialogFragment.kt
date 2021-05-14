@@ -21,7 +21,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -98,7 +98,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
       tVFingerprint.typeface = Typeface.DEFAULT_BOLD
       tVFingerprint.setTextColor(ContextCompat.getColor(requireContext(), R.color.silver))
       tVFingerprint.setTextIsSelectable(true)
-      tVFingerprint.text = "* ${GeneralUtil.doSectionsInText(" ", uid.fingerprint ?: "", 4)}"
+      tVFingerprint.text = "* ${GeneralUtil.doSectionsInText(" ", uid.fingerprint, 4)}"
       lFingerprints?.addView(tVFingerprint)
     }
 

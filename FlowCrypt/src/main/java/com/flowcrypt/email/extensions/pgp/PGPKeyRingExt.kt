@@ -9,7 +9,7 @@ package com.flowcrypt.email.extensions.pgp
 
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.openpgp.PGPKeyRing

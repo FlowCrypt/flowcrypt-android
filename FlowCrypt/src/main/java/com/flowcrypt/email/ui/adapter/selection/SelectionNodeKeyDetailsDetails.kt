@@ -6,7 +6,7 @@
 package com.flowcrypt.email.ui.adapter.selection
 
 import androidx.recyclerview.selection.ItemDetailsLookup
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 
 /**
  * @author Denis Bondarenko

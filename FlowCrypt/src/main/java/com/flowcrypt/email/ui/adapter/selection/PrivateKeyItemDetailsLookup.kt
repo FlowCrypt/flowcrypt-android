@@ -8,7 +8,7 @@ package com.flowcrypt.email.ui.adapter.selection
 import android.view.MotionEvent
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.widget.RecyclerView
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.adapter.PrivateKeysRecyclerViewAdapter
 
 /**

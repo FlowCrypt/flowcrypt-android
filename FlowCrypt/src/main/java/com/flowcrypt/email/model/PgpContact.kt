@@ -7,8 +7,8 @@ package com.flowcrypt.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import java.util.*
 
 data class PgpContact constructor(var email: String,

@@ -6,11 +6,11 @@
 package com.flowcrypt.email.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import java.util.*

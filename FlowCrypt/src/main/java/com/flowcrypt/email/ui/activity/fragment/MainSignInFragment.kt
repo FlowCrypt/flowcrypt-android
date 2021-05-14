@@ -19,12 +19,12 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.CheckKeysActivity

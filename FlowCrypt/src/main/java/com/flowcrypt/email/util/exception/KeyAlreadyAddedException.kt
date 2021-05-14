@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 
 /**
  * This exception means that the key already added.

@@ -1,20 +1,19 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *  DenBond7
- *  Ivan Pizhenko
+ * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node
+package com.flowcrypt.email.security.model
 
 import android.os.Parcel
 import android.os.Parcelable
 import android.text.TextUtils
 import android.util.Patterns
+import com.flowcrypt.email.api.retrofit.response.model.node.Algo
+import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.security.model.PrivateKeySourceType
 import com.flowcrypt.email.util.exception.FlowCryptException
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName

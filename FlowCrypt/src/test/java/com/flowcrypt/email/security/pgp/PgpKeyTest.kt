@@ -8,7 +8,7 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model.node
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.model.NodeKeyDetails
 
 import com.google.gson.annotations.Expose
 

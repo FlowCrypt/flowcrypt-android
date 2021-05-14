@@ -16,7 +16,7 @@ import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.NodeKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.*
