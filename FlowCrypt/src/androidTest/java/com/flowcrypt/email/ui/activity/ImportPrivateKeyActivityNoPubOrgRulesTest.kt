@@ -106,7 +106,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     @BeforeClass
     @JvmStatic
     fun createResources() {
-      keyDetails.passphrase = TestConstants.DEFAULT_PASSWORD
+      keyDetails.tempPassphrase = TestConstants.DEFAULT_PASSWORD.toCharArray()
       privateKey = keyDetails.privateKey!!
     }
 

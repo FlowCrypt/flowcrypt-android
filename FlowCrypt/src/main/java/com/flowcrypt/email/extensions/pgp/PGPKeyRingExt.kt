@@ -73,9 +73,7 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
       created = keyRingInfo.creationDate.time,
       lastModified = keyRingInfo.lastModified.time,
       expiration = keyRingInfo.primaryKeyExpirationDate?.time,
-      algo = algo,
-      passphrase = null,
-      errorMsg = null)
+      algo = algo)
 }
 
 @Throws(IOException::class)

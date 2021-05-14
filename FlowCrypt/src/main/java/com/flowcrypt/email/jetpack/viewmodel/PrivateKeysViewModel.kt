@@ -180,8 +180,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
               }
             }
 
-            val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
-                ?: ""
+            val passphrase = if (keyDetails.isFullyDecrypted) "" else {
+              keyDetails.tempPassphrase?.let { String(it) }
+            } ?: ""
             val keyEntity = keyDetails.toKeyEntity(accountEntity)
                 .copy(source = sourceType.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),

@@ -231,7 +231,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
                 val resultKeys = it.data ?: emptyList()
                 val sessionUnlockedKeys = resultKeys
                     .filter { checkResult ->
-                      checkResult.pgpKeyDetails.passphrase?.isNotEmpty() == true
+                      checkResult.pgpKeyDetails.tempPassphrase?.isNotEmpty() == true
                     }.map { checkResult -> checkResult.pgpKeyDetails }
                 if (sessionUnlockedKeys.isNotEmpty()) {
                   unlockedKeys.addAll(sessionUnlockedKeys)
@@ -343,7 +343,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
 
     keys?.let {
       for (keyDetails in it) {
-        map[keyDetails] = keyDetails.fingerprint ?: ""
+        map[keyDetails] = keyDetails.fingerprint
       }
     }
     return map

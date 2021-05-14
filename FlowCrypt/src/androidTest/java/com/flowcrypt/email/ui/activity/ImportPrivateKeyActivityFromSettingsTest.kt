@@ -164,7 +164,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     @BeforeClass
     @JvmStatic
     fun createResources() {
-      keyDetails.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD
+      keyDetails.tempPassphrase = TestConstants.DEFAULT_STRONG_PASSWORD.toCharArray()
       privateKey = keyDetails.privateKey!!
       fileWithPrivateKey = TestGeneralUtil.createFileAndFillWithContent(
           TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + "_sec.asc", privateKey)

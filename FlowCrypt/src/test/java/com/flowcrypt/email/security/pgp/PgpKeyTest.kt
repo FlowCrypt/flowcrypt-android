@@ -64,9 +64,7 @@ class PgpKeyTest {
         ),
         created = 1543592161000L,
         lastModified = 1543592161000L,
-        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
-        passphrase = null,
-        errorMsg = null
+        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null)
     )
     assertEquals(1, result.getAllKeys().size)
     assertEquals(expected, result.toNodeKeyDetailsList().first())
@@ -125,9 +123,7 @@ class PgpKeyTest {
         created = 1594847701000L,
         lastModified = 1594847701000L,
         expiration = 1594847702000L,
-        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
-        passphrase = null,
-        errorMsg = null
+        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null)
     )
     assertEquals(1, result.getAllKeys().size)
     assertEquals(expected, result.toNodeKeyDetailsList().first())

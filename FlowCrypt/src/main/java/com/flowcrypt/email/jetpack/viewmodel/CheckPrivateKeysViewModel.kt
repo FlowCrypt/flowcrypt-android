@@ -54,12 +54,12 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
             if (prvKey.isNullOrEmpty()) {
               e = IllegalArgumentException("Empty source")
             } else {
-              if (copy.isFullyDecrypted == true) {
-                copy.passphrase = passphrase.asString
+              if (copy.isFullyDecrypted) {
+                copy.tempPassphrase = passphrase.chars
               } else {
                 try {
                   PgpKey.decryptKey(prvKey, passphrase)
-                  copy.passphrase = passphrase.asString
+                  copy.tempPassphrase = passphrase.chars
                 } catch (ex: Exception) {
                   //to prevent leak sensitive info we skip printing stack trace for release builds
                   if (GeneralUtil.isDebugBuild()) {
