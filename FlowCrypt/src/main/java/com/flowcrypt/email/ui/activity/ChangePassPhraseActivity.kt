@@ -22,6 +22,7 @@ import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
+import org.pgpainless.util.Passphrase
 
 /**
  * This activity describes a logic of changing the pass phrase of all imported private keys of an active account.
@@ -36,7 +37,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override fun onConfirmPassPhraseSuccess() {
-    privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())
+    privateKeysViewModel.changePassphrase(
+        Passphrase.fromPassword(editTextKeyPassword.text.toString()))
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {

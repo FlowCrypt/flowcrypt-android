@@ -30,6 +30,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import org.apache.commons.io.IOUtils
+import org.pgpainless.util.Passphrase
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 
@@ -46,7 +47,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private var originalKeys: MutableList<NodeKeyDetails> = mutableListOf()
   private val unlockedKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private val remainingKeys: ArrayList<NodeKeyDetails> = ArrayList()
-  private var keyDetailsAndFingerprintsMap: MutableMap<NodeKeyDetails, String>? = null
+  private var keyDetailsAndLongIdsMap: MutableMap<NodeKeyDetails, String>? = null
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
 
   private var editTextKeyPassword: EditText? = null
@@ -78,15 +79,15 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     getExtras()
 
     if (originalKeys.isNotEmpty()) {
-      this.keyDetailsAndFingerprintsMap = prepareMapFromKeyDetailsList(originalKeys)
-      this.uniqueKeysCount = getUniqueFingerprintsCount(keyDetailsAndFingerprintsMap)
+      this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(originalKeys)
+      this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
 
       if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
         if (intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)) {
           removeAlreadyImportedKeys()
         }
-        this.uniqueKeysCount = getUniqueFingerprintsCount(keyDetailsAndFingerprintsMap)
-        this.originalKeys = ArrayList(keyDetailsAndFingerprintsMap?.keys ?: emptyList())
+        this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
+        this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
 
         when (uniqueKeysCount) {
           0 -> {
@@ -100,9 +101,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
           }
 
           else -> {
-            if (originalKeys.size != keyDetailsAndFingerprintsMap?.size) {
+            if (originalKeys.size != keyDetailsAndLongIdsMap?.size) {
               val map = prepareMapFromKeyDetailsList(originalKeys)
-              val remainingKeyCount = getUniqueFingerprintsCount(map)
+              val remainingKeyCount = getUniqueKeysLongIdsCount(map)
 
               this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
                   uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
@@ -132,12 +133,12 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     when (v.id) {
       R.id.buttonPositiveAction -> {
         UIUtil.hideSoftInput(this, editTextKeyPassword)
-        val passphrase = editTextKeyPassword?.text?.toString()
-        if (passphrase.isNullOrEmpty()) {
+        val typedText = editTextKeyPassword?.text?.toString()
+        if (typedText.isNullOrEmpty()) {
           showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty))
         } else {
           snackBar?.dismiss()
-          checkPrivateKeysViewModel.checkKeys(remainingKeys, passphrase)
+          checkPrivateKeysViewModel.checkKeys(remainingKeys, Passphrase.fromPassword(typedText))
         }
       }
 
@@ -245,7 +246,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
                     initButton(R.id.buttonSkipRemainingBackups, text = getString(R.string.skip_remaining_backups))
                     editTextKeyPassword?.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
-                    val remainingKeyCount = getUniqueFingerprintsCount(mapOfRemainingBackups)
+                    val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
 
                     textViewSubTitle?.text = resources.getQuantityString(
                         R.plurals.not_recovered_all_keys, remainingKeyCount,
@@ -294,15 +295,15 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
    * Remove the already imported keys from the list of found backups.
    */
   private fun removeAlreadyImportedKeys() {
-    val fingerprints = getUniqueKeysFingerprints(keyDetailsAndFingerprintsMap!!)
+    val longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap!!)
     val keysStorage = KeysStorageImpl.getInstance(this)
 
-    for (fingerprint in fingerprints) {
-      if (keysStorage.getPgpPrivateKey(fingerprint) != null) {
-        val iterator = keyDetailsAndFingerprintsMap!!.entries.iterator()
+    for (longId in longIds) {
+      if (keysStorage.getPassphraseByFingerprint(longId) != null) {
+        val iterator = keyDetailsAndLongIdsMap!!.entries.iterator()
         while (iterator.hasNext()) {
           val entry = iterator.next()
-          if (fingerprint == entry.value) {
+          if (longId == entry.value) {
             iterator.remove()
           }
         }
@@ -311,28 +312,28 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   }
 
   /**
-   * Get a count of unique fingerprints.
+   * Get a count of unique longIds.
    *
-   * @param mapOfKeyDetailsAndFingerprints An input map of [NodeKeyDetails].
-   * @return A count of unique fingerprints.
+   * @param mapOfKeyDetailsAndLongIds An input map of [NodeKeyDetails].
+   * @return A count of unique longIds.
    */
-  private fun getUniqueFingerprintsCount(mapOfKeyDetailsAndFingerprints: Map<NodeKeyDetails, String>?): Int {
-    return HashSet(mapOfKeyDetailsAndFingerprints?.values ?: emptyList()).size
+  private fun getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>?): Int {
+    return HashSet(mapOfKeyDetailsAndLongIds?.values ?: emptyList()).size
   }
 
   /**
-   * Get a set of unique fingerprints.
+   * Get a set of unique longIds.
    *
-   * @param mapOfKeyDetailsAndFingerprints An input map of [NodeKeyDetails].
-   * @return A list of unique fingerprints.
+   * @param mapOfKeyDetailsAndLongIds An input map of [NodeKeyDetails].
+   * @return A list of unique longIds.
    */
-  private fun getUniqueKeysFingerprints(mapOfKeyDetailsAndFingerprints: Map<NodeKeyDetails, String>): Set<String> {
-    return HashSet(mapOfKeyDetailsAndFingerprints.values)
+  private fun getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>): Set<String> {
+    return HashSet(mapOfKeyDetailsAndLongIds.values)
   }
 
   /**
    * Generate a map of incoming list of [NodeKeyDetails] objects where values will be a [NodeKeyDetails]
-   * fingerprint.
+   * longId.
    *
    * @param keys An incoming list of [NodeKeyDetails] objects.
    * @return A generated map.

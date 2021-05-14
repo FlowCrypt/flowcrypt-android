@@ -15,6 +15,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -101,16 +102,17 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         uid = messageEntity.uid))
   }
 
-  private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> = Transformations.switchMap(keysStorage.nodeKeyDetailsLiveData) {
-    liveData {
-      if (it.isNotEmpty()) {
-        emit(roomDatabase.msgDao().getMsgSuspend(
-            account = messageEntity.email,
-            folder = messageEntity.folder,
-            uid = messageEntity.uid))
+  private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> =
+      keysStorage.secretKeyRingsLiveData.switchMap {
+        liveData {
+          if (it.isNotEmpty()) {
+            emit(roomDatabase.msgDao().getMsgSuspend(
+                account = messageEntity.email,
+                folder = messageEntity.folder,
+                uid = messageEntity.uid))
+          }
+        }
       }
-    }
-  }
 
   private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
@@ -311,7 +313,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> = withContext(Dispatchers.IO) {
     val uri = msgSnapshot.getUri(0)
     if (uri != null) {
-      val list = keysStorage.getLatestAllPgpPrivateKeys()
+      val list = keysStorage.getRawKeys()
       val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
       val result = if (largerThan1Mb) {
         parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
@@ -340,7 +342,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
       val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(
               data = rawMimeBytes,
-              keyEntities = keysStorage.getLatestAllPgpPrivateKeys(),
+              keyEntities = keysStorage.getRawKeys(),
               isEmail = true
           ))
       modifyMsgBlocksIfNeeded(result)

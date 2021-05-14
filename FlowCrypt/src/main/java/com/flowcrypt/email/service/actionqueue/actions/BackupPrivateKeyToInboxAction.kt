@@ -15,7 +15,6 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.google.gson.annotations.SerializedName
 
@@ -38,8 +37,9 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
-    val keysStorage = KeysStorageImpl.getInstance(context)
-    val keyEntity = keysStorage.getPgpPrivateKey(privateKeyFingerprint) ?: return
+    val keyEntity = roomDatabase.keysDao().getAllKeysByAccount(account = account.email).first {
+      it.fingerprint.equals(privateKeyFingerprint, true)
+    }
     if (keyEntity.privateKey.isNotEmpty()) {
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
@@ -50,7 +50,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
         encryptedKey = key.privateKey ?: throw IllegalArgumentException("empty key")
       } else {
         try {
-          encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase!!)
+          encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase)
         } catch (e: Exception) {
           throw IllegalStateException("An error occurred during encrypting some key", e)
         }

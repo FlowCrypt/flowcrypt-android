@@ -64,7 +64,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
             resultText = "processing...\n"
             tvResult?.text = resultText
 
-            val list = KeysStorageImpl.getInstance(this).getAllPgpPrivateKeys()
+            val list = KeysStorageImpl.getInstance(this).getRawKeys()
             requestsManager?.decryptMsg(R.id.req_id_decrypt_email,
                 data = IOUtils.toByteArray(contentResolver.openInputStream(it)),
                 prvKeys = list.toTypedArray(),

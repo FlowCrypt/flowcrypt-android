@@ -148,7 +148,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       }
 
       val fingerprint = key.fingerprint ?: continue
-      if (KeysStorageImpl.getInstance(application).getPgpPrivateKey(fingerprint) == null) {
+      if (KeysStorageImpl.getInstance(application)
+              .getPGPSecretKeyRingByFingerprint(fingerprint) == null) {
         areFreshKeysExisted = true
       }
     }
@@ -249,7 +250,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     while (iterator.hasNext()) {
       val privateKey = iterator.next()
       uniqueKeysFingerprints.add(privateKey.fingerprint!!)
-      if (connector.getPgpPrivateKey(privateKey.fingerprint!!) != null) {
+      if (connector.getPGPSecretKeyRingByFingerprint(privateKey.fingerprint!!) != null) {
         iterator.remove()
         uniqueKeysFingerprints.remove(privateKey.fingerprint!!)
       }

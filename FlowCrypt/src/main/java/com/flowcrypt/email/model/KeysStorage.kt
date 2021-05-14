@@ -6,39 +6,28 @@
 package com.flowcrypt.email.model
 
 import androidx.annotation.Keep
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.KeyEntity
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 
 @Keep
 interface KeysStorage {
+  fun getRawKeys(): List<KeyEntity>
 
-  fun getAllPgpPrivateKeys(): List<KeyEntity>
+  fun getPGPSecretKeyRings(): List<PGPSecretKeyRing>
 
-  fun getPgpPrivateKey(fingerprint: String?): KeyEntity?
+  fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing?
 
-  /**
-   * if 2 keys requested and only one found, will return list of 1: [KeyEntity]
-   */
-  fun getFilteredPgpPrivateKeys(fingerprints: Array<String>): List<KeyEntity>
+  fun getPGPSecretKeyRingsByFingerprints(fingerprints: Iterable<String>): List<PGPSecretKeyRing>
 
-  /**
-   * Get [List] of [KeyEntity] where each key has [PgpContact] with the given email.
-   *
-   * Note: this method returns a list of not-expired [KeyEntity] only
-   */
-  fun getPgpPrivateKeysByEmail(email: String?): List<KeyEntity>
+  fun getPGPSecretKeyRingsByUserId(user: String): List<PGPSecretKeyRing>
 
-  /**
-   * Get [List] of [NodeKeyDetails] where each key has [PgpContact] with the given email.
-   *
-   * Note: this method returns a list of not-expired [NodeKeyDetails] only
-   */
-  fun getNodeKeyDetailsListByEmail(email: String?): List<NodeKeyDetails>
+  fun getPassphraseByFingerprint(fingerprint: String): Passphrase?
 
   fun getSecretKeyRingProtector(): SecretKeyRingProtector
 
-  fun updateStateOfPassPhrasesInRAM()
+  fun updatePassPhrasesCache()
 }
 
 

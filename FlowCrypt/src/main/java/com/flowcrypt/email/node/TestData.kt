@@ -328,7 +328,7 @@ class TestData internal constructor() {
           source = "TEST",
           privateKey = ECC_PRV_KEY.toByteArray(),
           publicKey = ECC_PUB_KEY.toByteArray(),
-          passphrase = "some long pp"
+          storedPassphrase = "some long pp"
       ))
     }
 
@@ -340,7 +340,7 @@ class TestData internal constructor() {
           source = "TEST",
           privateKey = RSA_2048_PRV_KEY.toByteArray(),
           publicKey = RSA_2048_PUB_KEY.toByteArray(),
-          passphrase = "some long pp"
+          storedPassphrase = "some long pp"
       ))
     }
 
@@ -352,7 +352,7 @@ class TestData internal constructor() {
           source = "TEST",
           privateKey = RSA_4096_PRV_KEY.toByteArray(),
           publicKey = RSA_4096_PUB_KEY.toByteArray(),
-          passphrase = "some long pp"
+          storedPassphrase = "some long pp"
       ))
     }
 

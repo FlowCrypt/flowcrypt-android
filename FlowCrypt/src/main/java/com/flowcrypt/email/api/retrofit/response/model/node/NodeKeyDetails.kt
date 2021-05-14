@@ -179,7 +179,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
             ?: throw NullPointerException("nodeKeyDetails.publicKey == null"),
         privateKey = privateKey?.toByteArray()
             ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
-        passphrase = passphrase)
+        storedPassphrase = passphrase)
   }
 
   companion object {

@@ -56,6 +56,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
@@ -1442,9 +1443,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       fromAddrs?.clear()
       fromAddrs?.addAll(aliases)
 
-      KeysStorageImpl.getInstance(requireContext().applicationContext).nodeKeyDetailsLiveData.value?.let {
-        updateFromAddressAdapter(it)
-      }
+      updateFromAddressAdapter(
+          KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings().map { key ->
+            key.toNodeKeyDetails()
+          })
 
       if (msgInfo != null) {
         prepareAliasForReplyIfNeeded(aliases)
@@ -1477,9 +1479,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun setupPrivateKeysViewModel() {
-    KeysStorageImpl.getInstance(requireContext().applicationContext).nodeKeyDetailsLiveData.observe(viewLifecycleOwner, {
-      updateFromAddressAdapter(it)
-    })
+    KeysStorageImpl.getInstance(requireContext()).secretKeyRingsLiveData
+        .observe(viewLifecycleOwner, { keys ->
+          updateFromAddressAdapter(keys.map { key -> key.toNodeKeyDetails() })
+        })
   }
 
   private fun updateFromAddressAdapter(list: List<NodeKeyDetails>) {

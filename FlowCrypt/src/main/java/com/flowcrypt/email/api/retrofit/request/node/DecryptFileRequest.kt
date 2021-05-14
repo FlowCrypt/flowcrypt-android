@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.request.node
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.google.gson.annotations.Expose
 import retrofit2.Response
 
@@ -23,7 +24,7 @@ class DecryptFileRequest(override val data: ByteArray, keyEntities: List<KeyEnti
 
   @Expose
   private val keys: List<PrivateKeyInfo> = keyEntities.map {
-    PrivateKeyInfo(it.privateKeyAsString, it.fingerprint, it.passphrase)
+    PrivateKeyInfo(it.privateKeyAsString, it.fingerprint, it.passphrase.asString)
   }
 
   override val endpoint: String = "decryptFile"

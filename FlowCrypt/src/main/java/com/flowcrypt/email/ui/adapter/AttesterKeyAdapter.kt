@@ -82,7 +82,9 @@ class AttesterKeyAdapter(
    * fingerprints of saved keys, otherwise false.
    */
   private fun isPublicKeyMatched(context: Context, nodeKeyDetails: NodeKeyDetails): Boolean {
-    return KeysStorageImpl.getInstance(context).getPgpPrivateKey(nodeKeyDetails.fingerprint) != null
+    return nodeKeyDetails.fingerprint?.let {
+      KeysStorageImpl.getInstance(context).getPGPSecretKeyRingByFingerprint(it) != null
+    } ?: false
   }
 
   /**

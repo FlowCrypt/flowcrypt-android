@@ -12,6 +12,7 @@ import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import org.pgpainless.util.Passphrase
 
 /**
  * @author Denis Bondarenko
@@ -42,13 +43,20 @@ data class KeyEntity(
     val source: String,
     @ColumnInfo(name = "public_key") val publicKey: ByteArray,
     @ColumnInfo(name = "private_key") val privateKey: ByteArray,
-    @ColumnInfo(defaultValue = "NULL") val passphrase: String?) {
+    @ColumnInfo(name = "passphrase", defaultValue = "NULL") val storedPassphrase: String?) {
 
   @Ignore
   val privateKeyAsString = String(privateKey)
 
   @Ignore
   val publicKeyAsString = String(publicKey)
+
+  @Ignore
+  val passphrase: Passphrase = if (storedPassphrase == null) {
+    Passphrase.emptyPassphrase()
+  } else {
+    Passphrase.fromPassword(storedPassphrase)
+  }
 
   override fun toString(): String {
     return "KeyEntity(id=$id," +
@@ -58,7 +66,7 @@ data class KeyEntity(
         " source='$source'," +
         " publicKey=${publicKey.contentToString()}," +
         " privateKey=${privateKey.contentToString()}," +
-        " passphrase=(hidden))"
+        " storedPassphrase=(hidden))"
   }
 
   override fun equals(other: Any?): Boolean {
@@ -74,7 +82,7 @@ data class KeyEntity(
     if (source != other.source) return false
     if (!publicKey.contentEquals(other.publicKey)) return false
     if (!privateKey.contentEquals(other.privateKey)) return false
-    if (passphrase != other.passphrase) return false
+    if (storedPassphrase != other.storedPassphrase) return false
 
     return true
   }
@@ -87,7 +95,7 @@ data class KeyEntity(
     result = 31 * result + source.hashCode()
     result = 31 * result + publicKey.contentHashCode()
     result = 31 * result + privateKey.contentHashCode()
-    result = 31 * result + (passphrase?.hashCode() ?: 0)
+    result = 31 * result + (storedPassphrase?.hashCode() ?: 0)
     return result
   }
 }

@@ -6,25 +6,19 @@
 package com.flowcrypt.email.security
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.org.pgpainless.key.longId
 import com.flowcrypt.email.model.KeysStorage
-import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.pgp.PgpKey
-import org.bouncycastle.bcpg.ArmoredInputStream
-import org.pgpainless.PGPainless
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
-import java.io.ByteArrayInputStream
 import java.time.Instant
 
 /**
@@ -35,19 +29,16 @@ import java.time.Instant
  * Date: 05.05.2017
  * Time: 13:06
  * E-mail: DenBond7@gmail.com
+ *
+ * @version 2.0 Updated to use [Passphrase] and [PGPSecretKeyRing]
  */
 class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   private val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-  private val nodeLiveData = Node.getInstance(context.applicationContext).liveData
-  private var keys = mutableListOf<KeyEntity>()
-  private var nodeKeyDetailsList = mutableListOf<NodeKeyDetails>()
-  private val storeInRAMTimeoutPassPhraseMap = mutableMapOf<String, PassPhraseInRAM>()
+  private val passPhraseMap = mutableMapOf<String, PassPhraseInRAM>()
 
-  private val pureActiveAccountLiveData: LiveData<AccountEntity?> = Transformations.switchMap(nodeLiveData) {
-    roomDatabase.accountDao().getActiveAccountLD()
-  }
+  private val pureActiveAccountLiveData = roomDatabase.accountDao().getActiveAccountLD()
 
-  private val encryptedKeysLiveData: LiveData<List<KeyEntity>> = Transformations.switchMap(pureActiveAccountLiveData) {
+  private val encryptedKeysLiveData = pureActiveAccountLiveData.switchMap {
     roomDatabase.keysDao().getAllKeysByAccountLD(it?.email ?: "")
   }
 
@@ -56,96 +47,64 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
       emit(list.map {
         it.copy(
             privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
-            passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase))
+            storedPassphrase = KeyStoreCryptoManager.decryptSuspend(it.storedPassphrase))
       })
     }
   }
 
-  val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> = Transformations.switchMap(keysLiveData) {
+  val secretKeyRingsLiveData = keysLiveData.switchMap {
     liveData {
-      emit(PgpKey.parseKeys(
-          it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString })
-          .toNodeKeyDetailsList())
+      val combinedSource = it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
+      val parseKeyResult = PgpKey.parseKeys(combinedSource)
+      val keys = parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings
+          .asSequence().toList()
+      emit(keys)
     }
   }
 
   init {
     keysLiveData.observeForever {
-      keys.clear()
-      keys.addAll(it)
-
-      updateDataRelatesToPassPhrasesInRAM(it)
-    }
-
-    nodeKeyDetailsLiveData.observeForever {
-      nodeKeyDetailsList.clear()
-      nodeKeyDetailsList.addAll(it)
+      updatePassphrasesMap(it)
     }
   }
 
-  override fun getPgpPrivateKey(fingerprint: String?): KeyEntity? {
-    return keys.firstOrNull { it.fingerprint.equals(fingerprint, true) }
+  override fun getRawKeys(): List<KeyEntity> {
+    return keysLiveData.value ?: emptyList()
   }
 
-  override fun getFilteredPgpPrivateKeys(fingerprints: Array<String>): List<KeyEntity> {
-    return keys.filter { fingerprints.contains(it.fingerprint) }
+  override fun getPGPSecretKeyRings(): List<PGPSecretKeyRing> {
+    return secretKeyRingsLiveData.value ?: emptyList()
   }
 
-  override fun getPgpPrivateKeysByEmail(email: String?): List<KeyEntity> {
-    val keys = mutableListOf<KeyEntity>()
-
-    nodeKeyDetailsList.forEach { nodeKeyDetails ->
-      for (contact in nodeKeyDetails.pgpContacts) {
-        if (email?.equals(contact.email, true) == true && !nodeKeyDetails.isExpired) {
-          getPgpPrivateKey(nodeKeyDetails.fingerprint)?.let { keyEntity -> keys.add(keyEntity) }
-        }
-      }
+  override fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing? {
+    return getPGPSecretKeyRings().firstOrNull {
+      it.secretKey.publicKey.fingerprint.contentEquals(fingerprint.toByteArray())
     }
-
-    return keys
   }
 
-  override fun getNodeKeyDetailsListByEmail(email: String?): List<NodeKeyDetails> {
-    val list = mutableListOf<NodeKeyDetails>()
+  override fun getPGPSecretKeyRingsByFingerprints(fingerprints: Iterable<String>): List<PGPSecretKeyRing> {
+    TODO("Not yet implemented")
+  }
 
-    nodeKeyDetailsList.forEach { nodeKeyDetails ->
-      for (contact in nodeKeyDetails.pgpContacts) {
-        if (email?.equals(contact.email, true) == true && !nodeKeyDetails.isExpired) {
-          list.add(nodeKeyDetails)
-        }
-      }
-    }
+  override fun getPGPSecretKeyRingsByUserId(user: String): List<PGPSecretKeyRing> {
+    TODO("Not yet implemented")
+  }
 
-    return list
+  override fun getPassphraseByFingerprint(fingerprint: String): Passphrase? {
+    return passPhraseMap[fingerprint]?.passphrase
   }
 
   override fun getSecretKeyRingProtector(): SecretKeyRingProtector {
-    val prvKeys = keys.map { it.privateKeyAsString }
-    val inputStream = ByteArrayInputStream(prvKeys.joinToString(separator = "\n").toByteArray())
-    val pgpSecretKeyRingCollection = inputStream.use {
-      ArmoredInputStream(it).use { armoredInputStream ->
-        PGPainless.readKeyRing().secretKeyRingCollection(armoredInputStream)
-      }
-    }
-
     val keyRingProtectionSettings = KeyRingProtectionSettings.secureDefaultSettings()
+    val availablePGPSecretKeyRings = getPGPSecretKeyRings()
     return PasswordBasedSecretKeyRingProtector(keyRingProtectionSettings) { keyId ->
-      for (pgpSecretKeyRing in pgpSecretKeyRingCollection) {
+      for (pgpSecretKeyRing in availablePGPSecretKeyRings) {
         val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
         if (keyIDs.contains(keyId)) {
           for (secretKey in pgpSecretKeyRing.secretKeys) {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
-            val key = getPgpPrivateKey(openPgpV4Fingerprint.toString())
-            if (key != null) {
-              val passphrase: Passphrase
-              if (key.passphrase.isNullOrEmpty()) {
-                passphrase = Passphrase.emptyPassphrase()
-              } else {
-                passphrase = Passphrase.fromPassword(key.passphrase)
-              }
-
-              return@PasswordBasedSecretKeyRingProtector passphrase
-            }
+            val passphrase = getPassphraseByFingerprint(openPgpV4Fingerprint.longId)
+            return@PasswordBasedSecretKeyRingProtector passphrase
           }
         }
       }
@@ -154,78 +113,45 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
-  override fun updateStateOfPassPhrasesInRAM() {
-    for (key in keys) {
-      if (key.passphrase == null) {
+  override fun updatePassPhrasesCache() {
+    for (key in getRawKeys()) {
+      if (key.storedPassphrase == null) {
         val id = key.fingerprint
-        if (storeInRAMTimeoutPassPhraseMap.containsKey(id)) {
+        if (passPhraseMap.containsKey(id)) {
           val now = Instant.now()
-          val entry = storeInRAMTimeoutPassPhraseMap[id] ?: continue
+          val entry = passPhraseMap[id] ?: continue
           if (entry.validUntil == now || entry.validUntil.isBefore(now)) {
-            storeInRAMTimeoutPassPhraseMap[id] = PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
+            passPhraseMap[id] = PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
           }
         }
       }
     }
   }
 
-  override fun getAllPgpPrivateKeys(): List<KeyEntity> {
-    return keys
-  }
-
-  /**
-   * Return the latest all private keys for an active account. We can use this method to fetch
-   * keys as they are stored in the database. It can't be used in UI thread.
-   */
-  suspend fun getLatestAllPgpPrivateKeys(): List<KeyEntity> {
-    val account = pureActiveAccountLiveData.value
-        ?: roomDatabase.accountDao().getActiveAccountSuspend()
-    account?.let { accountEntity ->
-      val cachedKeysFingerprints = keys.map { it.fingerprint }.toSet()
-      val latestEncryptedKeys =
-          roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
-      val latestKeysFingerprints = roomDatabase.keysDao()
-          .getAllKeysByAccountSuspend(accountEntity.email)
-          .map { it.fingerprint }
-          .toSet()
-
-      if (cachedKeysFingerprints == latestKeysFingerprints) {
-        return keys
-      }
-
-      return latestEncryptedKeys.map {
-        it.copy(
-            privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
-            passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase))
-      }
-    }
-
-    return emptyList()
-  }
-
-  private fun updateDataRelatesToPassPhrasesInRAM(keyDetailsList: List<KeyEntity>) {
-    val existedIdList = storeInRAMTimeoutPassPhraseMap.keys
-    val refreshedIdList = keyDetailsList.map { it.fingerprint }
+  private fun updatePassphrasesMap(keyEntityList: List<KeyEntity>) {
+    val existedIdList = passPhraseMap.keys
+    val refreshedIdList = keyEntityList.map { it.fingerprint }
     val removeCandidates = existedIdList - refreshedIdList
     val addCandidates = refreshedIdList - existedIdList
     val updateCandidates = refreshedIdList - addCandidates
 
     for (id in removeCandidates) {
-      storeInRAMTimeoutPassPhraseMap.remove(id)
+      passPhraseMap.remove(id)
     }
 
-    for (keyDetails in keyDetailsList) {
-      val id = keyDetails.fingerprint
+    for (keyEntity in keyEntityList) {
+      val id = keyEntity.fingerprint
       if (id in updateCandidates) {
-        if (keyDetails.passphrase != null) {
-          storeInRAMTimeoutPassPhraseMap.remove(id)
+        if (!keyEntity.passphrase.isEmpty) {
+          passPhraseMap.remove(id)
         }
       }
 
       if (id in addCandidates) {
-        if (keyDetails.passphrase == null) {
-          storeInRAMTimeoutPassPhraseMap[id] =
-              PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
+        if (keyEntity.passphrase.isEmpty) {
+          passPhraseMap[id] = PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
+        } else {
+          passPhraseMap[id] = PassPhraseInRAM(keyEntity.passphrase, Instant.MAX)
         }
       }
     }
