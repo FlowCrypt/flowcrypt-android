@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
@@ -30,7 +30,7 @@ import org.pgpainless.util.Passphrase
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
 
-  fun checkKeys(keys: List<NodeKeyDetails>, passphrase: Passphrase) {
+  fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
       checkPrvKeysLiveData.value = Result.loading()
       if (passphrase.isEmpty) {
@@ -41,7 +41,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
     }
   }
 
-  private suspend fun checkKeysInternal(keys: List<NodeKeyDetails>,
+  private suspend fun checkKeysInternal(keys: List<PgpKeyDetails>,
                                         passphrase: Passphrase): List<CheckResult> =
       withContext(Dispatchers.IO) {
         val context: Context = getApplication()
@@ -75,13 +75,13 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
           }
 
           resultList.add(CheckResult(
-              nodeKeyDetails = copy,
+              pgpKeyDetails = copy,
               passphrase = passphrase.asString ?: throw IllegalArgumentException(),
               e = e))
         }
         return@withContext resultList
       }
 
-  data class CheckResult(val nodeKeyDetails: NodeKeyDetails,
+  data class CheckResult(val pgpKeyDetails: PgpKeyDetails,
                          val passphrase: String, val e: Exception? = null)
 }

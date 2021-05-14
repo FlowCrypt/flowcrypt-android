@@ -26,7 +26,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -205,15 +205,15 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   /**
-   * Get a list with the matched [NodeKeyDetails]. If the sender email matched email the email from
+   * Get a list with the matched [PgpKeyDetails]. If the sender email matched email the email from
    * [PgpContact] which got from the private key than we return a list with relevant public keys.
    *
-   * @return A matched [NodeKeyDetails] or null.
+   * @return A matched [PgpKeyDetails] or null.
    */
-  private fun getMatchedKeys(nodeKeyDetailsList: List<NodeKeyDetails>): List<NodeKeyDetails> {
-    val keyDetails = ArrayList<NodeKeyDetails>()
+  private fun getMatchedKeys(pgpKeyDetailsList: List<PgpKeyDetails>): List<PgpKeyDetails> {
+    val keyDetails = ArrayList<PgpKeyDetails>()
 
-    for (nodeKeyDetails in nodeKeyDetailsList) {
+    for (nodeKeyDetails in pgpKeyDetailsList) {
       val (email) = nodeKeyDetails.primaryPgpContact
       if (email.equals(this.email, ignoreCase = true)) {
         keyDetails.add(nodeKeyDetails)

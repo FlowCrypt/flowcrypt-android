@@ -32,7 +32,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.`is`
@@ -145,7 +145,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
 
   private fun useIntentionFromRunCheckKeysActivity() {
     val intent = Intent()
-    val list: ArrayList<NodeKeyDetails> = ArrayList()
+    val list: ArrayList<PgpKeyDetails> = ArrayList()
     list.add(keyDetails)
     intent.putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
 

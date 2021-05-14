@@ -102,7 +102,7 @@ class KeysSettingsActivityTest : BaseTest() {
     val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        nodeKeyDetails = details,
+        pgpKeyDetails = details,
         passphrase = TestConstants.DEFAULT_PASSWORD,
         sourceType = KeyImportDetails.SourceType.EMAIL
     )
@@ -131,7 +131,7 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
-    val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnShowPubKey))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -141,7 +141,7 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnCopyToClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -162,7 +162,7 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
 
     onView(withId(R.id.textViewFingerprint))
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
@@ -195,7 +195,7 @@ class KeysSettingsActivityTest : BaseTest() {
         "pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        nodeKeyDetails = details,
+        pgpKeyDetails = details,
         passphrase = "wrong passphrase",
         sourceType = KeyImportDetails.SourceType.EMAIL
     )
@@ -211,7 +211,7 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
 
     val file =
         File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),

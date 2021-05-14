@@ -36,7 +36,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
@@ -73,10 +73,10 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val saveBackupAsFileLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
   val parseKeysLiveData = MutableLiveData<Result<PgpKey.ParseKeyResult?>>()
-  val createPrivateKeyLiveData = MutableLiveData<Result<NodeKeyDetails?>>()
+  val createPrivateKeyLiveData = MutableLiveData<Result<PgpKeyDetails?>>()
   val deleteKeysLiveData = MutableLiveData<Result<Boolean>>()
 
-  val parseKeysResultLiveData: LiveData<Result<List<NodeKeyDetails>>> =
+  val parseKeysResultLiveData: LiveData<Result<List<PgpKeyDetails>>> =
       keysStorage.secretKeyRingsLiveData.switchMap { list ->
         liveData {
           emit(Result.loading())
@@ -163,7 +163,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  fun encryptAndSaveKeysToDatabase(accountEntity: AccountEntity?, keys: List<NodeKeyDetails>,
+  fun encryptAndSaveKeysToDatabase(accountEntity: AccountEntity?, keys: List<PgpKeyDetails>,
                                    sourceType: KeyImportDetails.SourceType, addAccountIfNotExist: Boolean = false) {
     requireNotNull(accountEntity)
 
@@ -270,9 +270,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   fun createPrivateKey(accountEntity: AccountEntity, passphrase: String) {
     viewModelScope.launch {
       createPrivateKeyLiveData.value = Result.loading()
-      var nodeKeyDetails: NodeKeyDetails? = null
+      var pgpKeyDetails: PgpKeyDetails? = null
       try {
-        nodeKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+        pgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
             UserId.nameAndEmail(accountEntity.displayName
                 ?: accountEntity.email, accountEntity.email), passphrase).toNodeKeyDetails()
 
@@ -281,12 +281,12 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           roomDatabase.accountDao().addAccountSuspend(accountEntity)
         }
 
-        savePrivateKeyToDatabase(accountEntity, nodeKeyDetails, passphrase)
-        doAdditionalOperationsAfterKeyCreation(accountEntity, nodeKeyDetails)
-        createPrivateKeyLiveData.value = Result.success(nodeKeyDetails)
+        savePrivateKeyToDatabase(accountEntity, pgpKeyDetails, passphrase)
+        doAdditionalOperationsAfterKeyCreation(accountEntity, pgpKeyDetails)
+        createPrivateKeyLiveData.value = Result.success(pgpKeyDetails)
       } catch (e: Exception) {
         e.printStackTrace()
-        nodeKeyDetails?.fingerprint?.let {
+        pgpKeyDetails?.fingerprint?.let {
           roomDatabase.keysDao().deleteByAccountAndFingerprintSuspend(accountEntity.email, it)
         }
         createPrivateKeyLiveData.value = Result.exception(e)
@@ -295,7 +295,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  fun deleteKeys(accountEntity: AccountEntity, keys: List<NodeKeyDetails>) {
+  fun deleteKeys(accountEntity: AccountEntity, keys: List<PgpKeyDetails>) {
     viewModelScope.launch {
       deleteKeysLiveData.value = Result.loading()
       try {
@@ -324,10 +324,10 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  private suspend fun savePrivateKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails, passphrase: String) {
-    val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity).copy(
+  private suspend fun savePrivateKeyToDatabase(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails, passphrase: String) {
+    val keyEntity = pgpKeyDetails.toKeyEntity(accountEntity).copy(
         source = KeyImportDetails.SourceType.NEW.toPrivateKeySourceTypeString(),
-        privateKey = KeyStoreCryptoManager.encryptSuspend(nodeKeyDetails.privateKey).toByteArray(),
+        privateKey = KeyStoreCryptoManager.encryptSuspend(pgpKeyDetails.privateKey).toByteArray(),
         storedPassphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
 
     if (roomDatabase.keysDao().insertSuspend(keyEntity) == -1L) {
@@ -335,9 +335,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  private suspend fun doAdditionalOperationsAfterKeyCreation(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails) {
+  private suspend fun doAdditionalOperationsAfterKeyCreation(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails) {
     if (accountEntity.isRuleExist(AccountEntity.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
-      val model = InitialLegacySubmitModel(accountEntity.email, nodeKeyDetails.publicKey!!)
+      val model = InitialLegacySubmitModel(accountEntity.email, pgpKeyDetails.publicKey!!)
       val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
 
       when (initialLegacySubmitResult.status) {
@@ -355,38 +355,38 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       }
 
       if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
-        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
+        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
-              accountEntity.email, 0, nodeKeyDetails.fingerprint!!))
+              accountEntity.email, 0, pgpKeyDetails.fingerprint!!))
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
         }
       }
     } else {
       if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
-        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
+        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
-              accountEntity.email, 0, nodeKeyDetails.fingerprint!!))
+              accountEntity.email, 0, pgpKeyDetails.fingerprint!!))
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
         }
       }
 
-      if (!registerUserPublicKey(accountEntity, nodeKeyDetails)) {
+      if (!registerUserPublicKey(accountEntity, pgpKeyDetails)) {
         val registerAction = ActionQueueEntity.fromAction(RegisterUserPublicKeyAction(0,
-            accountEntity.email, 0, nodeKeyDetails.publicKey!!))
+            accountEntity.email, 0, pgpKeyDetails.publicKey!!))
         registerAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
       }
     }
 
-    if (!requestingTestMsgWithNewPublicKey(accountEntity, nodeKeyDetails)) {
+    if (!requestingTestMsgWithNewPublicKey(accountEntity, pgpKeyDetails)) {
       val welcomeEmailAction = ActionQueueEntity.fromAction(SendWelcomeTestEmailAction(0,
-          accountEntity.email, 0, nodeKeyDetails.publicKey!!))
+          accountEntity.email, 0, pgpKeyDetails.publicKey!!))
       welcomeEmailAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
     }
   }
 
   private suspend fun getModifiedNodeKeyDetails(oldPassphrase: Passphrase,
                                                 newPassphrase: Passphrase,
-                                                originalPrivateKey: String?): NodeKeyDetails =
+                                                originalPrivateKey: String?): PgpKeyDetails =
       withContext(Dispatchers.IO) {
         val keyDetailsList = PgpKey.parseKeys(originalPrivateKey!!.toByteArray())
             .toNodeKeyDetailsList()
@@ -438,7 +438,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
    * @return true if message was send.
    */
   private suspend fun saveCreatedPrivateKeyAsBackupToInbox(accountEntity: AccountEntity,
-                                                           keyDetails: NodeKeyDetails): Boolean =
+                                                           keyDetails: PgpKeyDetails): Boolean =
       withContext(Dispatchers.IO) {
         try {
           val context: Context = getApplication()
@@ -486,7 +486,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
    * @param keyDetails Details of the created key.
    * @return true if no errors.
    */
-  private suspend fun registerUserPublicKey(accountEntity: AccountEntity, keyDetails: NodeKeyDetails): Boolean = withContext(Dispatchers.IO) {
+  private suspend fun registerUserPublicKey(accountEntity: AccountEntity, keyDetails: PgpKeyDetails): Boolean = withContext(Dispatchers.IO) {
     return@withContext try {
       val model = InitialLegacySubmitModel(accountEntity.email, keyDetails.publicKey!!)
       val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
@@ -512,7 +512,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
    * @param keyDetails Details of the created key.
    * @return true if no errors.
    */
-  private suspend fun requestingTestMsgWithNewPublicKey(accountEntity: AccountEntity, keyDetails: NodeKeyDetails): Boolean =
+  private suspend fun requestingTestMsgWithNewPublicKey(accountEntity: AccountEntity, keyDetails: PgpKeyDetails): Boolean =
       withContext(Dispatchers.IO) {
         return@withContext try {
           val model = TestWelcomeModel(accountEntity.email, keyDetails.publicKey!!)

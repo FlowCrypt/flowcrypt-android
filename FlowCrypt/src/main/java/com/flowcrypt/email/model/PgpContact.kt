@@ -8,7 +8,7 @@ package com.flowcrypt.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.ContactEntity
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import java.util.*
 
 data class PgpContact constructor(var email: String,
@@ -18,7 +18,7 @@ data class PgpContact constructor(var email: String,
                                   var client: String? = null,
                                   var fingerprint: String? = null,
                                   var lastUse: Long = 0,
-                                  var nodeKeyDetails: NodeKeyDetails? = null) : Parcelable {
+                                  var pgpKeyDetails: PgpKeyDetails? = null) : Parcelable {
 
   constructor(source: Parcel) : this(
       source.readString()!!,
@@ -28,7 +28,7 @@ data class PgpContact constructor(var email: String,
       source.readString(),
       source.readString(),
       source.readLong(),
-      source.readParcelable(NodeKeyDetails::class.java.classLoader)
+      source.readParcelable(PgpKeyDetails::class.java.classLoader)
   )
 
   constructor(email: String, name: String?) : this(email) {
@@ -48,7 +48,7 @@ data class PgpContact constructor(var email: String,
         writeString(client)
         writeString(fingerprint)
         writeLong(lastUse)
-        writeParcelable(nodeKeyDetails, flags)
+        writeParcelable(pgpKeyDetails, flags)
       }
 
   fun toContactEntity(): ContactEntity {

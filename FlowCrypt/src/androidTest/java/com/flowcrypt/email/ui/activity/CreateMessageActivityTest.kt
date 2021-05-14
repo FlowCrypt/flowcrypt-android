@@ -439,7 +439,7 @@ class CreateMessageActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.nodeKeyDetails)
+    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.pgpKeyDetails)
 
     onView(withText(att?.name))
         .check(matches(isDisplayed()))

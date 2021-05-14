@@ -27,18 +27,18 @@ import javax.mail.internet.InternetAddress
  * Time: 1:23 PM
  * E-mail: DenBond7@gmail.com
  */
-data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
-                                      @Expose val isFullyEncrypted: Boolean?,
-                                      @Expose @SerializedName("private") val privateKey: String?,
-                                      @Expose @SerializedName("public") val publicKey: String?,
-                                      @Expose val users: List<String>?,
-                                      @Expose val ids: List<KeyId>?,
-                                      @Expose val created: Long,
-                                      @Expose val lastModified: Long,
-                                      @Expose val expiration: Long,
-                                      @Expose val algo: Algo?,
-                                      var passphrase: String?,
-                                      var errorMsg: String?) : Parcelable {
+data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
+                                     @Expose val isFullyEncrypted: Boolean?,
+                                     @Expose @SerializedName("private") val privateKey: String?,
+                                     @Expose @SerializedName("public") val publicKey: String?,
+                                     @Expose val users: List<String>?,
+                                     @Expose val ids: List<KeyId>?,
+                                     @Expose val created: Long,
+                                     @Expose val lastModified: Long,
+                                     @Expose val expiration: Long,
+                                     @Expose val algo: Algo?,
+                                     var passphrase: String?,
+                                     var errorMsg: String?) : Parcelable {
 
   val primaryPgpContact: PgpContact
     get() = determinePrimaryPgpContact()
@@ -183,9 +183,9 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<NodeKeyDetails> = object : Parcelable.Creator<NodeKeyDetails> {
-      override fun createFromParcel(source: Parcel): NodeKeyDetails = NodeKeyDetails(source)
-      override fun newArray(size: Int): Array<NodeKeyDetails?> = arrayOfNulls(size)
+    val CREATOR: Parcelable.Creator<PgpKeyDetails> = object : Parcelable.Creator<PgpKeyDetails> {
+      override fun createFromParcel(source: Parcel): PgpKeyDetails = PgpKeyDetails(source)
+      override fun newArray(size: Int): Array<PgpKeyDetails?> = arrayOfNulls(size)
     }
   }
 }

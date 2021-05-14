@@ -33,7 +33,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -57,7 +57,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
   private var tVPassPhraseVerification: TextView? = null
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
-  private var nodeKeyDetails: NodeKeyDetails? = null
+  private var pgpKeyDetails: PgpKeyDetails? = null
 
   override val contentResourceId: Int = R.layout.fragment_private_key_details
 
@@ -67,13 +67,13 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
     val args = arguments
     if (args != null) {
-      nodeKeyDetails = args.getParcelable(KEY_NODE_KEY_DETAILS)
+      pgpKeyDetails = args.getParcelable(KEY_NODE_KEY_DETAILS)
     }
 
-    if (nodeKeyDetails == null) {
+    if (pgpKeyDetails == null) {
       parentFragmentManager.popBackStack()
     } else {
-      nodeKeyDetails?.let {
+      pgpKeyDetails?.let {
         val context = context ?: return@let
         val passPhrase = KeysStorageImpl.getInstance(context)
             .getPassphraseByFingerprint(it.fingerprint ?: throw IllegalArgumentException())
@@ -124,7 +124,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
       REQUEST_CODE_DELETE_KEY_DIALOG -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
-            nodeKeyDetails?.let {
+            pgpKeyDetails?.let {
               account?.let { accountEntity -> privateKeysViewModel.deleteKeys(accountEntity, listOf(it)) }
             }
           }
@@ -137,7 +137,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
   private fun saveKey(data: Intent) {
     try {
-      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, nodeKeyDetails!!.publicKey!!)
+      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, pgpKeyDetails!!.publicKey!!)
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -167,7 +167,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
   }
 
   private fun initViews(view: View) {
-    val pgpContacts = nodeKeyDetails?.pgpContacts ?: emptyList()
+    val pgpContacts = pgpKeyDetails?.pgpContacts ?: emptyList()
     val emails = ArrayList<String>()
 
     for ((email) in pgpContacts) {
@@ -176,11 +176,11 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
     val textViewFingerprint = view.findViewById<TextView>(R.id.textViewFingerprint)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
-        GeneralUtil.doSectionsInText(" ", nodeKeyDetails?.fingerprint, 4)), textViewFingerprint)
+        GeneralUtil.doSectionsInText(" ", pgpKeyDetails?.fingerprint, 4)), textViewFingerprint)
 
     val textViewDate = view.findViewById<TextView>(R.id.textViewDate)
     textViewDate?.text = getString(R.string.template_date, DateFormat.getMediumDateFormat(context).format(
-        Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
+        Date(TimeUnit.MILLISECONDS.convert(pgpKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
 
     val textViewUsers = view.findViewById<TextView>(R.id.textViewUsers)
     textViewUsers.text = getString(R.string.template_users, TextUtils.join(", ", emails))
@@ -192,13 +192,13 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
   private fun initButtons(view: View) {
     view.findViewById<View>(R.id.btnShowPubKey)?.setOnClickListener {
-      val dialogFragment = InfoDialogFragment.newInstance("", nodeKeyDetails!!.publicKey!!)
+      val dialogFragment = InfoDialogFragment.newInstance("", pgpKeyDetails!!.publicKey!!)
       dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
     }
 
     view.findViewById<View>(R.id.btnCopyToClipboard)?.setOnClickListener {
       val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-      clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", nodeKeyDetails?.publicKey))
+      clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", pgpKeyDetails?.publicKey))
       Toast.makeText(context, getString(R.string.copied), Toast.LENGTH_SHORT).show()
     }
     view.findViewById<View>(R.id.btnSaveToFile)?.setOnClickListener {
@@ -213,7 +213,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = Constants.MIME_TYPE_PGP_KEY
-    intent.putExtra(Intent.EXTRA_TITLE, "0x" + nodeKeyDetails!!.fingerprint + ".asc")
+    intent.putExtra(Intent.EXTRA_TITLE, "0x" + pgpKeyDetails!!.fingerprint + ".asc")
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
   }
 
@@ -233,7 +233,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showInfoDialog(
               dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't delete a key with fingerprint = {${nodeKeyDetails?.fingerprint ?: ""}}")
+              ?: "Couldn't delete a key with fingerprint = {${pgpKeyDetails?.fingerprint ?: ""}}")
           baseActivity.countingIdlingResource.decrementSafely()
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
@@ -252,7 +252,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
           val checkResult = it.data?.firstOrNull()
           val verificationMsg: String?
           if (checkResult != null) {
-            if (checkResult.nodeKeyDetails.isPrivate) {
+            if (checkResult.pgpKeyDetails.isPrivate) {
               if (checkResult.e == null) {
                 verificationMsg = getString(R.string.stored_pass_phrase_matched)
               } else {
@@ -290,7 +290,7 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
     private const val REQUEST_CODE_DELETE_KEY_DIALOG = 100
 
-    fun newInstance(details: NodeKeyDetails): PrivateKeyDetailsFragment {
+    fun newInstance(details: PgpKeyDetails): PrivateKeyDetailsFragment {
       val keyDetailsFragment = PrivateKeyDetailsFragment()
       val args = Bundle()
       args.putParcelable(KEY_NODE_KEY_DETAILS, details)

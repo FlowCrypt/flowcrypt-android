@@ -10,7 +10,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import java.util.*
@@ -31,24 +31,24 @@ class PrivateKeysManager {
       saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, sourceType)
     }
 
-    fun saveKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails,
+    fun saveKeyToDatabase(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails,
                           passphrase: String, sourceType: KeyImportDetails.SourceType) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity).copy(
+      val keyEntity = pgpKeyDetails.toKeyEntity(accountEntity).copy(
           source = sourceType.toString(),
-          privateKey = KeyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey).toByteArray(),
+          privateKey = KeyStoreCryptoManager.encrypt(pgpKeyDetails.privateKey).toByteArray(),
           passphrase = KeyStoreCryptoManager.encrypt(passphrase))
       roomDatabase.keysDao().insertWithReplace(keyEntity)
       // Added timeout for a better sync between threads.
       Thread.sleep(3000)
     }
 
-    fun getNodeKeyDetailsFromAssets(assetsPath: String, onlyPrivate: Boolean = false): NodeKeyDetails {
+    fun getNodeKeyDetailsFromAssets(assetsPath: String, onlyPrivate: Boolean = false): PgpKeyDetails {
       return getNodeKeyDetailsListFromAssets(assetsPath, onlyPrivate).first()
     }
 
-    fun getNodeKeyDetailsListFromAssets(assetsPath: String, onlyPrivate: Boolean = false): List<NodeKeyDetails> {
+    fun getNodeKeyDetailsListFromAssets(assetsPath: String, onlyPrivate: Boolean = false): List<PgpKeyDetails> {
       val parsedCollections =
           PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(assetsPath))
 
@@ -63,8 +63,8 @@ class PrivateKeysManager {
       }
     }
 
-    fun getKeysFromAssets(keysPaths: Array<String>, onlyPrivate: Boolean = false): ArrayList<NodeKeyDetails> {
-      val privateKeys = ArrayList<NodeKeyDetails>()
+    fun getKeysFromAssets(keysPaths: Array<String>, onlyPrivate: Boolean = false): ArrayList<PgpKeyDetails> {
+      val privateKeys = ArrayList<PgpKeyDetails>()
       keysPaths.forEach { path ->
         privateKeys.addAll(getNodeKeyDetailsListFromAssets(path, onlyPrivate))
       }

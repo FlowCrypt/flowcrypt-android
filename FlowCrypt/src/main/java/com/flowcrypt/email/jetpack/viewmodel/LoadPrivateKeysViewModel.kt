@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
@@ -44,7 +44,7 @@ import kotlin.collections.ArrayList
  * E-mail: DenBond7@gmail.com
  */
 class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
-  val privateKeysLiveData = MutableLiveData<Result<ArrayList<NodeKeyDetails>?>>()
+  val privateKeysLiveData = MutableLiveData<Result<ArrayList<PgpKeyDetails>?>>()
 
   fun fetchAvailableKeys(accountEntity: AccountEntity?) {
     viewModelScope.launch {
@@ -59,7 +59,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
     }
   }
 
-  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>> =
+  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<PgpKeyDetails>> =
       withContext(Dispatchers.IO) {
         try {
           when (accountEntity.accountType) {
@@ -79,17 +79,17 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
       }
 
   /**
-   * Get a list of [NodeKeyDetails] using the standard JavaMail API
+   * Get a list of [PgpKeyDetails] using the standard JavaMail API
    *
    * @param session A [Session] object.
-   * @return A list of [NodeKeyDetails]
+   * @return A list of [PgpKeyDetails]
    * @throws MessagingException
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(accountEntity: AccountEntity): Collection<NodeKeyDetails> =
+  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(accountEntity: AccountEntity): Collection<PgpKeyDetails> =
       withContext(Dispatchers.IO) {
-        val details = ArrayList<NodeKeyDetails>()
+        val details = ArrayList<PgpKeyDetails>()
         OpenStoreHelper.openStore(getApplication(), accountEntity, OpenStoreHelper.getAccountSess(getApplication(), accountEntity)).use { store ->
           try {
             val context: Context = getApplication()

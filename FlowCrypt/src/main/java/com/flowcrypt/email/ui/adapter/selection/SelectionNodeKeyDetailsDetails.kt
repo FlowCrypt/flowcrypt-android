@@ -6,7 +6,7 @@
 package com.flowcrypt.email.ui.adapter.selection
 
 import androidx.recyclerview.selection.ItemDetailsLookup
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
  * @author Denis Bondarenko
@@ -15,7 +15,7 @@ import com.flowcrypt.email.security.model.NodeKeyDetails
  *         E-mail: DenBond7@gmail.com
  */
 class SelectionNodeKeyDetailsDetails(private val position: Int,
-                                     private val nodeKeyDetails: NodeKeyDetails?) : ItemDetailsLookup.ItemDetails<NodeKeyDetails>() {
-  override fun getSelectionKey() = nodeKeyDetails
+                                     private val pgpKeyDetails: PgpKeyDetails?) : ItemDetailsLookup.ItemDetails<PgpKeyDetails>() {
+  override fun getSelectionKey() = pgpKeyDetails
   override fun getPosition() = position
 }

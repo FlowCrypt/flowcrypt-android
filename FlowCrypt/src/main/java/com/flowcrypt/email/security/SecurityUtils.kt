@@ -12,7 +12,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.pgp.toNodeKeyDetails
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
@@ -128,7 +128,7 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderKeyDetails(context: Context, account: AccountEntity, senderEmail: String): NodeKeyDetails {
+    fun getSenderKeyDetails(context: Context, account: AccountEntity, senderEmail: String): PgpKeyDetails {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
       val keys = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
 

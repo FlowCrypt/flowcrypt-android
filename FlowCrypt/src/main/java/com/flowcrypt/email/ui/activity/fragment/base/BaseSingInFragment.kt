@@ -19,7 +19,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
@@ -37,7 +37,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   protected val existedAccounts = mutableListOf<AccountEntity>()
-  protected val importCandidates = mutableListOf<NodeKeyDetails>()
+  protected val importCandidates = mutableListOf<PgpKeyDetails>()
 
   abstract fun getTempAccount(): AccountEntity?
 

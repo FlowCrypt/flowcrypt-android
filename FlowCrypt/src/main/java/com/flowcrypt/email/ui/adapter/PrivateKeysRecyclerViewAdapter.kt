@@ -16,7 +16,7 @@ import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.*
@@ -32,10 +32,10 @@ import java.util.concurrent.TimeUnit
  */
 class PrivateKeysRecyclerViewAdapter(context: Context,
                                      private val listener: OnKeySelectedListener?,
-                                     val nodeKeyDetailsList: MutableList<NodeKeyDetails> = mutableListOf())
+                                     val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf())
   : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
   private val dateFormat: java.text.DateFormat = DateFormat.getMediumDateFormat(context)
-  var tracker: SelectionTracker<NodeKeyDetails>? = null
+  var tracker: SelectionTracker<PgpKeyDetails>? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     val view = LayoutInflater.from(parent.context).inflate(R.layout.key_item, parent, false)
@@ -43,7 +43,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-    val nodeKeyDetails = nodeKeyDetailsList[position]
+    val nodeKeyDetails = pgpKeyDetailsList[position]
     tracker?.isSelected(nodeKeyDetails)?.let { viewHolder.setActivated(it) }
     val email = nodeKeyDetails.primaryPgpContact.email
 
@@ -65,25 +65,25 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   override fun getItemCount(): Int {
-    return nodeKeyDetailsList.size
+    return pgpKeyDetailsList.size
   }
 
-  fun swap(newList: List<NodeKeyDetails>) {
-    val diffUtilCallback = DiffUtilCallback(this.nodeKeyDetailsList, newList)
+  fun swap(newList: List<PgpKeyDetails>) {
+    val diffUtilCallback = DiffUtilCallback(this.pgpKeyDetailsList, newList)
     val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
 
-    nodeKeyDetailsList.clear()
-    nodeKeyDetailsList.addAll(newList)
+    pgpKeyDetailsList.clear()
+    pgpKeyDetailsList.addAll(newList)
     productDiffResult.dispatchUpdatesTo(this)
   }
 
   interface OnKeySelectedListener {
-    fun onKeySelected(position: Int, nodeKeyDetails: NodeKeyDetails?)
+    fun onKeySelected(position: Int, pgpKeyDetails: PgpKeyDetails?)
   }
 
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-    fun getNodeKeyDetails(): ItemDetailsLookup.ItemDetails<NodeKeyDetails>? {
-      return nodeKeyDetailsList.getOrNull(adapterPosition)?.let {
+    fun getNodeKeyDetails(): ItemDetailsLookup.ItemDetails<PgpKeyDetails>? {
+      return pgpKeyDetailsList.getOrNull(adapterPosition)?.let {
         SelectionNodeKeyDetailsDetails(adapterPosition, it)
       }
     }
@@ -97,8 +97,8 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
   }
 
-  inner class DiffUtilCallback(private val oldList: List<NodeKeyDetails>,
-                               private val newList: List<NodeKeyDetails>) : DiffUtil.Callback() {
+  inner class DiffUtilCallback(private val oldList: List<PgpKeyDetails>,
+                               private val newList: List<PgpKeyDetails>) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val old = oldList[oldItemPosition]
       val new = newList[newItemPosition]

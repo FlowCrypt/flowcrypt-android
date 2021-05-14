@@ -24,7 +24,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
@@ -290,7 +290,7 @@ class MainSignInFragment : BaseSingInFragment() {
       if (result != null) {
         when (result.status) {
           Result.Status.SUCCESS -> {
-            onFetchKeysCompleted(result.data as ArrayList<NodeKeyDetails>?)
+            onFetchKeysCompleted(result.data as ArrayList<PgpKeyDetails>?)
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -313,7 +313,7 @@ class MainSignInFragment : BaseSingInFragment() {
     }
   }
 
-  private fun onFetchKeysCompleted(keyDetailsList: ArrayList<NodeKeyDetails>?) {
+  private fun onFetchKeysCompleted(keyDetailsList: ArrayList<PgpKeyDetails>?) {
     if (keyDetailsList.isNullOrEmpty()) {
       getTempAccount()?.let {
         requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
@@ -365,7 +365,7 @@ class MainSignInFragment : BaseSingInFragment() {
   private fun handleResultFromCheckKeysActivity(resultCode: Int, data: Intent?) {
     when (resultCode) {
       Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
-        val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+        val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
             CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
         if (keys.isNullOrEmpty()) {

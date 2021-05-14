@@ -8,7 +8,7 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -19,7 +19,7 @@ class PgpKeyTest {
     val pubKey = TestKeys.KEYS["rsa1"]!!.publicKey
     val result = PgpKey.parseKeys(pubKey.toByteArray())
 
-    val expected = NodeKeyDetails(
+    val expected = PgpKeyDetails(
         isFullyDecrypted = true,
         isFullyEncrypted = false, privateKey = null,
         publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
@@ -79,7 +79,7 @@ class PgpKeyTest {
     val result = PgpKey.parseKeys(pubKey.toByteArray())
 
     // TODO update from output
-    val expected = NodeKeyDetails(
+    val expected = PgpKeyDetails(
         isFullyDecrypted = true,
         isFullyEncrypted = false, privateKey = null,
         publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +

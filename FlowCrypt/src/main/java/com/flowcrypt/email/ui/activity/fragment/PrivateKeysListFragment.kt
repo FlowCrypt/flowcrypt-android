@@ -29,7 +29,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -57,9 +57,9 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   override val contentResourceId: Int = R.layout.fragment_private_keys
 
-  private var tracker: SelectionTracker<NodeKeyDetails>? = null
+  private var tracker: SelectionTracker<PgpKeyDetails>? = null
   private var actionMode: ActionMode? = null
-  private val selectionObserver = object : SelectionTracker.SelectionObserver<NodeKeyDetails>() {
+  private val selectionObserver = object : SelectionTracker.SelectionObserver<PgpKeyDetails>() {
     override fun onSelectionChanged() {
       super.onSelectionChanged()
       when {
@@ -145,12 +145,12 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     }
   }
 
-  override fun onKeySelected(position: Int, nodeKeyDetails: NodeKeyDetails?) {
+  override fun onKeySelected(position: Int, pgpKeyDetails: PgpKeyDetails?) {
     if (tracker?.hasSelection() == true) {
       return
     }
 
-    nodeKeyDetails?.let {
+    pgpKeyDetails?.let {
       parentFragmentManager
           .beginTransaction()
           .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it))
@@ -218,9 +218,9 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     tracker = SelectionTracker.Builder(
         javaClass.simpleName,
         recyclerView,
-        NodeKeyDetailsKeyProvider(recyclerViewAdapter.nodeKeyDetailsList),
+        NodeKeyDetailsKeyProvider(recyclerViewAdapter.pgpKeyDetailsList),
         PrivateKeyItemDetailsLookup(recyclerView),
-        StorageStrategy.createParcelableStorage(NodeKeyDetails::class.java)
+        StorageStrategy.createParcelableStorage(PgpKeyDetails::class.java)
     ).build()
 
     recyclerViewAdapter.tracker = tracker

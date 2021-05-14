@@ -29,7 +29,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -54,7 +54,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
   private val parseKeysViewModel: ParseKeysViewModel by viewModels()
 
   private var contactEntity: ContactEntity? = null
-  private var details: NodeKeyDetails? = null
+  private var details: PgpKeyDetails? = null
   private var progressBar: View? = null
   private var content: View? = null
   private var layoutUsers: ViewGroup? = null

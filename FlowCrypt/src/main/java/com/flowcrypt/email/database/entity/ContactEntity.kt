@@ -14,7 +14,7 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
  * @author Denis Bondarenko
@@ -46,7 +46,7 @@ data class ContactEntity(
 ) : Parcelable {
 
   @Ignore
-  var nodeKeyDetails: NodeKeyDetails? = null
+  var pgpKeyDetails: PgpKeyDetails? = null
 
   constructor(parcel: Parcel) : this(
       parcel.readValue(Long::class.java.classLoader) as? Long,
@@ -125,7 +125,7 @@ data class ContactEntity(
         client = client,
         fingerprint = fingerprint,
         lastUse = lastUse,
-        nodeKeyDetails = nodeKeyDetails)
+        pgpKeyDetails = pgpKeyDetails)
   }
 
   companion object CREATOR : Parcelable.Creator<ContactEntity> {

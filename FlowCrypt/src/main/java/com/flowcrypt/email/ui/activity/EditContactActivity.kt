@@ -21,7 +21,7 @@ import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.UpdatePublicKeyOfContactDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -56,7 +56,7 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
     isCheckingClipboardEnabled = false
   }
 
-  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
     if (keyDetailsList.size > 1) {
       showInfoDialogFragment(dialogMsg = getString(R.string.more_than_one_public_key_found))
       return
@@ -81,8 +81,8 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
     }
   }
 
-  override fun onKeySelected(nodeKeyDetails: NodeKeyDetails) {
-    contactsViewModel.updateContactPgpInfo(contactEntity, nodeKeyDetails)
+  override fun onKeySelected(pgpKeyDetails: PgpKeyDetails) {
+    contactsViewModel.updateContactPgpInfo(contactEntity, pgpKeyDetails)
     finish()
   }
 

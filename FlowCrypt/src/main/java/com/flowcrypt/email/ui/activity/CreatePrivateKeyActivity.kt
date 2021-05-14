@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -123,8 +123,8 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
 
           Result.Status.SUCCESS -> {
             isBackEnabled = true
-            val nodeKeyDetails: NodeKeyDetails? = it.data
-            createdPrivateKeyFingerprint = nodeKeyDetails?.fingerprint
+            val pgpKeyDetails: PgpKeyDetails? = it.data
+            createdPrivateKeyFingerprint = pgpKeyDetails?.fingerprint
             layoutSecondPasswordCheck.visibility = View.GONE
             layoutSuccess.visibility = View.VISIBLE
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)

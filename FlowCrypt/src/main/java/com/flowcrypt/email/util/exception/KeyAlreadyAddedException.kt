@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
  * This exception means that the key already added.
@@ -15,4 +15,4 @@ import com.flowcrypt.email.security.model.NodeKeyDetails
  * Time: 14:09
  * E-mail: DenBond7@gmail.com
  */
-class KeyAlreadyAddedException(val keyDetails: NodeKeyDetails, errorMsg: String) : Exception(errorMsg)
+class KeyAlreadyAddedException(val keyDetails: PgpKeyDetails, errorMsg: String) : Exception(errorMsg)

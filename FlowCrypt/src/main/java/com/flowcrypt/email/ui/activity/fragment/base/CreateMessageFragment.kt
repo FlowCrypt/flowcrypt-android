@@ -64,7 +64,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectContactsActivity
@@ -896,7 +896,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     for (sublist in pgpContactsList) {
       sublist?.let {
         for (pgpContact in it) {
-          if (pgpContact.nodeKeyDetails?.isExpired == true) {
+          if (pgpContact.pgpKeyDetails?.isExpired == true) {
             showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_expired))
             return true
           }
@@ -924,7 +924,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         for (pgpContactChipSpan in pgpContactChipSpans) {
           if (pgpContact.email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
             pgpContactChipSpan.hasPgp = pgpContact.hasPgp
-            pgpContactChipSpan.isExpired = pgpContact.nodeKeyDetails?.isExpired
+            pgpContactChipSpan.isExpired = pgpContact.pgpKeyDetails?.isExpired
             break
           }
         }
@@ -1485,7 +1485,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         })
   }
 
-  private fun updateFromAddressAdapter(list: List<NodeKeyDetails>) {
+  private fun updateFromAddressAdapter(list: List<PgpKeyDetails>) {
     val setOfUsers = list.map { nodeKeyDetails -> nodeKeyDetails.pgpContacts }
         .flatten()
         .map { contact -> contact.email }

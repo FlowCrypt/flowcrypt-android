@@ -26,7 +26,7 @@ import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -45,8 +45,8 @@ import com.google.android.material.snackbar.Snackbar
  */
 class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
   private val backupsViewModel: BackupsViewModel by viewModels()
-  private var privateKeysFromEmailBackups = mutableListOf<NodeKeyDetails>()
-  private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
+  private var privateKeysFromEmailBackups = mutableListOf<PgpKeyDetails>()
+  private val unlockedKeys: MutableList<PgpKeyDetails> = ArrayList()
   private var sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
 
   private var layoutSyncStatus: View? = null
@@ -114,7 +114,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
         when (resultCode) {
           Activity.RESULT_OK -> {
-            val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+            val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
                 CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
             keys?.let {
@@ -138,7 +138,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
   }
 
-  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
     var areFreshKeysExisted = false
     var arePrivateKeysExisted = false
 

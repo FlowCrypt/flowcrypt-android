@@ -27,7 +27,7 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -613,17 +613,17 @@ class GmailApiHelper {
     }
 
     /**
-     * Get a list of [NodeKeyDetails] using the **Gmail API**
+     * Get a list of [PgpKeyDetails] using the **Gmail API**
      *
      * @param context context Interface to global information about an application environment;
      * @param account An [AccountEntity] object.
-     * @return A list of [NodeKeyDetails]
+     * @return A list of [PgpKeyDetails]
      * @throws MessagingException
      * @throws IOException
      */
-    suspend fun getPrivateKeyBackups(context: Context, account: AccountEntity): List<NodeKeyDetails> = withContext(Dispatchers.IO) {
+    suspend fun getPrivateKeyBackups(context: Context, account: AccountEntity): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
       try {
-        val list = mutableListOf<NodeKeyDetails>()
+        val list = mutableListOf<PgpKeyDetails>()
 
         val searchQuery = EmailUtil.getGmailBackupSearchQuery(account.email)
         val gmailApiService = generateGmailApiService(context, account)

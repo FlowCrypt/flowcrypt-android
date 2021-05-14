@@ -24,7 +24,7 @@ import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -44,10 +44,10 @@ import java.nio.charset.StandardCharsets
  * E-mail: DenBond7@gmail.com
  */
 class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFragment.OnInfoDialogButtonClickListener {
-  private var originalKeys: MutableList<NodeKeyDetails> = mutableListOf()
-  private val unlockedKeys: ArrayList<NodeKeyDetails> = ArrayList()
-  private val remainingKeys: ArrayList<NodeKeyDetails> = ArrayList()
-  private var keyDetailsAndLongIdsMap: MutableMap<NodeKeyDetails, String>? = null
+  private var originalKeys: MutableList<PgpKeyDetails> = mutableListOf()
+  private val unlockedKeys: ArrayList<PgpKeyDetails> = ArrayList()
+  private val remainingKeys: ArrayList<PgpKeyDetails> = ArrayList()
+  private var keyDetailsAndLongIdsMap: MutableMap<PgpKeyDetails, String>? = null
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
 
   private var editTextKeyPassword: EditText? = null
@@ -173,7 +173,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   }
 
   private fun getExtras() {
-    val keys: List<NodeKeyDetails>? = intent?.getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS)
+    val keys: List<PgpKeyDetails>? = intent?.getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS)
     keys?.let { originalKeys.addAll(it) }
     this.sourceType = intent?.getParcelableExtra(KEY_EXTRA_TYPE)
     this.subTitle = intent?.getStringExtra(KEY_EXTRA_SUB_TITLE)
@@ -231,8 +231,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
                 val resultKeys = it.data ?: emptyList()
                 val sessionUnlockedKeys = resultKeys
                     .filter { checkResult ->
-                      checkResult.nodeKeyDetails.passphrase?.isNotEmpty() == true
-                    }.map { checkResult -> checkResult.nodeKeyDetails }
+                      checkResult.pgpKeyDetails.passphrase?.isNotEmpty() == true
+                    }.map { checkResult -> checkResult.pgpKeyDetails }
                 if (sessionUnlockedKeys.isNotEmpty()) {
                   unlockedKeys.addAll(sessionUnlockedKeys)
 
@@ -314,32 +314,32 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   /**
    * Get a count of unique longIds.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of [NodeKeyDetails].
+   * @param mapOfKeyDetailsAndLongIds An input map of [PgpKeyDetails].
    * @return A count of unique longIds.
    */
-  private fun getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>?): Int {
+  private fun getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds: Map<PgpKeyDetails, String>?): Int {
     return HashSet(mapOfKeyDetailsAndLongIds?.values ?: emptyList()).size
   }
 
   /**
    * Get a set of unique longIds.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of [NodeKeyDetails].
+   * @param mapOfKeyDetailsAndLongIds An input map of [PgpKeyDetails].
    * @return A list of unique longIds.
    */
-  private fun getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>): Set<String> {
+  private fun getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds: Map<PgpKeyDetails, String>): Set<String> {
     return HashSet(mapOfKeyDetailsAndLongIds.values)
   }
 
   /**
-   * Generate a map of incoming list of [NodeKeyDetails] objects where values will be a [NodeKeyDetails]
+   * Generate a map of incoming list of [PgpKeyDetails] objects where values will be a [PgpKeyDetails]
    * longId.
    *
-   * @param keys An incoming list of [NodeKeyDetails] objects.
+   * @param keys An incoming list of [PgpKeyDetails] objects.
    * @return A generated map.
    */
-  private fun prepareMapFromKeyDetailsList(keys: List<NodeKeyDetails>?): MutableMap<NodeKeyDetails, String> {
-    val map = HashMap<NodeKeyDetails, String>()
+  private fun prepareMapFromKeyDetailsList(keys: List<PgpKeyDetails>?): MutableMap<PgpKeyDetails, String> {
+    val map = HashMap<PgpKeyDetails, String>()
 
     keys?.let {
       for (keyDetails in it) {
@@ -371,7 +371,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
         "KEY_EXTRA_UNLOCKED_PRIVATE_KEYS", CheckKeysActivity::class.java)
     val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_SKIP_IMPORTED_KEYS", CheckKeysActivity::class.java)
 
-    fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>,
+    fun newIntent(context: Context, privateKeys: ArrayList<PgpKeyDetails>,
                   sourceType: KeyImportDetails.SourceType? = null, subTitle: String? = null, positiveBtnTitle:
                   String? = null, negativeBtnTitle: String? = null,
                   isExtraImportOpt: Boolean = false,
