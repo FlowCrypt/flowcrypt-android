@@ -43,11 +43,12 @@ import java.nio.charset.StandardCharsets
  * Time: 9:59
  * E-mail: DenBond7@gmail.com
  */
-class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFragment.OnInfoDialogButtonClickListener {
+class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
+    InfoDialogFragment.OnInfoDialogButtonClickListener {
   private var originalKeys: MutableList<PgpKeyDetails> = mutableListOf()
   private val unlockedKeys: ArrayList<PgpKeyDetails> = ArrayList()
   private val remainingKeys: ArrayList<PgpKeyDetails> = ArrayList()
-  private var keyDetailsAndLongIdsMap: MutableMap<PgpKeyDetails, String>? = null
+  private var keyDetailsAndFingerprintsMap: MutableMap<PgpKeyDetails, String> = mutableMapOf()
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
 
   private var editTextKeyPassword: EditText? = null
@@ -79,15 +80,15 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     getExtras()
 
     if (originalKeys.isNotEmpty()) {
-      this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(originalKeys)
-      this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
+      this.keyDetailsAndFingerprintsMap = prepareMapFromKeyDetailsList(originalKeys)
+      this.uniqueKeysCount = getCountOfUniqueKeys(keyDetailsAndFingerprintsMap)
 
       if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
         if (intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)) {
           removeAlreadyImportedKeys()
         }
-        this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
-        this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
+        this.uniqueKeysCount = getCountOfUniqueKeys(keyDetailsAndFingerprintsMap)
+        this.originalKeys = ArrayList(keyDetailsAndFingerprintsMap.keys)
 
         when (uniqueKeysCount) {
           0 -> {
@@ -101,9 +102,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
           }
 
           else -> {
-            if (originalKeys.size != keyDetailsAndLongIdsMap?.size) {
+            if (originalKeys.size != keyDetailsAndFingerprintsMap.size) {
               val map = prepareMapFromKeyDetailsList(originalKeys)
-              val remainingKeyCount = getUniqueKeysLongIdsCount(map)
+              val remainingKeyCount = getCountOfUniqueKeys(map)
 
               this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
                   uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
@@ -246,7 +247,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
                     initButton(R.id.buttonSkipRemainingBackups, text = getString(R.string.skip_remaining_backups))
                     editTextKeyPassword?.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
-                    val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
+                    val remainingKeyCount = getCountOfUniqueKeys(mapOfRemainingBackups)
 
                     textViewSubTitle?.text = resources.getQuantityString(
                         R.plurals.not_recovered_all_keys, remainingKeyCount,
@@ -295,15 +296,15 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
    * Remove the already imported keys from the list of found backups.
    */
   private fun removeAlreadyImportedKeys() {
-    val longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap!!)
+    val fingerprints = getUniqueFingerprints(keyDetailsAndFingerprintsMap)
     val keysStorage = KeysStorageImpl.getInstance(this)
 
-    for (longId in longIds) {
-      if (keysStorage.getPassphraseByFingerprint(longId) != null) {
-        val iterator = keyDetailsAndLongIdsMap!!.entries.iterator()
+    for (fingerprint in fingerprints) {
+      if (keysStorage.getPassphraseByFingerprint(fingerprint) != null) {
+        val iterator = keyDetailsAndFingerprintsMap.entries.iterator()
         while (iterator.hasNext()) {
           val entry = iterator.next()
-          if (longId == entry.value) {
+          if (fingerprint == entry.value) {
             iterator.remove()
           }
         }
@@ -312,33 +313,34 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   }
 
   /**
-   * Get a count of unique longIds.
+   * Get a count of unique fingerprints.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of [PgpKeyDetails].
-   * @return A count of unique longIds.
+   * @param map An input map of [PgpKeyDetails].
+   * @return A count of unique fingerprints.
    */
-  private fun getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds: Map<PgpKeyDetails, String>?): Int {
-    return HashSet(mapOfKeyDetailsAndLongIds?.values ?: emptyList()).size
+  private fun getCountOfUniqueKeys(map: Map<PgpKeyDetails, String>): Int {
+    return getUniqueFingerprints(map).size
   }
 
   /**
-   * Get a set of unique longIds.
+   * Get a set of unique fingerprints.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of [PgpKeyDetails].
-   * @return A list of unique longIds.
+   * @param map An input map of [PgpKeyDetails].
+   * @return A list of unique fingerprints.
    */
-  private fun getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds: Map<PgpKeyDetails, String>): Set<String> {
-    return HashSet(mapOfKeyDetailsAndLongIds.values)
+  private fun getUniqueFingerprints(map: Map<PgpKeyDetails, String>): Set<String> {
+    return HashSet(map.values)
   }
 
   /**
-   * Generate a map of incoming list of [PgpKeyDetails] objects where values will be a [PgpKeyDetails]
-   * longId.
+   * Generate a map of incoming list of [PgpKeyDetails] objects where values
+   * will be a [PgpKeyDetails] fingerprints.
    *
    * @param keys An incoming list of [PgpKeyDetails] objects.
    * @return A generated map.
    */
-  private fun prepareMapFromKeyDetailsList(keys: List<PgpKeyDetails>?): MutableMap<PgpKeyDetails, String> {
+  private fun prepareMapFromKeyDetailsList(keys: List<PgpKeyDetails>?):
+      MutableMap<PgpKeyDetails, String> {
     val map = HashMap<PgpKeyDetails, String>()
 
     keys?.let {
