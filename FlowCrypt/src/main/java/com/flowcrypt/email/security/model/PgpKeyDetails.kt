@@ -156,7 +156,8 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
     return results
   }
 
-  fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
+  fun toKeyEntity(
+      accountEntity: AccountEntity, passphraseType: KeyEntity.PassphraseType): KeyEntity {
     return KeyEntity(
         fingerprint = fingerprint,
         account = accountEntity.email.toLowerCase(Locale.US),
@@ -165,7 +166,9 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
         publicKey = publicKey.toByteArray(),
         privateKey = privateKey?.toByteArray()
             ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
-        storedPassphrase = tempPassphrase?.let { String(it) })
+        storedPassphrase = tempPassphrase?.let { String(it) },
+        passphraseType = passphraseType
+    )
   }
 
   override fun equals(other: Any?): Boolean {

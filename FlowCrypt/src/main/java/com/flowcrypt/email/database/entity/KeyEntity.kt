@@ -5,7 +5,8 @@
 
 package com.flowcrypt.email.database.entity
 
-import android.provider.BaseColumns
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -43,7 +44,8 @@ data class KeyEntity(
     val source: String,
     @ColumnInfo(name = "public_key") val publicKey: ByteArray,
     @ColumnInfo(name = "private_key") val privateKey: ByteArray,
-    @ColumnInfo(name = "passphrase", defaultValue = "NULL") val storedPassphrase: String?) {
+    @ColumnInfo(name = "passphrase", defaultValue = "NULL") val storedPassphrase: String?,
+    @ColumnInfo(name = "passphrase_type", defaultValue = "0") val passphraseType: PassphraseType) {
 
   @Ignore
   val privateKeyAsString = String(privateKey)
@@ -66,7 +68,8 @@ data class KeyEntity(
         " source='$source'," +
         " publicKey=${publicKey.contentToString()}," +
         " privateKey=${privateKey.contentToString()}," +
-        " storedPassphrase=(hidden))"
+        " storedPassphrase=(hidden))" +
+        " passphraseType='$passphraseType',"
   }
 
   override fun equals(other: Any?): Boolean {
@@ -83,6 +86,8 @@ data class KeyEntity(
     if (!publicKey.contentEquals(other.publicKey)) return false
     if (!privateKey.contentEquals(other.privateKey)) return false
     if (storedPassphrase != other.storedPassphrase) return false
+    if (passphraseType != other.passphraseType) return false
+    if (passphrase != other.passphrase) return false
 
     return true
   }
@@ -91,11 +96,37 @@ data class KeyEntity(
     var result = id?.hashCode() ?: 0
     result = 31 * result + fingerprint.hashCode()
     result = 31 * result + account.hashCode()
-    result = 31 * result + accountType.hashCode()
+    result = 31 * result + (accountType?.hashCode() ?: 0)
     result = 31 * result + source.hashCode()
     result = 31 * result + publicKey.contentHashCode()
     result = 31 * result + privateKey.contentHashCode()
     result = 31 * result + (storedPassphrase?.hashCode() ?: 0)
+    result = 31 * result + passphraseType.hashCode()
+    result = 31 * result + passphrase.hashCode()
     return result
+  }
+
+  enum class PassphraseType(val id: Int) : Parcelable {
+    REGULAR(0),
+    RAM(1),
+    UNDEFINED(1000);
+
+    override fun describeContents(): Int {
+      return 0
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+      dest.writeInt(ordinal)
+    }
+
+    companion object CREATOR : Parcelable.Creator<PassphraseType> {
+      override fun createFromParcel(source: Parcel): PassphraseType = values()[source.readInt()]
+      override fun newArray(size: Int): Array<PassphraseType?> = arrayOfNulls(size)
+
+      fun findValueById(id: Int): PassphraseType {
+        return values().firstOrNull { it.id == id }
+            ?: throw IllegalArgumentException("Unsupported key type")
+      }
+    }
   }
 }

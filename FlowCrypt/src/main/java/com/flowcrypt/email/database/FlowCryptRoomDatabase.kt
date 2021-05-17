@@ -13,8 +13,10 @@ import androidx.annotation.WorkerThread
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.converters.PassphraseTypeConverter
 import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
@@ -56,6 +58,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
   MessageEntity::class
 ],
     version = FlowCryptRoomDatabase.DB_VERSION)
+@TypeConverters(PassphraseTypeConverter::class)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun msgDao(): MessageDao
 
@@ -352,7 +355,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         //drop old table
         database.execSQL("DROP TABLE IF EXISTS keys;")
         //create a new table 'keys' with 'fingerprint' instead of 'long_id'
-        database.execSQL("CREATE TABLE IF NOT EXISTS `keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `fingerprint` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+        database.execSQL("CREATE TABLE IF NOT EXISTS `keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `fingerprint` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, `passphrase_type` INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
         //create indices for new table
         database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `fingerprint_account_account_type_in_keys` ON `keys` (`fingerprint`, `account`, `account_type`)")
         //fill new keys table with existed data. Later we will update fingerprints
@@ -368,7 +371,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
             val pubKey = PgpKey.parseKeys(pubKeyAsByteArray)
                 .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
             val fingerprint = OpenPgpV4Fingerprint(pubKey).toString()
-            database.execSQL("UPDATE keys SET fingerprint = ? WHERE fingerprint = ?;", arrayOf(fingerprint, longId))
+            database.execSQL("UPDATE keys SET fingerprint = ?, passphrase_type = 0 WHERE fingerprint = ?;", arrayOf(fingerprint, longId))
           }
         }
       }
