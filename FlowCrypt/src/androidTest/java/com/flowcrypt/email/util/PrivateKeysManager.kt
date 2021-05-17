@@ -38,7 +38,7 @@ class PrivateKeysManager {
       val keyEntity = pgpKeyDetails.toKeyEntity(accountEntity).copy(
           source = sourceType.toString(),
           privateKey = KeyStoreCryptoManager.encrypt(pgpKeyDetails.privateKey).toByteArray(),
-          passphrase = KeyStoreCryptoManager.encrypt(passphrase))
+          storedPassphrase = KeyStoreCryptoManager.encrypt(passphrase))
       roomDatabase.keysDao().insertWithReplace(keyEntity)
       // Added timeout for a better sync between threads.
       Thread.sleep(3000)
