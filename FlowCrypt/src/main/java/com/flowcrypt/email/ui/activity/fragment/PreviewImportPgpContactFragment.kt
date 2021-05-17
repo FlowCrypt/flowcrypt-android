@@ -224,7 +224,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
     private fun parseKeys(inputStream: InputStream): LoaderResult {
       try {
-        val details = PgpKey.parseKeys(inputStream).toNodeKeyDetailsList()
+        val details = PgpKey.parseKeys(inputStream).toPgpKeyDetailsList()
 
         return if (!CollectionUtils.isEmpty(details)) {
           LoaderResult(parsePublicKeysInfo(details), null)
@@ -291,7 +291,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         if (weakRef.get() != null) {
           val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
               .contactsDao().getContactByEmail(keyOwner)?.toPgpContact()
-          return PublicKeyInfo(fingerprint!!, keyOwner, contact, pgpKeyDetails.publicKey!!)
+          return PublicKeyInfo(fingerprint, keyOwner, contact, pgpKeyDetails.publicKey)
         }
       }
       return null

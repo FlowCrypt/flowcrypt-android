@@ -29,7 +29,7 @@ class ParseKeysViewModel(application: Application) : AccountViewModel(applicatio
       Transformations.switchMap(keysSourceLiveData) { source ->
         liveData {
           emit(Result.loading())
-          emit(Result.success(PgpKey.parseKeys(source).toNodeKeyDetailsList()))
+          emit(Result.success(PgpKey.parseKeys(source).toPgpKeyDetailsList()))
         }
       }
 

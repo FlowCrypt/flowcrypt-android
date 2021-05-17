@@ -35,7 +35,7 @@ class AddPrivateKeyToDatabaseRule(val accountEntity: AccountEntity,
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        pgpKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).toNodeKeyDetailsList().first()
+        pgpKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).toPgpKeyDetailsList().first()
         PrivateKeysManager.saveKeyToDatabase(accountEntity, pgpKeyDetails, passphrase, sourceType)
         base.evaluate()
       }

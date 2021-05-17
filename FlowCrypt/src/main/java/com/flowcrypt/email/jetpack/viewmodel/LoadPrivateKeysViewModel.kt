@@ -113,7 +113,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   }
 
                   try {
-                    details.addAll(PgpKey.parseKeys(backup).toNodeKeyDetailsList())
+                    details.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
                   } catch (e: NodeException) {
                     e.printStackTrace()
                     ExceptionUtil.handleError(e)

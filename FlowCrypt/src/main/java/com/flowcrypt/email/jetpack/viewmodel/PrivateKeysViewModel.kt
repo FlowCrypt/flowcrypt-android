@@ -389,7 +389,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                                                 originalPrivateKey: String?): PgpKeyDetails =
       withContext(Dispatchers.IO) {
         val keyDetailsList = PgpKey.parseKeys(originalPrivateKey!!.toByteArray())
-            .toNodeKeyDetailsList()
+            .toPgpKeyDetailsList()
         if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }
@@ -414,7 +414,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         }
 
         val modifiedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray())
-            .toNodeKeyDetailsList()
+            .toPgpKeyDetailsList()
         if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
           throw IllegalStateException("Parse keys error")
         }

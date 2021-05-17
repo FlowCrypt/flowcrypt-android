@@ -670,7 +670,7 @@ class GmailApiHelper {
           }
 
           try {
-            list.addAll(PgpKey.parseKeys(backup).toNodeKeyDetailsList())
+            list.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
           } catch (e: NodeException) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)

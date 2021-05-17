@@ -104,6 +104,6 @@ object PgpKey {
         pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
             pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
 
-    fun toNodeKeyDetailsList() = getAllKeys().map { it.toPgpKeyDetails() }
+    fun toPgpKeyDetailsList() = getAllKeys().map { it.toPgpKeyDetails() }
   }
 }

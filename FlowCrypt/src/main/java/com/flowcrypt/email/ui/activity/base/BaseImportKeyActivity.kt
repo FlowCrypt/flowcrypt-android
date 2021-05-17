@@ -258,7 +258,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               }
               showInfoDialogFragment(dialogMsg = msg)
             } else {
-              keyImportModel?.sourceType?.let { type -> onKeyFound(type, parseKeyResult.toNodeKeyDetailsList()) }
+              keyImportModel?.sourceType?.let { type -> onKeyFound(type, parseKeyResult.toPgpKeyDetailsList()) }
             }
 
             countingIdlingResource.decrementSafely()

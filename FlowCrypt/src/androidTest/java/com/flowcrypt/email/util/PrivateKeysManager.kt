@@ -57,9 +57,9 @@ class PrivateKeysManager {
             PGPKeyRingCollection(parsedCollections.pgpKeyRingCollection
                 .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), false))
 
-        return onlyPrivateKeysCollection.toNodeKeyDetailsList()
+        return onlyPrivateKeysCollection.toPgpKeyDetailsList()
       } else {
-        return parsedCollections.toNodeKeyDetailsList()
+        return parsedCollections.toPgpKeyDetailsList()
       }
     }
 
@@ -75,7 +75,7 @@ class PrivateKeysManager {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      nodeKeyDetails.fingerprint?.let {
+      nodeKeyDetails.fingerprint.let {
         roomDatabase.keysDao().deleteByAccountAndFingerprint(accountEntity.email, it)
       }
 

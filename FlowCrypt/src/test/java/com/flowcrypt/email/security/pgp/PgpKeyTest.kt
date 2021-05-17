@@ -67,7 +67,7 @@ class PgpKeyTest {
         algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null)
     )
     assertEquals(1, result.getAllKeys().size)
-    assertEquals(expected, result.toNodeKeyDetailsList().first())
+    assertEquals(expected, result.toPgpKeyDetailsList().first())
   }
 
   @Test
@@ -126,6 +126,6 @@ class PgpKeyTest {
         algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null)
     )
     assertEquals(1, result.getAllKeys().size)
-    assertEquals(expected, result.toNodeKeyDetailsList().first())
+    assertEquals(expected, result.toPgpKeyDetailsList().first())
   }
 }
