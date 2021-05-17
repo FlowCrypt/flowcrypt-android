@@ -156,14 +156,14 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           val eccDecryptedFileResult = responseWrapper.result as DecryptedFileResult?
           printDecryptFileResult("decrypt-file-ecc", TEST_MSG.toByteArray(), eccDecryptedFileResult!!,
               responseWrapper.executionTime)
-          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048, encryptBytes!!, TestData.rsa2048PrvKeyInfo())
+          //requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048, encryptBytes!!, TestData.rsa2048PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_2048 -> {
           val rsa2048DecryptedFileResult = responseWrapper.result as DecryptedFileResult?
           printDecryptFileResult("decrypt-file-rsa2048", TEST_MSG.toByteArray(), rsa2048DecryptedFileResult!!,
               responseWrapper.executionTime)
-          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_4096, encryptBytes!!, TestData.rsa4096PrvKeyInfo())
+          //requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_4096, encryptBytes!!, TestData.rsa4096PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_4096 -> {

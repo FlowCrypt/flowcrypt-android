@@ -9,10 +9,8 @@ import android.content.Context
 import android.net.Uri
 import android.os.AsyncTask
 import androidx.lifecycle.LiveData
-import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
-import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
@@ -42,7 +40,7 @@ object RequestsManager {
 
   fun decryptMsg(requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
                  prvKeys: Array<KeyEntity>, isEmail: Boolean = false) {
-    load(requestCode, ParseDecryptMsgRequest(data = data, uri = uri, keyEntities = listOf(*prvKeys), isEmail = isEmail))
+    //load(requestCode, ParseDecryptMsgRequest(data = data, uri = uri, keyEntities = listOf(*prvKeys), isEmail = isEmail))
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
@@ -51,10 +49,6 @@ object RequestsManager {
 
   fun encryptFile(requestCode: Int, context: Context, fileUri: Uri) {
     //load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", listOf(*TestData.mixedPubKeys)))
-  }
-
-  fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<KeyEntity>) {
-    load(requestCode, DecryptFileRequest(encryptedData, listOf(*prvKeys)))
   }
 
   private fun load(requestCode: Int, nodeRequest: NodeRequest) {

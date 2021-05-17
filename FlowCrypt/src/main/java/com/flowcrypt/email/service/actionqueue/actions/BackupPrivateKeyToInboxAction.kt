@@ -14,7 +14,9 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.google.gson.annotations.SerializedName
 
@@ -37,29 +39,29 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
-    val keyEntity = roomDatabase.keysDao().getAllKeysByAccount(account = account.email).first {
-      it.fingerprint.equals(privateKeyFingerprint, true)
-    }
-    if (keyEntity.privateKey.isNotEmpty()) {
-      val session = OpenStoreHelper.getAccountSess(context, account)
-      val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
+    val keysStorage = KeysStorageImpl.getInstance(context)
+    val pgpKeyDetails = keysStorage
+        .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)?.toPgpKeyDetails() ?: return
 
-      val key = PgpKey.parseKeys(keyEntity.privateKey).toPgpKeyDetailsList().first()
-      val encryptedKey: String
-      if (key.isFullyEncrypted == true) {
-        encryptedKey = key.privateKey ?: throw IllegalArgumentException("empty key")
-      } else {
-        try {
-          encryptedKey = PgpKey.encryptKey(keyEntity.privateKeyAsString, keyEntity.passphrase)
-        } catch (e: Exception) {
-          throw IllegalStateException("An error occurred during encrypting some key", e)
-        }
+    val encryptedKey: String
+    if (pgpKeyDetails.isFullyEncrypted) {
+      encryptedKey = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key")
+    } else {
+      try {
+        val passphrase = keysStorage.getPassphraseByFingerprint(pgpKeyDetails.fingerprint) ?: return
+        encryptedKey = PgpKey.encryptKey(
+            armored = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key"),
+            passphrase = passphrase)
+      } catch (e: Exception) {
+        throw IllegalStateException("An error occurred during encrypting some key", e)
       }
-
-      val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey)
-      val message = EmailUtil.genMsgWithPrivateKeys(context, encryptedAccount, session, mimeBodyPart)
-      transport.sendMessage(message, message.allRecipients)
     }
+
+    val session = OpenStoreHelper.getAccountSess(context, account)
+    val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
+    val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey)
+    val message = EmailUtil.genMsgWithPrivateKeys(context, encryptedAccount, session, mimeBodyPart)
+    transport.sendMessage(message, message.allRecipients)
   }
 
   constructor(source: Parcel) : this(

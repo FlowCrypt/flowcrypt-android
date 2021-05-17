@@ -99,7 +99,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
         roomDatabase.keysDao().updateSuspend(list.map { keyEntity ->
           with(getModifiedNodeKeyDetails(keyEntity.passphrase, newPassphrase, keyEntity.privateKeyAsString)) {
-            if (isFullyDecrypted == true) {
+            if (isFullyDecrypted) {
               throw IllegalArgumentException("Error. The key is decrypted!")
             }
 

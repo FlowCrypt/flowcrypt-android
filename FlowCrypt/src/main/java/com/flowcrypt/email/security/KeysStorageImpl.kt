@@ -11,7 +11,9 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.key.longId
+import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.model.KeysStorage
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -74,6 +76,16 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   override fun getPGPSecretKeyRings(): List<PGPSecretKeyRing> {
     return secretKeyRingsLiveData.value ?: emptyList()
+  }
+
+  override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
+    val list = mutableListOf<PgpKeyDetails>()
+    for (secretKey in secretKeyRingsLiveData.value ?: emptyList()) {
+      val pgpKeyDetails = secretKey.toPgpKeyDetails()
+      val passphrase = getPassphraseByFingerprint(pgpKeyDetails.fingerprint)
+      list.add(pgpKeyDetails.copy(tempPassphrase = passphrase?.chars))
+    }
+    return list
   }
 
   override fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing? {

@@ -658,7 +658,7 @@ class AttachmentDownloadManagerService : Service() {
 
     private fun getDecryptedFileResult(context: Context, inputStream: InputStream): DecryptedFileResult {
       val keysStorage = KeysStorageImpl.getInstance(context)
-      val list = keysStorage.getRawKeys()
+      val list = keysStorage.getPgpKeyDetailsList()
       val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = DecryptFileRequest(IOUtils.toByteArray(inputStream), list)
       val response = nodeService.decryptFile(request).execute()

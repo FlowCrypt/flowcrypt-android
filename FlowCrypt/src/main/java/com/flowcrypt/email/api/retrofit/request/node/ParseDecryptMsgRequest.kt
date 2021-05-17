@@ -9,8 +9,7 @@ import android.content.Context
 import android.net.Uri
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo
-import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.extensions.org.pgpainless.util.asString
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.google.gson.annotations.Expose
 import retrofit2.Response
 
@@ -27,12 +26,16 @@ class ParseDecryptMsgRequest @JvmOverloads constructor(
     override val data: ByteArray = ByteArray(0),
     override val uri: Uri? = null,
     override val hasEncryptedDataInUri: Boolean = false,
-    keyEntities: List<KeyEntity>,
+    pgpKeyDetailsList: List<PgpKeyDetails>,
     @Expose val isEmail: Boolean = false) : BaseNodeRequest(context, uri) {
 
   @Expose
-  private val keys: List<PrivateKeyInfo> = keyEntities.map {
-    PrivateKeyInfo(it.privateKeyAsString, it.fingerprint, it.passphrase.asString)
+  private val keys: List<PrivateKeyInfo> = pgpKeyDetailsList.map {
+    PrivateKeyInfo(
+        privateKey = it.privateKey ?: throw IllegalArgumentException("Empty private key"),
+        longid = it.fingerprint,
+        passphrase = String(it.tempPassphrase
+            ?: throw IllegalArgumentException("Empty passphrase")))
   }
 
   override val endpoint: String = "parseDecryptMsg"
