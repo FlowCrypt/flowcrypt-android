@@ -28,7 +28,6 @@ import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
-import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.model.KeyImportDetails
@@ -184,7 +183,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
             val passphrase = if (keyDetails.isFullyDecrypted) "" else {
               keyDetails.tempPassphrase?.let { String(it) }
             } ?: ""
-            val keyEntity = keyDetails.toKeyEntity(accountEntity, KeyEntity.PassphraseType.REGULAR)
+            val keyEntity = keyDetails.toKeyEntity(accountEntity)
                 .copy(source = sourceType.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),
                     storedPassphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
@@ -303,7 +302,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         val context: Context = getApplication()
         val allKeyEntitiesOfAccount =
             roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
-        val fingerprintListOfDeleteCandidates = keys.mapNotNull {
+        val fingerprintListOfDeleteCandidates = keys.map {
           it.fingerprint.toLowerCase(Locale.US)
         }
         val deleteCandidates = allKeyEntitiesOfAccount.filter {
@@ -326,7 +325,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   }
 
   private suspend fun savePrivateKeyToDatabase(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails, passphrase: String) {
-    val keyEntity = pgpKeyDetails.toKeyEntity(accountEntity, KeyEntity.PassphraseType.REGULAR).copy(
+    val keyEntity = pgpKeyDetails.toKeyEntity(accountEntity).copy(
         source = KeyImportDetails.SourceType.NEW.toPrivateKeySourceTypeString(),
         privateKey = KeyStoreCryptoManager.encryptSuspend(pgpKeyDetails.privateKey).toByteArray(),
         storedPassphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))

@@ -37,7 +37,8 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
                                      @Expose val lastModified: Long,
                                      @Expose val expiration: Long? = null,
                                      @Expose val algo: Algo,
-                                     var tempPassphrase: CharArray? = null) : Parcelable {
+                                     var tempPassphrase: CharArray? = null,
+                                     var passphraseType: KeyEntity.PassphraseType? = null) : Parcelable {
 
   val primaryPgpContact: PgpContact
     get() = determinePrimaryPgpContact()
@@ -70,7 +71,9 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
       source.readLong(),
       source.readValue(Long::class.java.classLoader) as Long?,
       source.readParcelable<Algo>(Algo::class.java.classLoader) ?: throw NullPointerException(),
-      source.createCharArray()
+      source.createCharArray(),
+      source.readParcelable<KeyEntity.PassphraseType>(
+          KeyEntity.PassphraseType::class.java.classLoader)
   )
 
   override fun describeContents() = 0
@@ -85,8 +88,9 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
     writeLong(created)
     writeLong(lastModified)
     writeValue(expiration)
-    writeParcelable(algo, 0)
+    writeParcelable(algo, flags)
     writeCharArray(tempPassphrase)
+    writeParcelable(passphraseType, flags)
   }
 
   private fun determinePrimaryPgpContact(): PgpContact {
@@ -156,8 +160,7 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
     return results
   }
 
-  fun toKeyEntity(
-      accountEntity: AccountEntity, passphraseType: KeyEntity.PassphraseType): KeyEntity {
+  fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
     return KeyEntity(
         fingerprint = fingerprint,
         account = accountEntity.email.toLowerCase(Locale.US),
@@ -168,6 +171,7 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
             ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
         storedPassphrase = tempPassphrase?.let { String(it) },
         passphraseType = passphraseType
+            ?: throw IllegalArgumentException("passphraseType is not defined")
     )
   }
 
@@ -191,6 +195,7 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
       if (other.tempPassphrase == null) return false
       if (!tempPassphrase.contentEquals(other.tempPassphrase)) return false
     } else if (other.tempPassphrase != null) return false
+    if (passphraseType != other.passphraseType) return false
 
     return true
   }
@@ -207,6 +212,7 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
     result = 31 * result + (expiration?.hashCode() ?: 0)
     result = 31 * result + algo.hashCode()
     result = 31 * result + (tempPassphrase?.contentHashCode() ?: 0)
+    result = 31 * result + (passphraseType?.hashCode() ?: 0)
     return result
   }
 

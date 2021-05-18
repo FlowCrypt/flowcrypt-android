@@ -106,6 +106,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return passPhraseMap[fingerprint]?.passphrase
   }
 
+  override fun getPassphraseTypeByFingerprint(fingerprint: String): KeyEntity.PassphraseType? {
+    return passPhraseMap[fingerprint]?.passphraseType
+  }
+
   override fun getSecretKeyRingProtector(): SecretKeyRingProtector {
     val keyRingProtectionSettings = KeyRingProtectionSettings.secureDefaultSettings()
     val availablePGPSecretKeyRings = getPGPSecretKeyRings()
@@ -133,7 +137,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
           val now = Instant.now()
           val entry = passPhraseMap[id] ?: continue
           if (entry.validUntil == now || entry.validUntil.isBefore(now)) {
-            passPhraseMap[id] = PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
+            passPhraseMap[id] = PassPhraseInRAM(
+                passphrase = Passphrase.emptyPassphrase(),
+                validUntil = Instant.now(),
+                passphraseType = KeyEntity.PassphraseType.RAM)
           }
         }
       }
@@ -161,9 +168,15 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
       if (id in addCandidates) {
         if (keyEntity.passphrase.isEmpty) {
-          passPhraseMap[id] = PassPhraseInRAM(Passphrase.emptyPassphrase(), Instant.now())
+          passPhraseMap[id] = PassPhraseInRAM(
+              passphrase = Passphrase.emptyPassphrase(),
+              validUntil = Instant.now(),
+              passphraseType = KeyEntity.PassphraseType.RAM)
         } else {
-          passPhraseMap[id] = PassPhraseInRAM(keyEntity.passphrase, Instant.MAX)
+          passPhraseMap[id] = PassPhraseInRAM(
+              passphrase = keyEntity.passphrase,
+              validUntil = Instant.MAX,
+              passphraseType = KeyEntity.PassphraseType.DATABASE)
         }
       }
     }
@@ -173,7 +186,9 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     fun onKeysUpdated()
   }
 
-  private data class PassPhraseInRAM(val passphrase: Passphrase, val validUntil: Instant)
+  private data class PassPhraseInRAM(val passphrase: Passphrase,
+                                     val validUntil: Instant,
+                                     val passphraseType: KeyEntity.PassphraseType)
 
   companion object {
     @Volatile

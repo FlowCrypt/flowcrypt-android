@@ -7,6 +7,7 @@ package com.flowcrypt.email.database.entity
 
 import android.os.Parcel
 import android.os.Parcelable
+import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -107,7 +108,7 @@ data class KeyEntity(
   }
 
   enum class PassphraseType(val id: Int) : Parcelable {
-    REGULAR(0),
+    DATABASE(0),
     RAM(1),
     UNDEFINED(1000);
 

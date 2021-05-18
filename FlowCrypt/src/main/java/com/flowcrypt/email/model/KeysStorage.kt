@@ -28,6 +28,8 @@ interface KeysStorage {
 
   fun getPassphraseByFingerprint(fingerprint: String): Passphrase?
 
+  fun getPassphraseTypeByFingerprint(fingerprint: String): KeyEntity.PassphraseType?
+
   fun getSecretKeyRingProtector(): SecretKeyRingProtector
 
   fun updatePassPhrasesCache()

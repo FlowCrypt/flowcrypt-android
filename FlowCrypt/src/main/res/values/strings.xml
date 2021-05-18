@@ -503,4 +503,6 @@
     <string name="date">Date</string>
     <string name="to_receiver">To %1$s</string>
     <string name="and_others">and others&#8230;</string>
+    <string name="store_pass_phrase_locally">Store pass phrase locally</string>
+    <string name="keep_pass_phrase_in_memory">Keep pass phrase in memory</string>
 </resources>

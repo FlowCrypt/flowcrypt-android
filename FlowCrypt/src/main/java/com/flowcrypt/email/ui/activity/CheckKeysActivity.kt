@@ -13,11 +13,13 @@ import android.os.Parcelable
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
@@ -60,6 +62,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
   private var negativeBtnTitle: String? = null
   private var uniqueKeysCount: Int = 0
   private var sourceType: KeyImportDetails.SourceType? = null
+  private var passphraseType: KeyEntity.PassphraseType? = null
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -139,7 +142,12 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
           showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty))
         } else {
           snackBar?.dismiss()
-          checkPrivateKeysViewModel.checkKeys(remainingKeys, Passphrase.fromPassword(typedText))
+          passphraseType?.let {
+            checkPrivateKeysViewModel.checkKeys(
+                keys = remainingKeys,
+                passphrase = Passphrase.fromPassword(typedText),
+                passphraseType = it)
+          }
         }
       }
 
@@ -205,6 +213,18 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
     if (intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
       val textViewTitle = findViewById<TextView>(R.id.textViewTitle)
       textViewTitle.setText(R.string.import_private_key)
+    }
+
+    findViewById<RadioGroup>(R.id.rGPassphraseType).setOnCheckedChangeListener { _, checkedId ->
+      passphraseType = when (checkedId) {
+        R.id.rBStoreLocally -> {
+          KeyEntity.PassphraseType.DATABASE
+        }
+        R.id.rBStoreInRAM -> {
+          KeyEntity.PassphraseType.RAM
+        }
+        else -> throw IllegalArgumentException("Unsupported passphrase type")
+      }
     }
   }
 

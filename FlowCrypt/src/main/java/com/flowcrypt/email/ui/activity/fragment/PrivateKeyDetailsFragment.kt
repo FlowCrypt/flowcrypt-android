@@ -77,7 +77,10 @@ class PrivateKeyDetailsFragment : BaseFragment() {
         val passPhrase = KeysStorageImpl.getInstance(context)
             .getPassphraseByFingerprint(it.fingerprint)
             ?: return@let
-        checkPrivateKeysViewModel.checkKeys(listOf(it), passPhrase)
+        val passPhraseType = KeysStorageImpl.getInstance(context)
+            .getPassphraseTypeByFingerprint(it.fingerprint)
+            ?: return@let
+        checkPrivateKeysViewModel.checkKeys(listOf(it), passPhrase, passPhraseType)
       }
     }
   }

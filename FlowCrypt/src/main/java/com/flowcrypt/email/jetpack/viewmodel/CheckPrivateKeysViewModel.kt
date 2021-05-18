@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -30,24 +31,28 @@ import org.pgpainless.util.Passphrase
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
 
-  fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase) {
+  fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase,
+                passphraseType: KeyEntity.PassphraseType) {
     viewModelScope.launch {
       checkPrvKeysLiveData.value = Result.loading()
       if (passphrase.isEmpty) {
         checkPrvKeysLiveData.value = Result.error(emptyList())
         return@launch
       }
-      checkPrvKeysLiveData.value = Result.success(checkKeysInternal(keys, passphrase))
+      checkPrvKeysLiveData.value =
+          Result.success(checkKeysInternal(keys, passphrase, passphraseType))
     }
   }
 
   private suspend fun checkKeysInternal(keys: List<PgpKeyDetails>,
-                                        passphrase: Passphrase): List<CheckResult> =
+                                        passphrase: Passphrase,
+                                        passphraseType: KeyEntity.PassphraseType):
+      List<CheckResult> =
       withContext(Dispatchers.IO) {
         val context: Context = getApplication()
         val resultList = mutableListOf<CheckResult>()
         for (keyDetails in keys) {
-          val copy = keyDetails.copy()
+          val copy = keyDetails.copy(passphraseType = passphraseType)
           var e: Exception? = null
           if (copy.isPrivate) {
             val prvKey = copy.privateKey
