@@ -82,18 +82,8 @@ object PgpMsg {
 
   private val maxTagNumber = 20
 
-  enum class DecryptionErrorType {
-    KEY_MISMATCH,
-    WRONG_PASSPHRASE,
-    NO_MDC,
-    BAD_MDC,
-    NEED_PASSPHRASE,
-    FORMAT,
-    OTHER
-  }
-
   data class DecryptionError(
-    val type: DecryptionErrorType,
+    val type: PgpDecrypt.DecryptionErrorType,
     val message: String,
     val cause: Throwable? = null
   )
@@ -119,7 +109,7 @@ object PgpMsg {
   ) {
     companion object {
       fun withError(
-        type: DecryptionErrorType,
+        type: PgpDecrypt.DecryptionErrorType,
         message: String,
         cause: Throwable? = null
       ): DecryptionResult {
@@ -147,7 +137,10 @@ object PgpMsg {
     pgpPublicKeyRingCollection: PGPPublicKeyRingCollection? // for verification
   ): DecryptionResult {
     if (data.isEmpty()) {
-      return DecryptionResult.withError(DecryptionErrorType.FORMAT, "Can't decrypt empty message")
+      return DecryptionResult.withError(
+        type = PgpDecrypt.DecryptionErrorType.FORMAT,
+        message = "Can't decrypt empty message"
+      )
     }
 
     val chunk = data.copyOfRange(0, data.size.coerceAtMost(50)).toString(StandardCharsets.US_ASCII)
@@ -162,13 +155,13 @@ object PgpMsg {
           ex is PGPException && ex.message != null && ex.message == "Cleartext format error"
         ) {
           DecryptionResult.withError(
-            type = DecryptionErrorType.FORMAT,
+            type = PgpDecrypt.DecryptionErrorType.FORMAT,
             message = ex.message!!,
             cause = ex.cause
           )
         } else {
           DecryptionResult.withError(
-            type = DecryptionErrorType.OTHER,
+            type = PgpDecrypt.DecryptionErrorType.OTHER,
             message = "Decode cleartext error",
             cause = ex
           )
@@ -192,12 +185,12 @@ object PgpMsg {
     } catch (ex: PGPException) {
       if (ex.message == "flowcrypt: need passphrase") {
         return DecryptionResult.withError(
-          type = DecryptionErrorType.NEED_PASSPHRASE,
+          type = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
           message = "Need passphrase"
         )
       }
       return DecryptionResult.withError(
-        type = DecryptionErrorType.WRONG_PASSPHRASE,
+        type = PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE,
         message = "Wrong passphrase",
         cause = ex
       )
@@ -222,20 +215,20 @@ object PgpMsg {
       return DecryptionResult.withDecrypted(output, streamResult.fileInfo?.fileName)
     } catch (ex: MessageNotIntegrityProtectedException) {
       return DecryptionResult.withError(
-        type = DecryptionErrorType.NO_MDC,
+        type = PgpDecrypt.DecryptionErrorType.NO_MDC,
         message = "Security threat! Message is missing integrity checks (MDC)." +
             " The sender should update their outdated software.",
         cause = ex
       )
     } catch (ex: ModificationDetectionException) {
       return DecryptionResult.withError(
-        type = DecryptionErrorType.BAD_MDC,
+        type = PgpDecrypt.DecryptionErrorType.BAD_MDC,
         message = "Security threat! Integrity check failed.",
         cause = ex
       )
     } catch (ex: PGPDataValidationException) {
       return DecryptionResult.withError(
-        type = DecryptionErrorType.KEY_MISMATCH,
+        type = PgpDecrypt.DecryptionErrorType.KEY_MISMATCH,
         message = "There is no matching key",
         cause = ex
       )
@@ -247,7 +240,7 @@ object PgpMsg {
         || ex.message?.contains("No suitable decryption key") == true
       ) {
         return DecryptionResult.withError(
-          type = DecryptionErrorType.KEY_MISMATCH,
+          type = PgpDecrypt.DecryptionErrorType.KEY_MISMATCH,
           message = "There is no suitable decryption key",
           cause = ex
         )
@@ -258,7 +251,7 @@ object PgpMsg {
       exception = ex
     }
     return DecryptionResult.withError(
-      type = DecryptionErrorType.OTHER,
+      type = PgpDecrypt.DecryptionErrorType.OTHER,
       message = "Decryption failed",
       cause = exception
     )

@@ -17,7 +17,7 @@ import java.util.*
  *         Time: 10:38 AM
  *         E-mail: DenBond7@gmail.com
  */
-fun TemporaryFolder.createFileWithGivenSizeAndRandomData(
+fun TemporaryFolder.createFileWithRandomData(
   fileSizeInBytes: Long,
   fileName: String = UUID.randomUUID().toString(),
   bufferSize: Int = (FileUtils.ONE_KB * 8).toInt()

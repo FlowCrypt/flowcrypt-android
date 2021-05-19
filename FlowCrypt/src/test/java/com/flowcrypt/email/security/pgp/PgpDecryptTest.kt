@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.extensions.createFileWithGivenSizeAndRandomData
+import com.flowcrypt.email.extensions.createFileWithRandomData
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
@@ -63,7 +63,7 @@ class PgpDecryptTest {
 
   @Test
   fun testDecryptionErrorWrongPassphrase() {
-    val srcFile = temporaryFolder.createFileWithGivenSizeAndRandomData(FileUtils.ONE_MB)
+    val srcFile = temporaryFolder.createFileWithRandomData(fileSizeInBytes = FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
     PgpEncrypt.encryptAndOrSign(
@@ -144,7 +144,7 @@ class PgpDecryptTest {
   }
 
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {
-    val srcFile = temporaryFolder.createFileWithGivenSizeAndRandomData(FileUtils.ONE_MB)
+    val srcFile = temporaryFolder.createFileWithRandomData(fileSizeInBytes = FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
     PgpEncrypt.encryptAndOrSign(
