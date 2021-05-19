@@ -175,7 +175,6 @@
     <string name="simulate_app_crash">Simulate app crash</string>
     <string name="attachments">Attachments</string>
     <string name="download_attachments_notification_channel">The download attachments notification channel</string>
-    <string name="template_warning_max_attachments_size_for_decryption">The app cannot decrypt an attachment greater than %1$s</string>
     <string name="decrypt_error_could_not_open_message">Could not open this message with %1$s.</string>
     <string name="decrypt_error_message_badly_formatted">Message is either badly formatted or not compatible with %1$s.</string>
     <string name="decrypt_error_please_write_me">Please write us at %1$s so that we can fix it for you.</string>
@@ -337,8 +336,6 @@
     <string name="could_not_decrypt_message_due_to_error">Could not decrypt this message due to error:\n\n %1$s </string>
     <string name="show_aliases">Show aliases</string>
     <string name="show_cc_bcc">Show CC/BCC</string>
-    <string name="opening_password_encrypted_msg_not_implemented_yet">Opening password encrypted messages not
-        implemented yet</string>
     <string name="system">System</string>
     <string name="errors_notifications">Errors notifications</string>
     <string name="system_notifications_notification_chanel">The system notifications channel</string>

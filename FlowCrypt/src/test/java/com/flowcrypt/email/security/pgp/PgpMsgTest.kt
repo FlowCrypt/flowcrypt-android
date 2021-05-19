@@ -7,11 +7,10 @@
 package com.flowcrypt.email.security.pgp
 
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.junit.Test
 import org.junit.Assert.assertTrue
+import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.util.Passphrase
-import java.lang.IllegalArgumentException
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -148,7 +147,7 @@ class PgpMsgTest {
     val r = processMessage("decrypt - [security] mdc - missing - error")
     assertTrue("Message is returned when should not", r.content == null)
     assertTrue("Error not returned", r.error != null)
-    assertTrue("Missing MDC not detected", r.error!!.type == PgpMsg.DecryptionErrorType.NO_MDC)
+    assertTrue("Missing MDC not detected", r.error!!.type == PgpDecrypt.DecryptionErrorType.NO_MDC)
   }
 
   @Test // ok
@@ -156,7 +155,7 @@ class PgpMsgTest {
     val r = processMessage("decrypt - [security] mdc - modification detected - error")
     assertTrue("Message is returned when should not", r.content == null)
     assertTrue("Error not returned", r.error != null)
-    assertTrue("Bad MDC not detected", r.error!!.type == PgpMsg.DecryptionErrorType.BAD_MDC)
+    assertTrue("Bad MDC not detected", r.error!!.type == PgpDecrypt.DecryptionErrorType.BAD_MDC)
   }
 
   // TODO: Should there be any error?
@@ -195,7 +194,7 @@ class PgpMsgTest {
     assertTrue("Error not returned", r.error != null)
     assertTrue(
       "Wrong passphrase not detected",
-      r.error!!.type == PgpMsg.DecryptionErrorType.WRONG_PASSPHRASE
+      r.error!!.type == PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE
     )
   }
 
@@ -212,7 +211,7 @@ class PgpMsgTest {
     assertTrue("Error not returned", r.error != null)
     assertTrue(
       "Missing passphrase not detected",
-      r.error!!.type == PgpMsg.DecryptionErrorType.NEED_PASSPHRASE
+      r.error!!.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE
     )
   }
 
@@ -227,7 +226,7 @@ class PgpMsgTest {
     assertTrue("Error not returned", r.error != null)
     assertTrue(
       "Key mismatch not detected",
-      r.error!!.type == PgpMsg.DecryptionErrorType.KEY_MISMATCH
+      r.error!!.type == PgpDecrypt.DecryptionErrorType.KEY_MISMATCH
     )
   }
 
