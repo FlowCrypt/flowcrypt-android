@@ -13,6 +13,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
 import org.pgpainless.exception.ModificationDetectionException
+import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.InputStream
 import java.io.OutputStream
@@ -53,21 +54,8 @@ object PgpDecrypt {
 
   private fun processDecryptionException(e: Exception): Exception {
     return when (e) {
-      is PGPException -> {
-        when {
-          e.message == "checksum mismatch at 0 of 20" -> {
-            DecryptionException(DecryptionErrorType.WRONG_PASSPHRASE, e)
-          }
-
-          e.message?.contains("exception decrypting session info") == true
-              || e.message?.contains("encoded length out of range") == true
-              || e.message?.contains("Exception recovering session info") == true
-              || e.message?.contains("No suitable decryption key") == true -> {
-            DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
-          }
-
-          else -> DecryptionException(DecryptionErrorType.OTHER, e)
-        }
+      is WrongPassphraseException -> {
+        DecryptionException(DecryptionErrorType.WRONG_PASSPHRASE, e)
       }
 
       is MessageNotIntegrityProtectedException -> {
@@ -83,6 +71,19 @@ object PgpDecrypt {
       }
 
       is DecryptionException -> e
+
+      is PGPException -> {
+        when {
+          e.message?.contains("exception decrypting session info") == true
+              || e.message?.contains("encoded length out of range") == true
+              || e.message?.contains("Exception recovering session info") == true
+              || e.message?.contains("No suitable decryption key") == true -> {
+            DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
+          }
+
+          else -> DecryptionException(DecryptionErrorType.OTHER, e)
+        }
+      }
 
       else -> DecryptionException(DecryptionErrorType.OTHER, e)
     }
