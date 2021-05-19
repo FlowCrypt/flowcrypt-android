@@ -21,7 +21,6 @@ gradle/wrapper @DenBond7 @IvanPizhenko @seisvelas
 script @DenBond7 @IvanPizhenko @seisvelas
 .gitignore @DenBond7 @IvanPizhenko @seisvelas
 README.md @DenBond7 @IvanPizhenko @seisvelas
-build.gradle @DenBond7 @IvanPizhenko @seisvelas
 detekt-config.yml @DenBond7 @IvanPizhenko @seisvelas
 detekt.gradle @DenBond7 @IvanPizhenko @seisvelas
 ext.gradle @DenBond7 @IvanPizhenko @seisvelas
