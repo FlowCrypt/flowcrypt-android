@@ -26,8 +26,8 @@ class ExceptionUtil {
     fun handleError(e: Throwable?) {
       e ?: return
       if (ExceptionResolver.isHandlingNeeded(e)) {
-        if (ACRA.isInitialised()) {
-          ACRA.getErrorReporter().handleException(ManualHandledException(e))
+        if (ACRA.isInitialised) {
+          ACRA.errorReporter.handleException(ManualHandledException(e))
         }
       }
     }
