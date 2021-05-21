@@ -109,8 +109,7 @@ data class KeyEntity(
 
   enum class PassphraseType(val id: Int) : Parcelable {
     DATABASE(0),
-    RAM(1),
-    UNDEFINED(1000);
+    RAM(1);
 
     override fun describeContents(): Int {
       return 0

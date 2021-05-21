@@ -22,20 +22,21 @@ import retrofit2.Response
  * E-mail: DenBond7@gmail.com
  */
 class ParseDecryptMsgRequest @JvmOverloads constructor(
-    context: Context? = null,
-    override val data: ByteArray = ByteArray(0),
-    override val uri: Uri? = null,
-    override val hasEncryptedDataInUri: Boolean = false,
-    pgpKeyDetailsList: List<PgpKeyDetails>,
-    @Expose val isEmail: Boolean = false) : BaseNodeRequest(context, uri) {
+  context: Context? = null,
+  override val data: ByteArray = ByteArray(0),
+  override val uri: Uri? = null,
+  override val hasEncryptedDataInUri: Boolean = false,
+  pgpKeyDetailsList: List<PgpKeyDetails>,
+  @Expose val isEmail: Boolean = false
+) : BaseNodeRequest(context, uri) {
 
   @Expose
   private val keys: List<PrivateKeyInfo> = pgpKeyDetailsList.map {
     PrivateKeyInfo(
-        privateKey = it.privateKey ?: throw IllegalArgumentException("Empty private key"),
-        longid = it.fingerprint,
-        passphrase = String(it.tempPassphrase
-            ?: throw IllegalArgumentException("Empty passphrase")))
+      privateKey = it.privateKey ?: throw IllegalArgumentException("Empty private key"),
+      longid = it.fingerprint,
+      passphrase = String(it.tempPassphrase ?: CharArray(0))
+    )
   }
 
   override val endpoint: String = "parseDecryptMsg"

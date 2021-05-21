@@ -25,6 +25,7 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.time.Instant
+import java.util.*
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -39,7 +40,7 @@ import java.time.Instant
  */
 class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   private val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-  private val passPhraseMap = mutableMapOf<String, PassPhraseInRAM>()
+  private val passPhraseMap = TreeMap<String, PassPhraseInRAM>(String.CASE_INSENSITIVE_ORDER)
 
   private val pureActiveAccountLiveData = roomDatabase.accountDao().getActiveAccountLD()
 
@@ -51,18 +52,20 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     liveData {
       emit(list.map {
         it.copy(
-            privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
-            storedPassphrase = KeyStoreCryptoManager.decryptSuspend(it.storedPassphrase))
+          privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
+          storedPassphrase = KeyStoreCryptoManager.decryptSuspend(it.storedPassphrase)
+        )
       })
     }
   }
 
   val secretKeyRingsLiveData = keysLiveData.switchMap {
     liveData {
-      val combinedSource = it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
+      val combinedSource =
+        it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
       val parseKeyResult = PgpKey.parseKeys(combinedSource)
       val keys = parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings
-          .asSequence().toList()
+        .asSequence().toList()
       emit(keys)
     }
   }
@@ -123,10 +126,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
           for (secretKey in pgpSecretKeyRing.secretKeys) {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
             val passphrase = getPassphraseByFingerprint(openPgpV4Fingerprint.longId)
-                ?: throw DecryptionException(
-                    decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
-                    e = PGPException("flowcrypt: need passphrase")
-                )
+              ?: throw DecryptionException(
+                decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
+                e = PGPException("flowcrypt: need passphrase")
+              )
             return@PasswordBasedSecretKeyRingProtector passphrase
           }
         }
@@ -145,13 +148,27 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
           val entry = passPhraseMap[id] ?: continue
           if (entry.validUntil == now || entry.validUntil.isBefore(now)) {
             passPhraseMap[id] = PassPhraseInRAM(
-                passphrase = Passphrase.emptyPassphrase(),
-                validUntil = Instant.now(),
-                passphraseType = KeyEntity.PassphraseType.RAM)
+              passphrase = Passphrase.emptyPassphrase(),
+              validUntil = Instant.now(),
+              passphraseType = KeyEntity.PassphraseType.RAM
+            )
           }
         }
       }
     }
+  }
+
+  override fun putPassPhraseToCache(
+    fingerprint: String,
+    passphrase: Passphrase,
+    validUntil: Instant,
+    passphraseType: KeyEntity.PassphraseType
+  ) {
+    passPhraseMap[fingerprint] = PassPhraseInRAM(
+      passphrase = passphrase,
+      validUntil = validUntil,
+      passphraseType = passphraseType
+    )
   }
 
   private fun updatePassphrasesMap(keyEntityList: List<KeyEntity>) {
@@ -168,22 +185,32 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     for (keyEntity in keyEntityList) {
       val id = keyEntity.fingerprint
       if (id in updateCandidates) {
-        if (!keyEntity.passphrase.isEmpty) {
-          passPhraseMap.remove(id)
+        if (keyEntity.passphraseType == KeyEntity.PassphraseType.DATABASE) {
+          passPhraseMap[id] = PassPhraseInRAM(
+            passphrase = keyEntity.passphrase,
+            validUntil = Instant.MAX,
+            passphraseType = keyEntity.passphraseType
+          )
         }
       }
 
       if (id in addCandidates) {
-        if (keyEntity.passphrase.isEmpty) {
-          passPhraseMap[id] = PassPhraseInRAM(
+        when (keyEntity.passphraseType) {
+          KeyEntity.PassphraseType.RAM -> {
+            passPhraseMap[id] = PassPhraseInRAM(
               passphrase = Passphrase.emptyPassphrase(),
               validUntil = Instant.now(),
-              passphraseType = KeyEntity.PassphraseType.RAM)
-        } else {
-          passPhraseMap[id] = PassPhraseInRAM(
+              passphraseType = keyEntity.passphraseType
+            )
+          }
+
+          KeyEntity.PassphraseType.DATABASE -> {
+            passPhraseMap[id] = PassPhraseInRAM(
               passphrase = keyEntity.passphrase,
               validUntil = Instant.MAX,
-              passphraseType = KeyEntity.PassphraseType.DATABASE)
+              passphraseType = keyEntity.passphraseType
+            )
+          }
         }
       }
     }
@@ -193,9 +220,11 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     fun onKeysUpdated()
   }
 
-  private data class PassPhraseInRAM(val passphrase: Passphrase,
-                                     val validUntil: Instant,
-                                     val passphraseType: KeyEntity.PassphraseType)
+  private data class PassPhraseInRAM(
+    val passphrase: Passphrase,
+    val validUntil: Instant,
+    val passphraseType: KeyEntity.PassphraseType
+  )
 
   companion object {
     @Volatile

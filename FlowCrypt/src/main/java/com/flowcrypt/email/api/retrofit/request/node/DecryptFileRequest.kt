@@ -19,15 +19,16 @@ import retrofit2.Response
  * Time: 4:32 PM
  * E-mail: DenBond7@gmail.com
  */
-class DecryptFileRequest(override val data: ByteArray, keyEntities: List<PgpKeyDetails>) : BaseNodeRequest() {
+class DecryptFileRequest(override val data: ByteArray, keyEntities: List<PgpKeyDetails>) :
+  BaseNodeRequest() {
 
   @Expose
   private val keys: List<PrivateKeyInfo> = keyEntities.map {
     PrivateKeyInfo(
-        privateKey = it.privateKey ?: throw IllegalArgumentException("Empty private key"),
-        longid = it.fingerprint,
-        passphrase = String(it.tempPassphrase
-            ?: throw IllegalArgumentException("Empty passphrase")))
+      privateKey = it.privateKey ?: throw IllegalArgumentException("Empty private key"),
+      longid = it.fingerprint,
+      passphrase = String(it.tempPassphrase ?: CharArray(0))
+    )
   }
 
   override val endpoint: String = "decryptFile"

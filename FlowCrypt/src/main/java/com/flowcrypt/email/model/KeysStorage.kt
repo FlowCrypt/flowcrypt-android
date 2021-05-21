@@ -11,6 +11,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
+import java.time.Instant
 
 @Keep
 interface KeysStorage {
@@ -33,6 +34,13 @@ interface KeysStorage {
   fun getSecretKeyRingProtector(): SecretKeyRingProtector
 
   fun updatePassPhrasesCache()
+
+  fun putPassPhraseToCache(
+    fingerprint: String,
+    passphrase: Passphrase,
+    validUntil: Instant,
+    passphraseType: KeyEntity.PassphraseType
+  )
 }
 
 
