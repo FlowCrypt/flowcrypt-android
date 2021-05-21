@@ -75,11 +75,6 @@ class Constants {
      */
     const val MAX_PUB_KEY_SIZE = 1024 * 256
 
-    /**
-     * The max size off an attachment which can be decrypted via the app.
-     */
-    const val MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED = 1024 * 1024 * 3
-
     const val PGP_CACHE_DIR = "PGP"
     const val FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded"
     const val ATTACHMENTS_CACHE_DIR = "attachments"

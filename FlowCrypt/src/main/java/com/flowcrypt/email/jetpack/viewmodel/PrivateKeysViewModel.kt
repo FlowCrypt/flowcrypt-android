@@ -14,7 +14,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
-import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -404,7 +403,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         val encryptedKey: String
         try {
           encryptedKey = PgpKey.changeKeyPassphrase(
-              nodeKeyDetails.privateKey!!, oldPassphrase, newPassphrase
+              nodeKeyDetails.privateKey!!,
+              oldPassphrase,
+              newPassphrase
           )
         } catch (e: Exception) {
           throw IllegalStateException(

@@ -3,7 +3,7 @@
  * Contributors: Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions.lang
+package com.flowcrypt.email.extensions.kotlin
 
 object StringExtensionsHelper {
   @JvmStatic

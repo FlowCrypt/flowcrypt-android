@@ -14,7 +14,6 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey

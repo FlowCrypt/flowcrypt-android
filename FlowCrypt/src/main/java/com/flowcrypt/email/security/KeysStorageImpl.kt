@@ -14,7 +14,10 @@ import com.flowcrypt.email.extensions.org.pgpainless.key.longId
 import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.util.exception.DecryptionException
+import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.protection.KeyRingProtectionSettings
@@ -120,6 +123,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
           for (secretKey in pgpSecretKeyRing.secretKeys) {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
             val passphrase = getPassphraseByFingerprint(openPgpV4Fingerprint.longId)
+                ?: throw DecryptionException(
+                    decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
+                    e = PGPException("flowcrypt: need passphrase")
+                )
             return@PasswordBasedSecretKeyRingProtector passphrase
           }
         }

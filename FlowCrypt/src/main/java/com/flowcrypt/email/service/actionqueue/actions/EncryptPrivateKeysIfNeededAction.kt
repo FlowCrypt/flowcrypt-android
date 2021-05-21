@@ -24,6 +24,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.gson.annotations.SerializedName
+import org.pgpainless.util.Passphrase
 
 /**
  * This [Action] checks all available private keys are they encrypted. If not we will try to encrypt a key and
@@ -69,7 +70,10 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
 
       try {
         PgpPwd.checkForWeakPassphrase(passphrase)
-        val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
+        val encryptedKey = PgpKey.encryptKey(
+          keyDetails.privateKey!!,
+          Passphrase.fromPassword(passphrase)
+        )
 
         val encryptedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray(), false)
             .toPgpKeyDetailsList()

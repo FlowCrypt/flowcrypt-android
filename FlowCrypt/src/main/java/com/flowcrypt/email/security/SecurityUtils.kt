@@ -11,7 +11,6 @@ import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd

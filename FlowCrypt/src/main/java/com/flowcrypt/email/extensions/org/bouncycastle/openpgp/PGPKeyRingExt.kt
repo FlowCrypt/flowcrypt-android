@@ -1,11 +1,9 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   DenBond7
- *   Ivan Pizhenko
+ * Contributors: ivan
  */
 
-package com.flowcrypt.email.extensions.pgp
+package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
