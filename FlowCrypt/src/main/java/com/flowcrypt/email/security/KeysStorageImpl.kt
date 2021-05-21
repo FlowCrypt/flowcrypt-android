@@ -142,18 +142,14 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   override fun updatePassPhrasesCache() {
     for (key in getRawKeys()) {
-      if (key.storedPassphrase == null) {
-        val id = key.fingerprint
-        if (passPhraseMap.containsKey(id)) {
-          val now = Instant.now()
-          val entry = passPhraseMap[id] ?: continue
-          if (entry.validUntil == now || entry.validUntil.isBefore(now)) {
-            passPhraseMap[id] = PassPhraseInRAM(
-              passphrase = Passphrase.emptyPassphrase(),
-              validUntil = Instant.now(),
-              passphraseType = KeyEntity.PassphraseType.RAM
-            )
-          }
+      if (key.passphraseType == KeyEntity.PassphraseType.RAM) {
+        val entry = passPhraseMap[key.fingerprint] ?: continue
+        if (entry.passphrase.isEmpty) continue
+        val now = Instant.now()
+        if (entry.validUntil == now || entry.validUntil.isBefore(now)) {
+          passPhraseMap[key.fingerprint] = entry.copy(
+            passphrase = Passphrase.emptyPassphrase()
+          )
         }
       }
     }
