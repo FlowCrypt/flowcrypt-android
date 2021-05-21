@@ -26,6 +26,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -227,6 +228,12 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   )
 
   companion object {
+    private val MAX_LIFE_TIME_OF_KEYS_IN_RAM = TimeUnit.HOURS.toMillis(4)
+
+    fun calculateLifeTimeForPassphrase(): Instant {
+      return Instant.ofEpochMilli(System.currentTimeMillis() + MAX_LIFE_TIME_OF_KEYS_IN_RAM)
+    }
+
     @Volatile
     private var INSTANCE: KeysStorageImpl? = null
 

@@ -94,7 +94,7 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
      */
     fun start(context: Context) {
       val startEmailServiceIntent = Intent(context, PassPhrasesInRAMService::class.java)
-      context.startService(startEmailServiceIntent)
+      context.startForegroundService(startEmailServiceIntent)
     }
 
     /**

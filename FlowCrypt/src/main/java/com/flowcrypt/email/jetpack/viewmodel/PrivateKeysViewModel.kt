@@ -55,7 +55,6 @@ import org.pgpainless.PGPainless
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.key.util.UserId
 import org.pgpainless.util.Passphrase
-import java.time.Instant
 import java.util.*
 
 /**
@@ -222,7 +221,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                 keysStorage.putPassPhraseToCache(
                   fingerprint = fingerprint,
                   passphrase = Passphrase(keyDetails.tempPassphrase),
-                  validUntil = Instant.MAX,
+                  validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
                   passphraseType = KeyEntity.PassphraseType.RAM
                 )
               }
