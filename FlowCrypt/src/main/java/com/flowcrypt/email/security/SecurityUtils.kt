@@ -11,6 +11,7 @@ import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
@@ -82,7 +83,7 @@ class SecurityUtils {
         PgpPwd.checkForWeakPassphrase(passPhrase)
 
         val keyDetails = key.toPgpKeyDetails()
-        val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
+        val encryptedKey = if (keyDetails.isFullyDecrypted) {
           PgpKey.encryptKey(keyDetails.privateKey ?: throw IllegalStateException(), passPhrase)
         } else {
           keyDetails.privateKey
@@ -106,7 +107,7 @@ class SecurityUtils {
     fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): MutableList<String> {
       val publicKeys = mutableListOf<String>()
       val contacts = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
-          .getContactsByEmails(emails)
+        .getContactsByEmails(emails)
 
       for (contact in contacts) {
         if (contact.publicKey?.isNotEmpty() == true) {
@@ -127,7 +128,11 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderKeyDetails(context: Context, account: AccountEntity, senderEmail: String): PgpKeyDetails {
+    fun getSenderKeyDetails(
+      context: Context,
+      account: AccountEntity,
+      senderEmail: String
+    ): PgpKeyDetails {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
       val keys = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
 

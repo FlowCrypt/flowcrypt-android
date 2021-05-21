@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.extensions.pgp.armor
-import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
@@ -64,12 +64,12 @@ object PgpKey {
         PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource))
   }
 
-  private fun decryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
+  fun decryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
     return PGPainless.modifyKeyRing(key)
-        .changePassphraseFromOldPassphrase(passphrase)
-        .withSecureDefaultSettings()
-        .toNoPassphrase()
-        .done()
+      .changePassphraseFromOldPassphrase(passphrase)
+      .withSecureDefaultSettings()
+      .toNoPassphrase()
+      .done()
   }
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {

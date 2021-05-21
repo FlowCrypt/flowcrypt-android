@@ -10,8 +10,8 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.org.pgpainless.key.longId
-import com.flowcrypt.email.extensions.pgp.toPgpKeyDetails
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecrypt

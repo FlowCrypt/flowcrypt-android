@@ -38,7 +38,6 @@ import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecrypt
-import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -49,6 +48,7 @@ import com.sun.mail.imap.IMAPFolder
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -661,18 +661,15 @@ class AttachmentDownloadManagerService : Service() {
         val decryptedFile = File.createTempFile("tmp", null, context.externalCacheDir)
         att.name = FilenameUtils.getBaseName(att.name)
 
-        val combinedSource = KeysStorageImpl.getInstance(context)
-          .getAllPgpPrivateKeys()
-          .joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
-        val parseKeyResult = PgpKey.parseKeys(combinedSource)
-        val keys = parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection
+        val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()
+        val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(pgpSecretKeyRings)
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
 
         try {
           val result = PgpDecrypt.decrypt(
             srcInputStream = inputStream,
             destOutputStream = decryptedFile.outputStream(),
-            pgpSecretKeyRingCollection = keys,
+            pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
             protector = protector
           )
 
