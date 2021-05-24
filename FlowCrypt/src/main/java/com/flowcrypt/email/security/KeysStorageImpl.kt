@@ -6,6 +6,7 @@
 package com.flowcrypt.email.security
 
 import android.content.Context
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -71,9 +72,11 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
+  val passphrasesUpdatesLiveData = MutableLiveData<Long>()
+
   init {
     keysLiveData.observeForever {
-      updatePassphrasesMap(it)
+      preparePassphrasesMap(it)
     }
   }
 
@@ -150,6 +153,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
           passPhraseMap[key.fingerprint] = entry.copy(
             passphrase = Passphrase.emptyPassphrase()
           )
+          passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
         }
       }
     }
@@ -166,9 +170,11 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
       validUntil = validUntil,
       passphraseType = passphraseType
     )
+
+    passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
   }
 
-  private fun updatePassphrasesMap(keyEntityList: List<KeyEntity>) {
+  private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {
     val existedIdList = passPhraseMap.keys
     val refreshedIdList = keyEntityList.map { it.fingerprint }
     val removeCandidates = existedIdList - refreshedIdList

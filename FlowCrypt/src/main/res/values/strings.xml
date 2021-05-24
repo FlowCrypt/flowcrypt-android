@@ -502,4 +502,10 @@
     <string name="and_others">and others&#8230;</string>
     <string name="store_pass_phrase_locally">Store pass phrase locally</string>
     <string name="keep_pass_phrase_in_memory">Keep pass phrase in memory</string>
+    <string name="pass_phrase_not_provided">Pass phrase is not provided</string>
+    <string name="forget_passphrase">Forget pass phrase</string>
+    <string name="check_passphrase">Check pass phrase</string>
+    <string name="your_passphrase">Your pass phrase</string>
+    <string name="passphrase_was_erased">The pass phrase was erased</string>
+    <string name="no_details_about_given_key">There are no details about the given key</string>
 </resources>

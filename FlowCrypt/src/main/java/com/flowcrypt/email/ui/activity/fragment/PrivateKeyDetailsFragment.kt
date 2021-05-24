@@ -18,6 +18,8 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -25,22 +27,28 @@ import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PgpKeyDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.jetpack.viewmodel.factory.PgpKeyDetailsViewModelFactory
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
+import org.pgpainless.util.Passphrase
 import java.io.FileNotFoundException
 import java.util.*
 
@@ -52,37 +60,35 @@ import java.util.*
  * Time: 12:43
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeyDetailsFragment : BaseFragment() {
+class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
+  override val progressView: View?
+    get() = view?.findViewById(R.id.progress)
+  override val contentView: View?
+    get() = view?.findViewById(R.id.content)
+  override val statusView: View?
+    get() = view?.findViewById(R.id.status)
+
+  private var tVFingerprint: TextView? = null
+  private var tVDate: TextView? = null
+  private var tVUsers: TextView? = null
   private var tVPassPhraseVerification: TextView? = null
+  private var eTKeyPassword: EditText? = null
+  private var btnForgetPassphrase: Button? = null
+  private var gCheckPassphrase: View? = null
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
-  private var pgpKeyDetails: PgpKeyDetails? = null
+  private val pgpKeyDetailsViewModel: PgpKeyDetailsViewModel by viewModels {
+    PgpKeyDetailsViewModelFactory(
+      arguments?.getString(KEY_PGP_KEY_FINGERPRINT),
+      requireActivity().application
+    )
+  }
 
   override val contentResourceId: Int = R.layout.fragment_private_key_details
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-
-    val args = arguments
-    if (args != null) {
-      pgpKeyDetails = args.getParcelable(KEY_NODE_KEY_DETAILS)
-    }
-
-    if (pgpKeyDetails == null) {
-      parentFragmentManager.popBackStack()
-    } else {
-      pgpKeyDetails?.let {
-        val context = context ?: return@let
-        val passPhrase = KeysStorageImpl.getInstance(context)
-            .getPassphraseByFingerprint(it.fingerprint)
-            ?: return@let
-        val passPhraseType = KeysStorageImpl.getInstance(context)
-            .getPassphraseTypeByFingerprint(it.fingerprint)
-            ?: return@let
-        checkPrivateKeysViewModel.checkKeys(listOf(it), passPhrase, passPhraseType)
-      }
-    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -94,11 +100,13 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     return when (item.itemId) {
       R.id.menuActionDeleteKey -> {
         showTwoWayDialog(
-            dialogTitle = "",
-            dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_key_question, 1, 1),
-            positiveButtonTitle = getString(android.R.string.ok),
-            negativeButtonTitle = getString(android.R.string.cancel),
-            requestCode = REQUEST_CODE_DELETE_KEY_DIALOG
+          dialogTitle = "",
+          dialogMsg = requireContext().resources.getQuantityString(
+            R.plurals.delete_key_question, 1, 1
+          ),
+          positiveButtonTitle = getString(android.R.string.ok),
+          negativeButtonTitle = getString(android.R.string.cancel),
+          requestCode = REQUEST_CODE_DELETE_KEY_DIALOG
         )
         true
       }
@@ -111,6 +119,8 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.setTitle(R.string.key_details)
     initViews(view)
+    updateViews()
+    setupPgpKeyDetailsViewModel()
     setupPrivateKeysViewModel()
     setupCheckPrivateKeysViewModel()
   }
@@ -126,8 +136,13 @@ class PrivateKeyDetailsFragment : BaseFragment() {
       REQUEST_CODE_DELETE_KEY_DIALOG -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
-            pgpKeyDetails?.let {
-              account?.let { accountEntity -> privateKeysViewModel.deleteKeys(accountEntity, listOf(it)) }
+            pgpKeyDetailsViewModel.getPgpKeyDetails()?.let {
+              account?.let { accountEntity ->
+                privateKeysViewModel.deleteKeys(
+                  accountEntity,
+                  listOf(it)
+                )
+              }
             }
           }
         }
@@ -139,7 +154,11 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
   private fun saveKey(data: Intent) {
     try {
-      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, pgpKeyDetails!!.publicKey)
+      GeneralUtil.writeFileFromStringToUri(
+        context = requireContext(),
+        uri = data.data!!,
+        data = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
+      )
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -151,7 +170,12 @@ class PrivateKeyDetailsFragment : BaseFragment() {
           showInfoSnackbar(requireView(), error, Snackbar.LENGTH_LONG)
 
           try {
-            data.data?.let { DocumentsContract.deleteDocument(requireContext().contentResolver, it) }
+            data.data?.let {
+              DocumentsContract.deleteDocument(
+                requireContext().contentResolver,
+                it
+              )
+            }
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
           }
@@ -169,38 +193,96 @@ class PrivateKeyDetailsFragment : BaseFragment() {
   }
 
   private fun initViews(view: View) {
-    val pgpContacts = pgpKeyDetails?.pgpContacts ?: emptyList()
-    val emails = ArrayList<String>()
-
-    for ((email) in pgpContacts) {
-      emails.add(email)
-    }
-
-    val textViewFingerprint = view.findViewById<TextView>(R.id.textViewFingerprint)
-    UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
-        GeneralUtil.doSectionsInText(" ", pgpKeyDetails?.fingerprint, 4)), textViewFingerprint)
-
-    val textViewDate = view.findViewById<TextView>(R.id.textViewDate)
-    textViewDate?.text = getString(R.string.template_date,
-        DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.created ?: 0)))
-
-    val textViewUsers = view.findViewById<TextView>(R.id.textViewUsers)
-    textViewUsers.text = getString(R.string.template_users, TextUtils.join(", ", emails))
-
+    tVFingerprint = view.findViewById(R.id.textViewFingerprint)
+    tVDate = view.findViewById(R.id.textViewDate)
+    tVUsers = view.findViewById(R.id.textViewUsers)
     tVPassPhraseVerification = view.findViewById(R.id.tVPassPhraseVerification)
+    eTKeyPassword = view.findViewById(R.id.eTKeyPassword)
+    gCheckPassphrase = view.findViewById(R.id.gCheckPassphrase)
 
     initButtons(view)
   }
 
+  private fun updateViews() {
+    pgpKeyDetailsViewModel.getPgpKeyDetails()?.let { value ->
+      UIUtil.setHtmlTextToTextView(
+        getString(
+          R.string.template_fingerprint,
+          GeneralUtil.doSectionsInText(" ", value.fingerprint, 4)
+        ), tVFingerprint
+      )
+
+      tVDate?.text = getString(
+        R.string.template_date,
+        DateFormat.getMediumDateFormat(context).format(Date(value.created))
+      )
+
+      tVUsers?.text = getString(
+        R.string.template_users,
+        TextUtils.join(", ", value.pgpContacts.map { it.email })
+      )
+
+      val passPhrase = pgpKeyDetailsViewModel.getPassphrase()
+      val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType()
+      if (passPhrase == null || passPhrase.isEmpty) {
+        handlePassphraseNotProvided()
+        return
+      }
+
+      if (passPhraseType == KeyEntity.PassphraseType.RAM) {
+        btnForgetPassphrase?.visible()
+      }
+    }
+  }
+
+  private fun handlePassphraseNotProvided() {
+    tVPassPhraseVerification?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
+    tVPassPhraseVerification?.text = getString(R.string.pass_phrase_not_provided)
+    btnForgetPassphrase?.gone()
+    gCheckPassphrase?.visible()
+  }
+
   private fun initButtons(view: View) {
+    btnForgetPassphrase = view.findViewById(R.id.btnForgetPassphrase)
+    btnForgetPassphrase?.setOnClickListener {
+      pgpKeyDetailsViewModel.forgotPassphrase()
+      toast(getString(R.string.passphrase_was_erased))
+      eTKeyPassword?.text = null
+    }
+
+    view.findViewById<View>(R.id.btnUpdatePassphrase)?.setOnClickListener {
+      UIUtil.hideSoftInput(requireContext(), eTKeyPassword)
+      val typedText = eTKeyPassword?.text?.toString()
+      if (typedText.isNullOrEmpty()) {
+        showInfoSnackbar(eTKeyPassword, getString(R.string.passphrase_must_be_non_empty))
+      } else {
+        snackBar?.dismiss()
+        eTKeyPassword?.let {
+          val passPhrase = Passphrase.fromPassword(typedText)
+          val pgpKeyDetails = pgpKeyDetailsViewModel.getPgpKeyDetails() ?: return@let
+          val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType() ?: return@let
+          checkPrivateKeysViewModel.checkKeys(listOf(pgpKeyDetails), passPhrase, passPhraseType)
+        }
+      }
+    }
+
     view.findViewById<View>(R.id.btnShowPubKey)?.setOnClickListener {
-      val dialogFragment = InfoDialogFragment.newInstance("", pgpKeyDetails!!.publicKey)
+      val dialogFragment = InfoDialogFragment.newInstance(
+        dialogTitle = "",
+        dialogMsg = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
+      )
       dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
     }
 
     view.findViewById<View>(R.id.btnCopyToClipboard)?.setOnClickListener {
-      val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-      clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", pgpKeyDetails?.publicKey))
+      val clipboard =
+        requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+      clipboard.setPrimaryClip(
+        ClipData.newPlainText(
+          "pubKey",
+          pgpKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
+        )
+      )
       Toast.makeText(context, getString(R.string.copied), Toast.LENGTH_SHORT).show()
     }
     view.findViewById<View>(R.id.btnSaveToFile)?.setOnClickListener {
@@ -215,8 +297,46 @@ class PrivateKeyDetailsFragment : BaseFragment() {
     val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = Constants.MIME_TYPE_PGP_KEY
-    intent.putExtra(Intent.EXTRA_TITLE, "0x" + pgpKeyDetails!!.fingerprint + ".asc")
+    intent.putExtra(
+      Intent.EXTRA_TITLE,
+      "0x" + pgpKeyDetailsViewModel.getPgpKeyDetails()!!.fingerprint + ".asc"
+    )
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
+  }
+
+  private fun setupPgpKeyDetailsViewModel() {
+    pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress()
+        }
+
+        Result.Status.SUCCESS -> {
+          if (it.data == null) {
+            toast(getString(R.string.no_details_about_given_key))
+            parentFragmentManager.popBackStack()
+          } else {
+            updateViews()
+            matchPassphrase(it.data)
+          }
+          showContent()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+      }
+    })
+  }
+
+  private fun matchPassphrase(pgpKeyDetails: PgpKeyDetails) {
+    val passPhrase = pgpKeyDetailsViewModel.getPassphrase() ?: return
+    if (passPhrase.isEmpty) return
+    val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType() ?: return
+    checkPrivateKeysViewModel.checkKeys(listOf(pgpKeyDetails), passPhrase, passPhraseType)
   }
 
   private fun setupPrivateKeysViewModel() {
@@ -234,8 +354,10 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't delete a key with fingerprint = {${pgpKeyDetails?.fingerprint ?: ""}}")
+            dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: "Couldn't delete a key with fingerprint =" +
+            " {${pgpKeyDetailsViewModel.getPgpKeyDetails()?.fingerprint ?: ""}}"
+          )
           baseActivity.countingIdlingResource.decrementSafely()
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
@@ -252,23 +374,40 @@ class PrivateKeyDetailsFragment : BaseFragment() {
 
         Result.Status.SUCCESS -> {
           val checkResult = it.data?.firstOrNull()
-          val verificationMsg: String?
+          var verificationMsg: String?
           if (checkResult != null) {
             if (checkResult.pgpKeyDetails.isPrivate) {
               if (checkResult.e == null) {
+                tVPassPhraseVerification?.setTextColor(
+                  UIUtil.getColor(requireContext(), R.color.colorPrimaryLight)
+                )
                 verificationMsg = getString(R.string.stored_pass_phrase_matched)
+                if (pgpKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
+                  val existedPassphrase = pgpKeyDetailsViewModel.getPassphrase()
+                  if (existedPassphrase == null || existedPassphrase.isEmpty) {
+                    pgpKeyDetailsViewModel.updatePassphrase(
+                      Passphrase.fromPassword(checkResult.passphrase)
+                    )
+                  }
+                  btnForgetPassphrase?.visible()
+                  gCheckPassphrase?.gone()
+                }
               } else {
-                verificationMsg = getString(R.string.stored_pass_phrase_mismatch)
-                context?.let {
-                  tVPassPhraseVerification?.setTextColor(UIUtil.getColor(it, R.color.red))
+                if (pgpKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
+                  eTKeyPassword?.requestFocus()
+                  toast(R.string.password_is_incorrect)
+                  verificationMsg = getString(R.string.pass_phrase_not_provided)
+                } else {
+                  verificationMsg = getString(R.string.stored_pass_phrase_mismatch)
+                  tVPassPhraseVerification?.setTextColor(
+                    UIUtil.getColor(requireContext(), R.color.red)
+                  )
                 }
               }
             } else verificationMsg = getString(R.string.not_private_key)
           } else {
             verificationMsg = getString(R.string.could_not_check_pass_phrase)
-            context?.let {
-              tVPassPhraseVerification?.setTextColor(UIUtil.getColor(it, R.color.red))
-            }
+            tVPassPhraseVerification?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
           }
 
           tVPassPhraseVerification?.text = verificationMsg
@@ -276,9 +415,11 @@ class PrivateKeyDetailsFragment : BaseFragment() {
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showInfoDialog(dialogMsg = it.exception?.message
+          showInfoDialog(
+            dialogMsg = it.exception?.message
               ?: it.exception?.javaClass?.simpleName
-              ?: getString(R.string.could_not_check_pass_phrase))
+              ?: getString(R.string.could_not_check_pass_phrase)
+          )
           baseActivity.countingIdlingResource.decrementSafely()
         }
       }
@@ -286,16 +427,18 @@ class PrivateKeyDetailsFragment : BaseFragment() {
   }
 
   companion object {
-    private val KEY_NODE_KEY_DETAILS =
-        GeneralUtil.generateUniqueExtraKey("KEY_NODE_KEY_DETAILS",
-            PrivateKeyDetailsFragment::class.java)
+    private val KEY_PGP_KEY_FINGERPRINT =
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_PGP_KEY_FINGERPRINT",
+        PrivateKeyDetailsFragment::class.java
+      )
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
     private const val REQUEST_CODE_DELETE_KEY_DIALOG = 100
 
-    fun newInstance(details: PgpKeyDetails): PrivateKeyDetailsFragment {
+    fun newInstance(fingerprint: String): PrivateKeyDetailsFragment {
       val keyDetailsFragment = PrivateKeyDetailsFragment()
       val args = Bundle()
-      args.putParcelable(KEY_NODE_KEY_DETAILS, details)
+      args.putString(KEY_PGP_KEY_FINGERPRINT, fingerprint)
       keyDetailsFragment.arguments = args
       return keyDetailsFragment
     }

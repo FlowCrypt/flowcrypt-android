@@ -152,8 +152,8 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
     pgpKeyDetails?.let {
       parentFragmentManager
-          .beginTransaction()
-          .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it))
+        .beginTransaction()
+        .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it.fingerprint))
           .addToBackStack(null)
           .commit()
     }
