@@ -46,18 +46,19 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
  * Time: 12:20
  * E-mail: DenBond7@gmail.com
  */
-@Database(entities =
-[
-  AccountAliasesEntity::class,
-  AccountEntity::class,
-  ActionQueueEntity::class,
-  AttachmentEntity::class,
-  ContactEntity::class,
-  KeyEntity::class,
-  LabelEntity::class,
-  MessageEntity::class
-],
-    version = FlowCryptRoomDatabase.DB_VERSION)
+@Database(
+  entities = [
+    AccountAliasesEntity::class,
+    AccountEntity::class,
+    ActionQueueEntity::class,
+    AttachmentEntity::class,
+    ContactEntity::class,
+    KeyEntity::class,
+    LabelEntity::class,
+    MessageEntity::class
+  ],
+  version = FlowCryptRoomDatabase.DB_VERSION
+)
 @TypeConverters(PassphraseTypeConverter::class)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun msgDao(): MessageDao
@@ -348,6 +349,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
     val MIGRATION_24_25 = object : FlowCryptMigration(24, 25) {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //create temp table with existed content
@@ -359,7 +361,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         //create indices for new table
         database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `fingerprint_account_account_type_in_keys` ON `keys` (`fingerprint`, `account`, `account_type`)")
         //fill new keys table with existed data. Later we will update fingerprints
-        database.execSQL("INSERT INTO keys SELECT * FROM keys_temp;")
+        database.execSQL("INSERT INTO keys(_id, fingerprint, account, account_type, source, public_key, private_key, passphrase) SELECT * FROM keys_temp;")
         //drop temp table
         database.execSQL("DROP TABLE IF EXISTS keys_temp;")
 
@@ -369,7 +371,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
             val longId = cursor.getString(cursor.getColumnIndex("fingerprint"))
             val pubKeyAsByteArray = cursor.getBlob(cursor.getColumnIndex("public_key"))
             val pubKey = PgpKey.parseKeys(pubKeyAsByteArray)
-                .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
+              .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
             val fingerprint = OpenPgpV4Fingerprint(pubKey).toString()
             database.execSQL("UPDATE keys SET fingerprint = ?, passphrase_type = 0 WHERE fingerprint = ?;", arrayOf(fingerprint, longId))
           }
@@ -389,34 +391,34 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
       synchronized(this) {
         val instance = Room.databaseBuilder(
-            context.applicationContext,
-            FlowCryptRoomDatabase::class.java,
-            DB_NAME)
-            .addMigrations(
-                MIGRATION_1_3,
-                MIGRATION_3_4,
-                MIGRATION_4_5,
-                MIGRATION_5_6,
-                MIGRATION_6_7,
-                MIGRATION_7_8,
-                MIGRATION_8_9,
-                MIGRATION_9_10,
-                MIGRATION_10_11,
-                MIGRATION_11_12,
-                MIGRATION_12_13,
-                MIGRATION_13_14,
-                MIGRATION_14_15,
-                MIGRATION_15_16,
-                MIGRATION_16_17,
-                MIGRATION_17_18,
-                MIGRATION_18_19,
-                MIGRATION_19_20,
-                MIGRATION_20_21,
-                MIGRATION_21_22,
-                MIGRATION_22_23,
-                MIGRATION_23_24,
-                MIGRATION_24_25)
-            .build()
+          context.applicationContext,
+          FlowCryptRoomDatabase::class.java,
+          DB_NAME
+        ).addMigrations(
+          MIGRATION_1_3,
+          MIGRATION_3_4,
+          MIGRATION_4_5,
+          MIGRATION_5_6,
+          MIGRATION_6_7,
+          MIGRATION_7_8,
+          MIGRATION_8_9,
+          MIGRATION_9_10,
+          MIGRATION_10_11,
+          MIGRATION_11_12,
+          MIGRATION_12_13,
+          MIGRATION_13_14,
+          MIGRATION_14_15,
+          MIGRATION_15_16,
+          MIGRATION_16_17,
+          MIGRATION_17_18,
+          MIGRATION_18_19,
+          MIGRATION_19_20,
+          MIGRATION_20_21,
+          MIGRATION_21_22,
+          MIGRATION_22_23,
+          MIGRATION_23_24,
+          MIGRATION_24_25
+        ).build()
         INSTANCE = instance
         return instance
       }
