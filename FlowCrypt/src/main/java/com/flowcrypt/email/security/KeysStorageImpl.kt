@@ -27,6 +27,7 @@ import org.pgpainless.util.Passphrase
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
+import javax.mail.internet.InternetAddress
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -89,7 +90,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
     val list = mutableListOf<PgpKeyDetails>()
-    for (secretKey in secretKeyRingsLiveData.value ?: emptyList()) {
+    for (secretKey in getPGPSecretKeyRings()) {
       val pgpKeyDetails = secretKey.toPgpKeyDetails()
       val passphrase = getPassphraseByFingerprint(pgpKeyDetails.fingerprint)
       list.add(pgpKeyDetails.copy(tempPassphrase = passphrase?.chars))
@@ -104,12 +105,37 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
-  override fun getPGPSecretKeyRingsByFingerprints(fingerprints: Iterable<String>): List<PGPSecretKeyRing> {
-    TODO("Not yet implemented")
+  override fun getPGPSecretKeyRingsByFingerprints(fingerprints: Collection<String>):
+      List<PGPSecretKeyRing> {
+    val list = mutableListOf<PGPSecretKeyRing>()
+    val set = fingerprints.map { it.toUpperCase(Locale.US) }.toSet()
+    for (secretKey in getPGPSecretKeyRings()) {
+      val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
+      if (openPgpV4Fingerprint.toString() in set) {
+        list.add(secretKey)
+      }
+    }
+    return list
   }
 
   override fun getPGPSecretKeyRingsByUserId(user: String): List<PGPSecretKeyRing> {
-    TODO("Not yet implemented")
+    val list = mutableListOf<PGPSecretKeyRing>()
+    for (secretKey in getPGPSecretKeyRings()) {
+      for (userId in secretKey.publicKey.userIDs) {
+        try {
+          val internetAddresses = InternetAddress.parse(userId)
+          for (internetAddress in internetAddresses) {
+            if (user.equals(internetAddress.address, true)) {
+              list.add(secretKey)
+              continue
+            }
+          }
+        } catch (e: Exception) {
+          e.printStackTrace()
+        }
+      }
+    }
+    return list
   }
 
   override fun getPassphraseByFingerprint(fingerprint: String): Passphrase? {

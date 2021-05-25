@@ -23,7 +23,7 @@ interface KeysStorage {
 
   fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing?
 
-  fun getPGPSecretKeyRingsByFingerprints(fingerprints: Iterable<String>): List<PGPSecretKeyRing>
+  fun getPGPSecretKeyRingsByFingerprints(fingerprints: Collection<String>): List<PGPSecretKeyRing>
 
   fun getPGPSecretKeyRingsByUserId(user: String): List<PGPSecretKeyRing>
 
