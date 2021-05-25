@@ -508,4 +508,5 @@
     <string name="your_passphrase">Your pass phrase</string>
     <string name="passphrase_was_erased">The pass phrase was erased</string>
     <string name="no_details_about_given_key">There are no details about the given key</string>
+    <string name="active_passphrase_session">Active pass phrase session</string>
 </resources>

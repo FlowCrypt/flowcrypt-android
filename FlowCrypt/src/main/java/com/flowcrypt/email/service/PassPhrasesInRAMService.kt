@@ -44,20 +44,20 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
 
   private fun runAsForeground() {
     val pendingIntent: PendingIntent =
-        Intent(this, EmailManagerActivity::class.java).let { notificationIntent ->
-          PendingIntent.getActivity(this, 0, notificationIntent, 0)
-        }
+      Intent(this, EmailManagerActivity::class.java).let { notificationIntent ->
+        PendingIntent.getActivity(this, 0, notificationIntent, 0)
+      }
 
-    val notification: Notification = Notification.Builder(this,
-        NotificationChannelManager.CHANNEL_ID_SYSTEM)
-        .setContentTitle("ContentTitle")
-        .setContentText("ContentText")
-        .setSmallIcon(R.mipmap.ic_launcher)
-        .setContentIntent(pendingIntent)
-        .setTicker("Ticker text")
-        .build()
+    val notification: Notification = Notification.Builder(
+      this,
+      NotificationChannelManager.CHANNEL_ID_SYSTEM
+    )
+      .setContentTitle(getString(R.string.active_passphrase_session))
+      .setSmallIcon(R.drawable.ic_baseline_password_24dp)
+      .setContentIntent(pendingIntent)
+      .build()
 
-    startForeground(100, notification)
+    startForeground(R.id.notification_id_passphrase_service, notification)
   }
 
   private fun runChecking() {
