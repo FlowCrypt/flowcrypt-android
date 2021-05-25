@@ -46,7 +46,7 @@ import java.nio.charset.StandardCharsets
  * E-mail: DenBond7@gmail.com
  */
 class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
-    InfoDialogFragment.OnInfoDialogButtonClickListener {
+  InfoDialogFragment.OnInfoDialogButtonClickListener {
   private var originalKeys: MutableList<PgpKeyDetails> = mutableListOf()
   private val unlockedKeys: ArrayList<PgpKeyDetails> = ArrayList()
   private val remainingKeys: ArrayList<PgpKeyDetails> = ArrayList()
@@ -56,13 +56,13 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
   private var editTextKeyPassword: EditText? = null
   private var textViewSubTitle: TextView? = null
   private var progressBar: View? = null
+  private var rGPassphraseType: RadioGroup? = null
 
   private var subTitle: String? = null
   private var positiveBtnTitle: String? = null
   private var negativeBtnTitle: String? = null
   private var uniqueKeysCount: Int = 0
   private var sourceType: KeyImportDetails.SourceType? = null
-  private var passphraseType: KeyEntity.PassphraseType? = null
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -101,7 +101,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
 
           1 -> {
             this.subTitle = resources.getQuantityString(
-                R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
+              R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount
+            )
           }
 
           else -> {
@@ -109,11 +110,14 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
               val map = prepareMapFromKeyDetailsList(originalKeys)
               val remainingKeyCount = getCountOfUniqueKeys(map)
 
-              this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
-                  uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
+              this.subTitle = resources.getQuantityString(
+                R.plurals.not_recovered_all_keys, remainingKeyCount,
+                uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount
+              )
             } else {
               this.subTitle = resources.getQuantityString(
-                  R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
+                R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount
+              )
             }
           }
         }
@@ -142,11 +146,12 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
           showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty))
         } else {
           snackBar?.dismiss()
-          passphraseType?.let {
+          getPassphraseType()?.let { passphraseType ->
             checkPrivateKeysViewModel.checkKeys(
-                keys = remainingKeys,
-                passphrase = Passphrase.fromPassword(typedText),
-                passphraseType = it)
+              keys = remainingKeys,
+              passphrase = Passphrase.fromPassword(typedText),
+              passphraseType = passphraseType
+            )
           }
         }
       }
@@ -161,15 +166,24 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
       }
 
       R.id.imageButtonHint -> {
-        val infoDialogFragment = InfoDialogFragment.newInstance(dialogMsg =
-        getString(R.string.hint_when_found_keys_in_email))
+        val infoDialogFragment = InfoDialogFragment.newInstance(
+          dialogMsg = getString(R.string.hint_when_found_keys_in_email)
+        )
         infoDialogFragment.show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
       }
 
       R.id.imageButtonPasswordHint -> try {
-        val webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
-            IOUtils.toString(assets.open("html/forgotten_pass_phrase_hint.htm"), StandardCharsets.UTF_8))
-        webViewInfoDialogFragment.show(supportFragmentManager, WebViewInfoDialogFragment::class.java.simpleName)
+        val webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance(
+          dialogTitle = "",
+          dialogMsg = IOUtils.toString(
+            assets.open("html/forgotten_pass_phrase_hint.htm"),
+            StandardCharsets.UTF_8
+          )
+        )
+        webViewInfoDialogFragment.show(
+          supportFragmentManager,
+          WebViewInfoDialogFragment::class.java.simpleName
+        )
       } catch (e: IOException) {
         e.printStackTrace()
       }
@@ -215,17 +229,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
       textViewTitle.setText(R.string.import_private_key)
     }
 
-    findViewById<RadioGroup>(R.id.rGPassphraseType).setOnCheckedChangeListener { _, checkedId ->
-      passphraseType = when (checkedId) {
-        R.id.rBStoreLocally -> {
-          KeyEntity.PassphraseType.DATABASE
-        }
-        R.id.rBStoreInRAM -> {
-          KeyEntity.PassphraseType.RAM
-        }
-        else -> throw IllegalArgumentException("Unsupported passphrase type")
-      }
-    }
+    rGPassphraseType = findViewById(R.id.rGPassphraseType)
   }
 
   private fun initButton(buttonViewId: Int, visibility: Int = View.VISIBLE, text: String?) {
@@ -251,9 +255,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
               Result.Status.SUCCESS -> {
                 val resultKeys = it.data ?: emptyList()
                 val sessionUnlockedKeys = resultKeys
-                    .filter { checkResult ->
-                      checkResult.pgpKeyDetails.tempPassphrase?.isNotEmpty() == true
-                    }.map { checkResult -> checkResult.pgpKeyDetails }
+                  .filter { checkResult ->
+                    checkResult.pgpKeyDetails.tempPassphrase?.isNotEmpty() == true
+                  }.map { checkResult -> checkResult.pgpKeyDetails }
                 if (sessionUnlockedKeys.isNotEmpty()) {
                   unlockedKeys.addAll(sessionUnlockedKeys)
 
@@ -264,14 +268,18 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
                   }
 
                   if (remainingKeys.isNotEmpty()) {
-                    initButton(R.id.buttonSkipRemainingBackups, text = getString(R.string.skip_remaining_backups))
+                    initButton(
+                      R.id.buttonSkipRemainingBackups,
+                      text = getString(R.string.skip_remaining_backups)
+                    )
                     editTextKeyPassword?.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
                     val remainingKeyCount = getCountOfUniqueKeys(mapOfRemainingBackups)
 
                     textViewSubTitle?.text = resources.getQuantityString(
-                        R.plurals.not_recovered_all_keys, remainingKeyCount,
-                        uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
+                      R.plurals.not_recovered_all_keys, remainingKeyCount,
+                      uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount
+                    )
                   } else {
                     returnUnlockedKeys(Activity.RESULT_OK)
                   }
@@ -371,6 +379,18 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
     return map
   }
 
+  private fun getPassphraseType(): KeyEntity.PassphraseType? {
+    return when (rGPassphraseType?.checkedRadioButtonId) {
+      R.id.rBStoreLocally -> {
+        KeyEntity.PassphraseType.DATABASE
+      }
+      R.id.rBStoreInRAM -> {
+        KeyEntity.PassphraseType.RAM
+      }
+      else -> null
+    }
+  }
+
   companion object {
 
     const val RESULT_NEGATIVE = 10
@@ -378,26 +398,42 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
     const val RESULT_NO_NEW_KEYS = 12
 
     val KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_PRIVATE_KEYS", CheckKeysActivity::class.java)
+      "KEY_EXTRA_PRIVATE_KEYS", CheckKeysActivity::class.java
+    )
     val KEY_EXTRA_TYPE = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_TYPE", CheckKeysActivity::class.java)
+      "KEY_EXTRA_TYPE", CheckKeysActivity::class.java
+    )
     val KEY_EXTRA_SUB_TITLE = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_SUB_TITLE", CheckKeysActivity::class.java)
+      "KEY_EXTRA_SUB_TITLE", CheckKeysActivity::class.java
+    )
     val KEY_EXTRA_POSITIVE_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_POSITIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
+      "KEY_EXTRA_POSITIVE_BUTTON_TITLE", CheckKeysActivity::class.java
+    )
     val KEY_EXTRA_NEGATIVE_BUTTON_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_NEGATIVE_BUTTON_TITLE",
+        CheckKeysActivity::class.java
+      )
     val KEY_EXTRA_IS_EXTRA_IMPORT_OPTION =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_IS_EXTRA_IMPORT_OPTION",
+        CheckKeysActivity::class.java
+      )
     val KEY_EXTRA_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_UNLOCKED_PRIVATE_KEYS", CheckKeysActivity::class.java)
-    val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_SKIP_IMPORTED_KEYS", CheckKeysActivity::class.java)
+      "KEY_EXTRA_UNLOCKED_PRIVATE_KEYS", CheckKeysActivity::class.java
+    )
+    val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EXTRA_SKIP_IMPORTED_KEYS",
+      CheckKeysActivity::class.java
+    )
 
-    fun newIntent(context: Context, privateKeys: ArrayList<PgpKeyDetails>,
-                  sourceType: KeyImportDetails.SourceType? = null, subTitle: String? = null, positiveBtnTitle:
-                  String? = null, negativeBtnTitle: String? = null,
-                  isExtraImportOpt: Boolean = false,
-                  skipImportedKeys: Boolean = false): Intent {
+    fun newIntent(
+      context: Context, privateKeys: ArrayList<PgpKeyDetails>,
+      sourceType: KeyImportDetails.SourceType? = null, subTitle: String? = null, positiveBtnTitle:
+      String? = null, negativeBtnTitle: String? = null,
+      isExtraImportOpt: Boolean = false,
+      skipImportedKeys: Boolean = false
+    ): Intent {
       val intent = Intent(context, CheckKeysActivity::class.java)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys)
       intent.putExtra(KEY_EXTRA_TYPE, sourceType as Parcelable)
