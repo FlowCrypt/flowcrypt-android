@@ -425,7 +425,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.4.0-beta01'
 
     //https://mvnrepository.com/artifact/com.google.code.gson/gson
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.8.7'
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
     implementation 'com.google.api-client:google-api-client-android:1.31.5'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
