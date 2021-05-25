@@ -659,8 +659,6 @@ class AttachmentDownloadManagerService : Service() {
 
       FileInputStream(file).use { inputStream ->
         val decryptedFile = File.createTempFile("tmp", null, context.externalCacheDir)
-        att.name = FilenameUtils.getBaseName(att.name)
-
         val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()
         val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(pgpSecretKeyRings)
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
@@ -673,6 +671,7 @@ class AttachmentDownloadManagerService : Service() {
             protector = protector
           )
 
+          att.name = FilenameUtils.getBaseName(att.name)
           result.fileInfo?.fileName?.let { fileName ->
             if (att.name == null) {
               att.name = fileName
