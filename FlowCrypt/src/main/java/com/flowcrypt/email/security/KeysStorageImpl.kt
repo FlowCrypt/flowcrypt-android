@@ -12,7 +12,6 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
-import com.flowcrypt.email.extensions.org.pgpainless.key.longId
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecrypt
@@ -100,7 +99,8 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   override fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing? {
     return getPGPSecretKeyRings().firstOrNull {
-      it.secretKey.publicKey.fingerprint.contentEquals(fingerprint.toByteArray())
+      val openPgpV4Fingerprint = OpenPgpV4Fingerprint(it.secretKey)
+      openPgpV4Fingerprint.toString().equals(fingerprint, true)
     }
   }
 
@@ -129,7 +129,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
         if (keyIDs.contains(keyId)) {
           for (secretKey in pgpSecretKeyRing.secretKeys) {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
-            val passphrase = getPassphraseByFingerprint(openPgpV4Fingerprint.longId)
+            val passphrase = getPassphraseByFingerprint(openPgpV4Fingerprint.toString())
               ?: throw DecryptionException(
                 decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
                 e = PGPException("flowcrypt: need passphrase")

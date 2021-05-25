@@ -248,11 +248,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     val uniqueKeysFingerprints = HashSet<String>()
 
     while (iterator.hasNext()) {
-      val privateKey = iterator.next()
-      uniqueKeysFingerprints.add(privateKey.fingerprint)
-      if (connector.getPGPSecretKeyRingByFingerprint(privateKey.fingerprint) != null) {
+      val pgpKeyDetails = iterator.next()
+      uniqueKeysFingerprints.add(pgpKeyDetails.fingerprint)
+      if (connector.getPGPSecretKeyRingByFingerprint(pgpKeyDetails.fingerprint) != null) {
         iterator.remove()
-        uniqueKeysFingerprints.remove(privateKey.fingerprint)
+        uniqueKeysFingerprints.remove(pgpKeyDetails.fingerprint)
       }
     }
     return uniqueKeysFingerprints
