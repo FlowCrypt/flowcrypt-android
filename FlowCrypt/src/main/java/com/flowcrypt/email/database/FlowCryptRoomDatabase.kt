@@ -368,12 +368,15 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         val cursor = database.query("SELECT * FROM keys;")
         if (cursor.count > 0) {
           while (cursor.moveToNext()) {
-            val longId = cursor.getString(cursor.getColumnIndex("fingerprint"))
-            val pubKeyAsByteArray = cursor.getBlob(cursor.getColumnIndex("public_key"))
+            val longId = cursor.getString(cursor.getColumnIndexOrThrow("fingerprint"))
+            val pubKeyAsByteArray = cursor.getBlob(cursor.getColumnIndexOrThrow("public_key"))
             val pubKey = PgpKey.parseKeys(pubKeyAsByteArray)
               .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
             val fingerprint = OpenPgpV4Fingerprint(pubKey).toString()
-            database.execSQL("UPDATE keys SET fingerprint = ?, passphrase_type = 0 WHERE fingerprint = ?;", arrayOf(fingerprint, longId))
+            database.execSQL(
+              "UPDATE keys SET fingerprint = ?, passphrase_type = 0 WHERE fingerprint = ?;",
+              arrayOf(fingerprint, longId)
+            )
           }
         }
       }
