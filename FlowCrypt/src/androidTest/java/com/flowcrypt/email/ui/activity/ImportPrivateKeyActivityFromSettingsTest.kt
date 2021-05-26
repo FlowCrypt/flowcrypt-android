@@ -26,6 +26,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -165,6 +166,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     @JvmStatic
     fun createResources() {
       keyDetails.tempPassphrase = TestConstants.DEFAULT_STRONG_PASSWORD.toCharArray()
+      keyDetails.passphraseType = KeyEntity.PassphraseType.DATABASE
       privateKey = keyDetails.privateKey!!
       fileWithPrivateKey = TestGeneralUtil.createFileAndFillWithContent(
           TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + "_sec.asc", privateKey)

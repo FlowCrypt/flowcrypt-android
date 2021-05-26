@@ -35,6 +35,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
@@ -337,18 +338,19 @@ class AddOtherAccountFragmentTest : BaseTest() {
   @Test
   @DependsOnMailServer
   fun testWhenNoAccountsAndHasBackup() {
-    val prvKey = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-        "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc")
+    val prvKey = PrivateKeysManager
+      .getNodeKeyDetailsFromAssets("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc")
+      .copy(passphraseType = KeyEntity.PassphraseType.DATABASE)
 
     intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().apply {
-          putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, ArrayList(listOf(prvKey)))
-        }))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().apply {
+        putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, ArrayList(listOf(prvKey)))
+      }))
 
     val creds = AuthCredentialsManager.getAuthCredentials()
 
     onView(withId(R.id.editTextEmail))
-        .perform(clearText(), typeText(creds.email), closeSoftKeyboard())
+      .perform(clearText(), typeText(creds.email), closeSoftKeyboard())
     onView(withId(R.id.editTextPassword))
         .perform(clearText(), typeText(creds.password), closeSoftKeyboard())
     onView(withId(R.id.buttonTryToConnect))

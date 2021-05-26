@@ -167,9 +167,6 @@ class KeysSettingsActivityTest : BaseTest() {
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
             GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)!!)))))
 
-    onView(withId(R.id.textViewFingerprint)).check(
-        matches(withText(getResString(R.string.template_fingerprint_3, details.fingerprint))))
-
     onView(withId(R.id.textViewDate))
         .check(matches(withText(getHtmlString(getResString(R.string.template_date,
             DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created)))))))

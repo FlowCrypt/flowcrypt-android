@@ -16,6 +16,7 @@ import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -44,7 +45,13 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
     get() = findViewById(R.id.layoutContent)
 
   override fun onConfirmPassPhraseSuccess() {
-    tempAccount?.let { privateKeysViewModel.createPrivateKey(it, editTextKeyPassword.text.toString()) }
+    tempAccount?.let {
+      privateKeysViewModel.createPrivateKey(
+        accountEntity = it,
+        passphrase = editTextKeyPassword.text.toString(),
+        passphraseType = KeyEntity.PassphraseType.DATABASE
+      )
+    }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +64,8 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
     }
 
     if (savedInstanceState != null) {
-      this.createdPrivateKeyFingerprint = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_FINGERPRINT)
+      this.createdPrivateKeyFingerprint =
+        savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_FINGERPRINT)
     }
 
     setupPrivateKeyViewModel()
@@ -72,7 +80,8 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
         finish()
       }
     } else {
-      Toast.makeText(this, R.string.please_wait_while_key_will_be_created, Toast.LENGTH_SHORT).show()
+      Toast.makeText(this, R.string.please_wait_while_key_will_be_created, Toast.LENGTH_SHORT)
+        .show()
     }
   }
 
@@ -137,8 +146,10 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
 
             it.exception?.let { exception ->
               if (exception is ApiException) {
-                showSnackbar(rootView, exception.apiError?.msg ?: it.javaClass.simpleName,
-                    getString(R.string.retry), Snackbar.LENGTH_LONG) {
+                showSnackbar(
+                  rootView, exception.apiError?.msg ?: it.javaClass.simpleName,
+                  getString(R.string.retry), Snackbar.LENGTH_LONG
+                ) {
                   onConfirmPassPhraseSuccess()
                 }
               } else {
@@ -154,9 +165,15 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   }
 
   companion object {
-    val KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BasePassPhraseManagerActivity::class.java)
+    val KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EXTRA_ACCOUNT",
+      BasePassPhraseManagerActivity::class.java
+    )
     val KEY_CREATED_PRIVATE_KEY_FINGERPRINT =
-        GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_FINGERPRINT", CreatePrivateKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_CREATED_PRIVATE_KEY_FINGERPRINT",
+        CreatePrivateKeyActivity::class.java
+      )
 
     fun newIntent(context: Context, account: AccountEntity?): Intent {
       val intent = Intent(context, CreatePrivateKeyActivity::class.java)

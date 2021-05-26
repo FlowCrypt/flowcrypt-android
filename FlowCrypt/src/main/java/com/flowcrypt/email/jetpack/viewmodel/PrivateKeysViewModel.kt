@@ -307,7 +307,10 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  fun createPrivateKey(accountEntity: AccountEntity, passphrase: String) {
+  fun createPrivateKey(
+    accountEntity: AccountEntity, passphrase: String,
+    passphraseType: KeyEntity.PassphraseType
+  ) {
     viewModelScope.launch {
       createPrivateKeyLiveData.value = Result.loading()
       var pgpKeyDetails: PgpKeyDetails? = null
@@ -317,7 +320,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
             accountEntity.displayName
               ?: accountEntity.email, accountEntity.email
           ), passphrase
-        ).toPgpKeyDetails()
+        ).toPgpKeyDetails().copy(passphraseType = passphraseType)
 
         val existedAccount =
           roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))

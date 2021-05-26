@@ -26,42 +26,59 @@ import java.util.*
  */
 class PrivateKeysManager {
   companion object {
-    fun saveKeyFromAssetsToDatabase(accountEntity: AccountEntity, keyPath: String,
-                                    passphrase: String, sourceType: KeyImportDetails.SourceType) {
+    fun saveKeyFromAssetsToDatabase(
+      accountEntity: AccountEntity, keyPath: String,
+      passphrase: String, sourceType: KeyImportDetails.SourceType
+    ) {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
       saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, sourceType)
     }
 
-    fun saveKeyToDatabase(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails,
-                          passphrase: String, sourceType: KeyImportDetails.SourceType) {
+    fun saveKeyToDatabase(
+      accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails,
+      passphrase: String, sourceType: KeyImportDetails.SourceType
+    ) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val keyEntity = pgpKeyDetails.copy(passphraseType = KeyEntity.PassphraseType.DATABASE)
-          .toKeyEntity(accountEntity)
-          .copy(
-              source = sourceType.toString(),
-              privateKey = KeyStoreCryptoManager.encrypt(pgpKeyDetails.privateKey).toByteArray(),
-              storedPassphrase = KeyStoreCryptoManager.encrypt(passphrase))
-      val existedKey = roomDatabase.keysDao().getKeyByAccountAndFingerprint(accountEntity.email,
-          pgpKeyDetails.fingerprint)
-      existedKey?.let { roomDatabase.keysDao().delete(it) }
+      val keyEntity = pgpKeyDetails
+        .copy(passphraseType = KeyEntity.PassphraseType.DATABASE)
+        .toKeyEntity(accountEntity)
+        .copy(
+          source = sourceType.toString(),
+          privateKey = KeyStoreCryptoManager.encrypt(pgpKeyDetails.privateKey).toByteArray(),
+          storedPassphrase = KeyStoreCryptoManager.encrypt(passphrase)
+        )
+      val existingKey = roomDatabase.keysDao().getKeyByAccountAndFingerprint(
+        accountEntity.email,
+        pgpKeyDetails.fingerprint
+      )
+      existingKey?.let { roomDatabase.keysDao().delete(it) }
       roomDatabase.keysDao().insert(keyEntity)
       // Added timeout for a better sync between threads.
       Thread.sleep(3000)
     }
 
-    fun getNodeKeyDetailsFromAssets(assetsPath: String, onlyPrivate: Boolean = false): PgpKeyDetails {
+    fun getNodeKeyDetailsFromAssets(
+      assetsPath: String,
+      onlyPrivate: Boolean = false
+    ): PgpKeyDetails {
       return getNodeKeyDetailsListFromAssets(assetsPath, onlyPrivate).first()
     }
 
-    fun getNodeKeyDetailsListFromAssets(assetsPath: String, onlyPrivate: Boolean = false): List<PgpKeyDetails> {
+    fun getNodeKeyDetailsListFromAssets(
+      assetsPath: String,
+      onlyPrivate: Boolean = false
+    ): List<PgpKeyDetails> {
       val parsedCollections =
-          PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(assetsPath))
+        PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(assetsPath))
 
       if (onlyPrivate) {
         val onlyPrivateKeysCollection = PgpKey.ParseKeyResult(
-            PGPKeyRingCollection(parsedCollections.pgpKeyRingCollection
-                .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), false))
+          PGPKeyRingCollection(
+            parsedCollections.pgpKeyRingCollection
+              .pgpSecretKeyRingCollection.keyRings.asSequence().toList(), false
+          )
+        )
 
         return onlyPrivateKeysCollection.toPgpKeyDetailsList()
       } else {
@@ -69,7 +86,10 @@ class PrivateKeysManager {
       }
     }
 
-    fun getKeysFromAssets(keysPaths: Array<String>, onlyPrivate: Boolean = false): ArrayList<PgpKeyDetails> {
+    fun getKeysFromAssets(
+      keysPaths: Array<String>,
+      onlyPrivate: Boolean = false
+    ): ArrayList<PgpKeyDetails> {
       val privateKeys = ArrayList<PgpKeyDetails>()
       keysPaths.forEach { path ->
         privateKeys.addAll(getNodeKeyDetailsListFromAssets(path, onlyPrivate))
