@@ -246,7 +246,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     btnForgetPassphrase = view.findViewById(R.id.btnForgetPassphrase)
     btnForgetPassphrase?.setOnClickListener {
       pgpKeyDetailsViewModel.forgotPassphrase()
-      toast(getString(R.string.passphrase_was_erased))
+      toast(getString(R.string.passphrase_purged_from_memory))
       eTKeyPassword?.text = null
     }
 
