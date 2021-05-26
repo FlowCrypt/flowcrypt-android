@@ -20,8 +20,7 @@ import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
 /**
  * @author DenBond7
  */
-//todo-denbond7 It's old code. Need to remove this and replace with a better approach. We use it
-// only for debugging
+//todo-denbond7 It's old code. We should drop this file
 @Deprecated("We should drop this file")
 object RequestsManager {
   private var data: SingleLiveEvent<NodeResponseWrapper<*>> = SingleLiveEvent()
@@ -35,20 +34,20 @@ object RequestsManager {
   }
 
   fun encryptMsg(requestCode: Int, msg: String) {
-    //load(requestCode, EncryptMsgRequest(msg, listOf(*TestData.mixedPubKeys)))
+
   }
 
   fun decryptMsg(requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
                  prvKeys: Array<KeyEntity>, isEmail: Boolean = false) {
-    //load(requestCode, ParseDecryptMsgRequest(data = data, uri = uri, keyEntities = listOf(*prvKeys), isEmail = isEmail))
+
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
-    //load(requestCode, EncryptFileRequest(data, "file.txt", listOf(*TestData.mixedPubKeys)))
+
   }
 
   fun encryptFile(requestCode: Int, context: Context, fileUri: Uri) {
-    //load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", listOf(*TestData.mixedPubKeys)))
+
   }
 
   private fun load(requestCode: Int, nodeRequest: NodeRequest) {
