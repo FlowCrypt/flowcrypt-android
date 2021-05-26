@@ -230,6 +230,10 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
     }
 
     rGPassphraseType = findViewById(R.id.rGPassphraseType)
+
+    if (GeneralUtil.isDebugBuild()) {
+      findViewById<View>(R.id.rBStoreInRAM).isEnabled = true
+    }
   }
 
   private fun initButton(buttonViewId: Int, visibility: Int = View.VISIBLE, text: String?) {
