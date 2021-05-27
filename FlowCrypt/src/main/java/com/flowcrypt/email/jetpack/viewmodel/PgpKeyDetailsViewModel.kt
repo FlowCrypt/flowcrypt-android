@@ -73,7 +73,7 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
     return fingerprint?.let { keysStorage.getPassphraseTypeByFingerprint(it) }
   }
 
-  fun forgotPassphrase() {
+  fun forgetPassphrase() {
     fingerprint?.let {
       keysStorage.putPassPhraseToCache(
         fingerprint = it,
