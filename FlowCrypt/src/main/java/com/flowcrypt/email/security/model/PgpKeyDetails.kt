@@ -27,18 +27,20 @@ import javax.mail.internet.InternetAddress
  * Time: 1:23 PM
  * E-mail: DenBond7@gmail.com
  */
-data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
-                                     @Expose val isFullyEncrypted: Boolean,
-                                     @Expose @SerializedName("private") val privateKey: String?,
-                                     @Expose @SerializedName("public") val publicKey: String,
-                                     @Expose val users: List<String>,
-                                     @Expose val ids: List<KeyId>,
-                                     @Expose val created: Long,
-                                     @Expose val lastModified: Long,
-                                     @Expose val expiration: Long? = null,
-                                     @Expose val algo: Algo,
-                                     var tempPassphrase: CharArray? = null,
-                                     var passphraseType: KeyEntity.PassphraseType? = null) : Parcelable {
+data class PgpKeyDetails constructor(
+  @Expose val isFullyDecrypted: Boolean,
+  @Expose val isFullyEncrypted: Boolean,
+  @Expose @SerializedName("private") val privateKey: String?,
+  @Expose @SerializedName("public") val publicKey: String,
+  @Expose val users: List<String>,
+  @Expose val ids: List<KeyId>,
+  @Expose val created: Long,
+  @Expose val lastModified: Long? = null,
+  @Expose val expiration: Long? = null,
+  @Expose val algo: Algo,
+  var tempPassphrase: CharArray? = null,
+  var passphraseType: KeyEntity.PassphraseType? = null
+) : Parcelable {
 
   val primaryPgpContact: PgpContact
     get() = determinePrimaryPgpContact()
@@ -61,19 +63,20 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
     }
 
   constructor(source: Parcel) : this(
-      source.readValue(Boolean::class.java.classLoader) as Boolean,
-      source.readValue(Boolean::class.java.classLoader) as Boolean,
-      source.readString(),
-      source.readString() ?: throw IllegalArgumentException("pubkey can't be null"),
-      source.createStringArrayList() ?: throw NullPointerException(),
-      source.createTypedArrayList(KeyId.CREATOR) ?: throw NullPointerException(),
-      source.readLong(),
-      source.readLong(),
-      source.readValue(Long::class.java.classLoader) as Long?,
-      source.readParcelable<Algo>(Algo::class.java.classLoader) ?: throw NullPointerException(),
-      source.createCharArray(),
-      source.readParcelable<KeyEntity.PassphraseType>(
-          KeyEntity.PassphraseType::class.java.classLoader)
+    source.readValue(Boolean::class.java.classLoader) as Boolean,
+    source.readValue(Boolean::class.java.classLoader) as Boolean,
+    source.readString(),
+    source.readString() ?: throw IllegalArgumentException("pubkey can't be null"),
+    source.createStringArrayList() ?: throw NullPointerException(),
+    source.createTypedArrayList(KeyId.CREATOR) ?: throw NullPointerException(),
+    source.readLong(),
+    source.readValue(Long::class.java.classLoader) as Long?,
+    source.readValue(Long::class.java.classLoader) as Long?,
+    source.readParcelable<Algo>(Algo::class.java.classLoader) ?: throw NullPointerException(),
+    source.createCharArray(),
+    source.readParcelable<KeyEntity.PassphraseType>(
+      KeyEntity.PassphraseType::class.java.classLoader
+    )
   )
 
   override fun describeContents() = 0
@@ -86,7 +89,7 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
     writeStringList(users)
     writeTypedList(ids)
     writeLong(created)
-    writeLong(lastModified)
+    writeValue(lastModified)
     writeValue(expiration)
     writeParcelable(algo, flags)
     writeCharArray(tempPassphrase)
@@ -208,7 +211,7 @@ data class PgpKeyDetails constructor(@Expose val isFullyDecrypted: Boolean,
     result = 31 * result + users.hashCode()
     result = 31 * result + ids.hashCode()
     result = 31 * result + created.hashCode()
-    result = 31 * result + lastModified.hashCode()
+    result = 31 * result + (lastModified?.hashCode() ?: 0)
     result = 31 * result + (expiration?.hashCode() ?: 0)
     result = 31 * result + algo.hashCode()
     result = 31 * result + (tempPassphrase?.contentHashCode() ?: 0)
