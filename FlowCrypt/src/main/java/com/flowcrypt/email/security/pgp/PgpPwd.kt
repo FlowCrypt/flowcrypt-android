@@ -6,8 +6,10 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.nulabinc.zxcvbn.Zxcvbn
+import org.pgpainless.util.Passphrase
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -39,8 +41,9 @@ object PgpPwd {
    * @throws [PrivateKeyStrengthException] if the given passphrase is weak
    * @throws [IllegalArgumentException] if missing passphrase strength evaluation
    */
-  fun checkForWeakPassphrase(passphrase: String) {
-    val measure = Zxcvbn().measure(passphrase, listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
+  fun checkForWeakPassphrase(passphrase: Passphrase) {
+    val measure = Zxcvbn().measure(passphrase.asString,
+        listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
     val passwordStrength = estimateStrength(measure)
 
     when (passwordStrength.word.word) {

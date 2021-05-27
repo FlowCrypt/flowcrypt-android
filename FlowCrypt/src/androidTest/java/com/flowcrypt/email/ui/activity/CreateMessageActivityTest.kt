@@ -45,7 +45,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -439,7 +439,7 @@ class CreateMessageActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.nodeKeyDetails)
+    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.pgpKeyDetails)
 
     onView(withText(att?.name))
         .check(matches(isDisplayed()))
@@ -450,7 +450,7 @@ class CreateMessageActivityTest : BaseTest() {
     val secondKeyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, secondKeyDetails,
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyImportDetails.SourceType.EMAIL)
     val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
 
     activeActivityRule.launch(intent)
@@ -480,7 +480,7 @@ class CreateMessageActivityTest : BaseTest() {
     val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets(
         "pgp/key_testing@flowcrypt.test_keyB_default.asc")
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, keyDetails,
-        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+        TestConstants.DEFAULT_PASSWORD, KeyImportDetails.SourceType.EMAIL)
 
     activeActivityRule.launch(intent)
     registerAllIdlingResources()

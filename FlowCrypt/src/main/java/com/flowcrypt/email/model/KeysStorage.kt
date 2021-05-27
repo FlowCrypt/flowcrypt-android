@@ -6,37 +6,41 @@
 package com.flowcrypt.email.model
 
 import androidx.annotation.Keep
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.security.model.PgpKeyDetails
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.util.Passphrase
+import java.time.Instant
 
 @Keep
 interface KeysStorage {
+  fun getRawKeys(): List<KeyEntity>
 
-  fun getAllPgpPrivateKeys(): List<KeyEntity>
+  fun getPGPSecretKeyRings(): List<PGPSecretKeyRing>
 
-  fun getPgpPrivateKey(longId: String?): KeyEntity?
+  fun getPgpKeyDetailsList(): List<PgpKeyDetails>
 
-  /**
-   * if 2 keys requested and only one found, will return list of 1: [KeyEntity]
-   */
-  fun getFilteredPgpPrivateKeys(longIds: Array<String>): List<KeyEntity>
+  fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing?
 
-  /**
-   * Get [List] of [KeyEntity] where each key has [PgpContact] with the given email.
-   *
-   * Note: this method returns a list of not-expired [KeyEntity] only
-   */
-  fun getPgpPrivateKeysByEmail(email: String?): List<KeyEntity>
+  fun getPGPSecretKeyRingsByFingerprints(fingerprints: Collection<String>): List<PGPSecretKeyRing>
 
-  /**
-   * Get [List] of [NodeKeyDetails] where each key has [PgpContact] with the given email.
-   *
-   * Note: this method returns a list of not-expired [NodeKeyDetails] only
-   */
-  fun getNodeKeyDetailsListByEmail(email: String?): List<NodeKeyDetails>
+  fun getPGPSecretKeyRingsByUserId(user: String): List<PGPSecretKeyRing>
+
+  fun getPassphraseByFingerprint(fingerprint: String): Passphrase?
+
+  fun getPassphraseTypeByFingerprint(fingerprint: String): KeyEntity.PassphraseType?
 
   fun getSecretKeyRingProtector(): SecretKeyRingProtector
+
+  fun updatePassPhrasesCache()
+
+  fun putPassPhraseToCache(
+    fingerprint: String,
+    passphrase: Passphrase,
+    validUntil: Instant,
+    passphraseType: KeyEntity.PassphraseType
+  )
 }
 
 

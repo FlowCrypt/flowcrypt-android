@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
  * @author Denis Bondarenko
@@ -13,4 +13,4 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
  *         Time: 4:03 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SavePrivateKeyToDatabaseException(val keys: List<NodeKeyDetails>, e: Exception) : Exception(e)
+class SavePrivateKeyToDatabaseException(val keys: List<PgpKeyDetails>, e: Exception) : Exception(e)

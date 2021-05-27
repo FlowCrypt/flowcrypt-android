@@ -115,7 +115,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     //todo-denbond7 Need to improve this code
     Thread.sleep(2000)
     onView(withId(R.id.rVMsgs))
-        .check(matches(withRecyclerViewItemCount(4))).check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(3))).check(matches(isDisplayed()))
   }
 
   @Test

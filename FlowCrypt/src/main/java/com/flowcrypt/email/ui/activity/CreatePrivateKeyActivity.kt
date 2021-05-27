@@ -15,11 +15,12 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -34,7 +35,7 @@ import com.google.android.material.snackbar.Snackbar
  */
 class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private var createdPrivateKeyLongId: String? = null
+  private var createdPrivateKeyFingerprint: String? = null
   private var tempAccount: AccountEntity? = null
 
   override val contentViewResourceId: Int
@@ -44,7 +45,13 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
     get() = findViewById(R.id.layoutContent)
 
   override fun onConfirmPassPhraseSuccess() {
-    tempAccount?.let { privateKeysViewModel.createPrivateKey(it, editTextKeyPassword.text.toString()) }
+    tempAccount?.let {
+      privateKeysViewModel.createPrivateKey(
+        accountEntity = it,
+        passphrase = editTextKeyPassword.text.toString(),
+        passphraseType = KeyEntity.PassphraseType.DATABASE
+      )
+    }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +64,8 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
     }
 
     if (savedInstanceState != null) {
-      this.createdPrivateKeyLongId = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_LONG_ID)
+      this.createdPrivateKeyFingerprint =
+        savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_FINGERPRINT)
     }
 
     setupPrivateKeyViewModel()
@@ -65,20 +73,21 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
 
   override fun onBackPressed() {
     if (isBackEnabled) {
-      if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
+      if (TextUtils.isEmpty(createdPrivateKeyFingerprint)) {
         super.onBackPressed()
       } else {
         setResult(Activity.RESULT_OK)
         finish()
       }
     } else {
-      Toast.makeText(this, R.string.please_wait_while_key_will_be_created, Toast.LENGTH_SHORT).show()
+      Toast.makeText(this, R.string.please_wait_while_key_will_be_created, Toast.LENGTH_SHORT)
+        .show()
     }
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
-    outState.putString(KEY_CREATED_PRIVATE_KEY_LONG_ID, createdPrivateKeyLongId)
+    outState.putString(KEY_CREATED_PRIVATE_KEY_FINGERPRINT, createdPrivateKeyFingerprint)
   }
 
   override fun onClick(v: View) {
@@ -102,7 +111,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
     textViewSuccessSubTitle.setText(R.string.you_can_send_and_receive_encrypted_emails)
     btnSuccess.setText(R.string.continue_)
 
-    if (!TextUtils.isEmpty(this.createdPrivateKeyLongId)) {
+    if (!TextUtils.isEmpty(this.createdPrivateKeyFingerprint)) {
       layoutProgress.visibility = View.GONE
       layoutFirstPasswordCheck.visibility = View.GONE
       layoutSecondPasswordCheck.visibility = View.GONE
@@ -123,8 +132,8 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
 
           Result.Status.SUCCESS -> {
             isBackEnabled = true
-            val nodeKeyDetails: NodeKeyDetails? = it.data
-            createdPrivateKeyLongId = nodeKeyDetails?.longId
+            val pgpKeyDetails: PgpKeyDetails? = it.data
+            createdPrivateKeyFingerprint = pgpKeyDetails?.fingerprint
             layoutSecondPasswordCheck.visibility = View.GONE
             layoutSuccess.visibility = View.VISIBLE
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
@@ -137,8 +146,10 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
 
             it.exception?.let { exception ->
               if (exception is ApiException) {
-                showSnackbar(rootView, exception.apiError?.msg ?: it.javaClass.simpleName,
-                    getString(R.string.retry), Snackbar.LENGTH_LONG) {
+                showSnackbar(
+                  rootView, exception.apiError?.msg ?: it.javaClass.simpleName,
+                  getString(R.string.retry), Snackbar.LENGTH_LONG
+                ) {
                   onConfirmPassPhraseSuccess()
                 }
               } else {
@@ -154,9 +165,15 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   }
 
   companion object {
-    val KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BasePassPhraseManagerActivity::class.java)
-    val KEY_CREATED_PRIVATE_KEY_LONG_ID =
-        GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity::class.java)
+    val KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EXTRA_ACCOUNT",
+      BasePassPhraseManagerActivity::class.java
+    )
+    val KEY_CREATED_PRIVATE_KEY_FINGERPRINT =
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_CREATED_PRIVATE_KEY_FINGERPRINT",
+        CreatePrivateKeyActivity::class.java
+      )
 
     fun newIntent(context: Context, account: AccountEntity?): Intent {
       val intent = Intent(context, CreatePrivateKeyActivity::class.java)

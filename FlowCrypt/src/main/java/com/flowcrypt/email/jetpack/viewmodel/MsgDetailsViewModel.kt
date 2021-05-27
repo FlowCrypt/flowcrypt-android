@@ -15,6 +15,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -38,12 +39,12 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
-import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -101,16 +102,17 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         uid = messageEntity.uid))
   }
 
-  private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> = Transformations.switchMap(keysStorage.nodeKeyDetailsLiveData) {
-    liveData {
-      if (it.isNotEmpty()) {
-        emit(roomDatabase.msgDao().getMsgSuspend(
-            account = messageEntity.email,
-            folder = messageEntity.folder,
-            uid = messageEntity.uid))
+  private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> =
+      keysStorage.secretKeyRingsLiveData.switchMap {
+        liveData {
+          if (it.isNotEmpty()) {
+            emit(roomDatabase.msgDao().getMsgSuspend(
+                account = messageEntity.email,
+                folder = messageEntity.folder,
+                uid = messageEntity.uid))
+          }
+        }
       }
-    }
-  }
 
   private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
@@ -311,7 +313,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> = withContext(Dispatchers.IO) {
     val uri = msgSnapshot.getUri(0)
     if (uri != null) {
-      val list = keysStorage.getLatestAllPgpPrivateKeys()
+      val list = keysStorage.getPgpKeyDetailsList()
       val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
       val result = if (largerThan1Mb) {
         parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
@@ -320,7 +322,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
             request = ParseDecryptMsgRequest(
                 context = getApplication(),
                 uri = uri,
-                keyEntities = list,
+                pgpKeyDetailsList = list,
                 isEmail = true,
                 hasEncryptedDataInUri = true
             ))
@@ -340,7 +342,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
       val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(
               data = rawMimeBytes,
-              keyEntities = keysStorage.getLatestAllPgpPrivateKeys(),
+              pgpKeyDetailsList = keysStorage.getPgpKeyDetailsList(),
               isEmail = true
           ))
       modifyMsgBlocksIfNeeded(result)
@@ -361,15 +363,15 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     }
   }
 
-  private suspend fun parseMimeAndDecrypt(context: Context, uri: Uri, list: List<KeyEntity>):
+  private suspend fun parseMimeAndDecrypt(context: Context, uri: Uri, list: List<PgpKeyDetails>):
       Result<ParseDecryptedMsgResult?> {
     val uriOfEncryptedPart = getUriOfEncryptedPart(context, uri)
     return if (uriOfEncryptedPart != null) {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, keyEntities = list, isEmail = false))
+          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, pgpKeyDetailsList = list, isEmail = false))
     } else {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true, hasEncryptedDataInUri = true))
+          request = ParseDecryptMsgRequest(context = context, uri = uri, pgpKeyDetailsList = list, isEmail = true, hasEncryptedDataInUri = true))
     }
   }
 

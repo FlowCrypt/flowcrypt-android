@@ -56,7 +56,6 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -77,7 +76,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(AddContactsToDatabaseRule(listOf(PgpContact(EMAIL_DENBOND7, USER_DENBOND7,
-          keyDetails.publicKey, true, null, null, null, 0))))
+          keyDetails.publicKey, true, null, null, 0))))
       .around(RetryRule.DEFAULT)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
@@ -93,22 +92,22 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   fun testPubKeyDetails() {
     chooseContact()
 
-    keyDetails.users?.forEachIndexed { index, s ->
+    keyDetails.users.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_user, index + 1, s)))
           .check(matches(isDisplayed()))
     }
 
-    keyDetails.ids?.forEachIndexed { index, s ->
-      onView(withText(getResString(R.string.template_long_id, index + 1, s.longId!!)))
+    keyDetails.ids.forEachIndexed { index, s ->
+      onView(withText(getResString(R.string.template_fingerprint_2, index + 1, s.fingerprint)))
           .check(matches(isDisplayed()))
     }
 
     onView(withId(R.id.textViewAlgorithm))
-        .check(matches(withText(getResString(R.string.template_algorithm, keyDetails.algo!!.algorithm!!))))
+        .check(matches(withText(getResString(R.string.template_algorithm, keyDetails.algo.algorithm!!))))
     onView(withId(R.id.textViewCreated))
         .check(matches(withText(getResString(R.string.template_created,
             DateFormat.getMediumDateFormat(getTargetContext()).format(
-                Date(TimeUnit.MILLISECONDS.convert(keyDetails.created, TimeUnit.SECONDS)))))))
+                Date(keyDetails.created))))))
   }
 
   @Test
@@ -129,7 +128,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     chooseContact()
 
     val sanitizedEmail = EMAIL_DENBOND7.replace("[^a-z0-9]".toRegex(), "")
-    val fileName = "0x" + keyDetails.longId + "-" + sanitizedEmail + "-publickey" + ".asc"
+    val fileName = "0x" + keyDetails.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     val file =
         File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)

@@ -30,11 +30,13 @@ import java.io.IOException
 class MigrationTest {
   // Array of all migrations which we are going to test
   private val arrayOfMigrations = arrayOf(
-      FlowCryptRoomDatabase.MIGRATION_19_20,
-      FlowCryptRoomDatabase.MIGRATION_20_21,
-      FlowCryptRoomDatabase.MIGRATION_21_22,
-      FlowCryptRoomDatabase.MIGRATION_22_23,
-      FlowCryptRoomDatabase.MIGRATION_23_24)
+    FlowCryptRoomDatabase.MIGRATION_19_20,
+    FlowCryptRoomDatabase.MIGRATION_20_21,
+    FlowCryptRoomDatabase.MIGRATION_21_22,
+    FlowCryptRoomDatabase.MIGRATION_22_23,
+    FlowCryptRoomDatabase.MIGRATION_23_24,
+    FlowCryptRoomDatabase.MIGRATION_24_25
+  )
 
   @get:Rule
   val migrationTestHelper: MigrationTestHelper = MigrationTestHelper(

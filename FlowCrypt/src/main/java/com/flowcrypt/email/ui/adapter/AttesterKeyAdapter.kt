@@ -13,8 +13,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.UIUtil
 
 
@@ -27,41 +27,41 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class AttesterKeyAdapter(
-    private val responses: MutableList<NodeKeyDetails> = mutableListOf()) : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
+    private val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()) : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.attester_key_item, parent, false))
   }
 
   override fun getItemCount(): Int {
-    return responses.size
+    return pgpKeyDetailsList.size
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
     val context = viewHolder.itemView.context
-    val nodeKeyDetails = responses[position]
+    val nodeKeyDetails = pgpKeyDetailsList[position]
     updateView(nodeKeyDetails, context, viewHolder)
   }
 
-  fun setData(newList: List<NodeKeyDetails>) {
-    val productDiffUtilCallback = ResponseDiffUtilCallback(responses, newList)
+  fun setData(newList: List<PgpKeyDetails>) {
+    val productDiffUtilCallback = ResponseDiffUtilCallback(pgpKeyDetailsList, newList)
     val productDiffResult = DiffUtil.calculateDiff(productDiffUtilCallback)
 
-    responses.clear()
-    responses.addAll(newList)
+    pgpKeyDetailsList.clear()
+    pgpKeyDetailsList.addAll(newList)
     productDiffResult.dispatchUpdatesTo(this)
   }
 
-  private fun updateView(nodeKeyDetails: NodeKeyDetails, context: Context, viewHolder: ViewHolder) {
-    viewHolder.textViewKeyOwner.text = nodeKeyDetails.primaryPgpContact.email
+  private fun updateView(pgpKeyDetails: PgpKeyDetails, context: Context, viewHolder: ViewHolder) {
+    viewHolder.textViewKeyOwner.text = pgpKeyDetails.primaryPgpContact.email
 
     when {
-      nodeKeyDetails.publicKey.isNullOrEmpty() -> {
+      pgpKeyDetails.publicKey.isNullOrEmpty() -> {
         viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded)
         viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange))
       }
 
-      isPublicKeyMatched(viewHolder.itemView.context, nodeKeyDetails) -> {
+      isPublicKeyMatched(viewHolder.itemView.context, pgpKeyDetails) -> {
         viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email)
         viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
       }
@@ -74,14 +74,17 @@ class AttesterKeyAdapter(
   }
 
   /**
-   * Check is public key found, and the longid does not match any longids of saved keys.
+   * Check is public key found, and the fingerprint does not match any fingerprints of saved keys.
    *
    * @param context Interface to global information about an application environment.
-   * @param nodeKeyDetails The [NodeKeyDetails] object which contains info about a public key.
-   * @return true if public key found, and the longid does not match any longids of saved keys, otherwise false.
+   * @param pgpKeyDetails The [PgpKeyDetails] object which contains info about a public key.
+   * @return true if public key found, and the fingerprint does not match any
+   * fingerprints of saved keys, otherwise false.
    */
-  private fun isPublicKeyMatched(context: Context, nodeKeyDetails: NodeKeyDetails): Boolean {
-    return KeysStorageImpl.getInstance(context).getPgpPrivateKey(nodeKeyDetails.longId) != null
+  private fun isPublicKeyMatched(context: Context, pgpKeyDetails: PgpKeyDetails): Boolean {
+    return pgpKeyDetails.fingerprint?.let {
+      KeysStorageImpl.getInstance(context).getPGPSecretKeyRingByFingerprint(it) != null
+    } ?: false
   }
 
   /**
@@ -92,12 +95,12 @@ class AttesterKeyAdapter(
     var textViewKeyAttesterStatus: TextView = itemView.findViewById(R.id.textViewKeyAttesterStatus)
   }
 
-  inner class ResponseDiffUtilCallback(private val oldList: List<NodeKeyDetails>,
-                                       private val newList: List<NodeKeyDetails>) : DiffUtil.Callback() {
+  inner class ResponseDiffUtilCallback(private val oldList: List<PgpKeyDetails>,
+                                       private val newList: List<PgpKeyDetails>) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldProduct = oldList[oldItemPosition]
       val newProduct = newList[newItemPosition]
-      return oldProduct.longId == newProduct.longId
+      return oldProduct.fingerprint == newProduct.fingerprint
     }
 
     override fun getOldListSize(): Int = oldList.size

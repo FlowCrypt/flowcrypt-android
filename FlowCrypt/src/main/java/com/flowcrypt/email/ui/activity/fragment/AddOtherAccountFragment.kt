@@ -34,13 +34,13 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
@@ -414,7 +414,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           Result.Status.SUCCESS -> {
             dismissCurrentSnackBar()
 
-            val keyDetailsList = result.data as ArrayList<NodeKeyDetails>?
+            val keyDetailsList = result.data as ArrayList<PgpKeyDetails>?
             if (keyDetailsList?.isEmpty() == true) {
               authCreds?.let { authCredentials ->
                 val account = AccountEntity(authCredentials)
@@ -432,7 +432,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
               val intent = CheckKeysActivity.newIntent(
                   context = requireContext(),
                   privateKeys = keyDetailsList ?: ArrayList(),
-                  type = KeyDetails.Type.EMAIL,
+                  sourceType = KeyImportDetails.SourceType.EMAIL,
                   subTitle = subTitle,
                   positiveBtnTitle = getString(R.string.continue_),
                   negativeBtnTitle = getString(R.string.use_another_account)
@@ -719,7 +719,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   private fun handleResultFromCheckKeysActivity(resultCode: Int, data: Intent?) {
     when (resultCode) {
       Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
-        val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+        val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
             CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
         if (keys.isNullOrEmpty()) {

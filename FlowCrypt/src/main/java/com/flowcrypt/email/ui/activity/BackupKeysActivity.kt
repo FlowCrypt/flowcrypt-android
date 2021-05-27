@@ -72,7 +72,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   override fun onClick(v: View) {
     when (v.id) {
       R.id.buttonBackupAction -> {
-        if (KeysStorageImpl.getInstance(application).getAllPgpPrivateKeys().isNullOrEmpty()) {
+        if (KeysStorageImpl.getInstance(application).getRawKeys().isNullOrEmpty()) {
           showInfoSnackbar(rootView, getString(R.string.there_are_no_private_keys,
               activeAccount?.email), Snackbar.LENGTH_LONG)
         } else {

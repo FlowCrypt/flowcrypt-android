@@ -21,10 +21,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -33,7 +32,7 @@ import java.util.concurrent.TimeUnit
  *         E-mail: DenBond7@gmail.com
  */
 class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
-  private var nodeKeyDetails: NodeKeyDetails? = null
+  private var pgpKeyDetails: PgpKeyDetails? = null
   private var expectedEmail: String? = null
   private var onKeySelectedListener: OnKeySelectedListener? = null
 
@@ -47,7 +46,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    nodeKeyDetails = arguments?.getParcelable(KEY_NODE_KEY_DETAILS)
+    pgpKeyDetails = arguments?.getParcelable(KEY_NODE_KEY_DETAILS)
     expectedEmail = arguments?.getString(KEY_EXPECTED_EMAIL)
   }
 
@@ -67,8 +66,8 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
 
     var isExpectedEmailFound = false
 
-    if (nodeKeyDetails?.mimeAddresses.isNullOrEmpty()) {
-      nodeKeyDetails?.users?.forEach { user ->
+    if (pgpKeyDetails?.mimeAddresses.isNullOrEmpty()) {
+      pgpKeyDetails?.users?.forEach { user ->
         val userLayout = layoutInflater.inflate(R.layout.item_user_with_email, lUsers, false)
         val tVUserName = userLayout.findViewById<TextView>(R.id.tVUserName)
         tVUserName.text = user
@@ -76,7 +75,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
         expectedEmail?.let { email -> isExpectedEmailFound = user.contains(email, ignoreCase = true) }
       }
     } else {
-      nodeKeyDetails?.mimeAddresses?.forEach { address ->
+      pgpKeyDetails?.mimeAddresses?.forEach { address ->
         val userLayout = layoutInflater.inflate(R.layout.item_user_with_email, lUsers, false)
         val tVUserName = userLayout.findViewById<TextView>(R.id.tVUserName)
         tVUserName.text = address.personal
@@ -92,34 +91,32 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
       tVWarning?.text = getString(R.string.warning_no_expected_email, expectedEmail ?: "")
     }
 
-    nodeKeyDetails?.ids?.forEach { uid ->
+    pgpKeyDetails?.ids?.forEach { uid ->
       val tVFingerprint = TextView(context)
       tVFingerprint.setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.default_text_size_very_small))
       tVFingerprint.typeface = Typeface.DEFAULT_BOLD
       tVFingerprint.setTextColor(ContextCompat.getColor(requireContext(), R.color.silver))
       tVFingerprint.setTextIsSelectable(true)
-      tVFingerprint.text = "* ${GeneralUtil.doSectionsInText(" ", uid.fingerprint ?: "", 4)}"
+      tVFingerprint.text = "* ${GeneralUtil.doSectionsInText(" ", uid.fingerprint, 4)}"
       lFingerprints?.addView(tVFingerprint)
     }
 
-    tVAlgorithm?.text = getString(R.string.template_algorithm, nodeKeyDetails?.algo?.algorithm)
-    tVAlgorithmBitsOrCurve?.text = if (nodeKeyDetails?.algo?.bits == 0) {
-      getString(R.string.template_curve, nodeKeyDetails?.algo?.curve)
+    tVAlgorithm?.text = getString(R.string.template_algorithm, pgpKeyDetails?.algo?.algorithm)
+    tVAlgorithmBitsOrCurve?.text = if (pgpKeyDetails?.algo?.bits == 0) {
+      getString(R.string.template_curve, pgpKeyDetails?.algo?.curve)
     } else {
-      getString(R.string.template_algorithm_bits, nodeKeyDetails?.algo?.bits.toString())
+      getString(R.string.template_algorithm_bits, pgpKeyDetails?.algo?.bits.toString())
     }
 
-    tVCreated?.text = getString(R.string.template_created, DateFormat.getMediumDateFormat(context).format(
-        Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
-    tVModified?.text = getString(R.string.template_modified, DateFormat.getMediumDateFormat(context)
-        .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.lastModified
-            ?: 0, TimeUnit.SECONDS))))
+    tVCreated?.text = getString(R.string.template_created,
+        DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.created ?: 0)))
+    tVModified?.text = getString(R.string.template_modified,
+        DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.lastModified ?: 0)))
 
-    if (nodeKeyDetails?.isExpired == true) {
+    if (pgpKeyDetails?.isExpired == true) {
       tVWarning.visibility = View.VISIBLE
-      val warningText = getString(R.string.warning_key_expired, DateFormat.getMediumDateFormat(context)
-          .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.expiration
-              ?: 0, TimeUnit.SECONDS))))
+      val warningText = getString(R.string.warning_key_expired,
+          DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails?.expiration ?: 0)))
       if (tVWarning.text.isNullOrEmpty()) {
         tVWarning?.text = warningText
       } else tVWarning.append("\n\n" + warningText)
@@ -130,7 +127,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     builder.setView(view)
 
     builder.setPositiveButton(getString(R.string.use_this_key)) { _, _ ->
-      nodeKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
+      pgpKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
     }
 
     builder.setNegativeButton(R.string.cancel) { _, _ -> }//do nothing
@@ -139,7 +136,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
   }
 
   interface OnKeySelectedListener {
-    fun onKeySelected(nodeKeyDetails: NodeKeyDetails)
+    fun onKeySelected(pgpKeyDetails: PgpKeyDetails)
   }
 
   companion object {
@@ -148,11 +145,11 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     private val KEY_EXPECTED_EMAIL =
         GeneralUtil.generateUniqueExtraKey("KEY_EXPECTED_EMAIL", UpdatePublicKeyOfContactDialogFragment::class.java)
 
-    fun newInstance(expectedEmail: String?, nodeKeyDetails: NodeKeyDetails): DialogFragment {
+    fun newInstance(expectedEmail: String?, pgpKeyDetails: PgpKeyDetails): DialogFragment {
       return UpdatePublicKeyOfContactDialogFragment().apply {
         arguments = Bundle().apply {
           putString(KEY_EXPECTED_EMAIL, expectedEmail)
-          putParcelable(KEY_NODE_KEY_DETAILS, nodeKeyDetails)
+          putParcelable(KEY_NODE_KEY_DETAILS, pgpKeyDetails)
         }
       }
     }

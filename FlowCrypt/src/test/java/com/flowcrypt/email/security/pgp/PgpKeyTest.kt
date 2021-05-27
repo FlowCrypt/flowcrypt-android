@@ -6,9 +6,9 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.api.retrofit.response.model.node.Algo
-import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.Algo
+import com.flowcrypt.email.security.model.KeyId
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -19,7 +19,7 @@ class PgpKeyTest {
     val pubKey = TestKeys.KEYS["rsa1"]!!.publicKey
     val result = PgpKey.parseKeys(pubKey.toByteArray())
 
-    val expected = NodeKeyDetails(
+    val expected = PgpKeyDetails(
         isFullyDecrypted = true,
         isFullyEncrypted = false, privateKey = null,
         publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
@@ -56,25 +56,18 @@ class PgpKeyTest {
         users = listOf("Test <t@est.com>"),
         ids = listOf(
             KeyId(
-                fingerprint = "E76853E128A0D376CAE47C143A30F4CC0A9A8F10",
-                longId = "3A30F4CC0A9A8F10",
-                shortId = "0A9A8F10",
+                fingerprint = "E76853E128A0D376CAE47C143A30F4CC0A9A8F10"
             ),
             KeyId(
-                fingerprint = "9EF2F8F36A841C0D5FAB8B0F0BAB9C018B265D22",
-                longId = "0BAB9C018B265D22",
-                shortId = "8B265D22",
+                fingerprint = "9EF2F8F36A841C0D5FAB8B0F0BAB9C018B265D22"
             )
         ),
-        created = 1543592161L,
-        lastModified = 1543592161L,
-        expiration = 0L,
-        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
-        passphrase = null,
-        errorMsg = null
+        created = 1543592161000L,
+        lastModified = 1543592161000L,
+        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null)
     )
     assertEquals(1, result.getAllKeys().size)
-    assertEquals(expected, result.toNodeKeyDetailsList().first())
+    assertEquals(expected, result.toPgpKeyDetailsList().first())
   }
 
   @Test
@@ -83,7 +76,7 @@ class PgpKeyTest {
     val result = PgpKey.parseKeys(pubKey.toByteArray())
 
     // TODO update from output
-    val expected = NodeKeyDetails(
+    val expected = PgpKeyDetails(
         isFullyDecrypted = true,
         isFullyEncrypted = false, privateKey = null,
         publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
@@ -121,24 +114,18 @@ class PgpKeyTest {
         users = listOf("<auto.refresh.expired.key@recipient.com>"),
         ids = listOf(
             KeyId(
-                fingerprint = "6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9",
-                longId = "BEE3A42D9A9C8AC9",
-                shortId = "9A9C8AC9",
+                fingerprint = "6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9"
             ),
             KeyId(
-                fingerprint = "0731F9992FE2152E101E0D37D16EE86BDB129956",
-                longId = "D16EE86BDB129956",
-                shortId = "DB129956",
+                fingerprint = "0731F9992FE2152E101E0D37D16EE86BDB129956"
             )
         ),
-        created = 1594847701L,
-        lastModified = 1594847701L,
-        expiration = 1594847702L,
-        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
-        passphrase = null,
-        errorMsg = null
+        created = 1594847701000L,
+        lastModified = 1594847701000L,
+        expiration = 1594847702000L,
+        algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null)
     )
     assertEquals(1, result.getAllKeys().size)
-    assertEquals(expected, result.toNodeKeyDetailsList().first())
+    assertEquals(expected, result.toPgpKeyDetailsList().first())
   }
 }

@@ -3,144 +3,210 @@
   ~ Contributors: DenBond7
   -->
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <include
+        android:id="@+id/progress"
+        layout="@layout/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" />
+
+    <ScrollView
+        android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/textViewHeader"
-            android:layout_width="0dp"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:gravity="center"
-            android:text="@string/public_key_below_is_safe_to_share"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:animateLayoutChanges="true">
 
-        <Button
-            android:id="@+id/btnShowPubKey"
-            style="@style/AppWidget.Button.Green"
-            android:layout_width="0dp"
-            android:layout_marginTop="@dimen/default_margin_content"
-            android:text="@string/show_public_key"
-            android:textAllCaps="true"
-            android:theme="@style/AppWidget.Button.Green"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewHeader" />
+            <TextView
+                android:id="@+id/textViewHeader"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:gravity="center"
+                android:text="@string/public_key_below_is_safe_to_share"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/btnCopyToClipboard"
-            style="@style/AppWidget.Button.Green"
-            android:layout_width="0dp"
-            android:layout_marginTop="@dimen/default_margin_content"
-            android:text="@string/copy_to_clipboard"
-            android:textAllCaps="true"
-            android:theme="@style/AppWidget.Button.Green"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/btnShowPubKey" />
+            <Button
+                android:id="@+id/btnShowPubKey"
+                style="@style/AppWidget.Button.Green"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/show_public_key"
+                android:textAllCaps="true"
+                android:theme="@style/AppWidget.Button.Green"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewHeader" />
 
-        <Button
-            android:id="@+id/btnSaveToFile"
-            style="@style/AppWidget.Button.Green"
-            android:layout_width="0dp"
-            android:layout_marginTop="@dimen/default_margin_content"
-            android:text="@string/save_to_file"
-            android:textAllCaps="true"
-            android:theme="@style/AppWidget.Button.Green"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
+            <Button
+                android:id="@+id/btnCopyToClipboard"
+                style="@style/AppWidget.Button.Green"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/copy_to_clipboard"
+                android:textAllCaps="true"
+                android:theme="@style/AppWidget.Button.Green"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnShowPubKey" />
 
-        <TextView
-            android:id="@+id/textViewFingerprint"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="true"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/btnSaveToFile"
-            tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
+            <Button
+                android:id="@+id/btnSaveToFile"
+                style="@style/AppWidget.Button.Green"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/save_to_file"
+                android:textAllCaps="true"
+                android:theme="@style/AppWidget.Button.Green"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
 
-        <TextView
-            android:id="@+id/textViewLongId"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:textIsSelectable="true"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
-            tools:text="Longid: 0045 .... 045E" />
+            <TextView
+                android:id="@+id/textViewFingerprint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnSaveToFile"
+                tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
-        <TextView
-            android:id="@+id/textViewDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:textIsSelectable="true"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewLongId"
-            tools:text="Date: Nov 3, 2017" />
+            <TextView
+                android:id="@+id/textViewDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
+                tools:text="Date: Nov 3, 2017" />
 
-        <TextView
-            android:id="@+id/textViewUsers"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:textIsSelectable="true"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewDate"
-            tools:text="Users: email@domain.com, email2@domain.com" />
+            <TextView
+                android:id="@+id/textViewUsers"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewDate"
+                tools:text="Users: email@domain.com, email2@domain.com" />
 
-        <TextView
-            android:id="@+id/tVPassPhraseVerification"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:text="@string/stored_pass_phrase_loading"
-            android:textIsSelectable="true"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewUsers" />
+            <TextView
+                android:id="@+id/tVPassPhraseVerification"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:text="@string/stored_pass_phrase_loading"
+                android:textColor="@color/colorPrimaryLight"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewUsers" />
 
-        <Button
-            android:id="@+id/btnShowPrKey"
-            style="@style/AppWidget.Button.Red"
-            android:layout_width="0dp"
-            android:layout_marginTop="@dimen/default_margin_content"
-            android:text="@string/show_private_key"
-            android:textAllCaps="true"
-            android:theme="@style/AppWidget.Button.Red"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/tVPassPhraseVerification" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tILKeyPassword"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/your_passphrase"
+                app:counterEnabled="false"
+                app:errorEnabled="false"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/tVPassPhraseVerification"
+                app:passwordToggleContentDescription="description"
+                app:passwordToggleEnabled="true">
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guidelineLeft"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/eTKeyPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guidelineRight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_end="@dimen/default_margin_content" />
+            <Button
+                android:id="@+id/btnUpdatePassphrase"
+                style="@style/AppWidget.Button.Green"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/check_passphrase"
+                android:textAllCaps="true"
+                android:theme="@style/AppWidget.Button.Green"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/tILKeyPassword" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <Button
+                android:id="@+id/btnForgetPassphrase"
+                style="@style/AppWidget.Button.Red"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/forget_passphrase"
+                android:textAllCaps="true"
+                android:theme="@style/AppWidget.Button.Green"
+                android:visibility="gone"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnUpdatePassphrase" />
 
-</ScrollView>
+            <Button
+                android:id="@+id/btnShowPrKey"
+                style="@style/AppWidget.Button.Red"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/show_private_key"
+                android:textAllCaps="true"
+                android:theme="@style/AppWidget.Button.Red"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnForgetPassphrase" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guidelineLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guidelineRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+            <androidx.constraintlayout.widget.Group
+                android:id="@+id/gCheckPassphrase"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:constraint_referenced_ids="btnUpdatePassphrase,tILKeyPassword"
+                tools:visibility="visible" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+    <include
+        android:id="@+id/status"
+        layout="@layout/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+</FrameLayout>

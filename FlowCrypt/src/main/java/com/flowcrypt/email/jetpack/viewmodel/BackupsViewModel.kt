@@ -17,8 +17,8 @@ import com.flowcrypt.email.api.email.SearchBackupsUtil
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.sun.mail.imap.IMAPFolder
@@ -37,7 +37,7 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 class BackupsViewModel(application: Application) : AccountViewModel(application) {
-  val onlineBackupsLiveData: LiveData<Result<List<NodeKeyDetails>?>> = Transformations.switchMap(activeAccountLiveData) { accountEntity ->
+  val onlineBackupsLiveData: LiveData<Result<List<PgpKeyDetails>?>> = Transformations.switchMap(activeAccountLiveData) { accountEntity ->
     liveData {
       accountEntity?.let {
         emit(Result.loading())
@@ -56,7 +56,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
           } else {
             val connection = IMAPStoreManager.activeConnections[accountEntity.id]
             if (connection == null) {
-              emit(Result.exception<List<NodeKeyDetails>?>(NullPointerException("There is no active connection for ${accountEntity.email}")))
+              emit(Result.exception<List<PgpKeyDetails>?>(NullPointerException("There is no active connection for ${accountEntity.email}")))
             } else {
               when (accountEntity.accountType) {
                 AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
@@ -71,7 +71,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
           }
         } catch (e: Exception) {
           e.printStackTrace()
-          emit(Result.exception<List<NodeKeyDetails>?>(e))
+          emit(Result.exception<List<PgpKeyDetails>?>(e))
         }
       }
     }
@@ -129,8 +129,8 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
     }
   }
 
-  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(account: AccountEntity, store: Store): MutableList<NodeKeyDetails> = withContext(Dispatchers.IO) {
-    val keyDetailsList = mutableListOf<NodeKeyDetails>()
+  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(account: AccountEntity, store: Store): MutableList<PgpKeyDetails> = withContext(Dispatchers.IO) {
+    val keyDetailsList = mutableListOf<PgpKeyDetails>()
     val folders = store.defaultFolder.list("*")
 
     for (folder in folders) {
@@ -145,7 +145,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
               continue
             }
 
-            keyDetailsList.addAll(PgpKey.parseKeys(backup).toNodeKeyDetailsList())
+            keyDetailsList.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
           }
         } catch (e: Exception) {
           e.printStackTrace()

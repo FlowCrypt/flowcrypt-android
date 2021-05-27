@@ -16,7 +16,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
@@ -24,9 +23,10 @@ import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -45,9 +45,9 @@ import com.google.android.material.snackbar.Snackbar
  */
 class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
   private val backupsViewModel: BackupsViewModel by viewModels()
-  private var privateKeysFromEmailBackups = mutableListOf<NodeKeyDetails>()
-  private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
-  private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
+  private var privateKeysFromEmailBackups = mutableListOf<PgpKeyDetails>()
+  private val unlockedKeys: MutableList<PgpKeyDetails> = ArrayList()
+  private var sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
 
   private var layoutSyncStatus: View? = null
   private var buttonImportBackup: Button? = null
@@ -85,11 +85,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       R.id.buttonImportBackup -> {
         unlockedKeys.clear()
         if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
-          keyDetailsType = KeyDetails.Type.EMAIL
+          sourceType = KeyImportDetails.SourceType.EMAIL
           startActivityForResult(CheckKeysActivity.newIntent(
               context = this,
               privateKeys = ArrayList(privateKeysFromEmailBackups),
-              type = KeyDetails.Type.EMAIL,
+              sourceType = KeyImportDetails.SourceType.EMAIL,
               positiveBtnTitle = getString(R.string.continue_),
               negativeBtnTitle = getString(R
                   .string.choose_another_key),
@@ -114,7 +114,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
         when (resultCode) {
           Activity.RESULT_OK -> {
-            val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+            val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
                 CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
             keys?.let {
@@ -138,7 +138,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
     var areFreshKeysExisted = false
     var arePrivateKeysExisted = false
 
@@ -147,8 +147,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         arePrivateKeysExisted = true
       }
 
-      val longId = key.longId ?: continue
-      if (KeysStorageImpl.getInstance(application).getPgpPrivateKey(longId) == null) {
+      val fingerprint = key.fingerprint
+      if (KeysStorageImpl.getInstance(application)
+              .getPGPSecretKeyRingByFingerprint(fingerprint) == null) {
         areFreshKeysExisted = true
       }
     }
@@ -171,9 +172,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       return
     }
 
-    when (type) {
-      KeyDetails.Type.FILE -> {
-        keyDetailsType = KeyDetails.Type.FILE
+    when (sourceType) {
+      KeyImportDetails.SourceType.FILE -> {
+        this.sourceType = KeyImportDetails.SourceType.FILE
         val fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel!!.fileUri)
         val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size, fileName, keyDetailsList.size)
@@ -181,7 +182,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         val intent = CheckKeysActivity.newIntent(
             context = this,
             privateKeys = ArrayList(keyDetailsList),
-            type = keyDetailsType,
+            sourceType = sourceType,
             subTitle = bottomTitle,
             positiveBtnTitle = posBtnTitle,
             negativeBtnTitle = getString
@@ -192,14 +193,14 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
-      KeyDetails.Type.CLIPBOARD -> {
-        keyDetailsType = KeyDetails.Type.CLIPBOARD
+      KeyImportDetails.SourceType.CLIPBOARD -> {
+        this.sourceType = KeyImportDetails.SourceType.CLIPBOARD
         val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size, keyDetailsList.size)
         val clipboardIntent = CheckKeysActivity.newIntent(
             context = this,
             privateKeys = ArrayList(keyDetailsList),
-            type = keyDetailsType,
+            sourceType = sourceType,
             subTitle = title,
             positiveBtnTitle = getString(R.string.continue_),
             negativeBtnTitle = getString(R
@@ -244,17 +245,17 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     val connector = KeysStorageImpl.getInstance(this)
 
     val iterator = privateKeysFromEmailBackups.iterator()
-    val uniqueKeysLongIds = HashSet<String>()
+    val uniqueKeysFingerprints = HashSet<String>()
 
     while (iterator.hasNext()) {
-      val privateKey = iterator.next()
-      uniqueKeysLongIds.add(privateKey.longId!!)
-      if (connector.getPgpPrivateKey(privateKey.longId!!) != null) {
+      val pgpKeyDetails = iterator.next()
+      uniqueKeysFingerprints.add(pgpKeyDetails.fingerprint)
+      if (connector.getPGPSecretKeyRingByFingerprint(pgpKeyDetails.fingerprint) != null) {
         iterator.remove()
-        uniqueKeysLongIds.remove(privateKey.longId!!)
+        uniqueKeysFingerprints.remove(pgpKeyDetails.fingerprint)
       }
     }
-    return uniqueKeysLongIds
+    return uniqueKeysFingerprints
   }
 
   private fun setupSubmitPubKeyViewModel() {
@@ -321,7 +322,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             if (e is SavePrivateKeyToDatabaseException) {
               showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
                   getString(R.string.retry), Snackbar.LENGTH_INDEFINITE) {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyDetails.Type.EMAIL)
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyImportDetails.SourceType.EMAIL)
               }
             } else {
               showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
@@ -349,13 +350,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             if (keys.isNotEmpty()) {
               privateKeysFromEmailBackups.addAll(keys)
 
-              val uniqueKeysLongIds = filterKeys()
+              val uniqueKeysFingerprints = filterKeys()
 
               if (privateKeysFromEmailBackups.isEmpty()) {
                 hideImportButton()
               } else {
-                buttonImportBackup?.text = resources.getQuantityString(R.plurals.import_keys, uniqueKeysLongIds.size)
-                textViewTitle.text = resources.getQuantityString(R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size)
+                buttonImportBackup?.text = resources.getQuantityString(R.plurals.import_keys, uniqueKeysFingerprints.size)
+                textViewTitle.text = resources.getQuantityString(R.plurals.you_have_backups_that_was_not_imported, uniqueKeysFingerprints.size)
               }
             } else {
               hideImportButton()
@@ -383,7 +384,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
   private fun handleSuccessSubmit() {
     textViewProgressText.setText(R.string.saving_prv_keys)
-    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, keyDetailsType, intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false))
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, sourceType, intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false))
   }
 
   companion object {

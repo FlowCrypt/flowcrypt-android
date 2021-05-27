@@ -14,11 +14,11 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.BackupKeysActivity
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
 import com.flowcrypt.email.util.UIUtil
@@ -45,7 +45,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
   private lateinit var layoutBackupNotFound: View
   private lateinit var textViewBackupFound: TextView
 
-  private var privateKeys = mutableListOf<NodeKeyDetails>()
+  private var privateKeys = mutableListOf<PgpKeyDetails>()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_backup_settings

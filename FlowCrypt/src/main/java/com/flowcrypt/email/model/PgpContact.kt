@@ -7,8 +7,8 @@ package com.flowcrypt.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import java.util.*
 
 data class PgpContact constructor(var email: String,
@@ -17,9 +17,8 @@ data class PgpContact constructor(var email: String,
                                   var hasPgp: Boolean = false,
                                   var client: String? = null,
                                   var fingerprint: String? = null,
-                                  var longid: String? = null,
                                   var lastUse: Long = 0,
-                                  var nodeKeyDetails: NodeKeyDetails? = null) : Parcelable {
+                                  var pgpKeyDetails: PgpKeyDetails? = null) : Parcelable {
 
   constructor(source: Parcel) : this(
       source.readString()!!,
@@ -28,9 +27,8 @@ data class PgpContact constructor(var email: String,
       source.readInt() == 1,
       source.readString(),
       source.readString(),
-      source.readString(),
       source.readLong(),
-      source.readParcelable(NodeKeyDetails::class.java.classLoader)
+      source.readParcelable(PgpKeyDetails::class.java.classLoader)
   )
 
   constructor(email: String, name: String?) : this(email) {
@@ -49,9 +47,8 @@ data class PgpContact constructor(var email: String,
         writeInt((if (hasPgp) 1 else 0))
         writeString(client)
         writeString(fingerprint)
-        writeString(longid)
         writeLong(lastUse)
-        writeParcelable(nodeKeyDetails, flags)
+        writeParcelable(pgpKeyDetails, flags)
       }
 
   fun toContactEntity(): ContactEntity {
@@ -62,7 +59,6 @@ data class PgpContact constructor(var email: String,
         hasPgp = hasPgp,
         client = client,
         fingerprint = fingerprint,
-        longId = longid,
         lastUse = lastUse,
         attested = false
     )

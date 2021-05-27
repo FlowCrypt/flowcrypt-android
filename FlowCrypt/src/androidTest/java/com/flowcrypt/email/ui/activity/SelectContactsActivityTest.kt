@@ -169,9 +169,9 @@ class SelectContactsActivityTest : BaseTest() {
       for (i in EMAILS.indices) {
         val email = EMAILS[i]
         val pgpContact = if (i % 2 == 0) {
-          PgpContact(email, getUserName(email), "publicKey", true, null, null, null, 0)
+          PgpContact(email, getUserName(email), "publicKey", true, null, null, 0)
         } else {
-          PgpContact(email, null, "publicKey", true, null, null, null, 0)
+          PgpContact(email, null, "publicKey", true, null, null, 0)
         }
         CONTACTS.add(pgpContact)
       }

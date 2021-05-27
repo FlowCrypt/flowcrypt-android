@@ -39,7 +39,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -60,7 +60,6 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -102,9 +101,9 @@ class KeysSettingsActivityTest : BaseTest() {
     val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        nodeKeyDetails = details,
+        pgpKeyDetails = details,
         passphrase = TestConstants.DEFAULT_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.floatActionButtonAddKey))
@@ -131,7 +130,7 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
-    val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnShowPubKey))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -141,12 +140,12 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnCopyToClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
     isToastDisplayed(decorView, getResString(R.string.copied))
-    UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey ?: "") }
+    UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey) }
   }
 
   @Test
@@ -162,19 +161,15 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
 
     onView(withId(R.id.textViewFingerprint))
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
             GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)!!)))))
 
-    onView(withId(R.id.textViewLongId)).check(
-        matches(withText(getResString(R.string.template_longid, details.longId ?: ""))))
-
     onView(withId(R.id.textViewDate))
         .check(matches(withText(getHtmlString(getResString(R.string.template_date,
-            DateFormat.getMediumDateFormat(getTargetContext()).format(
-                Date(TimeUnit.MILLISECONDS.convert(details.created, TimeUnit.SECONDS))))))))
+            DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created)))))))
 
     onView(withId(R.id.tVPassPhraseVerification))
         .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
@@ -195,9 +190,9 @@ class KeysSettingsActivityTest : BaseTest() {
         "pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        nodeKeyDetails = details,
+        pgpKeyDetails = details,
         passphrase = "wrong passphrase",
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.recyclerViewKeys))
@@ -211,10 +206,11 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
 
     val file =
-        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "0x" + details.longId + ".asc")
+        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+            "0x" + details.fingerprint + ".asc")
 
     if (file.exists()) {
       file.delete()

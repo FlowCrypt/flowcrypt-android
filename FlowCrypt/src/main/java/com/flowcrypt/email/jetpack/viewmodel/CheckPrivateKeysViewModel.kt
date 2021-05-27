@@ -11,7 +11,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.org.pgpainless.util.asString
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
@@ -29,36 +31,40 @@ import org.pgpainless.util.Passphrase
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
 
-  fun checkKeys(keys: List<NodeKeyDetails>, passphrase: String) {
+  fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase,
+                passphraseType: KeyEntity.PassphraseType) {
     viewModelScope.launch {
       checkPrvKeysLiveData.value = Result.loading()
-      if (passphrase.isEmpty()) {
+      if (passphrase.isEmpty) {
         checkPrvKeysLiveData.value = Result.error(emptyList())
         return@launch
       }
-      checkPrvKeysLiveData.value = Result.success(checkKeysInternal(keys, passphrase))
+      checkPrvKeysLiveData.value =
+          Result.success(checkKeysInternal(keys, passphrase, passphraseType))
     }
   }
 
-  private suspend fun checkKeysInternal(keys: List<NodeKeyDetails>,
-                                        passphrase: String): List<CheckResult> =
+  private suspend fun checkKeysInternal(keys: List<PgpKeyDetails>,
+                                        passphrase: Passphrase,
+                                        passphraseType: KeyEntity.PassphraseType):
+      List<CheckResult> =
       withContext(Dispatchers.IO) {
         val context: Context = getApplication()
         val resultList = mutableListOf<CheckResult>()
         for (keyDetails in keys) {
-          val copy = keyDetails.copy()
+          val copy = keyDetails.copy(passphraseType = passphraseType)
           var e: Exception? = null
           if (copy.isPrivate) {
             val prvKey = copy.privateKey
             if (prvKey.isNullOrEmpty()) {
               e = IllegalArgumentException("Empty source")
             } else {
-              if (copy.isFullyDecrypted == true) {
-                copy.passphrase = passphrase
+              if (copy.isFullyDecrypted) {
+                copy.tempPassphrase = passphrase.chars
               } else {
                 try {
-                  PgpKey.decryptKey(prvKey, Passphrase.fromPassword(passphrase))
-                  copy.passphrase = passphrase
+                  PgpKey.decryptKey(prvKey, passphrase)
+                  copy.tempPassphrase = passphrase.chars
                 } catch (ex: Exception) {
                   //to prevent leak sensitive info we skip printing stack trace for release builds
                   if (GeneralUtil.isDebugBuild()) {
@@ -73,11 +79,14 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
             e = IllegalArgumentException(context.getString(R.string.not_private_key))
           }
 
-          resultList.add(CheckResult(copy, passphrase, e))
+          resultList.add(CheckResult(
+              pgpKeyDetails = copy,
+              passphrase = passphrase.asString ?: throw IllegalArgumentException(),
+              e = e))
         }
         return@withContext resultList
       }
 
-  data class CheckResult(val nodeKeyDetails: NodeKeyDetails,
+  data class CheckResult(val pgpKeyDetails: PgpKeyDetails,
                          val passphrase: String, val e: Exception? = null)
 }

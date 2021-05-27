@@ -17,8 +17,8 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +40,7 @@ import java.util.*
 
 class AccountKeysInfoViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
-  val accountKeysInfoLiveData = MediatorLiveData<Result<List<NodeKeyDetails>>>()
+  val accountKeysInfoLiveData = MediatorLiveData<Result<List<PgpKeyDetails>>>()
   private val initLiveData = Transformations
       .switchMap(activeAccountLiveData) { accountEntity ->
         liveData {
@@ -48,7 +48,7 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
           emit(getResult(accountEntity))
         }
       }
-  private val refreshingLiveData = MutableLiveData<Result<List<NodeKeyDetails>>>()
+  private val refreshingLiveData = MutableLiveData<Result<List<PgpKeyDetails>>>()
 
   init {
     accountKeysInfoLiveData.addSource(initLiveData) { accountKeysInfoLiveData.value = it }
@@ -91,9 +91,9 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
     }
   }
 
-  private suspend fun getResult(accountEntity: AccountEntity?): Result<List<NodeKeyDetails>> {
+  private suspend fun getResult(accountEntity: AccountEntity?): Result<List<PgpKeyDetails>> {
     return if (accountEntity != null) {
-      val results = mutableListOf<NodeKeyDetails>()
+      val results = mutableListOf<PgpKeyDetails>()
       val emails = ArrayList<String>()
       emails.add(accountEntity.email)
 
@@ -104,7 +104,7 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       for (email in emails) {
         val pubResponseResult = apiRepository.getPub(context = getApplication(), identData = email)
         pubResponseResult.data?.pubkey?.let { key ->
-          results.addAll(PgpKey.parseKeys(key).toNodeKeyDetailsList())
+          results.addAll(PgpKey.parseKeys(key).toPgpKeyDetailsList())
         }
       }
 

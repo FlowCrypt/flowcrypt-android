@@ -20,18 +20,16 @@ import java.util.*
  */
 data class PublicKeyInfo constructor(val fingerprint: String,
                                      val keyOwner: String,
-                                     val longId: String,
                                      var pgpContact: PgpContact? = null,
                                      val publicKey: String) : Parcelable {
   val isUpdateEnabled: Boolean
-    get() = pgpContact != null && (pgpContact!!.longid == null || pgpContact!!.longid != longId)
+    get() = pgpContact != null && (pgpContact!!.fingerprint == null || pgpContact!!.fingerprint != fingerprint)
 
   fun hasPgpContact(): Boolean {
     return pgpContact != null
   }
 
   constructor(source: Parcel) : this(
-      source.readString()!!,
       source.readString()!!,
       source.readString()!!,
       source.readParcelable<PgpContact>(PgpContact::class.java.classLoader),
@@ -43,7 +41,6 @@ data class PublicKeyInfo constructor(val fingerprint: String,
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeString(fingerprint)
     writeString(keyOwner)
-    writeString(longId)
     writeParcelable(pgpContact, flags)
     writeString(publicKey)
   }
@@ -53,8 +50,7 @@ data class PublicKeyInfo constructor(val fingerprint: String,
         email = keyOwner.toLowerCase(Locale.getDefault()),
         publicKey = publicKey.toByteArray(),
         hasPgp = true,
-        fingerprint = fingerprint,
-        longId = longId
+        fingerprint = fingerprint
     )
   }
 
@@ -66,7 +62,6 @@ data class PublicKeyInfo constructor(val fingerprint: String,
         hasPgp = true,
         client = null,
         fingerprint = fingerprint,
-        longid = longId,
         lastUse = 0
     )
   }
