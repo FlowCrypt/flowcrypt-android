@@ -27,7 +27,7 @@
         tools:text="human@flowcrypt.com" />
 
     <TextView
-        android:id="@+id/textViewLongId"
+        android:id="@+id/textViewFingerprint"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_message_subject"

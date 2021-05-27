@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStr
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
@@ -28,6 +27,7 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -613,17 +613,17 @@ class GmailApiHelper {
     }
 
     /**
-     * Get a list of [NodeKeyDetails] using the **Gmail API**
+     * Get a list of [PgpKeyDetails] using the **Gmail API**
      *
      * @param context context Interface to global information about an application environment;
      * @param account An [AccountEntity] object.
-     * @return A list of [NodeKeyDetails]
+     * @return A list of [PgpKeyDetails]
      * @throws MessagingException
      * @throws IOException
      */
-    suspend fun getPrivateKeyBackups(context: Context, account: AccountEntity): List<NodeKeyDetails> = withContext(Dispatchers.IO) {
+    suspend fun getPrivateKeyBackups(context: Context, account: AccountEntity): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
       try {
-        val list = mutableListOf<NodeKeyDetails>()
+        val list = mutableListOf<PgpKeyDetails>()
 
         val searchQuery = EmailUtil.getGmailBackupSearchQuery(account.email)
         val gmailApiService = generateGmailApiService(context, account)
@@ -670,7 +670,7 @@ class GmailApiHelper {
           }
 
           try {
-            list.addAll(PgpKey.parseKeys(backup).toNodeKeyDetailsList())
+            list.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
           } catch (e: NodeException) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)

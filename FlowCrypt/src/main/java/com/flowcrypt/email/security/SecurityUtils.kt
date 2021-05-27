@@ -9,18 +9,19 @@ package com.flowcrypt.email.security
 
 import android.content.Context
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
-import com.google.android.gms.common.util.CollectionUtils
 import org.apache.commons.codec.android.binary.Hex
 import org.apache.commons.codec.android.digest.DigestUtils
+import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
 import java.util.*
 
@@ -55,19 +56,19 @@ class SecurityUtils {
      */
     fun genPrivateKeysBackup(context: Context, account: AccountEntity): String {
       val builder = StringBuilder()
-      val keys = KeysStorageImpl.getInstance(context.applicationContext).getAllPgpPrivateKeys()
+      val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
+      val keys = keysStorage.getPGPSecretKeyRings()
 
-      if (CollectionUtils.isEmpty(keys)) {
+      if (keys.isEmpty()) {
         throw NoPrivateKeysAvailableException(context, account.email)
       }
 
-      var firstPassPhrase: String? = null
+      var firstPassPhrase: Passphrase? = null
 
       for (i in keys.indices) {
         val key = keys[i]
-
-        val passPhrase = key.passphrase
-        val private = key.privateKeyAsString
+        val fingerprint = OpenPgpV4Fingerprint(key)
+        val passPhrase = keysStorage.getPassphraseByFingerprint(fingerprint.toString())
 
         if (i == 0) {
           firstPassPhrase = passPhrase
@@ -75,17 +76,15 @@ class SecurityUtils {
           throw DifferentPassPhrasesException(context.getString(R.string.keys_have_different_pass_phrase))
         }
 
-        if (passPhrase.isNullOrEmpty()) {
+        if (passPhrase == null || passPhrase.isEmpty) {
           throw PrivateKeyStrengthException(context.getString(R.string.empty_pass_phrase))
         }
 
         PgpPwd.checkForWeakPassphrase(passPhrase)
 
-        val nodeKeyDetailsList = PgpKey.parseKeys(private).toNodeKeyDetailsList()
-        val keyDetails = nodeKeyDetailsList.first()
-
-        val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
-          PgpKey.encryptKey(private, Passphrase.fromPassword(passPhrase))
+        val keyDetails = key.toPgpKeyDetails()
+        val encryptedKey = if (keyDetails.isFullyDecrypted) {
+          PgpKey.encryptKey(keyDetails.privateKey ?: throw IllegalStateException(), passPhrase)
         } else {
           keyDetails.privateKey
         }
@@ -108,7 +107,7 @@ class SecurityUtils {
     fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): MutableList<String> {
       val publicKeys = mutableListOf<String>()
       val contacts = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
-          .getContactsByEmails(emails)
+        .getContactsByEmails(emails)
 
       for (contact in contacts) {
         if (contact.publicKey?.isNotEmpty() == true) {
@@ -129,9 +128,13 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderKeyDetails(context: Context, account: AccountEntity, senderEmail: String): NodeKeyDetails {
+    fun getSenderKeyDetails(
+      context: Context,
+      account: AccountEntity,
+      senderEmail: String
+    ): PgpKeyDetails {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
-      val keys = keysStorage.getNodeKeyDetailsListByEmail(senderEmail)
+      val keys = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
 
       if (keys.isEmpty()) {
         if (account.email.equals(senderEmail, ignoreCase = true)) {
@@ -141,7 +144,7 @@ class SecurityUtils {
         }
       }
 
-      return keys.first()
+      return keys.first().toPgpKeyDetails()
     }
 
     /**

@@ -106,7 +106,7 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldItem = oldList[oldItemPosition]
       val newItem = newList[newItemPosition]
-      return oldItem.longId == newItem.longId
+      return oldItem.fingerprint == newItem.fingerprint
     }
 
     override fun getOldListSize(): Int = oldList.size

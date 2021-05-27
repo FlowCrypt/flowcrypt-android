@@ -40,7 +40,7 @@ class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMo
       viewHolder = ViewHolder()
       view = inflater.inflate(layoutId, parent, false)
       viewHolder.textViewEmail = view.findViewById(R.id.textViewEmail)
-      viewHolder.textViewLongId = view.findViewById(R.id.textViewLongId)
+      viewHolder.textViewFingerprint = view.findViewById(R.id.textViewFingerprint)
       view.tag = viewHolder
     } else {
       viewHolder = view.tag as ViewHolder
@@ -53,11 +53,11 @@ class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMo
 
   private fun updateView(att: AttachmentInfo?, viewHolder: ViewHolder) {
     viewHolder.textViewEmail?.text = att?.email
-    viewHolder.textViewLongId?.text = att?.name
+    viewHolder.textViewFingerprint?.text = att?.name
   }
 
   private class ViewHolder {
-    internal var textViewEmail: TextView? = null
-    internal var textViewLongId: TextView? = null
+    var textViewEmail: TextView? = null
+    var textViewFingerprint: TextView? = null
   }
 }

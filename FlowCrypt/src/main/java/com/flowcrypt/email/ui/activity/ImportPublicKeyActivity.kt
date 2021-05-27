@@ -11,11 +11,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -48,7 +48,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
     if (keyDetailsList.isNotEmpty()) {
       if (keyDetailsList.size == 1) {
         val key = keyDetailsList.first()
@@ -70,7 +70,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  private fun updateInformationAboutPgpContact(keyDetails: NodeKeyDetails) {
+  private fun updateInformationAboutPgpContact(keyDetails: PgpKeyDetails) {
     val pgpContactFromKey = keyDetails.primaryPgpContact
     pgpContact?.pubkey = pgpContactFromKey.pubkey
     pgpContact?.let { contactsViewModel.updateContactPgpInfo(it, pgpContactFromKey) }

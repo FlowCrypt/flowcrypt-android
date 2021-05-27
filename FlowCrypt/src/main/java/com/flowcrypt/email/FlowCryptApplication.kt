@@ -14,10 +14,12 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncInboxWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
@@ -42,7 +44,7 @@ import java.util.concurrent.TimeUnit
 class FlowCryptApplication : Application(), Configuration.Provider {
   override fun onCreate() {
     super.onCreate()
-    KeysStorageImpl.getInstance(this)
+    setupKeysStorage()
     initPerInstallationSharedPrefs()
     CacheManager.init(this)
     MsgsCacheManager.init(this)
@@ -61,6 +63,19 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     Configuration.Builder()
       .setJobSchedulerJobIdRange(JobIdManager.JOB_MAX_ID, JobIdManager.JOB_MAX_ID + 10000)
       .build()
+
+  private fun setupKeysStorage() {
+    val keysStorage = KeysStorageImpl.getInstance(this)
+    keysStorage.secretKeyRingsLiveData.observeForever {
+      val hasTemporaryPassPhrases =
+        keysStorage.getRawKeys().any { it.passphraseType == KeyEntity.PassphraseType.RAM }
+      if (hasTemporaryPassPhrases) {
+        PassPhrasesInRAMService.start(this)
+      } else {
+        PassPhrasesInRAMService.stop(this)
+      }
+    }
+  }
 
   private fun initACRA() {
     if (GeneralUtil.isDebugBuild()) {

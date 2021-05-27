@@ -87,7 +87,7 @@ class ContactsSettingsActivityTest : BaseTest() {
 
   private fun addContactsToDatabase() {
     for (email in EMAILS) {
-      val pgpContact = PgpContact(email, null, "", true, null, null, null, 0)
+      val pgpContact = PgpContact(email, null, "", true, null, null, 0)
       FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
     }
   }

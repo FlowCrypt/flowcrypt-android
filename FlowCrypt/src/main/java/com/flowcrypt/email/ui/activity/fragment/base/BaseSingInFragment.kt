@@ -13,13 +13,13 @@ import androidx.fragment.app.viewModels
 import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
@@ -37,7 +37,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   protected val existedAccounts = mutableListOf<AccountEntity>()
-  protected val importCandidates = mutableListOf<NodeKeyDetails>()
+  protected val importCandidates = mutableListOf<PgpKeyDetails>()
 
   abstract fun getTempAccount(): AccountEntity?
 
@@ -73,7 +73,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                   duration = Snackbar.LENGTH_INDEFINITE,
                   onClickListener = {
                     getTempAccount()?.let { accountEntity ->
-                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyDetails.Type.EMAIL)
+                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyImportDetails.SourceType.EMAIL)
                     }
                   }
               )
@@ -101,7 +101,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
             context?.let { context -> WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC) }
 
             getTempAccount()?.let { accountEntity ->
-              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)
+              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyImportDetails.SourceType.EMAIL)
             }
           }
         }

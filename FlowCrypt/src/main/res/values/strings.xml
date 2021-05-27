@@ -317,7 +317,6 @@
     <string name="save_to_file">Save to file</string>
     <string name="show_private_key">Show private key</string>
     <string name="template_fingerprint" formatted="false"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
-    <string name="template_longid">Longid: %1$s</string>
     <string name="template_date">Date: %1$s</string>
     <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
@@ -338,9 +337,9 @@
     <string name="show_cc_bcc">Show CC/BCC</string>
     <string name="system">System</string>
     <string name="errors_notifications">Errors notifications</string>
-    <string name="system_notifications_notification_chanel">The system notifications channel</string>
-    <string name="errors_notifications_notification_chanel">The errors notifications channel with high priority</string>
-    <string name="sync_notifications_notification_chanel">The sync notifications channel</string>
+    <string name="system_notifications_notification_channel">The system notifications channel</string>
+    <string name="errors_notifications_notification_channel">The errors notifications channel with high priority</string>
+    <string name="sync_notifications_notification_channel">The sync notifications channel</string>
     <string name="warning_passphrase_is_too_weak">Your private key pass phrase is too weak. Please change it in the
         settings.</string>
     <string name="please_type_key_id_or_email">Please type key id or email</string>
@@ -368,7 +367,7 @@
     <string name="template_algorithm_bits">Bits: %1$s</string>
     <string name="template_curve">Curve: %1$s</string>
     <string name="template_user">User %1$d: %2$s</string>
-    <string name="template_long_id">LongID %1$d: %2$s</string>
+    <string name="template_fingerprint_2">Fingerprint %1$d: %2$s</string>
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
     <string name="email_must_be_non_empty">Email should not be empty</string>
     <string name="your_email_address">Your email address</string>
@@ -500,4 +499,15 @@
     <string name="date">Date</string>
     <string name="to_receiver">To %1$s</string>
     <string name="and_others">and others&#8230;</string>
+    <string name="store_pass_phrase_locally">Store pass phrase locally</string>
+    <string name="keep_pass_phrase_in_memory">Keep pass phrase in memory</string>
+    <string name="pass_phrase_not_provided">Pass phrase is not provided</string>
+    <string name="forget_passphrase">Forget pass phrase</string>
+    <string name="check_passphrase">Check pass phrase</string>
+    <string name="your_passphrase">Your pass phrase</string>
+    <string name="passphrase_purged_from_memory">Pass phrase purged from memory</string>
+    <string name="no_details_about_given_key">There are no details about the given key</string>
+    <string name="active_passphrase_session">Active pass phrase session</string>
+    <string name="silent">Silent</string>
+    <string name="silent_notifications_notification_channel">The silent notifications channel</string>
 </resources>

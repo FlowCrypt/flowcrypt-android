@@ -24,7 +24,6 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.gson.annotations.SerializedName
-import org.pgpainless.util.Passphrase
 
 /**
  * This [Action] checks all available private keys are they encrypted. If not we will try to encrypt a key and
@@ -42,7 +41,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
   override val type: Action.Type = Action.Type.ENCRYPT_PRIVATE_KEYS
 
   override fun run(context: Context) {
-    val keyEntities = KeysStorageImpl.getInstance(context).getAllPgpPrivateKeys().map { it.copy() }
+    val keyEntities = KeysStorageImpl.getInstance(context).getRawKeys().map { it.copy() }
     val modifiedKeyEntities = mutableListOf<KeyEntity>()
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
@@ -51,10 +50,10 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     }
 
     for (keyEntity in keyEntities) {
-      val passphrase = keyEntity.passphrase ?: continue
+      val passphrase = keyEntity.passphrase
 
       val keyDetailsList = PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray(), false)
-          .toNodeKeyDetailsList()
+          .toPgpKeyDetailsList()
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
             IllegalArgumentException("An error occurred during the key parsing| 1: "
@@ -64,19 +63,16 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
 
       val keyDetails = keyDetailsList.first()
 
-      if (keyDetails.isFullyEncrypted == true) {
+      if (keyDetails.isFullyEncrypted) {
         continue
       }
 
       try {
         PgpPwd.checkForWeakPassphrase(passphrase)
-        val encryptedKey = PgpKey.encryptKey(
-          keyDetails.privateKey!!,
-          Passphrase.fromPassword(passphrase)
-        )
+        val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
 
         val encryptedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray(), false)
-            .toNodeKeyDetailsList()
+            .toPgpKeyDetailsList()
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue
@@ -85,8 +81,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
         val keyDetailsWithPgpEncryptedInfo = encryptedKeyDetailsList.first()
         val modifiedKeyEntity = keyEntity.copy(
             privateKey = KeyStoreCryptoManager.encrypt(keyDetailsWithPgpEncryptedInfo.privateKey).toByteArray(),
-            publicKey = keyDetailsWithPgpEncryptedInfo.publicKey?.toByteArray()
-                ?: keyEntity.publicKey)
+            publicKey = keyDetailsWithPgpEncryptedInfo.publicKey.toByteArray())
         modifiedKeyEntities.add(modifiedKeyEntity)
       } catch (e: PrivateKeyStrengthException) {
         val account = roomDatabase.accountDao().getActiveAccount() ?: return

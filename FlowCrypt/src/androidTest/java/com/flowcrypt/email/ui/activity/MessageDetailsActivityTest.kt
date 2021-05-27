@@ -51,7 +51,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -202,7 +202,7 @@ class MessageDetailsActivityTest : BaseTest() {
         accountEntity = addAccountToDatabaseRule.account,
         keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+        sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
     val incomingMsgInfoFixed =
@@ -280,7 +280,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase(addAccountToDatabaseRule
         .account, TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyImportDetails.SourceType.EMAIL)
 
 
     val msg = getQuantityString(R.plurals

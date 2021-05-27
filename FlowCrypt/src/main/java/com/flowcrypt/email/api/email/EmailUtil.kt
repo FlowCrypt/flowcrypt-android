@@ -23,13 +23,13 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -193,21 +193,21 @@ class EmailUtil {
     /**
      * Generate [AttachmentInfo] using the given key details.
      *
-     * @param nodeKeyDetails The key details
+     * @param pgpKeyDetails The key details
      * @return A generated [AttachmentInfo].
      */
-    fun genAttInfoFromPubKey(nodeKeyDetails: NodeKeyDetails?): AttachmentInfo? {
-      if (nodeKeyDetails != null) {
-        val fileName = "0x" + nodeKeyDetails.longId?.toUpperCase(Locale.getDefault()) + ".asc"
+    fun genAttInfoFromPubKey(pgpKeyDetails: PgpKeyDetails?): AttachmentInfo? {
+      if (pgpKeyDetails != null) {
+        val fileName = "0x" + pgpKeyDetails.fingerprint?.toUpperCase(Locale.getDefault()) + ".asc"
 
-        return if (!TextUtils.isEmpty(nodeKeyDetails.publicKey)) {
+        return if (!TextUtils.isEmpty(pgpKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()
 
           attachmentInfo.name = fileName
-          attachmentInfo.encodedSize = nodeKeyDetails.publicKey?.length?.toLong() ?: 0
-          attachmentInfo.rawData = nodeKeyDetails.publicKey
+          attachmentInfo.encodedSize = pgpKeyDetails.publicKey?.length?.toLong() ?: 0
+          attachmentInfo.rawData = pgpKeyDetails.publicKey
           attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
-          attachmentInfo.email = nodeKeyDetails.primaryPgpContact.email
+          attachmentInfo.email = pgpKeyDetails.primaryPgpContact.email
           attachmentInfo.id = generateContentId()
           attachmentInfo.isEncryptionAllowed = false
 
@@ -631,7 +631,6 @@ class EmailUtil {
      *
      * @param outgoingMsgInfo  The given [OutgoingMessageInfo] which contains information about
      * an outgoing message.
-     * @param pubKeys The public keys which will be used to generate an encrypted part.
      * @return The generated raw MIME message.
      */
     fun genMessage(context: Context, accountEntity: AccountEntity,

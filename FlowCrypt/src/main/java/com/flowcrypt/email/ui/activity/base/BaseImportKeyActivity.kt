@@ -22,14 +22,14 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -85,7 +85,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
 
-  abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>)
+  abstract fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -187,7 +187,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             val privateKeyFromClipboard = item.text
             if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
               keyImportModel = KeyImportModel(null, privateKeyFromClipboard.toString(),
-                  isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
+                  isPrivateKeyMode, KeyImportDetails.SourceType.CLIPBOARD)
               keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
             } else {
               showClipboardIsEmptyInfoDialog()
@@ -206,7 +206,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
    * @param uri A [Uri] of the selected file.
    */
   protected open fun handleSelectedFile(uri: Uri) {
-    keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyDetails.Type.FILE)
+    keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyImportDetails.SourceType.FILE)
     privateKeysViewModel.parseKeys(keyImportModel, true, isPrivateKeyMode)
   }
 
@@ -243,12 +243,12 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             val parseKeyResult = it.data
 
             if (parseKeyResult == null || parseKeyResult.pgpKeyRingCollection.size() == 0) {
-              val msg = when (keyImportModel?.type) {
-                KeyDetails.Type.FILE ->
+              val msg = when (keyImportModel?.sourceType) {
+                KeyImportDetails.SourceType.FILE ->
                   getString(R.string.file_has_wrong_pgp_structure,
                       if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
 
-                KeyDetails.Type.CLIPBOARD ->
+                KeyImportDetails.SourceType.CLIPBOARD ->
                   getString(R.string.clipboard_has_wrong_structure,
                       if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
 
@@ -258,7 +258,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               }
               showInfoDialogFragment(dialogMsg = msg)
             } else {
-              keyImportModel?.type?.let { type -> onKeyFound(type, parseKeyResult.toNodeKeyDetailsList()) }
+              keyImportModel?.sourceType?.let { type -> onKeyFound(type, parseKeyResult.toPgpKeyDetailsList()) }
             }
 
             countingIdlingResource.decrementSafely()
@@ -279,8 +279,8 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
               if (WRONG_STRUCTURE_ERROR == nodeException?.nodeError?.msg) {
                 val mode = if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
-                msg = when (keyImportModel?.type) {
-                  KeyDetails.Type.FILE ->
+                msg = when (keyImportModel?.sourceType) {
+                  KeyImportDetails.SourceType.FILE ->
                     getString(R.string.file_has_wrong_pgp_structure, mode)
 
                   else ->

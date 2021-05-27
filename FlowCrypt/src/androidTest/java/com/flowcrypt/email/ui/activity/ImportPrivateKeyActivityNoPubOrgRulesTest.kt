@@ -24,12 +24,12 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -88,7 +88,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
 
   private fun useIntentionFromRunCheckKeysActivity() {
     val intent = Intent()
-    val list: ArrayList<NodeKeyDetails> = ArrayList()
+    val list: ArrayList<PgpKeyDetails> = ArrayList()
     list.add(keyDetails)
     intent.putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
 
@@ -106,7 +106,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     @BeforeClass
     @JvmStatic
     fun createResources() {
-      keyDetails.passphrase = TestConstants.DEFAULT_PASSWORD
+      keyDetails.tempPassphrase = TestConstants.DEFAULT_PASSWORD.toCharArray()
       privateKey = keyDetails.privateKey!!
     }
 

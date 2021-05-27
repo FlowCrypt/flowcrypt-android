@@ -14,11 +14,11 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.google.gson.annotations.SerializedName
-import org.pgpainless.util.Passphrase
 
 /**
  * This action describes a task which backups a private key to INBOX.
@@ -31,7 +31,7 @@ import org.pgpainless.util.Passphrase
 data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var id: Long = 0,
                                                                    override var email: String,
                                                                    override val version: Int = 0,
-                                                                   private val privateKeyLongId: String) : Action {
+                                                                   private val privateKeyFingerprint: String) : Action {
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
@@ -40,30 +40,28 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
     val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
     val keysStorage = KeysStorageImpl.getInstance(context)
-    val keyEntity = keysStorage.getPgpPrivateKey(privateKeyLongId) ?: return
-    if (keyEntity.privateKey.isNotEmpty()) {
-      val session = OpenStoreHelper.getAccountSess(context, account)
-      val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
+    val pgpKeyDetails = keysStorage
+        .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)?.toPgpKeyDetails() ?: return
 
-      val key = PgpKey.parseKeys(keyEntity.privateKey).toNodeKeyDetailsList().first()
-      val encryptedKey: String
-      if (key.isFullyEncrypted == true) {
-        encryptedKey = key.privateKey ?: throw IllegalArgumentException("empty key")
-      } else {
-        try {
-          encryptedKey = PgpKey.encryptKey(
-            keyEntity.privateKeyAsString,
-            Passphrase.fromPassword(keyEntity.passphrase!!)
-          )
-        } catch (e: Exception) {
-          throw IllegalStateException("An error occurred during encrypting some key", e)
-        }
+    val encryptedKey: String
+    if (pgpKeyDetails.isFullyEncrypted) {
+      encryptedKey = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key")
+    } else {
+      try {
+        val passphrase = keysStorage.getPassphraseByFingerprint(pgpKeyDetails.fingerprint) ?: return
+        encryptedKey = PgpKey.encryptKey(
+            armored = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key"),
+            passphrase = passphrase)
+      } catch (e: Exception) {
+        throw IllegalStateException("An error occurred during encrypting some key", e)
       }
-
-      val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey)
-      val message = EmailUtil.genMsgWithPrivateKeys(context, encryptedAccount, session, mimeBodyPart)
-      transport.sendMessage(message, message.allRecipients)
     }
+
+    val session = OpenStoreHelper.getAccountSess(context, account)
+    val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
+    val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey)
+    val message = EmailUtil.genMsgWithPrivateKeys(context, encryptedAccount, session, mimeBodyPart)
+    transport.sendMessage(message, message.allRecipients)
   }
 
   constructor(source: Parcel) : this(
@@ -82,7 +80,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
         writeLong(id)
         writeString(email)
         writeInt(version)
-        writeString(privateKeyLongId)
+        writeString(privateKeyFingerprint)
       }
 
   companion object {

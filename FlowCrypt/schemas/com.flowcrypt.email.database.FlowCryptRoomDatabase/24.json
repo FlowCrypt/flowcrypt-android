@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 24,
-    "identityHash": "27b09b859233fc03abaab220d650bf92",
+    "identityHash": "66f9c3b99371f2874df7dd3184f8b604",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -608,7 +608,7 @@
       },
       {
         "tableName": "keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `fingerprint` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -617,8 +617,8 @@
             "notNull": false
           },
           {
-            "fieldPath": "longId",
-            "columnName": "long_id",
+            "fieldPath": "fingerprint",
+            "columnName": "fingerprint",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -669,14 +669,14 @@
         },
         "indices": [
           {
-            "name": "long_id_account_account_type_in_keys",
+            "name": "fingerprint_account_account_type_in_keys",
             "unique": true,
             "columnNames": [
-              "long_id",
+              "fingerprint",
               "account",
               "account_type"
             ],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `long_id_account_account_type_in_keys` ON `${TABLE_NAME}` (`long_id`, `account`, `account_type`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `fingerprint_account_account_type_in_keys` ON `${TABLE_NAME}` (`fingerprint`, `account`, `account_type`)"
           }
         ],
         "foreignKeys": [
@@ -987,7 +987,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '27b09b859233fc03abaab220d650bf92')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '66f9c3b99371f2874df7dd3184f8b604')"
     ]
   }
 }

@@ -18,7 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -45,7 +45,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
       CheckKeysActivity.newIntent(getTargetContext(),
           privateKeys,
-          KeyDetails.Type.EMAIL,
+          KeyImportDetails.SourceType.EMAIL,
           getQuantityString(R.plurals.found_backup_of_your_account_key,
               privateKeys.size, privateKeys.size),
           getTargetContext().getString(R.string.continue_),
