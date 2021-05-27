@@ -80,8 +80,6 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
   }
 
   companion object {
-    private val TAG = PassPhrasesInRAMService::class.java.simpleName
-
     /**
      * We will run checking every minute.
      */
