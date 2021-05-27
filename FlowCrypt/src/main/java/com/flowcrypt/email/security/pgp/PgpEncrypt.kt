@@ -87,27 +87,29 @@ object PgpEncrypt {
   ) {
     srcInputStream.use { srcStream ->
       destOutputStream.use { outStream ->
-        val encOpt = EncryptionOptions()
-        pgpPublicKeyRingCollection.forEach {
-          encOpt.addRecipient(it)
-        }
-
-        var signOpt: SigningOptions? = null
-        pgpSecretKeyRingCollection?.let { collection ->
-          signOpt = SigningOptions()
-          collection.forEach {
-            signOpt?.addInlineSignature(
-              secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
-            )
+        val encOpt = EncryptionOptions().apply {
+          pgpPublicKeyRingCollection.forEach {
+            addRecipient(it)
           }
         }
+
+        val producerOptions: ProducerOptions =
+          if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
+            ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
+              pgpSecretKeyRingCollection.forEach {
+                addInlineSignature(
+                  secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
+                )
+              }
+            })
+          } else {
+            ProducerOptions.encrypt(encOpt)
+          }
 
         PGPainless.encryptAndOrSign()
           .onOutputStream(outStream)
           .withOptions(
-            ProducerOptions
-              .signAndEncrypt(encOpt, signOpt)
-              .setAsciiArmor(doArmor)
+            producerOptions.setAsciiArmor(doArmor)
           ).use { encryptionStream ->
             srcStream.copyTo(encryptionStream)
           }
