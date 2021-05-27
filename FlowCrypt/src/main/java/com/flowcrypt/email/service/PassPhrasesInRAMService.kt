@@ -50,7 +50,7 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
 
     val notification: Notification = Notification.Builder(
       this,
-      NotificationChannelManager.CHANNEL_ID_SYSTEM
+      NotificationChannelManager.CHANNEL_ID_SILENT
     )
       .setContentTitle(getString(R.string.active_passphrase_session))
       .setSmallIcon(R.drawable.ic_baseline_password_24dp)
