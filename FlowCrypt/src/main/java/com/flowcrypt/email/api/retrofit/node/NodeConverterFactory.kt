@@ -24,14 +24,20 @@ import java.lang.reflect.Type
  */
 class NodeConverterFactory private constructor(private val gson: Gson) : Converter.Factory() {
 
-  override fun responseBodyConverter(type: Type?, annotations: Array<Annotation>?, retrofit: Retrofit?):
+  override fun responseBodyConverter(
+    type: Type?,
+    annotations: Array<Annotation>?,
+    retrofit: Retrofit?
+  ):
       Converter<ResponseBody, *> {
     val adapter = gson.getAdapter(TypeToken.get(type!!))
     return NodeResponseBodyConverter(gson, adapter)
   }
 
-  override fun requestBodyConverter(type: Type?, parameterAnnotations: Array<Annotation>?,
-                                    methodAnnotations: Array<Annotation>?, retrofit: Retrofit?):
+  override fun requestBodyConverter(
+    type: Type?, parameterAnnotations: Array<Annotation>?,
+    methodAnnotations: Array<Annotation>?, retrofit: Retrofit?
+  ):
       Converter<*, RequestBody> {
     val adapter = gson.getAdapter(TypeToken.get(type!!))
     return NodeRequestBodyConverter(gson, adapter)

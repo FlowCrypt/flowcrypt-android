@@ -21,11 +21,15 @@ import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
  * E-mail: DenBond7@gmail.com
  */
 class SingleCharacterSpanChipTokenizer<C : Chip>
-@JvmOverloads constructor(context: Context,
-                          chipCreator: ChipCreator<C>,
-                          chipClass: Class<C>,
-                          private val symbol: Char = CHIP_SEPARATOR_WHITESPACE) : SpanChipTokenizer<C>(context,
-    chipCreator, chipClass) {
+@JvmOverloads constructor(
+  context: Context,
+  chipCreator: ChipCreator<C>,
+  chipClass: Class<C>,
+  private val symbol: Char = CHIP_SEPARATOR_WHITESPACE
+) : SpanChipTokenizer<C>(
+  context,
+  chipCreator, chipClass
+) {
   override fun findTokenStart(text: CharSequence, cursor: Int): Int {
     var i = cursor
 

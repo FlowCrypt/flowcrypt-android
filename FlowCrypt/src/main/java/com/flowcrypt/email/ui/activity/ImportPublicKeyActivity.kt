@@ -48,14 +48,23 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
+  override fun onKeyFound(
+    sourceType: KeyImportDetails.SourceType,
+    keyDetailsList: List<PgpKeyDetails>
+  ) {
     if (keyDetailsList.isNotEmpty()) {
       if (keyDetailsList.size == 1) {
         val key = keyDetailsList.first()
 
         if (key.isPrivate) {
-          showInfoSnackbar(rootView, getString(R.string.file_has_wrong_pgp_structure, getString(R
-              .string.public_)), Snackbar.LENGTH_LONG)
+          showInfoSnackbar(
+            rootView, getString(
+              R.string.file_has_wrong_pgp_structure, getString(
+                R
+                  .string.public_
+              )
+            ), Snackbar.LENGTH_LONG
+          )
           return
         }
 
@@ -77,12 +86,21 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
   }
 
   companion object {
-    val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
-        ImportPublicKeyActivity::class.java)
+    val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EXTRA_PGP_CONTACT",
+      ImportPublicKeyActivity::class.java
+    )
 
-    fun newIntent(context: Context?, accountEntity: AccountEntity?, title: String, pgpContact: PgpContact): Intent {
-      val intent = newIntent(context = context, accountEntity = accountEntity, title = title,
-          throwErrorIfDuplicateFoundEnabled = false, cls = ImportPublicKeyActivity::class.java)
+    fun newIntent(
+      context: Context?,
+      accountEntity: AccountEntity?,
+      title: String,
+      pgpContact: PgpContact
+    ): Intent {
+      val intent = newIntent(
+        context = context, accountEntity = accountEntity, title = title,
+        throwErrorIfDuplicateFoundEnabled = false, cls = ImportPublicKeyActivity::class.java
+      )
       intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact)
       return intent
     }

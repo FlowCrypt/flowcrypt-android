@@ -27,10 +27,12 @@ interface BaseApiRepository {
   /**
    * Base implementation for the API calls
    */
-  suspend fun <T> getResult(requestCode: Long = 0L,
-                            context: Context? = null,
-                            expectedResultClass: Class<T>? = null,
-                            call: suspend () -> Response<T>): Result<T> {
+  suspend fun <T> getResult(
+    requestCode: Long = 0L,
+    context: Context? = null,
+    expectedResultClass: Class<T>? = null,
+    call: suspend () -> Response<T>
+  ): Result<T> {
     return try {
       val response = call()
       if (response.isSuccessful) {
@@ -46,7 +48,10 @@ interface BaseApiRepository {
             Result.success(data = body, requestCode = requestCode)
           }
         } else {
-          Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+          Result.exception(
+            throwable = ApiException(ApiError(response.code(), response.message())),
+            requestCode = requestCode
+          )
         }
       } else {
         val apiResponseWithError = parseError(context, expectedResultClass, response)
@@ -55,13 +60,30 @@ interface BaseApiRepository {
             return if (apiResponseWithError.apiError != null) {
               Result.error(data = apiResponseWithError, requestCode = requestCode)
             } else {
-              Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+              Result.exception(
+                throwable = ApiException(
+                  ApiError(
+                    response.code(),
+                    response.message()
+                  )
+                ), requestCode = requestCode
+              )
             }
           } else {
-            Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+            Result.exception(
+              throwable = ApiException(
+                ApiError(
+                  response.code(),
+                  response.message()
+                )
+              ), requestCode = requestCode
+            )
           }
         } else {
-          Result.exception(throwable = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
+          Result.exception(
+            throwable = ApiException(ApiError(response.code(), response.message())),
+            requestCode = requestCode
+          )
         }
       }
     } catch (e: Exception) {
@@ -70,18 +92,26 @@ interface BaseApiRepository {
     }
   }
 
-  private suspend fun <T> parseError(context: Context?, exceptedClass: Class<T>?, response: Response<T>): T? =
-      withContext(Dispatchers.IO) {
-        context ?: return@withContext null
-        exceptedClass ?: return@withContext null
-        try {
-          val errorConverter: Converter<ResponseBody, T> = ApiHelper.getInstance(context).retrofit.responseBodyConverter<T>(exceptedClass, arrayOfNulls(0))
-          response.errorBody()?.let {
-            return@withContext errorConverter.convert(it)
-          }
-        } catch (e: Exception) {
-          e.printStackTrace()
+  private suspend fun <T> parseError(
+    context: Context?,
+    exceptedClass: Class<T>?,
+    response: Response<T>
+  ): T? =
+    withContext(Dispatchers.IO) {
+      context ?: return@withContext null
+      exceptedClass ?: return@withContext null
+      try {
+        val errorConverter: Converter<ResponseBody, T> =
+          ApiHelper.getInstance(context).retrofit.responseBodyConverter<T>(
+            exceptedClass,
+            arrayOfNulls(0)
+          )
+        response.errorBody()?.let {
+          return@withContext errorConverter.convert(it)
         }
-        return@withContext null
+      } catch (e: Exception) {
+        e.printStackTrace()
       }
+      return@withContext null
+    }
 }

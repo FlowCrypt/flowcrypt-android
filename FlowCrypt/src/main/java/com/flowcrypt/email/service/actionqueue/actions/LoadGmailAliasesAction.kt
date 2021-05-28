@@ -25,17 +25,20 @@ import java.util.*
  *         Time: 12:09 PM
  *         E-mail: DenBond7@gmail.com
  */
-data class LoadGmailAliasesAction(override var id: Long = 0,
-                                  override val email: String? = null,
-                                  override val version: Int = 0) : Action, Parcelable {
+data class LoadGmailAliasesAction(
+  override var id: Long = 0,
+  override val email: String? = null,
+  override val version: Int = 0
+) : Action, Parcelable {
 
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.LOAD_GMAIL_ALIASES
 
   constructor(parcel: Parcel) : this(
-      parcel.readLong(),
-      parcel.readString(),
-      parcel.readInt())
+    parcel.readLong(),
+    parcel.readString(),
+    parcel.readInt()
+  )
 
   override fun run(context: Context) {
     try {
@@ -48,17 +51,19 @@ data class LoadGmailAliasesAction(override var id: Long = 0,
       }
 
       val gmailService = GmailApiHelper.generateGmailApiService(context, account)
-      val response = gmailService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
+      val response =
+        gmailService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
       val aliases = ArrayList<AccountAliasesEntity>()
       for (alias in response.sendAs) {
         if (alias.verificationStatus != null) {
           val accountAliasesDao = AccountAliasesEntity(
-              email = account.email.toLowerCase(Locale.getDefault()),
-              accountType = account.accountType,
-              sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
-              displayName = alias.displayName,
-              isDefault = alias.isDefault,
-              verificationStatus = alias.verificationStatus)
+            email = account.email.toLowerCase(Locale.getDefault()),
+            accountType = account.accountType,
+            sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
+            displayName = alias.displayName,
+            isDefault = alias.isDefault,
+            verificationStatus = alias.verificationStatus
+          )
           aliases.add(accountAliasesDao)
         }
       }

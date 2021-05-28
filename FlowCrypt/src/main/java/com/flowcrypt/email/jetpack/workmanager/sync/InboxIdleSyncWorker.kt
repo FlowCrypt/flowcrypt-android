@@ -40,7 +40,8 @@ import javax.mail.UIDFolder
  * Time: 17:12
  * E-mail: DenBond7@gmail.com
  */
-open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(context, params) {
+open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
+  BaseIdleWorker(context, params) {
 
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     syncMessages(accountEntity, store)
@@ -50,49 +51,77 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
     syncMessages(accountEntity)
   }
 
-  private suspend fun syncMessages(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
-    val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
-    val folderFullName = inboxLocalFolder.fullName
+  private suspend fun syncMessages(accountEntity: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
+      val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
+      val folderFullName = inboxLocalFolder.fullName
 
-    store.getFolder(folderFullName).use { folder ->
-      val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(accountEntity.email, folderFullName)
-      val cachedUIDSet = mapOfUIDAndMsgFlags.keys.toSet()
+      store.getFolder(folderFullName).use { folder ->
+        val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+        val mapOfUIDAndMsgFlags =
+          roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(accountEntity.email, folderFullName)
+        val cachedUIDSet = mapOfUIDAndMsgFlags.keys.toSet()
 
-      if (accountEntity.isShowOnlyEncrypted == true) {
-        val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
-        val fetchProfile = FetchProfile().apply {
-          add(UIDFolder.FetchProfileItem.UID)
-        }
-        remoteFolder.fetch(foundMsgs, fetchProfile)
-        val updatedMsgs = EmailUtil.getUpdatedMsgsByUIDs(remoteFolder, cachedUIDSet.toLongArray())
-        processUpdatedMsgs(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs, accountEntity, folderFullName)
-        processDeletedMsgs(cachedUIDSet, remoteFolder, updatedMsgs, accountEntity, folderFullName)
+        if (accountEntity.isShowOnlyEncrypted == true) {
+          val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+          val fetchProfile = FetchProfile().apply {
+            add(UIDFolder.FetchProfileItem.UID)
+          }
+          remoteFolder.fetch(foundMsgs, fetchProfile)
+          val updatedMsgs = EmailUtil.getUpdatedMsgsByUIDs(remoteFolder, cachedUIDSet.toLongArray())
+          processUpdatedMsgs(
+            mapOfUIDAndMsgFlags,
+            remoteFolder,
+            updatedMsgs,
+            accountEntity,
+            folderFullName
+          )
+          processDeletedMsgs(cachedUIDSet, remoteFolder, updatedMsgs, accountEntity, folderFullName)
 
-        val newestCachedUID = roomDatabase.msgDao()
+          val newestCachedUID = roomDatabase.msgDao()
             .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: return@use
-        val newMsgs = EmailUtil.fetchMsgs(remoteFolder, foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }.toTypedArray())
-        val newCandidates = EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, newMsgs)
-        processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
-      } else {
-        val oldestCachedUID = roomDatabase.msgDao()
+          val newMsgs = EmailUtil.fetchMsgs(
+            remoteFolder,
+            foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }
+              .toTypedArray()
+          )
+          val newCandidates = EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, newMsgs)
+          processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
+        } else {
+          val oldestCachedUID = roomDatabase.msgDao()
             .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: return@use
-        val allMsgsFromOldestExisted = EmailUtil.getUpdatedMsgsByUID(remoteFolder, oldestCachedUID.toLong(), UIDFolder.LASTUID)
-        processDeletedMsgs(cachedUIDSet, remoteFolder, allMsgsFromOldestExisted, accountEntity, folderFullName)
-        processUpdatedMsgs(mapOfUIDAndMsgFlags, remoteFolder, allMsgsFromOldestExisted, accountEntity, folderFullName)
+          val allMsgsFromOldestExisted =
+            EmailUtil.getUpdatedMsgsByUID(remoteFolder, oldestCachedUID.toLong(), UIDFolder.LASTUID)
+          processDeletedMsgs(
+            cachedUIDSet,
+            remoteFolder,
+            allMsgsFromOldestExisted,
+            accountEntity,
+            folderFullName
+          )
+          processUpdatedMsgs(
+            mapOfUIDAndMsgFlags,
+            remoteFolder,
+            allMsgsFromOldestExisted,
+            accountEntity,
+            folderFullName
+          )
 
-        val newCandidates = EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, allMsgsFromOldestExisted)
-        processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
+          val newCandidates =
+            EmailUtil.genNewCandidates(cachedUIDSet, remoteFolder, allMsgsFromOldestExisted)
+          processNewMsgs(newCandidates, accountEntity, inboxLocalFolder, remoteFolder)
+        }
       }
     }
-  }
 
   private suspend fun syncMessages(accountEntity: AccountEntity) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
     val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
-    val newestMsg = roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, inboxLocalFolder.fullName)
-    val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, inboxLocalFolder.fullName)
+    val newestMsg =
+      roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, inboxLocalFolder.fullName)
+    val labelEntity = roomDatabase.labelDao()
+      .getLabelSuspend(accountEntity.email, accountEntity.accountType, inboxLocalFolder.fullName)
     val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
     val msgEntityHistoryId = BigInteger(newestMsg?.historyId ?: "0")
     val startHistoryId = labelEntityHistoryId.max(msgEntityHistoryId)
@@ -100,10 +129,10 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
     executeGMailAPICall(applicationContext) {
       if (startHistoryId != BigInteger.ZERO) {
         val historyList = GmailApiHelper.loadHistoryInfo(
-            context = applicationContext,
-            accountEntity = accountEntity,
-            localFolder = inboxLocalFolder,
-            historyId = labelEntityHistoryId.max(msgEntityHistoryId)
+          context = applicationContext,
+          accountEntity = accountEntity,
+          localFolder = inboxLocalFolder,
+          historyId = labelEntityHistoryId.max(msgEntityHistoryId)
         )
 
         handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
@@ -111,8 +140,10 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
     }
   }
 
-  private suspend fun handleMsgsFromHistory(accountEntity: AccountEntity, localFolder: LocalFolder,
-                                            historyList: List<History>) = withContext(Dispatchers.IO) {
+  private suspend fun handleMsgsFromHistory(
+    accountEntity: AccountEntity, localFolder: LocalFolder,
+    historyList: List<History>
+  ) = withContext(Dispatchers.IO) {
     GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
                                                               newCandidatesMap,
                                                               updateCandidatesMap ->
@@ -121,23 +152,31 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
 
       val newCandidates = newCandidatesMap.values.toList()
       if (newCandidates.isNotEmpty()) {
-        val msgs = GmailApiHelper.loadMsgsInParallel(applicationContext, accountEntity,
-            newCandidates, localFolder)
+        val msgs = GmailApiHelper.loadMsgsInParallel(
+          applicationContext, accountEntity,
+          newCandidates, localFolder
+        )
 
         val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
         val isNew = !GeneralUtil.isAppForegrounded()
 
         val msgEntities = MessageEntity.genMessageEntities(
-            context = applicationContext,
-            email = email,
-            label = localFolder.fullName,
-            msgsList = msgs,
-            isNew = isNew,
-            areAllMsgsEncrypted = isEncryptedModeEnabled
+          context = applicationContext,
+          email = email,
+          label = localFolder.fullName,
+          msgsList = msgs,
+          isNew = isNew,
+          areAllMsgsEncrypted = isEncryptedModeEnabled
         )
 
         processNewMsgs(accountEntity, localFolder, msgEntities)
-        GmailApiHelper.identifyAttachments(msgEntities, msgs, accountEntity, localFolder, roomDatabase)
+        GmailApiHelper.identifyAttachments(
+          msgEntities,
+          msgs,
+          accountEntity,
+          localFolder,
+          roomDatabase
+        )
       }
 
       processUpdatedMsgs(accountEntity, localFolder.fullName, updateCandidatesMap)
@@ -149,19 +188,19 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) : Bas
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<InboxIdleSyncWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<InboxIdleSyncWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

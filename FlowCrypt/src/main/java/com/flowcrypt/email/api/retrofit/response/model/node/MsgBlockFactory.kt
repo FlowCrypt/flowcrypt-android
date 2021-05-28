@@ -6,14 +6,13 @@
 package com.flowcrypt.email.api.retrofit.response.model.node
 
 import android.os.Parcel
-import java.lang.IllegalArgumentException
 
 object MsgBlockFactory {
   @JvmStatic
   val supportedMsgBlockTypes = listOf(
-      MsgBlock.Type.PUBLIC_KEY,
-      MsgBlock.Type.DECRYPT_ERROR,
-      MsgBlock.Type.DECRYPTED_ATT
+    MsgBlock.Type.PUBLIC_KEY,
+    MsgBlock.Type.DECRYPT_ERROR,
+    MsgBlock.Type.DECRYPTED_ATT
   )
 
   @JvmStatic

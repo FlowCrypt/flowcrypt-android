@@ -32,7 +32,8 @@ import javax.mail.Store
  *         Time: 10:19 AM
  *         E-mail: DenBond7@gmail.com
  */
-class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class EmptyTrashWorker(context: Context, params: WorkerParameters) :
+  BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     emptyTrash(accountEntity, store)
   }
@@ -43,7 +44,8 @@ class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWor
 
   private suspend fun emptyTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
     emptyTrashInternal(account) { folderName ->
-      roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
+      roomDatabase.msgDao()
+        .changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
       try {
         executeGMailAPICall(applicationContext) {
           val msgs = GmailApiHelper.loadTrashMsgs(applicationContext, account)
@@ -64,30 +66,38 @@ class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWor
   }
 
 
-  private suspend fun emptyTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    emptyTrashInternal(account) { folderName ->
-      store.getFolder(folderName).use { folder ->
-        val remoteTrashFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-        val msgs = remoteTrashFolder.messages
+  private suspend fun emptyTrash(account: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      emptyTrashInternal(account) { folderName ->
+        store.getFolder(folderName).use { folder ->
+          val remoteTrashFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val msgs = remoteTrashFolder.messages
 
-        if (msgs.isNotEmpty()) {
-          roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
-          try {
-            remoteTrashFolder.setFlags(msgs, Flags(Flags.Flag.DELETED), true)
-          } catch (e: Exception) {
-            roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName)
-            throw e
+          if (msgs.isNotEmpty()) {
+            roomDatabase.msgDao().changeMsgsStateSuspend(
+              account.email,
+              folderName,
+              MessageState.PENDING_EMPTY_TRASH.value
+            )
+            try {
+              remoteTrashFolder.setFlags(msgs, Flags(Flags.Flag.DELETED), true)
+            } catch (e: Exception) {
+              roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName)
+              throw e
+            }
+
+            val candidatesForDeleting =
+              roomDatabase.msgDao().getMsgsSuspend(account.email, folderName)
+            roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
           }
-
-          val candidatesForDeleting = roomDatabase.msgDao().getMsgsSuspend(account.email, folderName)
-          roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
         }
       }
     }
-  }
 
-  private suspend fun emptyTrashInternal(account: AccountEntity,
-                                         action: suspend (folderName: String) -> Unit) = withContext(Dispatchers.IO)
+  private suspend fun emptyTrashInternal(
+    account: AccountEntity,
+    action: suspend (folderName: String) -> Unit
+  ) = withContext(Dispatchers.IO)
   {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val trash = foldersManager.folderTrash ?: return@withContext
@@ -99,19 +109,19 @@ class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWor
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<EmptyTrashWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<EmptyTrashWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

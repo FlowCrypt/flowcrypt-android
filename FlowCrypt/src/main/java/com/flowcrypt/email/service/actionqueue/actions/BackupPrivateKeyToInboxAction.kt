@@ -28,10 +28,12 @@ import com.google.gson.annotations.SerializedName
  * Time: 16:58
  * E-mail: DenBond7@gmail.com
  */
-data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var id: Long = 0,
-                                                                   override var email: String,
-                                                                   override val version: Int = 0,
-                                                                   private val privateKeyFingerprint: String) : Action {
+data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(
+  override var id: Long = 0,
+  override var email: String,
+  override val version: Int = 0,
+  private val privateKeyFingerprint: String
+) : Action {
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
@@ -41,7 +43,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
     val keysStorage = KeysStorageImpl.getInstance(context)
     val pgpKeyDetails = keysStorage
-        .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)?.toPgpKeyDetails() ?: return
+      .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)?.toPgpKeyDetails() ?: return
 
     val encryptedKey: String
     if (pgpKeyDetails.isFullyEncrypted) {
@@ -50,8 +52,9 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
       try {
         val passphrase = keysStorage.getPassphraseByFingerprint(pgpKeyDetails.fingerprint) ?: return
         encryptedKey = PgpKey.encryptKey(
-            armored = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key"),
-            passphrase = passphrase)
+          armored = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key"),
+          passphrase = passphrase
+        )
       } catch (e: Exception) {
         throw IllegalStateException("An error occurred during encrypting some key", e)
       }
@@ -65,10 +68,10 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
   }
 
   constructor(source: Parcel) : this(
-      source.readLong(),
-      source.readString()!!,
-      source.readInt(),
-      source.readString()!!
+    source.readLong(),
+    source.readString()!!,
+    source.readInt(),
+    source.readString()!!
   )
 
   override fun describeContents(): Int {
@@ -76,21 +79,21 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeLong(id)
-        writeString(email)
-        writeInt(version)
-        writeString(privateKeyFingerprint)
-      }
+    with(dest) {
+      writeLong(id)
+      writeString(email)
+      writeInt(version)
+      writeString(privateKeyFingerprint)
+    }
 
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<BackupPrivateKeyToInboxAction> =
-        object : Parcelable.Creator<BackupPrivateKeyToInboxAction> {
-          override fun createFromParcel(source: Parcel): BackupPrivateKeyToInboxAction =
-              BackupPrivateKeyToInboxAction(source)
+      object : Parcelable.Creator<BackupPrivateKeyToInboxAction> {
+        override fun createFromParcel(source: Parcel): BackupPrivateKeyToInboxAction =
+          BackupPrivateKeyToInboxAction(source)
 
-          override fun newArray(size: Int): Array<BackupPrivateKeyToInboxAction?> = arrayOfNulls(size)
-        }
+        override fun newArray(size: Int): Array<BackupPrivateKeyToInboxAction?> = arrayOfNulls(size)
+      }
   }
 }

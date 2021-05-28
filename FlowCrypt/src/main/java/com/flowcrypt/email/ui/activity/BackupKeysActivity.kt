@@ -43,7 +43,8 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:06
  * E-mail: DenBond7@gmail.com
  */
-class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener, RadioGroup.OnCheckedChangeListener {
+class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
+  RadioGroup.OnCheckedChangeListener {
   private val backupsViewModel: BackupsViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
@@ -73,8 +74,12 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (v.id) {
       R.id.buttonBackupAction -> {
         if (KeysStorageImpl.getInstance(application).getRawKeys().isNullOrEmpty()) {
-          showInfoSnackbar(rootView, getString(R.string.there_are_no_private_keys,
-              activeAccount?.email), Snackbar.LENGTH_LONG)
+          showInfoSnackbar(
+            rootView, getString(
+              R.string.there_are_no_private_keys,
+              activeAccount?.email
+            ), Snackbar.LENGTH_LONG
+          )
         } else {
           when (radioGroupBackupsVariants?.checkedRadioButtonId) {
             R.id.radioButtonEmail -> {
@@ -84,7 +89,10 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
                 UIUtil.exchangeViewVisibility(true, progressBar, rootView)
                 backupsViewModel.postBackup()
               } else {
-                UIUtil.showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
+                UIUtil.showInfoSnackbar(
+                  rootView,
+                  getString(R.string.internet_connection_is_not_available)
+                )
               }
             }
 
@@ -106,8 +114,10 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
         UIUtil.exchangeViewVisibility(false, progressBar, rootView)
       }
 
-      isPrivateKeySendingNow -> Toast.makeText(this, R.string.please_wait_while_message_will_be_sent,
-          Toast.LENGTH_SHORT).show()
+      isPrivateKeySendingNow -> Toast.makeText(
+        this, R.string.please_wait_while_message_will_be_sent,
+        Toast.LENGTH_SHORT
+      ).show()
 
       else -> super.onBackPressed()
     }
@@ -153,8 +163,10 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   }
 
   private fun showBackupingErrorHint() {
-    showSnackbar(rootView, getString(R.string.backup_was_not_sent), getString(R.string.retry),
-        Snackbar.LENGTH_LONG) {
+    showSnackbar(
+      rootView, getString(R.string.backup_was_not_sent), getString(R.string.retry),
+      Snackbar.LENGTH_LONG
+    ) {
       layoutSyncStatus?.visibility = View.GONE
       UIUtil.exchangeViewVisibility(true, progressBar, rootView)
       countingIdlingResource.incrementSafely()
@@ -163,18 +175,26 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   }
 
   private fun showDifferentPassHint() {
-    showSnackbar(rootView, getString(R.string.different_pass_phrases), getString(R.string.fix),
-        Snackbar.LENGTH_LONG) {
-      startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
-          REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
+    showSnackbar(
+      rootView, getString(R.string.different_pass_phrases), getString(R.string.fix),
+      Snackbar.LENGTH_LONG
+    ) {
+      startActivityForResult(
+        ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
+        REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY
+      )
     }
   }
 
   private fun showPassWeakHint() {
-    showSnackbar(rootView, getString(R.string.pass_phrase_is_too_weak),
-        getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG) {
-      startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
-          REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
+    showSnackbar(
+      rootView, getString(R.string.pass_phrase_is_too_weak),
+      getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG
+    ) {
+      startActivityForResult(
+        ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
+        REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY
+      )
     }
   }
 
@@ -242,8 +262,10 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
 
               else -> {
                 UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-                showInfoDialogFragment(dialogMsg = it.exception?.message
-                    ?: getString(R.string.error_could_not_save_private_keys))
+                showInfoDialogFragment(
+                  dialogMsg = it.exception?.message
+                    ?: getString(R.string.error_could_not_save_private_keys)
+                )
               }
             }
             countingIdlingResource.decrementSafely()

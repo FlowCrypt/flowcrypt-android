@@ -57,11 +57,11 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
 
   @get:Rule
   val ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   @NotReadyForCI
@@ -70,7 +70,7 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
     intended(hasComponent(CreateOrImportKeyActivity::class.java.name))
 
     onView(withId(R.id.buttonCreateNewKey))
-        .check(matches(not(isDisplayed())))
+      .check(matches(not(isDisplayed())))
   }
 
   companion object {
@@ -78,28 +78,39 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
+    val mockWebServerRule =
+      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          val gson =
+            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+          val model =
+            gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
 
-        if (request.path.equals("/account/login")) {
-          when (model.account) {
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+          if (request.path.equals("/account/login")) {
+            when (model.account) {
+              EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+            }
           }
-        }
 
-        if (request.path.equals("/account/get")) {
-          when (model.account) {
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(DomainRulesResponse(null, DomainRules(listOf
-                ("NO_PRV_CREATE", "NO_PRV_BACKUP")))))
+          if (request.path.equals("/account/get")) {
+            when (model.account) {
+              EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+                .setBody(
+                  gson.toJson(
+                    DomainRulesResponse(
+                      null, DomainRules(
+                        listOf
+                          ("NO_PRV_CREATE", "NO_PRV_BACKUP")
+                      )
+                    )
+                  )
+                )
+            }
           }
-        }
 
-        return MockResponse().setResponseCode(404)
-      }
-    })
+          return MockResponse().setResponseCode(404)
+        }
+      })
   }
 }

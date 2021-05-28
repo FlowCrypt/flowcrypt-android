@@ -127,10 +127,13 @@ class PublicKeyDetailsFragment : BaseFragment() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionCopy -> {
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard =
+          requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
-        Toast.makeText(context, getString(R.string.public_key_copied_to_clipboard),
-            Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+          context, getString(R.string.public_key_copied_to_clipboard),
+          Toast.LENGTH_SHORT
+        ).show()
         return true
       }
 
@@ -225,13 +228,16 @@ class PublicKeyDetailsFragment : BaseFragment() {
     layoutFingerprints?.removeAllViews()
     details?.ids?.forEachIndexed { index, s ->
       val textViewFingerprint = TextView(context)
-      textViewFingerprint.text = getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
+      textViewFingerprint.text =
+        getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
       layoutFingerprints?.addView(textViewFingerprint)
     }
 
     textViewAlgorithm?.text = getString(R.string.template_algorithm, details?.algo?.algorithm)
-    textViewCreated?.text = getString(R.string.template_created,
-        DateFormat.getMediumDateFormat(context).format(Date(details?.created ?: 0)))
+    textViewCreated?.text = getString(
+      R.string.template_created,
+      DateFormat.getMediumDateFormat(context).format(Date(details?.created ?: 0))
+    )
   }
 
   private fun chooseDest() {
@@ -247,8 +253,10 @@ class PublicKeyDetailsFragment : BaseFragment() {
   }
 
   companion object {
-    private val KEY_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_CONTACT",
-        PublicKeyDetailsFragment::class.java)
+    private val KEY_CONTACT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_CONTACT",
+      PublicKeyDetailsFragment::class.java
+    )
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
 
     fun newInstance(contactEntity: ContactEntity): PublicKeyDetailsFragment {

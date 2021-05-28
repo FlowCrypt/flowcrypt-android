@@ -42,12 +42,12 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   val accountKeysInfoLiveData = MediatorLiveData<Result<List<PgpKeyDetails>>>()
   private val initLiveData = Transformations
-      .switchMap(activeAccountLiveData) { accountEntity ->
-        liveData {
-          emit(Result.loading())
-          emit(getResult(accountEntity))
-        }
+    .switchMap(activeAccountLiveData) { accountEntity ->
+      liveData {
+        emit(Result.loading())
+        emit(getResult(accountEntity))
       }
+    }
   private val refreshingLiveData = MutableLiveData<Result<List<PgpKeyDetails>>>()
 
   init {
@@ -61,31 +61,33 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
    * @param account The [AccountEntity] object which contains information about an email account.
    * @return The list of available Gmail aliases.
    */
-  private suspend fun getAvailableGmailAliases(account: Account): Collection<String> = withContext(Dispatchers.IO) {
-    val emails = ArrayList<String>()
+  private suspend fun getAvailableGmailAliases(account: Account): Collection<String> =
+    withContext(Dispatchers.IO) {
+      val emails = ArrayList<String>()
 
-    try {
-      val gmail = GmailApiHelper.generateGmailApiService(getApplication(), account)
-      val aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-      for (alias in aliases.sendAs) {
-        if (alias.verificationStatus != null) {
-          emails.add(alias.sendAsEmail)
+      try {
+        val gmail = GmailApiHelper.generateGmailApiService(getApplication(), account)
+        val aliases =
+          gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
+        for (alias in aliases.sendAs) {
+          if (alias.verificationStatus != null) {
+            emails.add(alias.sendAsEmail)
+          }
         }
+      } catch (e: IOException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
       }
-    } catch (e: IOException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
 
-    return@withContext emails
-  }
+      return@withContext emails
+    }
 
   fun refreshData() {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         refreshingLiveData.postValue(Result.loading())
         val accountEntity = activeAccountLiveData.value
-            ?: roomDatabase.accountDao().getActiveAccountSuspend()
+          ?: roomDatabase.accountDao().getActiveAccountSuspend()
         refreshingLiveData.postValue(getResult(accountEntity))
       }
     }

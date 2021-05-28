@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
  * See details here https://github.com/romannurik/muzei/blob/master/extensions/src/main/java/com/google/android/apps/muzei/util/BroadcastReceiverExt.kt
  */
 fun BroadcastReceiver.goAsync(
-    coroutineScope: CoroutineScope = GlobalScope,
-    block: suspend () -> Unit
+  coroutineScope: CoroutineScope = GlobalScope,
+  block: suspend () -> Unit
 ) {
   val result = goAsync()
   coroutineScope.launch {

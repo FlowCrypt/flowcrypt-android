@@ -33,10 +33,12 @@ import javax.mail.internet.SharedInputStream
  *         Time: 3:12 PM
  *         E-mail: DenBond7@gmail.com
  */
-class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()),
-                         message: Message,
-                         private val context: Context? = null,
-                         private val accountEntity: AccountEntity? = null) : MimeMessage(session) {
+class GmaiAPIMimeMessage(
+  session: Session = Session.getInstance(Properties()),
+  message: Message,
+  private val context: Context? = null,
+  private val accountEntity: AccountEntity? = null
+) : MimeMessage(session) {
   private val internalDate = Date(message.internalDate ?: System.currentTimeMillis())
   private val msgId = message.id
 
@@ -111,11 +113,12 @@ class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()),
         //because we use users.messages.attachments.get that returns the body data of a MIME message part as a base64url encoded string
         headers.setHeader("Content-Transfer-Encoding", "base64")
         val attInputStream = GmailApiHelper.getAttInputStream(
-            context = context,
-            accountEntity = accountEntity,
-            msgId = msgId,
-            attId = part.body.attachmentId,
-            decodeBase64 = false)
+          context = context,
+          accountEntity = accountEntity,
+          msgId = msgId,
+          attId = part.body.attachmentId,
+          decodeBase64 = false
+        )
         CustomMimeBodyPart(CustomSharedInputStream(attInputStream), headers)
       } else MimeBodyPart(headers, byteArrayOf())
     } else {
@@ -125,7 +128,8 @@ class GmaiAPIMimeMessage(session: Session = Session.getInstance(Properties()),
     }
   }
 
-  class CustomSharedInputStream(inputStream: InputStream) : FilterInputStream(inputStream), SharedInputStream {
+  class CustomSharedInputStream(inputStream: InputStream) : FilterInputStream(inputStream),
+    SharedInputStream {
     override fun getPosition(): Long = 0
     override fun newStream(start: Long, end: Long) = this
   }

@@ -43,7 +43,8 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 16:59
  * E-mail: DenBond7@gmail.com
  */
-class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
+class ImportPrivateKeyActivity : BaseImportKeyActivity(),
+  TwoWayDialogFragment.OnTwoWayDialogListener {
   private val backupsViewModel: BackupsViewModel by viewModels()
   private var privateKeysFromEmailBackups = mutableListOf<PgpKeyDetails>()
   private val unlockedKeys: MutableList<PgpKeyDetails> = ArrayList()
@@ -86,15 +87,19 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         unlockedKeys.clear()
         if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
           sourceType = KeyImportDetails.SourceType.EMAIL
-          startActivityForResult(CheckKeysActivity.newIntent(
+          startActivityForResult(
+            CheckKeysActivity.newIntent(
               context = this,
               privateKeys = ArrayList(privateKeysFromEmailBackups),
               sourceType = KeyImportDetails.SourceType.EMAIL,
               positiveBtnTitle = getString(R.string.continue_),
-              negativeBtnTitle = getString(R
-                  .string.choose_another_key),
+              negativeBtnTitle = getString(
+                R
+                  .string.choose_another_key
+              ),
               skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
-          ), REQUEST_CODE_CHECK_PRIVATE_KEYS)
+            ), REQUEST_CODE_CHECK_PRIVATE_KEYS
+          )
         }
       }
 
@@ -115,13 +120,19 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         when (resultCode) {
           Activity.RESULT_OK -> {
             val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
-                CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+              CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS
+            )
 
             keys?.let {
               unlockedKeys.clear()
               unlockedKeys.addAll(it)
               if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
-                tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
+                tempAccount?.let { accountEntity ->
+                  submitPubKeyViewModel.submitPubKey(
+                    accountEntity,
+                    unlockedKeys
+                  )
+                }
               } else {
                 handleSuccessSubmit()
               }
@@ -138,7 +149,10 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
   }
 
-  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
+  override fun onKeyFound(
+    sourceType: KeyImportDetails.SourceType,
+    keyDetailsList: List<PgpKeyDetails>
+  ) {
     var areFreshKeysExisted = false
     var arePrivateKeysExisted = false
 
@@ -149,23 +163,37 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
       val fingerprint = key.fingerprint
       if (KeysStorageImpl.getInstance(application)
-              .getPGPSecretKeyRingByFingerprint(fingerprint) == null) {
+          .getPGPSecretKeyRingByFingerprint(fingerprint) == null
+      ) {
         areFreshKeysExisted = true
       }
     }
 
     if (!arePrivateKeysExisted) {
-      showInfoSnackbar(rootView, getString(R.string.file_has_wrong_pgp_structure, getString(R
-          .string.private_)), Snackbar.LENGTH_LONG)
+      showInfoSnackbar(
+        rootView, getString(
+          R.string.file_has_wrong_pgp_structure, getString(
+            R
+              .string.private_
+          )
+        ), Snackbar.LENGTH_LONG
+      )
       return
     }
 
     if (!areFreshKeysExisted) {
       if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
         unlockedKeys.addAll(keyDetailsList)
-        tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
-        Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
-            .LENGTH_SHORT).show()
+        tempAccount?.let { accountEntity ->
+          submitPubKeyViewModel.submitPubKey(
+            accountEntity,
+            unlockedKeys
+          )
+        }
+        Toast.makeText(
+          this, getString(R.string.key_already_imported_finishing_setup), Toast
+            .LENGTH_SHORT
+        ).show()
       } else {
         showInfoSnackbar(rootView, getString(R.string.the_key_already_added), Snackbar.LENGTH_LONG)
       }
@@ -176,40 +204,48 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       KeyImportDetails.SourceType.FILE -> {
         this.sourceType = KeyImportDetails.SourceType.FILE
         val fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel!!.fileUri)
-        val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
-            keyDetailsList.size, fileName, keyDetailsList.size)
+        val bottomTitle = resources.getQuantityString(
+          R.plurals.file_contains_some_amount_of_keys,
+          keyDetailsList.size, fileName, keyDetailsList.size
+        )
         val posBtnTitle = getString(R.string.continue_)
         val intent = CheckKeysActivity.newIntent(
-            context = this,
-            privateKeys = ArrayList(keyDetailsList),
-            sourceType = sourceType,
-            subTitle = bottomTitle,
-            positiveBtnTitle = posBtnTitle,
-            negativeBtnTitle = getString
+          context = this,
+          privateKeys = ArrayList(keyDetailsList),
+          sourceType = sourceType,
+          subTitle = bottomTitle,
+          positiveBtnTitle = posBtnTitle,
+          negativeBtnTitle = getString
             (R.string.choose_another_key),
-            isExtraImportOpt = true,
-            skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
+          isExtraImportOpt = true,
+          skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
         )
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
       KeyImportDetails.SourceType.CLIPBOARD -> {
         this.sourceType = KeyImportDetails.SourceType.CLIPBOARD
-        val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
-            keyDetailsList.size, keyDetailsList.size)
-        val clipboardIntent = CheckKeysActivity.newIntent(
-            context = this,
-            privateKeys = ArrayList(keyDetailsList),
-            sourceType = sourceType,
-            subTitle = title,
-            positiveBtnTitle = getString(R.string.continue_),
-            negativeBtnTitle = getString(R
-                .string.choose_another_key),
-            isExtraImportOpt = true,
-            skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
+        val title = resources.getQuantityString(
+          R.plurals.loaded_private_keys_from_clipboard,
+          keyDetailsList.size, keyDetailsList.size
         )
-        startActivityForResult(clipboardIntent,
-            REQUEST_CODE_CHECK_PRIVATE_KEYS)
+        val clipboardIntent = CheckKeysActivity.newIntent(
+          context = this,
+          privateKeys = ArrayList(keyDetailsList),
+          sourceType = sourceType,
+          subTitle = title,
+          positiveBtnTitle = getString(R.string.continue_),
+          negativeBtnTitle = getString(
+            R
+              .string.choose_another_key
+          ),
+          isExtraImportOpt = true,
+          skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
+        )
+        startActivityForResult(
+          clipboardIntent,
+          REQUEST_CODE_CHECK_PRIVATE_KEYS
+        )
       }
 
       else -> {
@@ -222,7 +258,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG -> {
         when (result) {
           TwoWayDialogFragment.RESULT_OK -> {
-            tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
+            tempAccount?.let { accountEntity ->
+              submitPubKeyViewModel.submitPubKey(
+                accountEntity,
+                unlockedKeys
+              )
+            }
           }
 
           TwoWayDialogFragment.RESULT_CANCELED -> {
@@ -236,8 +277,10 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private fun hideImportButton() {
     buttonImportBackup?.visibility = View.GONE
     val marginLayoutParams = buttonLoadFromFile.layoutParams as ViewGroup.MarginLayoutParams
-    marginLayoutParams.topMargin = resources.getDimensionPixelSize(R.dimen
-        .margin_top_first_button)
+    marginLayoutParams.topMargin = resources.getDimensionPixelSize(
+      R.dimen
+        .margin_top_first_button
+    )
     buttonLoadFromFile.requestLayout()
   }
 
@@ -288,12 +331,16 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               else -> it.exception?.javaClass?.simpleName ?: getString(R.string.unknown_error)
             }
 
-            showDialogFragment(TwoWayDialogFragment.newInstance(requestCode = REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG,
+            showDialogFragment(
+              TwoWayDialogFragment.newInstance(
+                requestCode = REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG,
                 dialogTitle = "",
                 dialogMsg = msg,
                 positiveButtonTitle = getString(R.string.retry),
                 negativeButtonTitle = getString(R.string.cancel),
-                isCancelable = false))
+                isCancelable = false
+              )
+            )
             countingIdlingResource.decrementSafely()
           }
         }
@@ -320,13 +367,21 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
-              showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
-                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE) {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyImportDetails.SourceType.EMAIL)
+              showSnackbar(
+                rootView, e.message ?: e.javaClass.simpleName,
+                getString(R.string.retry), Snackbar.LENGTH_INDEFINITE
+              ) {
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(
+                  tempAccount,
+                  e.keys,
+                  KeyImportDetails.SourceType.EMAIL
+                )
               }
             } else {
-              showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error))
+              showInfoSnackbar(
+                rootView, e?.message ?: e?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error)
+              )
             }
             countingIdlingResource.decrementSafely()
           }
@@ -355,8 +410,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               if (privateKeysFromEmailBackups.isEmpty()) {
                 hideImportButton()
               } else {
-                buttonImportBackup?.text = resources.getQuantityString(R.plurals.import_keys, uniqueKeysFingerprints.size)
-                textViewTitle.text = resources.getQuantityString(R.plurals.you_have_backups_that_was_not_imported, uniqueKeysFingerprints.size)
+                buttonImportBackup?.text =
+                  resources.getQuantityString(R.plurals.import_keys, uniqueKeysFingerprints.size)
+                textViewTitle.text = resources.getQuantityString(
+                  R.plurals.you_have_backups_that_was_not_imported,
+                  uniqueKeysFingerprints.size
+                )
               }
             } else {
               hideImportButton()
@@ -384,7 +443,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
   private fun handleSuccessSubmit() {
     textViewProgressText.setText(R.string.saving_prv_keys)
-    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, sourceType, intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false))
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(
+      tempAccount,
+      unlockedKeys,
+      sourceType,
+      intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false)
+    )
   }
 
   companion object {
@@ -392,26 +456,31 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     private const val REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG = 101
 
     private val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
+      "KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED", ImportPrivateKeyActivity::class.java
+    )
     private val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_SKIP_IMPORTED_KEYS", ImportPrivateKeyActivity::class.java)
+      "KEY_EXTRA_SKIP_IMPORTED_KEYS", ImportPrivateKeyActivity::class.java
+    )
     private val KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST", ImportPrivateKeyActivity::class.java)
+      "KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST", ImportPrivateKeyActivity::class.java
+    )
 
-    fun getIntent(context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
-                  title: String, model: KeyImportModel? = null,
-                  throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>,
-                  isSubmittingPubKeysEnabled: Boolean = true,
-                  skipImportedKeys: Boolean = false,
-                  addAccountIfNotExist: Boolean = false): Intent {
+    fun getIntent(
+      context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
+      title: String, model: KeyImportModel? = null,
+      throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>,
+      isSubmittingPubKeysEnabled: Boolean = true,
+      skipImportedKeys: Boolean = false,
+      addAccountIfNotExist: Boolean = false
+    ): Intent {
       val intent = newIntent(
-          context = context,
-          accountEntity = accountEntity,
-          isSyncEnabled = isSyncEnabled,
-          title = title,
-          model = model,
-          throwErrorIfDuplicateFoundEnabled = throwErrorIfDuplicateFoundEnabled,
-          cls = cls
+        context = context,
+        accountEntity = accountEntity,
+        isSyncEnabled = isSyncEnabled,
+        title = title,
+        model = model,
+        throwErrorIfDuplicateFoundEnabled = throwErrorIfDuplicateFoundEnabled,
+        cls = cls
       )
       intent.putExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, isSubmittingPubKeysEnabled)
       intent.putExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, skipImportedKeys)

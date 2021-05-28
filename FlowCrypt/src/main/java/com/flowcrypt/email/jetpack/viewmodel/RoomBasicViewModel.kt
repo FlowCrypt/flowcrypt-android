@@ -41,9 +41,9 @@ open class RoomBasicViewModel(application: Application) : BaseAndroidViewModel(a
     val account = accountEntity ?: return
     val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(account.email).size
     val outboxLabel = roomDatabase.labelDao().getLabelSuspend(
-        account = account.email,
-        accountType = account.accountType,
-        label = JavaEmailConstants.FOLDER_OUTBOX
+      account = account.email,
+      accountType = account.accountType,
+      label = JavaEmailConstants.FOLDER_OUTBOX
     )
 
     outboxLabel?.let {

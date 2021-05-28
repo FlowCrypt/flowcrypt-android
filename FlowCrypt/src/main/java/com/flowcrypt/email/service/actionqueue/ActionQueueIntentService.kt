@@ -42,7 +42,7 @@ class ActionQueueIntentService : JobIntentService() {
     if (ACTION_RUN_ACTIONS == intentAction) {
       val actions = intent.getParcelableArrayListExtra<Action>(EXTRA_KEY_ACTIONS) ?: return
       val resultReceiver =
-          intent.getParcelableExtra<ResultReceiver>(EXTRA_KEY_RESULTS_RECEIVER) ?: return
+        intent.getParcelableExtra<ResultReceiver>(EXTRA_KEY_RESULTS_RECEIVER) ?: return
 
       if (actions.isNotEmpty()) {
         LogsUtil.d(TAG, "Received " + actions.size + " action(s) for run in the queue")
@@ -68,14 +68,21 @@ class ActionQueueIntentService : JobIntentService() {
   }
 
   companion object {
-    val ACTION_RUN_ACTIONS = GeneralUtil.generateUniqueExtraKey("ACTION_RUN_ACTIONS",
-        ActionQueueIntentService::class.java)
+    val ACTION_RUN_ACTIONS = GeneralUtil.generateUniqueExtraKey(
+      "ACTION_RUN_ACTIONS",
+      ActionQueueIntentService::class.java
+    )
 
     private val TAG = ActionQueueIntentService::class.java.simpleName
-    private val EXTRA_KEY_ACTIONS = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIONS",
-        ActionQueueIntentService::class.java)
+    private val EXTRA_KEY_ACTIONS = GeneralUtil.generateUniqueExtraKey(
+      "EXTRA_KEY_ACTIONS",
+      ActionQueueIntentService::class.java
+    )
     private val EXTRA_KEY_RESULTS_RECEIVER =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_RESULTS_RECEIVER",
+        ActionQueueIntentService::class.java
+      )
 
     /**
      * Starts this service to perform action [.ACTION_RUN_ACTIONS]. If the service is already performing a task
@@ -86,8 +93,10 @@ class ActionQueueIntentService : JobIntentService() {
      * @param resultReceiverCallBack An implementation of [android.os.ResultReceiver].
      * @see IntentService
      */
-    fun appendActionsToQueue(context: Context, actions: ArrayList<Action>,
-                             resultReceiverCallBack: ActionResultReceiver.ResultReceiverCallBack) {
+    fun appendActionsToQueue(
+      context: Context, actions: ArrayList<Action>,
+      resultReceiverCallBack: ActionResultReceiver.ResultReceiverCallBack
+    ) {
       val resultReceiver = ActionResultReceiver(Handler(context.mainLooper))
       resultReceiver.setResultReceiverCallBack(resultReceiverCallBack)
 
@@ -96,7 +105,12 @@ class ActionQueueIntentService : JobIntentService() {
       intent.putExtra(EXTRA_KEY_ACTIONS, actions)
       intent.putExtra(EXTRA_KEY_RESULTS_RECEIVER, resultReceiver)
 
-      enqueueWork(context, ActionQueueIntentService::class.java, JobIdManager.JOB_TYPE_ACTION_QUEUE, intent)
+      enqueueWork(
+        context,
+        ActionQueueIntentService::class.java,
+        JobIdManager.JOB_TYPE_ACTION_QUEUE,
+        intent
+      )
     }
   }
 }

@@ -14,15 +14,18 @@ import android.os.Parcelable
  *         Time: 4:57 PM
  *         E-mail: DenBond7@gmail.com
  */
-data class AuthTokenInfo constructor(val email: String?,
-                                     val accessToken: String? = null,
-                                     val expiresAt: Long? = null,
-                                     val refreshToken: String? = null) : Parcelable {
+data class AuthTokenInfo constructor(
+  val email: String?,
+  val accessToken: String? = null,
+  val expiresAt: Long? = null,
+  val refreshToken: String? = null
+) : Parcelable {
   constructor(parcel: Parcel) : this(
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readValue(Long::class.java.classLoader) as? Long,
-      parcel.readString())
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readValue(Long::class.java.classLoader) as? Long,
+    parcel.readString()
+  )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeString(email)

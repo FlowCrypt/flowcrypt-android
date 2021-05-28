@@ -50,35 +50,37 @@ class AttesterSettingsActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(accountRule)
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(accountRule)
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   @NotReadyForCI
   fun testKeysExistOnAttester() {
     onView(withId(R.id.rVAttester))
-        .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
+      .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
     onView(withId(R.id.empty))
-        .check(matches(not(isDisplayed())))
+      .check(matches(not(isDisplayed())))
   }
 
   companion object {
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
-          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
-          if (AccountDaoManager.getDefaultAccountDao().email.equals(lastSegment, true)) {
-            return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("1.txt"))
+    val mockWebServerRule =
+      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+            val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+            if (AccountDaoManager.getDefaultAccountDao().email.equals(lastSegment, true)) {
+              return MockResponse().setResponseCode(200)
+                .setBody(TestGeneralUtil.readResourcesAsString("1.txt"))
+            }
           }
-        }
 
-        return MockResponse().setResponseCode(404)
-      }
-    })
+          return MockResponse().setResponseCode(404)
+        }
+      })
   }
 }

@@ -20,7 +20,9 @@ import okhttp3.Response
 class ApiVersionInterceptor : Interceptor {
 
   override fun intercept(chain: Interceptor.Chain): Response {
-    return chain.proceed(chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION, API_VERSION_VALUE).build())
+    return chain.proceed(
+      chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION, API_VERSION_VALUE).build()
+    )
   }
 
   companion object {

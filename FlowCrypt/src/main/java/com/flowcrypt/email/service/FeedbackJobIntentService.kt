@@ -43,7 +43,12 @@ class FeedbackJobIntentService : JobIntentService() {
   }
 
   private fun initFeedbackCache(context: Context) {
-    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.cacheDir, CACHE_DIR_NAME), CACHE_VERSION, CACHE_SIZE)
+    diskLruCache = DiskLruCache(
+      FileSystem.SYSTEM,
+      File(context.cacheDir, CACHE_DIR_NAME),
+      CACHE_VERSION,
+      CACHE_SIZE
+    )
   }
 
   override fun onHandleWork(intent: Intent) {
@@ -61,8 +66,10 @@ class FeedbackJobIntentService : JobIntentService() {
     val screenShotBase64 = Base64.encodeToString(screenShotBytes ?: byteArrayOf(), Base64.DEFAULT)
 
     feedbackMsg?.let {
-      addFeedbackToCache(UUID.randomUUID().toString(),
-          FeedBackItem(account?.email, feedbackMsg, screenShotBase64))
+      addFeedbackToCache(
+        UUID.randomUUID().toString(),
+        FeedBackItem(account?.email, feedbackMsg, screenShotBase64)
+      )
     }
   }
 
@@ -89,13 +96,15 @@ class FeedbackJobIntentService : JobIntentService() {
 
       val response = with(feedBackItem) {
         apiService
-            .postHelpFeedback(PostHelpFeedbackModel(
-                email = email ?: "",
-                logs = "",
-                screenshot = screenShot,
-                msg = "$feedbackMsg\n\nversion: Android ${BuildConfig.VERSION_NAME}"
-            ))
-            .execute()
+          .postHelpFeedback(
+            PostHelpFeedbackModel(
+              email = email ?: "",
+              logs = "",
+              screenshot = screenShot,
+              msg = "$feedbackMsg\n\nversion: Android ${BuildConfig.VERSION_NAME}"
+            )
+          )
+          .execute()
       }
 
       if (response.isSuccessful) {
@@ -109,11 +118,17 @@ class FeedbackJobIntentService : JobIntentService() {
 
   companion object {
     private val EXTRA_KEY_ACCOUNT =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT", FeedbackJobIntentService::class.java)
+      GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT", FeedbackJobIntentService::class.java)
     private val EXTRA_KEY_FEEDBACK_MSG =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FEEDBACK_MSG", FeedbackJobIntentService::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_FEEDBACK_MSG",
+        FeedbackJobIntentService::class.java
+      )
     private val EXTRA_KEY_SCREENSHOT_BYTES =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_SCREENSHOT_BYTES", FeedbackJobIntentService::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_SCREENSHOT_BYTES",
+        FeedbackJobIntentService::class.java
+      )
 
     private const val CACHE_VERSION = 1
     private const val CACHE_SIZE: Long = 1024 * 1000 * 3 //3Mb
@@ -129,21 +144,27 @@ class FeedbackJobIntentService : JobIntentService() {
      * @param screenShotBytes  A screenshot bytes array.
      */
     @JvmStatic
-    fun enqueueWork(context: Context, account: AccountEntity? = null, userComment: String? = null,
-                    screenShotBytes: ByteArray? = null) {
+    fun enqueueWork(
+      context: Context, account: AccountEntity? = null, userComment: String? = null,
+      screenShotBytes: ByteArray? = null
+    ) {
       val intent = Intent(context, FeedbackJobIntentService::class.java)
       intent.putExtra(EXTRA_KEY_ACCOUNT, account)
       intent.putExtra(EXTRA_KEY_FEEDBACK_MSG, userComment)
       intent.putExtra(EXTRA_KEY_SCREENSHOT_BYTES, screenShotBytes)
-      enqueueWork(context, FeedbackJobIntentService::class.java,
-          JobIdManager.JOB_TYPE_FEEDBACK, intent)
+      enqueueWork(
+        context, FeedbackJobIntentService::class.java,
+        JobIdManager.JOB_TYPE_FEEDBACK, intent
+      )
     }
   }
 
   /**
    * It's data class which describes info about a feedback
    */
-  data class FeedBackItem(val email: String?,
-                          val feedbackMsg: String,
-                          val screenShot: String?)
+  data class FeedBackItem(
+    val email: String?,
+    val feedbackMsg: String,
+    val screenShot: String?
+  )
 }

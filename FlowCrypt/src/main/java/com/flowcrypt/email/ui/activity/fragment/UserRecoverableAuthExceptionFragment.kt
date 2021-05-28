@@ -88,8 +88,11 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
                 context?.let { context ->
                   val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
                   roomDatabase.msgDao().changeMsgsStateSuspend(
-                      accountEntity.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
-                      MessageState.QUEUED.value)
+                    accountEntity.email,
+                    JavaEmailConstants.FOLDER_OUTBOX,
+                    MessageState.AUTH_FAILURE.value,
+                    MessageState.QUEUED.value
+                  )
                   MessagesSenderWorker.enqueue(context)
                   EmailManagerActivity.runEmailManagerActivity(context)
                 }
@@ -100,7 +103,11 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
           }
 
           Activity.RESULT_CANCELED -> {
-            Toast.makeText(requireContext(), getString(R.string.access_was_not_granted), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+              requireContext(),
+              getString(R.string.access_was_not_granted),
+              Toast.LENGTH_SHORT
+            ).show()
           }
         }
       }
@@ -111,8 +118,10 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
-    textViewExplanation.text = getString(R.string.reconnect_your_account,
-        getString(R.string.app_name), accountEntity?.email ?: "")
+    textViewExplanation.text = getString(
+      R.string.reconnect_your_account,
+      getString(R.string.app_name), accountEntity?.email ?: ""
+    )
   }
 
   private fun initViews(view: View) {
@@ -127,12 +136,17 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
             oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
-                requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
-                provider = OAuth2Helper.Provider.MICROSOFT)
+              requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
+              provider = OAuth2Helper.Provider.MICROSOFT
+            )
           }
 
           else -> {
-            Toast.makeText(requireContext(), getString(R.string.access_was_not_granted), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+              requireContext(),
+              getString(R.string.access_was_not_granted),
+              Toast.LENGTH_SHORT
+            ).show()
           }
         }
       }
@@ -145,7 +159,13 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
     view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
-      startActivity(HtmlViewFromAssetsRawActivity.newIntent(requireContext(), getString(R.string.security), "html/security.htm"))
+      startActivity(
+        HtmlViewFromAssetsRawActivity.newIntent(
+          requireContext(),
+          getString(R.string.security),
+          "html/security.htm"
+        )
+      )
     }
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
@@ -168,10 +188,15 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
             authRequest = authorizationRequest
             authRequest?.let { request ->
               AuthorizationService(requireContext())
-                  .performAuthorizationRequest(
-                      request,
-                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(),
-                          SignInActivity::class.java).apply { action = SignInActivity.ACTION_UPDATE_OAUTH_ACCOUNT }, 0))
+                .performAuthorizationRequest(
+                  request,
+                  PendingIntent.getActivity(
+                    requireContext(), 0, Intent(
+                      requireContext(),
+                      SignInActivity::class.java
+                    ).apply { action = SignInActivity.ACTION_UPDATE_OAUTH_ACCOUNT }, 0
+                  )
+                )
             }
           }
         }
@@ -180,8 +205,9 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
           oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
           showContent()
           showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: getString(R.string.could_not_load_oauth_server_configuration))
+            dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: getString(R.string.could_not_load_oauth_server_configuration)
+          )
         }
         else -> {
         }
@@ -199,10 +225,25 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
             oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
             account?.let { accountEntity ->
               val accountManager = AccountManager.get(requireContext())
-              val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
-              accountManager.setUserData(account, FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, authTokenInfo.email)
-              accountManager.setUserData(account, FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, authTokenInfo.refreshToken)
-              accountManager.setUserData(account, FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, authTokenInfo.expiresAt?.toString())
+              val account = Account(
+                accountEntity.email.toLowerCase(Locale.US),
+                FlowcryptAccountAuthenticator.ACCOUNT_TYPE
+              )
+              accountManager.setUserData(
+                account,
+                FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL,
+                authTokenInfo.email
+              )
+              accountManager.setUserData(
+                account,
+                FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN,
+                authTokenInfo.refreshToken
+              )
+              accountManager.setUserData(
+                account,
+                FlowcryptAccountAuthenticator.KEY_EXPIRES_AT,
+                authTokenInfo.expiresAt?.toString()
+              )
             }
 
             context?.let { context -> EmailManagerActivity.runEmailManagerActivity(context) }
@@ -214,8 +255,9 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
           oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
           showContent()
           showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't fetch token")
+            dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: "Couldn't fetch token"
+          )
         }
         else -> {
         }

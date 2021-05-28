@@ -26,7 +26,8 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class ActionsViewModel(application: Application) : RoomBasicViewModel(application), ActionResultReceiver.ResultReceiverCallBack {
+class ActionsViewModel(application: Application) : RoomBasicViewModel(application),
+  ActionResultReceiver.ResultReceiverCallBack {
   private val runningActions: LongSparseArray<Action> = LongSparseArray()
   private val completedActionsSet: MutableSet<Long> = HashSet()
 
@@ -56,7 +57,7 @@ class ActionsViewModel(application: Application) : RoomBasicViewModel(applicatio
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         val actions = roomDatabase.actionQueueDao().getActionsByEmailSuspend(account.email)
-            .map { it.toAction() }
+          .map { it.toAction() }
         val candidates = ArrayList<Action>()
         for (action in actions) {
           action?.let {
@@ -67,7 +68,11 @@ class ActionsViewModel(application: Application) : RoomBasicViewModel(applicatio
         }
 
         if (candidates.isNotEmpty()) {
-          ActionQueueIntentService.appendActionsToQueue(getApplication(), candidates, this@ActionsViewModel)
+          ActionQueueIntentService.appendActionsToQueue(
+            getApplication(),
+            candidates,
+            this@ActionsViewModel
+          )
         }
       }
     }

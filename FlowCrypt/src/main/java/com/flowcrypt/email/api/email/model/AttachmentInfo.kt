@@ -19,49 +19,57 @@ import com.flowcrypt.email.security.SecurityUtils
  * Time: 18:38
  * E-mail: DenBond7@gmail.com
  */
-data class AttachmentInfo constructor(var rawData: String? = null,
-                                      var email: String? = null,
-                                      var folder: String? = null,
-                                      var uid: Long = 0,
-                                      var fwdFolder: String? = null,
-                                      var fwdUid: Long = 0,
-                                      var name: String? = null,
-                                      var encodedSize: Long = 0,
-                                      var type: String = Constants.MIME_TYPE_BINARY_DATA,
-                                      var id: String? = null,
-                                      var path: String = "0",
-                                      var uri: Uri? = null,
-                                      var isProtected: Boolean = false,
-                                      var isForwarded: Boolean = false,
-                                      var isDecrypted: Boolean = false,
-                                      var isEncryptionAllowed: Boolean = true,
-                                      var orderNumber: Int = 0) : Parcelable {
+data class AttachmentInfo constructor(
+  var rawData: String? = null,
+  var email: String? = null,
+  var folder: String? = null,
+  var uid: Long = 0,
+  var fwdFolder: String? = null,
+  var fwdUid: Long = 0,
+  var name: String? = null,
+  var encodedSize: Long = 0,
+  var type: String = Constants.MIME_TYPE_BINARY_DATA,
+  var id: String? = null,
+  var path: String = "0",
+  var uri: Uri? = null,
+  var isProtected: Boolean = false,
+  var isForwarded: Boolean = false,
+  var isDecrypted: Boolean = false,
+  var isEncryptionAllowed: Boolean = true,
+  var orderNumber: Int = 0
+) : Parcelable {
 
   val uniqueStringId: String
     get() = uid.toString() + "_" + id + "_" + path
 
   fun copy(newFolder: String, newUid: Long): AttachmentInfo {
-    return copy(folder = newFolder, uid = newUid, fwdFolder = this.folder, fwdUid = this.uid, orderNumber = 0)
+    return copy(
+      folder = newFolder,
+      uid = newUid,
+      fwdFolder = this.folder,
+      fwdUid = this.uid,
+      orderNumber = 0
+    )
   }
 
   constructor(source: Parcel) : this(
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readLong(),
-      source.readString(),
-      source.readLong(),
-      source.readString(),
-      source.readLong(),
-      source.readString()!!,
-      source.readString(),
-      source.readString()!!,
-      source.readParcelable(Uri::class.java.classLoader),
-      source.readByte() != 0.toByte(),
-      source.readByte() != 0.toByte(),
-      source.readByte() != 0.toByte(),
-      source.readByte() != 0.toByte(),
-      source.readInt()
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readLong(),
+    source.readString(),
+    source.readLong(),
+    source.readString(),
+    source.readLong(),
+    source.readString()!!,
+    source.readString(),
+    source.readString()!!,
+    source.readParcelable(Uri::class.java.classLoader),
+    source.readByte() != 0.toByte(),
+    source.readByte() != 0.toByte(),
+    source.readByte() != 0.toByte(),
+    source.readByte() != 0.toByte(),
+    source.readInt()
   )
 
   override fun describeContents(): Int {

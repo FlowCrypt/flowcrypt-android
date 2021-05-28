@@ -17,7 +17,10 @@ class AccountDaoManager {
   companion object {
     @JvmStatic
     fun getDefaultAccountDao(): AccountEntity {
-      return TestGeneralUtil.readObjectFromResources("default_account.json", AccountEntity::class.java)
+      return TestGeneralUtil.readObjectFromResources(
+        "default_account.json",
+        AccountEntity::class.java
+      )
     }
 
     @JvmStatic
@@ -27,8 +30,10 @@ class AccountDaoManager {
 
     @JvmStatic
     fun getUserWithMoreThan21Letters(): AccountEntity {
-      return TestGeneralUtil.readObjectFromResources("user_with_more_than_21_letters_account.json",
-          AccountEntity::class.java)
+      return TestGeneralUtil.readObjectFromResources(
+        "user_with_more_than_21_letters_account.json",
+        AccountEntity::class.java
+      )
     }
   }
 }

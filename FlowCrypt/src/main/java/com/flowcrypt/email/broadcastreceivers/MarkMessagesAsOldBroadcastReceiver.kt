@@ -43,13 +43,17 @@ class MarkMessagesAsOldBroadcastReceiver : BroadcastReceiver() {
 
   companion object {
     val ACTION_MARK_MESSAGES_AS_OLD = GeneralUtil.generateUniqueExtraKey(
-        "ACTION_MARK_MESSAGES_AS_OLD", MarkMessagesAsOldBroadcastReceiver::class.java)
+      "ACTION_MARK_MESSAGES_AS_OLD", MarkMessagesAsOldBroadcastReceiver::class.java
+    )
     val EXTRA_KEY_UID_LIST = GeneralUtil.generateUniqueExtraKey(
-        "EXTRA_KEY_UID_LIST", MarkMessagesAsOldBroadcastReceiver::class.java)
+      "EXTRA_KEY_UID_LIST", MarkMessagesAsOldBroadcastReceiver::class.java
+    )
     val EXTRA_KEY_EMAIL = GeneralUtil.generateUniqueExtraKey(
-        "EXTRA_KEY_EMAIL", MarkMessagesAsOldBroadcastReceiver::class.java)
+      "EXTRA_KEY_EMAIL", MarkMessagesAsOldBroadcastReceiver::class.java
+    )
     val EXTRA_KEY_LABEL = GeneralUtil.generateUniqueExtraKey(
-        "EXTRA_KEY_LABEL", MarkMessagesAsOldBroadcastReceiver::class.java)
+      "EXTRA_KEY_LABEL", MarkMessagesAsOldBroadcastReceiver::class.java
+    )
 
     private val TAG = MarkMessagesAsOldBroadcastReceiver::class.java.simpleName
   }

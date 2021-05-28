@@ -45,21 +45,31 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
       ChangePassPhraseActivity.newIntent(context)
     }
 
-    val pendingIntent = PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
+    val pendingIntent =
+      PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
 
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_SYSTEM)
-        .setSmallIcon(android.R.drawable.stat_sys_warning)
-        .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
-        .setContentText(context.getString(R.string.warning_passphrase_is_too_weak))
-        .setStyle(NotificationCompat.BigTextStyle().bigText(context.getString(R.string.warning_passphrase_is_too_weak)))
-        .setContentIntent(pendingIntent)
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        .setAutoCancel(true)
-        .setGroup(GROUP_NAME_SYSTEM)
-        .setSubText(account?.email)
-        .setOngoing(true)
-        .setDefaults(Notification.DEFAULT_ALL)
-        .addAction(NotificationCompat.Action.Builder(0, context.getString(R.string.change_pass_phrase), pendingIntent).build())
+      .setSmallIcon(android.R.drawable.stat_sys_warning)
+      .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
+      .setContentText(context.getString(R.string.warning_passphrase_is_too_weak))
+      .setStyle(
+        NotificationCompat.BigTextStyle()
+          .bigText(context.getString(R.string.warning_passphrase_is_too_weak))
+      )
+      .setContentIntent(pendingIntent)
+      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+      .setAutoCancel(true)
+      .setGroup(GROUP_NAME_SYSTEM)
+      .setSubText(account?.email)
+      .setOngoing(true)
+      .setDefaults(Notification.DEFAULT_ALL)
+      .addAction(
+        NotificationCompat.Action.Builder(
+          0,
+          context.getString(R.string.change_pass_phrase),
+          pendingIntent
+        ).build()
+      )
 
     notificationManagerCompat.notify(groupName, groupId, builder.build())
   }

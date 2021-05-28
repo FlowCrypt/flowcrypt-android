@@ -50,12 +50,14 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
    * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/HttpsServer.java
    */
   private fun getSSLSocketFactory(): SSLSocketFactory {
-    val serverCertificate: HeldCertificate = HeldCertificate.decode(TestGeneralUtil
-        .readResourcesAsString("ssl/server_combined.pem"))
+    val serverCertificate: HeldCertificate = HeldCertificate.decode(
+      TestGeneralUtil
+        .readResourcesAsString("ssl/server_combined.pem")
+    )
 
     val serverHandshakeCertificates: HandshakeCertificates = HandshakeCertificates.Builder()
-        .heldCertificate(serverCertificate)
-        .build()
+      .heldCertificate(serverCertificate)
+      .build()
 
     return serverHandshakeCertificates.sslSocketFactory()
   }
@@ -76,23 +78,23 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
    */
   private fun genSSLSocketFactory(): SSLSocketFactory {
     val rootCertificate: HeldCertificate = HeldCertificate.Builder()
-        .certificateAuthority(1)
-        .build()
+      .certificateAuthority(1)
+      .build()
 
     val intermediateCertificate: HeldCertificate = HeldCertificate.Builder()
-        .certificateAuthority(0)
-        .signedBy(rootCertificate)
-        .build()
+      .certificateAuthority(0)
+      .signedBy(rootCertificate)
+      .build()
 
     val localhost: String = InetAddress.getByName("localhost").canonicalHostName
     val serverCertificate: HeldCertificate = HeldCertificate.Builder()
-        .addSubjectAlternativeName(localhost)
-        .signedBy(intermediateCertificate)
-        .build()
+      .addSubjectAlternativeName(localhost)
+      .signedBy(intermediateCertificate)
+      .build()
 
     val serverHandshakeCertificates: HandshakeCertificates = HandshakeCertificates.Builder()
-        .heldCertificate(serverCertificate)
-        .build()
+      .heldCertificate(serverCertificate)
+      .build()
 
     return serverHandshakeCertificates.sslSocketFactory()
   }

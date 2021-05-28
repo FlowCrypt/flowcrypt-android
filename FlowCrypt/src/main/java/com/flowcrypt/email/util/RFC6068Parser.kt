@@ -70,8 +70,10 @@ class RFC6068Parser {
       val subject = getFirstParameterValue(params, SUBJECT)
       val body = getFirstParameterValue(params, BODY)
 
-      return ExtraActionInfo(emptyList(), toList, ccList, bccList,
-          subject ?: "", body ?: "")
+      return ExtraActionInfo(
+        emptyList(), toList, ccList, bccList,
+        subject ?: "", body ?: ""
+      )
     }
 
     private fun checkToList(toList: ArrayList<String>): ArrayList<String> {
@@ -80,7 +82,8 @@ class RFC6068Parser {
         for (section in toList) {
           if (!TextUtils.isEmpty(section)) {
             if (section.indexOf(',') != -1) {
-              val arraysRecipients = section.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+              val arraysRecipients =
+                section.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
               newToList.addAll(ArrayList(Arrays.asList(*arraysRecipients)))
             } else {
               newToList.add(section)
@@ -91,16 +94,19 @@ class RFC6068Parser {
       return newToList
     }
 
-    private fun getFirstParameterValue(params: CaseInsensitiveParamWrapper, paramName: String): String? {
+    private fun getFirstParameterValue(
+      params: CaseInsensitiveParamWrapper,
+      paramName: String
+    ): String? {
       val paramValues = params.getQueryParameters(paramName)
       return if (paramValues.isEmpty()) null else paramValues[0]
     }
   }
 
 
-  private class CaseInsensitiveParamWrapper internal constructor(private val uri: Uri) {
+  private class CaseInsensitiveParamWrapper(private val uri: Uri) {
 
-    internal fun getQueryParameters(key: String): ArrayList<String> {
+    fun getQueryParameters(key: String): ArrayList<String> {
       val params = ArrayList<String>()
       for (paramName in uri.queryParameterNames) {
         if (paramName.equals(key, ignoreCase = true)) {

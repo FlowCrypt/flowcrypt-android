@@ -11,4 +11,5 @@ package com.flowcrypt.email.util.exception
  *         Time: 3:41 PM
  *         E-mail: DenBond7@gmail.com
  */
-class WrongPassPhraseException(message: String, cause: Throwable) : FlowCryptException(message, cause)
+class WrongPassPhraseException(message: String, cause: Throwable) :
+  FlowCryptException(message, cause)

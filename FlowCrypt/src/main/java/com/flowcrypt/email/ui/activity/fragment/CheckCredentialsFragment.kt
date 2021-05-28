@@ -65,6 +65,9 @@ class CheckCredentialsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   companion object {
-    val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey("KEY_CHECK_ACCOUNT_SETTINGS_RESULT", CheckCredentialsFragment::class.java)
+    val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_CHECK_ACCOUNT_SETTINGS_RESULT",
+      CheckCredentialsFragment::class.java
+    )
   }
 }

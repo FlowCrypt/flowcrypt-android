@@ -23,7 +23,8 @@ class OAuth2Helper {
   }
 
   companion object {
-    const val OPENID_CONFIGURATION_URL_MICROSOFT = "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"
+    const val OPENID_CONFIGURATION_URL_MICROSOFT =
+      "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"
 
     const val OAUTH2_GRANT_TYPE = "authorization_code"
     const val OAUTH2_GRANT_TYPE_REFRESH_TOKEN = "refresh_token"
@@ -38,21 +39,28 @@ class OAuth2Helper {
      *
      * https://outlook.office.com/SMTP.Send - Allows the app to be able to send emails from the user’s mailbox using the SMTP AUTH client submission protocol.
      */
-    const val SCOPE_MICROSOFT_OAUTH2_FOR_MAIL = "openid offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send"
+    const val SCOPE_MICROSOFT_OAUTH2_FOR_MAIL =
+      "openid offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send"
 
-    const val MICROSOFT_OAUTH2_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    const val MICROSOFT_OAUTH2_TOKEN_URL =
+      "https://login.microsoftonline.com/common/oauth2/v2.0/token"
     const val MICROSOFT_AZURE_APP_ID = "7c5d8772-773f-4bef-bbc7-892e4de91f7f"
     const val MICROSOFT_OAUTH2_SCHEMA = "msauth"
 
-    fun getMicrosoftAuthorizationRequest(loginHint: String? = null, redirectUri: String, configuration: AuthorizationServiceConfiguration): AuthorizationRequest {
+    fun getMicrosoftAuthorizationRequest(
+      loginHint: String? = null,
+      redirectUri: String,
+      configuration: AuthorizationServiceConfiguration
+    ): AuthorizationRequest {
       val request = AuthorizationRequest.Builder(
-          configuration,
-          MICROSOFT_AZURE_APP_ID,
-          ResponseTypeValues.CODE,
-          Uri.parse(redirectUri))
-          .setResponseMode(AuthorizationRequest.ResponseMode.QUERY)
-          .setPrompt(AuthorizationRequest.Prompt.SELECT_ACCOUNT)
-          .setScope("profile email $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")
+        configuration,
+        MICROSOFT_AZURE_APP_ID,
+        ResponseTypeValues.CODE,
+        Uri.parse(redirectUri)
+      )
+        .setResponseMode(AuthorizationRequest.ResponseMode.QUERY)
+        .setPrompt(AuthorizationRequest.Prompt.SELECT_ACCOUNT)
+        .setScope("profile email $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")
 
       if (loginHint?.isNotEmpty() == true) {
         request.setLoginHint(loginHint)

@@ -17,7 +17,8 @@ import com.flowcrypt.email.util.LogsUtil
  *         Time: 10:05 AM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class FlowCryptMigration(startVersion: Int, endVersion: Int) : Migration(startVersion, endVersion) {
+abstract class FlowCryptMigration(startVersion: Int, endVersion: Int) :
+  Migration(startVersion, endVersion) {
 
   /**
    * Should run the necessary migrations.
@@ -32,8 +33,14 @@ abstract class FlowCryptMigration(startVersion: Int, endVersion: Int) : Migratio
   abstract fun doMigration(database: SupportSQLiteDatabase)
 
   override fun migrate(database: SupportSQLiteDatabase) {
-    LogsUtil.d(FlowCryptMigration::class.java.simpleName, "Begin migration from $startVersion to $endVersion")
+    LogsUtil.d(
+      FlowCryptMigration::class.java.simpleName,
+      "Begin migration from $startVersion to $endVersion"
+    )
     doMigration(database)
-    LogsUtil.d(FlowCryptMigration::class.java.simpleName, "End migration from $startVersion to $endVersion")
+    LogsUtil.d(
+      FlowCryptMigration::class.java.simpleName,
+      "End migration from $startVersion to $endVersion"
+    )
   }
 }

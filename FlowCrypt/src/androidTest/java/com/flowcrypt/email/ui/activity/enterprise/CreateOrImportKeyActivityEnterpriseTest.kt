@@ -37,22 +37,23 @@ import org.junit.runner.RunWith
 class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(
-      intent = CreateOrImportKeyActivity.newIntent(
-          context = getTargetContext(),
-          accountEntity = AccountDaoManager.getAccountDao("enterprise_account_no_prv_create.json"),
-          isShowAnotherAccountBtnEnabled = true
-      ))
+    intent = CreateOrImportKeyActivity.newIntent(
+      context = getTargetContext(),
+      accountEntity = AccountDaoManager.getAccountDao("enterprise_account_no_prv_create.json"),
+      isShowAnotherAccountBtnEnabled = true
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testCreateNewKeyNotExist() {
     onView(withId(R.id.buttonCreateNewKey))
-        .check(matches(not(isDisplayed())))
+      .check(matches(not(isDisplayed())))
   }
 }

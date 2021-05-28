@@ -20,24 +20,26 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 
-data class GeneralMessageDetails constructor(val email: String,
-                                             val label: String,
-                                             val uid: Int = 0,
-                                             val id: Int,
-                                             val receivedDate: Long = 0,
-                                             val sentDate: Long = 0,
-                                             var from: List<@JvmSuppressWildcards InternetAddress>? = null,
-                                             var replyTo: List<@JvmSuppressWildcards InternetAddress>? = null,
-                                             var to: List<@JvmSuppressWildcards InternetAddress>? = null,
-                                             var cc: List<@JvmSuppressWildcards InternetAddress>? = null,
-                                             var subject: String? = null,
-                                             var msgFlags: List<String> = arrayListOf(),
-                                             var isRawMsgAvailable: Boolean = false,
-                                             var hasAtts: Boolean = false,
-                                             var isEncrypted: Boolean = false,
-                                             var msgState: MessageState = MessageState.NONE,
-                                             var attsDir: String? = null,
-                                             var errorMsg: String? = null) : Parcelable {
+data class GeneralMessageDetails constructor(
+  val email: String,
+  val label: String,
+  val uid: Int = 0,
+  val id: Int,
+  val receivedDate: Long = 0,
+  val sentDate: Long = 0,
+  var from: List<@JvmSuppressWildcards InternetAddress>? = null,
+  var replyTo: List<@JvmSuppressWildcards InternetAddress>? = null,
+  var to: List<@JvmSuppressWildcards InternetAddress>? = null,
+  var cc: List<@JvmSuppressWildcards InternetAddress>? = null,
+  var subject: String? = null,
+  var msgFlags: List<String> = arrayListOf(),
+  var isRawMsgAvailable: Boolean = false,
+  var hasAtts: Boolean = false,
+  var isEncrypted: Boolean = false,
+  var msgState: MessageState = MessageState.NONE,
+  var attsDir: String? = null,
+  var errorMsg: String? = null
+) : Parcelable {
 
   fun isSeen(): Boolean {
     return msgFlags.contains(MessageFlag.SEEN.value)
@@ -68,24 +70,44 @@ data class GeneralMessageDetails constructor(val email: String,
     }
 
   constructor(source: Parcel) : this(
-      source.readString()!!,
-      source.readString()!!,
-      source.readInt(),
-      source.readInt(),
-      source.readLong(),
-      source.readLong(),
-      mutableListOf<InternetAddress>().apply { source.readList(this as List<*>, InternetAddress::class.java.classLoader) },
-      mutableListOf<InternetAddress>().apply { source.readList(this as List<*>, InternetAddress::class.java.classLoader) },
-      mutableListOf<InternetAddress>().apply { source.readList(this as List<*>, InternetAddress::class.java.classLoader) },
-      mutableListOf<InternetAddress>().apply { source.readList(this as List<*>, InternetAddress::class.java.classLoader) },
-      source.readString(),
-      source.createStringArrayList()!!,
-      1 == source.readInt(),
-      1 == source.readInt(),
-      1 == source.readInt(),
-      source.readParcelable(MessageState::class.java.classLoader)!!,
-      source.readString(),
-      source.readString()
+    source.readString()!!,
+    source.readString()!!,
+    source.readInt(),
+    source.readInt(),
+    source.readLong(),
+    source.readLong(),
+    mutableListOf<InternetAddress>().apply {
+      source.readList(
+        this as List<*>,
+        InternetAddress::class.java.classLoader
+      )
+    },
+    mutableListOf<InternetAddress>().apply {
+      source.readList(
+        this as List<*>,
+        InternetAddress::class.java.classLoader
+      )
+    },
+    mutableListOf<InternetAddress>().apply {
+      source.readList(
+        this as List<*>,
+        InternetAddress::class.java.classLoader
+      )
+    },
+    mutableListOf<InternetAddress>().apply {
+      source.readList(
+        this as List<*>,
+        InternetAddress::class.java.classLoader
+      )
+    },
+    source.readString(),
+    source.createStringArrayList()!!,
+    1 == source.readInt(),
+    1 == source.readInt(),
+    1 == source.readInt(),
+    source.readParcelable(MessageState::class.java.classLoader)!!,
+    source.readString(),
+    source.readString()
   )
 
   override fun describeContents() = 0
@@ -116,9 +138,12 @@ data class GeneralMessageDetails constructor(val email: String,
   companion object {
     @JvmField
     @Suppress("unused")
-    val CREATOR: Parcelable.Creator<GeneralMessageDetails> = object : Parcelable.Creator<GeneralMessageDetails> {
-      override fun createFromParcel(source: Parcel): GeneralMessageDetails = GeneralMessageDetails(source)
-      override fun newArray(size: Int): Array<GeneralMessageDetails?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<GeneralMessageDetails> =
+      object : Parcelable.Creator<GeneralMessageDetails> {
+        override fun createFromParcel(source: Parcel): GeneralMessageDetails =
+          GeneralMessageDetails(source)
+
+        override fun newArray(size: Int): Array<GeneralMessageDetails?> = arrayOfNulls(size)
+      }
   }
 }

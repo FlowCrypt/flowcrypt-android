@@ -34,25 +34,36 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
   val addNewAccountLiveData = MutableLiveData<Result<Boolean?>>()
   val updateAuthCredentialsLiveData = MutableLiveData<Result<Boolean?>>()
 
-  private val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
-  val activeAccountLiveData: LiveData<AccountEntity?> = pureActiveAccountLiveData.switchMap { accountEntity ->
-    liveData {
-      emit(getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+  private val pureActiveAccountLiveData: LiveData<AccountEntity?> =
+    roomDatabase.accountDao().getActiveAccountLD()
+  val activeAccountLiveData: LiveData<AccountEntity?> =
+    pureActiveAccountLiveData.switchMap { accountEntity ->
+      liveData {
+        emit(getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+      }
     }
-  }
 
-  private val pureNonActiveAccountsLiveData: LiveData<List<AccountEntity>> = roomDatabase.accountDao().getAllNonactiveAccountsLD()
-  val nonActiveAccountsLiveData: LiveData<List<AccountEntity>> = pureNonActiveAccountsLiveData.switchMap { accountEntities ->
-    liveData {
-      emit(accountEntities.mapNotNull { accountEntity -> getAccountEntityWithDecryptedInfoSuspend(accountEntity) })
+  private val pureNonActiveAccountsLiveData: LiveData<List<AccountEntity>> =
+    roomDatabase.accountDao().getAllNonactiveAccountsLD()
+  val nonActiveAccountsLiveData: LiveData<List<AccountEntity>> =
+    pureNonActiveAccountsLiveData.switchMap { accountEntities ->
+      liveData {
+        emit(accountEntities.mapNotNull { accountEntity ->
+          getAccountEntityWithDecryptedInfoSuspend(
+            accountEntity
+          )
+        })
+      }
     }
-  }
 
-  val pureAccountsLiveData: LiveData<List<AccountEntity>> = roomDatabase.accountDao().getAccountsLD()
+  val pureAccountsLiveData: LiveData<List<AccountEntity>> =
+    roomDatabase.accountDao().getAccountsLD()
 
   suspend fun getActiveAccountSuspend(): AccountEntity? {
     return activeAccountLiveData.value
-        ?: return getAccountEntityWithDecryptedInfoSuspend(roomDatabase.accountDao().getActiveAccountSuspend())
+      ?: return getAccountEntityWithDecryptedInfoSuspend(
+        roomDatabase.accountDao().getActiveAccountSuspend()
+      )
   }
 
   fun addNewAccount(accountEntity: AccountEntity) {
@@ -64,8 +75,13 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
         if (existedAccount == null) {
           roomDatabase.accountDao().addAccountSuspend(accountEntity)
         } else {
-          roomDatabase.accountDao().updateAccountSuspend(accountEntity.copy(
-              id = existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
+          roomDatabase.accountDao().updateAccountSuspend(
+            accountEntity.copy(
+              id = existedAccount.id,
+              uuid = existedAccount.uuid,
+              domainRules = existedAccount.domainRules
+            )
+          )
         }
 
         LoadContactsWorker.enqueue(getApplication())
@@ -81,7 +97,8 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
   fun updateAccountByAuthCredentials(authCredentials: AuthCredentials) {
     viewModelScope.launch {
       val context: Context = getApplication()
-      updateAuthCredentialsLiveData.value = Result.loading(progressMsg = context.getString(R.string.updating_server_settings))
+      updateAuthCredentialsLiveData.value =
+        Result.loading(progressMsg = context.getString(R.string.updating_server_settings))
       try {
         val accountDao = roomDatabase.accountDao()
         val isUpdated = accountDao.updateAccountByAuthCredentials(authCredentials) > 0
@@ -108,26 +125,28 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
       }
 
       return accountEntity?.copy(
-          password = KeyStoreCryptoManager.decrypt(originalPassword),
-          smtpPassword = KeyStoreCryptoManager.decrypt(accountEntity.smtpPassword),
-          uuid = KeyStoreCryptoManager.decrypt(accountEntity.uuid))
+        password = KeyStoreCryptoManager.decrypt(originalPassword),
+        smtpPassword = KeyStoreCryptoManager.decrypt(accountEntity.smtpPassword),
+        uuid = KeyStoreCryptoManager.decrypt(accountEntity.uuid)
+      )
     }
 
     suspend fun getAccountEntityWithDecryptedInfoSuspend(accountEntity: AccountEntity?): AccountEntity? =
-        withContext(Dispatchers.IO) {
-          var originalPassword = accountEntity?.password
+      withContext(Dispatchers.IO) {
+        var originalPassword = accountEntity?.password
 
-          //fixed a bug when try to decrypting the template password.
-          // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
-          //todo-denbond7 remove this in 2022
-          if ("password".equals(originalPassword, ignoreCase = true)) {
-            originalPassword = ""
-          }
-
-          return@withContext accountEntity?.copy(
-              password = KeyStoreCryptoManager.decryptSuspend(originalPassword),
-              smtpPassword = KeyStoreCryptoManager.decryptSuspend(accountEntity.smtpPassword),
-              uuid = KeyStoreCryptoManager.decryptSuspend(accountEntity.uuid))
+        //fixed a bug when try to decrypting the template password.
+        // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
+        //todo-denbond7 remove this in 2022
+        if ("password".equals(originalPassword, ignoreCase = true)) {
+          originalPassword = ""
         }
+
+        return@withContext accountEntity?.copy(
+          password = KeyStoreCryptoManager.decryptSuspend(originalPassword),
+          smtpPassword = KeyStoreCryptoManager.decryptSuspend(accountEntity.smtpPassword),
+          uuid = KeyStoreCryptoManager.decryptSuspend(accountEntity.uuid)
+        )
+      }
   }
 }

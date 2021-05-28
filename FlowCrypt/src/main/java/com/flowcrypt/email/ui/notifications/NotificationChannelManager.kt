@@ -32,7 +32,8 @@ object NotificationChannelManager {
    * @param context Interface to global information about an application environment.
    */
   fun registerNotificationChannels(context: Context) {
-    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager =
+      context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     notificationManager.createNotificationChannel(genGeneralNotificationChannel(context))
     notificationManager.createNotificationChannel(genAttsNotificationChannel(context))

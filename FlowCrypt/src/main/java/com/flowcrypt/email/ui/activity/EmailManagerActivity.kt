@@ -85,8 +85,9 @@ import kotlinx.coroutines.launch
  * Time: 16:12
  * E-mail: DenBond7@gmail.com
  */
-class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigationItemSelectedListener,
-    SearchView.OnQueryTextListener, TwoWayDialogFragment.OnTwoWayDialogListener {
+class EmailManagerActivity : BaseEmailListActivity(),
+  NavigationView.OnNavigationItemSelectedListener,
+  SearchView.OnQueryTextListener, TwoWayDialogFragment.OnTwoWayDialogListener {
 
   private lateinit var client: GoogleSignInClient
   private val labelsViewModel: LabelsViewModel by viewModels()
@@ -212,14 +213,16 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
           }
 
           FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity.applicationContext)
-              .accountDao().updateAccountSuspend(it.copy(isShowOnlyEncrypted = isChecked))
+            .accountDao().updateAccountSuspend(it.copy(isShowOnlyEncrypted = isChecked))
 
           onShowOnlyEncryptedMsgs(isChecked)
 
-          Toast.makeText(this@EmailManagerActivity, if (isChecked)
-            R.string.showing_only_encrypted_messages
-          else
-            R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
+          Toast.makeText(
+            this@EmailManagerActivity, if (isChecked)
+              R.string.showing_only_encrypted_messages
+            else
+              R.string.showing_all_messages, Toast.LENGTH_SHORT
+          ).show()
         }
       }
     }
@@ -236,7 +239,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     when {
       JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
         itemSwitch.isVisible = false
-        itemSearch.isVisible = AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
+        itemSearch.isVisible =
+          AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
         itemForceSending.isVisible = true
         itemForceSending.isEnabled = isForceSendingEnabled
       }
@@ -257,21 +261,21 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     return when (item.itemId) {
       R.id.menuForceSending -> {
         showTwoWayDialogFragment(
-            requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
-            dialogTitle = getString(R.string.restart_sending),
-            dialogMsg = getString(R.string.restart_sending_process_warning)
+          requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
+          dialogTitle = getString(R.string.restart_sending),
+          dialogMsg = getString(R.string.restart_sending_process_warning)
         )
         return true
       }
 
       R.id.menuEmptyTrash -> {
         showTwoWayDialogFragment(
-            requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
-            dialogTitle = getString(R.string.empty_trash),
-            dialogMsg = getString(R.string.empty_trash_warning),
-            positiveButtonTitle = getString(android.R.string.ok),
-            negativeButtonTitle = getString(android.R.string.cancel),
-            isCancelable = false
+          requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
+          dialogTitle = getString(R.string.empty_trash),
+          dialogMsg = getString(R.string.empty_trash_warning),
+          positiveButtonTitle = getString(android.R.string.ok),
+          negativeButtonTitle = getString(android.R.string.cancel),
+          isCancelable = false
         )
         return true
       }
@@ -287,7 +291,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
           val signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
           if (signInResult?.isSuccess == true) {
             val fragment = supportFragmentManager
-                .findFragmentById(R.id.emailListFragment) as EmailListFragment?
+              .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
             fragment?.reloadMsgs()
           } else {
@@ -343,7 +347,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onQueryTextSubmit(query: String): Boolean {
     if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
-        && !SearchSequence.isAscii(query)) {
+      && !SearchSequence.isAscii(query)
+    ) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }
@@ -391,10 +396,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
                 val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
                 activeAccount?.let { accountEntity ->
                   roomDatabase.msgDao().changeMsgsStateSuspend(
-                      account = accountEntity.email,
-                      label = JavaEmailConstants.FOLDER_OUTBOX,
-                      oldValue = MessageState.AUTH_FAILURE.value,
-                      newValues = MessageState.QUEUED.value
+                    account = accountEntity.email,
+                    label = JavaEmailConstants.FOLDER_OUTBOX,
+                    oldValue = MessageState.AUTH_FAILURE.value,
+                    newValues = MessageState.QUEUED.value
                   )
                 }
 
@@ -411,7 +416,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
             if (GeneralUtil.isConnected(this)) {
               emptyTrash()
             } else {
-              showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
+              showInfoSnackbar(
+                rootView,
+                getString(R.string.internet_connection_is_not_available),
+                Snackbar.LENGTH_LONG
+              )
             }
           }
         }
@@ -420,8 +429,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   private fun showGmailSignIn() {
-    showSnackbar(rootView, getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-        Snackbar.LENGTH_INDEFINITE) { onRetryGoogleAuth() }
+    showSnackbar(
+      rootView, getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+      Snackbar.LENGTH_INDEFINITE
+    ) { onRetryGoogleAuth() }
   }
 
   private fun doLogout() {
@@ -440,16 +451,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    */
   private fun onShowOnlyEncryptedMsgs(onlyEncrypted: Boolean) {
     val fragment = supportFragmentManager
-        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
+      .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     if (onlyEncrypted) {
-      val currentNotificationLevel = SharedPreferencesHelper.getString(PreferenceManager
-          .getDefaultSharedPreferences(this), Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+      val currentNotificationLevel = SharedPreferencesHelper.getString(
+        PreferenceManager
+          .getDefaultSharedPreferences(this), Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
+      )
 
       if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
-        SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
-            Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
-            NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY)
+        SharedPreferencesHelper.setString(
+          PreferenceManager.getDefaultSharedPreferences(this),
+          Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+          NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+        )
       }
     }
 
@@ -463,15 +478,17 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    */
   private fun notifyFragmentAboutDrawerChange(slideOffset: Float, isOpened: Boolean) {
     val fragment = supportFragmentManager
-        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
+      .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     fragment?.onDrawerStateChanged(slideOffset, isOpened)
   }
 
   private fun initViews() {
     drawerLayout = findViewById(R.id.drawer_layout)
-    actionBarDrawerToggle = CustomDrawerToggle(this, drawerLayout, toolbar,
-        R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+    actionBarDrawerToggle = CustomDrawerToggle(
+      this, drawerLayout, toolbar,
+      R.string.navigation_drawer_open, R.string.navigation_drawer_close
+    )
     actionBarDrawerToggle?.let { drawerLayout?.addDrawerListener(it) }
     actionBarDrawerToggle?.syncState()
 
@@ -480,14 +497,23 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     accountManagementLayout = LinearLayout(this)
     accountManagementLayout?.orientation = LinearLayout.VERTICAL
     accountManagementLayout?.layoutParams = ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+    )
     accountManagementLayout?.visibility = View.GONE
     accountManagementLayout?.let { navigationView?.addHeaderView(it) }
 
     findViewById<View>(R.id.floatActionButtonCompose)?.setOnClickListener {
-      startActivity(CreateMessageActivity.generateIntent(this, null, MessageEncryptionType.ENCRYPTED))
+      startActivity(
+        CreateMessageActivity.generateIntent(
+          this,
+          null,
+          MessageEncryptionType.ENCRYPTED
+        )
+      )
     }
-    activeAccount?.let { navigationView?.getHeaderView(0)?.let { view -> initUserProfileView(view) } }
+    activeAccount?.let {
+      navigationView?.getHeaderView(0)?.let { view -> initUserProfileView(view) }
+    }
   }
 
   /**
@@ -512,12 +538,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         it.photoUrl
       } else R.mipmap.ic_account_default_photo
       GlideApp.with(this)
-          .load(resource)
-          .apply(RequestOptions()
-              .centerCrop()
-              .transform(CircleTransformation())
-              .error(R.mipmap.ic_account_default_photo))
-          .into(imageViewUserPhoto)
+        .load(resource)
+        .apply(
+          RequestOptions()
+            .centerCrop()
+            .transform(CircleTransformation())
+            .error(R.mipmap.ic_account_default_photo)
+        )
+        .into(imageViewUserPhoto)
     }
 
     currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails)
@@ -556,10 +584,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       accountManagementLayout?.addView(generateAccountItemView(account))
     }
 
-    val addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account, accountManagementLayout, false)
+    val addNewAccountView =
+      LayoutInflater.from(this).inflate(R.layout.add_account, accountManagementLayout, false)
     addNewAccountView.setOnClickListener {
-      startActivityForResult(Intent(this, SignInActivity::class.java)
-          .apply { action = SignInActivity.ACTION_ADD_ONE_MORE_ACCOUNT }, REQUEST_CODE_ADD_NEW_ACCOUNT)
+      startActivityForResult(
+        Intent(this, SignInActivity::class.java)
+          .apply { action = SignInActivity.ACTION_ADD_ONE_MORE_ACCOUNT },
+        REQUEST_CODE_ADD_NEW_ACCOUNT
+      )
       drawerLayout?.closeDrawer(GravityCompat.START)
     }
     accountManagementLayout?.addView(addNewAccountView)
@@ -568,7 +600,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   private fun generateAccountItemView(account: AccountEntity): View {
-    val view = LayoutInflater.from(this).inflate(R.layout.nav_menu_account_item, accountManagementLayout, false)
+    val view = LayoutInflater.from(this)
+      .inflate(R.layout.nav_menu_account_item, accountManagementLayout, false)
     view.tag = account
 
     val imageViewActiveUserPhoto = view.findViewById<ImageView>(R.id.imageViewActiveUserPhoto)
@@ -584,12 +617,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     if (!TextUtils.isEmpty(account.photoUrl)) {
       GlideApp.with(this)
-          .load(account.photoUrl)
-          .apply(RequestOptions()
-              .centerCrop()
-              .transform(CircleTransformation())
-              .error(R.mipmap.ic_account_default_photo))
-          .into(imageViewActiveUserPhoto)
+        .load(account.photoUrl)
+        .apply(
+          RequestOptions()
+            .centerCrop()
+            .transform(CircleTransformation())
+            .error(R.mipmap.ic_account_default_photo)
+        )
+        .into(imageViewActiveUserPhoto)
     }
 
     view.setOnClickListener {
@@ -645,8 +680,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     if (foldersManager?.getFolderByAlias(label)?.msgCount ?: 0 > 0) {
       val folder = foldersManager?.getFolderByAlias(label) ?: return
-      val view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
-          navigationView, false)
+      val view = LayoutInflater.from(this).inflate(
+        R.layout.navigation_view_item_with_amount,
+        navigationView, false
+      )
       val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
       textViewMsgsCount.text = folder.msgCount.toString()
       menuItem.actionView = view
@@ -682,12 +719,19 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
    * update task when the drawer will be opened.
    */
-  private inner class CustomDrawerToggle(activity: Activity,
-                                         drawerLayout: DrawerLayout?,
-                                         toolbar: Toolbar?,
-                                         @StringRes openDrawerContentDescRes: Int,
-                                         @StringRes closeDrawerContentDescRes: Int)
-    : ActionBarDrawerToggle(activity, drawerLayout, toolbar, openDrawerContentDescRes, closeDrawerContentDescRes) {
+  private inner class CustomDrawerToggle(
+    activity: Activity,
+    drawerLayout: DrawerLayout?,
+    toolbar: Toolbar?,
+    @StringRes openDrawerContentDescRes: Int,
+    @StringRes closeDrawerContentDescRes: Int
+  ) : ActionBarDrawerToggle(
+    activity,
+    drawerLayout,
+    toolbar,
+    openDrawerContentDescRes,
+    closeDrawerContentDescRes
+  ) {
 
     var slideOffset = 0f
 
@@ -724,7 +768,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   companion object {
     const val ACTION_OPEN_OUTBOX_FOLDER = BuildConfig.APPLICATION_ID + ".OPEN_OUTBOX_FOLDER"
-    const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS = BuildConfig.APPLICATION_ID + ".ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS"
+    const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =
+      BuildConfig.APPLICATION_ID + ".ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val KEY_ACCOUNT = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT"
 
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 100

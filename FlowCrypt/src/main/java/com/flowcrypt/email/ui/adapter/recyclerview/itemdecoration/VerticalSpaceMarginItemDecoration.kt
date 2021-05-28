@@ -16,11 +16,14 @@ import androidx.recyclerview.widget.RecyclerView
  *         E-mail: DenBond7@gmail.com
  */
 class VerticalSpaceMarginItemDecoration(
-    private val marginTop: Int,
-    private val marginBottom: Int,
-    private val marginInternal: Int) : RecyclerView.ItemDecoration() {
-  override fun getItemOffsets(outRect: Rect, view: View,
-                              parent: RecyclerView, state: RecyclerView.State) {
+  private val marginTop: Int,
+  private val marginBottom: Int,
+  private val marginInternal: Int
+) : RecyclerView.ItemDecoration() {
+  override fun getItemOffsets(
+    outRect: Rect, view: View,
+    parent: RecyclerView, state: RecyclerView.State
+  ) {
     val position = parent.getChildLayoutPosition(view)
     val adapter = parent.adapter
 

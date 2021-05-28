@@ -14,7 +14,8 @@ import java.io.InputStream
  *         Time: 2:28 PM
  *         E-mail: DenBond7@gmail.com
  */
-class GMailRawMIMEMessageFilterInputStream(inputStream: InputStream) : FilterInputStream(inputStream) {
+class GMailRawMIMEMessageFilterInputStream(inputStream: InputStream) :
+  FilterInputStream(inputStream) {
   init {
     // we should skip first 12 bytes to begin to read raw MIME message as a stream
     skip(12)

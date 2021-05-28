@@ -69,17 +69,26 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
 
-  private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
+  private val keyDetails =
+    PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(AddContactsToDatabaseRule(listOf(PgpContact(EMAIL_DENBOND7, USER_DENBOND7,
-          keyDetails.publicKey, true, null, null, 0))))
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(
+      AddContactsToDatabaseRule(
+        listOf(
+          PgpContact(
+            EMAIL_DENBOND7, USER_DENBOND7,
+            keyDetails.publicKey, true, null, null, 0
+          )
+        )
+      )
+    )
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Before
   fun waitData() {
@@ -94,20 +103,38 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
     keyDetails.users.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_user, index + 1, s)))
-          .check(matches(isDisplayed()))
+        .check(matches(isDisplayed()))
     }
 
     keyDetails.ids.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_fingerprint_2, index + 1, s.fingerprint)))
-          .check(matches(isDisplayed()))
+        .check(matches(isDisplayed()))
     }
 
     onView(withId(R.id.textViewAlgorithm))
-        .check(matches(withText(getResString(R.string.template_algorithm, keyDetails.algo.algorithm!!))))
+      .check(
+        matches(
+          withText(
+            getResString(
+              R.string.template_algorithm,
+              keyDetails.algo.algorithm!!
+            )
+          )
+        )
+      )
     onView(withId(R.id.textViewCreated))
-        .check(matches(withText(getResString(R.string.template_created,
-            DateFormat.getMediumDateFormat(getTargetContext()).format(
-                Date(keyDetails.created))))))
+      .check(
+        matches(
+          withText(
+            getResString(
+              R.string.template_created,
+              DateFormat.getMediumDateFormat(getTargetContext()).format(
+                Date(keyDetails.created)
+              )
+            )
+          )
+        )
+      )
   }
 
   @Test
@@ -115,8 +142,8 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     chooseContact()
 
     onView(withId(R.id.menuActionCopy))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     isToastDisplayed(decorView, getResString(R.string.public_key_copied_to_clipboard))
     UiThreadStatement.runOnUiThread {
       checkClipboardText(TestGeneralUtil.replaceVersionInKey(keyDetails.publicKey))
@@ -131,23 +158,28 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     val fileName = "0x" + keyDetails.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     val file =
-        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
+      File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
 
     if (file.exists()) {
       file.delete()
     }
 
     val resultData = Intent()
-    resultData.data = FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
+    resultData.data =
+      FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
 
-    Intents.intending(AllOf.allOf(IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
+    Intents.intending(
+      AllOf.allOf(
+        IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
         IntentMatchers.hasCategories(CoreMatchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
-        IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+        IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
 
     onView(withId(R.id.menuActionSave))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     isToastDisplayed(decorView, getResString(R.string.saved))
   }
@@ -158,11 +190,11 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.delete))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     onView(withText(R.string.no_results))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -172,7 +204,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   private fun chooseContact() {
     onView(withId(R.id.recyclerViewContacts))
-        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
   }
 
   /**
@@ -199,7 +231,8 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     @AfterClass
     @JvmStatic
     fun removeContactFromDatabase() {
-      val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
+      val dao =
+        FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
       dao.getContactByEmail(EMAIL_DENBOND7)?.let { dao.delete(it) }
     }
   }

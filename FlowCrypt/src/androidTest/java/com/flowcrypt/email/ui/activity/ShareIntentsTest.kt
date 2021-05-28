@@ -59,17 +59,18 @@ import java.util.*
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class ShareIntentsTest : BaseTest() {
-  override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+  override val activeActivityRule =
+    lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activeActivityRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activeActivityRule)
+    .around(ScreenshotTestRule())
 
   private val randomActionForRFC6068: String
     get() = if (Random().nextBoolean()) Intent.ACTION_SENDTO else Intent.ACTION_VIEW
@@ -83,48 +84,72 @@ class ShareIntentsTest : BaseTest() {
 
   @Test
   fun testToSubjectBody() {
-    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
-        + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    activeActivityRule.launch(
+      genIntentForUri(
+        randomActionForRFC6068, "mailto:" + recipients[0]
+            + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
   fun testToParamSubjectBody() {
-    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
-        + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    activeActivityRule.launch(
+      genIntentForUri(
+        randomActionForRFC6068, "mailto:?to=" + recipients[0]
+            + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
   fun testToToParamSubjectBody() {
-    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
-        + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    activeActivityRule.launch(
+      genIntentForUri(
+        randomActionForRFC6068, "mailto:" + recipients[0]
+            + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
   fun testToParamToSubjectBody() {
-    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
-        + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    activeActivityRule.launch(
+      genIntentForUri(
+        randomActionForRFC6068, "mailto:?to=" + recipients[0]
+            + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
   fun testMultiToSubjectBody() {
-    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
-        + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    activeActivityRule.launch(
+      genIntentForUri(
+        randomActionForRFC6068, "mailto:" + recipients[0]
+            + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
   fun testMultiToParamSubjectBody() {
-    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
-        + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    activeActivityRule.launch(
+      genIntentForUri(
+        randomActionForRFC6068, "mailto:?to=" + recipients[0]
+            + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
@@ -145,14 +170,28 @@ class ShareIntentsTest : BaseTest() {
 
   @Test
   fun testSendExtSubject() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 0))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND,
+        Intent.EXTRA_SUBJECT,
+        null,
+        0
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 0)
   }
 
   @Test
   fun testSendExtBody() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 0))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND,
+        null,
+        Intent.EXTRA_TEXT,
+        0
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 0)
   }
@@ -166,45 +205,78 @@ class ShareIntentsTest : BaseTest() {
 
   @Test
   fun testSendExtSubjectExtBody() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, 0))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
+        Intent.EXTRA_TEXT, 0
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0)
   }
 
   @Test
   fun testSendExtSubjectAtt() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 1))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND,
+        Intent.EXTRA_SUBJECT,
+        null,
+        1
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 1)
   }
 
   @Test
   fun testSendExtBodyAtt() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 1))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND,
+        null,
+        Intent.EXTRA_TEXT,
+        1
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 1)
   }
 
   @Test
   fun testSendExtSubjectExtBodyAtt() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, 1))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
+        Intent.EXTRA_TEXT, 1
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 1)
   }
 
   @Test
   fun testSendMultipleMultiAtt() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, null, null, atts.size))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND_MULTIPLE,
+        null,
+        null,
+        atts.size
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, null, null, atts.size)
   }
 
   @Test
   fun testSendMultipleExtSubjectExtBodyMultiAtt() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, atts.size))
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
+        Intent.EXTRA_TEXT, atts.size
+      )
+    )
     registerAllIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, atts.size)
   }
@@ -212,9 +284,14 @@ class ShareIntentsTest : BaseTest() {
   @Test
   fun testDoNotSupportAttWithFileSchema() {
     activeActivityRule.launch(
-        generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0).apply {
-          putExtra(Intent.EXTRA_STREAM, atts.first())
-        })
+      generateIntentWithExtras(
+        Intent.ACTION_SEND,
+        Intent.EXTRA_SUBJECT,
+        Intent.EXTRA_TEXT,
+        0
+      ).apply {
+        putExtra(Intent.EXTRA_STREAM, atts.first())
+      })
     registerAllIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0)
   }
@@ -229,8 +306,10 @@ class ShareIntentsTest : BaseTest() {
   }
 
 
-  private fun generateIntentWithExtras(action: String?, extraSubject: String?, extraMsg: CharSequence?,
-                                       attachmentsCount: Int): Intent {
+  private fun generateIntentWithExtras(
+    action: String?, extraSubject: String?, extraMsg: CharSequence?,
+    attachmentsCount: Int
+  ): Intent {
     val intent = Intent(getTargetContext(), CreateMessageActivity::class.java)
     intent.action = action
     intent.putExtra(Intent.EXTRA_SUBJECT, extraSubject)
@@ -250,11 +329,16 @@ class ShareIntentsTest : BaseTest() {
     return intent
   }
 
-  private fun checkViewsOnScreen(recipientsCount: Int, subject: String?, body: CharSequence?, attachmentsCount: Int) {
+  private fun checkViewsOnScreen(
+    recipientsCount: Int,
+    subject: String?,
+    body: CharSequence?,
+    attachmentsCount: Int
+  ) {
     onView(withText(R.string.compose))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
-        .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
+      .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
     closeSoftKeyboard()
 
     checkRecipients(recipientsCount)
@@ -265,17 +349,17 @@ class ShareIntentsTest : BaseTest() {
 
   private fun checkAtts(attachmentsCount: Int) {
     onView(withId(R.id.layoutAtts))
-        .check(matches(hasChildCount(attachmentsCount)))
+      .check(matches(hasChildCount(attachmentsCount)))
 
     when {
       attachmentsCount > 0 -> {
         if (attachmentsCount == 1) {
           onView(withText(atts.first().name))
-              .check(matches(isDisplayed()))
+            .check(matches(isDisplayed()))
         } else {
           for (att in atts) {
             onView(withText(att.name))
-                .check(matches(isDisplayed()))
+              .check(matches(isDisplayed()))
           }
         }
       }
@@ -285,20 +369,22 @@ class ShareIntentsTest : BaseTest() {
   private fun checkBody(body: CharSequence?) {
     if (body != null) {
       onView(withId(R.id.editTextEmailMessage))
-          .check(matches(isDisplayed())).check(matches(withText(getRidOfCharacterSubstitutes(body.toString()))))
+        .check(matches(isDisplayed()))
+        .check(matches(withText(getRidOfCharacterSubstitutes(body.toString()))))
     } else {
       onView(withId(R.id.editTextEmailMessage))
-          .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
     }
   }
 
   private fun checkSubject(subject: String?) {
     if (subject != null) {
       onView(withId(R.id.editTextEmailSubject))
-          .check(matches(isDisplayed())).check(matches(withText(getRidOfCharacterSubstitutes(subject))))
+        .check(matches(isDisplayed()))
+        .check(matches(withText(getRidOfCharacterSubstitutes(subject))))
     } else {
       onView(withId(R.id.editTextEmailSubject))
-          .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
     }
   }
 
@@ -306,11 +392,11 @@ class ShareIntentsTest : BaseTest() {
     if (recipientsCount > 0) {
       for (i in 0 until recipientsCount) {
         onView(withId(R.id.editTextRecipientTo))
-            .check(matches(isDisplayed())).check(matches(withText(containsString(recipients[i]))))
+          .check(matches(isDisplayed())).check(matches(withText(containsString(recipients[i]))))
       }
     } else {
       onView(withId(R.id.editTextRecipientTo))
-          .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
     }
   }
 
@@ -324,8 +410,10 @@ class ShareIntentsTest : BaseTest() {
   }
 
   private fun genUriFromFile(file: File): Uri {
-    return FileProvider.getUriForFile(ApplicationProvider.getApplicationContext(), Constants
-        .FILE_PROVIDER_AUTHORITY, file)
+    return FileProvider.getUriForFile(
+      ApplicationProvider.getApplicationContext(), Constants
+        .FILE_PROVIDER_AUTHORITY, file
+    )
   }
 
   companion object {
@@ -335,8 +423,9 @@ class ShareIntentsTest : BaseTest() {
 
     private lateinit var atts: MutableList<File>
     private val recipients: Array<String> = arrayOf(
-        TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
-        TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
+      TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
+      TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+    )
 
     @BeforeClass
     @JvmStatic
@@ -352,31 +441,39 @@ class ShareIntentsTest : BaseTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
-          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+    val mockWebServerRule =
+      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+            val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
-          when {
-            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-              return MockResponse().setResponseCode(404).setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
-            }
+            when {
+              TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
+                return MockResponse().setResponseCode(404)
+                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+              }
 
-            TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-              return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+              TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
+                return MockResponse().setResponseCode(200)
+                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+              }
             }
           }
-        }
 
-        return MockResponse().setResponseCode(404)
-      }
-    })
+          return MockResponse().setResponseCode(404)
+        }
+      })
 
     private fun createFilesForAtts() {
       atts = mutableListOf()
 
       for (i in 0 until ATTACHMENTS_COUNT) {
-        atts.add(TestGeneralUtil.createFileAndFillWithContent("$i.txt", UUID.randomUUID().toString()))
+        atts.add(
+          TestGeneralUtil.createFileAndFillWithContent(
+            "$i.txt",
+            UUID.randomUUID().toString()
+          )
+        )
       }
     }
   }

@@ -33,7 +33,8 @@ import javax.mail.Store
  *         Time: 5:33 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters) :
+  BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     deleteMsgsPermanently(accountEntity, store)
   }
@@ -42,31 +43,35 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
     deleteMsgsPermanently(accountEntity)
   }
 
-  private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    deleteMsgsPermanentlyInternal(account) { folderName, uidList ->
-      store.getFolder(folderName).use { folder ->
-        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-        val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-        if (msgs.isNotEmpty()) {
-          imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.DELETED), true)
+  private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      deleteMsgsPermanentlyInternal(account) { folderName, uidList ->
+        store.getFolder(folderName).use { folder ->
+          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val msgs: List<Message> =
+            imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+          if (msgs.isNotEmpty()) {
+            imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.DELETED), true)
+          }
         }
       }
     }
-  }
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity) = withContext(Dispatchers.IO) {
     deleteMsgsPermanentlyInternal(account) { _, uidList ->
       executeGMailAPICall(applicationContext) {
         GmailApiHelper.deleteMsgsPermanently(
-            context = applicationContext,
-            accountEntity = account,
-            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+          context = applicationContext,
+          accountEntity = account,
+          ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
       }
     }
   }
 
-  private suspend fun deleteMsgsPermanentlyInternal(account: AccountEntity,
-                                                    action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
+  private suspend fun deleteMsgsPermanentlyInternal(
+    account: AccountEntity,
+    action: suspend (folderName: String, list: List<Long>) -> Unit
+  ) = withContext(Dispatchers.IO)
   {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val trash = foldersManager.folderTrash ?: return@withContext
@@ -74,7 +79,8 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
 
     while (true) {
       val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
-          account.email, trash.fullName, MessageState.PENDING_DELETING_PERMANENTLY.value)
+        account.email, trash.fullName, MessageState.PENDING_DELETING_PERMANENTLY.value
+      )
 
       if (candidatesForDeleting.isEmpty()) {
         break
@@ -91,19 +97,19 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<DeleteMessagesPermanentlyWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<DeleteMessagesPermanentlyWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

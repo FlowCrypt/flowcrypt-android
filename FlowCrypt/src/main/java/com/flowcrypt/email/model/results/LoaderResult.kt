@@ -15,11 +15,12 @@ package com.flowcrypt.email.model.results
  */
 //todo-denbond7 need to remove this class in the near future. Refactor code and remove this
 data class LoaderResult constructor(
-    /**
-     * Some result which will be returned by loader.
-     */
-    var result: Any? = null,
-    /**
-     * Some exception which will be returned if it happened.
-     */
-    var exception: Exception? = null)
+  /**
+   * Some result which will be returned by loader.
+   */
+  var result: Any? = null,
+  /**
+   * Some exception which will be returned if it happened.
+   */
+  var exception: Exception? = null
+)

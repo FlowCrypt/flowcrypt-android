@@ -195,7 +195,11 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
     private val MIGRATION_14_15 = object : FlowCryptMigration(14, 15) {
       override fun doMigration(database: SupportSQLiteDatabase) {
-        database.delete("attachment", "folder NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
+        database.delete(
+          "attachment",
+          "folder NOT IN (?)",
+          arrayOf(JavaEmailConstants.FOLDER_OUTBOX)
+        )
 
         val tempTableName = "attachment_temp"
 
@@ -216,7 +220,13 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         val contentValues = ContentValues()
         contentValues.putNull("raw_message_without_attachments")
-        database.update("messages", SQLiteDatabase.CONFLICT_NONE, contentValues, "folder = ? ", arrayOf("INBOX"))
+        database.update(
+          "messages",
+          SQLiteDatabase.CONFLICT_NONE,
+          contentValues,
+          "folder = ? ",
+          arrayOf("INBOX")
+        )
       }
     }
 
@@ -267,7 +277,11 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         //Recreate 'attachment' table to use an ability of foreign keys
         //delete non-OUTBOX attachments
-        database.delete("attachment", "folder NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
+        database.delete(
+          "attachment",
+          "folder NOT IN (?)",
+          arrayOf(JavaEmailConstants.FOLDER_OUTBOX)
+        )
         val tempTableAtts = "attachment_temp"
 
         database.execSQL("CREATE TEMP TABLE IF NOT EXISTS $tempTableAtts AS SELECT * FROM attachment;")

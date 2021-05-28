@@ -53,64 +53,74 @@ import java.io.InputStreamReader
 @RunWith(AndroidJUnit4::class)
 class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
   override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(
-      intent = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java).apply {
-        putExtra(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT, AccountDaoManager
-            .getAccountDao("enterprise_account_enforce_attester_submit.json")
-            .copy(email = EMAIL_ENFORCE_ATTESTER_SUBMIT))
-      })
+    intent = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java).apply {
+      putExtra(
+        CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT, AccountDaoManager
+          .getAccountDao("enterprise_account_enforce_attester_submit.json")
+          .copy(email = EMAIL_ENFORCE_ATTESTER_SUBMIT)
+      )
+    })
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testFailAttesterSubmit() {
     onView(withId(R.id.editTextKeyPassword))
-        .check(matches(isDisplayed()))
-        .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonSetPassPhrase))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.editTextKeyPasswordSecond))
-        .check(matches(isDisplayed()))
-        .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonConfirmPassPhrases))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     checkIsSnackbarDisplayedAndClick(SUBMIT_API_ERROR_RESPONSE.apiError?.msg!!)
 
     checkIsSnackBarDisplayed()
     onView(withText(SUBMIT_API_ERROR_RESPONSE.apiError?.msg))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   companion object {
     const val EMAIL_ENFORCE_ATTESTER_SUBMIT = "enforce_attester_submit@example.com"
 
-    val SUBMIT_API_ERROR_RESPONSE = InitialLegacySubmitResponse(ApiError(400, "Invalid email " +
-        "address", "internal_error"), false)
+    val SUBMIT_API_ERROR_RESPONSE = InitialLegacySubmitResponse(
+      ApiError(
+        400, "Invalid email " +
+            "address", "internal_error"
+      ), false
+    )
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson<InitialLegacySubmitModel>(InputStreamReader(request.body.inputStream()),
-            InitialLegacySubmitModel::class.java)
+    val mockWebServerRule =
+      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          val gson =
+            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+          val model = gson.fromJson<InitialLegacySubmitModel>(
+            InputStreamReader(request.body.inputStream()),
+            InitialLegacySubmitModel::class.java
+          )
 
-        if (request.path.equals("/initial/legacy_submit")) {
-          when (model.email) {
-            EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(200)
+          if (request.path.equals("/initial/legacy_submit")) {
+            when (model.email) {
+              EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(SUBMIT_API_ERROR_RESPONSE))
+            }
           }
-        }
 
-        return MockResponse().setResponseCode(404)
-      }
-    })
+          return MockResponse().setResponseCode(404)
+        }
+      })
   }
 }

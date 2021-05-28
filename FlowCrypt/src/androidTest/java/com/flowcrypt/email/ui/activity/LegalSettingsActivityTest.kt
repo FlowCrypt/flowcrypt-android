@@ -44,26 +44,27 @@ class LegalSettingsActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   private val titleNames: Array<String> = arrayOf(
-      getResString(R.string.privacy),
-      getResString(R.string.terms),
-      getResString(R.string.licence),
-      getResString(R.string.sources))
+    getResString(R.string.privacy),
+    getResString(R.string.terms),
+    getResString(R.string.licence),
+    getResString(R.string.sources)
+  )
 
   @Test
   fun testClickToTitleViewPager() {
     for (titleName in titleNames) {
       onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
       onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-          .check(matches(isDisplayed())).check(matches(isSelected()))
+        .check(matches(isDisplayed())).check(matches(isSelected()))
     }
   }
 
@@ -74,12 +75,22 @@ class LegalSettingsActivityTest : BaseTest() {
 
   @Test
   fun testSwipeInViewPager() {
-    onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[0])))
-        .check(matches(isDisplayed())).check(matches(isSelected()))
+    onView(
+      allOf(
+        withParent(withParent(withParent(withId(R.id.tabLayout)))),
+        withText(titleNames[0])
+      )
+    )
+      .check(matches(isDisplayed())).check(matches(isSelected()))
     for (i in 1 until titleNames.size) {
       onView(withId(R.id.viewPager)).perform(swipeLeft())
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[i])))
-          .check(matches(isDisplayed())).check(matches(isSelected()))
+      onView(
+        allOf(
+          withParent(withParent(withParent(withId(R.id.tabLayout)))),
+          withText(titleNames[i])
+        )
+      )
+        .check(matches(isDisplayed())).check(matches(isSelected()))
     }
   }
 }

@@ -40,9 +40,9 @@ class MigrationTest {
 
   @get:Rule
   val migrationTestHelper: MigrationTestHelper = MigrationTestHelper(
-      InstrumentationRegistry.getInstrumentation(),
-      FlowCryptRoomDatabase::class.java.canonicalName,
-      FrameworkSQLiteOpenHelperFactory()
+    InstrumentationRegistry.getInstrumentation(),
+    FlowCryptRoomDatabase::class.java.canonicalName,
+    FrameworkSQLiteOpenHelperFactory()
   )
 
   @Test
@@ -55,8 +55,8 @@ class MigrationTest {
 
     // Open latest version of the DB. Room will validate the schema once all migrations execute.
     Room.databaseBuilder(
-        InstrumentationRegistry.getInstrumentation().targetContext,
-        FlowCryptRoomDatabase::class.java, FlowCryptRoomDatabase.DB_NAME
+      InstrumentationRegistry.getInstrumentation().targetContext,
+      FlowCryptRoomDatabase::class.java, FlowCryptRoomDatabase.DB_NAME
     ).addMigrations(*arrayOfMigrations).build().apply {
       openHelper.writableDatabase
       close()

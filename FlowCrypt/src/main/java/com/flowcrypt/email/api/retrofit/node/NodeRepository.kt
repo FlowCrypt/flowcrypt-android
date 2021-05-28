@@ -27,11 +27,14 @@ import kotlinx.coroutines.withContext
  * E-mail: DenBond7@gmail.com
  */
 class NodeRepository : PgpApiRepository {
-  override suspend fun parseDecryptMsg(requestCode: Int, request: ParseDecryptMsgRequest): Result<ParseDecryptedMsgResult?> =
-      withContext(Dispatchers.IO) {
-        val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-        getResult(call = { apiService.parseDecryptMsg(request) })
-      }
+  override suspend fun parseDecryptMsg(
+    requestCode: Int,
+    request: ParseDecryptMsgRequest
+  ): Result<ParseDecryptedMsgResult?> =
+    withContext(Dispatchers.IO) {
+      val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
+      getResult(call = { apiService.parseDecryptMsg(request) })
+    }
 
   /**
    * It's a base method for all requests to Node.js
@@ -40,30 +43,50 @@ class NodeRepository : PgpApiRepository {
    * @param data        An instance of [MutableLiveData] which will be used for result delivering.
    * @param nodeRequest An instance of [NodeRequest]
    */
-  private fun load(requestCode: Int, data: MutableLiveData<NodeResponseWrapper<*>>, nodeRequest: NodeRequest) {
-    data.value = NodeResponseWrapper.loading(requestCode = requestCode, data = null, loadingState = LoadingState.PREPARE_REQUEST)
+  private fun load(
+    requestCode: Int,
+    data: MutableLiveData<NodeResponseWrapper<*>>,
+    nodeRequest: NodeRequest
+  ) {
+    data.value = NodeResponseWrapper.loading(
+      requestCode = requestCode,
+      data = null,
+      loadingState = LoadingState.PREPARE_REQUEST
+    )
     Worker(data).execute(NodeRequestWrapper(requestCode, nodeRequest))
   }
 
   /**
    * Here we describe a logic of making requests to Node.js using [retrofit2.Retrofit]
    */
-  private class Worker(private val liveData: MutableLiveData<NodeResponseWrapper<*>>)
-    : AsyncTask<NodeRequestWrapper<*>, NodeResponseWrapper<*>, NodeResponseWrapper<*>>() {
+  private class Worker(private val liveData: MutableLiveData<NodeResponseWrapper<*>>) :
+    AsyncTask<NodeRequestWrapper<*>, NodeResponseWrapper<*>, NodeResponseWrapper<*>>() {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
       val nodeRequestWrapper = nodeRequestWrappers[0]
       val baseNodeResult: BaseNodeResponse
 
-      publishProgress(NodeResponseWrapper.loading(requestCode = nodeRequestWrapper.requestCode, data = null,
-          loadingState = LoadingState.PREPARE_SERVICE))
+      publishProgress(
+        NodeResponseWrapper.loading(
+          requestCode = nodeRequestWrapper.requestCode, data = null,
+          loadingState = LoadingState.PREPARE_SERVICE
+        )
+      )
       val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       try {
-        publishProgress(NodeResponseWrapper.loading(requestCode = nodeRequestWrapper.requestCode, data = null,
-            loadingState = LoadingState.RUN_REQUEST))
+        publishProgress(
+          NodeResponseWrapper.loading(
+            requestCode = nodeRequestWrapper.requestCode, data = null,
+            loadingState = LoadingState.RUN_REQUEST
+          )
+        )
         val response = nodeRequestWrapper.request.getResponse(nodeService)
-        publishProgress(NodeResponseWrapper.loading(requestCode = nodeRequestWrapper.requestCode, data = null,
-            loadingState = LoadingState.RESPONSE_RECEIVED))
+        publishProgress(
+          NodeResponseWrapper.loading(
+            requestCode = nodeRequestWrapper.requestCode, data = null,
+            loadingState = LoadingState.RESPONSE_RECEIVED
+          )
+        )
         val time = response.raw().receivedResponseAtMillis - response.raw().sentRequestAtMillis
         if (response.body() != null) {
           baseNodeResult = response.body() as BaseNodeResponse
@@ -72,8 +95,10 @@ class NodeRepository : PgpApiRepository {
             return NodeResponseWrapper.error(nodeRequestWrapper.requestCode, baseNodeResult, time)
           }
         } else {
-          return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode,
-              NullPointerException("The response body is null!"), null, time)
+          return NodeResponseWrapper.exception(
+            nodeRequestWrapper.requestCode,
+            NullPointerException("The response body is null!"), null, time
+          )
         }
       } catch (e: Exception) {
         e.printStackTrace()

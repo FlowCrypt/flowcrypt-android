@@ -33,15 +33,29 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
     return BuildConfig.APPLICATION_ID + ".auth" + if (authTokenType.isNullOrEmpty()) "" else ".$authTokenType"
   }
 
-  override fun confirmCredentials(response: AccountAuthenticatorResponse?, account: Account?, options: Bundle?): Bundle {
+  override fun confirmCredentials(
+    response: AccountAuthenticatorResponse?,
+    account: Account?,
+    options: Bundle?
+  ): Bundle {
     return Bundle()
   }
 
-  override fun updateCredentials(response: AccountAuthenticatorResponse?, account: Account?, authTokenType: String?, options: Bundle?): Bundle {
+  override fun updateCredentials(
+    response: AccountAuthenticatorResponse?,
+    account: Account?,
+    authTokenType: String?,
+    options: Bundle?
+  ): Bundle {
     return Bundle()
   }
 
-  override fun getAuthToken(response: AccountAuthenticatorResponse?, account: Account?, authTokenType: String?, options: Bundle?): Bundle {
+  override fun getAuthToken(
+    response: AccountAuthenticatorResponse?,
+    account: Account?,
+    authTokenType: String?,
+    options: Bundle?
+  ): Bundle {
     account ?: return Bundle().apply {
       putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_ARGUMENTS)
       putString(AccountManager.KEY_ERROR_MESSAGE, "Should provided non-null account")
@@ -66,7 +80,10 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
       if (encryptedRefreshToken.isNullOrEmpty()) {
         return Bundle().apply {
           putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_ARGUMENTS)
-          putString(AccountManager.KEY_ERROR_MESSAGE, context.getString(R.string.refrech_token_was_corrupted))
+          putString(
+            AccountManager.KEY_ERROR_MESSAGE,
+            context.getString(R.string.refrech_token_was_corrupted)
+          )
         }
       }
       try {
@@ -77,8 +94,16 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
           val tokenResponse = apiResponse.body()
           authToken = KeyStoreCryptoManager.encrypt(tokenResponse?.accessToken)
           accountManager.setAuthToken(account, authTokenType, authToken)
-          accountManager.setUserData(account, KEY_REFRESH_TOKEN, KeyStoreCryptoManager.encrypt(tokenResponse?.refreshToken))
-          accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
+          accountManager.setUserData(
+            account,
+            KEY_REFRESH_TOKEN,
+            KeyStoreCryptoManager.encrypt(tokenResponse?.refreshToken)
+          )
+          accountManager.setUserData(
+            account,
+            KEY_EXPIRES_AT,
+            OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString()
+          )
         } else return Bundle().apply {
           //via clearing the current token we force the token updating in the next call
           accountManager.setAuthToken(account, authTokenType, null)
@@ -96,7 +121,7 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
           }
 
           val errorMsg = errorResponse?.errorDescription
-              ?: context.getString(R.string.could_not_fetch_access_token)
+            ?: context.getString(R.string.could_not_fetch_access_token)
           putString(AccountManager.KEY_ERROR_MESSAGE, errorMsg)
         }
       } catch (e: Exception) {
@@ -119,15 +144,28 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
     return genBundleToAddNewAccount(response).apply { options?.let { putAll(options) } }
   }
 
-  override fun hasFeatures(response: AccountAuthenticatorResponse?, account: Account?, features: Array<out String>?): Bundle {
+  override fun hasFeatures(
+    response: AccountAuthenticatorResponse?,
+    account: Account?,
+    features: Array<out String>?
+  ): Bundle {
     return Bundle()
   }
 
-  override fun editProperties(response: AccountAuthenticatorResponse?, accountType: String?): Bundle {
+  override fun editProperties(
+    response: AccountAuthenticatorResponse?,
+    accountType: String?
+  ): Bundle {
     return Bundle()
   }
 
-  override fun addAccount(response: AccountAuthenticatorResponse?, accountType: String?, authTokenType: String?, requiredFeatures: Array<out String>?, options: Bundle?): Bundle {
+  override fun addAccount(
+    response: AccountAuthenticatorResponse?,
+    accountType: String?,
+    authTokenType: String?,
+    requiredFeatures: Array<out String>?,
+    options: Bundle?
+  ): Bundle {
     if (ACCOUNT_TYPE != accountType) {
       throw IllegalArgumentException("Request to the wrong authenticator!")
     }
@@ -146,18 +184,23 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
     }
   }
 
-  override fun getAccountRemovalAllowed(response: AccountAuthenticatorResponse?, account: Account?): Bundle {
+  override fun getAccountRemovalAllowed(
+    response: AccountAuthenticatorResponse?,
+    account: Account?
+  ): Bundle {
     val bundle = super.getAccountRemovalAllowed(response, account)
 
     if (bundle?.containsKey(AccountManager.KEY_BOOLEAN_RESULT) == true) {
       val isRemovalAllowed = bundle.getBoolean(AccountManager.KEY_BOOLEAN_RESULT, false)
       if (isRemovalAllowed) {
         return Bundle().apply {
-          putParcelable(AccountManager.KEY_INTENT, Intent(context, EmailManagerActivity::class.java).apply {
-            action = EmailManagerActivity.ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS
-            putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
-            putExtra(EmailManagerActivity.KEY_ACCOUNT, account)
-          })
+          putParcelable(
+            AccountManager.KEY_INTENT,
+            Intent(context, EmailManagerActivity::class.java).apply {
+              action = EmailManagerActivity.ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS
+              putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
+              putExtra(EmailManagerActivity.KEY_ACCOUNT, account)
+            })
         }
       }
     }

@@ -38,14 +38,18 @@ abstract class BaseCreateOrImportKeyActivityTest : BaseTest() {
 
   @Test
   fun testClickOnButtonImportMyKey() {
-    intending(allOf(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)),
+    intending(
+      allOf(
+        hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_TITLE),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD),
-        hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+        hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND)
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     onView(withId(R.id.buttonImportMyKey))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
 
     Assert.assertTrue(activityScenarioRule?.scenario?.result?.resultCode == Activity.RESULT_OK)
   }
@@ -53,7 +57,7 @@ abstract class BaseCreateOrImportKeyActivityTest : BaseTest() {
   @Test
   fun testClickOnButtonSelectAnotherAccount() {
     onView(withId(R.id.buttonSelectAnotherAccount))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
 
     Assert.assertTrue(activityScenarioRule?.scenario?.result?.resultCode == CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT)
   }

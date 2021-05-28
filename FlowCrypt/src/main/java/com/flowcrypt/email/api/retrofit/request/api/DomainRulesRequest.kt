@@ -18,5 +18,7 @@ import com.flowcrypt.email.api.retrofit.request.model.LoginModel
  *         E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 this class is redundant. We can refactor code and delete this
-class DomainRulesRequest(override val apiName: ApiName = ApiName.POST_GET_DOMAIN_RULES,
-                         override val requestModel: LoginModel) : BaseRequest<LoginModel>
+class DomainRulesRequest(
+  override val apiName: ApiName = ApiName.POST_GET_DOMAIN_RULES,
+  override val requestModel: LoginModel
+) : BaseRequest<LoginModel>

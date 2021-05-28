@@ -42,14 +42,23 @@ class SmtpProtocolUtil {
      * @throws IOException
      * @throws GoogleAuthException
      */
-    fun prepareSmtpTransport(context: Context, session: Session, accountEntity: AccountEntity): Transport {
+    fun prepareSmtpTransport(
+      context: Context,
+      session: Session,
+      accountEntity: AccountEntity
+    ): Transport {
       val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
 
       when (accountEntity.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
           val userName = accountEntity.email
           val password = EmailUtil.getGmailAccountToken(context, accountEntity)
-          transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT, userName, password)
+          transport.connect(
+            GmailConstants.GMAIL_SMTP_SERVER,
+            GmailConstants.GMAIL_SMTP_PORT,
+            userName,
+            password
+          )
         }
 
         else -> {
@@ -66,10 +75,13 @@ class SmtpProtocolUtil {
 
           if (accountEntity.useOAuth2) {
             val accountManager = AccountManager.get(context)
-            val oAuthAccount = accountManager.accounts.firstOrNull { it.name == accountEntity.email }
+            val oAuthAccount =
+              accountManager.accounts.firstOrNull { it.name == accountEntity.email }
             if (oAuthAccount != null) {
-              val encryptedToken = accountManager.blockingGetAuthToken(oAuthAccount,
-                  FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+              val encryptedToken = accountManager.blockingGetAuthToken(
+                oAuthAccount,
+                FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true
+              )
               password = if (encryptedToken.isNullOrEmpty()) {
                 ""//need to think about
               } else {
@@ -78,8 +90,10 @@ class SmtpProtocolUtil {
             }
           }
 
-          transport.connect(accountEntity.smtpServer, accountEntity.smtpPort
-              ?: 0, userName, password)
+          transport.connect(
+            accountEntity.smtpServer, accountEntity.smtpPort
+              ?: 0, userName, password
+          )
         }
       }
 
@@ -97,12 +111,18 @@ class SmtpProtocolUtil {
      * @throws IOException
      * @throws GoogleAuthException
      */
-    fun prepareSmtpTransport(session: Session, accountEntity: AccountEntity, authCredentials: AuthCredentials): Transport {
+    fun prepareSmtpTransport(
+      session: Session,
+      accountEntity: AccountEntity,
+      authCredentials: AuthCredentials
+    ): Transport {
       val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
       when (accountEntity.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT,
-              authCredentials.email, authCredentials.peekPassword())
+          transport.connect(
+            GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT,
+            authCredentials.email, authCredentials.peekPassword()
+          )
         }
 
         else -> {
@@ -117,7 +137,12 @@ class SmtpProtocolUtil {
             password = authCredentials.peekPassword()
           }
 
-          transport.connect(authCredentials.smtpServer, authCredentials.smtpPort, username, password)
+          transport.connect(
+            authCredentials.smtpServer,
+            authCredentials.smtpPort,
+            username,
+            password
+          )
         }
       }
 

@@ -74,12 +74,14 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     val encryptedUuid = KeyStoreCryptoManager.encryptSuspend(accountEntity.uuid)
 
     insertSuspend(
-        accountEntity.copy(
-            email = accountEntity.email.toLowerCase(Locale.US),
-            password = encryptedPassword,
-            smtpPassword = encryptedSmtpPassword,
-            uuid = encryptedUuid,
-            isActive = true))
+      accountEntity.copy(
+        email = accountEntity.email.toLowerCase(Locale.US),
+        password = encryptedPassword,
+        smtpPassword = encryptedSmtpPassword,
+        uuid = encryptedUuid,
+        isActive = true
+      )
+    )
   }
 
   @Transaction
@@ -94,12 +96,14 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     val encryptedUuid = KeyStoreCryptoManager.encrypt(accountEntity.uuid)
 
     insert(
-        accountEntity.copy(
-            email = accountEntity.email.toLowerCase(Locale.US),
-            password = encryptedPassword,
-            smtpPassword = encryptedSmtpPassword,
-            uuid = encryptedUuid,
-            isActive = true))
+      accountEntity.copy(
+        email = accountEntity.email.toLowerCase(Locale.US),
+        password = encryptedPassword,
+        smtpPassword = encryptedSmtpPassword,
+        uuid = encryptedUuid,
+        isActive = true
+      )
+    )
   }
 
   @Transaction
@@ -123,21 +127,27 @@ abstract class AccountDao : BaseDao<AccountEntity> {
   @Transaction
   open fun updateAccount(entity: AccountEntity): Int {
     val existedAccount = getAccount(entity.email) ?: return 0
-    return update(entity.copy(
+    return update(
+      entity.copy(
         id = existedAccount.id,
         password = existedAccount.password,
         smtpPassword = existedAccount.smtpPassword,
-        uuid = existedAccount.uuid))
+        uuid = existedAccount.uuid
+      )
+    )
   }
 
   @Transaction
   open suspend fun updateAccountSuspend(entity: AccountEntity): Int {
     val existedAccount = getAccountSuspend(entity.email) ?: return 0
-    return updateSuspend(entity.copy(
+    return updateSuspend(
+      entity.copy(
         id = existedAccount.id,
         password = existedAccount.password,
         smtpPassword = existedAccount.smtpPassword,
-        uuid = existedAccount.uuid))
+        uuid = existedAccount.uuid
+      )
+    )
   }
 
   @Transaction
@@ -170,7 +180,8 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     val encryptedPassword = KeyStoreCryptoManager.encrypt(authCredentials.password)
     val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(authCredentials.smtpSignInPassword)
 
-    return update(existedAccount.copy(
+    return update(
+      existedAccount.copy(
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
         imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
@@ -182,6 +193,8 @@ abstract class AccountDao : BaseDao<AccountEntity> {
         smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
         smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
         useCustomSignForSmtp = authCredentials.hasCustomSignInForSmtp,
-        smtpUsername = authCredentials.smtpSigInUsername))
+        smtpUsername = authCredentials.smtpSigInUsername
+      )
+    )
   }
 }

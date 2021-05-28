@@ -28,10 +28,10 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
     return object : Statement() {
       override fun evaluate() {
         val fromAnnotation = description
-            .annotations
-            .filterIsInstance<RetryOnFailure>()
-            .firstOrNull()
-            ?.value
+          .annotations
+          .filterIsInstance<RetryOnFailure>()
+          .firstOrNull()
+          ?.value
 
         val attempts = if (fromAnnotation == null || fromAnnotation !in 1..MAX_RETRY_VALUE) {
           if (retryCount in 1..MAX_RETRY_VALUE) retryCount else 1
@@ -42,11 +42,11 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
         var caughtThrowable: Throwable? = null
         repeat(attempts) { times ->
           runCatching { base.evaluate() }
-              .onSuccess { return }
-              .onFailure {
-                caughtThrowable = it
-                System.err.println(description.displayName.toString() + ": run $times failed")
-              }
+            .onSuccess { return }
+            .onFailure {
+              caughtThrowable = it
+              System.err.println(description.displayName.toString() + ": run $times failed")
+            }
         }
         System.err.println(description.displayName.toString() + ": giving up after " + attempts + " failures")
         caughtThrowable?.let { throw it } ?: throw RuntimeException("Something went wrong")

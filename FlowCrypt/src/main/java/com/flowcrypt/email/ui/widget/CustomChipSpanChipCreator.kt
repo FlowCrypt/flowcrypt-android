@@ -36,7 +36,10 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
     return PGPContactChipSpan(context, text.toString().toLowerCase(Locale.getDefault()), null, data)
   }
 
-  override fun createChip(context: Context, pgpContactChipSpan: PGPContactChipSpan): PGPContactChipSpan {
+  override fun createChip(
+    context: Context,
+    pgpContactChipSpan: PGPContactChipSpan
+  ): PGPContactChipSpan {
     return PGPContactChipSpan(context, pgpContactChipSpan)
   }
 

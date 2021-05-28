@@ -32,11 +32,13 @@ import kotlin.collections.ArrayList
  */
 class AccountAliasesViewModel(application: Application) : AccountViewModel(application) {
 
-  val accountAliasesLiveData: LiveData<List<AccountAliasesEntity>> = Transformations.switchMap(activeAccountLiveData) {
-    roomDatabase.accountAliasesDao().getAliasesLD(it?.email ?: "", it?.accountType ?: "")
-  }
+  val accountAliasesLiveData: LiveData<List<AccountAliasesEntity>> =
+    Transformations.switchMap(activeAccountLiveData) {
+      roomDatabase.accountAliasesDao().getAliasesLD(it?.email ?: "", it?.accountType ?: "")
+    }
 
-  private val freshAccountAliasesLiveData: LiveData<Collection<AccountAliasesEntity>> = Transformations
+  private val freshAccountAliasesLiveData: LiveData<Collection<AccountAliasesEntity>> =
+    Transformations
       .switchMap(activeAccountLiveData) { accountEntity ->
         liveData {
           val account = accountEntity?.account ?: return@liveData
@@ -55,27 +57,29 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
   }
 
   private suspend fun fetchAliases(context: Context, account: Account) =
-      withContext(Dispatchers.IO) {
-        try {
-          val gmailService = GmailApiHelper.generateGmailApiService(context, account)
-          val response = gmailService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-          val aliases = ArrayList<AccountAliasesEntity>()
-          for (alias in response.sendAs) {
-            if (alias.verificationStatus != null) {
-              val accountAliasesDao = AccountAliasesEntity(
-                  email = account.name.toLowerCase(Locale.getDefault()),
-                  accountType = account.type ?: AccountEntity.ACCOUNT_TYPE_GOOGLE,
-                  sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
-                  displayName = alias.displayName,
-                  isDefault = alias.isDefault,
-                  verificationStatus = alias.verificationStatus)
-              aliases.add(accountAliasesDao)
-            }
+    withContext(Dispatchers.IO) {
+      try {
+        val gmailService = GmailApiHelper.generateGmailApiService(context, account)
+        val response =
+          gmailService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
+        val aliases = ArrayList<AccountAliasesEntity>()
+        for (alias in response.sendAs) {
+          if (alias.verificationStatus != null) {
+            val accountAliasesDao = AccountAliasesEntity(
+              email = account.name.toLowerCase(Locale.getDefault()),
+              accountType = account.type ?: AccountEntity.ACCOUNT_TYPE_GOOGLE,
+              sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
+              displayName = alias.displayName,
+              isDefault = alias.isDefault,
+              verificationStatus = alias.verificationStatus
+            )
+            aliases.add(accountAliasesDao)
           }
-          aliases
-        } catch (e: IOException) {
-          e.printStackTrace()
-          emptyList<AccountAliasesEntity>()
         }
+        aliases
+      } catch (e: IOException) {
+        e.printStackTrace()
+        emptyList<AccountAliasesEntity>()
       }
+    }
 }

@@ -71,9 +71,18 @@ class OpenStoreHelper {
       }
     }
 
-    fun openStore(account: AccountEntity, authCredentials: AuthCredentials, session: Session): Store {
+    fun openStore(
+      account: AccountEntity,
+      authCredentials: AuthCredentials,
+      session: Session
+    ): Store {
       val store = getStore(account, session)
-      store.connect(authCredentials.imapServer, authCredentials.imapPort, authCredentials.username, authCredentials.peekPassword())
+      store.connect(
+        authCredentials.imapServer,
+        authCredentials.imapPort,
+        authCredentials.username,
+        authCredentials.peekPassword()
+      )
       return store
     }
 
@@ -100,10 +109,17 @@ class OpenStoreHelper {
           try {
             val password = if (accountEntity.useOAuth2) {
               val accountManager = AccountManager.get(context)
-              val oauthAccount = accountManager.accounts.firstOrNull { it.name == accountEntity.email }
-              if (oauthAccount != null && oauthAccount.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
-                val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
-                    FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+              val oauthAccount =
+                accountManager.accounts.firstOrNull { it.name == accountEntity.email }
+              if (oauthAccount != null && oauthAccount.type.equals(
+                  FlowcryptAccountAuthenticator.ACCOUNT_TYPE,
+                  ignoreCase = true
+                )
+              ) {
+                val encryptedToken = accountManager.blockingGetAuthToken(
+                  oauthAccount,
+                  FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true
+                )
                 if (encryptedToken.isNullOrEmpty()) {
                   ExceptionUtil.handleError(NullPointerException("Warning. Encrypted token is null!"))
                   ""
@@ -129,7 +145,11 @@ class OpenStoreHelper {
     fun openStore(context: Context, account: AccountEntity?, session: Session): Store {
       return if (account != null) {
         when (account.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> openAndConnectToGimapsStore(context, session, account)
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> openAndConnectToGimapsStore(
+            context,
+            session,
+            account
+          )
 
           else -> {
             val store = when {
@@ -144,13 +164,23 @@ class OpenStoreHelper {
         throw NullPointerException("AccountEntity must not be a null!")
     }
 
-    private fun openAndConnectToGimapsStore(context: Context, session: Session, accountEntity: AccountEntity): GmailSSLStore {
-      val gmailSSLStore: GmailSSLStore = session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
+    private fun openAndConnectToGimapsStore(
+      context: Context,
+      session: Session,
+      accountEntity: AccountEntity
+    ): GmailSSLStore {
+      val gmailSSLStore: GmailSSLStore =
+        session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
       connectToGimapsStore(context, accountEntity, false, gmailSSLStore)
       return gmailSSLStore
     }
 
-    private fun connectToGimapsStore(context: Context, accountEntity: AccountEntity, isResetTokenNeeded: Boolean, store: Store) {
+    private fun connectToGimapsStore(
+      context: Context,
+      accountEntity: AccountEntity,
+      isResetTokenNeeded: Boolean,
+      store: Store
+    ) {
       try {
         var token = EmailUtil.getGmailAccountToken(context, accountEntity)
 
@@ -173,7 +203,10 @@ class OpenStoreHelper {
           if (!isResetTokenNeeded) {
             connectToGimapsStore(context, accountEntity, true, store)
           } else {
-            ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity, recoverableIntent)
+            ErrorNotificationManager(context).notifyUserAboutAuthFailure(
+              accountEntity,
+              recoverableIntent
+            )
             throw e
           }
         } else throw e
@@ -181,14 +214,20 @@ class OpenStoreHelper {
     }
 
     private fun isAuthException(e: Exception) =
-        e is AuthenticationFailedException
-            || e is UserRecoverableAuthException
-            || e is UserRecoverableAuthIOException
-            || e is AuthenticatorException
+      e is AuthenticationFailedException
+          || e is UserRecoverableAuthException
+          || e is UserRecoverableAuthIOException
+          || e is AuthenticatorException
 
-    private fun handleConnectException(e: Exception, context: Context, accountEntity: AccountEntity, store: Store) {
+    private fun handleConnectException(
+      e: Exception,
+      context: Context,
+      accountEntity: AccountEntity,
+      store: Store
+    ) {
       if (isAuthException(e)) {
-        val activeAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
+        val activeAccount =
+          FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
         activeAccount?.let {
           if (activeAccount.id == accountEntity.id) {
             if (accountEntity.useOAuth2) {

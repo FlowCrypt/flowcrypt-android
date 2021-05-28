@@ -41,8 +41,10 @@ class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidView
     val context: Context = getApplication()
 
     viewModelScope.launch {
-      val loginResult = repository.login(context,
-          LoginRequest(ApiName.POST_LOGIN, LoginModel(account, uuid), tokenId))
+      val loginResult = repository.login(
+        context,
+        LoginRequest(ApiName.POST_LOGIN, LoginModel(account, uuid), tokenId)
+      )
 
       when (loginResult.status) {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -52,12 +54,20 @@ class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidView
 
         Result.Status.SUCCESS -> {
           if (loginResult.data?.isVerified == true) {
-            val domainRulesResult = repository.getDomainRules(context,
-                DomainRulesRequest(ApiName.POST_GET_DOMAIN_RULES, LoginModel(account, uuid)))
+            val domainRulesResult = repository.getDomainRules(
+              context,
+              DomainRulesRequest(ApiName.POST_GET_DOMAIN_RULES, LoginModel(account, uuid))
+            )
             domainRulesLiveData.value = domainRulesResult
           } else {
-            domainRulesLiveData.value = Result.error(LoginResponse(ApiError(-1,
-                context.getString(R.string.user_not_verified)), false))
+            domainRulesLiveData.value = Result.error(
+              LoginResponse(
+                ApiError(
+                  -1,
+                  context.getString(R.string.user_not_verified)
+                ), false
+              )
+            )
           }
         }
 

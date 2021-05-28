@@ -23,11 +23,15 @@ import java.util.*
  * Time: 5:22 PM
  * E-mail: DenBond7@gmail.com
  */
-class FromAddressesAdapter<T>(context: Context,
-                              resource: Int,
-                              textViewResId: Int,
-                              val objects: List<T>) : ArrayAdapter<T>(context, resource,
-    textViewResId, objects) {
+class FromAddressesAdapter<T>(
+  context: Context,
+  resource: Int,
+  textViewResId: Int,
+  val objects: List<T>
+) : ArrayAdapter<T>(
+  context, resource,
+  textViewResId, objects
+) {
   private val keysAvailability: MutableMap<String, Boolean> = HashMap()
   private var originalColor: Int = 0
   private var useKeysInfo: Boolean = false
@@ -37,7 +41,12 @@ class FromAddressesAdapter<T>(context: Context,
 
     val textView = view.findViewById<TextView>(android.R.id.text1)
 
-    textView?.setTextColor(if (isEnabled(position)) originalColor else UIUtil.getColor(context, R.color.gray))
+    textView?.setTextColor(
+      if (isEnabled(position)) originalColor else UIUtil.getColor(
+        context,
+        R.color.gray
+      )
+    )
 
     return view
   }

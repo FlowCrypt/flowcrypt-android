@@ -15,4 +15,5 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
  * Time: 14:09
  * E-mail: DenBond7@gmail.com
  */
-class KeyAlreadyAddedException(val keyDetails: PgpKeyDetails, errorMsg: String) : Exception(errorMsg)
+class KeyAlreadyAddedException(val keyDetails: PgpKeyDetails, errorMsg: String) :
+  Exception(errorMsg)

@@ -32,7 +32,7 @@ class CreateFileWithIncreasedIndexTest {
   fun fileWithExistedNameOnce() {
     val existedFile = temporaryFolder.newFile("tmp6153894960499929676.tmp")
     val newFileWithIncreasedIndex =
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
+      FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
     val theoreticalFileName = "tmp6153894960499929676(1).tmp"
     Assert.assertEquals(theoreticalFileName, newFileWithIncreasedIndex.name)
   }
@@ -41,7 +41,7 @@ class CreateFileWithIncreasedIndexTest {
   fun fileWithExistedNameTwice() {
     val existedFile = temporaryFolder.newFile("tmp6153894960499929676(1).tmp")
     val newFileWithIncreasedIndex =
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
+      FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
     val theoreticalFileName = "tmp6153894960499929676(2).tmp"
     Assert.assertEquals(theoreticalFileName, newFileWithIncreasedIndex.name)
   }
@@ -51,7 +51,7 @@ class CreateFileWithIncreasedIndexTest {
     val existedFile = temporaryFolder.newFile("tmp6153894960499929676.tmp")
     temporaryFolder.newFile("tmp6153894960499929676(1).tmp")
     val newFileWithIncreasedIndex =
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
+      FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
     val theoreticalFileName = "tmp6153894960499929676(2).tmp"
     Assert.assertEquals(theoreticalFileName, newFileWithIncreasedIndex.name)
   }
@@ -60,7 +60,7 @@ class CreateFileWithIncreasedIndexTest {
   fun fileWithExistedNameWithoutExtensionOnce() {
     val existedFile = temporaryFolder.newFile("tmp6153894960499929676")
     val newFileWithIncreasedIndex =
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
+      FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
     val theoreticalFileName = "tmp6153894960499929676(1)"
     Assert.assertEquals(theoreticalFileName, newFileWithIncreasedIndex.name)
   }
@@ -69,7 +69,7 @@ class CreateFileWithIncreasedIndexTest {
   fun fileWithExistedNameWithoutExtensionTwice() {
     val existedFile = temporaryFolder.newFile("tmp6153894960499929676(1)")
     val newFileWithIncreasedIndex =
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
+      FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
     val theoreticalFileName = "tmp6153894960499929676(2)"
     Assert.assertEquals(theoreticalFileName, newFileWithIncreasedIndex.name)
   }
@@ -79,7 +79,7 @@ class CreateFileWithIncreasedIndexTest {
     val existedFile = temporaryFolder.newFile("tmp6153894960499929676")
     temporaryFolder.newFile("tmp6153894960499929676(1)")
     val newFileWithIncreasedIndex =
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
+      FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
     val theoreticalFileName = "tmp6153894960499929676(2)"
     Assert.assertEquals(theoreticalFileName, newFileWithIncreasedIndex.name)
   }
@@ -88,7 +88,7 @@ class CreateFileWithIncreasedIndexTest {
   fun fileWithExtensionOnly() {
     val existedFile = temporaryFolder.newFile(".ext")
     val newFileWithIncreasedIndex =
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
+      FileAndDirectoryUtils.createFileWithIncreasedIndex(temporaryFolder.root, existedFile.name)
     val theoreticalFileName = "(1).ext"
     Assert.assertEquals(theoreticalFileName, newFileWithIncreasedIndex.name)
   }

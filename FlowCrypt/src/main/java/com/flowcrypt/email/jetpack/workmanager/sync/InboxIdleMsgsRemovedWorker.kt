@@ -29,8 +29,10 @@ import javax.mail.UIDFolder
  *         Time: 1:50 PM
  *         E-mail: DenBond7@gmail.com
  */
-class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(context,
-    params) {
+class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(
+  context,
+  params
+) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     syncInboxAndRemoveRedundantMsgs(accountEntity, store)
   }
@@ -39,45 +41,47 @@ class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : B
 
   }
 
-  private suspend fun syncInboxAndRemoveRedundantMsgs(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
-    val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
-    val folderFullName = inboxLocalFolder.fullName
+  private suspend fun syncInboxAndRemoveRedundantMsgs(accountEntity: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
+      val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
+      val folderFullName = inboxLocalFolder.fullName
 
-    store.getFolder(folderFullName).use { folder ->
-      val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val oldestCachedUID = roomDatabase.msgDao()
+      store.getFolder(folderFullName).use { folder ->
+        val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+        val oldestCachedUID = roomDatabase.msgDao()
           .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
-      val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
-      val updatedMsgs = EmailUtil.getUpdatedMsgsByUID(
+        val cachedUIDSet =
+          roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
+        val updatedMsgs = EmailUtil.getUpdatedMsgsByUID(
           folder = remoteFolder,
           first = oldestCachedUID.toLong(),
           end = UIDFolder.LASTUID,
           fetchFlags = false
-      )
+        )
 
-      processDeletedMsgs(cachedUIDSet, remoteFolder, updatedMsgs, accountEntity, folderFullName)
+        processDeletedMsgs(cachedUIDSet, remoteFolder, updatedMsgs, accountEntity, folderFullName)
+      }
     }
-  }
 
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".INBOX_IDLE_MESSAGES_REMOVED"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<InboxIdleMsgsRemovedWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<InboxIdleMsgsRemovedWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

@@ -17,8 +17,8 @@ import org.hamcrest.Description
  *         Time: 3:17 PM
  *         E-mail: DenBond7@gmail.com
  */
-class AppBarLayoutBackgroundColorMatcher(val color: Int)
-  : BoundedMatcher<View, AppBarLayout>(AppBarLayout::class.java) {
+class AppBarLayoutBackgroundColorMatcher(val color: Int) :
+  BoundedMatcher<View, AppBarLayout>(AppBarLayout::class.java) {
   public override fun matchesSafely(appBarLayout: AppBarLayout): Boolean {
     return if (appBarLayout.background is ColorDrawable) {
       color == (appBarLayout.background as ColorDrawable).color

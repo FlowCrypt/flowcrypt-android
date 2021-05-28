@@ -22,31 +22,35 @@ import org.pgpainless.util.Passphrase
  *         Time: 4:12 PM
  *         E-mail: DenBond7@gmail.com
  */
-@Entity(tableName = "keys",
-    indices = [
-      Index(
-          name = "fingerprint_account_account_type_in_keys",
-          value = ["fingerprint", "account", "account_type"],
-          unique = true)
-    ],
-    foreignKeys = [
-      ForeignKey(
-          entity = AccountEntity::class,
-          parentColumns = ["email", "account_type"],
-          childColumns = ["account", "account_type"],
-          onDelete = ForeignKey.CASCADE)
-    ]
+@Entity(
+  tableName = "keys",
+  indices = [
+    Index(
+      name = "fingerprint_account_account_type_in_keys",
+      value = ["fingerprint", "account", "account_type"],
+      unique = true
+    )
+  ],
+  foreignKeys = [
+    ForeignKey(
+      entity = AccountEntity::class,
+      parentColumns = ["email", "account_type"],
+      childColumns = ["account", "account_type"],
+      onDelete = ForeignKey.CASCADE
+    )
+  ]
 )
 data class KeyEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
-    @ColumnInfo(name = "fingerprint") val fingerprint: String,
-    val account: String,
-    @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
-    val source: String,
-    @ColumnInfo(name = "public_key") val publicKey: ByteArray,
-    @ColumnInfo(name = "private_key") val privateKey: ByteArray,
-    @ColumnInfo(name = "passphrase", defaultValue = "NULL") val storedPassphrase: String?,
-    @ColumnInfo(name = "passphrase_type", defaultValue = "0") val passphraseType: PassphraseType) {
+  @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
+  @ColumnInfo(name = "fingerprint") val fingerprint: String,
+  val account: String,
+  @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
+  val source: String,
+  @ColumnInfo(name = "public_key") val publicKey: ByteArray,
+  @ColumnInfo(name = "private_key") val privateKey: ByteArray,
+  @ColumnInfo(name = "passphrase", defaultValue = "NULL") val storedPassphrase: String?,
+  @ColumnInfo(name = "passphrase_type", defaultValue = "0") val passphraseType: PassphraseType
+) {
 
   @Ignore
   val privateKeyAsString = String(privateKey)
@@ -125,7 +129,7 @@ data class KeyEntity(
 
       fun findValueById(id: Int): PassphraseType {
         return values().firstOrNull { it.id == id }
-            ?: throw IllegalArgumentException("Unsupported key type")
+          ?: throw IllegalArgumentException("Unsupported key type")
       }
     }
   }

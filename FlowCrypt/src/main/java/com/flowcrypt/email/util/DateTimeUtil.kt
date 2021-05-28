@@ -47,7 +47,8 @@ class DateTimeUtil {
         if (isTheSameDay) {
           DateFormat.getTimeFormat(context).format(calendarOfDate.time)
         } else {
-          val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NO_YEAR or DateUtils.FORMAT_ABBREV_MONTH
+          val flags =
+            DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NO_YEAR or DateUtils.FORMAT_ABBREV_MONTH
           DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
         }
       } else {

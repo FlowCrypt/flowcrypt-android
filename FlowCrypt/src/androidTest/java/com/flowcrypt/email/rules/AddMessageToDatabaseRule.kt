@@ -27,12 +27,17 @@ import javax.mail.UIDFolder
  * Time: 09:48
  * E-mail: DenBond7@gmail.com
  */
-class AddMessageToDatabaseRule(val account: AccountEntity, val localFolder: LocalFolder) : BaseRule() {
+class AddMessageToDatabaseRule(val account: AccountEntity, val localFolder: LocalFolder) :
+  BaseRule() {
   private var message: Message? = null
 
   init {
     try {
-      OpenStoreHelper.openStore(targetContext, account, OpenStoreHelper.getAccountSess(targetContext, account)).use { store ->
+      OpenStoreHelper.openStore(
+        targetContext,
+        account,
+        OpenStoreHelper.getAccountSess(targetContext, account)
+      ).use { store ->
         store.getFolder(localFolder.fullName).use { folder ->
           val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
           val messages = arrayOf(imapFolder.getMessage(imapFolder.messageCount))
@@ -69,11 +74,11 @@ class AddMessageToDatabaseRule(val account: AccountEntity, val localFolder: Loca
   private fun saveMsgToDatabase() {
     message?.let {
       val msgEntity = MessageEntity.genMsgEntity(
-          email = account.email,
-          label = localFolder.fullName,
-          msg = it,
-          uid = 0,
-          isNew = false
+        email = account.email,
+        label = localFolder.fullName,
+        msg = it,
+        uid = 0,
+        isNew = false
       )
 
       FlowCryptRoomDatabase.getDatabase(targetContext).msgDao().insert(msgEntity)

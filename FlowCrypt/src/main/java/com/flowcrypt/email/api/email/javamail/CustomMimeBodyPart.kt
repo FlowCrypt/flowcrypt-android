@@ -15,7 +15,8 @@ import javax.mail.internet.MimeBodyPart
  *         Time: 11:46 AM
  *         E-mail: DenBond7@gmail.com
  */
-class CustomMimeBodyPart(inputStream: InputStream, headers: InternetHeaders) : MimeBodyPart(headers, null) {
+class CustomMimeBodyPart(inputStream: InputStream, headers: InternetHeaders) :
+  MimeBodyPart(headers, null) {
   init {
     contentStream = inputStream
   }

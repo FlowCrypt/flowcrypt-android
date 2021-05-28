@@ -30,12 +30,14 @@ object IMAPStoreManager {
     val applicationContext = context.applicationContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-    val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
-    val activeAccountLiveData: LiveData<AccountEntity?> = pureActiveAccountLiveData.switchMap { accountEntity ->
-      liveData {
-        emit(AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+    val pureActiveAccountLiveData: LiveData<AccountEntity?> =
+      roomDatabase.accountDao().getActiveAccountLD()
+    val activeAccountLiveData: LiveData<AccountEntity?> =
+      pureActiveAccountLiveData.switchMap { accountEntity ->
+        liveData {
+          emit(AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+        }
       }
-    }
 
     activeAccountLiveData.observeForever { activeAccount ->
       GlobalScope.launch(Dispatchers.IO) {

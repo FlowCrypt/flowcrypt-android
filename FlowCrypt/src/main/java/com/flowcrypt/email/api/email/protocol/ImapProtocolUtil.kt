@@ -54,7 +54,8 @@ class ImapProtocolUtil {
      */
     fun getAttPartByPath(part: Part?, currentPath: String = "0/", neededPath: String): BodyPart? {
       if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        val neededParentPath = neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
+        val neededParentPath =
+          neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
         val multiPart = part.content as Multipart
         val partsCount = multiPart.count
 
@@ -69,9 +70,13 @@ class ImapProtocolUtil {
           }
         } else {
           val nextDepth = neededParentPath.replaceFirst(currentPath, "")
-              .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
+            .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
           val bodyPart = multiPart.getBodyPart(nextDepth)
-          return getAttPartByPath(bodyPart, currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR, neededPath)
+          return getAttPartByPath(
+            bodyPart,
+            currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR,
+            neededPath
+          )
         }
         return null
       } else {

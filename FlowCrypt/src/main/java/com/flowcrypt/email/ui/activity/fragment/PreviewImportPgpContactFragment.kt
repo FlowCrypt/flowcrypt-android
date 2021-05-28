@@ -54,7 +54,7 @@ import java.util.*
 //todo-denbond7 Improve this class.
 //Need to migrate to use LiveData and improve performance for the file parsing.
 class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
-    ImportPgpContactsRecyclerViewAdapter.ContactActionsListener {
+  ImportPgpContactsRecyclerViewAdapter.ContactActionsListener {
 
   private var recyclerView: RecyclerView? = null
   private var btnImportAll: TextView? = null
@@ -133,10 +133,12 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     when (loaderId) {
       R.id.loader_id_parse_public_keys -> if (activity != null) {
         requireActivity().setResult(Activity.RESULT_CANCELED)
-        Toast.makeText(context, if (e?.message.isNullOrEmpty()) {
-          e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
-        } else
-          e?.message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+          context, if (e?.message.isNullOrEmpty()) {
+            e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
+          } else
+            e?.message, Toast.LENGTH_SHORT
+        ).show()
         requireActivity().finish()
       }
 
@@ -176,15 +178,17 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         }
       } else {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        Toast.makeText(context, getString(R.string.could_not_import_data), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.could_not_import_data), Toast.LENGTH_SHORT)
+          .show()
       }
     }
   }
 
-  private class PublicKeysParserAsyncTask(fragment: PreviewImportPgpContactFragment,
-                                          private val publicKeysString: String,
-                                          private val publicKeysFileUri: Uri?)
-    : BaseAsyncTask<Void, Int, LoaderResult>(fragment) {
+  private class PublicKeysParserAsyncTask(
+    fragment: PreviewImportPgpContactFragment,
+    private val publicKeysString: String,
+    private val publicKeysFileUri: Uri?
+  ) : BaseAsyncTask<Void, Int, LoaderResult>(fragment) {
     override val progressTitleResourcesId: Int
       get() = R.string.parsing_public_keys
 
@@ -230,12 +234,19 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
           LoaderResult(parsePublicKeysInfo(details), null)
         } else {
           if (weakRef.get() != null) {
-            LoaderResult(null, IllegalArgumentException(
-                weakRef.get()?.requireContext()?.getString(R.string.clipboard_has_wrong_structure,
-                    weakRef.get()?.requireContext()?.getString(R.string.public_))))
+            LoaderResult(
+              null, IllegalArgumentException(
+                weakRef.get()?.requireContext()?.getString(
+                  R.string.clipboard_has_wrong_structure,
+                  weakRef.get()?.requireContext()?.getString(R.string.public_)
+                )
+              )
+            )
           } else {
-            LoaderResult(null,
-                IllegalArgumentException("The content of your clipboard doesn't look like a valid PGP pubkey."))
+            LoaderResult(
+              null,
+              IllegalArgumentException("The content of your clipboard doesn't look like a valid PGP pubkey.")
+            )
           }
         }
 
@@ -275,7 +286,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       return publicKeyInfoList
     }
 
-    private fun getPublicKeyInfo(pgpKeyDetails: PgpKeyDetails, emails: MutableSet<String>): PublicKeyInfo? {
+    private fun getPublicKeyInfo(
+      pgpKeyDetails: PgpKeyDetails,
+      emails: MutableSet<String>
+    ): PublicKeyInfo? {
       val fingerprint = pgpKeyDetails.fingerprint
       var keyOwner: String? = pgpKeyDetails.primaryPgpContact.email
 
@@ -290,7 +304,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
         if (weakRef.get() != null) {
           val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-              .contactsDao().getContactByEmail(keyOwner)?.toPgpContact()
+            .contactsDao().getContactByEmail(keyOwner)?.toPgpContact()
           return PublicKeyInfo(fingerprint, keyOwner, contact, pgpKeyDetails.publicKey)
         }
       }
@@ -299,8 +313,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
   }
 
   private class SaveAllContactsAsyncTask(
-      fragment: PreviewImportPgpContactFragment,
-      private val publicKeyInfoList: List<PublicKeyInfo>) : BaseAsyncTask<Void, Int, Boolean>(fragment) {
+    fragment: PreviewImportPgpContactFragment,
+    private val publicKeyInfoList: List<PublicKeyInfo>
+  ) : BaseAsyncTask<Void, Int, Boolean>(fragment) {
 
     override val progressTitleResourcesId: Int
       get() = R.string.importing_public_keys
@@ -310,8 +325,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       val updateCandidates = ArrayList<PgpContact>()
 
       for (publicKeyInfo in publicKeyInfoList) {
-        val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey,
-            true, null, publicKeyInfo.fingerprint, 0)
+        val pgpContact = PgpContact(
+          publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey,
+          true, null, publicKeyInfo.fingerprint, 0
+        )
 
         if (publicKeyInfo.hasPgpContact()) {
           if (publicKeyInfo.isUpdateEnabled) {
@@ -331,11 +348,13 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
           var i = 0
           while (i < newCandidates.size) {
             val start = i
-            val end = if (newCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else newCandidates.size
+            val end =
+              if (newCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else newCandidates.size
 
             if (weakRef.get() != null) {
               FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-                  .contactsDao().insert(newCandidates.subList(start, end).map { it.toContactEntity() })
+                .contactsDao()
+                .insert(newCandidates.subList(start, end).map { it.toContactEntity() })
             }
             i = end
 
@@ -353,19 +372,26 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         var i = 0
         while (i < updateCandidates.size) {
           val start = i
-          val end = if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
+          val end =
+            if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
 
           if (weakRef.get() != null) {
             val contacts = mutableListOf<ContactEntity>()
             val list = updateCandidates.subList(start, end + 1)
 
             list.forEach { pgpContact ->
-              val foundContactEntity = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+              val foundContactEntity =
+                FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
                   .contactsDao().getContactByEmail(pgpContact.email)
-              foundContactEntity?.let { entity -> contacts.add(pgpContact.toContactEntity().copy(id = entity.id)) }
+              foundContactEntity?.let { entity ->
+                contacts.add(
+                  pgpContact.toContactEntity().copy(id = entity.id)
+                )
+              }
             }
 
-            FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!).contactsDao().update(contacts)
+            FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!).contactsDao()
+              .update(contacts)
           }
           i = end + 1
 
@@ -408,10 +434,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     }
   }
 
-  private abstract class BaseAsyncTask<Params, Progress, Result>(previewImportPgpContactFragment: PreviewImportPgpContactFragment)
-    : AsyncTask<Params, Progress, Result>() {
+  private abstract class BaseAsyncTask<Params, Progress, Result>(previewImportPgpContactFragment: PreviewImportPgpContactFragment) :
+    AsyncTask<Params, Progress, Result>() {
     val weakRef: WeakReference<PreviewImportPgpContactFragment> =
-        WeakReference(previewImportPgpContactFragment)
+      WeakReference(previewImportPgpContactFragment)
 
     abstract val progressTitleResourcesId: Int
 
@@ -422,8 +448,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       if (weakRef.get() != null) {
         weakRef.get()?.progressBar!!.isIndeterminate = true
         weakRef.get()?.textViewProgressTitle!!.setText(progressTitleResourcesId)
-        UIUtil.exchangeViewVisibility(true,
-            weakRef.get()?.layoutProgress!!, weakRef.get()?.layoutContentView!!)
+        UIUtil.exchangeViewVisibility(
+          true,
+          weakRef.get()?.layoutProgress!!, weakRef.get()?.layoutContentView!!
+        )
       }
     }
 
@@ -441,12 +469,16 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
   companion object {
     private val KEY_EXTRA_PUBLIC_KEY_STRING =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING",
-            PreviewImportPgpContactFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_PUBLIC_KEY_STRING",
+        PreviewImportPgpContactFragment::class.java
+      )
 
     private val KEY_EXTRA_PUBLIC_KEYS_FILE_URI =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
-            PreviewImportPgpContactFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
+        PreviewImportPgpContactFragment::class.java
+      )
 
     fun newInstance(stringExtra: String?, fileUri: Parcelable?): PreviewImportPgpContactFragment {
       val args = Bundle()

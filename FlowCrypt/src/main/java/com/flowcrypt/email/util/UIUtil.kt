@@ -36,7 +36,7 @@ class UIUtil {
      */
     fun showInfoSnackbar(view: View, msgText: String): Snackbar {
       val snackbar = Snackbar.make(view, msgText, Snackbar.LENGTH_INDEFINITE)
-          .setAction(android.R.string.ok) { }
+        .setAction(android.R.string.ok) { }
       snackbar.show()
 
       return snackbar
@@ -52,8 +52,10 @@ class UIUtil {
      * @param duration        How long to display the message. Either [Snackbar.LENGTH_SHORT] or [Snackbar.LENGTH_LONG]
      */
     @JvmOverloads
-    fun showSnackbar(view: View, msgText: String, buttonName: String,
-                     onClickListener: View.OnClickListener, duration: Int = Snackbar.LENGTH_INDEFINITE): Snackbar {
+    fun showSnackbar(
+      view: View, msgText: String, buttonName: String,
+      onClickListener: View.OnClickListener, duration: Int = Snackbar.LENGTH_INDEFINITE
+    ): Snackbar {
       val snackbar = Snackbar.make(view, msgText, duration).setAction(buttonName, onClickListener)
       snackbar.show()
 
@@ -130,8 +132,10 @@ class UIUtil {
       val view = activity.window.decorView
       val width = view.width
       val height = view.height
-      val bitmap = Bitmap.createBitmap(if (width > 0) width else 640,
-          if (height > 0) height else 480, Bitmap.Config.RGB_565)
+      val bitmap = Bitmap.createBitmap(
+        if (width > 0) width else 640,
+        if (height > 0) height else 480, Bitmap.Config.RGB_565
+      )
       val canvas = Canvas(bitmap)
       view.draw(canvas)
       return getCompressedByteArrayOfBitmap(bitmap, 50)

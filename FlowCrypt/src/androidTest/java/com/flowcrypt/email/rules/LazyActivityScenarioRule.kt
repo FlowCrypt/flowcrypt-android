@@ -67,10 +67,16 @@ class LazyActivityScenarioRule<A : Activity> : ExternalResource {
   fun getNonNullScenario(): ActivityScenario<A> = checkNotNull(scenario)
 }
 
-inline fun <reified A : Activity> lazyActivityScenarioRule(launchActivity: Boolean = true, noinline intentSupplier: () -> Intent): LazyActivityScenarioRule<A> =
-    LazyActivityScenarioRule(launchActivity, intentSupplier)
+inline fun <reified A : Activity> lazyActivityScenarioRule(
+  launchActivity: Boolean = true,
+  noinline intentSupplier: () -> Intent
+): LazyActivityScenarioRule<A> =
+  LazyActivityScenarioRule(launchActivity, intentSupplier)
 
-inline fun <reified A : Activity> lazyActivityScenarioRule(launchActivity: Boolean = true, intent: Intent? = null): LazyActivityScenarioRule<A> = if (intent == null) {
+inline fun <reified A : Activity> lazyActivityScenarioRule(
+  launchActivity: Boolean = true,
+  intent: Intent? = null
+): LazyActivityScenarioRule<A> = if (intent == null) {
   LazyActivityScenarioRule(launchActivity, A::class.java)
 } else {
   LazyActivityScenarioRule(launchActivity, intent)

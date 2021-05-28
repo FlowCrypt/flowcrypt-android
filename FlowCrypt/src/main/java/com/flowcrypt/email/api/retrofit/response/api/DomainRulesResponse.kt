@@ -21,13 +21,16 @@ import com.google.gson.annotations.SerializedName
  *         Time: 11:25 AM
  *         E-mail: DenBond7@gmail.com
  */
-data class DomainRulesResponse constructor(@SerializedName("error")
-                                      @Expose override val apiError: ApiError?,
-                                           @SerializedName("domain_org_rules")
-                                      @Expose val domainRules: DomainRules?) : ApiResponse {
+data class DomainRulesResponse constructor(
+  @SerializedName("error")
+  @Expose override val apiError: ApiError?,
+  @SerializedName("domain_org_rules")
+  @Expose val domainRules: DomainRules?
+) : ApiResponse {
   constructor(parcel: Parcel) : this(
-      parcel.readParcelable(ApiError::class.java.classLoader),
-      parcel.readParcelable<DomainRules>(DomainRules::class.java.classLoader))
+    parcel.readParcelable(ApiError::class.java.classLoader),
+    parcel.readParcelable<DomainRules>(DomainRules::class.java.classLoader)
+  )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     with(parcel) {

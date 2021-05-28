@@ -45,7 +45,8 @@ class DrawableMatcher(private val expectedId: Int) : TypeSafeMatcher<View>(View:
       ANY -> return target.drawable != null
       else -> {
         val resources = target.getContext().resources
-        val expectedDrawable = resources.getDrawable(expectedId, target.getContext().theme) ?: return false
+        val expectedDrawable =
+          resources.getDrawable(expectedId, target.getContext().theme) ?: return false
         resourceName = resources.getResourceEntryName(expectedId)
 
         val bitmap = getBitmap(target.drawable)
@@ -56,7 +57,11 @@ class DrawableMatcher(private val expectedId: Int) : TypeSafeMatcher<View>(View:
   }
 
   private fun getBitmap(drawable: Drawable): Bitmap {
-    val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+    val bitmap = Bitmap.createBitmap(
+      drawable.intrinsicWidth,
+      drawable.intrinsicHeight,
+      Bitmap.Config.ARGB_8888
+    )
     val canvas = Canvas(bitmap)
     drawable.setBounds(0, 0, canvas.width, canvas.height)
     drawable.draw(canvas)

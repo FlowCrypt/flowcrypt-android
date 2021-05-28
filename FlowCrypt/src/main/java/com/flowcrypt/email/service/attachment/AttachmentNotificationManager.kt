@@ -43,10 +43,10 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
   fun attachmentAddedToLoadQueue(context: Context, attInfo: AttachmentInfo) {
     val builder = genDefBuilder(context, attInfo)
     builder.setProgress(0, 0, true)
-        .addAction(genCancelDownloadAction(context, attInfo))
-        .setOnlyAlertOnce(true)
-        .setGroup(GROUP_NAME_ATTACHMENTS)
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
+      .addAction(genCancelDownloadAction(context, attInfo))
+      .setOnlyAlertOnce(true)
+      .setGroup(GROUP_NAME_ATTACHMENTS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
     prepareAndShowNotificationsGroup(context, attInfo, true)
 
@@ -63,17 +63,22 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param progress              The attachment loading progress in percentage.
    * @param timeLeftInMillisecond The time left in millisecond (approximately).
    */
-  fun updateLoadingProgress(context: Context, attInfo: AttachmentInfo, progress: Int, timeLeftInMillisecond: Long) {
+  fun updateLoadingProgress(
+    context: Context,
+    attInfo: AttachmentInfo,
+    progress: Int,
+    timeLeftInMillisecond: Long
+  ) {
     val builder = genDefBuilder(context, attInfo)
 
     builder.setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, timeLeftInMillisecond == 0L)
-        .addAction(genCancelDownloadAction(context, attInfo))
-        .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-        .setSmallIcon(android.R.drawable.stat_sys_download)
-        .setContentText(DateUtils.formatElapsedTime(timeLeftInMillisecond / DateUtils.SECOND_IN_MILLIS))
-        .setOnlyAlertOnce(true)
-        .setGroup(GROUP_NAME_ATTACHMENTS)
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
+      .addAction(genCancelDownloadAction(context, attInfo))
+      .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+      .setSmallIcon(android.R.drawable.stat_sys_download)
+      .setContentText(DateUtils.formatElapsedTime(timeLeftInMillisecond / DateUtils.SECOND_IN_MILLIS))
+      .setOnlyAlertOnce(true)
+      .setGroup(GROUP_NAME_ATTACHMENTS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, true)
@@ -97,14 +102,14 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     val builder = genDefBuilder(context, attInfo)
 
     builder.setProgress(0, 0, false)
-        .setAutoCancel(true)
-        .setOngoing(false)
-        .setCategory(NotificationCompat.CATEGORY_STATUS)
-        .setSmallIcon(android.R.drawable.stat_sys_download_done)
-        .setContentText(context.getString(R.string.download_complete))
-        .setContentIntent(pendingIntent)
-        .setGroup(GROUP_NAME_ATTACHMENTS)
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+      .setAutoCancel(true)
+      .setOngoing(false)
+      .setCategory(NotificationCompat.CATEGORY_STATUS)
+      .setSmallIcon(android.R.drawable.stat_sys_download_done)
+      .setContentText(context.getString(R.string.download_complete))
+      .setContentIntent(pendingIntent)
+      .setGroup(GROUP_NAME_ATTACHMENTS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
 
@@ -123,21 +128,23 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     val builder = genDefBuilder(context, attInfo)
 
     val contentText = if (TextUtils.isEmpty(e.message))
-      context.getString(R.string
-          .error_occurred_please_try_again)
+      context.getString(
+        R.string
+          .error_occurred_please_try_again
+      )
     else
       e.message
 
     builder.setProgress(0, 0, false)
-        .setAutoCancel(true)
-        .setOngoing(false)
-        .addAction(genCancelDownloadAction(context, attInfo))
-        .addAction(genRetryDownloadingAction(context, attInfo))
-        .setCategory(NotificationCompat.CATEGORY_SERVICE)
-        .setSmallIcon(android.R.drawable.stat_sys_download_done)
-        .setContentText(contentText)
-        .setGroup(GROUP_NAME_ATTACHMENTS)
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+      .setAutoCancel(true)
+      .setOngoing(false)
+      .addAction(genCancelDownloadAction(context, attInfo))
+      .addAction(genRetryDownloadingAction(context, attInfo))
+      .setCategory(NotificationCompat.CATEGORY_SERVICE)
+      .setSmallIcon(android.R.drawable.stat_sys_download_done)
+      .setContentText(contentText)
+      .setGroup(GROUP_NAME_ATTACHMENTS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, false)
@@ -172,13 +179,17 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param context Interface to global information about an application environment.
    * @return The created [NotificationCompat.Action].
    */
-  private fun genCancelDownloadAction(context: Context, attInfo: AttachmentInfo): NotificationCompat.Action {
+  private fun genCancelDownloadAction(
+    context: Context,
+    attInfo: AttachmentInfo
+  ): NotificationCompat.Action {
     val intent = Intent(context, AttachmentDownloadManagerService::class.java)
     intent.action = AttachmentDownloadManagerService.ACTION_CANCEL_DOWNLOAD_ATTACHMENT
     intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attInfo)
 
     val pendingIntent = PendingIntent.getService(context, Random().nextInt(), intent, 0)
-    return NotificationCompat.Action.Builder(0, context.getString(R.string.cancel), pendingIntent).build()
+    return NotificationCompat.Action.Builder(0, context.getString(R.string.cancel), pendingIntent)
+      .build()
   }
 
   /**
@@ -188,13 +199,17 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param attInfo [AttachmentInfo] object which contains a detail information about an attachment.
    * @return The created [NotificationCompat.Action].
    */
-  private fun genRetryDownloadingAction(context: Context, attInfo: AttachmentInfo): NotificationCompat.Action {
+  private fun genRetryDownloadingAction(
+    context: Context,
+    attInfo: AttachmentInfo
+  ): NotificationCompat.Action {
     val intent = Intent(context, AttachmentDownloadManagerService::class.java)
     intent.action = AttachmentDownloadManagerService.ACTION_RETRY_DOWNLOAD_ATTACHMENT
     intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attInfo)
 
     val pendingIntent = PendingIntent.getService(context, Random().nextInt(), intent, 0)
-    return NotificationCompat.Action.Builder(0, context.getString(R.string.retry), pendingIntent).build()
+    return NotificationCompat.Action.Builder(0, context.getString(R.string.retry), pendingIntent)
+      .build()
   }
 
   /**
@@ -205,15 +220,17 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @return Generated [NotificationCompat.Builder].
    */
   private fun genDefBuilder(context: Context, attInfo: AttachmentInfo): NotificationCompat.Builder {
-    return NotificationCompat.Builder(context,
-        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
-        .setAutoCancel(false)
-        .setOngoing(true)
-        .setSmallIcon(android.R.drawable.stat_sys_download)
-        .setContentTitle(prepareContentTitle(attInfo))
-        .setContentText(context.getString(R.string.waiting_to_load))
-        .setSubText(attInfo.email)
-        .setDefaults(Notification.DEFAULT_ALL)
+    return NotificationCompat.Builder(
+      context,
+      NotificationChannelManager.CHANNEL_ID_ATTACHMENTS
+    )
+      .setAutoCancel(false)
+      .setOngoing(true)
+      .setSmallIcon(android.R.drawable.stat_sys_download)
+      .setContentTitle(prepareContentTitle(attInfo))
+      .setContentText(context.getString(R.string.waiting_to_load))
+      .setSubText(attInfo.email)
+      .setDefaults(Notification.DEFAULT_ALL)
   }
 
   /**
@@ -223,7 +240,11 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param attInfo           [AttachmentInfo] object which contains a detail information about an attachment.
    * @param isProgressEnabled true if need to use the progress icon as default, otherwise false.
    */
-  private fun prepareAndShowNotificationsGroup(context: Context, attInfo: AttachmentInfo, isProgressEnabled: Boolean) {
+  private fun prepareAndShowNotificationsGroup(
+    context: Context,
+    attInfo: AttachmentInfo,
+    isProgressEnabled: Boolean
+  ) {
     var groupResourceId = if (isProgressEnabled)
       android.R.drawable.stat_sys_download
     else
@@ -233,12 +254,14 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
 
     for (stBarNotification in manager.activeNotifications) {
       if (!TextUtils.isEmpty(stBarNotification.tag) && stBarNotification.tag != attInfo.id
-          && stBarNotification.id != attInfo.uid.toInt()) {
+        && stBarNotification.id != attInfo.uid.toInt()
+      ) {
         val notification = stBarNotification.notification
         if (GROUP_NAME_ATTACHMENTS == notification.group) {
           val extras = notification.extras
           if (extras != null && extras.getInt(Notification.EXTRA_PROGRESS_MAX) == MAX_FILE_SIZE_IN_PERCENTAGE
-              && extras.getInt(Notification.EXTRA_PROGRESS) > 0) {
+            && extras.getInt(Notification.EXTRA_PROGRESS) > 0
+          ) {
             groupResourceId = android.R.drawable.stat_sys_download
             break
           }
@@ -246,14 +269,16 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       }
     }
 
-    val groupBuilder = NotificationCompat.Builder(context,
-        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
-        .setSmallIcon(groupResourceId)
-        .setGroup(GROUP_NAME_ATTACHMENTS)
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
-        .setDefaults(Notification.DEFAULT_ALL)
-        .setAutoCancel(true)
-        .setGroupSummary(true)
+    val groupBuilder = NotificationCompat.Builder(
+      context,
+      NotificationChannelManager.CHANNEL_ID_ATTACHMENTS
+    )
+      .setSmallIcon(groupResourceId)
+      .setGroup(GROUP_NAME_ATTACHMENTS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+      .setDefaults(Notification.DEFAULT_ALL)
+      .setAutoCancel(true)
+      .setGroupSummary(true)
     notificationManagerCompat.notify(groupName, groupId, groupBuilder.build())
   }
 

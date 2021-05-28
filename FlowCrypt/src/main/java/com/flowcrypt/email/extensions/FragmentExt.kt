@@ -49,20 +49,22 @@ fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T
 }
 
 fun <T> androidx.fragment.app.Fragment.getNavigationResult(
-    key: String,
-    onResult: (result: T) -> Unit) {
+  key: String,
+  onResult: (result: T) -> Unit
+) {
   currentOnResultSavedStateHandle
-      ?.getLiveData<T>(key)
-      ?.observe(viewLifecycleOwner) {
-        currentOnResultSavedStateHandle?.remove<T>(key)
-        onResult.invoke(it)
-      }
+    ?.getLiveData<T>(key)
+    ?.observe(viewLifecycleOwner) {
+      currentOnResultSavedStateHandle?.remove<T>(key)
+      onResult.invoke(it)
+    }
 }
 
 fun <T> androidx.fragment.app.Fragment.getNavigationResultForDialog(
-    @IdRes destinationId: Int,
-    key: String,
-    onResult: (result: T) -> Unit) {
+  @IdRes destinationId: Int,
+  key: String,
+  onResult: (result: T) -> Unit
+) {
   val navBackStackEntry = navController?.getBackStackEntry(destinationId) ?: return
 
   val observer = LifecycleEventObserver { _, event ->
@@ -91,46 +93,46 @@ fun androidx.fragment.app.Fragment.showDialogFragment(dialog: DialogFragment) {
 }
 
 fun androidx.fragment.app.Fragment.showInfoDialog(
-    dialogTitle: String? = null,
-    dialogMsg: String? = null,
-    buttonTitle: String? = null,
-    isPopBackStack: Boolean = false,
-    isCancelable: Boolean = false,
-    hasHtml: Boolean = false,
-    useLinkify: Boolean = false,
-    requestCode: Int = 10000
+  dialogTitle: String? = null,
+  dialogMsg: String? = null,
+  buttonTitle: String? = null,
+  isPopBackStack: Boolean = false,
+  isCancelable: Boolean = false,
+  hasHtml: Boolean = false,
+  useLinkify: Boolean = false,
+  requestCode: Int = 10000
 ) {
   val fragment = InfoDialogFragment.newInstance(
-      dialogTitle = dialogTitle,
-      dialogMsg = dialogMsg,
-      buttonTitle = buttonTitle,
-      isPopBackStack = isPopBackStack,
-      isCancelable = isCancelable,
-      hasHtml = hasHtml,
-      useLinkify = useLinkify
+    dialogTitle = dialogTitle,
+    dialogMsg = dialogMsg,
+    buttonTitle = buttonTitle,
+    isPopBackStack = isPopBackStack,
+    isCancelable = isCancelable,
+    hasHtml = hasHtml,
+    useLinkify = useLinkify
   )
   fragment.setTargetFragment(this, requestCode)
   showDialogFragment(fragment)
 }
 
 fun androidx.fragment.app.Fragment.showTwoWayDialog(
-    dialogTitle: String? = null,
-    dialogMsg: String? = null,
-    positiveButtonTitle: String? = null,
-    negativeButtonTitle: String? = null,
-    isCancelable: Boolean = false,
-    requestCode: Int = 10000,
-    hasHtml: Boolean = false,
-    useLinkify: Boolean = false
+  dialogTitle: String? = null,
+  dialogMsg: String? = null,
+  positiveButtonTitle: String? = null,
+  negativeButtonTitle: String? = null,
+  isCancelable: Boolean = false,
+  requestCode: Int = 10000,
+  hasHtml: Boolean = false,
+  useLinkify: Boolean = false
 ) {
   val fragment = TwoWayDialogFragment.newInstance(
-      dialogTitle = dialogTitle,
-      dialogMsg = dialogMsg,
-      positiveButtonTitle = positiveButtonTitle,
-      negativeButtonTitle = negativeButtonTitle,
-      isCancelable = isCancelable,
-      hasHtml = hasHtml,
-      useLinkify = useLinkify
+    dialogTitle = dialogTitle,
+    dialogMsg = dialogMsg,
+    positiveButtonTitle = positiveButtonTitle,
+    negativeButtonTitle = negativeButtonTitle,
+    isCancelable = isCancelable,
+    hasHtml = hasHtml,
+    useLinkify = useLinkify
   )
   fragment.setTargetFragment(this, requestCode)
   showDialogFragment(fragment)

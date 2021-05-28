@@ -29,11 +29,13 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 
-data class MessageReplyResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
-                                            @Expose val isSent: Boolean) : ApiResponse {
+data class MessageReplyResponse constructor(
+  @SerializedName("error") @Expose override val apiError: ApiError?,
+  @Expose val isSent: Boolean
+) : ApiResponse {
   constructor(source: Parcel) : this(
-      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-      1 == source.readInt()
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+    1 == source.readInt()
   )
 
   override fun describeContents(): Int {
@@ -41,16 +43,19 @@ data class MessageReplyResponse constructor(@SerializedName("error") @Expose ove
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeParcelable(apiError, 0)
-        writeInt((if (isSent) 1 else 0))
-      }
+    with(dest) {
+      writeParcelable(apiError, 0)
+      writeInt((if (isSent) 1 else 0))
+    }
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<MessageReplyResponse> = object : Parcelable.Creator<MessageReplyResponse> {
-      override fun createFromParcel(source: Parcel): MessageReplyResponse = MessageReplyResponse(source)
-      override fun newArray(size: Int): Array<MessageReplyResponse?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<MessageReplyResponse> =
+      object : Parcelable.Creator<MessageReplyResponse> {
+        override fun createFromParcel(source: Parcel): MessageReplyResponse =
+          MessageReplyResponse(source)
+
+        override fun newArray(size: Int): Array<MessageReplyResponse?> = arrayOfNulls(size)
+      }
   }
 }

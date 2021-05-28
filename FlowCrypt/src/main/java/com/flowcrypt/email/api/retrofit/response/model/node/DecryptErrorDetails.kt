@@ -17,11 +17,13 @@ import com.google.gson.annotations.SerializedName
  * Time: 3:30 PM
  * E-mail: DenBond7@gmail.com
  */
-data class DecryptErrorDetails(@Expose val type: Type?,
-                               @Expose val message: String?) : Parcelable {
+data class DecryptErrorDetails(
+  @Expose val type: Type?,
+  @Expose val message: String?
+) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readParcelable<Type>(Type::class.java.classLoader),
-      source.readString()
+    source.readParcelable<Type>(Type::class.java.classLoader),
+    source.readString()
   )
 
   override fun describeContents(): Int {
@@ -35,10 +37,13 @@ data class DecryptErrorDetails(@Expose val type: Type?,
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<DecryptErrorDetails> = object : Parcelable.Creator<DecryptErrorDetails> {
-      override fun createFromParcel(source: Parcel): DecryptErrorDetails = DecryptErrorDetails(source)
-      override fun newArray(size: Int): Array<DecryptErrorDetails?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<DecryptErrorDetails> =
+      object : Parcelable.Creator<DecryptErrorDetails> {
+        override fun createFromParcel(source: Parcel): DecryptErrorDetails =
+          DecryptErrorDetails(source)
+
+        override fun newArray(size: Int): Array<DecryptErrorDetails?> = arrayOfNulls(size)
+      }
   }
 
   enum class Type : Parcelable {

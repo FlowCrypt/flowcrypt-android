@@ -101,7 +101,10 @@ class GeneralUtil {
      */
     fun readFileFromUriToString(context: Context, uri: Uri): String? {
       val inputStream = context.contentResolver.openInputStream(uri)
-      return if (inputStream != null) IOUtils.toString(inputStream, StandardCharsets.UTF_8) else null
+      return if (inputStream != null) IOUtils.toString(
+        inputStream,
+        StandardCharsets.UTF_8
+      ) else null
     }
 
     /**
@@ -128,8 +131,10 @@ class GeneralUtil {
           val path = it.path ?: return@let
           fileSize = File(path).length()
         } else {
-          val returnCursor = context.contentResolver.query(fileUri,
-              arrayOf(OpenableColumns.SIZE), null, null, null)
+          val returnCursor = context.contentResolver.query(
+            fileUri,
+            arrayOf(OpenableColumns.SIZE), null, null, null
+          )
 
           if (returnCursor != null) {
             if (returnCursor.moveToFirst()) {
@@ -160,8 +165,10 @@ class GeneralUtil {
           val path = it.path ?: return@let
           fileName = File(path).name
         } else {
-          val returnCursor = context.contentResolver.query(fileUri,
-              arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+          val returnCursor = context.contentResolver.query(
+            fileUri,
+            arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null
+          )
 
           if (returnCursor != null) {
             if (returnCursor.moveToFirst()) {
@@ -213,7 +220,11 @@ class GeneralUtil {
      * @param groupSize      Group size
      * @return The formatted string.
      */
-    fun doSectionsInText(template: String? = " ", originalString: String?, groupSize: Int): String? {
+    fun doSectionsInText(
+      template: String? = " ",
+      originalString: String?,
+      groupSize: Int
+    ): String? {
 
       if (template == null || originalString == null || groupSize <= 0 || originalString.length <= groupSize) {
         return originalString
@@ -237,7 +248,7 @@ class GeneralUtil {
      */
     fun isEmailValid(email: CharSequence?): Boolean {
       return email?.isNotEmpty() == true && android.util.Patterns.EMAIL_ADDRESS.matcher(email)
-          .matches()
+        .matches()
     }
 
     /**
@@ -253,8 +264,9 @@ class GeneralUtil {
         contentResolver.getType(uri) ?: Constants.MIME_TYPE_BINARY_DATA
       } else {
         val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
-        MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
-            ?: Constants.MIME_TYPE_BINARY_DATA
+        MimeTypeMap.getSingleton()
+          .getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
+          ?: Constants.MIME_TYPE_BINARY_DATA
       }
     }
 
@@ -286,13 +298,17 @@ class GeneralUtil {
      * @return The generated order number.
      */
     fun genAttOrderId(context: Context): Int {
-      var lastId = SharedPreferencesHelper.getInt(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_ATT_ORDER_ID, 0)
+      var lastId = SharedPreferencesHelper.getInt(
+        PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREF_KEY_LAST_ATT_ORDER_ID, 0
+      )
 
       lastId++
 
-      SharedPreferencesHelper.setInt(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_ATT_ORDER_ID, lastId)
+      SharedPreferencesHelper.setInt(
+        PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREF_KEY_LAST_ATT_ORDER_ID, lastId
+      )
 
       return lastId
     }
@@ -332,7 +348,11 @@ class GeneralUtil {
       val bitmap: Bitmap = if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
         Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
       } else {
-        Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        Bitmap.createBitmap(
+          drawable.intrinsicWidth,
+          drawable.intrinsicHeight,
+          Bitmap.Config.ARGB_8888
+        )
       }
 
       val canvas = Canvas(bitmap)

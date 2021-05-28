@@ -26,12 +26,12 @@ import com.flowcrypt.email.security.pgp.PgpKey
 class ParseKeysViewModel(application: Application) : AccountViewModel(application) {
   private val keysSourceLiveData = MutableLiveData<ByteArray>()
   val parseKeysLiveData: LiveData<Result<List<PgpKeyDetails>>> =
-      Transformations.switchMap(keysSourceLiveData) { source ->
-        liveData {
-          emit(Result.loading())
-          emit(Result.success(PgpKey.parseKeys(source).toPgpKeyDetailsList()))
-        }
+    Transformations.switchMap(keysSourceLiveData) { source ->
+      liveData {
+        emit(Result.loading())
+        emit(Result.success(PgpKey.parseKeys(source).toPgpKeyDetailsList()))
       }
+    }
 
   fun fetchKeys(source: ByteArray?) {
     keysSourceLiveData.value = source ?: byteArrayOf()

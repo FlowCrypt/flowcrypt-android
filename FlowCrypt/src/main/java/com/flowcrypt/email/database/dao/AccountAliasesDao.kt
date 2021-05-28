@@ -32,7 +32,10 @@ interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
   suspend fun deleteByEmailSuspend(email: String, accountType: String): Int
 
   @Transaction
-  suspend fun updateAliases(accountEntity: AccountEntity?, newAliases: Collection<AccountAliasesEntity>) {
+  suspend fun updateAliases(
+    accountEntity: AccountEntity?,
+    newAliases: Collection<AccountAliasesEntity>
+  ) {
     accountEntity?.let {
       deleteByEmailSuspend(it.email, it.accountType ?: "")
       insertWithReplaceSuspend(newAliases)

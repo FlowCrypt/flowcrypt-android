@@ -28,7 +28,8 @@ import javax.mail.Store
  *         Time: 6:08 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
+abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
+  BaseWorker(context, params) {
   override val useIndependentConnection: Boolean = false
 
   abstract suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store)
@@ -43,24 +44,25 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
       val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
       activeAccountEntity?.let {
         if (useIndependentConnection) {
-          AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(it)?.let { accountWithDecryptedInfo ->
-            if (accountWithDecryptedInfo.useAPI) {
-              when (accountWithDecryptedInfo.accountType) {
-                AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-                  runAPIAction(accountWithDecryptedInfo)
-                }
+          AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(it)
+            ?.let { accountWithDecryptedInfo ->
+              if (accountWithDecryptedInfo.useAPI) {
+                when (accountWithDecryptedInfo.accountType) {
+                  AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+                    runAPIAction(accountWithDecryptedInfo)
+                  }
 
-                else -> throw ManualHandledException("Unsupported provider")
-              }
-            } else {
-              val connection = IMAPStoreConnection(applicationContext, accountWithDecryptedInfo)
-              connection.store.use { store ->
-                connection.executeIMAPAction {
-                  runIMAPAction(activeAccountEntity, store)
+                  else -> throw ManualHandledException("Unsupported provider")
+                }
+              } else {
+                val connection = IMAPStoreConnection(applicationContext, accountWithDecryptedInfo)
+                connection.store.use { store ->
+                  connection.executeIMAPAction {
+                    runIMAPAction(activeAccountEntity, store)
+                  }
                 }
               }
             }
-          }
         } else {
           if (activeAccountEntity.useAPI) {
             runAPIAction(activeAccountEntity)
@@ -92,13 +94,14 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : Base
   companion object {
     const val TAG_SYNC = BuildConfig.APPLICATION_ID + ".SYNC"
 
-    suspend fun <T> executeGMailAPICall(context: Context, action: suspend () -> T): T = withContext(Dispatchers.IO) {
-      val result = GmailApiHelper.executeWithResult {
-        com.flowcrypt.email.api.retrofit.response.base.Result.success(action.invoke())
-      }
+    suspend fun <T> executeGMailAPICall(context: Context, action: suspend () -> T): T =
+      withContext(Dispatchers.IO) {
+        val result = GmailApiHelper.executeWithResult {
+          com.flowcrypt.email.api.retrofit.response.base.Result.success(action.invoke())
+        }
 
-      result.data ?: throw result.exception
+        result.data ?: throw result.exception
           ?: IllegalStateException(context.getString(R.string.unknown_error))
-    }
+      }
   }
 }

@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
  * E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 this class is redundant. We can refactor code and delete this
-class PostHelpFeedbackRequest @JvmOverloads constructor(override val apiName: ApiName = ApiName.POST_HELP_FEEDBACK,
-                                                        override val requestModel: PostHelpFeedbackModel)
-  : BaseRequest<PostHelpFeedbackModel>
+class PostHelpFeedbackRequest @JvmOverloads constructor(
+  override val apiName: ApiName = ApiName.POST_HELP_FEEDBACK,
+  override val requestModel: PostHelpFeedbackModel
+) : BaseRequest<PostHelpFeedbackModel>

@@ -36,45 +36,57 @@ class PgpEncryptTest {
     val sourceBytes = source.toByteArray()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
     PgpEncrypt.encryptAndOrSign(
-        srcInputStream = ByteArrayInputStream(sourceBytes),
-        destOutputStream = outputStreamForEncryptedSource,
-        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(
-            senderPgpPublicKeyRing,
-            recipientPgpPublicKeyRing)
-        ))
+      srcInputStream = ByteArrayInputStream(sourceBytes),
+      destOutputStream = outputStreamForEncryptedSource,
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+        listOf(
+          senderPgpPublicKeyRing,
+          recipientPgpPublicKeyRing
+        )
+      )
+    )
     val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
 
     val decryptedBytesForSender = decrypt(
-        inputStream = ByteArrayInputStream(encryptedBytes),
-        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(
-            senderPgpPublicKeyRing,
-            recipientPgpPublicKeyRing)
-        ),
-        pgpSecretKeyRing = senderPGPSecretKeyRing,
-        passphrase = Passphrase.fromPassword(SENDER_PASSWORD))
-        .toByteArray()
+      inputStream = ByteArrayInputStream(encryptedBytes),
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+        listOf(
+          senderPgpPublicKeyRing,
+          recipientPgpPublicKeyRing
+        )
+      ),
+      pgpSecretKeyRing = senderPGPSecretKeyRing,
+      passphrase = Passphrase.fromPassword(SENDER_PASSWORD)
+    )
+      .toByteArray()
     assertArrayEquals(sourceBytes, decryptedBytesForSender)
 
     val decryptedBytesForReceiver = decrypt(
-        inputStream = ByteArrayInputStream(encryptedBytes),
-        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf(
-            senderPgpPublicKeyRing,
-            recipientPgpPublicKeyRing)
-        ),
-        pgpSecretKeyRing = recipientPGPSecretKeyRing,
-        passphrase = Passphrase.fromPassword(RECEIVER_PASSWORD))
-        .toByteArray()
+      inputStream = ByteArrayInputStream(encryptedBytes),
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+        listOf(
+          senderPgpPublicKeyRing,
+          recipientPgpPublicKeyRing
+        )
+      ),
+      pgpSecretKeyRing = recipientPGPSecretKeyRing,
+      passphrase = Passphrase.fromPassword(RECEIVER_PASSWORD)
+    )
+      .toByteArray()
     assertArrayEquals(sourceBytes, decryptedBytesForReceiver)
   }
 
   //todo-denbond7 Replace it when we will have PgpDecrypt.decryptFile()
-  private fun decrypt(inputStream: ByteArrayInputStream,
-                      pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
-                      pgpSecretKeyRing: PGPSecretKeyRing,
-                      passphrase: Passphrase): ByteArrayOutputStream {
+  private fun decrypt(
+    inputStream: ByteArrayInputStream,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
+    pgpSecretKeyRing: PGPSecretKeyRing,
+    passphrase: Passphrase
+  ): ByteArrayOutputStream {
 
     val protector = PasswordBasedSecretKeyRingProtector(
-        KeyRingProtectionSettings.secureDefaultSettings()) { keyId ->
+      KeyRingProtectionSettings.secureDefaultSettings()
+    ) { keyId ->
       pgpSecretKeyRing.publicKeys.forEach { publicKey ->
         if (publicKey.keyID == keyId) {
           return@PasswordBasedSecretKeyRingProtector passphrase
@@ -84,11 +96,11 @@ class PgpEncryptTest {
     }
 
     val decryptionStream = PGPainless.decryptAndOrVerify()
-        .onInputStream(inputStream)
-        .decryptWith(protector, PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)))
-        .verifyWith(pgpPublicKeyRingCollection)
-        .ignoreMissingPublicKeys()
-        .build()
+      .onInputStream(inputStream)
+      .decryptWith(protector, PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)))
+      .verifyWith(pgpPublicKeyRingCollection)
+      .ignoreMissingPublicKeys()
+      .build()
 
     val outputStreamWithDecryptedData = ByteArrayOutputStream()
     decryptionStream.use { it.copyTo(outputStreamWithDecryptedData) }
@@ -113,9 +125,9 @@ class PgpEncryptTest {
     @JvmStatic
     fun setUp() {
       senderPGPSecretKeyRing = PGPainless.generateKeyRing()
-          .simpleEcKeyRing("sender@encrypted.key", SENDER_PASSWORD)
+        .simpleEcKeyRing("sender@encrypted.key", SENDER_PASSWORD)
       recipientPGPSecretKeyRing = PGPainless.generateKeyRing()
-          .simpleEcKeyRing("juliet@encrypted.key", RECEIVER_PASSWORD)
+        .simpleEcKeyRing("juliet@encrypted.key", RECEIVER_PASSWORD)
     }
   }
 }

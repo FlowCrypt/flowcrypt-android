@@ -32,78 +32,108 @@ import kotlinx.coroutines.withContext
  */
 class FlowcryptApiRepository : ApiRepository {
   override suspend fun login(context: Context, request: LoginRequest): Result<LoginResponse> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult { apiService.postLogin(request.requestModel, "Bearer ${request.tokenId}") }
-      }
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult { apiService.postLogin(request.requestModel, "Bearer ${request.tokenId}") }
+    }
 
-  override suspend fun getDomainRules(context: Context, request: DomainRulesRequest): Result<DomainRulesResponse> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult { apiService.getDomainRules(request.requestModel) }
-      }
+  override suspend fun getDomainRules(
+    context: Context,
+    request: DomainRulesRequest
+  ): Result<DomainRulesResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult { apiService.getDomainRules(request.requestModel) }
+    }
 
-  override suspend fun submitPubKey(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult { apiService.submitPubKey(model) }
-      }
+  override suspend fun submitPubKey(
+    context: Context,
+    model: InitialLegacySubmitModel
+  ): Result<InitialLegacySubmitResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult { apiService.submitPubKey(model) }
+    }
 
-  override suspend fun postInitialLegacySubmit(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult { apiService.postInitialLegacySubmitSuspend(model) }
-      }
+  override suspend fun postInitialLegacySubmit(
+    context: Context,
+    model: InitialLegacySubmitModel
+  ): Result<InitialLegacySubmitResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult { apiService.postInitialLegacySubmitSuspend(model) }
+    }
 
-  override suspend fun postTestWelcome(context: Context, model: TestWelcomeModel): Result<TestWelcomeResponse> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult { apiService.postTestWelcomeSuspend(model) }
-      }
+  override suspend fun postTestWelcome(
+    context: Context,
+    model: TestWelcomeModel
+  ): Result<TestWelcomeResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult { apiService.postTestWelcomeSuspend(model) }
+    }
 
   //todo-denbond7 need to ask Tom to improve https://flowcrypt.com/attester/pub to use the common
   // API  response ([ApiResponse])
-  override suspend fun getPub(requestCode: Long, context: Context, identData: String): Result<PubResponse> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        val result = getResult(requestCode = requestCode) { apiService.getPub(identData) }
-        when (result.status) {
-          Result.Status.SUCCESS -> Result.success(requestCode = requestCode, data = PubResponse(null, result.data))
+  override suspend fun getPub(
+    requestCode: Long,
+    context: Context,
+    identData: String
+  ): Result<PubResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val result = getResult(requestCode = requestCode) { apiService.getPub(identData) }
+      when (result.status) {
+        Result.Status.SUCCESS -> Result.success(
+          requestCode = requestCode,
+          data = PubResponse(null, result.data)
+        )
 
-          Result.Status.ERROR -> Result.error(requestCode = requestCode, data = PubResponse(null, null))
+        Result.Status.ERROR -> Result.error(
+          requestCode = requestCode,
+          data = PubResponse(null, null)
+        )
 
-          Result.Status.EXCEPTION -> Result.exception(requestCode = requestCode, throwable = result.exception
-              ?: Exception())
+        Result.Status.EXCEPTION -> Result.exception(
+          requestCode = requestCode, throwable = result.exception
+            ?: Exception()
+        )
 
-          Result.Status.LOADING -> Result.loading(requestCode = requestCode)
+        Result.Status.LOADING -> Result.loading(requestCode = requestCode)
 
-          Result.Status.NONE -> Result.none()
-        }
+        Result.Status.NONE -> Result.none()
       }
+    }
 
-  override suspend fun getMicrosoftOAuth2Token(requestCode: Long, context: Context,
-                                               authorizeCode: String, scopes: String, codeVerifier: String):
+  override suspend fun getMicrosoftOAuth2Token(
+    requestCode: Long, context: Context,
+    authorizeCode: String, scopes: String, codeVerifier: String
+  ):
       Result<MicrosoftOAuth2TokenResponse> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult(
-            context = context,
-            expectedResultClass = MicrosoftOAuth2TokenResponse::class.java
-        ) {
-          apiService.getMicrosoftOAuth2Token(
-              code = authorizeCode,
-              scope = scopes,
-              codeVerifier = codeVerifier,
-              redirect_uri = context.getString(R.string.microsoft_redirect_uri)
-          )
-        }
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult(
+        context = context,
+        expectedResultClass = MicrosoftOAuth2TokenResponse::class.java
+      ) {
+        apiService.getMicrosoftOAuth2Token(
+          code = authorizeCode,
+          scope = scopes,
+          codeVerifier = codeVerifier,
+          redirect_uri = context.getString(R.string.microsoft_redirect_uri)
+        )
       }
+    }
 
-  override suspend fun getOpenIdConfiguration(requestCode: Long, context: Context, url: String): Result<JsonObject> =
-      withContext(Dispatchers.IO) {
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult {
-          apiService.getOpenIdConfiguration(url)
-        }
+  override suspend fun getOpenIdConfiguration(
+    requestCode: Long,
+    context: Context,
+    url: String
+  ): Result<JsonObject> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult {
+        apiService.getOpenIdConfiguration(url)
       }
+    }
 }

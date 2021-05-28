@@ -39,7 +39,8 @@ import javax.mail.Store
  *         Time: 6:16 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
+  BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     moveMsgsToTrash(accountEntity, store)
   }
@@ -54,42 +55,47 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
         //todo-denbond7 need to improve this logic. We should delete local messages only if we'll
         // success delete remote messages
         GmailApiHelper.moveToTrash(
-            context = applicationContext,
-            accountEntity = account,
-            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+          context = applicationContext,
+          accountEntity = account,
+          ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
         //need to wait while the Gmail server will update labels
         delay(2000)
       }
     }
   }
 
-  private suspend fun moveMsgsToTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    moveMsgsToTrashInternal(account) { folderName, uidList ->
-      store.getFolder(folderName).use { folder ->
-        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-        val trash = foldersManager.folderTrash ?: return@use
-        val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
-        val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-        if (msgs.isNotEmpty()) {
-          if ((store as IMAPStore).hasCapability("MOVE")) {
-            remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-          } else {
-            remoteSrcFolder.copyMessages(msgs.toTypedArray(), remoteDestFolder)
+  private suspend fun moveMsgsToTrash(account: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      moveMsgsToTrashInternal(account) { folderName, uidList ->
+        store.getFolder(folderName).use { folder ->
+          val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+          val trash = foldersManager.folderTrash ?: return@use
+          val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
+          val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val msgs: List<Message> =
+            remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+          if (msgs.isNotEmpty()) {
+            if ((store as IMAPStore).hasCapability("MOVE")) {
+              remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+            } else {
+              remoteSrcFolder.copyMessages(msgs.toTypedArray(), remoteDestFolder)
+            }
           }
         }
       }
     }
-  }
 
-  private suspend fun moveMsgsToTrashInternal(account: AccountEntity,
-                                              action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO)
+  private suspend fun moveMsgsToTrashInternal(
+    account: AccountEntity,
+    action: suspend (folderName: String, list: List<Long>) -> Unit
+  ) = withContext(Dispatchers.IO)
   {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
       val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
-          account.email, MessageState.PENDING_DELETING.value)
+        account.email, MessageState.PENDING_DELETING.value
+      )
 
       if (candidatesForDeleting.isEmpty()) {
         break
@@ -98,7 +104,11 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
 
         for (srcFolder in setOfFolders) {
           val filteredMsgs = candidatesForDeleting.filter { it.folder == srcFolder }
-          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(srcFolder, ignoreCase = true)) {
+          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(
+              srcFolder,
+              ignoreCase = true
+            )
+          ) {
             continue
           }
           val uidList = filteredMsgs.map { it.uid }
@@ -114,19 +124,19 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) : BaseSyn
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<DeleteMessagesWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<DeleteMessagesWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

@@ -48,8 +48,10 @@ import javax.net.ssl.X509TrustManager
  * the app.
  */
 // todo - one of the main class which should be reviewed
-class NodeSecret @JvmOverloads internal constructor(writablePath: String,
-                                                    nodeSecretCertsCache: NodeSecretCerts? = null) {
+class NodeSecret @JvmOverloads internal constructor(
+  writablePath: String,
+  nodeSecretCertsCache: NodeSecretCerts? = null
+) {
 
   val port: Int
   var ca: String? = null
@@ -132,7 +134,8 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String,
 
   private fun parseCert(certString: String?): X509Certificate {
     ByteArrayInputStream(certString!!.toByteArray()).use { inputStream ->
-      return CertificateFactory.getInstance("X.509").generateCertificate(inputStream) as X509Certificate
+      return CertificateFactory.getInstance("X.509")
+        .generateCertificate(inputStream) as X509Certificate
     }
   }
 
@@ -187,7 +190,12 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String,
     return keyStore
   }
 
-  private fun newSignedCrt(issuerKeyPair: KeyPair, subjectKeyPair: KeyPair, subject: X500Name, keyUsage: Int)
+  private fun newSignedCrt(
+    issuerKeyPair: KeyPair,
+    subjectKeyPair: KeyPair,
+    subject: X500Name,
+    keyUsage: Int
+  )
       : X509Certificate {
     val calendar = Calendar.getInstance()
     val from = calendar.time
@@ -197,7 +205,8 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String,
     val info = SubjectPublicKeyInfo.getInstance(subjectKeyPair.public.encoded)
     val serial = BigInteger.valueOf(System.currentTimeMillis())
 
-    val subjectCertBuilder = X509v3CertificateBuilder(issuer, serial, from, to, Locale.US, subject, info)
+    val subjectCertBuilder =
+      X509v3CertificateBuilder(issuer, serial, from, to, Locale.US, subject, info)
     subjectCertBuilder.addExtension(Extension.keyUsage, true, KeyUsage(keyUsage))
     val signer = JcaContentSignerBuilder("SHA256WithRSAEncryption").build(issuerKeyPair.private)
     val crtHolder = subjectCertBuilder.build(signer)

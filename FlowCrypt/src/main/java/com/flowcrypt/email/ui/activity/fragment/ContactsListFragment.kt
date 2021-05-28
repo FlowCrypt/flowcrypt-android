@@ -34,12 +34,13 @@ import com.flowcrypt.email.util.UIUtil
  *         E-mail: DenBond7@gmail.com
  */
 class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDeleteContactListener,
-    ContactsRecyclerViewAdapter.OnContactClickListener {
+  ContactsRecyclerViewAdapter.OnContactClickListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter = ContactsRecyclerViewAdapter(true)
+  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
+    ContactsRecyclerViewAdapter(true)
   private val contactsViewModel: ContactsViewModel by viewModels()
 
   override val contentResourceId: Int = R.layout.fragment_contacts_list
@@ -64,7 +65,11 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY -> when (resultCode) {
-        Activity.RESULT_OK -> Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
+        Activity.RESULT_OK -> Toast.makeText(
+          context,
+          R.string.key_successfully_imported,
+          Toast.LENGTH_SHORT
+        ).show()
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -73,16 +78,18 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
 
   override fun onContactClick(contactEntity: ContactEntity) {
     parentFragmentManager
-        .beginTransaction()
-        .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(contactEntity))
-        .addToBackStack(null)
-        .commit()
+      .beginTransaction()
+      .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(contactEntity))
+      .addToBackStack(null)
+      .commit()
   }
 
   override fun onDeleteContact(contactEntity: ContactEntity) {
     contactsViewModel.deleteContact(contactEntity)
-    Toast.makeText(context, getString(R.string.the_contact_was_deleted, contactEntity.email),
-        Toast.LENGTH_SHORT).show()
+    Toast.makeText(
+      context, getString(R.string.the_contact_was_deleted, contactEntity.email),
+      Toast.LENGTH_SHORT
+    ).show()
   }
 
   private fun initViews(root: View) {
@@ -92,7 +99,8 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
     recyclerViewContacts = root.findViewById(R.id.recyclerViewContacts)
     val manager = LinearLayoutManager(context)
     val decoration = DividerItemDecoration(context, manager.orientation)
-    val drawable = ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, requireContext().theme)
+    val drawable =
+      ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, requireContext().theme)
     drawable?.let { decoration.setDrawable(drawable) }
     recyclerViewContacts?.addItemDecoration(decoration)
     recyclerViewContacts?.layoutManager = manager
@@ -100,8 +108,10 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
 
     root.findViewById<View>(R.id.floatActionButtonImportPublicKey)?.setOnClickListener {
       context?.let {
-        startActivityForResult(ImportPgpContactActivity.newIntent(it, account),
-            REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY)
+        startActivityForResult(
+          ImportPgpContactActivity.newIntent(it, account),
+          REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY
+        )
       }
     }
   }

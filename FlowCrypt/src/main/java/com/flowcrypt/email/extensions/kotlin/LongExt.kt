@@ -7,7 +7,7 @@
 
 package com.flowcrypt.email.extensions.kotlin
 
-import java.util.Locale
+import java.util.*
 
 /**
  * @author Denis Bondarenko

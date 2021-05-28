@@ -18,7 +18,10 @@ import org.junit.runners.model.Statement
  * Time: 09:19
  * E-mail: DenBond7@gmail.com
  */
-class AddLabelsToDatabaseRule(private val account: AccountEntity, private val folders: List<LocalFolder>) : BaseRule() {
+class AddLabelsToDatabaseRule(
+  private val account: AccountEntity,
+  private val folders: List<LocalFolder>
+) : BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {

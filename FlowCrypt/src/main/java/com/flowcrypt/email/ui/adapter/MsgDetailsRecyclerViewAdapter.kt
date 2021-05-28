@@ -21,12 +21,13 @@ import com.flowcrypt.email.R
  *         E-mail: DenBond7@gmail.com
  */
 class MsgDetailsRecyclerViewAdapter :
-    ListAdapter<MsgDetailsRecyclerViewAdapter.Header,
-        MsgDetailsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+  ListAdapter<MsgDetailsRecyclerViewAdapter.Header,
+      MsgDetailsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
-        LayoutInflater.from(parent.context).inflate(R.layout.item_mime_header, parent, false))
+      LayoutInflater.from(parent.context).inflate(R.layout.item_mime_header, parent, false)
+    )
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {

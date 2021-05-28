@@ -19,7 +19,10 @@ import java.nio.charset.StandardCharsets
  * @see [Node.js for Mobile Apps](https://code.janeasystems.com/nodejs-mobile/getting-started-android)
  */
 //todo-denbond7 Update Node usage https://github.com/janeasystems/nodejs-mobile/releases/
-internal class NativeNode private constructor(private val isDebugEnabled: Boolean, private val nodeSecret: NodeSecret) {
+internal class NativeNode private constructor(
+  private val isDebugEnabled: Boolean,
+  private val nodeSecret: NodeSecret
+) {
 
   private var isRunning: Boolean = false
 
@@ -130,8 +133,10 @@ internal class NativeNode private constructor(private val isDebugEnabled: Boolea
         }
         val idLen = 10
         val id = msg.substring(ASYNC_REQUEST_HEADER.length, ASYNC_REQUEST_HEADER.length + idLen)
-        val nameEndSeparator = msg.indexOf('|', ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 2)
-        val name = msg.substring(ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 1, nameEndSeparator)
+        val nameEndSeparator =
+          msg.indexOf('|', ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 2)
+        val name =
+          msg.substring(ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 1, nameEndSeparator)
         val reqBody = msg.subSequence(nameEndSeparator + 1, msg.length)
         val responseData = nodeHost.nodeReqHandler(name, reqBody)
         var response: String

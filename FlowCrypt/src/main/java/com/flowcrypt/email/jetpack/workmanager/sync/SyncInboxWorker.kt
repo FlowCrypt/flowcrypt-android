@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit
  *         Time: 4:52 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SyncInboxWorker(context: Context, params: WorkerParameters) : InboxIdleSyncWorker(context, params) {
+class SyncInboxWorker(context: Context, params: WorkerParameters) :
+  InboxIdleSyncWorker(context, params) {
   override val useIndependentConnection: Boolean = true
 
   companion object {
@@ -29,19 +30,19 @@ class SyncInboxWorker(context: Context, params: WorkerParameters) : InboxIdleSyn
 
     fun enqueuePeriodic(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .setRequiresBatteryNotLow(true)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .setRequiresBatteryNotLow(true)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniquePeriodicWork(
-              GROUP_UNIQUE_TAG,
-              ExistingPeriodicWorkPolicy.REPLACE,
-              PeriodicWorkRequestBuilder<SyncInboxWorker>(15, TimeUnit.MINUTES)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniquePeriodicWork(
+          GROUP_UNIQUE_TAG,
+          ExistingPeriodicWorkPolicy.REPLACE,
+          PeriodicWorkRequestBuilder<SyncInboxWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

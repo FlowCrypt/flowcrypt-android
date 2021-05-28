@@ -28,6 +28,8 @@ import com.flowcrypt.email.api.retrofit.request.model.MessageReplyModel
  * E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 this class is redundant. We can refactor code and delete this
-class MessageReplyRequest(override val apiName: ApiName = ApiName.POST_MESSAGE_REPLY,
-                          override val requestModel: MessageReplyModel) : BaseRequest<MessageReplyModel>
+class MessageReplyRequest(
+  override val apiName: ApiName = ApiName.POST_MESSAGE_REPLY,
+  override val requestModel: MessageReplyModel
+) : BaseRequest<MessageReplyModel>
 

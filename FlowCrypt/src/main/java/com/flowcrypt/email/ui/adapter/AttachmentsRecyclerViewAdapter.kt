@@ -25,7 +25,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  *         E-mail: DenBond7@gmail.com
  */
 class AttachmentsRecyclerViewAdapter(private val listener: Listener) :
-    ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+  ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     val view = LayoutInflater.from(parent.context).inflate(R.layout.attachment_item, parent, false)
@@ -76,10 +76,11 @@ class AttachmentsRecyclerViewAdapter(private val listener: Listener) :
 
   class DiffUtilCallBack : DiffUtil.ItemCallback<AttachmentInfo>() {
     override fun areItemsTheSame(oldItem: AttachmentInfo, newItem: AttachmentInfo) = oldItem
-        .uniqueStringId == newItem.uniqueStringId && oldItem.email == newItem.email && oldItem
-        .folder == newItem.folder
+      .uniqueStringId == newItem.uniqueStringId && oldItem.email == newItem.email && oldItem
+      .folder == newItem.folder
 
-    override fun areContentsTheSame(oldItem: AttachmentInfo, newItem: AttachmentInfo) = oldItem == newItem
+    override fun areContentsTheSame(oldItem: AttachmentInfo, newItem: AttachmentInfo) =
+      oldItem == newItem
   }
 
   interface Listener {

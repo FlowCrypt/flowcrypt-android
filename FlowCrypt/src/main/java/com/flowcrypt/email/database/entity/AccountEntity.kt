@@ -28,182 +28,218 @@ import java.util.*
  *         Time: 2:50 PM
  *         E-mail: DenBond7@gmail.com
  */
-@Entity(tableName = "accounts",
-    indices = [
-      Index(name = "email_account_type_in_accounts", value = ["email", "account_type"], unique = true)
-    ])
+@Entity(
+  tableName = "accounts",
+  indices = [
+    Index(name = "email_account_type_in_accounts", value = ["email", "account_type"], unique = true)
+  ]
+)
 data class AccountEntity constructor(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
-    val email: String,
-    @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
-    @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
-    @ColumnInfo(name = "given_name", defaultValue = "NULL") val givenName: String? = null,
-    @ColumnInfo(name = "family_name", defaultValue = "NULL") val familyName: String? = null,
-    @ColumnInfo(name = "photo_url", defaultValue = "NULL") val photoUrl: String? = null,
-    @ColumnInfo(name = "is_enable", defaultValue = "1") val isEnabled: Boolean? = true,
-    @ColumnInfo(name = "is_active", defaultValue = "0") val isActive: Boolean? = false,
-    val username: String,
-    val password: String,
-    @ColumnInfo(name = "imap_server") val imapServer: String,
-    @ColumnInfo(name = "imap_port", defaultValue = "143") val imapPort: Int? = 143,
-    @ColumnInfo(name = "imap_is_use_ssl_tls", defaultValue = "0") val imapIsUseSslTls: Boolean? = false,
-    @ColumnInfo(name = "imap_is_use_starttls", defaultValue = "0") val imapIsUseStarttls: Boolean? = false,
-    @ColumnInfo(name = "imap_auth_mechanisms") val imapAuthMechanisms: String? = null,
-    @ColumnInfo(name = "smtp_server") val smtpServer: String,
-    @ColumnInfo(name = "smtp_port", defaultValue = "25") val smtpPort: Int? = 25,
-    @ColumnInfo(name = "smtp_is_use_ssl_tls", defaultValue = "0") val smtpIsUseSslTls: Boolean? = false,
-    @ColumnInfo(name = "smtp_is_use_starttls", defaultValue = "0") val smtpIsUseStarttls: Boolean? = false,
-    @ColumnInfo(name = "smtp_auth_mechanisms") val smtpAuthMechanisms: String? = null,
-    @ColumnInfo(name = "smtp_is_use_custom_sign", defaultValue = "0") val useCustomSignForSmtp: Boolean? = false,
-    @ColumnInfo(name = "smtp_username", defaultValue = "NULL") val smtpUsername: String? = null,
-    @ColumnInfo(name = "smtp_password", defaultValue = "NULL") val smtpPassword: String? = null,
-    @ColumnInfo(name = "ic_contacts_loaded", defaultValue = "0") val areContactsLoaded: Boolean? = false,
-    @ColumnInfo(name = "is_show_only_encrypted", defaultValue = "0") val isShowOnlyEncrypted: Boolean? = false,
-    @ColumnInfo(defaultValue = "NULL") val uuid: String? = null,
-    @ColumnInfo(name = "domain_rules", defaultValue = "NULL") val domainRules: String? = null,
-    @Deprecated("Don't use this field. Should be removed in the next database upgrading")
-    @ColumnInfo(name = "is_restore_access_required", defaultValue = "0") val isRestoreAccessRequired: Boolean? = false,
-    @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false) : Parcelable {
+  @PrimaryKey(autoGenerate = true)
+  @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
+  val email: String,
+  @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
+  @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
+  @ColumnInfo(name = "given_name", defaultValue = "NULL") val givenName: String? = null,
+  @ColumnInfo(name = "family_name", defaultValue = "NULL") val familyName: String? = null,
+  @ColumnInfo(name = "photo_url", defaultValue = "NULL") val photoUrl: String? = null,
+  @ColumnInfo(name = "is_enable", defaultValue = "1") val isEnabled: Boolean? = true,
+  @ColumnInfo(name = "is_active", defaultValue = "0") val isActive: Boolean? = false,
+  val username: String,
+  val password: String,
+  @ColumnInfo(name = "imap_server") val imapServer: String,
+  @ColumnInfo(name = "imap_port", defaultValue = "143") val imapPort: Int? = 143,
+  @ColumnInfo(
+    name = "imap_is_use_ssl_tls",
+    defaultValue = "0"
+  ) val imapIsUseSslTls: Boolean? = false,
+  @ColumnInfo(
+    name = "imap_is_use_starttls",
+    defaultValue = "0"
+  ) val imapIsUseStarttls: Boolean? = false,
+  @ColumnInfo(name = "imap_auth_mechanisms") val imapAuthMechanisms: String? = null,
+  @ColumnInfo(name = "smtp_server") val smtpServer: String,
+  @ColumnInfo(name = "smtp_port", defaultValue = "25") val smtpPort: Int? = 25,
+  @ColumnInfo(
+    name = "smtp_is_use_ssl_tls",
+    defaultValue = "0"
+  ) val smtpIsUseSslTls: Boolean? = false,
+  @ColumnInfo(
+    name = "smtp_is_use_starttls",
+    defaultValue = "0"
+  ) val smtpIsUseStarttls: Boolean? = false,
+  @ColumnInfo(name = "smtp_auth_mechanisms") val smtpAuthMechanisms: String? = null,
+  @ColumnInfo(
+    name = "smtp_is_use_custom_sign",
+    defaultValue = "0"
+  ) val useCustomSignForSmtp: Boolean? = false,
+  @ColumnInfo(name = "smtp_username", defaultValue = "NULL") val smtpUsername: String? = null,
+  @ColumnInfo(name = "smtp_password", defaultValue = "NULL") val smtpPassword: String? = null,
+  @ColumnInfo(
+    name = "ic_contacts_loaded",
+    defaultValue = "0"
+  ) val areContactsLoaded: Boolean? = false,
+  @ColumnInfo(
+    name = "is_show_only_encrypted",
+    defaultValue = "0"
+  ) val isShowOnlyEncrypted: Boolean? = false,
+  @ColumnInfo(defaultValue = "NULL") val uuid: String? = null,
+  @ColumnInfo(name = "domain_rules", defaultValue = "NULL") val domainRules: String? = null,
+  @Deprecated("Don't use this field. Should be removed in the next database upgrading")
+  @ColumnInfo(
+    name = "is_restore_access_required",
+    defaultValue = "0"
+  ) val isRestoreAccessRequired: Boolean? = false,
+  @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false
+) : Parcelable {
 
   @Ignore
-  val account: Account = Account(this.email, accountType
-      ?: this.email.substring(this.email.indexOf('@') + 1).toLowerCase(Locale.US))
+  val account: Account = Account(
+    this.email, accountType
+      ?: this.email.substring(this.email.indexOf('@') + 1).toLowerCase(Locale.US)
+  )
 
   val useOAuth2: Boolean
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
 
-  constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
-              domainRules: List<String>? = null) :
+  constructor(
+    googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
+    domainRules: List<String>? = null
+  ) :
       this(
-          email = googleSignInAccount.email!!.toLowerCase(Locale.US),
-          accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.US),
-          displayName = googleSignInAccount.displayName,
-          givenName = googleSignInAccount.givenName,
-          familyName = googleSignInAccount.familyName,
-          photoUrl = googleSignInAccount.photoUrl?.toString(),
-          isEnabled = true,
-          isActive = false,
-          username = googleSignInAccount.email!!,
-          password = "",
-          imapServer = GmailConstants.GMAIL_IMAP_SERVER,
-          imapPort = GmailConstants.GMAIL_IMAP_PORT,
-          imapIsUseSslTls = true,
-          imapIsUseStarttls = false,
-          imapAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
-          smtpServer = GmailConstants.GMAIL_SMTP_SERVER,
-          smtpPort = GmailConstants.GMAIL_SMTP_PORT,
-          smtpIsUseSslTls = true,
-          smtpIsUseStarttls = false,
-          smtpAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
-          useCustomSignForSmtp = false,
-          smtpUsername = null,
-          smtpPassword = null,
-          areContactsLoaded = false,
-          isShowOnlyEncrypted = false,
-          uuid = uuid,
-          domainRules = domainRules?.joinToString(),
-          isRestoreAccessRequired = false,
-          useAPI = FlavorSettings.isGMailAPIEnabled()
+        email = googleSignInAccount.email!!.toLowerCase(Locale.US),
+        accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.US),
+        displayName = googleSignInAccount.displayName,
+        givenName = googleSignInAccount.givenName,
+        familyName = googleSignInAccount.familyName,
+        photoUrl = googleSignInAccount.photoUrl?.toString(),
+        isEnabled = true,
+        isActive = false,
+        username = googleSignInAccount.email!!,
+        password = "",
+        imapServer = GmailConstants.GMAIL_IMAP_SERVER,
+        imapPort = GmailConstants.GMAIL_IMAP_PORT,
+        imapIsUseSslTls = true,
+        imapIsUseStarttls = false,
+        imapAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
+        smtpServer = GmailConstants.GMAIL_SMTP_SERVER,
+        smtpPort = GmailConstants.GMAIL_SMTP_PORT,
+        smtpIsUseSslTls = true,
+        smtpIsUseStarttls = false,
+        smtpAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
+        useCustomSignForSmtp = false,
+        smtpUsername = null,
+        smtpPassword = null,
+        areContactsLoaded = false,
+        isShowOnlyEncrypted = false,
+        uuid = uuid,
+        domainRules = domainRules?.joinToString(),
+        isRestoreAccessRequired = false,
+        useAPI = FlavorSettings.isGMailAPIEnabled()
       )
 
-  constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<String>? = null) :
+  constructor(
+    authCredentials: AuthCredentials,
+    uuid: String? = null,
+    domainRules: List<String>? = null
+  ) :
       this(
-          email = authCredentials.email.toLowerCase(Locale.US),
-          accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).toLowerCase(Locale.getDefault()),
-          displayName = authCredentials.displayName,
-          givenName = null,
-          familyName = null,
-          photoUrl = null,
-          isEnabled = true,
-          isActive = false,
-          username = authCredentials.username,
-          password = authCredentials.password,
-          imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
-          imapPort = authCredentials.imapPort,
-          imapIsUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
-          imapIsUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
-          imapAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
-          smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
-          smtpPort = authCredentials.smtpPort,
-          smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
-          smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
-          smtpAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
-          useCustomSignForSmtp = authCredentials.hasCustomSignInForSmtp,
-          smtpUsername = authCredentials.smtpSigInUsername,
-          smtpPassword = authCredentials.smtpSignInPassword,
-          areContactsLoaded = false,
-          isShowOnlyEncrypted = false,
-          uuid = uuid,
-          domainRules = domainRules?.joinToString(),
-          isRestoreAccessRequired = false,
-          useAPI = false
+        email = authCredentials.email.toLowerCase(Locale.US),
+        accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1)
+          .toLowerCase(Locale.getDefault()),
+        displayName = authCredentials.displayName,
+        givenName = null,
+        familyName = null,
+        photoUrl = null,
+        isEnabled = true,
+        isActive = false,
+        username = authCredentials.username,
+        password = authCredentials.password,
+        imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
+        imapPort = authCredentials.imapPort,
+        imapIsUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
+        imapIsUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
+        imapAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
+        smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
+        smtpPort = authCredentials.smtpPort,
+        smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
+        smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
+        smtpAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
+        useCustomSignForSmtp = authCredentials.hasCustomSignInForSmtp,
+        smtpUsername = authCredentials.smtpSigInUsername,
+        smtpPassword = authCredentials.smtpSignInPassword,
+        areContactsLoaded = false,
+        isShowOnlyEncrypted = false,
+        uuid = uuid,
+        domainRules = domainRules?.joinToString(),
+        isRestoreAccessRequired = false,
+        useAPI = false
       )
 
   constructor(email: String) :
       this(
-          email = email,
-          accountType = null,
-          displayName = null,
-          givenName = null,
-          familyName = null,
-          photoUrl = null,
-          isEnabled = true,
-          isActive = false,
-          username = "",
-          password = "",
-          imapServer = "",
-          imapPort = 0,
-          imapIsUseSslTls = true,
-          imapIsUseStarttls = false,
-          imapAuthMechanisms = null,
-          smtpServer = "",
-          smtpPort = 0,
-          smtpIsUseSslTls = true,
-          smtpIsUseStarttls = false,
-          smtpAuthMechanisms = "",
-          useCustomSignForSmtp = false,
-          smtpUsername = null,
-          smtpPassword = null,
-          areContactsLoaded = false,
-          isShowOnlyEncrypted = false,
-          uuid = null,
-          domainRules = null,
-          isRestoreAccessRequired = false,
-          useAPI = false
+        email = email,
+        accountType = null,
+        displayName = null,
+        givenName = null,
+        familyName = null,
+        photoUrl = null,
+        isEnabled = true,
+        isActive = false,
+        username = "",
+        password = "",
+        imapServer = "",
+        imapPort = 0,
+        imapIsUseSslTls = true,
+        imapIsUseStarttls = false,
+        imapAuthMechanisms = null,
+        smtpServer = "",
+        smtpPort = 0,
+        smtpIsUseSslTls = true,
+        smtpIsUseStarttls = false,
+        smtpAuthMechanisms = "",
+        useCustomSignForSmtp = false,
+        smtpUsername = null,
+        smtpPassword = null,
+        areContactsLoaded = false,
+        isShowOnlyEncrypted = false,
+        uuid = null,
+        domainRules = null,
+        isRestoreAccessRequired = false,
+        useAPI = false
       )
 
   constructor(source: Parcel) : this(
-      source.readValue(Long::class.java.classLoader) as Long?,
-      source.readString()!!,
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readString()!!,
-      source.readString()!!,
-      source.readString()!!,
-      source.readValue(Int::class.java.classLoader) as Int,
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readString(),
-      source.readString()!!,
-      source.readValue(Int::class.java.classLoader) as Int,
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readString(),
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readString(),
-      source.readString(),
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readString(),
-      source.readString(),
-      source.readValue(Boolean::class.java.classLoader) as Boolean?,
-      source.readValue(Boolean::class.java.classLoader) as Boolean
+    source.readValue(Long::class.java.classLoader) as Long?,
+    source.readString()!!,
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readString()!!,
+    source.readString()!!,
+    source.readString()!!,
+    source.readValue(Int::class.java.classLoader) as Int,
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readString(),
+    source.readString()!!,
+    source.readValue(Int::class.java.classLoader) as Int,
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readString(),
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readString(),
+    source.readString(),
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readString(),
+    source.readString(),
+    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readValue(Boolean::class.java.classLoader) as Boolean
   )
 
   fun domainRulesList(): List<String> {

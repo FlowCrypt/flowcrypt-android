@@ -49,7 +49,7 @@ class FlowCryptMimeMessageTest {
 
   private fun extractDomainFromMessageID(messageId: String): String {
     return messageId
-        .substring(messageId.indexOf('@') + 1)
-        .replace(">", "")
+      .substring(messageId.indexOf('@') + 1)
+      .replace(">", "")
   }
 }

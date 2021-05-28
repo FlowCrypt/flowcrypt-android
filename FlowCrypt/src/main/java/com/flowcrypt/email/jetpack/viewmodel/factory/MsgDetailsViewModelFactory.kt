@@ -18,9 +18,11 @@ import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
  *         Time: 4:48 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MsgDetailsViewModelFactory(val localFolder: LocalFolder, val msgEntity: MessageEntity,
-                                 val application: Application) :
-    ViewModelProvider.AndroidViewModelFactory(application) {
+class MsgDetailsViewModelFactory(
+  val localFolder: LocalFolder, val msgEntity: MessageEntity,
+  val application: Application
+) :
+  ViewModelProvider.AndroidViewModelFactory(application) {
   @Suppress("UNCHECKED_CAST")
   override fun <T : ViewModel?> create(modelClass: Class<T>): T {
     return MsgDetailsViewModel(localFolder, msgEntity, application) as T

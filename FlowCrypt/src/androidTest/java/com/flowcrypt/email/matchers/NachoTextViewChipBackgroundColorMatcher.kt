@@ -17,9 +17,10 @@ import org.hamcrest.Description
  *         Time: 10:19 AM
  *         E-mail: DenBond7@gmail.com
  */
-class NachoTextViewChipBackgroundColorMatcher(private val chipText: String,
-                                              private val backgroundColor: Int)
-  : BoundedMatcher<View, NachoTextView>(NachoTextView::class.java) {
+class NachoTextViewChipBackgroundColorMatcher(
+  private val chipText: String,
+  private val backgroundColor: Int
+) : BoundedMatcher<View, NachoTextView>(NachoTextView::class.java) {
   public override fun matchesSafely(nachoTextView: NachoTextView): Boolean {
     val expectedChip = nachoTextView.allChips.firstOrNull { it.text == chipText } ?: return false
     val pgpContactChipSpan = expectedChip as? PGPContactChipSpan ?: return false

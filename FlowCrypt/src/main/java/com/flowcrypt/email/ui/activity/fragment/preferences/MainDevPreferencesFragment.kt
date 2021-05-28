@@ -24,7 +24,8 @@ import com.flowcrypt.email.R
  * Time: 11:19
  * E-mail: DenBond7@gmail.com
  */
-class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
+class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
+  SharedPreferences.OnSharedPreferenceChangeListener {
 
   private lateinit var sharedPreferences: SharedPreferences
 
@@ -69,7 +70,11 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
   }
 
   private fun showApplicationDetailsSettingsActivity() {
-    Toast.makeText(activity, R.string.toast_message_press_force_stop_to_apply_changes, Toast.LENGTH_SHORT).show()
+    Toast.makeText(
+      activity,
+      R.string.toast_message_press_force_stop_to_apply_changes,
+      Toast.LENGTH_SHORT
+    ).show()
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
     val uri = Uri.fromParts("package", requireActivity().packageName, null)
     intent.data = uri

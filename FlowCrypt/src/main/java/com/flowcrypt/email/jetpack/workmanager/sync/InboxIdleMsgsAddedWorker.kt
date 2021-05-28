@@ -32,7 +32,8 @@ import javax.mail.UIDFolder
  * Time: 15:50
  * E-mail: DenBond7@gmail.com
  */
-class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(context, params) {
+class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) :
+  BaseIdleWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     checkAndProcessNewMessages(accountEntity, store)
   }
@@ -41,53 +42,59 @@ class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) : Bas
 
   }
 
-  private suspend fun checkAndProcessNewMessages(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
-    val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
-    val folderFullName = inboxLocalFolder.fullName
+  private suspend fun checkAndProcessNewMessages(accountEntity: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
+      val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
+      val folderFullName = inboxLocalFolder.fullName
 
-    store.getFolder(folderFullName).use { folder ->
-      val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-      val newestCachedUID = roomDatabase.msgDao()
+      store.getFolder(folderFullName).use { folder ->
+        val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+        val newestCachedUID = roomDatabase.msgDao()
           .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
-      val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
-      val newMsgs = if (accountEntity.isShowOnlyEncrypted == true) {
-        val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+        val cachedUIDSet =
+          roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
+        val newMsgs = if (accountEntity.isShowOnlyEncrypted == true) {
+          val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
 
-        val fetchProfile = FetchProfile().apply {
-          add(UIDFolder.FetchProfileItem.UID)
+          val fetchProfile = FetchProfile().apply {
+            add(UIDFolder.FetchProfileItem.UID)
+          }
+          remoteFolder.fetch(foundMsgs, fetchProfile)
+          EmailUtil.fetchMsgs(remoteFolder,
+            foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }
+              .toTypedArray()
+          )
+        } else {
+          val newestMsgsFromFetchExceptExisted =
+            remoteFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
+              .filterNot { remoteFolder.getUID(it) in cachedUIDSet }
+              .filterNotNull()
+          EmailUtil.fetchMsgs(remoteFolder, newestMsgsFromFetchExceptExisted.toTypedArray())
         }
-        remoteFolder.fetch(foundMsgs, fetchProfile)
-        EmailUtil.fetchMsgs(remoteFolder, foundMsgs.filter { message -> remoteFolder.getUID(message) > newestCachedUID }.toTypedArray())
-      } else {
-        val newestMsgsFromFetchExceptExisted = remoteFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
-            .filterNot { remoteFolder.getUID(it) in cachedUIDSet }
-            .filterNotNull()
-        EmailUtil.fetchMsgs(remoteFolder, newestMsgsFromFetchExceptExisted.toTypedArray())
-      }
 
-      processNewMsgs(newMsgs, accountEntity, inboxLocalFolder, remoteFolder)
+        processNewMsgs(newMsgs, accountEntity, inboxLocalFolder, remoteFolder)
+      }
     }
-  }
 
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".CHECK_NEW_MESSAGES_IN_INBOX"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<InboxIdleMsgsAddedWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<InboxIdleMsgsAddedWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

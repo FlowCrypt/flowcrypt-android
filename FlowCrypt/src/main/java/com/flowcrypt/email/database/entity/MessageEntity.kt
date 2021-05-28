@@ -47,34 +47,41 @@ import kotlin.collections.HashMap
  *         E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 need to add ForeignKey on account table
-@Entity(tableName = MessageEntity.TABLE_NAME,
-    indices = [
-      Index(name = "email_in_messages", value = ["email"]),
-      Index(name = "email_uid_folder_in_messages", value = ["email", "uid", "folder"], unique = true)
-    ]
+@Entity(
+  tableName = MessageEntity.TABLE_NAME,
+  indices = [
+    Index(name = "email_in_messages", value = ["email"]),
+    Index(name = "email_uid_folder_in_messages", value = ["email", "uid", "folder"], unique = true)
+  ]
 )
 data class MessageEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
-    val email: String,
-    val folder: String,
-    val uid: Long,
-    @ColumnInfo(name = "received_date", defaultValue = "NULL") val receivedDate: Long? = null,
-    @ColumnInfo(name = "sent_date", defaultValue = "NULL") val sentDate: Long? = null,
-    @ColumnInfo(name = "from_address", defaultValue = "NULL") val fromAddress: String? = null,
-    @ColumnInfo(name = "to_address", defaultValue = "NULL") val toAddress: String? = null,
-    @ColumnInfo(name = "cc_address", defaultValue = "NULL") val ccAddress: String? = null,
-    @ColumnInfo(defaultValue = "NULL") val subject: String? = null,
-    @ColumnInfo(defaultValue = "NULL") val flags: String? = null,
-    @ColumnInfo(name = "raw_message_without_attachments", defaultValue = "NULL") val rawMessageWithoutAttachments: String? = null,
-    @ColumnInfo(name = "is_message_has_attachments", defaultValue = "0") val hasAttachments: Boolean? = null,
-    @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
-    @ColumnInfo(name = "is_new", defaultValue = "-1") val isNew: Boolean? = null,
-    @ColumnInfo(defaultValue = "-1") val state: Int? = null,
-    @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
-    @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
-    @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
-    @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
-    @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null
+  @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
+  val email: String,
+  val folder: String,
+  val uid: Long,
+  @ColumnInfo(name = "received_date", defaultValue = "NULL") val receivedDate: Long? = null,
+  @ColumnInfo(name = "sent_date", defaultValue = "NULL") val sentDate: Long? = null,
+  @ColumnInfo(name = "from_address", defaultValue = "NULL") val fromAddress: String? = null,
+  @ColumnInfo(name = "to_address", defaultValue = "NULL") val toAddress: String? = null,
+  @ColumnInfo(name = "cc_address", defaultValue = "NULL") val ccAddress: String? = null,
+  @ColumnInfo(defaultValue = "NULL") val subject: String? = null,
+  @ColumnInfo(defaultValue = "NULL") val flags: String? = null,
+  @ColumnInfo(
+    name = "raw_message_without_attachments",
+    defaultValue = "NULL"
+  ) val rawMessageWithoutAttachments: String? = null,
+  @ColumnInfo(
+    name = "is_message_has_attachments",
+    defaultValue = "0"
+  ) val hasAttachments: Boolean? = null,
+  @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
+  @ColumnInfo(name = "is_new", defaultValue = "-1") val isNew: Boolean? = null,
+  @ColumnInfo(defaultValue = "-1") val state: Int? = null,
+  @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
+  @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
+  @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
+  @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
+  @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null
 ) : Parcelable {
 
   @Ignore
@@ -119,27 +126,28 @@ data class MessageEntity(
     }
 
   constructor(parcel: Parcel) : this(
-      parcel.readValue(Long::class.java.classLoader) as? Long,
-      parcel.readString() ?: "",
-      parcel.readString() ?: "",
-      parcel.readLong(),
-      parcel.readValue(Long::class.java.classLoader) as? Long,
-      parcel.readValue(Long::class.java.classLoader) as? Long,
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-      parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-      parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-      parcel.readValue(Int::class.java.classLoader) as? Int,
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString())
+    parcel.readValue(Long::class.java.classLoader) as? Long,
+    parcel.readString() ?: "",
+    parcel.readString() ?: "",
+    parcel.readLong(),
+    parcel.readValue(Long::class.java.classLoader) as? Long,
+    parcel.readValue(Long::class.java.classLoader) as? Long,
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+    parcel.readValue(Int::class.java.classLoader) as? Int,
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString()
+  )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeValue(id)
@@ -184,19 +192,26 @@ data class MessageEntity(
       return arrayOfNulls(size)
     }
 
-    fun genMessageEntities(context: Context, email: String, label: String, folder: IMAPFolder,
-                           msgs: Array<Message>?,
-                           msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
-                           isNew: Boolean, areAllMsgsEncrypted: Boolean): List<MessageEntity> {
+    fun genMessageEntities(
+      context: Context, email: String, label: String, folder: IMAPFolder,
+      msgs: Array<Message>?,
+      msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
+      isNew: Boolean, areAllMsgsEncrypted: Boolean
+    ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       msgs?.let { msgsList ->
         val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
-            SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-                Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+            SharedPreferencesHelper.getString(
+              PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
+            )
 
-        val onlyEncryptedMsgs = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
-            SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-                Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+        val onlyEncryptedMsgs =
+          NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
+              SharedPreferencesHelper.getString(
+                PreferenceManager.getDefaultSharedPreferences(context),
+                Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
+              )
 
         for (msg in msgsList) {
           try {
@@ -221,8 +236,12 @@ data class MessageEntity(
               }
             }
 
-            messageEntities.add(genMsgEntity(email, label, msg, folder.getUID(msg),
-                isNewTemp, isEncrypted))
+            messageEntities.add(
+              genMsgEntity(
+                email, label, msg, folder.getUID(msg),
+                isNewTemp, isEncrypted
+              )
+            )
           } catch (e: MessageRemovedException) {
             e.printStackTrace()
           } catch (e: AddressException) {
@@ -234,16 +253,27 @@ data class MessageEntity(
       return messageEntities
     }
 
-    fun genMessageEntities(context: Context, email: String, label: String, msgsList: List<com.google.api.services.gmail.model.Message>,
-                           isNew: Boolean, areAllMsgsEncrypted: Boolean): List<MessageEntity> {
+    fun genMessageEntities(
+      context: Context,
+      email: String,
+      label: String,
+      msgsList: List<com.google.api.services.gmail.model.Message>,
+      isNew: Boolean,
+      areAllMsgsEncrypted: Boolean
+    ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
-          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+          SharedPreferencesHelper.getString(
+            PreferenceManager.getDefaultSharedPreferences(context),
+            Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
+          )
 
-      val onlyEncryptedMsgs = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
-          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+      val onlyEncryptedMsgs =
+        NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
+            SharedPreferencesHelper.getString(
+              PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
+            )
 
       for (msg in msgsList) {
         try {
@@ -264,7 +294,8 @@ data class MessageEntity(
           }
 
           val mimeMessage = GmaiAPIMimeMessage(Session.getInstance(Properties()), msg)
-          messageEntities.add(genMsgEntity(
+          messageEntities.add(
+            genMsgEntity(
               email = email,
               label = label,
               msg = mimeMessage,
@@ -272,7 +303,8 @@ data class MessageEntity(
               isNew = isNewTemp,
               isEncrypted = isEncrypted,
               hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
-          ).copy(threadId = msg.threadId, historyId = msg.historyId.toString()))
+            ).copy(threadId = msg.threadId, historyId = msg.historyId.toString())
+          )
         } catch (e: MessageRemovedException) {
           e.printStackTrace()
         } catch (e: AddressException) {
@@ -296,38 +328,46 @@ data class MessageEntity(
      * @throws MessagingException This exception may be occured when we call methods of thr
      * [Message] object
      */
-    fun genMsgEntity(email: String, label: String, msg: Message, uid: Long, isNew: Boolean,
-                     isEncrypted: Boolean? = null, hasAttachments: Boolean? = null):
+    fun genMsgEntity(
+      email: String, label: String, msg: Message, uid: Long, isNew: Boolean,
+      isEncrypted: Boolean? = null, hasAttachments: Boolean? = null
+    ):
         MessageEntity {
       return MessageEntity(email = email,
-          folder = label,
-          uid = uid,
-          receivedDate = msg.receivedDate?.time,
-          sentDate = msg.sentDate?.time,
-          fromAddress = InternetAddress.toString(msg.from),
-          replyTo = InternetAddress.toString(msg.replyTo),
-          toAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)),
-          ccAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)),
-          subject = msg.subject,
-          flags = msg.flags.toString().toUpperCase(Locale.getDefault()),
-          hasAttachments = hasAttachments?.let { hasAttachments } ?: EmailUtil.hasAtt(msg),
-          isNew = if (!msg.flags.contains(Flags.Flag.SEEN)) {
-            isNew
-          } else {
-            null
-          },
-          isEncrypted = isEncrypted
+        folder = label,
+        uid = uid,
+        receivedDate = msg.receivedDate?.time,
+        sentDate = msg.sentDate?.time,
+        fromAddress = InternetAddress.toString(msg.from),
+        replyTo = InternetAddress.toString(msg.replyTo),
+        toAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)),
+        ccAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)),
+        subject = msg.subject,
+        flags = msg.flags.toString().toUpperCase(Locale.getDefault()),
+        hasAttachments = hasAttachments?.let { hasAttachments } ?: EmailUtil.hasAtt(msg),
+        isNew = if (!msg.flags.contains(Flags.Flag.SEEN)) {
+          isNew
+        } else {
+          null
+        },
+        isEncrypted = isEncrypted
       )
     }
 
-    fun genMsgEntity(email: String, label: String, uid: Long, info: OutgoingMessageInfo): MessageEntity {
-      return MessageEntity(email = email,
-          folder = label,
-          uid = uid,
-          sentDate = System.currentTimeMillis(),
-          subject = info.subject,
-          flags = MessageFlag.SEEN.value,
-          hasAttachments = !CollectionUtils.isEmpty(info.atts) || !CollectionUtils.isEmpty(info.forwardedAtts)
+    fun genMsgEntity(
+      email: String,
+      label: String,
+      uid: Long,
+      info: OutgoingMessageInfo
+    ): MessageEntity {
+      return MessageEntity(
+        email = email,
+        folder = label,
+        uid = uid,
+        sentDate = System.currentTimeMillis(),
+        subject = info.subject,
+        flags = MessageFlag.SEEN.value,
+        hasAttachments = !CollectionUtils.isEmpty(info.atts) || !CollectionUtils.isEmpty(info.forwardedAtts)
       )
     }
   }

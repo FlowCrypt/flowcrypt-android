@@ -17,15 +17,17 @@ import android.os.Parcelable
  * Time: 15:47
  * E-mail: DenBond7@gmail.com
  */
-data class KeyImportModel constructor(val fileUri: Uri? = null,
-                                      val keyString: String? = null,
-                                      val isPrivateKey: Boolean = false,
-                                      val sourceType: KeyImportDetails.SourceType) : Parcelable {
+data class KeyImportModel constructor(
+  val fileUri: Uri? = null,
+  val keyString: String? = null,
+  val isPrivateKey: Boolean = false,
+  val sourceType: KeyImportDetails.SourceType
+) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readParcelable<Uri>(Uri::class.java.classLoader),
-      source.readString(),
-      source.readInt() == 1,
-      source.readParcelable(KeyImportDetails.SourceType::class.java.classLoader)!!
+    source.readParcelable<Uri>(Uri::class.java.classLoader),
+    source.readString(),
+    source.readInt() == 1,
+    source.readParcelable(KeyImportDetails.SourceType::class.java.classLoader)!!
   )
 
   override fun describeContents(): Int {
@@ -33,12 +35,12 @@ data class KeyImportModel constructor(val fileUri: Uri? = null,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeParcelable(fileUri, flags)
-        writeString(keyString)
-        writeInt((if (isPrivateKey) 1 else 0))
-        writeParcelable(sourceType, flags)
-      }
+    with(dest) {
+      writeParcelable(fileUri, flags)
+      writeString(keyString)
+      writeInt((if (isPrivateKey) 1 else 0))
+      writeParcelable(sourceType, flags)
+    }
 
   companion object {
     @JvmField

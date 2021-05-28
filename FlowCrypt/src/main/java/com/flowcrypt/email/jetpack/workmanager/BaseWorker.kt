@@ -19,17 +19,19 @@ import kotlinx.coroutines.withContext
  *         Time: 5:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+abstract class BaseWorker(context: Context, params: WorkerParameters) :
+  CoroutineWorker(context, params) {
   abstract val useIndependentConnection: Boolean
   protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-  suspend fun rescheduleIfActiveAccountWasChanged(accountEntity: AccountEntity?): Result = withContext(Dispatchers.IO) {
-    val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-    if (activeAccountEntity?.id == accountEntity?.id) {
-      return@withContext Result.success()
-    } else {
-      //reschedule a task if the active account was changed
-      return@withContext Result.retry()
+  suspend fun rescheduleIfActiveAccountWasChanged(accountEntity: AccountEntity?): Result =
+    withContext(Dispatchers.IO) {
+      val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
+      if (activeAccountEntity?.id == accountEntity?.id) {
+        return@withContext Result.success()
+      } else {
+        //reschedule a task if the active account was changed
+        return@withContext Result.retry()
+      }
     }
-  }
 }

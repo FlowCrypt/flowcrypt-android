@@ -43,7 +43,7 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     this.isShowAnotherAccountBtnEnabled =
-        intent?.getBooleanExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true) ?: true
+      intent?.getBooleanExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true) ?: true
     val accountEntity: AccountEntity? = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT)
 
     if (accountEntity == null) {
@@ -56,8 +56,10 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonCreateNewKey -> startActivityForResult(CreatePrivateKeyActivity.newIntent(this, tempAccount),
-          REQUEST_CODE_CREATE_KEY_ACTIVITY)
+      R.id.buttonCreateNewKey -> startActivityForResult(
+        CreatePrivateKeyActivity.newIntent(this, tempAccount),
+        REQUEST_CODE_CREATE_KEY_ACTIVITY
+      )
 
       R.id.buttonImportMyKey -> {
         var keyImportModel: KeyImportModel? = null
@@ -66,16 +68,18 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
         }
 
         startActivityForResult(
-            ImportPrivateKeyActivity.getIntent(
-                context = this,
-                accountEntity = tempAccount,
-                isSyncEnabled = false,
-                title = getString(R.string.import_private_key),
-                model = keyImportModel,
-                throwErrorIfDuplicateFoundEnabled = true,
-                cls = ImportPrivateKeyActivity::class.java,
-                addAccountIfNotExist = true),
-            REQUEST_CODE_IMPORT_ACTIVITY)
+          ImportPrivateKeyActivity.getIntent(
+            context = this,
+            accountEntity = tempAccount,
+            isSyncEnabled = false,
+            title = getString(R.string.import_private_key),
+            model = keyImportModel,
+            throwErrorIfDuplicateFoundEnabled = true,
+            cls = ImportPrivateKeyActivity::class.java,
+            addAccountIfNotExist = true
+          ),
+          REQUEST_CODE_IMPORT_ACTIVITY
+        )
       }
 
       R.id.buttonSelectAnotherAccount -> {
@@ -135,15 +139,21 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
     const val RESULT_CODE_HANDLE_RESOLVED_KEYS = 11
 
     val EXTRA_KEY_ACCOUNT =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT", CreateOrImportKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT", CreateOrImportKeyActivity::class.java)
 
     private const val REQUEST_CODE_IMPORT_ACTIVITY = 11
     private const val REQUEST_CODE_CREATE_KEY_ACTIVITY = 12
     private val KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED =
-        GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED",
-            CreateOrImportKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED",
+        CreateOrImportKeyActivity::class.java
+      )
 
-    fun newIntent(context: Context, accountEntity: AccountEntity, isShowAnotherAccountBtnEnabled: Boolean): Intent {
+    fun newIntent(
+      context: Context,
+      accountEntity: AccountEntity,
+      isShowAnotherAccountBtnEnabled: Boolean
+    ): Intent {
       val intent = Intent(context, CreateOrImportKeyActivity::class.java)
       intent.putExtra(EXTRA_KEY_ACCOUNT, accountEntity)
       intent.putExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, isShowAnotherAccountBtnEnabled)

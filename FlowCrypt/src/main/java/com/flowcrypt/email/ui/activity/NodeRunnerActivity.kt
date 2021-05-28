@@ -50,9 +50,11 @@ class NodeRunnerActivity : BaseActivity() {
     if (nodeInitResult.isReady) {
       finish()
     } else {
-      showInfoDialogFragment(dialogMsg = nodeInitResult.e?.message
+      showInfoDialogFragment(
+        dialogMsg = nodeInitResult.e?.message
           ?: nodeInitResult.e?.javaClass?.simpleName
-          ?: getString(R.string.internal_node_init_error))
+          ?: getString(R.string.internal_node_init_error)
+      )
     }
   }
 }

@@ -69,14 +69,16 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     this.email = arguments?.getString(KEY_EMAIL)
     this.title = arguments?.getInt(KEY_TITLE_RESOURCE_ID)
     this.choiceMode = arguments?.getInt(KEY_CHOICE_MODE, ListView.CHOICE_MODE_NONE)
-        ?: ListView.CHOICE_MODE_NONE
+      ?: ListView.CHOICE_MODE_NONE
     this.returnResultImmediatelyIfSingle =
-        arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
+      arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val view = LayoutInflater.from(context).inflate(R.layout.fragment_send_user_public_key,
-        if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false)
+    val view = LayoutInflater.from(context).inflate(
+      R.layout.fragment_send_user_public_key,
+      if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false
+    )
 
     textViewMsg = view.findViewById(R.id.textViewMessage)
     progressBar = view.findViewById(R.id.progressBar)
@@ -229,25 +231,37 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   companion object {
     val KEY_ATTACHMENT_INFO_LIST =
-        GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST",
-            ChoosePublicKeyDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_ATTACHMENT_INFO_LIST",
+        ChoosePublicKeyDialogFragment::class.java
+      )
 
-    private val KEY_EMAIL = GeneralUtil.generateUniqueExtraKey("KEY_EMAIL",
-        ChoosePublicKeyDialogFragment::class.java)
+    private val KEY_EMAIL = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EMAIL",
+      ChoosePublicKeyDialogFragment::class.java
+    )
 
-    private val KEY_CHOICE_MODE = GeneralUtil.generateUniqueExtraKey("KEY_CHOICE_MODE",
-        ChoosePublicKeyDialogFragment::class.java)
+    private val KEY_CHOICE_MODE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_CHOICE_MODE",
+      ChoosePublicKeyDialogFragment::class.java
+    )
 
-    private val KEY_TITLE_RESOURCE_ID = GeneralUtil.generateUniqueExtraKey("KEY_TITLE_RESOURCE_ID",
-        ChoosePublicKeyDialogFragment::class.java)
+    private val KEY_TITLE_RESOURCE_ID = GeneralUtil.generateUniqueExtraKey(
+      "KEY_TITLE_RESOURCE_ID",
+      ChoosePublicKeyDialogFragment::class.java
+    )
 
     private val KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
-            ChoosePublicKeyDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
+        ChoosePublicKeyDialogFragment::class.java
+      )
 
-    fun newInstance(email: String, choiceMode: Int,
-                    titleResourceId: Int?,
-                    returnResultImmediatelyIfSingle: Boolean = false): ChoosePublicKeyDialogFragment {
+    fun newInstance(
+      email: String, choiceMode: Int,
+      titleResourceId: Int?,
+      returnResultImmediatelyIfSingle: Boolean = false
+    ): ChoosePublicKeyDialogFragment {
       val args = Bundle()
       args.putString(KEY_EMAIL, email)
       args.putInt(KEY_CHOICE_MODE, choiceMode)

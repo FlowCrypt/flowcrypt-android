@@ -82,8 +82,10 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_RUN_PREVIEW_ACTIVITY -> UIUtil.exchangeViewVisibility(false,
-          layoutProgress, layoutContentView)
+      REQUEST_CODE_RUN_PREVIEW_ACTIVITY -> UIUtil.exchangeViewVisibility(
+        false,
+        layoutProgress, layoutContentView
+      )
 
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
@@ -100,12 +102,19 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
+  override fun onKeyFound(
+    sourceType: KeyImportDetails.SourceType,
+    keyDetailsList: List<PgpKeyDetails>
+  ) {
     if (sourceType == KeyImportDetails.SourceType.CLIPBOARD) {
       if (keyDetailsList.isNotEmpty()) {
         UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyImportModel!!
-            .keyString), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
+        startActivityForResult(
+          PreviewImportPgpContactActivity.newIntent(
+            this, keyImportModel!!
+              .keyString
+          ), REQUEST_CODE_RUN_PREVIEW_ACTIVITY
+        )
       } else {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         Toast.makeText(this, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
@@ -115,7 +124,10 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
 
   override fun handleSelectedFile(uri: Uri) {
     UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-    startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
+    startActivityForResult(
+      PreviewImportPgpContactActivity.newIntent(this, uri),
+      REQUEST_CODE_RUN_PREVIEW_ACTIVITY
+    )
   }
 
   override fun initViews() {
@@ -175,9 +187,11 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
           UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
 
           val exception = it.exception ?: return@Observer
-          Toast.makeText(this, if (exception.message.isNullOrEmpty()) {
-            exception.javaClass.simpleName
-          } else exception.message, Toast.LENGTH_SHORT).show()
+          Toast.makeText(
+            this, if (exception.message.isNullOrEmpty()) {
+              exception.javaClass.simpleName
+            } else exception.message, Toast.LENGTH_SHORT
+          ).show()
 
           countingIdlingResource.decrementSafely()
         }
@@ -192,8 +206,10 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
     } else {
       val pubkey = pubResponse.pubkey
       if (!pubkey.isNullOrEmpty()) {
-        startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, pubkey),
-            REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
+        startActivityForResult(
+          PreviewImportPgpContactActivity.newIntent(this, pubkey),
+          REQUEST_CODE_RUN_PREVIEW_ACTIVITY
+        )
       } else {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         Toast.makeText(this, R.string.supported_public_key_not_found, Toast.LENGTH_SHORT).show()
@@ -205,8 +221,12 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
     private const val REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100
 
     fun newIntent(context: Context, accountEntity: AccountEntity?): Intent {
-      return newIntent(context = context, accountEntity = accountEntity, title = context.getString(R.string
-          .add_public_keys_of_your_contacts), throwErrorIfDuplicateFoundEnabled = false, cls = ImportPgpContactActivity::class.java)
+      return newIntent(
+        context = context, accountEntity = accountEntity, title = context.getString(
+          R.string
+            .add_public_keys_of_your_contacts
+        ), throwErrorIfDuplicateFoundEnabled = false, cls = ImportPgpContactActivity::class.java
+      )
     }
   }
 }

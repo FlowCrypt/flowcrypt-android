@@ -67,23 +67,23 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule(userWithoutLetters))
-      .around(AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
-      .around(AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, LOCAL_FOLDERS))
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule(userWithoutLetters))
+    .around(AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
+    .around(AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, LOCAL_FOLDERS))
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   @DependsOnMailServer
   fun testComposeFloatButton() {
     onView(withId(R.id.floatActionButtonCompose))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
     onView(allOf(withText(R.string.compose), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -101,22 +101,22 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
     Thread.sleep(1000)
 
     onView(withId(R.id.rVMsgs))
-        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, scrollTo()))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, scrollTo()))
     onView(withId(R.id.rVMsgs))
-        .check(matches(isDisplayed()))
-        .perform(swipeDown())
+      .check(matches(isDisplayed()))
+      .perform(swipeDown())
     onView(withId(R.id.rVMsgs))
-        .check(matches(not(withEmptyRecyclerView())))
-        .check(matches(isDisplayed()))
+      .check(matches(not(withEmptyRecyclerView())))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   @DependsOnMailServer
   fun testOpenAndSwipeNavigationView() {
     onView(withId(R.id.drawer_layout))
-        .perform(open())
+      .perform(open())
     onView(withId(R.id.navigationView))
-        .perform(swipeUp())
+      .perform(swipeUp())
   }
 
   @Test
@@ -133,12 +133,12 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   @DependsOnMailServer
   fun testGoToSettingsActivity() {
     onView(withId(R.id.drawer_layout))
-        .perform(open())
+      .perform(open())
     onView(withId(R.id.navigationView))
-        .perform(swipeUp())
+      .perform(swipeUp())
     onView(withText(R.string.action_settings))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intended(hasComponent(SettingsActivity::class.java.name))
   }
 
@@ -146,71 +146,91 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   @DependsOnMailServer
   fun testSwitchLabels() {
     val menuItem = "Sent"
-    onView(withId(R.id.toolbar)).check(matches(anyOf(
-        withToolBarText("INBOX"),
-        withToolBarText(InstrumentationRegistry.getInstrumentation().targetContext.getString(R
-            .string.loading)))))
+    onView(withId(R.id.toolbar)).check(
+      matches(
+        anyOf(
+          withToolBarText("INBOX"),
+          withToolBarText(
+            InstrumentationRegistry.getInstrumentation().targetContext.getString(
+              R
+                .string.loading
+            )
+          )
+        )
+      )
+    )
 
     onView(withId(R.id.drawer_layout))
-        .perform(open())
+      .perform(open())
     onView(withId(R.id.navigationView))
-        .perform(navigateToItemWithName(menuItem))
+      .perform(navigateToItemWithName(menuItem))
     onView(withId(R.id.toolbar))
-        .check(matches(withToolBarText(menuItem)))
+      .check(matches(withToolBarText(menuItem)))
   }
 
   @Test
   @NotReadyForCI
   fun testShowAnotherAccounts() {
     onView(withId(R.id.drawer_layout))
-        .perform(open())
+      .perform(open())
     onView(withId(R.id.textViewActiveUserEmail))
-        .check(matches(isDisplayed())).check(matches(withText(userWithMoreThan21LettersAccount.email)))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(userWithMoreThan21LettersAccount.email)))
     onView(withId(R.id.layoutUserDetails))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(userWithoutLetters.email))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   private fun clickLogOut() {
     onView(withId(R.id.drawer_layout))
-        .perform(open())
+      .perform(open())
     onView(withId(R.id.navigationView))
-        .perform(swipeUp())
+      .perform(swipeUp())
     onView(withText(R.string.log_out))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   companion object {
     private val LOCAL_FOLDERS: MutableList<LocalFolder>
     private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWithMoreThan21Letters()
     private val INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT = LocalFolder(
-        account = userWithMoreThan21LettersAccount.email,
-        fullName = "INBOX",
-        folderAlias = "INBOX",
-        attributes = listOf("\\HasNoChildren"),
-        isCustom = false)
+      account = userWithMoreThan21LettersAccount.email,
+      fullName = "INBOX",
+      folderAlias = "INBOX",
+      attributes = listOf("\\HasNoChildren"),
+      isCustom = false
+    )
 
     init {
       LOCAL_FOLDERS = ArrayList()
       LOCAL_FOLDERS.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT)
-      LOCAL_FOLDERS.add(LocalFolder(
+      LOCAL_FOLDERS.add(
+        LocalFolder(
           account = userWithMoreThan21LettersAccount.email,
           fullName = "Drafts",
           folderAlias = "Drafts",
-          attributes = listOf("\\HasNoChildren", "\\Drafts")))
-      LOCAL_FOLDERS.add(LocalFolder(
+          attributes = listOf("\\HasNoChildren", "\\Drafts")
+        )
+      )
+      LOCAL_FOLDERS.add(
+        LocalFolder(
           account = userWithMoreThan21LettersAccount.email,
           fullName = "Sent",
           folderAlias = "Sent",
-          attributes = listOf("\\HasNoChildren", "\\Sent")))
-      LOCAL_FOLDERS.add(LocalFolder(
+          attributes = listOf("\\HasNoChildren", "\\Sent")
+        )
+      )
+      LOCAL_FOLDERS.add(
+        LocalFolder(
           account = userWithMoreThan21LettersAccount.email,
           fullName = "Junk",
           folderAlias = "Junk",
-          attributes = listOf("\\HasNoChildren", "\\Junk")))
+          attributes = listOf("\\HasNoChildren", "\\Junk")
+        )
+      )
     }
   }
 }
