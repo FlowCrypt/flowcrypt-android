@@ -62,16 +62,17 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
   }
 
   return PgpKeyDetails(
-      isFullyDecrypted = keyRingInfo.isFullyDecrypted,
-      isFullyEncrypted = keyRingInfo.isFullyEncrypted,
-      privateKey = privateKey,
-      publicKey = publicKey,
-      users = keyRingInfo.userIds,
-      ids = keyIdList,
-      created = keyRingInfo.creationDate.time,
-      lastModified = keyRingInfo.lastModified.time,
-      expiration = keyRingInfo.primaryKeyExpirationDate?.time,
-      algo = algo)
+    isFullyDecrypted = keyRingInfo.isFullyDecrypted,
+    isFullyEncrypted = keyRingInfo.isFullyEncrypted,
+    privateKey = privateKey,
+    publicKey = publicKey,
+    users = keyRingInfo.userIds,
+    ids = keyIdList,
+    created = keyRingInfo.creationDate.time,
+    lastModified = keyRingInfo.lastModified?.time,
+    expiration = keyRingInfo.primaryKeyExpirationDate?.time,
+    algo = algo
+  )
 }
 
 @Throws(IOException::class)
