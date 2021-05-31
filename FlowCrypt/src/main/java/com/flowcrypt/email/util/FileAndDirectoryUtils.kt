@@ -102,8 +102,10 @@ class FileAndDirectoryUtils {
      * @return created file.
      */
     fun createFileWithIncreasedIndex(directory: File?, fileName: String): File {
-      val patternWithIndex: Pattern = Pattern.compile("((?<Left>\\()(?<Digits>\\d+)(?<Right>\\))(?<Ext>(\\.\\w+)*|\\.+))\$",
-          Pattern.CASE_INSENSITIVE)
+      val patternWithIndex: Pattern = Pattern.compile(
+        "((?<Left>\\()(?<Digits>\\d+)(?<Right>\\))(?<Ext>(\\.\\w+)*|\\.+))\$",
+        Pattern.CASE_INSENSITIVE
+      )
       val matcherWithIndex: Matcher = patternWithIndex.matcher(fileName)
       if (matcherWithIndex.find()) {
         val newIndex = (matcherWithIndex.group(3)?.toInt() ?: 0) + 1
@@ -139,7 +141,7 @@ class FileAndDirectoryUtils {
      * @return normalized file name.
      */
     fun normalizeFileName(fileName: String?) =
-        fileName?.replace("[^\\w._-]".toRegex(), "")
+      fileName?.replace("[^\\w._-]".toRegex(), "")
 
   }
 }

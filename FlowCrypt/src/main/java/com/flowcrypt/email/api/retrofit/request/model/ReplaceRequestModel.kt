@@ -16,6 +16,8 @@ import com.google.gson.annotations.SerializedName
  * Time: 10:03
  * E-mail: DenBond7@gmail.com
  */
-data class ReplaceRequestModel(@SerializedName("signed_message") @Expose val signedMsg: String,
-                               @SerializedName("new_pubkey") @Expose val newPubKey: String,
-                               @SerializedName("email") @Expose val email: String) : RequestModel
+data class ReplaceRequestModel(
+  @SerializedName("signed_message") @Expose val signedMsg: String,
+  @SerializedName("new_pubkey") @Expose val newPubKey: String,
+  @SerializedName("email") @Expose val email: String
+) : RequestModel

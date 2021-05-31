@@ -146,9 +146,13 @@ class MainSignInFragment : BaseSingInFragment() {
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
       val addOtherAccountFragment = AddOtherAccountFragment.newInstance()
       activity?.supportFragmentManager?.beginTransaction()
-          ?.replace(R.id.fragmentContainerView, addOtherAccountFragment, AddOtherAccountFragment::class.java.simpleName)
-          ?.addToBackStack(null)
-          ?.commit()
+        ?.replace(
+          R.id.fragmentContainerView,
+          addOtherAccountFragment,
+          AddOtherAccountFragment::class.java.simpleName
+        )
+        ?.addToBackStack(null)
+        ?.commit()
     }
 
     view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
@@ -160,8 +164,12 @@ class MainSignInFragment : BaseSingInFragment() {
     }
 
     view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
-      startActivity(HtmlViewFromAssetsRawActivity.newIntent(requireContext(), getString(R.string.security),
-          "html/security.htm"))
+      startActivity(
+        HtmlViewFromAssetsRawActivity.newIntent(
+          requireContext(), getString(R.string.security),
+          "html/security.htm"
+        )
+      )
     }
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
@@ -201,8 +209,10 @@ class MainSignInFragment : BaseSingInFragment() {
           throw error
         }
 
-        showInfoSnackbar(msgText = error?.message ?: error?.javaClass?.simpleName
-        ?: getString(R.string.unknown_error))
+        showInfoSnackbar(
+          msgText = error?.message ?: error?.javaClass?.simpleName
+          ?: getString(R.string.unknown_error)
+        )
       }
     } catch (e: ApiException) {
       val msg = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
@@ -222,27 +232,42 @@ class MainSignInFragment : BaseSingInFragment() {
     if (existedAccount == null) {
       getTempAccount()?.let {
         if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
-          requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
+          requireContext().startService(
+            Intent(
+              requireContext(),
+              CheckClipboardToFindKeyService::class.java
+            )
+          )
           val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
           startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
         } else {
           val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(it)
           activity?.supportFragmentManager?.beginTransaction()
-              ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-              ?.addToBackStack(null)
-              ?.commit()
+            ?.replace(
+              R.id.fragmentContainerView,
+              nextFrag,
+              AuthorizeAndSearchBackupsFragment::class.java.simpleName
+            )
+            ?.addToBackStack(null)
+            ?.commit()
         }
       }
     } else {
       showContent()
-      showInfoSnackbar(msgText = getString(R.string.template_email_already_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
+      showInfoSnackbar(
+        msgText = getString(
+          R.string.template_email_already_added,
+          existedAccount.email
+        ), duration = Snackbar.LENGTH_LONG
+      )
     }
   }
 
   @Suppress("UNCHECKED_CAST")
   private fun subscribeToCheckAccountSettings() {
     setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
-      val result: Result<*>? = bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+      val result: Result<*>? =
+        bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
 
       if (result != null) {
         when (result.status) {
@@ -265,13 +290,14 @@ class MainSignInFragment : BaseSingInFragment() {
             }
 
             val faqUrl = "https://support.google.com/mail/answer/75725?hl=" + GeneralUtil
-                .getLocaleLanguageCode(requireContext())
+              .getLocaleLanguageCode(requireContext())
             val dialogMsg = msg + getString(R.string.provider_faq, faqUrl)
 
             showInfoDialog(
-                dialogTitle = title,
-                dialogMsg = dialogMsg,
-                useLinkify = true)
+              dialogTitle = title,
+              dialogMsg = dialogMsg,
+              useLinkify = true
+            )
           }
 
           else -> {
@@ -285,7 +311,8 @@ class MainSignInFragment : BaseSingInFragment() {
   @Suppress("UNCHECKED_CAST")
   private fun subscribeToAuthorizeAndSearchBackups() {
     setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS) { _, bundle ->
-      val result: Result<*>? = bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+      val result: Result<*>? =
+        bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
 
       if (result != null) {
         when (result.status) {
@@ -299,9 +326,11 @@ class MainSignInFragment : BaseSingInFragment() {
             if (result.exception is UserRecoverableAuthIOException) {
               startActivityForResult(result.exception.intent, REQUEST_CODE_RESOLVE_SIGN_IN_ERROR)
             } else {
-              showInfoSnackbar(msgText =
-              result.exception?.message ?: result.exception?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error))
+              showInfoSnackbar(
+                msgText =
+                result.exception?.message ?: result.exception?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error)
+              )
             }
           }
 
@@ -316,17 +345,31 @@ class MainSignInFragment : BaseSingInFragment() {
   private fun onFetchKeysCompleted(keyDetailsList: ArrayList<PgpKeyDetails>?) {
     if (keyDetailsList.isNullOrEmpty()) {
       getTempAccount()?.let {
-        requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
+        requireContext().startService(
+          Intent(
+            requireContext(),
+            CheckClipboardToFindKeyService::class.java
+          )
+        )
         val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
         startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
       }
     } else {
-      val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key, keyDetailsList.size, keyDetailsList.size)
+      val subTitle = resources.getQuantityString(
+        R.plurals.found_backup_of_your_account_key,
+        keyDetailsList.size,
+        keyDetailsList.size
+      )
       val positiveBtnTitle = getString(R.string.continue_)
       val negativeBtnTitle = getString(R.string.use_another_account)
-      val intent = CheckKeysActivity.newIntent(context = requireContext(), privateKeys = keyDetailsList,
-          sourceType = KeyImportDetails.SourceType.EMAIL, subTitle = subTitle, positiveBtnTitle = positiveBtnTitle,
-          negativeBtnTitle = negativeBtnTitle)
+      val intent = CheckKeysActivity.newIntent(
+        context = requireContext(),
+        privateKeys = keyDetailsList,
+        sourceType = KeyImportDetails.SourceType.EMAIL,
+        subTitle = subTitle,
+        positiveBtnTitle = positiveBtnTitle,
+        negativeBtnTitle = negativeBtnTitle
+      )
       startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
     }
   }
@@ -348,14 +391,18 @@ class MainSignInFragment : BaseSingInFragment() {
 
           Result.Status.ERROR -> {
             showContent()
-            Toast.makeText(requireContext(), it.data?.apiError?.msg
-                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+              requireContext(), it.data?.apiError?.msg
+                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT
+            ).show()
           }
 
           Result.Status.EXCEPTION -> {
             showContent()
-            Toast.makeText(requireContext(), it.exception?.message
-                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+              requireContext(), it.exception?.message
+                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT
+            ).show()
           }
         }
       }
@@ -366,7 +413,8 @@ class MainSignInFragment : BaseSingInFragment() {
     when (resultCode) {
       Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
         val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
-            CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+          CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS
+        )
 
         if (keys.isNullOrEmpty()) {
           showInfoSnackbar(msgText = getString(R.string.error_no_keys))
@@ -376,7 +424,11 @@ class MainSignInFragment : BaseSingInFragment() {
 
           if (getTempAccount() == null) {
             ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
-            Toast.makeText(requireContext(), R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+              requireContext(),
+              R.string.error_occurred_try_again_later,
+              Toast.LENGTH_SHORT
+            ).show()
             return
           } else {
             getTempAccount()?.let {
@@ -387,7 +439,11 @@ class MainSignInFragment : BaseSingInFragment() {
       }
 
       CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
-        Toast.makeText(requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+          requireContext(),
+          getString(R.string.key_already_imported_finishing_setup),
+          Toast.LENGTH_SHORT
+        ).show()
         if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
       }
 

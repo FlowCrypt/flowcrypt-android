@@ -32,15 +32,17 @@ abstract class BaseSignActivityTest : BaseTest() {
     val intent = Intent()
     intent.putExtra("googleSignInAccount", GoogleSignInAccount.zaa(signInAccountJson))
 
-    val signInIntent = GoogleSignIn.getClient(getTargetContext(),
-        GoogleApiClientHelper.generateGoogleSignInOptions()).signInIntent
+    val signInIntent = GoogleSignIn.getClient(
+      getTargetContext(),
+      GoogleApiClientHelper.generateGoogleSignInOptions()
+    ).signInIntent
 
     Intents.intending(IntentMatchers.hasComponent(signInIntent.component))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
 
     Espresso.onView(ViewMatchers.withId(R.id.buttonSignInWithGmail))
-        .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        .perform(ViewActions.click())
+      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+      .perform(ViewActions.click())
   }
 
   protected fun genMockGoogleSignInAccountJson(email: String): String {

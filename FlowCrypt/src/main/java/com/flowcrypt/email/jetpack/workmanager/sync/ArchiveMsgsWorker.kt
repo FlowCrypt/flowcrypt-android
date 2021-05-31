@@ -34,7 +34,8 @@ import javax.mail.Store
  *         Time: 12:02 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class ArchiveMsgsWorker(context: Context, params: WorkerParameters) :
+  BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     archive(accountEntity, store)
   }
@@ -50,7 +51,8 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
 
       store.getFolder(folderName).use { folder ->
         val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+        val msgs: List<Message> =
+          remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
 
         if (msgs.isNotEmpty()) {
           val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
@@ -64,22 +66,26 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
     archiveInternal(account) { _, uidList ->
       executeGMailAPICall(applicationContext) {
         GmailApiHelper.changeLabels(
-            context = applicationContext,
-            accountEntity = account,
-            ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
-            removeLabelIds = listOf(GmailApiHelper.LABEL_INBOX))
+          context = applicationContext,
+          accountEntity = account,
+          ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) },
+          removeLabelIds = listOf(GmailApiHelper.LABEL_INBOX)
+        )
       }
     }
   }
 
-  private suspend fun archiveInternal(account: AccountEntity,
-                                      action: suspend (folderName: String, list: List<Long>) -> Unit) = withContext(Dispatchers.IO) {
+  private suspend fun archiveInternal(
+    account: AccountEntity,
+    action: suspend (folderName: String, list: List<Long>) -> Unit
+  ) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
     val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
 
     while (true) {
-      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
+      val candidatesForArchiving = roomDatabase.msgDao()
+        .getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
       if (candidatesForArchiving.isEmpty()) {
         break
       } else {
@@ -95,19 +101,19 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<ArchiveMsgsWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<ArchiveMsgsWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

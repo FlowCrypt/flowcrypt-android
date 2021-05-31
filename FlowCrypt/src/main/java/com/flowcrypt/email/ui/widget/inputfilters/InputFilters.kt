@@ -8,7 +8,7 @@ import android.text.InputFilter
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextUtils
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -22,8 +22,10 @@ interface InputFilters {
    * through edits.
    */
   class NoCaps : InputFilter {
-    override fun filter(source: CharSequence, start: Int, end: Int,
-                        dest: Spanned?, dstart: Int, dend: Int): CharSequence? {
+    override fun filter(
+      source: CharSequence, start: Int, end: Int,
+      dest: Spanned?, dstart: Int, dend: Int
+    ): CharSequence? {
       for (i in start until end) {
         if (Character.isUpperCase(source[i])) {
           val v = CharArray(end - start)
@@ -31,8 +33,10 @@ interface InputFilters {
           val s = String(v).toLowerCase(Locale.US)
           return if (source is Spanned) {
             val sp = SpannableString(s)
-            TextUtils.copySpansFrom(source,
-                start, end, null, sp, 0)
+            TextUtils.copySpansFrom(
+              source,
+              start, end, null, sp, 0
+            )
             sp
           } else {
             s
@@ -47,8 +51,10 @@ interface InputFilters {
    * This filter will constrain edits not to add non-digital characters.
    */
   class OnlyDigits : InputFilter {
-    override fun filter(source: CharSequence, start: Int, end: Int,
-                        dest: Spanned?, dstart: Int, dend: Int): CharSequence? {
+    override fun filter(
+      source: CharSequence, start: Int, end: Int,
+      dest: Spanned?, dstart: Int, dend: Int
+    ): CharSequence? {
       for (i in start until end) {
         if (!Character.isDigit(source[i])) {
           return ""

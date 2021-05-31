@@ -26,5 +26,8 @@ interface PgpApiRepository : BaseApiRepository {
    * @param requestCode A unique request code for identify the current action.
    * @param request     An instance of [ParseDecryptMsgRequest] which contains information about a message.
    */
-  suspend fun parseDecryptMsg(requestCode: Int = 0, request: ParseDecryptMsgRequest): Result<ParseDecryptedMsgResult?>
+  suspend fun parseDecryptMsg(
+    requestCode: Int = 0,
+    request: ParseDecryptMsgRequest
+  ): Result<ParseDecryptedMsgResult?>
 }

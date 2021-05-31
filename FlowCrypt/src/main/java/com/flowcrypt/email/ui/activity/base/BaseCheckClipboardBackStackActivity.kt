@@ -32,7 +32,11 @@ abstract class BaseCheckClipboardBackStackActivity : BaseBackStackActivity(), Se
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    bindService(Intent(this, CheckClipboardToFindKeyService::class.java), this, Context.BIND_AUTO_CREATE)
+    bindService(
+      Intent(this, CheckClipboardToFindKeyService::class.java),
+      this,
+      Context.BIND_AUTO_CREATE
+    )
   }
 
   override fun onDestroy() {

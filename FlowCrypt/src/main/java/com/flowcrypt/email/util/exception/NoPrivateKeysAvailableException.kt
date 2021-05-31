@@ -17,5 +17,5 @@ import com.flowcrypt.email.R
  * Time: 10:22
  * E-mail: DenBond7@gmail.com
  */
-class NoPrivateKeysAvailableException(context: Context, val email: String)
-  : FlowCryptException(context.getString(R.string.there_are_no_private_keys, email))
+class NoPrivateKeysAvailableException(context: Context, val email: String) :
+  FlowCryptException(context.getString(R.string.there_are_no_private_keys, email))

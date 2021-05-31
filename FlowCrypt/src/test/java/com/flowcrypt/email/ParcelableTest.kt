@@ -48,24 +48,26 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false)
     )
     //todo-denbond7 improve that
-    fixture.customise().sameInstance(OutgoingMessageInfo::class.java,
-        OutgoingMessageInfo(
-            account = "account@test.com",
-            subject = "subject",
-            msg = "msg",
-            toRecipients = listOf(InternetAddress("to@test.com")),
-            ccRecipients = listOf(InternetAddress("cc@test.com")),
-            bccRecipients = listOf(
-                InternetAddress("bcc@test.com"),
-                InternetAddress("bcc1@test.com")),
-            from = "from@test.com",
-            atts = null,
-            forwardedAtts = listOf(),
-            encryptionType = MessageEncryptionType.STANDARD,
-            messageType = MessageType.NEW,
-            replyToMsgEntity = null,
-            uid = 1000
-        )
+    fixture.customise().sameInstance(
+      OutgoingMessageInfo::class.java,
+      OutgoingMessageInfo(
+        account = "account@test.com",
+        subject = "subject",
+        msg = "msg",
+        toRecipients = listOf(InternetAddress("to@test.com")),
+        ccRecipients = listOf(InternetAddress("cc@test.com")),
+        bccRecipients = listOf(
+          InternetAddress("bcc@test.com"),
+          InternetAddress("bcc1@test.com")
+        ),
+        from = "from@test.com",
+        atts = null,
+        forwardedAtts = listOf(),
+        encryptionType = MessageEncryptionType.STANDARD,
+        messageType = MessageType.NEW,
+        replyToMsgEntity = null,
+        uid = 1000
+      )
     )
     objectInstance = currentClass.kotlin.objectInstance ?: fixture.create(currentClass)
   }
@@ -92,18 +94,18 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     private val scanResult: List<Array<Any>> by lazy {
       val classLoader = Thread.currentThread().contextClassLoader
       ClassGraph()
-          // Use contextClassLoader to avoid ClassCastExceptions
-          .addClassLoader(classLoader)
-          // use the right classloader which we added above
-          .ignoreParentClassLoaders()
-          .enableAllInfo()
-          .rejectPackages("androidx", "android")
-          .acceptPackages("com.flowcrypt.email")
-          .scan()
-          .getClassesImplementing("android.os.Parcelable")
-          .filter { (it.isInterface || it.isAbstract || it.typeSignature?.typeParameters?.size ?: 0 > 0).not() }
-          .loadClasses()
-          .map { arrayOf(it.name, it) }
+        // Use contextClassLoader to avoid ClassCastExceptions
+        .addClassLoader(classLoader)
+        // use the right classloader which we added above
+        .ignoreParentClassLoaders()
+        .enableAllInfo()
+        .rejectPackages("androidx", "android")
+        .acceptPackages("com.flowcrypt.email")
+        .scan()
+        .getClassesImplementing("android.os.Parcelable")
+        .filter { (it.isInterface || it.isAbstract || it.typeSignature?.typeParameters?.size ?: 0 > 0).not() }
+        .loadClasses()
+        .map { arrayOf(it.name, it) }
     }
 
     @JvmStatic

@@ -34,7 +34,8 @@ class KeysSettingsActivity : BaseBackStackActivity() {
 
     if (savedInstanceState == null) {
       val keysListFragment = PrivateKeysListFragment.newInstance()
-      supportFragmentManager.beginTransaction().replace(R.id.layoutContent, keysListFragment).commitNow()
+      supportFragmentManager.beginTransaction().replace(R.id.layoutContent, keysListFragment)
+        .commitNow()
     }
   }
 }

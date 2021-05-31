@@ -26,7 +26,8 @@ import com.google.android.material.snackbar.Snackbar
 class GoogleApiClientHelper {
 
   companion object {
-    private const val SERVER_CLIENT_ID = "374364070962-n83b6asllhfkhij6slijr61576lqqi3v.apps.googleusercontent.com"
+    private const val SERVER_CLIENT_ID =
+      "374364070962-n83b6asllhfkhij6slijr61576lqqi3v.apps.googleusercontent.com"
 
     fun generateGoogleSignInOptions(): GoogleSignInOptions {
       val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -46,13 +47,18 @@ class GoogleApiClientHelper {
      * @param rootView        A view which will be used for showing an info [Snackbar]
      * @param requestCode     A request code for handling the result.
      */
-    fun signInWithGmailUsingOAuth2(activity: BaseActivity, client: GoogleSignInClient,
-                                   rootView: View?, requestCode: Int) {
+    fun signInWithGmailUsingOAuth2(
+      activity: BaseActivity, client: GoogleSignInClient,
+      rootView: View?, requestCode: Int
+    ) {
       if (GeneralUtil.isConnected(activity)) {
         client.signOut()
         activity.startActivityForResult(client.signInIntent, requestCode)
       } else {
-        activity.showInfoSnackbar(rootView, activity.getString(R.string.internet_connection_is_not_available))
+        activity.showInfoSnackbar(
+          rootView,
+          activity.getString(R.string.internet_connection_is_not_available)
+        )
       }
     }
   }

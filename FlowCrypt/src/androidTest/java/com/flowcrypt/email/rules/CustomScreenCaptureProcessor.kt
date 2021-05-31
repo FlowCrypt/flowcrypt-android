@@ -15,7 +15,7 @@ import androidx.test.runner.screenshot.BasicScreenCaptureProcessor
 import androidx.test.runner.screenshot.ScreenCapture
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedOutputStream
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -43,8 +43,10 @@ class CustomScreenCaptureProcessor : BasicScreenCaptureProcessor() {
         put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/screenshots")
       }
 
-      val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-          contentValues) ?: return ""
+      val imageUri = contentResolver.insert(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        contentValues
+      ) ?: return ""
       val outputStream = contentResolver.openOutputStream(imageUri) ?: return ""
       BufferedOutputStream(outputStream).use { out ->
         capture.bitmap.compress(capture.format, 100, out)

@@ -12,10 +12,12 @@ object ByteExtHelper {
   const val lf = '\n'.toByte()
 }
 
-val Byte.isLineEnding: Boolean get() {
-  return this == ByteExtHelper.cr || this == ByteExtHelper.lf
-}
+val Byte.isLineEnding: Boolean
+  get() {
+    return this == ByteExtHelper.cr || this == ByteExtHelper.lf
+  }
 
-val Byte.isWhiteSpace: Boolean get() {
-  return isLineEnding || this == ByteExtHelper.tab || this == ByteExtHelper.space
-}
+val Byte.isWhiteSpace: Boolean
+  get() {
+    return isLineEnding || this == ByteExtHelper.tab || this == ByteExtHelper.space
+  }

@@ -20,32 +20,34 @@ import com.flowcrypt.email.database.entity.LabelEntity
  * E-mail: DenBond7@gmail.com
  */
 
-data class LocalFolder constructor(val account: String,
-                                   val fullName: String,
-                                   var folderAlias: String? = null,
-                                   val attributes: List<String>? = null,
-                                   val isCustom: Boolean = false,
-                                   var msgCount: Int = 0,
-                                   var searchQuery: String? = null) : Parcelable {
+data class LocalFolder constructor(
+  val account: String,
+  val fullName: String,
+  var folderAlias: String? = null,
+  val attributes: List<String>? = null,
+  val isCustom: Boolean = false,
+  var msgCount: Int = 0,
+  var searchQuery: String? = null
+) : Parcelable {
 
   constructor(source: Parcel) : this(
-      source.readString()!!,
-      source.readString()!!,
-      source.readString(),
-      source.createStringArrayList(),
-      source.readInt() == 1,
-      source.readInt(),
-      source.readString()
+    source.readString()!!,
+    source.readString()!!,
+    source.readString(),
+    source.createStringArrayList(),
+    source.readInt() == 1,
+    source.readInt(),
+    source.readString()
   )
 
   constructor(source: LabelEntity) : this(
-      source.email,
-      source.name,
-      source.alias,
-      source.attributesList,
-      source.isCustom,
-      source.messagesTotal,
-      null
+    source.email,
+    source.name,
+    source.alias,
+    source.attributesList,
+    source.isCustom,
+    source.messagesTotal,
+    null
   )
 
   fun isOutbox(): Boolean {
@@ -65,15 +67,15 @@ data class LocalFolder constructor(val account: String,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeString(account)
-        writeString(fullName)
-        writeString(folderAlias)
-        writeStringList(attributes)
-        writeInt((if (isCustom) 1 else 0))
-        writeInt(msgCount)
-        writeString(searchQuery)
-      }
+    with(dest) {
+      writeString(account)
+      writeString(fullName)
+      writeString(folderAlias)
+      writeStringList(attributes)
+      writeInt((if (isCustom) 1 else 0))
+      writeInt(msgCount)
+      writeString(searchQuery)
+    }
 
   companion object {
     @JvmField

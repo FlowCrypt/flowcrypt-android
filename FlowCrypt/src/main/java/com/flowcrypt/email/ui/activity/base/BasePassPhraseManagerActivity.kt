@@ -36,7 +36,7 @@ import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -88,7 +88,11 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   override fun onClick(v: View) {
     when (v.id) {
       R.id.buttonSetPassPhrase -> if (TextUtils.isEmpty(editTextKeyPassword.text.toString())) {
-        showInfoSnackbar(rootView, getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG)
+        showInfoSnackbar(
+          rootView,
+          getString(R.string.passphrase_must_be_non_empty),
+          Snackbar.LENGTH_LONG
+        )
       } else {
         if (snackBar != null) {
           snackBar!!.dismiss()
@@ -98,12 +102,16 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
           when (word.word) {
             Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> {
               InfoDialogFragment.newInstance(
-                  dialogTitle = "",
-                  dialogMsg = getString(R.string.select_stronger_pass_phrase)
+                dialogTitle = "",
+                dialogMsg = getString(R.string.select_stronger_pass_phrase)
               ).show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
             }
 
-            else -> UIUtil.exchangeViewVisibility(true, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
+            else -> UIUtil.exchangeViewVisibility(
+              true,
+              layoutSecondPasswordCheck,
+              layoutFirstPasswordCheck
+            )
           }
         }
       }
@@ -112,9 +120,14 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
         snackBar?.dismiss()
 
         try {
-          val webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
-              IOUtils.toString(assets.open("html/pass_phrase_hint.htm"), StandardCharsets.UTF_8))
-          webViewInfoDialogFragment.show(supportFragmentManager, WebViewInfoDialogFragment::class.java.simpleName)
+          val webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance(
+            "",
+            IOUtils.toString(assets.open("html/pass_phrase_hint.htm"), StandardCharsets.UTF_8)
+          )
+          webViewInfoDialogFragment.show(
+            supportFragmentManager,
+            WebViewInfoDialogFragment::class.java.simpleName
+          )
         } catch (e: IOException) {
           e.printStackTrace()
         }
@@ -132,7 +145,11 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
       }
 
       R.id.buttonConfirmPassPhrases -> if (TextUtils.isEmpty(editTextKeyPasswordSecond.text.toString())) {
-        showInfoSnackbar(rootView, getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG)
+        showInfoSnackbar(
+          rootView,
+          getString(R.string.passphrase_must_be_non_empty),
+          Snackbar.LENGTH_LONG
+        )
       } else {
         snackBar?.dismiss()
 
@@ -140,7 +157,11 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
           onConfirmPassPhraseSuccess()
         } else {
           editTextKeyPasswordSecond.text = null
-          showInfoSnackbar(rootView, getString(R.string.pass_phrases_do_not_match), Snackbar.LENGTH_LONG)
+          showInfoSnackbar(
+            rootView,
+            getString(R.string.pass_phrases_do_not_match),
+            Snackbar.LENGTH_LONG
+          )
         }
       }
 
@@ -193,13 +214,15 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
       Constants.PASSWORD_QUALITY_WEAK,
       Constants.PASSWORD_QUALITY_POOR -> {
         val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-            ContextCompat.getColor(this, R.color.silver), BlendModeCompat.MODULATE)
+          ContextCompat.getColor(this, R.color.silver), BlendModeCompat.MODULATE
+        )
         btnSetPassPhrase.background.colorFilter = colorFilter
       }
 
       else -> {
         val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-            ContextCompat.getColor(this, R.color.colorPrimary), BlendModeCompat.MODULATE)
+          ContextCompat.getColor(this, R.color.colorPrimary), BlendModeCompat.MODULATE
+        )
         btnSetPassPhrase.background.colorFilter = colorFilter
       }
     }
@@ -207,23 +230,30 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     val color = parseColor()
 
     progressBarPasswordQuality.progress = word?.bar?.toInt() ?: 0
-    val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_IN)
+    val colorFilter =
+      BlendModeColorFilterCompat.createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_IN)
     progressBarPasswordQuality.progressDrawable.colorFilter = colorFilter
 
     val qualityValue = getLocalizedPasswordQualityValue(word)
 
     val qualityValueSpannable = SpannableString(qualityValue)
-    qualityValueSpannable.setSpan(ForegroundColorSpan(color), 0, qualityValueSpannable.length,
-        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-    qualityValueSpannable.setSpan(StyleSpan(android.graphics.Typeface.BOLD), 0,
-        qualityValueSpannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    qualityValueSpannable.setSpan(
+      ForegroundColorSpan(color), 0, qualityValueSpannable.length,
+      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
+    qualityValueSpannable.setSpan(
+      StyleSpan(android.graphics.Typeface.BOLD), 0,
+      qualityValueSpannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
     textViewPasswordQualityInfo.text = qualityValueSpannable
     textViewPasswordQualityInfo.append(" ")
     textViewPasswordQualityInfo.append(getString(R.string.password_quality_subtext))
 
     val timeSpannable = SpannableString(pwdStrengthResult?.time ?: "")
-    timeSpannable.setSpan(ForegroundColorSpan(color), 0, timeSpannable.length,
-        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    timeSpannable.setSpan(
+      ForegroundColorSpan(color), 0, timeSpannable.length,
+      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
     textViewPasswordQualityInfo.append(" ")
     textViewPasswordQualityInfo.append(timeSpannable)
     textViewPasswordQualityInfo.append(")")

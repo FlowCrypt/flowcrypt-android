@@ -23,7 +23,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  *         E-mail: DenBond7@gmail.com
  */
 class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMode: Int) :
-    ArrayAdapter<AttachmentInfo>(context, R.layout.pub_key_adapter_item_radio_button, atts) {
+  ArrayAdapter<AttachmentInfo>(context, R.layout.pub_key_adapter_item_radio_button, atts) {
   private val inflater: LayoutInflater = LayoutInflater.from(context)
   private val layoutId = if (choiceMode == ListView.CHOICE_MODE_MULTIPLE) {
     R.layout.pub_key_adapter_item_checkbox

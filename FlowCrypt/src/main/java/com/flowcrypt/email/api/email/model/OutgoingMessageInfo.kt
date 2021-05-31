@@ -21,19 +21,20 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 data class OutgoingMessageInfo constructor(
-    val account: String,
-    val subject: String,
-    val msg: String? = null,
-    val toRecipients: List<InternetAddress>,
-    val ccRecipients: List<InternetAddress>? = null,
-    val bccRecipients: List<InternetAddress>? = null,
-    val from: String,
-    val atts: List<AttachmentInfo>? = null,
-    val forwardedAtts: List<AttachmentInfo>? = null,
-    val encryptionType: MessageEncryptionType,
-    val messageType: MessageType,
-    val replyToMsgEntity: MessageEntity? = null,
-    val uid: Long = 0) : Parcelable {
+  val account: String,
+  val subject: String,
+  val msg: String? = null,
+  val toRecipients: List<InternetAddress>,
+  val ccRecipients: List<InternetAddress>? = null,
+  val bccRecipients: List<InternetAddress>? = null,
+  val from: String,
+  val atts: List<AttachmentInfo>? = null,
+  val forwardedAtts: List<AttachmentInfo>? = null,
+  val encryptionType: MessageEncryptionType,
+  val messageType: MessageType,
+  val replyToMsgEntity: MessageEntity? = null,
+  val uid: Long = 0
+) : Parcelable {
 
   /**
    * Generate a list of the all recipients.
@@ -50,19 +51,20 @@ data class OutgoingMessageInfo constructor(
 
   @Suppress("UNCHECKED_CAST")
   constructor(parcel: Parcel) : this(
-      parcel.readString()!!,
-      parcel.readString()!!,
-      parcel.readString(),
-      parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>,
-      parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-      parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-      parcel.readString()!!,
-      parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
-      parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
-      parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
-      parcel.readParcelable<MessageType>(MessageType::class.java.classLoader)!!,
-      parcel.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader),
-      parcel.readLong())
+    parcel.readString()!!,
+    parcel.readString()!!,
+    parcel.readString(),
+    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>,
+    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
+    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
+    parcel.readString()!!,
+    parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
+    parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
+    parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
+    parcel.readParcelable<MessageType>(MessageType::class.java.classLoader)!!,
+    parcel.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader),
+    parcel.readLong()
+  )
 
   override fun describeContents(): Int {
     return 0
@@ -89,9 +91,12 @@ data class OutgoingMessageInfo constructor(
   companion object {
     @JvmField
     @Suppress("unused")
-    val CREATOR: Parcelable.Creator<OutgoingMessageInfo> = object : Parcelable.Creator<OutgoingMessageInfo> {
-      override fun createFromParcel(source: Parcel): OutgoingMessageInfo = OutgoingMessageInfo(source)
-      override fun newArray(size: Int): Array<OutgoingMessageInfo?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<OutgoingMessageInfo> =
+      object : Parcelable.Creator<OutgoingMessageInfo> {
+        override fun createFromParcel(source: Parcel): OutgoingMessageInfo =
+          OutgoingMessageInfo(source)
+
+        override fun newArray(size: Int): Array<OutgoingMessageInfo?> = arrayOfNulls(size)
+      }
   }
 }

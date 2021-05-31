@@ -34,13 +34,15 @@ import com.google.gson.annotations.SerializedName
  * Time: 12:34
  * E-mail: DenBond7@gmail.com
  */
-data class PostHelpFeedbackResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
-                                                @SerializedName("sent") @Expose val isSent: Boolean,
-                                                @Expose val text: String?) : ApiResponse {
+data class PostHelpFeedbackResponse constructor(
+  @SerializedName("error") @Expose override val apiError: ApiError?,
+  @SerializedName("sent") @Expose val isSent: Boolean,
+  @Expose val text: String?
+) : ApiResponse {
   constructor(source: Parcel) : this(
-      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-      1 == source.readInt(),
-      source.readString()
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+    1 == source.readInt(),
+    source.readString()
   )
 
   override fun describeContents(): Int {
@@ -48,17 +50,20 @@ data class PostHelpFeedbackResponse constructor(@SerializedName("error") @Expose
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeParcelable(apiError, 0)
-        writeInt((if (isSent) 1 else 0))
-        writeString(text)
-      }
+    with(dest) {
+      writeParcelable(apiError, 0)
+      writeInt((if (isSent) 1 else 0))
+      writeString(text)
+    }
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<PostHelpFeedbackResponse> = object : Parcelable.Creator<PostHelpFeedbackResponse> {
-      override fun createFromParcel(source: Parcel): PostHelpFeedbackResponse = PostHelpFeedbackResponse(source)
-      override fun newArray(size: Int): Array<PostHelpFeedbackResponse?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<PostHelpFeedbackResponse> =
+      object : Parcelable.Creator<PostHelpFeedbackResponse> {
+        override fun createFromParcel(source: Parcel): PostHelpFeedbackResponse =
+          PostHelpFeedbackResponse(source)
+
+        override fun newArray(size: Int): Array<PostHelpFeedbackResponse?> = arrayOfNulls(size)
+      }
   }
 }

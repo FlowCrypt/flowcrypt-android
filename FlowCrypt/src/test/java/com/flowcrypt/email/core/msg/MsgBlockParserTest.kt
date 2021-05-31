@@ -22,17 +22,17 @@ class MsgBlockParserTest {
   @Test
   fun testDetectBlocksDoesNotGetTrippedOnBlocksWithUnknownHeaders() {
     checkForSinglePlaintextBlock(
-        "This text breaks email and Gmail web app.\n\n" +
-        "-----BEGIN FOO-----\n\n" +
-        "Even though it's not a valid PGP m\n\n" +
-        "Muhahah"
+      "This text breaks email and Gmail web app.\n\n" +
+          "-----BEGIN FOO-----\n\n" +
+          "Even though it's not a valid PGP m\n\n" +
+          "Muhahah"
     )
   }
 
   @Test
   fun testDetectBlocksIgnoresFalsePositiveBlocks() {
     checkForSinglePlaintextBlock(
-        """Hello, sending you the promised json:
+      """Hello, sending you the promised json:
       {
         "entries" : [ {
           "id" : "1,email-key-manager,evaluation.org,pgp-key-private,106988520142055188323",
@@ -140,7 +140,8 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
           "content" : "1,email-key-manager,evaluation.org,pgp-key-private,106988520142055188323
 1,email-key-manager,evaluation.org,pgp-key-public,ekm%40ekm-org-rules-test.flowcrypt.com"
         } ]
-      }""")
+      }"""
+    )
   }
 
   @Test
@@ -268,8 +269,8 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
 
     assertTrue(blocks[3] is PublicKeyMsgBlock)
     assertEquals(
-        PublicKeyMsgBlock(pub, true, null),
-        blocks[3] as PublicKeyMsgBlock
+      PublicKeyMsgBlock(pub, true, null),
+      blocks[3] as PublicKeyMsgBlock
     )
   }
 

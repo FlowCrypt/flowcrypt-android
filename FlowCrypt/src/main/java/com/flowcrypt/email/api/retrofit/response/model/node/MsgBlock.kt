@@ -98,12 +98,12 @@ interface MsgBlock : Parcelable {
 
       @JvmField
       val replaceableBlockTypes = setOf(
-          PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
+        PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
       )
 
       @JvmField
       val wellKnownBlockTypes = setOf(
-          PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
+        PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
       )
 
       @JvmStatic

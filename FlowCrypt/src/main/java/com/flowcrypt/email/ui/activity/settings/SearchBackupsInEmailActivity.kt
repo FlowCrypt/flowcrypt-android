@@ -72,7 +72,10 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
     when (v.id) {
       R.id.buttonSeeMoreBackupOptions,
       R.id.buttonBackupMyKey ->
-        startActivityForResult(Intent(this, BackupKeysActivity::class.java), REQUEST_CODE_BACKUP_WITH_OPTION)
+        startActivityForResult(
+          Intent(this, BackupKeysActivity::class.java),
+          REQUEST_CODE_BACKUP_WITH_OPTION
+        )
     }
   }
 
@@ -126,9 +129,11 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
         }
 
         Result.Status.EXCEPTION -> {
-          toast(it.exception?.message
+          toast(
+            it.exception?.message
               ?: it.exception?.cause?.message
-              ?: getString(R.string.unknown_error))
+              ?: getString(R.string.unknown_error)
+          )
           countingIdlingResource.decrementSafely()
           finish()
         }

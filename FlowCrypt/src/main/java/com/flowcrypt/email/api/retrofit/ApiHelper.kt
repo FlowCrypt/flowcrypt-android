@@ -40,50 +40,64 @@ class ApiHelper private constructor(context: Context) {
 
   init {
     val okHttpClientBuilder = OkHttpClient.Builder()
-        .connectTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
-        .readTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
-        .writeTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+      .connectTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+      .readTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+      .writeTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
 
     okHttpClientBuilder.addInterceptor(ApiVersionInterceptor())
 
     if (GeneralUtil.isDebugBuild()) {
       val isHttpLogEnabled =
-          SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREF_KEY_IS_HTTP_LOG_ENABLED, BuildConfig.IS_HTTP_LOG_ENABLED)
+        SharedPreferencesHelper.getBoolean(
+          PreferenceManager.getDefaultSharedPreferences(context),
+          Constants.PREF_KEY_IS_HTTP_LOG_ENABLED, BuildConfig.IS_HTTP_LOG_ENABLED
+        )
 
       if (isHttpLogEnabled) {
-        val levelString = SharedPreferencesHelper.getString(PreferenceManager
-            .getDefaultSharedPreferences(context), Constants.PREF_KEY_HTTP_LOG_LEVEL, BuildConfig.HTTP_LOG_LEVEL)
+        val levelString = SharedPreferencesHelper.getString(
+          PreferenceManager
+            .getDefaultSharedPreferences(context),
+          Constants.PREF_KEY_HTTP_LOG_LEVEL,
+          BuildConfig.HTTP_LOG_LEVEL
+        )
 
         val isWriteLogsEnabled =
-            SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(context),
-                Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false)
+          SharedPreferencesHelper.getBoolean(
+            PreferenceManager.getDefaultSharedPreferences(context),
+            Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false
+          )
 
         if (isWriteLogsEnabled) {
           val loggingInFileInterceptor = LoggingInFileInterceptor(context, "API")
-          loggingInFileInterceptor.setLevel(LoggingInFileInterceptor.Level.valueOf(levelString
-              ?: LoggingInFileInterceptor.Level.NONE.name))
+          loggingInFileInterceptor.setLevel(
+            LoggingInFileInterceptor.Level.valueOf(
+              levelString
+                ?: LoggingInFileInterceptor.Level.NONE.name
+            )
+          )
           okHttpClientBuilder.addInterceptor(loggingInFileInterceptor)
         }
 
         val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(levelString
-            ?: HttpLoggingInterceptor.Level.NONE.name)
+        loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(
+          levelString
+            ?: HttpLoggingInterceptor.Level.NONE.name
+        )
         okHttpClientBuilder.addInterceptor(loggingInterceptor)
       }
     }
 
     okHttpClient = okHttpClientBuilder.build()
     gson = GsonBuilder()
-        .excludeFieldsWithoutExposeAnnotation()
-        .serializeNulls()
-        .create()
+      .excludeFieldsWithoutExposeAnnotation()
+      .serializeNulls()
+      .create()
 
     val retrofitBuilder = Retrofit.Builder()
-        .baseUrl(BuildConfig.ATTESTER_URL)
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .addConverterFactory(GsonConverterFactory.create(gson))
-        .client(okHttpClient)
+      .baseUrl(BuildConfig.ATTESTER_URL)
+      .addConverterFactory(ScalarsConverterFactory.create())
+      .addConverterFactory(GsonConverterFactory.create(gson))
+      .client(okHttpClient)
 
     retrofit = retrofitBuilder.build()
   }
@@ -99,7 +113,8 @@ class ApiHelper private constructor(context: Context) {
     inline fun <reified T> parseAsError(context: Context, response: Response<T>): T? {
       val retrofit = getInstance(context).retrofit
       try {
-        val converter = retrofit.responseBodyConverter<T>(T::class.java, arrayOfNulls<Annotation>(0))
+        val converter =
+          retrofit.responseBodyConverter<T>(T::class.java, arrayOfNulls<Annotation>(0))
         val errorBody = response.errorBody() ?: return null
         return converter.convert(errorBody)
       } catch (e: Exception) {

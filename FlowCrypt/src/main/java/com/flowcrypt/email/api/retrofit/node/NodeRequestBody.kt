@@ -36,8 +36,10 @@ import java.io.ByteArrayInputStream
  * Time: 5:54 PM
  * E-mail: DenBond7@gmail.com
  */
-class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
-                                  private val json: ByteString) : RequestBody() {
+class NodeRequestBody constructor(
+  private val nodeRequest: NodeRequest,
+  private val json: ByteString
+) : RequestBody() {
 
   override fun contentType(): MediaType? {
     return null

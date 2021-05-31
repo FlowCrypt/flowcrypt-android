@@ -50,11 +50,11 @@ class ContactsSettingsActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testShowHelpScreen() {
@@ -64,9 +64,9 @@ class ContactsSettingsActivityTest : BaseTest() {
   @Test
   fun testEmptyList() {
     onView(withId(R.id.recyclerViewContacts))
-        .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))
+      .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))
     onView(withId(R.id.emptyView))
-        .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
+      .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
 
   @Test
@@ -77,32 +77,40 @@ class ContactsSettingsActivityTest : BaseTest() {
     Thread.sleep(2000)
     for (ignored in EMAILS) {
       onView(withId(R.id.recyclerViewContacts))
-          .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, ClickOnViewInRecyclerViewItem(R.id.imageButtonDeleteContact)))
+        .perform(
+          actionOnItemAtPosition<RecyclerView.ViewHolder>(
+            0,
+            ClickOnViewInRecyclerViewItem(R.id.imageButtonDeleteContact)
+          )
+        )
     }
     Thread.sleep(2000)
     onView(withId(R.id.emptyView))
-        .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
+      .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
     clearContactsFromDatabase()
   }
 
   private fun addContactsToDatabase() {
     for (email in EMAILS) {
       val pgpContact = PgpContact(email, null, "", true, null, null, 0)
-      FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
+      FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
+        .insert(pgpContact.toContactEntity())
     }
   }
 
   companion object {
     private val EMAILS = arrayOf(
-        "contact_0@flowcrypt.test",
-        "contact_1@flowcrypt.test",
-        "contact_2@flowcrypt.test",
-        "contact_3@flowcrypt.test")
+      "contact_0@flowcrypt.test",
+      "contact_1@flowcrypt.test",
+      "contact_2@flowcrypt.test",
+      "contact_3@flowcrypt.test"
+    )
 
     @AfterClass
     fun clearContactsFromDatabase() {
       for (email in EMAILS) {
-        val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
+        val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext())
+          .contactsDao()
 
         val contact = dao.getContactByEmail(email) ?: continue
         dao.delete(contact)

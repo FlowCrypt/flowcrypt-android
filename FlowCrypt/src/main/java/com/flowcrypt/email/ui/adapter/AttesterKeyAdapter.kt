@@ -27,10 +27,13 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class AttesterKeyAdapter(
-    private val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()) : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
+  private val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()
+) : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.attester_key_item, parent, false))
+    return ViewHolder(
+      LayoutInflater.from(parent.context).inflate(R.layout.attester_key_item, parent, false)
+    )
   }
 
   override fun getItemCount(): Int {
@@ -63,7 +66,12 @@ class AttesterKeyAdapter(
 
       isPublicKeyMatched(viewHolder.itemView.context, pgpKeyDetails) -> {
         viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email)
-        viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
+        viewHolder.textViewKeyAttesterStatus.setTextColor(
+          UIUtil.getColor(
+            context,
+            R.color.colorPrimary
+          )
+        )
       }
 
       else -> {
@@ -82,9 +90,9 @@ class AttesterKeyAdapter(
    * fingerprints of saved keys, otherwise false.
    */
   private fun isPublicKeyMatched(context: Context, pgpKeyDetails: PgpKeyDetails): Boolean {
-    return pgpKeyDetails.fingerprint?.let {
+    return pgpKeyDetails.fingerprint.let {
       KeysStorageImpl.getInstance(context).getPGPSecretKeyRingByFingerprint(it) != null
-    } ?: false
+    }
   }
 
   /**
@@ -95,8 +103,10 @@ class AttesterKeyAdapter(
     var textViewKeyAttesterStatus: TextView = itemView.findViewById(R.id.textViewKeyAttesterStatus)
   }
 
-  inner class ResponseDiffUtilCallback(private val oldList: List<PgpKeyDetails>,
-                                       private val newList: List<PgpKeyDetails>) : DiffUtil.Callback() {
+  inner class ResponseDiffUtilCallback(
+    private val oldList: List<PgpKeyDetails>,
+    private val newList: List<PgpKeyDetails>
+  ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldProduct = oldList[oldItemPosition]
       val newProduct = newList[newItemPosition]

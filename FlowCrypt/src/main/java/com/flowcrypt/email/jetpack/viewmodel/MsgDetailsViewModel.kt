@@ -79,7 +79,11 @@ import javax.mail.internet.MimeMessage
  *         Time: 4:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: MessageEntity, application: Application) : AccountViewModel(application) {
+class MsgDetailsViewModel(
+  val localFolder: LocalFolder,
+  val messageEntity: MessageEntity,
+  application: Application
+) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(application)
   private val apiRepository: PgpApiRepository = NodeRepository()
 
@@ -90,133 +94,153 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private var lastUpdateTime = System.currentTimeMillis()
 
   val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
-      account = messageEntity.email,
-      folder = messageEntity.folder,
-      uid = messageEntity.uid
+    account = messageEntity.email,
+    folder = messageEntity.folder,
+    uid = messageEntity.uid
   )
 
   private val initMsgLiveData: LiveData<MessageEntity?> = liveData {
-    emit(roomDatabase.msgDao().getMsgSuspend(
+    emit(
+      roomDatabase.msgDao().getMsgSuspend(
         account = messageEntity.email,
         folder = messageEntity.folder,
-        uid = messageEntity.uid))
+        uid = messageEntity.uid
+      )
+    )
   }
 
   private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> =
-      keysStorage.secretKeyRingsLiveData.switchMap {
-        liveData {
-          if (it.isNotEmpty()) {
-            emit(roomDatabase.msgDao().getMsgSuspend(
-                account = messageEntity.email,
-                folder = messageEntity.folder,
-                uid = messageEntity.uid))
-          }
+    keysStorage.secretKeyRingsLiveData.switchMap {
+      liveData {
+        if (it.isNotEmpty()) {
+          emit(
+            roomDatabase.msgDao().getMsgSuspend(
+              account = messageEntity.email,
+              folder = messageEntity.folder,
+              uid = messageEntity.uid
+            )
+          )
         }
       }
+    }
 
   private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
-  private val processingMsgLiveData: MediatorLiveData<Result<ParseDecryptedMsgResult?>> = MediatorLiveData()
-  private val processingProgressLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> = MutableLiveData()
-  private val processingOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
-    liveData {
-      if (messageEntity?.isOutboxMsg() == true) {
-        emit(Result.loading())
-        emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-        val processingResult = processingByteArray(messageEntity.rawMessageWithoutAttachments?.toByteArray())
-        emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
-        emit(processingResult)
-      }
-    }
-  }
-
-  private val processingNonOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
-    liveData {
-      if (messageEntity?.isOutboxMsg() == false) {
-        emit(Result.loading())
-        val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-        if (existedMsgSnapshot != null) {
+  private val processingMsgLiveData: MediatorLiveData<Result<ParseDecryptedMsgResult?>> =
+    MediatorLiveData()
+  private val processingProgressLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> =
+    MutableLiveData()
+  private val processingOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> =
+    Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
+      liveData {
+        if (messageEntity?.isOutboxMsg() == true) {
+          emit(Result.loading())
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-          setSeenStatusInternal(msgEntity = messageEntity, isSeen = true, usePending = true)
-          UpdateMsgsSeenStateWorker.enqueue(application)
-          val processingResult = processingMsgSnapshot(existedMsgSnapshot)
-          emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
-          emit(processingResult)
-        } else {
-          emit(Result.loading(resultCode = R.id.progress_id_connecting, progress = 5.toDouble()))
-          val newMsgSnapshot = try {
-            loadMessageFromServer(messageEntity)
-          } catch (e: Exception) {
-            e.printStackTrace()
-            emit(Result.exception(e))
-            return@liveData
-          }
-          setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
-          emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-          val processingResult = processingMsgSnapshot(newMsgSnapshot)
+          val processingResult =
+            processingByteArray(messageEntity.rawMessageWithoutAttachments?.toByteArray())
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
           emit(processingResult)
         }
       }
     }
-  }
 
-  val incomingMessageInfoLiveData: LiveData<Result<IncomingMessageInfo>> = Transformations.switchMap(processingMsgLiveData) {
-    liveData {
-      val context: Context = getApplication()
-      val result = when (it.status) {
-        Result.Status.LOADING -> {
-          Result.loading(
+  private val processingNonOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> =
+    Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
+      liveData {
+        if (messageEntity?.isOutboxMsg() == false) {
+          emit(Result.loading())
+          val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+          if (existedMsgSnapshot != null) {
+            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
+            setSeenStatusInternal(msgEntity = messageEntity, isSeen = true, usePending = true)
+            UpdateMsgsSeenStateWorker.enqueue(application)
+            val processingResult = processingMsgSnapshot(existedMsgSnapshot)
+            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
+            emit(processingResult)
+          } else {
+            emit(Result.loading(resultCode = R.id.progress_id_connecting, progress = 5.toDouble()))
+            val newMsgSnapshot = try {
+              loadMessageFromServer(messageEntity)
+            } catch (e: Exception) {
+              e.printStackTrace()
+              emit(Result.exception(e))
+              return@liveData
+            }
+            setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
+            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
+            val processingResult = processingMsgSnapshot(newMsgSnapshot)
+            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
+            emit(processingResult)
+          }
+        }
+      }
+    }
+
+  val incomingMessageInfoLiveData: LiveData<Result<IncomingMessageInfo>> =
+    Transformations.switchMap(processingMsgLiveData) {
+      liveData {
+        val context: Context = getApplication()
+        val result = when (it.status) {
+          Result.Status.LOADING -> {
+            Result.loading(
               requestCode = it.requestCode,
               resultCode = it.resultCode,
               progressMsg = it.progressMsg,
               progress = it.progress
-          )
-        }
+            )
+          }
 
-        Result.Status.SUCCESS -> {
-          val parseDecryptedMsgResult = it.data
-          if (parseDecryptedMsgResult != null) {
-            try {
-              val msgInfo = IncomingMessageInfo(
+          Result.Status.SUCCESS -> {
+            val parseDecryptedMsgResult = it.data
+            if (parseDecryptedMsgResult != null) {
+              try {
+                val msgInfo = IncomingMessageInfo(
                   msgEntity = messageEntity,
                   text = parseDecryptedMsgResult.text,
                   subject = parseDecryptedMsgResult.subject,
                   msgBlocks = parseDecryptedMsgResult.msgBlocks ?: emptyList(),
                   encryptionType = parseDecryptedMsgResult.getMsgEncryptionType()
+                )
+                Result.success(requestCode = it.requestCode, data = msgInfo)
+              } catch (e: Exception) {
+                Result.exception(requestCode = it.requestCode, throwable = e)
+              }
+            } else {
+              Result.exception(
+                requestCode = it.requestCode,
+                throwable = IllegalStateException(context.getString(R.string.unknown_error))
               )
-              Result.success(requestCode = it.requestCode, data = msgInfo)
-            } catch (e: Exception) {
-              Result.exception(requestCode = it.requestCode, throwable = e)
             }
-          } else {
-            Result.exception(requestCode = it.requestCode, throwable = IllegalStateException(context.getString(R.string.unknown_error)))
+          }
+
+          Result.Status.ERROR -> {
+            Result.exception(
+              requestCode = it.requestCode,
+              throwable = ApiException(it.data?.apiError)
+            )
+          }
+
+          Result.Status.EXCEPTION -> {
+            Result.exception(
+              requestCode = it.requestCode, throwable = it.exception
+                ?: IllegalStateException(context.getString(R.string.unknown_error))
+            )
+          }
+
+          Result.Status.NONE -> {
+            Result.none()
           }
         }
 
-        Result.Status.ERROR -> {
-          Result.exception(requestCode = it.requestCode, throwable = ApiException(it.data?.apiError))
-        }
-
-        Result.Status.EXCEPTION -> {
-          Result.exception(requestCode = it.requestCode, throwable = it.exception
-              ?: IllegalStateException(context.getString(R.string.unknown_error)))
-        }
-
-        Result.Status.NONE -> {
-          Result.none()
-        }
+        emit(result)
       }
-
-      emit(result)
     }
-  }
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
   val attsLiveData = roomDatabase.attachmentDao().getAttachmentsLD(
-      account = messageEntity.email,
-      label = messageEntity.folder,
-      uid = messageEntity.uid
+    account = messageEntity.email,
+    label = messageEntity.folder,
+    uid = messageEntity.uid
   )
 
   init {
@@ -235,8 +259,12 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     })
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
-    processingMsgLiveData.addSource(processingOutgoingMsgLiveData) { processingMsgLiveData.value = it }
-    processingMsgLiveData.addSource(processingNonOutgoingMsgLiveData) { processingMsgLiveData.value = it }
+    processingMsgLiveData.addSource(processingOutgoingMsgLiveData) {
+      processingMsgLiveData.value = it
+    }
+    processingMsgLiveData.addSource(processingNonOutgoingMsgLiveData) {
+      processingMsgLiveData.value = it
+    }
   }
 
   fun changeMsgState(newMsgState: MessageState) {
@@ -246,18 +274,20 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         val candidate: MessageEntity = when (newMsgState) {
           MessageState.PENDING_MARK_READ -> {
             msgEntity.copy(
-                state = newMsgState.value,
-                flags = if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-                  msgEntity.flags
-                } else {
-                  msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
-                })
+              state = newMsgState.value,
+              flags = if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                msgEntity.flags
+              } else {
+                msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+              }
+            )
           }
 
           MessageState.PENDING_MARK_UNREAD -> {
             msgEntity.copy(
-                state = newMsgState.value,
-                flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, ""))
+              state = newMsgState.value,
+              flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+            )
           }
 
           else -> {
@@ -282,9 +312,9 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
           val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.email).size
           val outboxLabel = roomDatabase.labelDao().getLabelSuspend(
-              account = accountEntity.email,
-              accountType = accountEntity.accountType,
-              label = JavaEmailConstants.FOLDER_OUTBOX
+            account = accountEntity.email,
+            accountType = accountEntity.accountType,
+            label = JavaEmailConstants.FOLDER_OUTBOX
           )
 
           outboxLabel?.let {
@@ -310,45 +340,49 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     }
   }
 
-  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> = withContext(Dispatchers.IO) {
-    val uri = msgSnapshot.getUri(0)
-    if (uri != null) {
-      val list = keysStorage.getPgpKeyDetailsList()
-      val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
-      val result = if (largerThan1Mb) {
-        parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
-      } else {
-        apiRepository.parseDecryptMsg(
+  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> =
+    withContext(Dispatchers.IO) {
+      val uri = msgSnapshot.getUri(0)
+      if (uri != null) {
+        val list = keysStorage.getPgpKeyDetailsList()
+        val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
+        val result = if (largerThan1Mb) {
+          parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
+        } else {
+          apiRepository.parseDecryptMsg(
             request = ParseDecryptMsgRequest(
-                context = getApplication(),
-                uri = uri,
-                pgpKeyDetailsList = list,
-                isEmail = true,
-                hasEncryptedDataInUri = true
-            ))
+              context = getApplication(),
+              uri = uri,
+              pgpKeyDetailsList = list,
+              isEmail = true,
+              hasEncryptedDataInUri = true
+            )
+          )
+        }
+        modifyMsgBlocksIfNeeded(result)
+        return@withContext result
+      } else {
+        val byteArray = msgSnapshot.getByteArray(0)
+        return@withContext processingByteArray(byteArray)
       }
-      modifyMsgBlocksIfNeeded(result)
-      return@withContext result
-    } else {
-      val byteArray = msgSnapshot.getByteArray(0)
-      return@withContext processingByteArray(byteArray)
     }
-  }
 
-  private suspend fun processingByteArray(rawMimeBytes: ByteArray?): Result<ParseDecryptedMsgResult?> = withContext(Dispatchers.IO) {
-    return@withContext if (rawMimeBytes == null) {
-      Result.exception(throwable = IllegalArgumentException("empty byte array"))
-    } else {
-      val result = apiRepository.parseDecryptMsg(
+  private suspend fun processingByteArray(rawMimeBytes: ByteArray?): Result<ParseDecryptedMsgResult?> =
+    withContext(Dispatchers.IO) {
+      return@withContext if (rawMimeBytes == null) {
+        Result.exception(throwable = IllegalArgumentException("empty byte array"))
+      } else {
+        val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(
-              data = rawMimeBytes,
-              pgpKeyDetailsList = keysStorage.getPgpKeyDetailsList(),
-              isEmail = true
-          ))
-      modifyMsgBlocksIfNeeded(result)
-      result
+            data = rawMimeBytes,
+            pgpKeyDetailsList = keysStorage.getPgpKeyDetailsList(),
+            isEmail = true
+          )
+        )
+        modifyMsgBlocksIfNeeded(result)
+        result
+      }
     }
-  }
 
   private suspend fun modifyMsgBlocksIfNeeded(result: Result<ParseDecryptedMsgResult?>) {
     result.data?.let { parseDecryptMsgResult ->
@@ -368,20 +402,33 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     val uriOfEncryptedPart = getUriOfEncryptedPart(context, uri)
     return if (uriOfEncryptedPart != null) {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, pgpKeyDetailsList = list, isEmail = false))
+        request = ParseDecryptMsgRequest(
+          context = context,
+          uri = uriOfEncryptedPart,
+          pgpKeyDetailsList = list,
+          isEmail = false
+        )
+      )
     } else {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uri, pgpKeyDetailsList = list, isEmail = true, hasEncryptedDataInUri = true))
+        request = ParseDecryptMsgRequest(
+          context = context,
+          uri = uri,
+          pgpKeyDetailsList = list,
+          isEmail = true,
+          hasEncryptedDataInUri = true
+        )
+      )
     }
   }
 
   private suspend fun getMimeMessageFromInputStream(context: Context, uri: Uri) =
-      withContext(Dispatchers.IO) {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        if (inputStream != null) {
-          MimeMessage(null, KeyStoreCryptoManager.getCipherInputStream(inputStream))
-        } else throw NullPointerException("Stream is empty")
-      }
+    withContext(Dispatchers.IO) {
+      val inputStream = context.contentResolver.openInputStream(uri)
+      if (inputStream != null) {
+        MimeMessage(null, KeyStoreCryptoManager.getCipherInputStream(inputStream))
+      } else throw NullPointerException("Stream is empty")
+    }
 
   private suspend fun getUriOfEncryptedPart(context: Context, uri: Uri): Uri? {
     val mimeMessage: MimeMessage = getMimeMessageFromInputStream(context, uri)
@@ -400,9 +447,22 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
             if (encryptedPart != null) {
               return@withContext encryptedPart
             }
-          } else if (bodyPart?.disposition?.toLowerCase(Locale.getDefault()) in listOf(Part.ATTACHMENT, Part.INLINE)) {
+          } else if (bodyPart?.disposition?.toLowerCase(Locale.getDefault()) in listOf(
+              Part.ATTACHMENT,
+              Part.INLINE
+            )
+          ) {
             val fileName = bodyPart.fileName?.toLowerCase(Locale.getDefault()) ?: ""
-            if (fileName in listOf("message", "msg.asc", "message.asc", "encrypted.asc", "encrypted.eml.pgp", "Message.pgp", "")) {
+            if (fileName in listOf(
+                "message",
+                "msg.asc",
+                "message.asc",
+                "encrypted.asc",
+                "encrypted.eml.pgp",
+                "Message.pgp",
+                ""
+              )
+            ) {
               val file = prepareTempFile(bodyPart)
               return@withContext Uri.fromFile(file)
             }
@@ -438,91 +498,123 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     }
   }
 
-  private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot = withContext(Dispatchers.IO) {
-    val accountEntity = getActiveAccountSuspend()
+  private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot =
+    withContext(Dispatchers.IO) {
+      val accountEntity = getActiveAccountSuspend()
         ?: throw java.lang.NullPointerException("Account is null")
-    val context: Context = getApplication()
-    if (accountEntity.useAPI) {
-      if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-        val result = GmailApiHelper.executeWithResult {
-          val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(),
-              accountEntity, messageEntity.uidAsHEX, null)
-          msgSize = msgFullInfo.sizeEstimate
-          val originalMsg = GmaiAPIMimeMessage(
+      val context: Context = getApplication()
+      if (accountEntity.useAPI) {
+        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+          val result = GmailApiHelper.executeWithResult {
+            val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(
+              getApplication(),
+              accountEntity, messageEntity.uidAsHEX, null
+            )
+            msgSize = msgFullInfo.sizeEstimate
+            val originalMsg = GmaiAPIMimeMessage(
               message = msgFullInfo,
               context = getApplication(),
-              accountEntity = accountEntity)
-          if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            MsgsCacheManager.storeMsg(messageEntity.id.toString(), originalMsg)
-          } else {
-            val inputStream = FetchingInputStream(GmailApiHelper.getWholeMimeMessageInputStream(getApplication(), accountEntity, messageEntity))
-            MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
-          }
-
-          Result.success(null)
-        }
-        if (result.status == Result.Status.SUCCESS) {
-          return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-              ?: throw java.lang.NullPointerException("Message not found in the local cache")
-        } else throw result.exception ?: java.lang.IllegalStateException(context.getString(R
-            .string.unknown_error))
-      }
-    }
-
-    val connection = IMAPStoreManager.activeConnections[accountEntity.id]
-    if (connection == null) {
-      throw java.lang.NullPointerException("There is no active connection for ${accountEntity.email}")
-    } else {
-      return@withContext connection.execute { store ->
-        store.getFolder(localFolder.fullName).use {
-          val imapFolder = it as IMAPFolder
-          processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_connecting, progress = 10.toDouble()))
-          imapFolder.open(Folder.READ_WRITE)
-          processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_connecting, progress = 20.toDouble()))
-
-          val originalMsg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
-              ?: throw java.lang.NullPointerException("Message not found")
-
-          val fetchProfile = FetchProfile()
-          fetchProfile.add(FetchProfile.Item.SIZE)
-          fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-          fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
-          imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
-
-          msgSize = originalMsg.size
-
-          if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            val rawHeaders = TextUtils.join("\n", Collections.list(originalMsg.allHeaderLines))
-            if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
-            val customMsg = CustomMimeMessage(connection.session, rawHeaders)
-
-            val originalMultipart = originalMsg.content as? Multipart
-            if (originalMultipart != null) {
-              val modifiedMultipart = CustomMimeMultipart(customMsg.contentType)
-              buildFromSource(originalMultipart, modifiedMultipart)
-              customMsg.setContent(modifiedMultipart)
+              accountEntity = accountEntity
+            )
+            if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+              MsgsCacheManager.storeMsg(messageEntity.id.toString(), originalMsg)
             } else {
-              customMsg.setContent(originalMsg.content, originalMsg.contentType)
-              downloadedMsgSize += originalMsg.size
+              val inputStream = FetchingInputStream(
+                GmailApiHelper.getWholeMimeMessageInputStream(
+                  getApplication(),
+                  accountEntity,
+                  messageEntity
+                )
+              )
+              MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
             }
 
-            customMsg.saveChanges()
-            customMsg.setMessageId(originalMsg.messageID ?: "")
-
-            MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
-          } else {
-            val cachedMsg = MimeMessage(originalMsg.session, FetchingInputStream((originalMsg as IMAPMessage).mimeStream))
-            MsgsCacheManager.storeMsg(messageEntity.id.toString(), cachedMsg)
+            Result.success(null)
           }
-
-          processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_fetching_message, progress = 60.toDouble()))
-
-          return@execute MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+          if (result.status == Result.Status.SUCCESS) {
+            return@withContext MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
               ?: throw java.lang.NullPointerException("Message not found in the local cache")
+          } else throw result.exception ?: java.lang.IllegalStateException(
+            context.getString(
+              R
+                .string.unknown_error
+            )
+          )
+        }
+      }
+
+      val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+      if (connection == null) {
+        throw java.lang.NullPointerException("There is no active connection for ${accountEntity.email}")
+      } else {
+        return@withContext connection.execute { store ->
+          store.getFolder(localFolder.fullName).use {
+            val imapFolder = it as IMAPFolder
+            processingProgressLiveData.postValue(
+              Result.loading(
+                resultCode = R.id.progress_id_connecting,
+                progress = 10.toDouble()
+              )
+            )
+            imapFolder.open(Folder.READ_WRITE)
+            processingProgressLiveData.postValue(
+              Result.loading(
+                resultCode = R.id.progress_id_connecting,
+                progress = 20.toDouble()
+              )
+            )
+
+            val originalMsg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
+              ?: throw java.lang.NullPointerException("Message not found")
+
+            val fetchProfile = FetchProfile()
+            fetchProfile.add(FetchProfile.Item.SIZE)
+            fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+            fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
+            imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
+
+            msgSize = originalMsg.size
+
+            if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+              val rawHeaders = TextUtils.join("\n", Collections.list(originalMsg.allHeaderLines))
+              if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
+              val customMsg = CustomMimeMessage(connection.session, rawHeaders)
+
+              val originalMultipart = originalMsg.content as? Multipart
+              if (originalMultipart != null) {
+                val modifiedMultipart = CustomMimeMultipart(customMsg.contentType)
+                buildFromSource(originalMultipart, modifiedMultipart)
+                customMsg.setContent(modifiedMultipart)
+              } else {
+                customMsg.setContent(originalMsg.content, originalMsg.contentType)
+                downloadedMsgSize += originalMsg.size
+              }
+
+              customMsg.saveChanges()
+              customMsg.setMessageId(originalMsg.messageID ?: "")
+
+              MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
+            } else {
+              val cachedMsg = MimeMessage(
+                originalMsg.session,
+                FetchingInputStream((originalMsg as IMAPMessage).mimeStream)
+              )
+              MsgsCacheManager.storeMsg(messageEntity.id.toString(), cachedMsg)
+            }
+
+            processingProgressLiveData.postValue(
+              Result.loading(
+                resultCode = R.id.progress_id_fetching_message,
+                progress = 60.toDouble()
+              )
+            )
+
+            return@execute MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+              ?: throw java.lang.NullPointerException("Message not found in the local cache")
+          }
         }
       }
     }
-  }
 
   private fun buildFromSource(sourceMultipart: Multipart, resultMultipart: Multipart) {
     val candidates = LinkedList<BodyPart>()
@@ -592,18 +684,29 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private fun sendProgress() {
     if (msgSize > 0) {
       currentPercentage = (downloadedMsgSize * 100 / msgSize)
-      val isUpdateNeeded = System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL
+      val isUpdateNeeded =
+        System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL
       if (currentPercentage - lastPercentage >= 1 && isUpdateNeeded) {
         lastPercentage = currentPercentage
         lastUpdateTime = System.currentTimeMillis()
         val value = (currentPercentage * 40 / 100) + 20
-        processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_fetching_message, progress = value.toDouble()))
+        processingProgressLiveData.postValue(
+          Result.loading(
+            resultCode = R.id.progress_id_fetching_message,
+            progress = value.toDouble()
+          )
+        )
       }
     }
   }
 
-  private suspend fun setSeenStatusInternal(msgEntity: MessageEntity, isSeen: Boolean, usePending: Boolean = false) {
-    roomDatabase.msgDao().updateSuspend(msgEntity.copy(
+  private suspend fun setSeenStatusInternal(
+    msgEntity: MessageEntity,
+    isSeen: Boolean,
+    usePending: Boolean = false
+  ) {
+    roomDatabase.msgDao().updateSuspend(
+      msgEntity.copy(
         state = if (usePending) {
           if (isSeen) MessageState.PENDING_MARK_READ.value else MessageState.PENDING_MARK_UNREAD.value
         } else msgEntity.state,
@@ -616,52 +719,62 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         } else {
           msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
         }
-    ))
+      )
+    )
   }
 
-  private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    try {
-      store.getFolder(localFolder.fullName).use { folder ->
-        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-        val msg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
+  private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      try {
+        store.getFolder(localFolder.fullName).use { folder ->
+          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+          val msg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage
             ?: return@withContext
 
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(FetchProfile.Item.SIZE)
-        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-        imapFolder.fetch(arrayOf(msg), fetchProfile)
+          val fetchProfile = FetchProfile()
+          fetchProfile.add(FetchProfile.Item.SIZE)
+          fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+          imapFolder.fetch(arrayOf(msg), fetchProfile)
 
-        val msgUid = messageEntity.uid
-        val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+          val msgUid = messageEntity.uid
+          val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+            AttachmentEntity.fromAttInfo(it.apply {
+              email = accountEntity.email
+              this.folder =
+                if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+              uid = msgUid
+            })
+          }
+
+          FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()
+            .insertWithReplaceSuspend(attachments)
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
+    }
+
+  private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity) =
+    withContext(Dispatchers.IO) {
+      try {
+        val msg = GmailApiHelper.loadMsgFullInfoSuspend(
+          getApplication(),
+          accountEntity,
+          messageEntity.uidAsHEX
+        )
+        val attachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
           AttachmentEntity.fromAttInfo(it.apply {
-            email = accountEntity.email
-            this.folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
-            uid = msgUid
+            this.email = accountEntity.email
+            this.folder = localFolder.fullName
+            this.uid = msg.uid
           })
         }
-
-        FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
+        FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()
+          .insertWithReplaceSuspend(attachments)
+      } catch (e: Exception) {
+        e.printStackTrace()
       }
-    } catch (e: Exception) {
-      e.printStackTrace()
     }
-  }
-
-  private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity) = withContext(Dispatchers.IO) {
-    try {
-      val msg = GmailApiHelper.loadMsgFullInfoSuspend(getApplication(), accountEntity, messageEntity.uidAsHEX)
-      val attachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
-        AttachmentEntity.fromAttInfo(it.apply {
-          this.email = accountEntity.email
-          this.folder = localFolder.fullName
-          this.uid = msg.uid
-        })
-      }
-      FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
-  }
 
   /**
    * This class will be used to identify the fetching progress.

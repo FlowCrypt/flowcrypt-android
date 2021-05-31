@@ -87,29 +87,33 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   private val foldersLiveData = MutableLiveData<LocalFolder>()
 
-  var msgsLiveData: LiveData<PagedList<MessageEntity>>? = Transformations.switchMap(foldersLiveData) { localFolder ->
-    liveData {
-      cancelActionsForPreviousFolder()
-      val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: ""
+  var msgsLiveData: LiveData<PagedList<MessageEntity>>? =
+    Transformations.switchMap(foldersLiveData) { localFolder ->
+      liveData {
+        cancelActionsForPreviousFolder()
+        val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: ""
 
-      val label = if (localFolder.searchQuery.isNullOrEmpty()) {
-        localFolder.fullName
-      } else {
-        SearchMessagesActivity.SEARCH_FOLDER_NAME
-      }
+        val label = if (localFolder.searchQuery.isNullOrEmpty()) {
+          localFolder.fullName
+        } else {
+          SearchMessagesActivity.SEARCH_FOLDER_NAME
+        }
 
-      emitSource(
+        emitSource(
           roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
-              .toLiveData(
-                  config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
-                  boundaryCallback = boundaryCallback))
+            .toLiveData(
+              config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
+              boundaryCallback = boundaryCallback
+            )
+        )
+      }
     }
-  }
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
-  var outboxMsgsLiveData: LiveData<List<MessageEntity>> = Transformations.switchMap(activeAccountLiveData) {
-    roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
-  }
+  var outboxMsgsLiveData: LiveData<List<MessageEntity>> =
+    Transformations.switchMap(activeAccountLiveData) {
+      roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
+    }
 
   val loadMsgsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
   val refreshMsgsLiveData = MutableLiveData<Result<Boolean?>>()
@@ -179,7 +183,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
               refreshMsgsInternal(accountEntity, store, localFolder)
             }
-                ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+              ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
           }
         }
       }
@@ -196,32 +200,56 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       val accountEntity = getActiveAccountSuspend()
       accountEntity?.let {
-        val totalItemsCount = roomDatabase.msgDao().getMsgsCount(accountEntity.email,
-            if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME)
+        val totalItemsCount = roomDatabase.msgDao().getMsgsCount(
+          accountEntity.email,
+          if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+        )
         if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
 
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
-        loadMsgsFromRemoteServerLiveData.value = Result.loading(progress = 10.0, resultCode = R.id.progress_id_start_of_loading_new_messages)
-        loadMsgsFromRemoteServerLiveData.value = controlledRunnerForLoadNextMessages.cancelPreviousThenRun {
-          return@cancelPreviousThenRun if (accountEntity.useAPI) {
-            GmailApiHelper.executeWithResult {
-              if (localFolder.searchQuery.isNullOrEmpty()) {
-                loadMsgsFromRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
-              } else {
-                searchMsgsOnRemoteServerAndStoreLocally(accountEntity, localFolder, totalItemsCount)
+        loadMsgsFromRemoteServerLiveData.value = Result.loading(
+          progress = 10.0,
+          resultCode = R.id.progress_id_start_of_loading_new_messages
+        )
+        loadMsgsFromRemoteServerLiveData.value =
+          controlledRunnerForLoadNextMessages.cancelPreviousThenRun {
+            return@cancelPreviousThenRun if (accountEntity.useAPI) {
+              GmailApiHelper.executeWithResult {
+                if (localFolder.searchQuery.isNullOrEmpty()) {
+                  loadMsgsFromRemoteServerAndStoreLocally(
+                    accountEntity,
+                    localFolder,
+                    totalItemsCount
+                  )
+                } else {
+                  searchMsgsOnRemoteServerAndStoreLocally(
+                    accountEntity,
+                    localFolder,
+                    totalItemsCount
+                  )
+                }
               }
-            }
-          } else {
-            IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
-              if (localFolder.searchQuery.isNullOrEmpty()) {
-                loadMsgsFromRemoteServerAndStoreLocally(accountEntity, store, localFolder, totalItemsCount)
-              } else {
-                searchMsgsOnRemoteServerAndStoreLocally(accountEntity, store, localFolder, totalItemsCount)
+            } else {
+              IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
+                if (localFolder.searchQuery.isNullOrEmpty()) {
+                  loadMsgsFromRemoteServerAndStoreLocally(
+                    accountEntity,
+                    store,
+                    localFolder,
+                    totalItemsCount
+                  )
+                } else {
+                  searchMsgsOnRemoteServerAndStoreLocally(
+                    accountEntity,
+                    store,
+                    localFolder,
+                    totalItemsCount
+                  )
+                }
               }
-            }
                 ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+            }
           }
-        }
       }
     }
   }
@@ -258,11 +286,13 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState,
-                      notifyMsgStatesListener: Boolean = true) {
+  fun changeMsgsState(
+    ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState,
+    notifyMsgStatesListener: Boolean = true
+  ) {
     viewModelScope.launch {
       val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
-          localFolder.fullName, ids.map { it })
+        localFolder.fullName, ids.map { it })
 
       if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
         if (newMsgState == MessageState.PENDING_DELETING) {
@@ -279,29 +309,39 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  private fun prepareCandidates(entities: Iterable<MessageEntity>, newMsgState: MessageState): Iterable<MessageEntity> {
+  private fun prepareCandidates(
+    entities: Iterable<MessageEntity>,
+    newMsgState: MessageState
+  ): Iterable<MessageEntity> {
     val candidates = mutableListOf<MessageEntity>()
 
     for (msgEntity in entities) {
-      if (msgEntity.msgState in listOf(MessageState.SENDING, MessageState.SENT_WITHOUT_LOCAL_COPY, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER)) {
+      if (msgEntity.msgState in listOf(
+          MessageState.SENDING,
+          MessageState.SENT_WITHOUT_LOCAL_COPY,
+          MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
+        )
+      ) {
         continue
       }
 
       val candidate: MessageEntity = when (newMsgState) {
         MessageState.PENDING_MARK_READ -> {
           msgEntity.copy(
-              state = newMsgState.value,
-              flags = if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-                msgEntity.flags
-              } else {
-                msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
-              })
+            state = newMsgState.value,
+            flags = if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+              msgEntity.flags
+            } else {
+              msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+            }
+          )
         }
 
         MessageState.PENDING_MARK_UNREAD -> {
           msgEntity.copy(
-              state = newMsgState.value,
-              flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, ""))
+            state = newMsgState.value,
+            flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+          )
         }
 
         else -> {
@@ -315,13 +355,19 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return candidates
   }
 
-  private suspend fun loadMsgsFromRemoteServerAndStoreLocally(accountEntity: AccountEntity, store: Store,
-                                                              localFolder: LocalFolder,
-                                                              countOfAlreadyLoadedMsgs: Int
+  private suspend fun loadMsgsFromRemoteServerAndStoreLocally(
+    accountEntity: AccountEntity, store: Store,
+    localFolder: LocalFolder,
+    countOfAlreadyLoadedMsgs: Int
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     store.getFolder(localFolder.fullName).use { folder ->
       val imapFolder = folder as IMAPFolder
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_opening_store))
+      loadMsgsFromRemoteServerLiveData.postValue(
+        Result.loading(
+          progress = 70.0,
+          resultCode = R.id.progress_id_opening_store
+        )
+      )
       imapFolder.open(Folder.READ_ONLY)
 
       val countOfLoadedMsgs = when {
@@ -350,14 +396,17 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
       val folderName = imapFolder.fullName
 
-      roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
-        roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = msgsCount))
-      }
+      roomDatabase.labelDao()
+        .getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
+          roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = msgsCount))
+        }
 
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
+      loadMsgsFromRemoteServerLiveData.postValue(
+        Result.loading(
           progress = 80.0,
           resultCode = R.id.progress_id_getting_list_of_emails
-      ))
+        )
+      )
       if (end < 1) {
         handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
       } else {
@@ -381,70 +430,104 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return@withContext Result.success(true)
   }
 
-  private suspend fun loadMsgsFromRemoteServerAndStoreLocally(accountEntity: AccountEntity,
-                                                              localFolder: LocalFolder,
-                                                              totalItemsCount: Int
+  private suspend fun loadMsgsFromRemoteServerAndStoreLocally(
+    accountEntity: AccountEntity,
+    localFolder: LocalFolder,
+    totalItemsCount: Int
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     when (accountEntity.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-        val labelEntity: LabelEntity? = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
-        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
-        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(getApplication(), accountEntity,
-            localFolder, if (totalItemsCount > 0) labelEntity?.nextPageToken else null)
-        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
+        val labelEntity: LabelEntity? = roomDatabase.labelDao()
+          .getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
+        loadMsgsFromRemoteServerLiveData.postValue(
+          Result.loading(
+            progress = 20.0,
+            resultCode = R.id.progress_id_gmail_list
+          )
+        )
+        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(
+          getApplication(), accountEntity,
+          localFolder, if (totalItemsCount > 0) labelEntity?.nextPageToken else null
+        )
+        loadMsgsFromRemoteServerLiveData.postValue(
+          Result.loading(
+            progress = 70.0,
+            resultCode = R.id.progress_id_gmail_msgs_info
+          )
+        )
 
         if (messagesBaseInfo.messages?.isNotEmpty() == true) {
-          val msgs = GmailApiHelper.loadMsgsInParallel(getApplication(), accountEntity, messagesBaseInfo.messages
-              ?: emptyList(), localFolder)
-          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
+          val msgs = GmailApiHelper.loadMsgsInParallel(
+            getApplication(), accountEntity, messagesBaseInfo.messages
+              ?: emptyList(), localFolder
+          )
+          loadMsgsFromRemoteServerLiveData.postValue(
+            Result.loading(
+              progress = 90.0,
+              resultCode = R.id.progress_id_gmail_msgs_info
+            )
+          )
           handleReceivedMsgs(accountEntity, localFolder, msgs)
         } else {
-          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
+          loadMsgsFromRemoteServerLiveData.postValue(
+            Result.loading(
+              progress = 90.0,
+              resultCode = R.id.progress_id_gmail_msgs_info
+            )
+          )
         }
-        labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(nextPageToken = messagesBaseInfo.nextPageToken)) }
+        labelEntity?.let {
+          roomDatabase.labelDao()
+            .updateSuspend(it.copy(nextPageToken = messagesBaseInfo.nextPageToken))
+        }
       }
     }
 
     return@withContext Result.success(true)
   }
 
-  private suspend fun handleReceivedMsgs(account: AccountEntity, localFolder: LocalFolder,
-                                         msgs: List<com.google.api.services.gmail.model.Message>) = withContext(Dispatchers.IO) {
+  private suspend fun handleReceivedMsgs(
+    account: AccountEntity, localFolder: LocalFolder,
+    msgs: List<com.google.api.services.gmail.model.Message>
+  ) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
 
     val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
-        context = getApplication(),
-        email = email,
-        label = folder,
-        msgsList = msgs,
-        isNew = false,
-        areAllMsgsEncrypted = isEncryptedModeEnabled
+      context = getApplication(),
+      email = email,
+      label = folder,
+      msgsList = msgs,
+      isNew = false,
+      areAllMsgsEncrypted = isEncryptedModeEnabled
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
     GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
     val session = Session.getInstance(Properties())
     updateLocalContactsIfNeeded(messages = msgs
-        .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
-        .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
+      .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+      .map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
+    )
   }
 
-  private suspend fun handleReceivedMsgs(account: AccountEntity, localFolder: LocalFolder,
-                                         remoteFolder: IMAPFolder, msgs: Array<Message>) = withContext(Dispatchers.IO) {
+  private suspend fun handleReceivedMsgs(
+    account: AccountEntity, localFolder: LocalFolder,
+    remoteFolder: IMAPFolder, msgs: Array<Message>
+  ) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
 
     val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
-        context = getApplication(),
-        email = email,
-        label = folder,
-        folder = remoteFolder,
-        msgs = msgs,
-        isNew = false,
-        areAllMsgsEncrypted = isEncryptedModeEnabled
+      context = getApplication(),
+      email = email,
+      label = folder,
+      folder = remoteFolder,
+      msgs = msgs,
+      isNew = false,
+      areAllMsgsEncrypted = isEncryptedModeEnabled
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
@@ -457,9 +540,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     updateLocalContactsIfNeeded(remoteFolder, msgs)
   }
 
-  private suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: Array<Message>,
-                                          remoteFolder: IMAPFolder, account: AccountEntity, localFolder:
-                                          LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
+  private suspend fun identifyAttachments(
+    msgEntities: List<MessageEntity>, msgs: Array<Message>,
+    remoteFolder: IMAPFolder, account: AccountEntity, localFolder:
+    LocalFolder, roomDatabase: FlowCryptRoomDatabase
+  ) = withContext(Dispatchers.IO) {
     try {
       val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
       val attachments = mutableListOf<AttachmentEntity>()
@@ -483,7 +568,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  private suspend fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder? = null, messages: Array<Message>) = withContext(Dispatchers.IO) {
+  private suspend fun updateLocalContactsIfNeeded(
+    imapFolder: IMAPFolder? = null,
+    messages: Array<Message>
+  ) = withContext(Dispatchers.IO) {
     try {
       val isSentFolder = imapFolder?.attributes?.contains("\\Sent") ?: true
 
@@ -533,23 +621,53 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return pairs
   }
 
-  private suspend fun searchMsgsOnRemoteServerAndStoreLocally(accountEntity: AccountEntity,
-                                                              localFolder: LocalFolder,
-                                                              totalItemsCount: Int): Result<Boolean?> = withContext(Dispatchers.IO) {
+  private suspend fun searchMsgsOnRemoteServerAndStoreLocally(
+    accountEntity: AccountEntity,
+    localFolder: LocalFolder,
+    totalItemsCount: Int
+  ): Result<Boolean?> = withContext(Dispatchers.IO) {
     when (accountEntity.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 20.0, resultCode = R.id.progress_id_gmail_list))
-        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfoUsingSearch(getApplication(), accountEntity,
-            localFolder, if (totalItemsCount > 0) searchNextPageToken else null)
-        loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 70.0, resultCode = R.id.progress_id_gmail_msgs_info))
+        loadMsgsFromRemoteServerLiveData.postValue(
+          Result.loading(
+            progress = 20.0,
+            resultCode = R.id.progress_id_gmail_list
+          )
+        )
+        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfoUsingSearch(
+          getApplication(), accountEntity,
+          localFolder, if (totalItemsCount > 0) searchNextPageToken else null
+        )
+        loadMsgsFromRemoteServerLiveData.postValue(
+          Result.loading(
+            progress = 70.0,
+            resultCode = R.id.progress_id_gmail_msgs_info
+          )
+        )
 
         if (messagesBaseInfo.messages?.isNotEmpty() == true) {
-          val msgs = GmailApiHelper.loadMsgsInParallel(getApplication(), accountEntity, messagesBaseInfo.messages
-              ?: emptyList(), localFolder)
-          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
-          handleSearchResults(accountEntity, localFolder.copy(fullName = SearchMessagesActivity.SEARCH_FOLDER_NAME), msgs)
+          val msgs = GmailApiHelper.loadMsgsInParallel(
+            getApplication(), accountEntity, messagesBaseInfo.messages
+              ?: emptyList(), localFolder
+          )
+          loadMsgsFromRemoteServerLiveData.postValue(
+            Result.loading(
+              progress = 90.0,
+              resultCode = R.id.progress_id_gmail_msgs_info
+            )
+          )
+          handleSearchResults(
+            accountEntity,
+            localFolder.copy(fullName = SearchMessagesActivity.SEARCH_FOLDER_NAME),
+            msgs
+          )
         } else {
-          loadMsgsFromRemoteServerLiveData.postValue(Result.loading(progress = 90.0, resultCode = R.id.progress_id_gmail_msgs_info))
+          loadMsgsFromRemoteServerLiveData.postValue(
+            Result.loading(
+              progress = 90.0,
+              resultCode = R.id.progress_id_gmail_msgs_info
+            )
+          )
         }
 
         searchNextPageToken = messagesBaseInfo.nextPageToken
@@ -560,9 +678,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
 
-  private suspend fun searchMsgsOnRemoteServerAndStoreLocally(accountEntity: AccountEntity, store: Store,
-                                                              localFolder: LocalFolder,
-                                                              countOfAlreadyLoadedMsgs: Int): Result<Boolean?> = withContext(Dispatchers.IO) {
+  private suspend fun searchMsgsOnRemoteServerAndStoreLocally(
+    accountEntity: AccountEntity, store: Store,
+    localFolder: LocalFolder,
+    countOfAlreadyLoadedMsgs: Int
+  ): Result<Boolean?> = withContext(Dispatchers.IO) {
     store.getFolder(localFolder.fullName).use { folder ->
       val imapFolder = folder as IMAPFolder
       imapFolder.open(Folder.READ_ONLY)
@@ -582,10 +702,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         else -> startCandidate
       }
 
-      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(
+      loadMsgsFromRemoteServerLiveData.postValue(
+        Result.loading(
           progress = 80.0,
           resultCode = R.id.progress_id_getting_list_of_emails
-      ))
+        )
+      )
 
       if (end < 1) {
         handleSearchResults(accountEntity, localFolder, imapFolder, arrayOf())
@@ -607,20 +729,22 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return@withContext Result.success(true)
   }
 
-  private suspend fun handleSearchResults(account: AccountEntity, localFolder: LocalFolder,
-                                          remoteFolder: IMAPFolder, msgs: Array<Message>) = withContext(Dispatchers.IO) {
+  private suspend fun handleSearchResults(
+    account: AccountEntity, localFolder: LocalFolder,
+    remoteFolder: IMAPFolder, msgs: Array<Message>
+  ) = withContext(Dispatchers.IO) {
     val email = account.email
     val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
     val searchLabel = SearchMessagesActivity.SEARCH_FOLDER_NAME
 
     val msgEntities = MessageEntity.genMessageEntities(
-        context = getApplication(),
-        email = email,
-        label = searchLabel,
-        folder = remoteFolder,
-        msgs = msgs,
-        isNew = false,
-        areAllMsgsEncrypted = isEncryptedModeEnabled
+      context = getApplication(),
+      email = email,
+      label = searchLabel,
+      folder = remoteFolder,
+      msgs = msgs,
+      isNew = false,
+      areAllMsgsEncrypted = isEncryptedModeEnabled
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
@@ -632,41 +756,49 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     updateLocalContactsIfNeeded(remoteFolder, msgs)
   }
 
-  private suspend fun handleSearchResults(account: AccountEntity, localFolder: LocalFolder,
-                                          msgs: List<com.google.api.services.gmail.model.Message>) = withContext(Dispatchers.IO) {
+  private suspend fun handleSearchResults(
+    account: AccountEntity, localFolder: LocalFolder,
+    msgs: List<com.google.api.services.gmail.model.Message>
+  ) = withContext(Dispatchers.IO) {
     val email = account.email
     val label = localFolder.fullName
 
     val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
-        context = getApplication(),
-        email = email,
-        label = label,
-        msgsList = msgs,
-        isNew = false,
-        areAllMsgsEncrypted = isEncryptedModeEnabled
+      context = getApplication(),
+      email = email,
+      label = label,
+      msgsList = msgs,
+      isNew = false,
+      areAllMsgsEncrypted = isEncryptedModeEnabled
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
     GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
     val session = Session.getInstance(Properties())
     updateLocalContactsIfNeeded(messages = msgs
-        .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
-        .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
+      .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+      .map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
+    )
   }
 
-  private suspend fun refreshMsgsInternal(accountEntity: AccountEntity, localFolder: LocalFolder): Result<Boolean?> = withContext(Dispatchers.IO) {
-    val newestMsg = roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, localFolder.fullName)
+  private suspend fun refreshMsgsInternal(
+    accountEntity: AccountEntity,
+    localFolder: LocalFolder
+  ): Result<Boolean?> = withContext(Dispatchers.IO) {
+    val newestMsg =
+      roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, localFolder.fullName)
     try {
-      val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
+      val labelEntity = roomDatabase.labelDao()
+        .getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
       val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
       val msgEntityHistoryId = BigInteger(newestMsg?.historyId ?: "0")
 
       val historyList = GmailApiHelper.loadHistoryInfo(
-          context = getApplication(),
-          accountEntity = accountEntity,
-          localFolder = localFolder,
-          historyId = labelEntityHistoryId.max(msgEntityHistoryId)
+        context = getApplication(),
+        accountEntity = accountEntity,
+        localFolder = localFolder,
+        historyId = labelEntityHistoryId.max(msgEntityHistoryId)
       )
 
       handleMsgsFromHistory(accountEntity, localFolder, historyList)
@@ -674,8 +806,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       when (e) {
         is GoogleJsonResponseException -> {
           if (localFolder.getFolderType() == FoldersManager.FolderType.INBOX
-              && e.statusCode == 404
-              && e.details.errors.any { it.reason.equals("notFound", true) }) {
+            && e.statusCode == 404
+            && e.details.errors.any { it.reason.equals("notFound", true) }
+          ) {
             //client must perform a full sync
             //https://developers.google.com/gmail/api/guides/sync#partial_synchronization
             roomDatabase.msgDao().delete(accountEntity.email, localFolder.fullName)
@@ -689,18 +822,27 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return@withContext Result.success(true)
   }
 
-  private suspend fun refreshMsgsInternal(accountEntity: AccountEntity, store: Store, localFolder: LocalFolder): Result<Boolean?> = withContext(Dispatchers.IO) {
+  private suspend fun refreshMsgsInternal(
+    accountEntity: AccountEntity,
+    store: Store,
+    localFolder: LocalFolder
+  ): Result<Boolean?> = withContext(Dispatchers.IO) {
     store.getFolder(localFolder.fullName).use { folder ->
       val imapFolder = folder as IMAPFolder
       imapFolder.open(Folder.READ_ONLY)
       val folderName = localFolder.fullName
 
       val newestCachedUID = roomDatabase.msgDao()
-          .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName) ?: 0
+        .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName) ?: 0
       val oldestCachedUID = roomDatabase.msgDao()
-          .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderName) ?: 0
-      val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderName).toSet()
-      val updatedMsgs = EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
+        .getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderName) ?: 0
+      val cachedUIDSet =
+        roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderName).toSet()
+      val updatedMsgs = EmailUtil.getUpdatedMsgsByUID(
+        imapFolder,
+        oldestCachedUID.toLong(),
+        newestCachedUID.toLong()
+      )
 
       val newMsgsAfterLastInLocalCache = if (accountEntity.isShowOnlyEncrypted == true) {
         val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
@@ -720,22 +862,32 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
       } else {
-        val newestMsgsFromFetchExceptExisted = imapFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
+        val newestMsgsFromFetchExceptExisted =
+          imapFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID)
             .filterNot { imapFolder.getUID(it) in cachedUIDSet }
             .filterNotNull()
-        val msgs = newestMsgsFromFetchExceptExisted + updatedMsgs.filter { imapFolder.getUID(it) !in cachedUIDSet }
+        val msgs =
+          newestMsgsFromFetchExceptExisted + updatedMsgs.filter { imapFolder.getUID(it) !in cachedUIDSet }
         EmailUtil.fetchMsgs(imapFolder, msgs.toTypedArray())
       }
 
-      handleRefreshedMsgs(accountEntity, localFolder, imapFolder, newMsgsAfterLastInLocalCache, updatedMsgs)
+      handleRefreshedMsgs(
+        accountEntity,
+        localFolder,
+        imapFolder,
+        newMsgsAfterLastInLocalCache,
+        updatedMsgs
+      )
     }
 
     return@withContext Result.success(true)
   }
 
-  private suspend fun handleRefreshedMsgs(accountEntity: AccountEntity, localFolder: LocalFolder,
-                                          remoteFolder: IMAPFolder, newMsgs: Array<Message>,
-                                          updatedMsgs: Array<Message>) = withContext(Dispatchers.IO) {
+  private suspend fun handleRefreshedMsgs(
+    accountEntity: AccountEntity, localFolder: LocalFolder,
+    remoteFolder: IMAPFolder, newMsgs: Array<Message>,
+    updatedMsgs: Array<Message>
+  ) = withContext(Dispatchers.IO) {
     val email = accountEntity.email
     val folderName = localFolder.fullName
 
@@ -759,13 +911,13 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
     val msgEntities = MessageEntity.genMessageEntities(
-        context = getApplication(),
-        email = email,
-        label = folderName,
-        folder = remoteFolder,
-        msgs = newCandidates,
-        isNew = isNew,
-        areAllMsgsEncrypted = isEncryptedModeEnabled
+      context = getApplication(),
+      email = email,
+      label = folderName,
+      folder = remoteFolder,
+      msgs = newCandidates,
+      isNew = isNew,
+      areAllMsgsEncrypted = isEncryptedModeEnabled
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
@@ -774,20 +926,24 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
     }
 
-    val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs)
+    val updateCandidates =
+      EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs)
         .map { remoteFolder.getUID(it) to it.flags }.toMap()
     roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderName, updateCandidates)
 
     updateLocalContactsIfNeeded(remoteFolder, newCandidates)
   }
 
-  private suspend fun handleMsgsFromHistory(accountEntity: AccountEntity, localFolder: LocalFolder,
-                                            historyList: List<History>) = withContext(Dispatchers.IO) {
+  private suspend fun handleMsgsFromHistory(
+    accountEntity: AccountEntity, localFolder: LocalFolder,
+    historyList: List<History>
+  ) = withContext(Dispatchers.IO) {
 
     GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
                                                               newCandidatesMap,
                                                               updateCandidatesMap ->
-      roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs)
+      roomDatabase.msgDao()
+        .deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs)
 
       val folderType = FoldersManager.getFolderType(localFolder)
       if (folderType === FoldersManager.FolderType.INBOX) {
@@ -799,38 +955,50 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       val newCandidates = newCandidatesMap.values
       if (newCandidates.isNotEmpty()) {
-        val msgs = GmailApiHelper.loadMsgsInParallel(getApplication(), accountEntity,
-            newCandidates.toList(), localFolder)
+        val msgs = GmailApiHelper.loadMsgsInParallel(
+          getApplication(), accountEntity,
+          newCandidates.toList(), localFolder
+        )
 
         val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
-        val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
+        val isNew =
+          !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
         val msgEntities = MessageEntity.genMessageEntities(
-            context = getApplication(),
-            email = accountEntity.email,
-            label = localFolder.fullName,
-            msgsList = msgs,
-            isNew = isNew,
-            areAllMsgsEncrypted = isEncryptedModeEnabled
+          context = getApplication(),
+          email = accountEntity.email,
+          label = localFolder.fullName,
+          msgsList = msgs,
+          isNew = isNew,
+          areAllMsgsEncrypted = isEncryptedModeEnabled
         )
 
         roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-        GmailApiHelper.identifyAttachments(msgEntities, msgs, accountEntity, localFolder, roomDatabase)
+        GmailApiHelper.identifyAttachments(
+          msgEntities,
+          msgs,
+          accountEntity,
+          localFolder,
+          roomDatabase
+        )
       }
 
-      roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, localFolder.fullName, updateCandidatesMap)
+      roomDatabase.msgDao()
+        .updateFlagsSuspend(accountEntity.email, localFolder.fullName, updateCandidatesMap)
 
       if (folderType === FoldersManager.FolderType.SENT) {
         val session = Session.getInstance(Properties())
         updateLocalContactsIfNeeded(messages = newCandidates
-            .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
-            .map { GmaiAPIMimeMessage(session, it) }.toTypedArray())
+          .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+          .map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
+        )
       }
     }
   }
 
   private suspend fun clearHistoryIdForLabel(accountEntity: AccountEntity, label: String) {
-    val labelEntity: LabelEntity? = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, label)
+    val labelEntity: LabelEntity? =
+      roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, label)
     labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(historyId = null)) }
   }
 
@@ -838,8 +1006,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     refreshMsgsLiveData.value = controlledRunnerForRefreshing.cancelPreviousThenRun {
       return@cancelPreviousThenRun Result.none()
     }
-    loadMsgsFromRemoteServerLiveData.value = controlledRunnerForLoadNextMessages.cancelPreviousThenRun {
-      return@cancelPreviousThenRun Result.none()
-    }
+    loadMsgsFromRemoteServerLiveData.value =
+      controlledRunnerForLoadNextMessages.cancelPreviousThenRun {
+        return@cancelPreviousThenRun Result.none()
+      }
   }
 }

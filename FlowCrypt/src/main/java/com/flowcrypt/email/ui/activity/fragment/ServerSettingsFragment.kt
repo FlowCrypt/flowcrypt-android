@@ -138,14 +138,16 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     spinnerSmtpSecurityType = view.findViewById(R.id.spinnerSmtpSecurityType)
 
     spinnerImapSecurityType?.adapter = ArrayAdapter(
-        requireContext(),
-        android.R.layout.simple_spinner_dropdown_item,
-        SecurityType.generateSecurityTypes(requireContext()))
+      requireContext(),
+      android.R.layout.simple_spinner_dropdown_item,
+      SecurityType.generateSecurityTypes(requireContext())
+    )
 
     spinnerSmtpSecurityType?.adapter = ArrayAdapter(
-        requireContext(),
-        android.R.layout.simple_spinner_dropdown_item,
-        SecurityType.generateSecurityTypes(requireContext()))
+      requireContext(),
+      android.R.layout.simple_spinner_dropdown_item,
+      SecurityType.generateSecurityTypes(requireContext())
+    )
 
     spinnerImapSecurityType?.onItemSelected { parent, _, position, _ ->
       val securityType = parent?.adapter?.getItem(position) as SecurityType
@@ -177,7 +179,11 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
       authCreds?.let { authCredentials ->
         isImapSpinnerRestored = false
         isSmtpSpinnerRestored = false
-        navController?.navigate(ServerSettingsFragmentDirections.actionServerSettingsFragmentToCheckCredentialsFragment(AccountEntity(authCredentials)))
+        navController?.navigate(
+          ServerSettingsFragmentDirections.actionServerSettingsFragmentToCheckCredentialsFragment(
+            AccountEntity(authCredentials)
+          )
+        )
       }
     }
   }
@@ -238,45 +244,73 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
   private fun isDataCorrect(): Boolean {
     when {
       editTextPassword?.text.isNullOrEmpty() -> {
-        showInfoSnackbar(editTextPassword, getString(R.string.text_must_not_be_empty,
-            getString(R.string.password)))
+        showInfoSnackbar(
+          editTextPassword, getString(
+            R.string.text_must_not_be_empty,
+            getString(R.string.password)
+          )
+        )
         editTextPassword?.requestFocus()
       }
 
       editTextImapServer?.text.isNullOrEmpty() -> {
-        showInfoSnackbar(editTextImapServer, getString(R.string.text_must_not_be_empty,
-            getString(R.string.imap_server)))
+        showInfoSnackbar(
+          editTextImapServer, getString(
+            R.string.text_must_not_be_empty,
+            getString(R.string.imap_server)
+          )
+        )
         editTextImapServer?.requestFocus()
       }
 
       editTextImapPort?.text.isNullOrEmpty() -> {
-        showInfoSnackbar(editTextImapPort, getString(R.string.text_must_not_be_empty,
-            getString(R.string.imap_port)))
+        showInfoSnackbar(
+          editTextImapPort, getString(
+            R.string.text_must_not_be_empty,
+            getString(R.string.imap_port)
+          )
+        )
         editTextImapPort?.requestFocus()
       }
 
       editTextSmtpServer?.text.isNullOrEmpty() -> {
-        showInfoSnackbar(editTextSmtpServer, getString(R.string.text_must_not_be_empty,
-            getString(R.string.smtp_server)))
+        showInfoSnackbar(
+          editTextSmtpServer, getString(
+            R.string.text_must_not_be_empty,
+            getString(R.string.smtp_server)
+          )
+        )
         editTextSmtpServer?.requestFocus()
       }
 
       editTextSmtpPort?.text.isNullOrEmpty() -> {
-        showInfoSnackbar(editTextSmtpPort, getString(R.string.text_must_not_be_empty,
-            getString(R.string.smtp_port)))
+        showInfoSnackbar(
+          editTextSmtpPort, getString(
+            R.string.text_must_not_be_empty,
+            getString(R.string.smtp_port)
+          )
+        )
         editTextSmtpPort?.requestFocus()
       }
 
       checkBoxRequireSignInForSmtp?.isChecked == true -> when {
         editTextSmtpUsername?.text.isNullOrEmpty() -> {
-          showInfoSnackbar(editTextSmtpUsername, getString(R.string.text_must_not_be_empty,
-              getString(R.string.smtp_username)))
+          showInfoSnackbar(
+            editTextSmtpUsername, getString(
+              R.string.text_must_not_be_empty,
+              getString(R.string.smtp_username)
+            )
+          )
           editTextSmtpUsername?.requestFocus()
         }
 
         editTextSmtpPassword?.text.isNullOrEmpty() -> {
-          showInfoSnackbar(editTextSmtpPassword, getString(R.string.text_must_not_be_empty,
-              getString(R.string.smtp_password)))
+          showInfoSnackbar(
+            editTextSmtpPassword, getString(
+              R.string.text_must_not_be_empty,
+              getString(R.string.smtp_password)
+            )
+          )
           editTextSmtpPassword?.requestFocus()
         }
         else -> return true
@@ -300,18 +334,18 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
       Integer.parseInt(editTextSmtpPort?.text.toString())
 
     return AuthCredentials(
-        email = editTextEmail?.text.toString(),
-        username = editTextUserName?.text.toString(),
-        password = editTextPassword?.text.toString(),
-        imapServer = editTextImapServer?.text.toString(),
-        imapPort = imapPort,
-        imapOpt = (spinnerImapSecurityType?.selectedItem as SecurityType).opt,
-        smtpServer = editTextSmtpServer?.text.toString(),
-        smtpPort = smtpPort,
-        smtpOpt = (spinnerSmtpSecurityType?.selectedItem as SecurityType).opt,
-        hasCustomSignInForSmtp = checkBoxRequireSignInForSmtp?.isChecked ?: false,
-        smtpSigInUsername = editTextSmtpUsername?.text.toString(),
-        smtpSignInPassword = editTextSmtpPassword?.text.toString()
+      email = editTextEmail?.text.toString(),
+      username = editTextUserName?.text.toString(),
+      password = editTextPassword?.text.toString(),
+      imapServer = editTextImapServer?.text.toString(),
+      imapPort = imapPort,
+      imapOpt = (spinnerImapSecurityType?.selectedItem as SecurityType).opt,
+      smtpServer = editTextSmtpServer?.text.toString(),
+      smtpPort = smtpPort,
+      smtpOpt = (spinnerSmtpSecurityType?.selectedItem as SecurityType).opt,
+      hasCustomSignInForSmtp = checkBoxRequireSignInForSmtp?.isChecked ?: false,
+      smtpSigInUsername = editTextSmtpUsername?.text.toString(),
+      smtpSignInPassword = editTextSmtpPassword?.text.toString()
     )
   }
 
@@ -334,17 +368,22 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
-              editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
-          val dialogMsg = msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
+            editTextEmail?.text.toString(), editTextPassword?.text.toString()
+          )?.faqUrl
+          val dialogMsg =
+            msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
 
-          navController?.navigate(NavGraphDirections.actionGlobalTwoWayDialogFragment(
+          navController?.navigate(
+            NavGraphDirections.actionGlobalTwoWayDialogFragment(
               requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
               dialogTitle = title,
               dialogMsg = dialogMsg,
               positiveButtonTitle = getString(R.string.retry),
               negativeButtonTitle = getString(R.string.cancel),
               isCancelable = true,
-              useLinkify = true))
+              useLinkify = true
+            )
+          )
         }
 
         Result.Status.SUCCESS -> {
@@ -366,8 +405,8 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     }
 
     getNavigationResultForDialog<TwoWayDialogFragment.Result>(
-        destinationId = R.id.serverSettingsFragment,
-        key = TwoWayDialogFragment.KEY_RESULT
+      destinationId = R.id.serverSettingsFragment,
+      key = TwoWayDialogFragment.KEY_RESULT
     ) {
       when (it.requestCode) {
         REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
@@ -394,8 +433,9 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
               context?.let { context ->
                 val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
                 roomDatabase.msgDao().changeMsgsStateSuspend(
-                    account?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
-                    MessageState.QUEUED.value)
+                  account?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
+                  MessageState.QUEUED.value
+                )
                 MessagesSenderWorker.enqueue(context, true)
                 InboxIdleSyncWorker.enqueue(context)
                 toast(text = getString(R.string.server_settings_updated))

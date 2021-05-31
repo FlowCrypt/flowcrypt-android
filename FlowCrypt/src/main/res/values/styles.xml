@@ -104,8 +104,7 @@
         <item name="android:background">@drawable/bg_bottom_line_gray</item>
     </style>
 
-    <style name="AppWidget.TextInputLayout.PgpBlock">
-    </style>
+    <style name="AppWidget.TextInputLayout.PgpBlock"></style>
 
     <style name="AppWidget.TextInputLayout.PgpBlock.Error">
         <item name="android:background">@drawable/bg_message_part_pgp_message_error</item>

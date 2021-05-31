@@ -42,7 +42,8 @@ import javax.mail.internet.InternetAddress
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class LoadContactsWorker(context: Context, params: WorkerParameters) :
+  BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     fetchContacts(accountEntity, store)
   }
@@ -51,29 +52,31 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
     fetchContacts(accountEntity)
   }
 
-  private suspend fun fetchContacts(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    fetchContactsInternal(account) {
-      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      val folderSent = foldersManager.findSentFolder() ?: return@fetchContactsInternal emptyArray()
+  private suspend fun fetchContacts(account: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      fetchContactsInternal(account) {
+        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+        val folderSent =
+          foldersManager.findSentFolder() ?: return@fetchContactsInternal emptyArray()
 
-      store.getFolder(folderSent.fullName).use { folder ->
-        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-        val msgs = imapFolder.messages
+        store.getFolder(folderSent.fullName).use { folder ->
+          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+          val msgs = imapFolder.messages
 
-        if (msgs.isNotEmpty()) {
-          val fetchProfile = FetchProfile()
-          fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
-          fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
-          fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
-          imapFolder.fetch(msgs, fetchProfile)
+          if (msgs.isNotEmpty()) {
+            val fetchProfile = FetchProfile()
+            fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
+            fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
+            fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
+            imapFolder.fetch(msgs, fetchProfile)
 
-          return@fetchContactsInternal msgs
+            return@fetchContactsInternal msgs
+          }
         }
-      }
 
-      return@fetchContactsInternal emptyArray()
+        return@fetchContactsInternal emptyArray()
+      }
     }
-  }
 
   private suspend fun fetchContacts(account: AccountEntity) = withContext(Dispatchers.IO) {
     fetchContactsInternal(account) {
@@ -84,11 +87,11 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
         val gmailApiService = GmailApiHelper.generateGmailApiService(applicationContext, account)
 
         var response = gmailApiService
-            .users()
-            .messages()
-            .list(GmailApiHelper.DEFAULT_USER_ID)
-            .setLabelIds(listOf(GmailApiHelper.LABEL_SENT))
-            .execute()
+          .users()
+          .messages()
+          .list(GmailApiHelper.DEFAULT_USER_ID)
+          .setLabelIds(listOf(GmailApiHelper.LABEL_SENT))
+          .execute()
 
         val msgsBaseInfo = mutableListOf<com.google.api.services.gmail.model.Message>()
 
@@ -99,28 +102,34 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
           msgsBaseInfo.addAll(response.messages)
           if (msgsBaseInfo.size < MAX_MSGS_COUNT && response.nextPageToken != null) {
             response = gmailApiService
-                .users()
-                .messages()
-                .list(GmailApiHelper.DEFAULT_USER_ID)
-                .setPageToken(response.nextPageToken)
-                .execute()
+              .users()
+              .messages()
+              .list(GmailApiHelper.DEFAULT_USER_ID)
+              .setPageToken(response.nextPageToken)
+              .execute()
           } else {
             break
           }
         }
 
         val list = mutableListOf<com.google.api.services.gmail.model.Message>()
-        list.addAll(GmailApiHelper.doOperationViaStepsSuspend(stepValue = 50, list = msgsBaseInfo) { subList ->
-          //to prevent limit exception we can do it once per 1 seconds
-          delay(1000)
-          GmailApiHelper.loadMsgs(context = applicationContext,
+        list.addAll(
+          GmailApiHelper.doOperationViaStepsSuspend(
+            stepValue = 50,
+            list = msgsBaseInfo
+          ) { subList ->
+            //to prevent limit exception we can do it once per 1 seconds
+            delay(1000)
+            GmailApiHelper.loadMsgs(
+              context = applicationContext,
               accountEntity = account,
               messages = subList,
               localFolder = folderSent,
               format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_METADATA,
               metadataHeaders = listOf("To", "Cc"),
-              fields = listOf("payload"))
-        })
+              fields = listOf("payload")
+            )
+          })
 
         val session = Session.getInstance(Properties())
         list.map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
@@ -128,14 +137,17 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
     }
   }
 
-  private suspend fun fetchContactsInternal(account: AccountEntity,
-                                            action: suspend () -> Array<Message>) = withContext(Dispatchers.IO) {
+  private suspend fun fetchContactsInternal(
+    account: AccountEntity,
+    action: suspend () -> Array<Message>
+  ) = withContext(Dispatchers.IO) {
     if (account.areContactsLoaded == true) return@withContext
     val msgs = action.invoke()
 
     if (msgs.isNotEmpty()) {
       updateContacts(msgs)
-      FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
+      FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao()
+        .updateAccountSuspend(account.copy(areContactsLoaded = true))
     }
   }
 
@@ -178,7 +190,13 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
         if (!contactsWhichWillBeCreated.contains(emailAndNamePair.email)) {
           emailAndNamePair.email?.let {
             contactsWhichWillBeCreated.add(it)
-            newCandidates.add(ContactEntity(email = it, name = emailAndNamePair.name, hasPgp = false))
+            newCandidates.add(
+              ContactEntity(
+                email = it,
+                name = emailAndNamePair.name,
+                hasPgp = false
+              )
+            )
           }
         }
       }
@@ -196,7 +214,10 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
    * @param recipientType The input [Message.RecipientType].
    * @return An array of EmailAndNamePair objects, which contains information about emails and names.
    */
-  private suspend fun parseRecipients(msg: Message?, recipientType: Message.RecipientType?): List<EmailAndNamePair> = withContext(Dispatchers.IO) {
+  private suspend fun parseRecipients(
+    msg: Message?,
+    recipientType: Message.RecipientType?
+  ): List<EmailAndNamePair> = withContext(Dispatchers.IO) {
     if (msg != null && recipientType != null) {
       try {
         val header = msg.getHeader(recipientType.toString()) ?: return@withContext emptyList()
@@ -205,8 +226,11 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
             val addresses = InternetAddress.parse(header[0])
             val emailAndNamePairs = mutableListOf<EmailAndNamePair>()
             for (address in addresses) {
-              emailAndNamePairs.add(EmailAndNamePair(
-                  address.address.toLowerCase(Locale.getDefault()), address.personal))
+              emailAndNamePairs.add(
+                EmailAndNamePair(
+                  address.address.toLowerCase(Locale.getDefault()), address.personal
+                )
+              )
             }
 
             return@withContext emailAndNamePairs
@@ -228,19 +252,19 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncW
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.KEEP,
-              OneTimeWorkRequestBuilder<LoadContactsWorker>()
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.KEEP,
+          OneTimeWorkRequestBuilder<LoadContactsWorker>()
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

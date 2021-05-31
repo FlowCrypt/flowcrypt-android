@@ -41,8 +41,9 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 11:43
  * E-mail: DenBond7@gmail.com
  */
-class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment.OnMessageSendListener,
-    OnChangeMessageEncryptionTypeListener, ChoosePublicKeyDialogFragment.OnLoadKeysProgressListener {
+class CreateMessageActivity : BaseBackStackSyncActivity(),
+  CreateMessageFragment.OnMessageSendListener,
+  OnChangeMessageEncryptionTypeListener, ChoosePublicKeyDialogFragment.OnLoadKeysProgressListener {
 
   private var nonEncryptedHintView: View? = null
   override lateinit var rootView: View
@@ -58,7 +59,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     if (intent != null) {
       serviceInfo = intent.getParcelableExtra(EXTRA_KEY_SERVICE_INFO)
       msgEncryptionType = intent.getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)
-          ?: MessageEncryptionType.ENCRYPTED
+        ?: MessageEncryptionType.ENCRYPTED
     }
 
     super.onCreate(savedInstanceState)
@@ -82,7 +83,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
       R.string.switch_to_secure_email
     else
       R.string
-          .switch_to_standard_email
+        .switch_to_standard_email
     menuActionSwitchType.setTitle(titleRes)
 
     if (serviceInfo?.isMsgTypeSwitchable == false) {
@@ -118,10 +119,12 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
   override fun sendMsg(outgoingMsgInfo: OutgoingMessageInfo) {
     PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMsgInfo)
-    Toast.makeText(this, if (GeneralUtil.isConnected(this))
-      R.string.sending
-    else
-      R.string.no_conn_msg_sent_later, Toast.LENGTH_SHORT).show()
+    Toast.makeText(
+      this, if (GeneralUtil.isConnected(this))
+        R.string.sending
+      else
+        R.string.no_conn_msg_sent_later, Toast.LENGTH_SHORT
+    ).show()
     finish()
   }
 
@@ -184,14 +187,17 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
   }
 
   private fun notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType: MessageEncryptionType) {
-    val fragment = supportFragmentManager.findFragmentById(R.id
-        .createMessageFragment) as CreateMessageFragment?
+    val fragment = supportFragmentManager.findFragmentById(
+      R.id
+        .createMessageFragment
+    ) as CreateMessageFragment?
 
     fragment?.onMsgEncryptionTypeChange(messageEncryptionType)
   }
 
   private fun initNonEncryptedHintView() {
-    nonEncryptedHintView = layoutInflater.inflate(R.layout.under_toolbar_line_with_text, appBarLayout, false)
+    nonEncryptedHintView =
+      layoutInflater.inflate(R.layout.under_toolbar_line_with_text, appBarLayout, false)
     val textView = nonEncryptedHintView!!.findViewById<TextView>(R.id.underToolbarTextTextView)
     textView.setText(R.string.this_message_will_not_be_encrypted)
   }
@@ -199,24 +205,40 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
   companion object {
 
     val EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE",
+        CreateMessageActivity::class.java
+      )
 
     val EXTRA_KEY_INCOMING_MESSAGE_INFO =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_INCOMING_MESSAGE_INFO",
+        CreateMessageActivity::class.java
+      )
 
     val EXTRA_KEY_SERVICE_INFO =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_SERVICE_INFO",
+        CreateMessageActivity::class.java
+      )
 
     val EXTRA_KEY_MESSAGE_TYPE =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_MESSAGE_TYPE",
+        CreateMessageActivity::class.java
+      )
 
-    fun generateIntent(context: Context, msgInfo: IncomingMessageInfo?,
-                       msgEncryptionType: MessageEncryptionType): Intent {
+    fun generateIntent(
+      context: Context, msgInfo: IncomingMessageInfo?,
+      msgEncryptionType: MessageEncryptionType
+    ): Intent {
       return generateIntent(context, msgInfo, MessageType.NEW, msgEncryptionType)
     }
 
-    fun generateIntent(context: Context?, msgInfo: IncomingMessageInfo?, messageType: MessageType?,
-                       msgEncryptionType: MessageEncryptionType?, serviceInfo: ServiceInfo? = null): Intent {
+    fun generateIntent(
+      context: Context?, msgInfo: IncomingMessageInfo?, messageType: MessageType?,
+      msgEncryptionType: MessageEncryptionType?, serviceInfo: ServiceInfo? = null
+    ): Intent {
 
       val intent = Intent(context, CreateMessageActivity::class.java)
       intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, msgInfo)

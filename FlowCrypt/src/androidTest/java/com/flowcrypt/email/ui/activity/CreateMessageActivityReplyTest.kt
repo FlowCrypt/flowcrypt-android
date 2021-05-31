@@ -39,34 +39,40 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class CreateMessageActivityReplyTest : BaseTest() {
-  override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+  override val activeActivityRule =
+    lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(AddPrivateKeyToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activeActivityRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(AddPrivateKeyToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activeActivityRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testReplyToHeader() {
-    val msgInfo = getMsgInfo("messages/info/standard_msg_reply_to_header.json",
-        "messages/mime/standard_msg_reply_to_header.txt")
-    activeActivityRule.launch(CreateMessageActivity.generateIntent(
+    val msgInfo = getMsgInfo(
+      "messages/info/standard_msg_reply_to_header.json",
+      "messages/mime/standard_msg_reply_to_header.txt"
+    )
+    activeActivityRule.launch(
+      CreateMessageActivity.generateIntent(
         getTargetContext(),
         msgInfo,
         MessageType.REPLY,
-        MessageEncryptionType.STANDARD))
+        MessageEncryptionType.STANDARD
+      )
+    )
 
     registerAllIdlingResources()
 
     onView(withId(R.id.editTextRecipientTo))
-        .check(matches(isDisplayed()))
-        .check(matches(withText(prepareChipText(msgInfo?.getReplyTo()?.first()?.address))))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(prepareChipText(msgInfo?.getReplyTo()?.first()?.address))))
   }
 
   private fun prepareChipText(text: String?): String {

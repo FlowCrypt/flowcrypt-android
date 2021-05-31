@@ -22,8 +22,10 @@ class AuthCredentialsManager {
     }
 
     fun getLocalWithOneBackupAuthCreds(): AuthCredentials {
-      return TestGeneralUtil.readObjectFromResources("user_with_one_backup.json", AuthCredentials::class.java)
+      return TestGeneralUtil.readObjectFromResources(
+        "user_with_one_backup.json",
+        AuthCredentials::class.java
+      )
     }
   }
 }
-

@@ -18,11 +18,19 @@ import androidx.preference.PreferenceManager
  */
 class SharedPreferencesHelper {
   companion object {
-    fun getString(sharedPreferences: SharedPreferences, key: String, defaultValue: String? = null): String? {
+    fun getString(
+      sharedPreferences: SharedPreferences,
+      key: String,
+      defaultValue: String? = null
+    ): String? {
       return sharedPreferences.getString(key, defaultValue)
     }
 
-    fun getBoolean(sharedPreferences: SharedPreferences, key: String, defaultValue: Boolean): Boolean {
+    fun getBoolean(
+      sharedPreferences: SharedPreferences,
+      key: String,
+      defaultValue: Boolean
+    ): Boolean {
       return sharedPreferences.getBoolean(key, defaultValue)
     }
 
@@ -32,7 +40,11 @@ class SharedPreferencesHelper {
       return editor.commit()
     }
 
-    fun getStringSet(sharedPreferences: SharedPreferences, key: String, defValues: Set<String>): Set<String>? {
+    fun getStringSet(
+      sharedPreferences: SharedPreferences,
+      key: String,
+      defValues: Set<String>
+    ): Set<String>? {
       return sharedPreferences.getStringSet(key, defValues)
     }
 

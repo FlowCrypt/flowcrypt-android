@@ -21,20 +21,22 @@ import java.io.BufferedInputStream
  * Time: 4:37 PM
  * E-mail: DenBond7@gmail.com
  */
-data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
-                                           @Expose val name: String?,
-                                           @SerializedName("error")
-                                           @Expose override val apiError: ApiError?,
-                                           var decryptedBytes: ByteArray? = null) : BaseNodeResponse {
+data class DecryptedFileResult constructor(
+  @Expose val isSuccess: Boolean,
+  @Expose val name: String?,
+  @SerializedName("error")
+  @Expose override val apiError: ApiError?,
+  var decryptedBytes: ByteArray? = null
+) : BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     decryptedBytes = IOUtils.toByteArray(bufferedInputStream)
   }
 
   constructor(source: Parcel) : this(
-      1 == source.readInt(),
-      source.readString(),
-      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-      source.createByteArray()
+    1 == source.readInt(),
+    source.readString(),
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+    source.createByteArray()
   )
 
   override fun describeContents(): Int {
@@ -42,12 +44,12 @@ data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeInt((if (isSuccess) 1 else 0))
-        writeString(name)
-        writeParcelable(apiError, flags)
-        writeByteArray(decryptedBytes)
-      }
+    with(dest) {
+      writeInt((if (isSuccess) 1 else 0))
+      writeString(name)
+      writeParcelable(apiError, flags)
+      writeByteArray(decryptedBytes)
+    }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -78,9 +80,12 @@ data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<DecryptedFileResult> = object : Parcelable.Creator<DecryptedFileResult> {
-      override fun createFromParcel(source: Parcel): DecryptedFileResult = DecryptedFileResult(source)
-      override fun newArray(size: Int): Array<DecryptedFileResult?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<DecryptedFileResult> =
+      object : Parcelable.Creator<DecryptedFileResult> {
+        override fun createFromParcel(source: Parcel): DecryptedFileResult =
+          DecryptedFileResult(source)
+
+        override fun newArray(size: Int): Array<DecryptedFileResult?> = arrayOfNulls(size)
+      }
   }
 }

@@ -37,7 +37,11 @@ constructor(handler: Handler) : ResultReceiver(handler) {
     if (resultReceiverCallBack != null) {
       val action = resultData.getParcelable<Action>(EXTRA_KEY_ACTION)
       when (resultCode) {
-        RESULT_CODE_OK -> resultReceiverCallBack!!.onSuccess(resultData.getParcelable(EXTRA_KEY_ACTION))
+        RESULT_CODE_OK -> resultReceiverCallBack!!.onSuccess(
+          resultData.getParcelable(
+            EXTRA_KEY_ACTION
+          )
+        )
 
         RESULT_CODE_ERROR -> {
           val e = resultData.getSerializable(EXTRA_KEY_EXCEPTION) as java.lang.Exception
@@ -75,10 +79,14 @@ constructor(handler: Handler) : ResultReceiver(handler) {
     const val RESULT_CODE_OK = 1
     const val RESULT_CODE_ERROR = 0
 
-    private val EXTRA_KEY_ACTION = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTION",
-        ActionResultReceiver::class.java)
-    private val EXTRA_KEY_EXCEPTION = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_EXCEPTION",
-        ActionResultReceiver::class.java)
+    private val EXTRA_KEY_ACTION = GeneralUtil.generateUniqueExtraKey(
+      "EXTRA_KEY_ACTION",
+      ActionResultReceiver::class.java
+    )
+    private val EXTRA_KEY_EXCEPTION = GeneralUtil.generateUniqueExtraKey(
+      "EXTRA_KEY_EXCEPTION",
+      ActionResultReceiver::class.java
+    )
 
     fun generateSuccessBundle(action: Action): Bundle {
       val bundle = Bundle()

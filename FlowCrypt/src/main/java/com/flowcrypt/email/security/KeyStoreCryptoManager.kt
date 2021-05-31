@@ -82,13 +82,17 @@ object KeyStoreCryptoManager {
     synchronized(this) {
       val cipher = getCipherForEncryption()
       val encryptedBytes = cipher.doFinal(input)
-      return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
+      return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(
+        encryptedBytes,
+        BASE64_FLAGS
+      )
     }
   }
 
   @WorkerThread
   fun getCipherForEncryption(): Cipher {
-    return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply { init(Cipher.ENCRYPT_MODE, secretKey) }
+    return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING)
+      .apply { init(Cipher.ENCRYPT_MODE, secretKey) }
   }
 
   /**
@@ -125,7 +129,8 @@ object KeyStoreCryptoManager {
       val iv = encryptedData.substring(0, splitPosition)
       synchronized(this) {
         val cipher = getCipherForDecryption(iv)
-        val decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
+        val decodedBytes =
+          cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
         String(decodedBytes, StandardCharsets.UTF_8)
       }
     }
@@ -174,15 +179,16 @@ object KeyStoreCryptoManager {
    * Generate [SecretKey] using AndroidKeyStore for the AES symmetric algorithm.
    */
   private fun genAESSecretKey() {
-    val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,
-        PROVIDER_ANDROID_KEY_STORE
+    val keyGenerator = KeyGenerator.getInstance(
+      KeyProperties.KEY_ALGORITHM_AES,
+      PROVIDER_ANDROID_KEY_STORE
     ).apply {
       val purposes = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
       init(
-          KeyGenParameterSpec.Builder(ANDROID_KEY_STORE_AES_ALIAS, purposes)
-              .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-              .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-              .build()
+        KeyGenParameterSpec.Builder(ANDROID_KEY_STORE_AES_ALIAS, purposes)
+          .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+          .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+          .build()
       )
     }
 

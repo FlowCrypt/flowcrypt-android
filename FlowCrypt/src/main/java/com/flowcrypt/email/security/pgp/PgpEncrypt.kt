@@ -28,27 +28,32 @@ import java.io.OutputStream
  *         E-mail: DenBond7@gmail.com
  */
 object PgpEncrypt {
-  fun encryptAndOrSignMsg(msg: String,
-                          pubKeys: List<String>,
-                          prvKeys: List<String>? = null,
-                          secretKeyRingProtector: SecretKeyRingProtector? = null): String {
+  fun encryptAndOrSignMsg(
+    msg: String,
+    pubKeys: List<String>,
+    prvKeys: List<String>? = null,
+    secretKeyRingProtector: SecretKeyRingProtector? = null
+  ): String {
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
     encryptAndOrSign(
-        srcInputStream = ByteArrayInputStream(msg.toByteArray()),
-        destOutputStream = outputStreamForEncryptedSource,
-        pubKeys = pubKeys,
-        prvKeys = prvKeys,
-        secretKeyRingProtector = secretKeyRingProtector,
-        doArmor = true)
+      srcInputStream = ByteArrayInputStream(msg.toByteArray()),
+      destOutputStream = outputStreamForEncryptedSource,
+      pubKeys = pubKeys,
+      prvKeys = prvKeys,
+      secretKeyRingProtector = secretKeyRingProtector,
+      doArmor = true
+    )
     return String(outputStreamForEncryptedSource.toByteArray())
   }
 
-  fun encryptAndOrSign(srcInputStream: InputStream,
-                       destOutputStream: OutputStream,
-                       pubKeys: List<String>,
-                       prvKeys: List<String>? = null,
-                       secretKeyRingProtector: SecretKeyRingProtector? = null,
-                       doArmor: Boolean = false) {
+  fun encryptAndOrSign(
+    srcInputStream: InputStream,
+    destOutputStream: OutputStream,
+    pubKeys: List<String>,
+    prvKeys: List<String>? = null,
+    secretKeyRingProtector: SecretKeyRingProtector? = null,
+    doArmor: Boolean = false
+  ) {
     val pubKeysStream = ByteArrayInputStream(pubKeys.joinToString(separator = "\n").toByteArray())
     val pgpPublicKeyRingCollection = pubKeysStream.use {
       ArmoredInputStream(it).use { armoredInputStream ->
@@ -68,12 +73,12 @@ object PgpEncrypt {
     }
 
     encryptAndOrSign(
-        srcInputStream = srcInputStream,
-        destOutputStream = destOutputStream,
-        pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-        pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
-        secretKeyRingProtector = secretKeyRingProtector,
-        doArmor = doArmor
+      srcInputStream = srcInputStream,
+      destOutputStream = destOutputStream,
+      pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
+      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      secretKeyRingProtector = secretKeyRingProtector,
+      doArmor = doArmor
     )
   }
 

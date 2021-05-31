@@ -30,8 +30,10 @@ import javax.mail.search.SubjectTerm
  *         E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 need to look at com.sun.mail.imap.IdleManager
-class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
-                       private val actionsListener: ActionsListener? = null) : Runnable {
+class IdleSyncRunnable(
+  val context: Context, val accountEntity: AccountEntity,
+  private val actionsListener: ActionsListener? = null
+) : Runnable {
   private val session = OpenStoreHelper.getAccountSess(context, accountEntity)
 
   @Volatile
@@ -78,7 +80,10 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
       try {
         if (!store.isConnected) {
           EmailUtil.patchingSecurityProvider(context)
-          LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "Not connected. Start a reconnection ...")
+          LogsUtil.d(
+            IdleSyncRunnable::class.java.simpleName,
+            "Not connected. Start a reconnection ..."
+          )
           OpenStoreHelper.openStore(context, accountEntity, store)
           LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "Reconnection done")
         }
@@ -86,7 +91,8 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
         LogsUtil.d(IdleSyncRunnable::class.java.simpleName, "Start idling for store $store")
 
         store.getFolder(inboxLocalFolder.fullName).use { remoteFolder ->
-          this.remoteFolder = (remoteFolder as IMAPFolder).apply { open(javax.mail.Folder.READ_ONLY) }
+          this.remoteFolder =
+            (remoteFolder as IMAPFolder).apply { open(javax.mail.Folder.READ_ONLY) }
           actionsListener?.syncFolderState()
           remoteFolder.addMessageCountListener(object : MessageCountListener {
             override fun messagesAdded(e: MessageCountEvent?) {
@@ -98,7 +104,12 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
             }
           })
           remoteFolder.addMessageChangedListener { messageChangedEvent ->
-            actionsListener?.messageChanged(accountEntity, inboxLocalFolder, remoteFolder, messageChangedEvent)
+            actionsListener?.messageChanged(
+              accountEntity,
+              inboxLocalFolder,
+              remoteFolder,
+              messageChangedEvent
+            )
           }
 
           while (!Thread.interrupted() && isIdlingAvailable) {
@@ -118,24 +129,24 @@ class IdleSyncRunnable(val context: Context, val accountEntity: AccountEntity,
     fun syncFolderState()
 
     fun messageChanged(
-        accountEntity: AccountEntity,
-        localFolder: LocalFolder,
-        remoteFolder: IMAPFolder,
-        e: MessageChangedEvent?
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      remoteFolder: IMAPFolder,
+      e: MessageChangedEvent?
     )
 
     fun messagesAdded(
-        accountEntity: AccountEntity,
-        localFolder: LocalFolder,
-        remoteFolder: IMAPFolder,
-        e: MessageCountEvent?
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      remoteFolder: IMAPFolder,
+      e: MessageCountEvent?
     )
 
     fun messagesRemoved(
-        accountEntity: AccountEntity,
-        localFolder: LocalFolder,
-        remoteFolder: IMAPFolder,
-        e: MessageCountEvent?
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      remoteFolder: IMAPFolder,
+      e: MessageCountEvent?
     )
   }
 

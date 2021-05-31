@@ -8,7 +8,8 @@ package com.flowcrypt.email.util
 import android.content.Context
 import android.text.format.DateFormat
 import android.text.format.DateUtils
-import java.util.*
+import java.util.Calendar
+import java.util.GregorianCalendar
 
 /**
  * This class can be used to work with datea and time.
@@ -47,7 +48,8 @@ class DateTimeUtil {
         if (isTheSameDay) {
           DateFormat.getTimeFormat(context).format(calendarOfDate.time)
         } else {
-          val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NO_YEAR or DateUtils.FORMAT_ABBREV_MONTH
+          val flags =
+            DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NO_YEAR or DateUtils.FORMAT_ABBREV_MONTH
           DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
         }
       } else {

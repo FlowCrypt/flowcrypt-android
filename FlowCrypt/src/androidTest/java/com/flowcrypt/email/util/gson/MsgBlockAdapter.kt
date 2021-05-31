@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.util.gson
 
-import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.google.gson.JsonDeserializationContext
@@ -21,15 +21,26 @@ import java.lang.reflect.Type
  * E-mail: DenBond7@gmail.com
  */
 class MsgBlockAdapter : JsonDeserializer<MsgBlock> {
-  override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): MsgBlock? {
+  override fun deserialize(
+    json: JsonElement,
+    typeOfT: Type,
+    context: JsonDeserializationContext
+  ): MsgBlock? {
     val jsonObject = json.asJsonObject
 
-    val type = context.deserialize<MsgBlock.Type>(jsonObject.get("type"), MsgBlock.Type::class.java) ?: return null
+    val type = context.deserialize<MsgBlock.Type>(jsonObject.get("type"), MsgBlock.Type::class.java)
+      ?: return null
 
     when (type) {
-      MsgBlock.Type.PUBLIC_KEY -> return context.deserialize<MsgBlock>(json, PublicKeyMsgBlock::class.java)
+      MsgBlock.Type.PUBLIC_KEY -> return context.deserialize<MsgBlock>(
+        json,
+        PublicKeyMsgBlock::class.java
+      )
 
-      MsgBlock.Type.DECRYPT_ERROR -> return context.deserialize<MsgBlock>(json, DecryptErrorMsgBlock::class.java)
+      MsgBlock.Type.DECRYPT_ERROR -> return context.deserialize<MsgBlock>(
+        json,
+        DecryptErrorMsgBlock::class.java
+      )
 
       else -> return context.deserialize<MsgBlock>(json, GenericMsgBlock::class.java)
     }

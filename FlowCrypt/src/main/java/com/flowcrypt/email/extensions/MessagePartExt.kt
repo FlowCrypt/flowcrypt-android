@@ -40,7 +40,7 @@ fun MessagePart.isMimeType(inputMimeType: String): Boolean {
 fun MessagePart.disposition(): String? {
   try {
     val value = headers?.firstOrNull { it.name.equals("Content-Disposition", true) }?.value
-        ?: return null
+      ?: return null
     val cd = ContentDisposition(value)
     return cd.disposition
   } catch (e: Exception) {

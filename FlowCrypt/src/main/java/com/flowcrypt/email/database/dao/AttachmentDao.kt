@@ -26,7 +26,11 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
   fun getAttachments(account: String, label: String, uid: Long): List<AttachmentEntity>
 
   @Query("SELECT * FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
-  suspend fun getAttachmentsSuspend(account: String, label: String, uid: Long): List<AttachmentEntity>
+  suspend fun getAttachmentsSuspend(
+    account: String,
+    label: String,
+    uid: Long
+  ): List<AttachmentEntity>
 
   @Query("SELECT * FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
   fun getAttachmentsLD(account: String, label: String, uid: Long): LiveData<List<AttachmentEntity>>

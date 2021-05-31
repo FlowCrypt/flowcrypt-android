@@ -14,7 +14,8 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.util.exception.FlowCryptException
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import java.util.*
+import java.util.ArrayList
+import java.util.Locale
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -120,12 +121,12 @@ data class PgpKeyDetails constructor(
     }
 
     return PgpContact(
-        email = email.toLowerCase(Locale.US),
-        name = name,
-        pubkey = publicKey,
-        hasPgp = true,
-        client = null,
-        fingerprint = fingerprintFromKeyId
+      email = email.toLowerCase(Locale.US),
+      name = name,
+      pubkey = publicKey,
+      hasPgp = true,
+      client = null,
+      fingerprint = fingerprintFromKeyId
     )
   }
 
@@ -165,16 +166,16 @@ data class PgpKeyDetails constructor(
 
   fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
     return KeyEntity(
-        fingerprint = fingerprint,
-        account = accountEntity.email.toLowerCase(Locale.US),
-        accountType = accountEntity.accountType,
-        source = PrivateKeySourceType.BACKUP.toString(),
-        publicKey = publicKey.toByteArray(),
-        privateKey = privateKey?.toByteArray()
-            ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
-        storedPassphrase = tempPassphrase?.let { String(it) },
-        passphraseType = passphraseType
-            ?: throw IllegalArgumentException("passphraseType is not defined")
+      fingerprint = fingerprint,
+      account = accountEntity.email.toLowerCase(Locale.US),
+      accountType = accountEntity.accountType,
+      source = PrivateKeySourceType.BACKUP.toString(),
+      publicKey = publicKey.toByteArray(),
+      privateKey = privateKey?.toByteArray()
+        ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
+      storedPassphrase = tempPassphrase?.let { String(it) },
+      passphraseType = passphraseType
+        ?: throw IllegalArgumentException("passphraseType is not defined")
     )
   }
 

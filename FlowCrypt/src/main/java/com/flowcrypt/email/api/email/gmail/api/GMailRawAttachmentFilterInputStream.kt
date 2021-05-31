@@ -14,7 +14,8 @@ import java.io.InputStream
  *         Time: 4:07 PM
  *         E-mail: DenBond7@gmail.com
  */
-class GMailRawAttachmentFilterInputStream(inputStream: InputStream) : FilterInputStream(inputStream) {
+class GMailRawAttachmentFilterInputStream(inputStream: InputStream) :
+  FilterInputStream(inputStream) {
   init {
     skip(9)
   }

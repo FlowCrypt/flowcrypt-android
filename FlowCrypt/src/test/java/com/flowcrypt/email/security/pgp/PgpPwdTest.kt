@@ -15,17 +15,18 @@ class PgpPwdTest {
   @Test
   fun testEstimateStrength() {
     val actualResult = PgpPwd.estimateStrength(
-        BigDecimal("88946283684264"), PgpPwd.PwdType.PASSPHRASE)
+      BigDecimal("88946283684264"), PgpPwd.PwdType.PASSPHRASE
+    )
     val expectedResult = PgpPwd.PwdStrengthResult(
-        word = PgpPwd.Word(
-            match = "week",
-            word = "poor",
-            bar = 30,
-            color = "darkred",
-            pass = false
-        ),
-        seconds = BigInteger.valueOf(1111828),
-        time = "2 weeks"
+      word = PgpPwd.Word(
+        match = "week",
+        word = "poor",
+        bar = 30,
+        color = "darkred",
+        pass = false
+      ),
+      seconds = BigInteger.valueOf(1111828),
+      time = "2 weeks"
     )
     assertEquals(expectedResult, actualResult)
   }

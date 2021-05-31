@@ -25,7 +25,15 @@ class LauncherViewModel(application: Application) : BaseAndroidViewModel(applica
   val mediatorLiveData = MediatorLiveData<Boolean>()
 
   init {
-    mediatorLiveData.addSource(isNodeInfoReceivedLiveData) { value -> mediatorLiveData.setValue(value) }
-    mediatorLiveData.addSource(isAccountInfoReceivedLiveData) { value -> mediatorLiveData.setValue(value) }
+    mediatorLiveData.addSource(isNodeInfoReceivedLiveData) { value ->
+      mediatorLiveData.setValue(
+        value
+      )
+    }
+    mediatorLiveData.addSource(isAccountInfoReceivedLiveData) { value ->
+      mediatorLiveData.setValue(
+        value
+      )
+    }
   }
 }

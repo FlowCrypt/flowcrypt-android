@@ -60,23 +60,30 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
   }
 
   private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<PgpKeyDetails>> =
-      withContext(Dispatchers.IO) {
-        try {
-          when (accountEntity.accountType) {
-            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-              GmailApiHelper.executeWithResult {
-                Result.success(ArrayList(GmailApiHelper.getPrivateKeyBackups(getApplication(), accountEntity)))
-              }
+    withContext(Dispatchers.IO) {
+      try {
+        when (accountEntity.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+            GmailApiHelper.executeWithResult {
+              Result.success(
+                ArrayList(
+                  GmailApiHelper.getPrivateKeyBackups(
+                    getApplication(),
+                    accountEntity
+                  )
+                )
+              )
             }
-
-            else -> Result.success(ArrayList(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity)))
           }
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          Result.exception(e)
+
+          else -> Result.success(ArrayList(getPrivateKeyBackupsUsingJavaMailAPI(accountEntity)))
         }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        Result.exception(e)
       }
+    }
 
   /**
    * Get a list of [PgpKeyDetails] using the standard JavaMail API
@@ -88,48 +95,64 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
    * @throws GoogleAuthException
    */
   private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(accountEntity: AccountEntity): Collection<PgpKeyDetails> =
-      withContext(Dispatchers.IO) {
-        val details = ArrayList<PgpKeyDetails>()
-        OpenStoreHelper.openStore(getApplication(), accountEntity, OpenStoreHelper.getAccountSess(getApplication(), accountEntity)).use { store ->
-          try {
-            val context: Context = getApplication()
-            val folders = store.defaultFolder.list("*")
+    withContext(Dispatchers.IO) {
+      val details = ArrayList<PgpKeyDetails>()
+      OpenStoreHelper.openStore(
+        getApplication(),
+        accountEntity,
+        OpenStoreHelper.getAccountSess(getApplication(), accountEntity)
+      ).use { store ->
+        try {
+          val context: Context = getApplication()
+          val folders = store.defaultFolder.list("*")
 
-            privateKeysLiveData.postValue(Result.loading(progressMsg = context.resources
-                .getQuantityString(R.plurals.found_folder, folders.size, folders.size)))
+          privateKeysLiveData.postValue(
+            Result.loading(
+              progressMsg = context.resources
+                .getQuantityString(R.plurals.found_folder, folders.size, folders.size)
+            )
+          )
 
-            for ((index, folder) in folders.withIndex()) {
-              val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
-              if (!containsNoSelectAttr) {
-                folder.open(Folder.READ_ONLY)
+          for ((index, folder) in folders.withIndex()) {
+            val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
+            if (!containsNoSelectAttr) {
+              folder.open(Folder.READ_ONLY)
 
-                val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountEntity.email))
+              val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountEntity.email))
 
-                for (message in foundMsgs) {
-                  val backup = EmailUtil.getKeyFromMimeMsg(message)
+              for (message in foundMsgs) {
+                val backup = EmailUtil.getKeyFromMimeMsg(message)
 
-                  if (TextUtils.isEmpty(backup)) {
-                    continue
-                  }
-
-                  try {
-                    details.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
-                  } catch (e: NodeException) {
-                    e.printStackTrace()
-                    ExceptionUtil.handleError(e)
-                  }
+                if (TextUtils.isEmpty(backup)) {
+                  continue
                 }
 
-                folder.close(false)
+                try {
+                  details.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
+                } catch (e: NodeException) {
+                  e.printStackTrace()
+                  ExceptionUtil.handleError(e)
+                }
               }
 
-              privateKeysLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.searching_in_folders, index, folders.size)))
+              folder.close(false)
             }
-          } catch (e: Exception) {
-            e.printStackTrace()
-            throw e
+
+            privateKeysLiveData.postValue(
+              Result.loading(
+                progressMsg = context.getString(
+                  R.string.searching_in_folders,
+                  index,
+                  folders.size
+                )
+              )
+            )
           }
+        } catch (e: Exception) {
+          e.printStackTrace()
+          throw e
         }
-        return@withContext details
       }
+      return@withContext details
+    }
 }

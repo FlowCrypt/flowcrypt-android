@@ -28,12 +28,14 @@ import com.google.gson.annotations.SerializedName
  * Time: 16:30
  * E-mail: DenBond7@gmail.com
  */
-data class InitialLegacySubmitResponse constructor(@SerializedName("error") @Expose override val
-                                                   apiError: ApiError? = null,
-                                                   @Expose val isSaved: Boolean) : ApiResponse {
+data class InitialLegacySubmitResponse constructor(
+  @SerializedName("error") @Expose override val
+  apiError: ApiError? = null,
+  @Expose val isSaved: Boolean
+) : ApiResponse {
   constructor(source: Parcel) : this(
-      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-      1 == source.readInt()
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+    1 == source.readInt()
   )
 
   override fun describeContents(): Int {
@@ -41,17 +43,19 @@ data class InitialLegacySubmitResponse constructor(@SerializedName("error") @Exp
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeParcelable(apiError, 0)
-        writeInt((if (isSaved) 1 else 0))
-      }
+    with(dest) {
+      writeParcelable(apiError, 0)
+      writeInt((if (isSaved) 1 else 0))
+    }
 
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<InitialLegacySubmitResponse> =
-        object : Parcelable.Creator<InitialLegacySubmitResponse> {
-      override fun createFromParcel(source: Parcel): InitialLegacySubmitResponse = InitialLegacySubmitResponse(source)
-      override fun newArray(size: Int): Array<InitialLegacySubmitResponse?> = arrayOfNulls(size)
-    }
+      object : Parcelable.Creator<InitialLegacySubmitResponse> {
+        override fun createFromParcel(source: Parcel): InitialLegacySubmitResponse =
+          InitialLegacySubmitResponse(source)
+
+        override fun newArray(size: Int): Array<InitialLegacySubmitResponse?> = arrayOfNulls(size)
+      }
   }
 }

@@ -39,42 +39,68 @@ interface ApiRepository : BaseApiRepository {
    * @param context Interface to global information about an application environment.
    * @param request An instance of [DomainRulesRequest].
    */
-  suspend fun getDomainRules(context: Context, request: DomainRulesRequest): Result<DomainRulesResponse>
+  suspend fun getDomainRules(
+    context: Context,
+    request: DomainRulesRequest
+  ): Result<DomainRulesResponse>
 
   /**
    * @param context Interface to global information about an application environment.
    * @param model An instance of [InitialLegacySubmitModel].
    */
-  suspend fun submitPubKey(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse>
+  suspend fun submitPubKey(
+    context: Context,
+    model: InitialLegacySubmitModel
+  ): Result<InitialLegacySubmitResponse>
 
   /**
    * @param context Interface to global information about an application environment.
    * @param model An instance of [PostLookUpEmailsModel].
    */
-  suspend fun postInitialLegacySubmit(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse>
+  suspend fun postInitialLegacySubmit(
+    context: Context,
+    model: InitialLegacySubmitModel
+  ): Result<InitialLegacySubmitResponse>
 
   /**
    * @param context Interface to global information about an application environment.
    * @param model An instance of [TestWelcomeModel].
    */
-  suspend fun postTestWelcome(context: Context, model: TestWelcomeModel): Result<TestWelcomeResponse>
+  suspend fun postTestWelcome(
+    context: Context,
+    model: TestWelcomeModel
+  ): Result<TestWelcomeResponse>
 
   /**
    * @param context Interface to global information about an application environment.
    * @param identData A key id or the user email or a fingerprint.
    */
-  suspend fun getPub(requestCode: Long = 0L, context: Context, identData: String): Result<PubResponse>
+  suspend fun getPub(
+    requestCode: Long = 0L,
+    context: Context,
+    identData: String
+  ): Result<PubResponse>
 
   /**
    * @param requestCode A unique request code for this call
    * @param context Interface to global information about an application environment.
    * @param authorizeCode A code which will be used to retrieve an access token.
    */
-  suspend fun getMicrosoftOAuth2Token(requestCode: Long = 0L, context: Context, authorizeCode: String, scopes: String, codeVerifier: String): Result<MicrosoftOAuth2TokenResponse>
+  suspend fun getMicrosoftOAuth2Token(
+    requestCode: Long = 0L,
+    context: Context,
+    authorizeCode: String,
+    scopes: String,
+    codeVerifier: String
+  ): Result<MicrosoftOAuth2TokenResponse>
 
   /**
    * @param context Interface to global information about an application environment.
    * @param url The configuration url.
    */
-  suspend fun getOpenIdConfiguration(requestCode: Long = 0L, context: Context, url: String): Result<JsonObject>
+  suspend fun getOpenIdConfiguration(
+    requestCode: Long = 0L,
+    context: Context,
+    url: String
+  ): Result<JsonObject>
 }

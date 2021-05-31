@@ -14,7 +14,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.collection.PGPKeyRingCollection
-import java.util.*
+import java.util.ArrayList
 
 /**
  * This tool can help manage private keys in the database. For testing purposes only.

@@ -14,7 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
  *         Time: 4:44 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CustomStableIdKeyProvider(private val recyclerView: RecyclerView) : ItemKeyProvider<Long>(SCOPE_CACHED) {
+class CustomStableIdKeyProvider(private val recyclerView: RecyclerView) :
+  ItemKeyProvider<Long>(SCOPE_CACHED) {
   init {
     requireNotNull(recyclerView.adapter)
     require(recyclerView.adapter?.hasStableIds() == true) {

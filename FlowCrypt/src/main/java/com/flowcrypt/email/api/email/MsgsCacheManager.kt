@@ -37,7 +37,12 @@ object MsgsCacheManager {
   lateinit var diskLruCache: DiskLruCache
 
   fun init(context: Context) {
-    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, CACHE_SIZE)
+    diskLruCache = DiskLruCache(
+      FileSystem.SYSTEM,
+      File(context.filesDir, CACHE_DIR_NAME),
+      CACHE_VERSION,
+      CACHE_SIZE
+    )
   }
 
   fun storeMsg(key: String, msg: MimeMessage) {
@@ -81,11 +86,17 @@ object MsgsCacheManager {
       val bufferedSink = editor.newSink().buffer()
       val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
       val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
-      val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+      val base64OutputStream =
+        Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
       val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
 
       outputStream.use {
-        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+        outputStreamOfBufferedSink.write(
+          Base64.encodeToString(
+            cipherForEncryption.iv,
+            KeyStoreCryptoManager.BASE64_FLAGS
+          ).toByteArray()
+        )
         outputStreamOfBufferedSink.write("\n".toByteArray())
         action.invoke(outputStream)
         bufferedSink.flush()

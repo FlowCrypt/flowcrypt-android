@@ -42,5 +42,3 @@ interface KeysStorage {
     passphraseType: KeyEntity.PassphraseType
   )
 }
-
-

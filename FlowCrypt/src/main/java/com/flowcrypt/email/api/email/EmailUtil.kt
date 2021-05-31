@@ -99,22 +99,22 @@ class EmailUtil {
     private const val HTML_EMAIL_INTRO_TEMPLATE_HTM = "html/email_intro.template.htm"
 
     private val ALLOWED_FILE_NAMES = arrayOf(
-        "PGPexch.htm.pgp",
-        "PGPMIME version identification",
-        "Version.txt",
-        "PGPMIME Versions Identification",
-        "signature.asc",
-        "msg.asc",
-        "message",
-        "message.asc",
-        "encrypted.asc",
-        "encrypted.eml.pgp",
-        "Message.pgp"
+      "PGPexch.htm.pgp",
+      "PGPMIME version identification",
+      "Version.txt",
+      "PGPMIME Versions Identification",
+      "signature.asc",
+      "msg.asc",
+      "message",
+      "message.asc",
+      "encrypted.asc",
+      "encrypted.eml.pgp",
+      "Message.pgp"
     )
 
     private val KEYS_EXTENSIONS = arrayOf(
-        "asc",
-        "key"
+      "asc",
+      "key"
     )
 
     /**
@@ -165,8 +165,12 @@ class EmailUtil {
         attInfo.type = GeneralUtil.getFileMimeTypeFromUri(context, uri)
         attInfo.id = generateContentId()
 
-        val cursor = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME,
-            OpenableColumns.SIZE), null, null, null)
+        val cursor = context.contentResolver.query(
+          uri, arrayOf(
+            OpenableColumns.DISPLAY_NAME,
+            OpenableColumns.SIZE
+          ), null, null, null
+        )
         if (cursor != null) {
           if (cursor.moveToFirst()) {
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -198,13 +202,13 @@ class EmailUtil {
      */
     fun genAttInfoFromPubKey(pgpKeyDetails: PgpKeyDetails?): AttachmentInfo? {
       if (pgpKeyDetails != null) {
-        val fileName = "0x" + pgpKeyDetails.fingerprint?.toUpperCase(Locale.getDefault()) + ".asc"
+        val fileName = "0x" + pgpKeyDetails.fingerprint.toUpperCase(Locale.getDefault()) + ".asc"
 
         return if (!TextUtils.isEmpty(pgpKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()
 
           attachmentInfo.name = fileName
-          attachmentInfo.encodedSize = pgpKeyDetails.publicKey?.length?.toLong() ?: 0
+          attachmentInfo.encodedSize = pgpKeyDetails.publicKey.length.toLong()
           attachmentInfo.rawData = pgpKeyDetails.publicKey
           attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
           attachmentInfo.email = pgpKeyDetails.primaryPgpContact.email
@@ -245,7 +249,11 @@ class EmailUtil {
      * @return Generated [Message] object.
      * @throws Exception will occur when generate this message.
      */
-    fun genMsgWithAllPrivateKeys(context: Context, account: AccountEntity, session: Session): Message {
+    fun genMsgWithAllPrivateKeys(
+      context: Context,
+      account: AccountEntity,
+      session: Session
+    ): Message {
       val keys = SecurityUtils.genPrivateKeysBackup(context, account)
 
       val multipart = MimeMultipart()
@@ -269,7 +277,12 @@ class EmailUtil {
      * @return Generated [Message] object.
      * @throws Exception will occur when generate this message.
      */
-    fun genMsgWithPrivateKeys(context: Context, account: AccountEntity, sess: Session, bodyPart: MimeBodyPart): Message {
+    fun genMsgWithPrivateKeys(
+      context: Context,
+      account: AccountEntity,
+      sess: Session,
+      bodyPart: MimeBodyPart
+    ): Message {
       val multipart = MimeMultipart()
       multipart.addBodyPart(getBodyPartWithBackupText(context))
       bodyPart.contentID = generateContentId()
@@ -292,7 +305,11 @@ class EmailUtil {
     fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
       val account: Account = accountEntity.account
 
-      return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
+      return GoogleAuthUtil.getToken(
+        context,
+        account,
+        JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM
+      )
     }
 
     /**
@@ -303,8 +320,9 @@ class EmailUtil {
      */
     fun hasEnabledDebug(context: Context): Boolean {
       return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(
-          PreferenceManager.getDefaultSharedPreferences(context.applicationContext),
-          Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED, BuildConfig.IS_MAIL_DEBUG_ENABLED)
+        PreferenceManager.getDefaultSharedPreferences(context.applicationContext),
+        Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED, BuildConfig.IS_MAIL_DEBUG_ENABLED
+      )
     }
 
     /**
@@ -354,7 +372,11 @@ class EmailUtil {
      * @param msgs      The array of incoming messages.
      * @return A list of UID of the local messages which will be removed.
      */
-    fun genDeleteCandidates(localUIDs: Collection<Long>, folder: IMAPFolder, msgs: Array<Message>): Collection<Long> {
+    fun genDeleteCandidates(
+      localUIDs: Collection<Long>,
+      folder: IMAPFolder,
+      msgs: Array<Message>
+    ): Collection<Long> {
       val uidListDeleteCandidates = HashSet(localUIDs)
       val uidList = HashSet<Long>()
       try {
@@ -380,7 +402,11 @@ class EmailUtil {
      * @param msgs      The array of incoming messages.
      * @return The generated array.
      */
-    fun genNewCandidates(localUIDs: Collection<Long>, folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
+    fun genNewCandidates(
+      localUIDs: Collection<Long>,
+      folder: IMAPFolder,
+      msgs: Array<Message>
+    ): Array<Message> {
       val newCandidates = mutableListOf<Message>()
       try {
         for (msg in msgs) {
@@ -406,7 +432,11 @@ class EmailUtil {
      * @param msgs   The array of incoming messages.
      * @return An array of the messages which are candidates for updating iin the local database.
      */
-    fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
+    fun genUpdateCandidates(
+      map: Map<Long, String?>,
+      folder: IMAPFolder,
+      msgs: Array<Message>
+    ): Array<Message> {
       val updateCandidates = mutableListOf<Message>()
       try {
         for (msg in msgs) {
@@ -453,7 +483,11 @@ class EmailUtil {
      * @return A list of messages which already exist in the local database.
      * @throws MessagingException for other failures.
      */
-    fun getUpdatedMsgs(folder: IMAPFolder, loadedMsgsCount: Int, newMsgsCount: Int): Array<Message> {
+    fun getUpdatedMsgs(
+      folder: IMAPFolder,
+      loadedMsgsCount: Int,
+      newMsgsCount: Int
+    ): Array<Message> {
       val end = folder.messageCount - newMsgsCount
       var start = end - loadedMsgsCount + 1
 
@@ -512,7 +546,11 @@ class EmailUtil {
      * @return A list of messages which already exist in the local database.
      * @throws MessagingException for other failures.
      */
-    fun getUpdatedMsgsByUIDs(folder: IMAPFolder, uids: LongArray, fetchFlags: Boolean = true): Array<Message> {
+    fun getUpdatedMsgsByUIDs(
+      folder: IMAPFolder,
+      uids: LongArray,
+      fetchFlags: Boolean = true
+    ): Array<Message> {
       return if (uids.isEmpty()) {
         arrayOf()
       } else {
@@ -633,8 +671,10 @@ class EmailUtil {
      * an outgoing message.
      * @return The generated raw MIME message.
      */
-    fun genMessage(context: Context, accountEntity: AccountEntity,
-                   outgoingMsgInfo: OutgoingMessageInfo): Message {
+    fun genMessage(
+      context: Context, accountEntity: AccountEntity,
+      outgoingMsgInfo: OutgoingMessageInfo
+    ): Message {
       val session = Session.getInstance(Properties())
       val senderEmail = outgoingMsgInfo.from
       val senderKeyDetails = SecurityUtils.getSenderKeyDetails(context, accountEntity, senderEmail)
@@ -645,10 +685,13 @@ class EmailUtil {
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
         pubKeys = SecurityUtils.getRecipientsPubKeys(context, recipients)
-        pubKeys.add(senderKeyDetails.publicKey
-            ?: throw IllegalStateException("Sender pub key not found"))
-        prvKeys = listOf(senderKeyDetails.privateKey
-            ?: throw IllegalStateException("Sender private key not found"))
+        pubKeys.add(
+          senderKeyDetails.publicKey
+        )
+        prvKeys = listOf(
+          senderKeyDetails.privateKey
+            ?: throw IllegalStateException("Sender private key not found")
+        )
         ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
       }
 
@@ -670,13 +713,17 @@ class EmailUtil {
      * @return The next [UID] value for the outgoing message.
      */
     fun genOutboxUID(context: Context?): Long {
-      var lastUid = SharedPreferencesHelper.getLong(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_OUTBOX_UID, 0)
+      var lastUid = SharedPreferencesHelper.getLong(
+        PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREF_KEY_LAST_OUTBOX_UID, 0
+      )
 
       lastUid++
 
-      SharedPreferencesHelper.setLong(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_OUTBOX_UID, lastUid)
+      SharedPreferencesHelper.setLong(
+        PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREF_KEY_LAST_OUTBOX_UID, lastUid
+      )
 
       return lastUid
     }
@@ -712,12 +759,22 @@ class EmailUtil {
 
     private fun getBodyPartWithBackupText(context: Context): BodyPart {
       val messageBodyPart = MimeBodyPart()
-      messageBodyPart.setContent(GeneralUtil.removeAllComments(IOUtils.toString(context.assets
-          .open(HTML_EMAIL_INTRO_TEMPLATE_HTM), StandardCharsets.UTF_8)), JavaEmailConstants.MIME_TYPE_TEXT_HTML)
+      messageBodyPart.setContent(
+        GeneralUtil.removeAllComments(
+          IOUtils.toString(
+            context.assets
+              .open(HTML_EMAIL_INTRO_TEMPLATE_HTM), StandardCharsets.UTF_8
+          )
+        ), JavaEmailConstants.MIME_TYPE_TEXT_HTML
+      )
       return messageBodyPart
     }
 
-    private fun genMsgWithBackupTemplate(context: Context, account: AccountEntity, session: Session): Message {
+    private fun genMsgWithBackupTemplate(
+      context: Context,
+      account: AccountEntity,
+      session: Session
+    ): Message {
       val msg = FlowCryptMimeMessage(session)
 
       msg.setFrom(InternetAddress(account.email))
@@ -759,7 +816,12 @@ class EmailUtil {
         val partsNumber = multiPart.count
         for (partCount in 0 until partsNumber) {
           val bodyPart = multiPart.getBodyPart(partCount)
-          attachmentInfoList.addAll(getAttsInfoFromPart(bodyPart, "$depth${AttachmentInfo.DEPTH_SEPARATOR}$partCount"))
+          attachmentInfoList.addAll(
+            getAttsInfoFromPart(
+              bodyPart,
+              "$depth${AttachmentInfo.DEPTH_SEPARATOR}$partCount"
+            )
+          )
         }
       } else if (Part.ATTACHMENT.equals(part.disposition, ignoreCase = true)) {
         val attachmentInfo = AttachmentInfo()
@@ -767,7 +829,7 @@ class EmailUtil {
         attachmentInfo.encodedSize = part.size.toLong()
         attachmentInfo.type = part.contentType ?: ""
         attachmentInfo.id = (part as? IMAPBodyPart)?.contentID
-            ?: generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
+          ?: generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
         attachmentInfo.path = depth
         attachmentInfoList.add(attachmentInfo)
       }
@@ -821,7 +883,8 @@ class EmailUtil {
      */
     @SuppressLint("SimpleDateFormat") // for now we use iso format, regardles of locality
     fun genReplyContent(msgInfo: IncomingMessageInfo?): String {
-      val date = if (msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
+      val date =
+        if (msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
       val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
       val replyText = prepareReplyQuotes(msgInfo?.text)
       return "\n\nOn $date, $sender wrote:\n$replyText"
@@ -882,14 +945,22 @@ class EmailUtil {
       if (isEncryptedModeEnabled == true) {
         val searchTerm = genEncryptedMsgsSearchTerm(account)
 
-        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(
+            account.accountType,
+            ignoreCase = true
+          )
+        ) {
           val stringTerm = searchTerm as StringTerm
           GmailRawSearchTerm(localFolder.searchQuery + " AND (" + stringTerm.pattern + ")")
         } else {
           AndTerm(searchTerm, generateNonGmailSearchTerm(localFolder))
         }
       } else {
-        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+        return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(
+            account.accountType,
+            ignoreCase = true
+          )
+        ) {
           GmailRawSearchTerm(localFolder.searchQuery)
         } else {
           generateNonGmailSearchTerm(localFolder)
@@ -947,17 +1018,17 @@ class EmailUtil {
      */
     fun getGmailBackupSearchQuery(email: String): String {
       val subjects = listOf(
-          "Your FlowCrypt Backup",
-          "Your CryptUp Backup",
-          "All you need to know about CryptUP (contains a backup)",
-          "CryptUP Account Backup"
+        "Your FlowCrypt Backup",
+        "Your CryptUp Backup",
+        "All you need to know about CryptUP (contains a backup)",
+        "CryptUP Account Backup"
       )
 
       val parameters = listOf(
-          "from:${email}",
-          "to:${email}",
-          """(subject:"${subjects.joinToString(separator = """" OR subject: """")}")""",
-          "-is:spam"
+        "from:${email}",
+        "to:${email}",
+        """(subject:"${subjects.joinToString(separator = """" OR subject: """")}")""",
+        "-is:spam"
       )
 
       return parameters.joinToString(separator = " ")
@@ -971,11 +1042,13 @@ class EmailUtil {
       }
     }
 
-    fun prepareNewMsg(session: Session,
-                      info: OutgoingMessageInfo,
-                      pubKeys: List<String>? = null,
-                      prvKeys: List<String>? = null,
-                      protector: SecretKeyRingProtector? = null): MimeMessage {
+    fun prepareNewMsg(
+      session: Session,
+      info: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null
+    ): MimeMessage {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
       msg.setFrom(InternetAddress(info.from))
@@ -990,11 +1063,13 @@ class EmailUtil {
       return msg
     }
 
-    fun genReplyMessage(replyToMsg: MimeMessage,
-                        info: OutgoingMessageInfo,
-                        pubKeys: List<String>? = null,
-                        prvKeys: List<String>? = null,
-                        protector: SecretKeyRingProtector? = null): Message {
+    fun genReplyMessage(
+      replyToMsg: MimeMessage,
+      info: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null
+    ): Message {
       val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
       reply.setFrom(InternetAddress(info.from))
       reply.setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
@@ -1005,37 +1080,41 @@ class EmailUtil {
     }
 
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
-      return OrTerm(arrayOf(
+      return OrTerm(
+        arrayOf(
           SubjectTerm(localFolder.searchQuery),
           BodyTerm(localFolder.searchQuery),
           FromStringTerm(localFolder.searchQuery),
           RecipientStringTerm(Message.RecipientType.TO, localFolder.searchQuery),
           RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
           RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
-      ))
+        )
+      )
     }
 
     private fun prepareReplyMsg(
-        context: Context,
-        session: Session,
-        info: OutgoingMessageInfo,
-        pubKeys: List<String>?,
-        prvKeys: List<String>? = null,
-        protector: SecretKeyRingProtector? = null): Message {
+      context: Context,
+      session: Session,
+      info: OutgoingMessageInfo,
+      pubKeys: List<String>?,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null
+    ): Message {
       val replyToMessageEntity = info.replyToMsgEntity
-          ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
+        ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
       var msg: MimeMessage
       if (replyToMessageEntity.rawMessageWithoutAttachments.isNullOrEmpty()) {
         val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
-            ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
+          ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
 
         val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
         val input = context.contentResolver?.openInputStream(uri)
-            ?: throw IllegalArgumentException("InputStream not found")
+          ?: throw IllegalArgumentException("InputStream not found")
         msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
       } else {
         val input = ByteArrayInputStream(
-            replyToMessageEntity.rawMessageWithoutAttachments.toByteArray())
+          replyToMessageEntity.rawMessageWithoutAttachments.toByteArray()
+        )
         try {
           msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
         } catch (e: Exception) {
@@ -1047,15 +1126,18 @@ class EmailUtil {
       return genReplyMessage(msg, info, pubKeys, prvKeys, protector)
     }
 
-    private fun prepareMsgContent(info: OutgoingMessageInfo, pubKeys: List<String>? = null,
-                                  prvKeys: List<String>? = null,
-                                  protector: SecretKeyRingProtector? = null): String {
+    private fun prepareMsgContent(
+      info: OutgoingMessageInfo, pubKeys: List<String>? = null,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null
+    ): String {
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
         PgpEncrypt.encryptAndOrSignMsg(
-            msg = info.msg ?: "",
-            pubKeys = pubKeys ?: emptyList(),
-            prvKeys = prvKeys,
-            secretKeyRingProtector = protector)
+          msg = info.msg ?: "",
+          pubKeys = pubKeys ?: emptyList(),
+          prvKeys = prvKeys,
+          secretKeyRingProtector = protector
+        )
       } else {
         info.msg ?: ""
       }

@@ -12,6 +12,8 @@ package com.flowcrypt.email.rules
  * E-mail: DenBond7@gmail.com
  */
 @Retention()
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER,
-    AnnotationTarget.PROPERTY_SETTER, AnnotationTarget.ANNOTATION_CLASS)
+@Target(
+  AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER,
+  AnnotationTarget.PROPERTY_SETTER, AnnotationTarget.ANNOTATION_CLASS
+)
 annotation class Repeat(val value: Int = 1)

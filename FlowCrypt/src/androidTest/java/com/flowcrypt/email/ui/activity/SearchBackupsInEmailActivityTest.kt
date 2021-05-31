@@ -45,12 +45,12 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(AddPrivateKeyToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(AddPrivateKeyToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   @NotReadyForCI
@@ -62,9 +62,9 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   @NotReadyForCI
   fun testIsBackupFound() {
     onView(withId(R.id.buttonSeeMoreBackupOptions))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(withId(R.id.textViewBackupFound))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -72,9 +72,9 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   fun testShowBackupOptions() {
     testIsBackupFound()
     onView(withId(R.id.buttonSeeMoreBackupOptions))
-        .perform(click())
+      .perform(click())
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -82,14 +82,14 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   fun testSelectEmailForSavingBackup() {
     testShowBackupOptions()
     onView(withId(R.id.radioButtonEmail))
-        .check(matches(isDisplayed()))
-        .perform(click()).check(matches(isChecked()))
+      .check(matches(isDisplayed()))
+      .perform(click()).check(matches(isChecked()))
     onView(withId(R.id.textViewOptionsHint))
-        .check(matches(isDisplayed())).check(matches(withText(R.string.backup_as_email_hint)))
+      .check(matches(isDisplayed())).check(matches(withText(R.string.backup_as_email_hint)))
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(withText(R.string.backup_as_email)))
+      .check(matches(withText(R.string.backup_as_email)))
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed())).check(matches(not<View>(isChecked())))
+      .check(matches(isDisplayed())).check(matches(not<View>(isChecked())))
   }
 
   @Test
@@ -97,13 +97,13 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
   fun testSelectDownloadToFileForSavingBackup() {
     testShowBackupOptions()
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed()))
-        .perform(click()).check(matches(isChecked()))
+      .check(matches(isDisplayed()))
+      .perform(click()).check(matches(isChecked()))
     onView(withId(R.id.textViewOptionsHint))
-        .check(matches(isDisplayed())).check(matches(withText(R.string.backup_as_download_hint)))
+      .check(matches(isDisplayed())).check(matches(withText(R.string.backup_as_download_hint)))
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(withText(R.string.backup_as_a_file)))
+      .check(matches(withText(R.string.backup_as_a_file)))
     onView(withId(R.id.radioButtonEmail))
-        .check(matches(isDisplayed())).check(matches(not<View>(isChecked())))
+      .check(matches(isDisplayed())).check(matches(not<View>(isChecked())))
   }
 }

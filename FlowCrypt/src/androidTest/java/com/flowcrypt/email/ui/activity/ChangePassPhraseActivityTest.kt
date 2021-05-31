@@ -47,28 +47,28 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(addAccountToDatabaseRule)
-      .around(AddPrivateKeyToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(addAccountToDatabaseRule)
+    .around(AddPrivateKeyToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   @DependsOnMailServer
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
-        .check(matches(isDisplayed()))
-        .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonSetPassPhrase))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.editTextKeyPasswordSecond))
-        .check(matches(isDisplayed()))
-        .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonConfirmPassPhrases))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }

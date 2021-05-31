@@ -15,7 +15,8 @@ import org.hamcrest.Description
  *         Time: 3:08 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SecurityTypeOptionMatcher(val option: SecurityType.Option) : BaseMatcher<SecurityType.Option>() {
+class SecurityTypeOptionMatcher(val option: SecurityType.Option) :
+  BaseMatcher<SecurityType.Option>() {
   override fun describeTo(description: Description?) {
     description?.appendText("The input option = $option")
   }

@@ -37,8 +37,10 @@ object RequestsManager {
 
   }
 
-  fun decryptMsg(requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
-                 prvKeys: Array<KeyEntity>, isEmail: Boolean = false) {
+  fun decryptMsg(
+    requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
+    prvKeys: Array<KeyEntity>, isEmail: Boolean = false
+  ) {
 
   }
 
@@ -55,7 +57,8 @@ object RequestsManager {
   }
 
   private class Worker(
-      private val data: SingleLiveEvent<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void,
+    private val data: SingleLiveEvent<NodeResponseWrapper<*>>
+  ) : AsyncTask<NodeRequestWrapper<*>, Void,
       NodeResponseWrapper<*>>() {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {

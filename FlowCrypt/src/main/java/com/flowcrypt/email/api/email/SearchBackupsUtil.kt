@@ -31,16 +31,22 @@ class SearchBackupsUtil {
      * @return Generated [SearchTerm].
      */
     fun genSearchTerms(email: String): SearchTerm {
-      val subjectTerms = OrTerm(arrayOf(
+      val subjectTerms = OrTerm(
+        arrayOf(
           SubjectTerm("Your CryptUp Backup"),
           SubjectTerm("Your FlowCrypt Backup"),
           SubjectTerm("Your CryptUP Backup"),
           SubjectTerm("All you need to know about CryptUP (contains a backup)"),
-          SubjectTerm("CryptUP Account Backup")))
-      return AndTerm(arrayOf(
+          SubjectTerm("CryptUP Account Backup")
+        )
+      )
+      return AndTerm(
+        arrayOf(
           subjectTerms,
           FromTerm(InternetAddress(email)),
-          RecipientTerm(Message.RecipientType.TO, InternetAddress(email))))
+          RecipientTerm(Message.RecipientType.TO, InternetAddress(email))
+        )
+      )
     }
   }
 }

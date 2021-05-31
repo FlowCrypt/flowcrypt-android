@@ -19,7 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
 import com.flowcrypt.email.util.GeneralUtil
-import java.util.*
+import java.util.Date
 
 /**
  * This adapter will be used to show a list of private keys.
@@ -29,10 +29,11 @@ import java.util.*
  * Time: 6:24 PM
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeysRecyclerViewAdapter(context: Context,
-                                     private val listener: OnKeySelectedListener?,
-                                     val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf())
-  : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
+class PrivateKeysRecyclerViewAdapter(
+  context: Context,
+  private val listener: OnKeySelectedListener?,
+  val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()
+) : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
   private val dateFormat: java.text.DateFormat = DateFormat.getMediumDateFormat(context)
   var tracker: SelectionTracker<PgpKeyDetails>? = null
 
@@ -48,7 +49,8 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
 
     viewHolder.textViewKeyOwner.text = email
     viewHolder.textViewFingerprint.text = GeneralUtil.doSectionsInText(
-        originalString = nodeKeyDetails.fingerprint, groupSize = 4)
+      originalString = nodeKeyDetails.fingerprint, groupSize = 4
+    )
 
     val timestamp = nodeKeyDetails.created
     if (timestamp != -1L) {
@@ -95,8 +97,10 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
   }
 
-  inner class DiffUtilCallback(private val oldList: List<PgpKeyDetails>,
-                               private val newList: List<PgpKeyDetails>) : DiffUtil.Callback() {
+  inner class DiffUtilCallback(
+    private val oldList: List<PgpKeyDetails>,
+    private val newList: List<PgpKeyDetails>
+  ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val old = oldList[oldItemPosition]
       val new = newList[newItemPosition]

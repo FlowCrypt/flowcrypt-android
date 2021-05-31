@@ -35,7 +35,8 @@ import javax.mail.Store
  * Time: 14:30
  * E-mail: DenBond7@gmail.com
  */
-class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParameters) :
+  BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     identifyEncryptedMsgs(accountEntity, store)
   }
@@ -44,34 +45,41 @@ class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParam
 
   }
 
-  private suspend fun identifyEncryptedMsgs(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val folderFullName = inputData.getString(KEY_FOLDER_FULL_NAME) ?: return@withContext
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-    val localFolder = foldersManager.getFolderByFullName(folderFullName) ?: return@withContext
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    val uidList = roomDatabase.msgDao().getNotCheckedUIDs(account.email, folderFullName)
+  private suspend fun identifyEncryptedMsgs(account: AccountEntity, store: Store) =
+    withContext(Dispatchers.IO) {
+      val folderFullName = inputData.getString(KEY_FOLDER_FULL_NAME) ?: return@withContext
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      val localFolder = foldersManager.getFolderByFullName(folderFullName) ?: return@withContext
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+      val uidList = roomDatabase.msgDao().getNotCheckedUIDs(account.email, folderFullName)
 
-    if (uidList.isEmpty()) {
-      return@withContext
-    }
-
-    store.getFolder(folderFullName).use { folder ->
-      val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-
-      val encryptionStates = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList)
-      if (encryptionStates.isNotEmpty()) {
-        roomDatabase.msgDao().updateEncryptionStates(account.email, folderFullName, encryptionStates)
+      if (uidList.isEmpty()) {
+        return@withContext
       }
 
-      val email = account.email
-      val folderType = FoldersManager.getFolderType(localFolder)
+      store.getFolder(folderFullName).use { folder ->
+        val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
 
-      if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
-        val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(email, folderFullName)
-        MessagesNotificationManager(applicationContext).notify(applicationContext, account, localFolder, detailsList)
+        val encryptionStates = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList)
+        if (encryptionStates.isNotEmpty()) {
+          roomDatabase.msgDao()
+            .updateEncryptionStates(account.email, folderFullName, encryptionStates)
+        }
+
+        val email = account.email
+        val folderType = FoldersManager.getFolderType(localFolder)
+
+        if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
+          val detailsList = roomDatabase.msgDao().getNewMsgsSuspend(email, folderFullName)
+          MessagesNotificationManager(applicationContext).notify(
+            applicationContext,
+            account,
+            localFolder,
+            detailsList
+          )
+        }
       }
     }
-  }
 
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".IDENTIFY_ENCRYPTED_MESSAGES"
@@ -79,25 +87,24 @@ class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParam
 
     fun enqueue(context: Context, localFolder: LocalFolder) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       val inputData = Data.Builder()
-          .putString(KEY_FOLDER_FULL_NAME, localFolder.fullName)
-          .build()
+        .putString(KEY_FOLDER_FULL_NAME, localFolder.fullName)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              GROUP_UNIQUE_TAG,
-              ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<CheckIsLoadedMessagesEncryptedWorker>()
-                  .setInputData(inputData)
-                  .addTag(TAG_SYNC)
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<CheckIsLoadedMessagesEncryptedWorker>()
+            .setInputData(inputData)
+            .addTag(TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }
-

@@ -37,11 +37,13 @@ abstract class KeysDao {
 
   @Query("DELETE FROM keys WHERE account = :account AND fingerprint = :fingerprint")
   abstract suspend fun deleteByAccountAndFingerprintSuspend(
-      account: String, fingerprint: String): Int
+    account: String, fingerprint: String
+  ): Int
 
   @Query("SELECT * FROM keys WHERE account = :account AND fingerprint = :fingerprint")
   abstract suspend fun getKeyByAccountAndFingerprintSuspend(
-      account: String, fingerprint: String): KeyEntity?
+    account: String, fingerprint: String
+  ): KeyEntity?
 
   @Query("SELECT * FROM keys WHERE account = :account AND fingerprint = :fingerprint")
   abstract fun getKeyByAccountAndFingerprint(account: String, fingerprint: String): KeyEntity?
@@ -82,25 +84,26 @@ abstract class KeysDao {
 
   @Insert
   open suspend fun insertSuspend(keyEntity: KeyEntity): Long =
-      withContext(Dispatchers.IO) { insertInternalSuspend(processKeyEntity(keyEntity)) }
+    withContext(Dispatchers.IO) { insertInternalSuspend(processKeyEntity(keyEntity)) }
 
   @Insert
   open suspend fun insertSuspend(entities: Iterable<KeyEntity>) =
-      withContext(Dispatchers.IO) { insertInternalSuspend(entities.map { processKeyEntity(it) }) }
+    withContext(Dispatchers.IO) { insertInternalSuspend(entities.map { processKeyEntity(it) }) }
 
   @Update
   open suspend fun updateSuspend(keyEntity: KeyEntity): Int =
-      withContext(Dispatchers.IO) { updateInternalSuspend(processKeyEntity(keyEntity)) }
+    withContext(Dispatchers.IO) { updateInternalSuspend(processKeyEntity(keyEntity)) }
 
   @Update
   open suspend fun updateSuspend(entities: Iterable<KeyEntity>): Int =
-      withContext(Dispatchers.IO) { updateInternalSuspend(entities.map { processKeyEntity(it) }) }
+    withContext(Dispatchers.IO) { updateInternalSuspend(entities.map { processKeyEntity(it) }) }
 
   private fun processKeyEntity(keyEntity: KeyEntity) =
-      keyEntity.copy(
-          storedPassphrase = if (keyEntity.passphraseType == KeyEntity.PassphraseType.RAM) {
-            null
-          } else {
-            keyEntity.storedPassphrase
-          })
+    keyEntity.copy(
+      storedPassphrase = if (keyEntity.passphraseType == KeyEntity.PassphraseType.RAM) {
+        null
+      } else {
+        keyEntity.storedPassphrase
+      }
+    )
 }

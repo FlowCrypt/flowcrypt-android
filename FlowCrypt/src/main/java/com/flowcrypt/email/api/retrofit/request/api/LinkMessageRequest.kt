@@ -23,5 +23,7 @@ import com.flowcrypt.email.api.retrofit.request.model.LinkMessageModel
  * E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 this class is redundant. We can refactor code and delete this
-class LinkMessageRequest(override val apiName: ApiName = ApiName.POST_LINK_MESSAGE,
-                         override val requestModel: LinkMessageModel) : BaseRequest<LinkMessageModel>
+class LinkMessageRequest(
+  override val apiName: ApiName = ApiName.POST_LINK_MESSAGE,
+  override val requestModel: LinkMessageModel
+) : BaseRequest<LinkMessageModel>

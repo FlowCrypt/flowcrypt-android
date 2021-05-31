@@ -19,8 +19,8 @@ open class NodeException(val nodeError: ApiError?) : Exception() {
 
   override val message: String = if (nodeError != null) {
     StringBuilder()
-        .append("Error :").append(nodeError.msg).append("\n")
-        .append("Stack :").append(nodeError.stack).append("\n")
-        .append("Type :").append(nodeError.type).toString()
+      .append("Error :").append(nodeError.msg).append("\n")
+      .append("Stack :").append(nodeError.stack).append("\n")
+      .append("Type :").append(nodeError.type).toString()
   } else ""
 }

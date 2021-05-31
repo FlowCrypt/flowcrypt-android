@@ -22,13 +22,16 @@ import com.google.gson.annotations.SerializedName
  *         Time: 3:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-data class LoginResponse constructor(@SerializedName("error")
-                                     @Expose override val apiError: ApiError?,
-                                     @SerializedName("verified")
-                                     @Expose val isVerified: Boolean?) : ApiResponse {
+data class LoginResponse constructor(
+  @SerializedName("error")
+  @Expose override val apiError: ApiError?,
+  @SerializedName("verified")
+  @Expose val isVerified: Boolean?
+) : ApiResponse {
   constructor(parcel: Parcel) : this(
-      parcel.readParcelable(ApiError::class.java.classLoader),
-      parcel.readValue(Boolean::class.java.classLoader) as Boolean?)
+    parcel.readParcelable(ApiError::class.java.classLoader),
+    parcel.readValue(Boolean::class.java.classLoader) as Boolean?
+  )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     with(parcel) {

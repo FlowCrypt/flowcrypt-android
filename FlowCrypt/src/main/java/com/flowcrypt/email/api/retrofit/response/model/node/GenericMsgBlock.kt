@@ -21,14 +21,16 @@ import com.google.gson.annotations.Expose
  *
  * @author Ivan Pizhenko
  */
-data class GenericMsgBlock(@Expose override val type: MsgBlock.Type = MsgBlock.Type.UNKNOWN,
-                           @Expose override val content: String?,
-                           @Expose override val complete: Boolean) : MsgBlock {
+data class GenericMsgBlock(
+  @Expose override val type: MsgBlock.Type = MsgBlock.Type.UNKNOWN,
+  @Expose override val content: String?,
+  @Expose override val complete: Boolean
+) : MsgBlock {
 
   constructor(type: MsgBlock.Type, source: Parcel) : this(
-      type,
-      source.readString(),
-      1 == source.readInt(),
+    type,
+    source.readString(),
+    1 == source.readInt()
   )
 
   override fun describeContents() = 0

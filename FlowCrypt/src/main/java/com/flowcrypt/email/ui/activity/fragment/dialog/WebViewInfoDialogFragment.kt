@@ -51,8 +51,10 @@ class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
 
     val webView = rootView.findViewById<WebView>(R.id.webView)
     dialogMsg?.let {
-      webView.loadDataWithBaseURL(null, it, "text/html",
-          StandardCharsets.UTF_8.displayName(), null)
+      webView.loadDataWithBaseURL(
+        null, it, "text/html",
+        StandardCharsets.UTF_8.displayName(), null
+      )
     }
     dialog.setView(rootView)
     return dialog.create()
@@ -66,13 +68,26 @@ class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
 
   companion object {
     private val KEY_INFO_DIALOG_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", WebViewInfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_DIALOG_TITLE",
+        WebViewInfoDialogFragment::class.java
+      )
     private val KEY_INFO_DIALOG_MESSAGE =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", WebViewInfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_DIALOG_MESSAGE",
+        WebViewInfoDialogFragment::class.java
+      )
     private val KEY_INFO_IS_CANCELABLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", WebViewInfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_IS_CANCELABLE",
+        WebViewInfoDialogFragment::class.java
+      )
 
-    fun newInstance(dialogTitle: String, dialogMsg: String, isCancelable: Boolean = true): WebViewInfoDialogFragment {
+    fun newInstance(
+      dialogTitle: String,
+      dialogMsg: String,
+      isCancelable: Boolean = true
+    ): WebViewInfoDialogFragment {
       val infoDialogFragment = WebViewInfoDialogFragment()
 
       val args = prepareArgs(dialogTitle, dialogMsg, isCancelable)
