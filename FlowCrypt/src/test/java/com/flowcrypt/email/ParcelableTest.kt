@@ -43,7 +43,8 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     val fixture = JFixture()
     fixture.customise(SelectConstructorCustomisation(currentClass))
     fixture.customise(MsgBlockGenerationCustomization())
-    fixture.customise().sameInstance(GenericMsgBlock::class.java, GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false))
+    fixture.customise().sameInstance(GenericMsgBlock::class.java,
+      GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false, null))
     //todo-denbond7 improve that
     fixture.customise().sameInstance(OutgoingMessageInfo::class.java,
         OutgoingMessageInfo(

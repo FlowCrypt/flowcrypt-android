@@ -250,19 +250,19 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
 
     assertTrue(blocks[0] is GenericMsgBlock)
     assertEquals(
-        GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, "Hello, these should get replaced:", true),
+        GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, "Hello, these should get replaced:", true, null),
         blocks[0] as GenericMsgBlock
     )
 
     assertTrue(blocks[1] is GenericMsgBlock)
     assertEquals(
-        GenericMsgBlock(MsgBlock.Type.PRIVATE_KEY, prv, true),
+        GenericMsgBlock(MsgBlock.Type.PRIVATE_KEY, prv, true, null),
         blocks[1] as GenericMsgBlock
     )
 
     assertTrue(blocks[2] is GenericMsgBlock)
     assertEquals(
-        GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, "And this one too:", true),
+        GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, "And this one too:", true, null),
         blocks[2] as GenericMsgBlock
     )
 
@@ -278,7 +278,7 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
     val blocks = MsgBlockParser.detectBlocks(input)
     assertEquals(1, blocks.size)
     assertTrue(blocks[0] is GenericMsgBlock)
-    val expectedBlock = GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, input.trimEnd(), true)
+    val expectedBlock = GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, input.trimEnd(), true, null)
     assertEquals(expectedBlock, blocks[0] as GenericMsgBlock)
   }
 }

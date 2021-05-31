@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model.node
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import java.lang.IllegalArgumentException
 
 interface MsgBlock : Parcelable {
   val type: Type
@@ -69,7 +70,13 @@ interface MsgBlock : Parcelable {
     CERTIFICATE,
 
     @SerializedName("signature")
-    SIGNATURE;
+    SIGNATURE,
+
+    @SerializedName("signedText")
+    SIGNED_TEXT,
+
+    @SerializedName("signedHtml")
+    SIGNED_HTML;
 
     override fun describeContents(): Int {
       return 0
@@ -86,13 +93,28 @@ interface MsgBlock : Parcelable {
         override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
       }
 
+      @JvmField
       val keyBlockTypes = setOf(PUBLIC_KEY, PRIVATE_KEY)
+
+      @JvmField
       val replaceableBlockTypes = setOf(
           PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
       )
+
+      @JvmField
       val wellKnownBlockTypes = setOf(
           PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
       )
+
+      @JvmStatic
+      fun ofSerializedName(serializedName: String): Type {
+        for (v in values()) {
+          val field = Type::class.java.getField(v.name)
+          val annotation = field.getAnnotation(SerializedName::class.java)
+          if (annotation != null && annotation.value == serializedName) return v
+        }
+        throw IllegalArgumentException("Unknown block type serialized name '$serializedName'")
+      }
     }
   }
 

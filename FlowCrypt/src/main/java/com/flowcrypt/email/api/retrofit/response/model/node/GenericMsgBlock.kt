@@ -25,17 +25,18 @@ data class GenericMsgBlock(@Expose override val type: MsgBlock.Type = MsgBlock.T
                            @Expose override val content: String?,
                            @Expose override val complete: Boolean) : MsgBlock {
 
-  constructor(source: Parcel, type: MsgBlock.Type) : this(
+  constructor(type: MsgBlock.Type, source: Parcel) : this(
       type,
       source.readString(),
-      1 == source.readInt())
+      1 == source.readInt(),
+  )
 
   override fun describeContents() = 0
 
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeParcelable(type, flags)
     writeString(content)
-    writeInt((if (complete) 1 else 0))
+    writeInt(if (complete) 1 else 0)
   }
 
   companion object {

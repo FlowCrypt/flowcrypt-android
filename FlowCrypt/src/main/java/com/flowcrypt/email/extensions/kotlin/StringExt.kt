@@ -44,3 +44,11 @@ fun String.countOfMatchesZeroOneOrMore(needle: String): Int {
   }
   return result
 }
+
+fun String.normalizeEol(): String {
+  return this.replace("\r\n", "\n").replace('\r', '\n')
+}
+
+fun String.removeUtf8Bom(): String {
+  return if (this.startsWith("\uFEFF")) this.substring(1) else this
+}
