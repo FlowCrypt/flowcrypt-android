@@ -25,7 +25,9 @@ object MsgBlockFactory {
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(source)
       MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(source)
       MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(source)
-      MsgBlock.Type.SIGNED_TEXT, MsgBlock.Type.SIGNED_HTML -> SignedBlock(source)
+      MsgBlock.Type.SIGNED_TEXT, MsgBlock.Type.SIGNED_HTML, MsgBlock.Type.SIGNED_MSG -> {
+        SignedBlock(source)
+      }
       else -> GenericMsgBlock(type, source)
     }
   }
