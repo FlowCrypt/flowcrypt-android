@@ -11,7 +11,7 @@ import android.os.Parcelable
 import com.google.gson.annotations.Expose
 
 /**
- * Generic message block represents content with a signature.
+ * Message block which represents content with a signature.
  */
 data class SignedBlock(
   @Expose val signedType: Type,
