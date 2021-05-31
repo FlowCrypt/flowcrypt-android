@@ -43,8 +43,10 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     val fixture = JFixture()
     fixture.customise(SelectConstructorCustomisation(currentClass))
     fixture.customise(MsgBlockGenerationCustomization())
-    fixture.customise().sameInstance(GenericMsgBlock::class.java,
-      GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false, null))
+    fixture.customise().sameInstance(
+      GenericMsgBlock::class.java,
+      GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false)
+    )
     //todo-denbond7 improve that
     fixture.customise().sameInstance(OutgoingMessageInfo::class.java,
         OutgoingMessageInfo(
@@ -83,7 +85,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       readParcelable<Parcelable>(this::class.java.classLoader)
     }
 
-    Assert.assertTrue("$name failed", objectInstance == retainedParcelable)
+    Assert.assertEquals("$name failed", objectInstance, retainedParcelable)
   }
 
   companion object {

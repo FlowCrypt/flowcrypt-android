@@ -6,8 +6,8 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.SignedBlock
 import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
 import com.google.gson.JsonParser
@@ -353,7 +353,7 @@ class PgpMsgTest {
         || actualBlock.type == MsgBlock.Type.SIGNED_HTML
       ) {
         val expectedSignature = expectedBlock["signature"].asString.normalizeEol()
-        val actualSignature = ((actualBlock as GenericMsgBlock).signature ?: "").normalizeEol()
+        val actualSignature = ((actualBlock as SignedBlock).signature ?: "").normalizeEol()
         assertEquals(expectedSignature, actualSignature)
       }
     }

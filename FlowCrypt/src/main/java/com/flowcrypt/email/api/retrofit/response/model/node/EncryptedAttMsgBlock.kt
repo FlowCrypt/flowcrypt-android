@@ -36,7 +36,6 @@ data class EncryptedAttMsgBlock(@Expose override val content: String?,
     with(dest) {
       writeParcelable(type, flags)
       writeString(content)
-      writeInt((if (complete) 1 else 0))
       writeParcelable(attMeta, flags)
       writeParcelable(fileUri, flags)
     }

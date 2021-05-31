@@ -11,13 +11,16 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.Expose
 
-data class PlainAttMsgBlock(@Expose override val content: String?,
-                                @Expose val attMeta: AttMeta) : MsgBlock {
+data class PlainAttMsgBlock(
+  @Expose override val content: String?,
+  @Expose val attMeta: AttMeta
+) : MsgBlock {
 
   var fileUri: Uri? = null
 
   @Expose
   override val complete: Boolean = true
+
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PLAIN_ATT
 
@@ -25,7 +28,7 @@ data class PlainAttMsgBlock(@Expose override val content: String?,
     source.readString(),
     source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!
   ) {
-    fileUri = source.readParcelable<Uri>(Uri::class.java.classLoader)
+    fileUri = source.readParcelable(Uri::class.java.classLoader)
   }
 
   override fun describeContents(): Int {
@@ -36,7 +39,6 @@ data class PlainAttMsgBlock(@Expose override val content: String?,
     with(dest) {
       writeParcelable(type, flags)
       writeString(content)
-      writeInt((if (complete) 1 else 0))
       writeParcelable(attMeta, flags)
       writeParcelable(fileUri, flags)
     }

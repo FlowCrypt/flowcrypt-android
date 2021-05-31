@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.retrofit.response.model.node
 
 import android.os.Parcel
-import java.lang.IllegalArgumentException
 
 object MsgBlockFactory {
   @JvmStatic
@@ -26,8 +25,7 @@ object MsgBlockFactory {
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(source)
       MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(source)
       MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(source)
-      MsgBlock.Type.SIGNED_TEXT -> SignedMsgBlock(type, source)
-      MsgBlock.Type.SIGNED_HTML -> SignedMsgBlock(type, source)
+      MsgBlock.Type.SIGNED_TEXT, MsgBlock.Type.SIGNED_HTML -> SignedBlock(source)
       else -> GenericMsgBlock(type, source)
     }
   }
@@ -43,8 +41,12 @@ object MsgBlockFactory {
     return when (type) {
       MsgBlock.Type.PUBLIC_KEY -> PublicKeyMsgBlock(content, complete, null)
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(content, complete, null)
-      MsgBlock.Type.SIGNED_TEXT -> SignedMsgBlock(type, content, complete, signature)
-      MsgBlock.Type.SIGNED_HTML -> SignedMsgBlock(type, content, complete, signature)
+      MsgBlock.Type.SIGNED_TEXT -> {
+        SignedBlock(SignedBlock.Type.SIGNED_TEXT, content, complete, signature)
+      }
+      MsgBlock.Type.SIGNED_HTML -> {
+        SignedBlock(SignedBlock.Type.SIGNED_HTML, content, complete, signature)
+      }
       else -> GenericMsgBlock(type, content, complete)
     }
   }
