@@ -87,7 +87,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       readParcelable<Parcelable>(this::class.java.classLoader)
     }
 
-    Assert.assertTrue("$name failed", objectInstance == retainedParcelable)
+    Assert.assertEquals("$name failed", objectInstance, retainedParcelable)
   }
 
   companion object {

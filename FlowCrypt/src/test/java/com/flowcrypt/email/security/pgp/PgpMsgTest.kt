@@ -6,13 +6,24 @@
 
 package com.flowcrypt.email.security.pgp
 
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.SignedBlock
+import com.flowcrypt.email.extensions.kotlin.normalizeEol
+import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
+import com.google.gson.JsonParser
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.util.*
+import javax.mail.Session
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeMessage
 
 class PgpMsgTest {
 
@@ -92,9 +103,10 @@ class PgpMsgTest {
       )
     )
 
-    private fun decodeString(s: String, charset: String): String {
+    @Suppress("SameParameterValue")
+    private fun decodeString(s: String, charsetName: String): String {
       val bytes = s.substring(1).split('=').map { Integer.parseInt(it, 16).toByte() }.toByteArray()
-      return String(bytes, Charset.forName(charset))
+      return String(bytes, Charset.forName(charsetName))
     }
 
     private fun loadResource(path: String): ByteArray {
@@ -113,6 +125,10 @@ class PgpMsgTest {
 
     private fun loadMessage(file: String): String {
       return loadResourceAsString("messages/$file")
+    }
+
+    private fun loadComplexMessage(file: String): String {
+      return loadResourceAsString("complex_messages/$file")
     }
 
     private fun findMessage(key: String): MessageInfo {
@@ -232,7 +248,8 @@ class PgpMsgTest {
 
   // -------------------------------------------------------------------------------------------
 
-  @Test // use this for debugging
+  // Use this one for debugging
+  @Test
   fun singleDecryptionTest() {
     val key = "decrypt - [enigmail] encrypted iso-2022-jp, plain text"
     val r = processMessage(key)
@@ -263,6 +280,79 @@ class PgpMsgTest {
     val z = String(actual, Charset.forName(charset))
     for (s in expected) {
       assertTrue("Text '$s' not found", z.indexOf(s) != -1)
+    }
+  }
+
+  // -------------------------------------------------------------------------------------------
+
+  @Test
+  fun multipleComplexMessagesTest() {
+    val testFiles = listOf(
+      "decrypt - [enigmail] basic html-0.json",
+      "decrypt - [gnupg v2] thai text-0.json",
+      "decrypt - [gnupg v2] thai text in html-0.json",
+      "decrypt - [gpgmail] signed message will get parsed and rendered " +
+          "(though verification fails, enigmail does the same)-0.json",
+      "decrypt - protonmail - auto TOFU load matching pubkey first time-0.json",
+      "decrypt - protonmail - load pubkey into contact + verify detached msg-0.json",
+      "decrypt - protonmail - load pubkey into contact + verify detached msg-1.json",
+      "decrypt - protonmail - load pubkey into contact + verify detached msg-2.json",
+      "decrypt - [symantec] base64 german umlauts-0.json",
+      "decrypt - [thunderbird] unicode chinese-0.json",
+      "decrypt - verify encrypted+signed message-0.json",
+      "verify - Kraken - urldecode signature-0.json"
+    )
+
+    for (testFile in testFiles) {
+      checkComplexMessage(testFile)
+    }
+  }
+
+  // Use this one for debugging
+  @Test
+  fun singleComplexMessageTest() {
+    val testFile = "verify - Kraken - urldecode signature-0.json"
+    checkComplexMessage(testFile)
+  }
+
+  private fun checkComplexMessage(fileName: String) {
+    println("\n*** Processing '$fileName'")
+
+    val rootObject = JsonParser.parseString(loadComplexMessage(fileName)).asJsonObject
+    val inputMsg = Base64.getDecoder().decode(rootObject["in"].asJsonObject["mimeMsg"].asString)
+    val out = rootObject["out"].asJsonObject
+    val expectedBlocks = out["blocks"].asJsonArray
+    val from = InternetAddress(out["from"].asString)
+    val to = out["to"].asJsonArray.map { InternetAddress(it.asString) }.toTypedArray()
+    val session = Session.getInstance(Properties())
+    val mimeMessage = MimeMessage(session, inputMsg.inputStream())
+    val mimeContent = PgpMsg.decodeMimeMessage(mimeMessage)
+    val processed = PgpMsg.processDecodedMimeMessage(mimeContent)
+
+    assertEquals(1, processed.from?.size ?: 0)
+    assertEquals(from, processed.from!![0])
+    assertArrayEquals(to, processed.to)
+    assertEquals(expectedBlocks.size(), processed.blocks.size)
+
+    for (i in processed.blocks.indices) {
+      println("Checking block #$i of the '$fileName'")
+
+      val expectedBlock = expectedBlocks[i].asJsonObject
+      val expectedBlockType = MsgBlock.Type.ofSerializedName(expectedBlock["type"].asString)
+      val expectedContent = expectedBlock["content"].asString.normalizeEol()
+      val expectedComplete = expectedBlock["complete"].asBoolean
+      val actualBlock = processed.blocks[i]
+      val actualContent = (actualBlock.content ?: "").normalizeEol().removeUtf8Bom()
+
+      assertEquals(expectedBlockType, actualBlock.type)
+      assertEquals(expectedComplete, actualBlock.complete)
+      assertEquals(expectedContent, actualContent)
+
+      if (actualBlock.type in MsgBlock.Type.signedBlocks) {
+        val expectedSignature = expectedBlock["signature"].asString.normalizeEol()
+        val actualSignature = ((actualBlock as SignedBlock).signature ?: "").normalizeEol()
+        assertEquals(expectedSignature, actualSignature)
+      }
     }
   }
 }

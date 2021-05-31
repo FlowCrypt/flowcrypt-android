@@ -260,4 +260,19 @@ object PgpArmor {
   }
 
   private val lineSeparatorBytes = Strings.lineSeparator().toByteArray()
+
+  @JvmStatic
+  fun clip(text: String): String? {
+    val unknown = ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!
+    if (text.contains(unknown.begin) && text.contains(unknown.end)) {
+      val match = blockRegex.find(text)
+      if (match != null) return text.substring(match.range)
+    }
+    return null
+  }
+
+  private val blockRegex = Regex(
+    "(-----BEGIN PGP (MESSAGE|SIGNED MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----[\\s\\S]+" +
+        "-----END PGP (MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----)"
+  )
 }
