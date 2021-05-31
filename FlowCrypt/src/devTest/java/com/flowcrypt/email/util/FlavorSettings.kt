@@ -6,7 +6,7 @@
 package com.flowcrypt.email.util
 
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import java.util.List
+import java.util.Properties
 
 /**
  * @author Denis Bondarenko
