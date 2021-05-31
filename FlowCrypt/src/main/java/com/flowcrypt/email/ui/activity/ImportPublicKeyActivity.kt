@@ -58,12 +58,11 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
 
         if (key.isPrivate) {
           showInfoSnackbar(
-            rootView, getString(
-              R.string.file_has_wrong_pgp_structure, getString(
-                R
-                  .string.public_
-              )
-            ), Snackbar.LENGTH_LONG
+            view = rootView,
+            messageText = getString(
+              R.string.file_has_wrong_pgp_structure, getString(R.string.public_)
+            ),
+            duration = Snackbar.LENGTH_LONG
           )
           return
         }

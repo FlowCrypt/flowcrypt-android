@@ -152,8 +152,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
           withToolBarText("INBOX"),
           withToolBarText(
             InstrumentationRegistry.getInstrumentation().targetContext.getString(
-              R
-                .string.loading
+              R.string.loading
             )
           )
         )

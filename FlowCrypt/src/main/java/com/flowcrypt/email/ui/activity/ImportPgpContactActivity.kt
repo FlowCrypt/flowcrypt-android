@@ -222,10 +222,11 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
 
     fun newIntent(context: Context, accountEntity: AccountEntity?): Intent {
       return newIntent(
-        context = context, accountEntity = accountEntity, title = context.getString(
-          R.string
-            .add_public_keys_of_your_contacts
-        ), throwErrorIfDuplicateFoundEnabled = false, cls = ImportPgpContactActivity::class.java
+        context = context,
+        accountEntity = accountEntity,
+        title = context.getString(R.string.add_public_keys_of_your_contacts),
+        throwErrorIfDuplicateFoundEnabled = false,
+        cls = ImportPgpContactActivity::class.java
       )
     }
   }

@@ -79,12 +79,13 @@ class ImportPublicKeyActivityTest : BaseTest() {
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPublicKey)
     intending(
       allOf(
-        hasAction(Intent.ACTION_CHOOSER), hasExtra(
-          `is`(Intent.EXTRA_INTENT), allOf(
-            hasAction(
-              Intent
-                .ACTION_OPEN_DOCUMENT
-            ), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")
+        hasAction(Intent.ACTION_CHOOSER),
+        hasExtra(
+          `is`(Intent.EXTRA_INTENT),
+          allOf(
+            hasAction(Intent.ACTION_OPEN_DOCUMENT),
+            hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+            hasType("*/*")
           )
         )
       )

@@ -93,10 +93,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
               privateKeys = ArrayList(privateKeysFromEmailBackups),
               sourceType = KeyImportDetails.SourceType.EMAIL,
               positiveBtnTitle = getString(R.string.continue_),
-              negativeBtnTitle = getString(
-                R
-                  .string.choose_another_key
-              ),
+              negativeBtnTitle = getString(R.string.choose_another_key),
               skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
             ), REQUEST_CODE_CHECK_PRIVATE_KEYS
           )

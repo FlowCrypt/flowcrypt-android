@@ -450,10 +450,9 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
       MessageState.ERROR_DURING_CREATION -> {
         message = getString(
-          R.string.error_happened_during_creation, getString(
-            R.string
-              .support_email
-          ), messageEntity.errorMsg ?: "none"
+          R.string.error_happened_during_creation,
+          getString(R.string.support_email),
+          messageEntity.errorMsg ?: "none"
         )
 
         val twoWayDialogFragment = TwoWayDialogFragment.newInstance(

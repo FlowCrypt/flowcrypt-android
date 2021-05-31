@@ -101,10 +101,9 @@ class GeneralUtil {
      */
     fun readFileFromUriToString(context: Context, uri: Uri): String? {
       val inputStream = context.contentResolver.openInputStream(uri)
-      return if (inputStream != null) IOUtils.toString(
-        inputStream,
-        StandardCharsets.UTF_8
-      ) else null
+      return if (inputStream != null) {
+        IOUtils.toString(inputStream, StandardCharsets.UTF_8)
+      } else null
     }
 
     /**

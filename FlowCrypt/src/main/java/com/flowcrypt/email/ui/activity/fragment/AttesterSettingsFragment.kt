@@ -104,10 +104,9 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
           Result.Status.EXCEPTION -> {
             sRL?.isRefreshing = false
             showStatus(
-              it.exception?.message ?: it.exception?.javaClass?.simpleName ?: getString(
-                R
-                  .string.unknown_error
-              )
+              it.exception?.message
+                ?: it.exception?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error)
             )
             showSnackbar(
               view = contentView,
