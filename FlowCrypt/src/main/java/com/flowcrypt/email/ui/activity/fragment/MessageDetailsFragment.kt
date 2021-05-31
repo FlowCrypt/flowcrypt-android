@@ -123,21 +123,27 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
-      object : AttachmentsRecyclerViewAdapter.Listener {
-        override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
-          lastClickedAtt = attachmentInfo
-          lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
-              ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            lastClickedAtt?.let {
-              context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
-            }
-          } else {
-            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
+    object : AttachmentsRecyclerViewAdapter.Listener {
+      override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
+        lastClickedAtt = attachmentInfo
+        lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+          ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+          ) == PackageManager.PERMISSION_GRANTED
+        ) {
+          lastClickedAtt?.let {
+            context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
           }
+        } else {
+          requestPermissions(
+            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE
+          )
         }
-      })
+      }
+    })
 
   private var textViewSenderAddress: TextView? = null
   private var textViewDate: TextView? = null
@@ -199,8 +205,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION -> when (resultCode) {
         Activity.RESULT_OK -> {
-          val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment
-              .KEY_ATTACHMENT_INFO_LIST) ?: emptyList()
+          val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(
+            ChoosePublicKeyDialogFragment
+              .KEY_ATTACHMENT_INFO_LIST
+          ) ?: emptyList()
 
           if (atts.isNotEmpty()) {
             makeAttsProtected(atts)
@@ -237,7 +245,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
     menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
     menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
-    menuActionMarkUnread?.isVisible = !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
+    menuActionMarkUnread?.isVisible =
+      !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
 
     menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
     menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
@@ -265,7 +274,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
           msgEntity.let {
             if (msgEntity.msgState === MessageState.SENDING) {
-              Toast.makeText(context, R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
+              Toast.makeText(context, R.string.can_not_delete_sending_message, Toast.LENGTH_LONG)
+                .show()
             } else {
               msgDetailsViewModel.deleteMsg()
               Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
@@ -274,11 +284,15 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         } else {
           if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
             showTwoWayDialog(
-                dialogTitle = "",
-                dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_msg_question, 1, 1),
-                positiveButtonTitle = getString(android.R.string.ok),
-                negativeButtonTitle = getString(android.R.string.cancel),
-                requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG
+              dialogTitle = "",
+              dialogMsg = requireContext().resources.getQuantityString(
+                R.plurals.delete_msg_question,
+                1,
+                1
+              ),
+              positiveButtonTitle = getString(android.R.string.ok),
+              negativeButtonTitle = getString(android.R.string.cancel),
+              requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG
             )
           } else {
             msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
@@ -304,13 +318,19 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   override fun onClick(v: View) {
     when (v.id) {
       R.id.layoutReplyButton -> {
-        startActivity(CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.REPLY, msgEncryptType))
+        startActivity(
+          CreateMessageActivity.generateIntent(
+            context, prepareMsgInfoForReply(), MessageType.REPLY, msgEncryptType
+          )
+        )
       }
 
       R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
-        startActivity(CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.REPLY_ALL, msgEncryptType))
+        startActivity(
+          CreateMessageActivity.generateIntent(
+            context, prepareMsgInfoForReply(), MessageType.REPLY_ALL, msgEncryptType
+          )
+        )
       }
 
       R.id.imageButtonMoreOptions -> {
@@ -340,19 +360,31 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
           if (attachmentsRecyclerViewAdapter.currentList.isNotEmpty()) {
-            Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
+            Toast.makeText(
+              context,
+              R.string.cannot_forward_encrypted_attachments,
+              Toast.LENGTH_LONG
+            ).show()
           }
         } else {
-          msgInfo?.atts = attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
+          msgInfo?.atts =
+            attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
         }
 
-        startActivity(CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.FORWARD, msgEncryptType))
+        startActivity(
+          CreateMessageActivity.generateIntent(
+            context, prepareMsgInfoForReply(), MessageType.FORWARD, msgEncryptType
+          )
+        )
       }
     }
   }
 
-  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+  override fun onRequestPermissionsResult(
+    requestCode: Int,
+    permissions: Array<String>,
+    grantResults: IntArray
+  ) {
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
@@ -360,7 +392,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
           }
         } else {
-          Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
+          Toast.makeText(
+            activity,
+            R.string.cannot_save_attachment_without_permission,
+            Toast.LENGTH_LONG
+          ).show()
         }
       }
 
@@ -409,8 +445,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun showConnLostHint() {
-    showSnackbar(requireView(), getString(R.string.failed_load_message_from_email_server),
-        getString(R.string.retry)) {
+    showSnackbar(
+      requireView(), getString(R.string.failed_load_message_from_email_server),
+      getString(R.string.retry)
+    ) {
       UIUtil.exchangeViewVisibility(true, progressView, statusView)
 
     }
@@ -426,9 +464,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private fun showSendersPublicKeyDialog() {
-    val fragment = ChoosePublicKeyDialogFragment.newInstance(args.messageEntity.email,
-        ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings)
-    fragment.setTargetFragment(this@MessageDetailsFragment, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION)
+    val fragment = ChoosePublicKeyDialogFragment.newInstance(
+      args.messageEntity.email,
+      ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings
+    )
+    fragment.setTargetFragment(
+      this@MessageDetailsFragment,
+      REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION
+    )
     fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
   }
 
@@ -445,16 +488,22 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       atts.add(att)
     }
 
-    startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.REPLY,
+    startActivity(
+      CreateMessageActivity.generateIntent(
+        context, prepareMsgInfoForReply(), MessageType.REPLY,
         MessageEncryptionType.STANDARD,
-        ServiceInfo(isToFieldEditable = false,
-            isFromFieldEditable = false,
-            isMsgEditable = false,
-            isSubjectEditable = false,
-            isMsgTypeSwitchable = false,
-            hasAbilityToAddNewAtt = false,
-            systemMsg = getString(R.string.message_was_encrypted_for_wrong_key),
-            atts = atts)))
+        ServiceInfo(
+          isToFieldEditable = false,
+          isFromFieldEditable = false,
+          isMsgEditable = false,
+          isSubjectEditable = false,
+          isMsgTypeSwitchable = false,
+          hasAbilityToAddNewAtt = false,
+          systemMsg = getString(R.string.message_was_encrypted_for_wrong_key),
+          atts = atts
+        )
+      )
+    )
   }
 
   /**
@@ -590,14 +639,17 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     rVAttachments?.apply {
       layoutManager = LinearLayoutManager(context)
-      addItemDecoration(MarginItemDecoration(
-          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small))
+      addItemDecoration(
+        MarginItemDecoration(
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+        )
       )
       adapter = attachmentsRecyclerViewAdapter
     }
 
-    val subject = if (TextUtils.isEmpty(args.messageEntity.subject)) getString(R.string.no_subject) else
-      args.messageEntity.subject
+    val subject =
+      if (TextUtils.isEmpty(args.messageEntity.subject)) getString(R.string.no_subject) else
+        args.messageEntity.subject
 
     if (folderType === FoldersManager.FolderType.SENT) {
       textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
@@ -607,10 +659,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     textViewSubject?.text = subject
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
       textViewDate?.text =
-          DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
+        DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
     } else {
       textViewDate?.text =
-          DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate ?: 0)
+        DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate ?: 0)
     }
 
     updateMsgBody()
@@ -619,10 +671,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun updateMsgDetails() {
     rVMsgDetails?.apply {
       layoutManager = LinearLayoutManager(context)
-      addItemDecoration(VerticalSpaceMarginItemDecoration(
+      addItemDecoration(
+        VerticalSpaceMarginItemDecoration(
           marginTop = 0,
           marginBottom = 0,
-          marginInternal = resources.getDimensionPixelSize(R.dimen.default_margin_content_small))
+          marginInternal = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+        )
       )
       adapter = msgDetailsAdapter
     }
@@ -630,34 +684,44 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     tVTo?.text = prepareToText()
 
     val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
-      add(MsgDetailsRecyclerViewAdapter.Header(
+      add(
+        MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.from),
           value = formatAddresses(args.messageEntity.from)
-      ))
+        )
+      )
 
       if (args.messageEntity.replyToAddress.isNotEmpty()) {
-        add(MsgDetailsRecyclerViewAdapter.Header(
+        add(
+          MsgDetailsRecyclerViewAdapter.Header(
             name = getString(R.string.reply_to),
             value = formatAddresses(args.messageEntity.replyToAddress)
-        ))
+          )
+        )
       }
 
-      add(MsgDetailsRecyclerViewAdapter.Header(
+      add(
+        MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.to),
           value = formatAddresses(args.messageEntity.to)
-      ))
+        )
+      )
 
       if (args.messageEntity.cc.isNotEmpty()) {
-        add(MsgDetailsRecyclerViewAdapter.Header(
+        add(
+          MsgDetailsRecyclerViewAdapter.Header(
             name = getString(R.string.cc),
             value = formatAddresses(args.messageEntity.cc)
-        ))
+          )
+        )
       }
 
-      add(MsgDetailsRecyclerViewAdapter.Header(
+      add(
+        MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.date),
           value = prepareDateHeaderValue()
-      ))
+        )
+      )
     }
 
     msgDetailsAdapter.submitList(headers)
@@ -704,17 +768,17 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun formatAddresses(addresses: List<InternetAddress>) =
-      addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
-        if (index < MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE) {
-          builder.append(it.getFormattedString())
-          if (index != addresses.size - 1) {
-            builder.append("\n")
-          }
-        } else if (index == MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE + 1) {
-          builder.append(getString(R.string.and_others))
+    addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
+      if (index < MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE) {
+        builder.append(it.getFormattedString())
+        if (index != addresses.size - 1) {
+          builder.append("\n")
         }
-        builder
-      }.toSpannable()
+      } else if (index == MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE + 1) {
+        builder.append(getString(R.string.and_others))
+      }
+      builder
+    }.toSpannable()
 
   private fun updateMsgView() {
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
@@ -751,7 +815,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         MsgBlock.Type.DECRYPT_ERROR -> {
           msgEncryptType = MessageEncryptionType.ENCRYPTED
-          layoutMsgParts?.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
+          layoutMsgParts?.addView(
+            genDecryptErrorPart(
+              block as DecryptErrorMsgBlock,
+              layoutInflater
+            )
+          )
         }
 
         MsgBlock.Type.DECRYPTED_ATT -> {
@@ -760,15 +829,23 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           if (att != null) {
             att.isDecrypted = true
             att.uri?.path?.let {
-              att.uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, File(it))
+              att.uri = FileProvider.getUriForFile(
+                requireContext(),
+                Constants.FILE_PROVIDER_AUTHORITY,
+                File(it)
+              )
             }
 
             inlineEncryptedAtts.add(att)
           }
         }
 
-        else -> layoutMsgParts?.addView(genDefPart(block, layoutInflater,
-            R.layout.message_part_other, layoutMsgParts))
+        else -> layoutMsgParts?.addView(
+          genDefPart(
+            block, layoutInflater,
+            R.layout.message_part_other, layoutMsgParts
+          )
+        )
       }
       isFirstMsgPartText = false
     }
@@ -788,7 +865,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     val text = clipLargeText(block.content) ?: ""
 
-    emailWebView?.loadDataWithBaseURL(null, text, "text/html", StandardCharsets.UTF_8.displayName(), null)
+    emailWebView?.loadDataWithBaseURL(
+      null,
+      text,
+      "text/html",
+      StandardCharsets.UTF_8.displayName(),
+      null
+    )
     emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
         setActionProgress(100, null)
@@ -861,7 +944,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    */
   private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
 
-    val pubKeyView = inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup
+    val pubKeyView =
+      inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup
     val textViewPgpPublicKey = pubKeyView.findViewById<TextView>(R.id.textViewPgpPublicKey)
     val switchShowPublicKey = pubKeyView.findViewById<CompoundButton>(R.id.switchShowPublicKey)
 
@@ -880,8 +964,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
 
     val fingerprint = pubKeyView.findViewById<TextView>(R.id.textViewFingerprintTemplate)
-    UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", keyDetails?.fingerprint, 4)), fingerprint)
+    UIUtil.setHtmlTextToTextView(
+      getString(
+        R.string.template_message_part_public_key_fingerprint,
+        GeneralUtil.doSectionsInText(" ", keyDetails?.fingerprint, 4)
+      ), fingerprint
+    )
 
     textViewPgpPublicKey.text = clipLargeText(block.content)
 
@@ -891,8 +979,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       if (existingPgpContact == null) {
         initSaveContactButton(block, button)
       } else if (TextUtils.isEmpty(existingPgpContact.fingerprint)
-          || keyDetails?.fingerprint?.equals(
-              existingPgpContact.fingerprint!!, ignoreCase = true) == true) {
+        || keyDetails?.fingerprint?.equals(
+          existingPgpContact.fingerprint!!, ignoreCase = true
+        ) == true
+      ) {
         initUpdateContactButton(block, button)
       } else {
         initReplaceContactButton(block, button)
@@ -917,7 +1007,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         contactsViewModel.addContact(pgpContact)
         v.visibility = View.GONE
       } else {
-        Toast.makeText(context, getString(R.string.contact_for_saving_not_found), Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+          context,
+          getString(R.string.contact_for_saving_not_found),
+          Toast.LENGTH_SHORT
+        ).show()
       }
     }
   }
@@ -938,7 +1032,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {
-        Toast.makeText(context, getString(R.string.contact_for_updating_is_not_found), Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+          context,
+          getString(R.string.contact_for_updating_is_not_found),
+          Toast.LENGTH_SHORT
+        ).show()
       }
     }
   }
@@ -959,12 +1057,21 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         Toast.makeText(context, R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {
-        Toast.makeText(context, getString(R.string.contact_for_replacing_is_not_found), Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+          context,
+          getString(R.string.contact_for_replacing_is_not_found),
+          Toast.LENGTH_SHORT
+        ).show()
       }
     }
   }
 
-  private fun genDefPart(block: MsgBlock, inflater: LayoutInflater, res: Int, viewGroup: ViewGroup?): TextView {
+  private fun genDefPart(
+    block: MsgBlock,
+    inflater: LayoutInflater,
+    res: Int,
+    viewGroup: ViewGroup?
+  ): TextView {
     val textViewMsgPartOther = inflater.inflate(res, viewGroup, false) as TextView
     textViewMsgPartOther.text = clipLargeText(block.content)
     return textViewMsgPartOther
@@ -978,35 +1085,58 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     return genDefPart(block, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts)
   }
 
-  private fun genDecryptErrorPart(block: DecryptErrorMsgBlock, layoutInflater: LayoutInflater): View {
+  private fun genDecryptErrorPart(
+    block: DecryptErrorMsgBlock,
+    layoutInflater: LayoutInflater
+  ): View {
     val decryptError = block.error ?: return View(context)
 
     when (decryptError.details?.type) {
-      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(clipLargeText(block.content), layoutInflater)
+      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
+        clipLargeText(
+          block.content
+        ), layoutInflater
+      )
 
       DecryptErrorDetails.Type.FORMAT -> {
-        val formatErrorMsg = (getString(R.string.decrypt_error_message_badly_formatted,
-            getString(R.string.app_name)) + "\n\n"
+        val formatErrorMsg = (getString(
+          R.string.decrypt_error_message_badly_formatted,
+          getString(R.string.app_name)
+        ) + "\n\n"
             + decryptError.details.type + ": " + decryptError.details.message)
         return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
       }
 
       DecryptErrorDetails.Type.OTHER -> {
-        val otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
-            "\n\n" + getString(R.string.decrypt_error_please_write_me, getString(R.string.support_email)) +
-            "\n\n" + decryptError.details.type + ": " + decryptError.details.message
+        val otherErrorMsg =
+          getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
+              "\n\n" + getString(
+            R.string.decrypt_error_please_write_me,
+            getString(R.string.support_email)
+          ) +
+              "\n\n" + decryptError.details.type + ": " + decryptError.details.message
         return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 
-      else -> return getView(clipLargeText(block.content), getString(R.string.could_not_decrypt_message_due_to_error,
-          decryptError.details?.type.toString() + ": " + decryptError.details?.message),
-          layoutInflater)
+      else -> return getView(
+        clipLargeText(block.content), getString(
+          R.string.could_not_decrypt_message_due_to_error,
+          decryptError.details?.type.toString() + ": " + decryptError.details?.message
+        ),
+        layoutInflater
+      )
     }
   }
 
-  private fun getView(originalMsg: String?, errorMsg: String, layoutInflater: LayoutInflater): View {
-    val viewGroup = layoutInflater.inflate(R.layout.message_part_pgp_message_error,
-        layoutMsgParts, false) as ViewGroup
+  private fun getView(
+    originalMsg: String?,
+    errorMsg: String,
+    layoutInflater: LayoutInflater
+  ): View {
+    val viewGroup = layoutInflater.inflate(
+      R.layout.message_part_pgp_message_error,
+      layoutMsgParts, false
+    ) as ViewGroup
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
     ExceptionUtil.handleError(ManualHandledException(errorMsg))
     textViewErrorMsg.text = errorMsg
@@ -1023,21 +1153,25 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    */
   private fun generateMissingPrivateKeyLayout(pgpMsg: String?, inflater: LayoutInflater): View {
     val viewGroup = inflater.inflate(
-        R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false) as ViewGroup
+      R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false
+    ) as ViewGroup
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
     textViewErrorMsg.text = getString(R.string.decrypt_error_current_key_cannot_open_message)
 
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey.setOnClickListener {
-      startActivityForResult(ImportPrivateKeyActivity.getIntent(
+      startActivityForResult(
+        ImportPrivateKeyActivity.getIntent(
           context = context,
           title = getString(R.string.import_private_key),
           throwErrorIfDuplicateFoundEnabled = true,
           cls = ImportPrivateKeyActivity::class.java,
           isSubmittingPubKeysEnabled = false,
           accountEntity = account,
-          skipImportedKeys = true),
-          REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
+          skipImportedKeys = true
+        ),
+        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY
+      )
     }
 
     val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
@@ -1056,9 +1190,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * [LayoutInflater].
    * @return A generated layout.
    */
-  private fun genShowOrigMsgLayout(msg: String?, layoutInflater: LayoutInflater,
-                                   rootView: ViewGroup): ViewGroup {
-    val viewGroup = layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false) as ViewGroup
+  private fun genShowOrigMsgLayout(
+    msg: String?, layoutInflater: LayoutInflater,
+    rootView: ViewGroup
+  ): ViewGroup {
+    val viewGroup =
+      layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false) as ViewGroup
     val textViewOrigPgpMsg = viewGroup.findViewById<TextView>(R.id.textViewOrigPgpMsg)
     textViewOrigPgpMsg.text = msg
 
@@ -1158,8 +1295,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             }
 
             else -> {
-              showStatus(msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error))
+              showStatus(
+                msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error)
+              )
             }
           }
           baseActivity.countingIdlingResource.decrementSafely()

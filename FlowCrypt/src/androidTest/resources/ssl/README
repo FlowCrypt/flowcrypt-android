@@ -15,4 +15,3 @@ openssl ca -config openssl-ca.cnf -days 3650 -out localhost-cert.pem -infiles lo
 -----BEGIN PRIVATE KEY-----
 ...
 -----END PRIVATE KEY-----
-

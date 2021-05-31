@@ -18,7 +18,9 @@ import org.junit.runner.Description
 open class ReadyForCIFilter : ParentFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = NotReadyForCI::class.java
-    return (description?.testClass?.isAnnotationPresent(annotationClass) == false && description.getAnnotation(annotationClass) == null)
+    return (description?.testClass?.isAnnotationPresent(annotationClass) == false && description.getAnnotation(
+      annotationClass
+    ) == null)
   }
 
   override fun describe() = "Filter tests that are ready to be run on a CI server"

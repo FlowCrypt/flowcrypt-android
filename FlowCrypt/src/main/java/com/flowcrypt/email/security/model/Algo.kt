@@ -16,15 +16,17 @@ import com.google.gson.annotations.Expose
  * Time: 1:42 PM
  * E-mail: DenBond7@gmail.com
  */
-data class Algo constructor(@Expose val algorithm: String?,
-                            @Expose val algorithmId: Int,
-                            @Expose val bits: Int,
-                            @Expose val curve: String?) : Parcelable {
+data class Algo constructor(
+  @Expose val algorithm: String?,
+  @Expose val algorithmId: Int,
+  @Expose val bits: Int,
+  @Expose val curve: String?
+) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readString(),
-      source.readInt(),
-      source.readInt(),
-      source.readString()
+    source.readString(),
+    source.readInt(),
+    source.readInt(),
+    source.readString()
   )
 
   override fun describeContents(): Int {
@@ -32,12 +34,12 @@ data class Algo constructor(@Expose val algorithm: String?,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeString(algorithm)
-        writeInt(algorithmId)
-        writeInt(bits)
-        writeString(curve)
-      }
+    with(dest) {
+      writeString(algorithm)
+      writeInt(algorithmId)
+      writeInt(bits)
+      writeString(curve)
+    }
 
   companion object {
     @JvmField

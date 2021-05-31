@@ -9,8 +9,7 @@
 
     <include layout="@layout/toolbar" />
 
-    <androidx.fragment.app.FragmentContainerView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    <androidx.fragment.app.FragmentContainerView xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/experimentalSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.preferences.ExperimentalSettingsFragment"
         android:layout_width="match_parent"

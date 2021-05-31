@@ -41,17 +41,21 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class SelectContactsActivity : BaseBackStackActivity(),
-    ContactsRecyclerViewAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
+  ContactsRecyclerViewAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter = ContactsRecyclerViewAdapter(false)
+  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
+    ContactsRecyclerViewAdapter(false)
   private var searchPattern: String? = null
   private val contactsViewModel: ContactsViewModel by viewModels()
 
   @VisibleForTesting
-  private val countingIdlingResourceForFilter = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(this::class.java), GeneralUtil.isDebugBuild())
+  private val countingIdlingResourceForFilter = CountingIdlingResource(
+    GeneralUtil.genIdlingResourcesName(this::class.java),
+    GeneralUtil.isDebugBuild()
+  )
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_select_contact
@@ -157,11 +161,17 @@ class SelectContactsActivity : BaseBackStackActivity(),
 
   companion object {
     val KEY_EXTRA_PGP_CONTACT =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT", SelectContactsActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_PGP_CONTACT",
+        SelectContactsActivity::class.java
+      )
     private val KEY_EXTRA_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectContactsActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectContactsActivity::class.java)
     private val KEY_EXTRA_IS_MULTIPLY =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_MULTIPLY", SelectContactsActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_IS_MULTIPLY",
+        SelectContactsActivity::class.java
+      )
 
     fun newIntent(context: Context?, title: String, isMultiply: Boolean): Intent {
       val intent = Intent(context, SelectContactsActivity::class.java)

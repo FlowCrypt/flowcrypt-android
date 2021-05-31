@@ -34,9 +34,11 @@ import com.google.gson.annotations.SerializedName
  * Time: 4:03 PM
  * E-mail: DenBond7@gmail.com
  */
-data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override var id: Long = 0,
-                                                                      override var email: String? = null,
-                                                                      override val version: Int = 0) : Action {
+data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
+  override var id: Long = 0,
+  override var email: String? = null,
+  override val version: Int = 0
+) : Action {
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.ENCRYPT_PRIVATE_KEYS
 
@@ -53,11 +55,14 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
       val passphrase = keyEntity.passphrase
 
       val keyDetailsList = PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray(), false)
-          .toPgpKeyDetailsList()
+        .toPgpKeyDetailsList()
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
-            IllegalArgumentException("An error occurred during the key parsing| 1: "
-                + if (CollectionUtils.isEmpty(keyDetailsList)) "Empty results" else "Size = " + keyDetailsList.size))
+          IllegalArgumentException(
+            "An error occurred during the key parsing| 1: "
+                + if (CollectionUtils.isEmpty(keyDetailsList)) "Empty results" else "Size = " + keyDetailsList.size
+          )
+        )
         continue
       }
 
@@ -72,7 +77,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
         val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
 
         val encryptedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray(), false)
-            .toPgpKeyDetailsList()
+          .toPgpKeyDetailsList()
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue
@@ -80,8 +85,10 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
 
         val keyDetailsWithPgpEncryptedInfo = encryptedKeyDetailsList.first()
         val modifiedKeyEntity = keyEntity.copy(
-            privateKey = KeyStoreCryptoManager.encrypt(keyDetailsWithPgpEncryptedInfo.privateKey).toByteArray(),
-            publicKey = keyDetailsWithPgpEncryptedInfo.publicKey.toByteArray())
+          privateKey = KeyStoreCryptoManager.encrypt(keyDetailsWithPgpEncryptedInfo.privateKey)
+            .toByteArray(),
+          publicKey = keyDetailsWithPgpEncryptedInfo.publicKey.toByteArray()
+        )
         modifiedKeyEntities.add(modifiedKeyEntity)
       } catch (e: PrivateKeyStrengthException) {
         val account = roomDatabase.accountDao().getActiveAccount() ?: return
@@ -92,14 +99,16 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
 
     roomDatabase.keysDao().update(modifiedKeyEntities)
 
-    SharedPreferencesHelper.setBoolean(PreferenceManager
-        .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, false)
+    SharedPreferencesHelper.setBoolean(
+      PreferenceManager
+        .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, false
+    )
   }
 
   constructor(source: Parcel) : this(
-      source.readLong(),
-      source.readString(),
-      source.readInt()
+    source.readLong(),
+    source.readString(),
+    source.readInt()
   )
 
   override fun describeContents(): Int {
@@ -107,20 +116,21 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeLong(id)
-        writeString(email)
-        writeInt(version)
-      }
+    with(dest) {
+      writeLong(id)
+      writeString(email)
+      writeInt(version)
+    }
 
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<EncryptPrivateKeysIfNeededAction> =
-        object : Parcelable.Creator<EncryptPrivateKeysIfNeededAction> {
-          override fun createFromParcel(source: Parcel): EncryptPrivateKeysIfNeededAction =
-              EncryptPrivateKeysIfNeededAction(source)
+      object : Parcelable.Creator<EncryptPrivateKeysIfNeededAction> {
+        override fun createFromParcel(source: Parcel): EncryptPrivateKeysIfNeededAction =
+          EncryptPrivateKeysIfNeededAction(source)
 
-          override fun newArray(size: Int): Array<EncryptPrivateKeysIfNeededAction?> = arrayOfNulls(size)
-        }
+        override fun newArray(size: Int): Array<EncryptPrivateKeysIfNeededAction?> =
+          arrayOfNulls(size)
+      }
   }
 }

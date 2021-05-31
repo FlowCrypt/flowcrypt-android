@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util
 
-import java.util.*
+import java.util.Properties
 
 /**
  * @author Denis Bondarenko

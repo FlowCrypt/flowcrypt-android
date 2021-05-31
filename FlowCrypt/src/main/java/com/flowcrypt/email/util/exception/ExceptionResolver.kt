@@ -42,11 +42,11 @@ object ExceptionResolver {
    */
   fun isHandlingNeeded(t: Throwable): Boolean {
     val e =
-        if (t is ManualHandledException) {
-          t.cause ?: t
-        } else {
-          t
-        }
+      if (t is ManualHandledException) {
+        t.cause ?: t
+      } else {
+        t
+      }
 
     if (e is UserRecoverableAuthException) {
       if ("BadAuthentication" == e.message) {
@@ -55,22 +55,24 @@ object ExceptionResolver {
     }
 
     if (e is MailConnectException
-        || e is SMTPSendFailedException
-        || e is UnknownHostException
-        || e is SocketTimeoutException
-        || e is ConnectionException
-        || e is java.net.ConnectException
-        || e is UserRecoverableAuthException
-        || e is AuthenticationFailedException
-        || e is UserRecoverableAuthIOException
-        || e is FlowCryptException) {
+      || e is SMTPSendFailedException
+      || e is UnknownHostException
+      || e is SocketTimeoutException
+      || e is ConnectionException
+      || e is java.net.ConnectException
+      || e is UserRecoverableAuthException
+      || e is AuthenticationFailedException
+      || e is UserRecoverableAuthIOException
+      || e is FlowCryptException
+    ) {
       return false
     }
 
     if (e is IOException) {
       //Google network errors.
       if ("NetworkError".equals(e.message, ignoreCase = true)
-          || "Error on service connection.".equals(e.message, ignoreCase = true)) {
+        || "Error on service connection.".equals(e.message, ignoreCase = true)
+      ) {
         return false
       }
 
@@ -84,16 +86,18 @@ object ExceptionResolver {
     }
 
     if (e is SSLHandshakeException
-        || e is SSLProtocolException
-        || e is MessagingException) {
+      || e is SSLProtocolException
+      || e is MessagingException
+    ) {
       e.message?.let {
         if (it.contains("Connection closed by peer")
-            || it.contains("I/O error during system call")
-            || it.contains("Failure in SSL library, usually a protocol error")
-            || it.contains("Handshake failed")
-            || it.contains("Exception reading response")
-            || it.contains("connection failure")
-            || it.contains("Connection reset;")) {
+          || it.contains("I/O error during system call")
+          || it.contains("Failure in SSL library, usually a protocol error")
+          || it.contains("Handshake failed")
+          || it.contains("Exception reading response")
+          || it.contains("connection failure")
+          || it.contains("Connection reset;")
+        ) {
           return false
         }
       }
@@ -120,19 +124,25 @@ object ExceptionResolver {
 
     if (e is GoogleAuthException) {
       if ("InternalError".equals(e.message, ignoreCase = true) ||
-          "ServiceDisabled".equals(e.message, ignoreCase = true)) {
+        "ServiceDisabled".equals(e.message, ignoreCase = true)
+      ) {
         return false
       }
     }
 
     if (e is RuntimeException) {
-      if ("error:04000044:RSA routines:OPENSSL_internal:internal error".equals(e.message, ignoreCase = true)) {
+      if ("error:04000044:RSA routines:OPENSSL_internal:internal error".equals(
+          e.message,
+          ignoreCase = true
+        )
+      ) {
         return false
       }
     }
 
     if (e is BadPaddingException) {
-      val errorMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error"
+      val errorMsg =
+        "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error"
       return !errorMsg.equals(e.message, ignoreCase = true)
     }
 

@@ -25,10 +25,11 @@ import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.node.TestData
 import com.flowcrypt.email.security.KeysStorageImpl
 import org.apache.commons.io.IOUtils
-import java.util.*
+import java.util.Arrays
 
 //todo-denbond7 Need to refactor this class
-class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<NodeResponseWrapper<*>> {
+class NodeTestActivity : AppCompatActivity(), View.OnClickListener,
+  Observer<NodeResponseWrapper<*>> {
 
   private var resultText = ""
   private var tvResult: TextView? = null
@@ -54,7 +55,11 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           resultText = "processing...\n"
           tvResult?.text = resultText
 
-          requestsManager?.encryptFile(R.id.req_id_encrypt_file_from_uri, applicationContext, data.data!!)
+          requestsManager?.encryptFile(
+            R.id.req_id_encrypt_file_from_uri,
+            applicationContext,
+            data.data!!
+          )
         }
       }
 
@@ -65,10 +70,12 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
             tvResult?.text = resultText
 
             val list = KeysStorageImpl.getInstance(this).getRawKeys()
-            requestsManager?.decryptMsg(R.id.req_id_decrypt_email,
-                data = IOUtils.toByteArray(contentResolver.openInputStream(it)),
-                prvKeys = list.toTypedArray(),
-                isEmail = true)
+            requestsManager?.decryptMsg(
+              R.id.req_id_decrypt_email,
+              data = IOUtils.toByteArray(contentResolver.openInputStream(it)),
+              prvKeys = list.toTypedArray(),
+              isEmail = true
+            )
           }
         }
       }
@@ -127,21 +134,37 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_msg_ecc -> {
           val eccDecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
-          printDecryptMsgResult("decrypt-msg-ecc", eccDecryptMsgResult!!, responseWrapper.executionTime)
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, data = encryptedMsg!!
-              .toByteArray(), prvKeys = TestData.rsa2048PrvKeyInfo())
+          printDecryptMsgResult(
+            "decrypt-msg-ecc",
+            eccDecryptMsgResult!!,
+            responseWrapper.executionTime
+          )
+          requestsManager!!.decryptMsg(
+            R.id.req_id_decrypt_msg_rsa_2048, data = encryptedMsg!!
+              .toByteArray(), prvKeys = TestData.rsa2048PrvKeyInfo()
+          )
         }
 
         R.id.req_id_decrypt_msg_rsa_2048 -> {
           val rsa2048DecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
-          printDecryptMsgResult("decrypt-msg-rsa2048", rsa2048DecryptMsgResult!!, responseWrapper.executionTime)
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, data = encryptedMsg!!
-              .toByteArray(), prvKeys = TestData.rsa4096PrvKeyInfo())
+          printDecryptMsgResult(
+            "decrypt-msg-rsa2048",
+            rsa2048DecryptMsgResult!!,
+            responseWrapper.executionTime
+          )
+          requestsManager!!.decryptMsg(
+            R.id.req_id_decrypt_msg_rsa_4096, data = encryptedMsg!!
+              .toByteArray(), prvKeys = TestData.rsa4096PrvKeyInfo()
+          )
         }
 
         R.id.req_id_decrypt_msg_rsa_4096 -> {
           val rsa4096DecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
-          printDecryptMsgResult("decrypt-rawMimeBytes-rsa4096", rsa4096DecryptMsgResult!!, responseWrapper.executionTime)
+          printDecryptMsgResult(
+            "decrypt-rawMimeBytes-rsa4096",
+            rsa4096DecryptMsgResult!!,
+            responseWrapper.executionTime
+          )
           requestsManager!!.encryptFile(R.id.req_id_encrypt_file, TEST_MSG.toByteArray())
         }
 
@@ -154,22 +177,28 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_file_ecc -> {
           val eccDecryptedFileResult = responseWrapper.result as DecryptedFileResult?
-          printDecryptFileResult("decrypt-file-ecc", TEST_MSG.toByteArray(), eccDecryptedFileResult!!,
-              responseWrapper.executionTime)
+          printDecryptFileResult(
+            "decrypt-file-ecc", TEST_MSG.toByteArray(), eccDecryptedFileResult!!,
+            responseWrapper.executionTime
+          )
           //requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048, encryptBytes!!, TestData.rsa2048PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_2048 -> {
           val rsa2048DecryptedFileResult = responseWrapper.result as DecryptedFileResult?
-          printDecryptFileResult("decrypt-file-rsa2048", TEST_MSG.toByteArray(), rsa2048DecryptedFileResult!!,
-              responseWrapper.executionTime)
+          printDecryptFileResult(
+            "decrypt-file-rsa2048", TEST_MSG.toByteArray(), rsa2048DecryptedFileResult!!,
+            responseWrapper.executionTime
+          )
           //requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_4096, encryptBytes!!, TestData.rsa4096PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_4096 -> {
           val rsa4096DecryptedFileResult = responseWrapper.result as DecryptedFileResult?
-          printDecryptFileResult("decrypt-file-rsa4096", TEST_MSG.toByteArray(), rsa4096DecryptedFileResult!!,
-              responseWrapper.executionTime)
+          printDecryptFileResult(
+            "decrypt-file-rsa4096", TEST_MSG.toByteArray(), rsa4096DecryptedFileResult!!,
+            responseWrapper.executionTime
+          )
           requestsManager!!.encryptFile(R.id.req_id_encrypt_file_rsa_2048_1mb, payloads[0])
         }
 
@@ -183,8 +212,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_file_rsa_2048_1mb -> {
           val rsa2048DecryptedFileResult1Mb = responseWrapper.result as DecryptedFileResult?
-          printDecryptFileResult("decrypt-file-" + 1 + "m" + "-rsa2048", payloads[0], rsa2048DecryptedFileResult1Mb!!,
-              responseWrapper.executionTime)
+          printDecryptFileResult(
+            "decrypt-file-" + 1 + "m" + "-rsa2048", payloads[0], rsa2048DecryptedFileResult1Mb!!,
+            responseWrapper.executionTime
+          )
           requestsManager!!.encryptFile(R.id.req_id_encrypt_file_rsa_2048_3mb, payloads[1])
         }
 
@@ -198,8 +229,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_file_rsa_2048_3mb -> {
           val rsa2048DecryptedFileResult3Mb = responseWrapper.result as DecryptedFileResult?
-          printDecryptFileResult("decrypt-file-" + 3 + "m" + "-rsa2048", payloads[1], rsa2048DecryptedFileResult3Mb!!,
-              responseWrapper.executionTime)
+          printDecryptFileResult(
+            "decrypt-file-" + 3 + "m" + "-rsa2048", payloads[1], rsa2048DecryptedFileResult3Mb!!,
+            responseWrapper.executionTime
+          )
           requestsManager!!.encryptFile(R.id.req_id_encrypt_file_rsa_2048_5mb, payloads[2])
         }
 
@@ -213,13 +246,25 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_file_rsa_2048_5mb -> {
           val rsa2048DecryptFileResult5Mb = responseWrapper.result as DecryptedFileResult?
-          printDecryptFileResult("decrypt-file-" + 5 + "m" + "-rsa2048", payloads[2], rsa2048DecryptFileResult5Mb!!,
-              responseWrapper.executionTime)
+          printDecryptFileResult(
+            "decrypt-file-" + 5 + "m" + "-rsa2048", payloads[2], rsa2048DecryptFileResult5Mb!!,
+            responseWrapper.executionTime
+          )
 
           if (!hasTestFailure) {
-            addResultLine("all-tests", System.currentTimeMillis() - allTestsStartTime, "success", true)
+            addResultLine(
+              "all-tests",
+              System.currentTimeMillis() - allTestsStartTime,
+              "success",
+              true
+            )
           } else {
-            addResultLine("all-tests", System.currentTimeMillis() - allTestsStartTime, "hasTestFailure", true)
+            addResultLine(
+              "all-tests",
+              System.currentTimeMillis() - allTestsStartTime,
+              "hasTestFailure",
+              true
+            )
           }
         }
 
@@ -232,8 +277,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_file_rsa_2048_from_uri -> {
           val rsa2048DecryptFileFromUriResult3Mb = responseWrapper.result as DecryptedFileResult?
-          printDecryptFileResult("decrypt-file-rsa2048", null, rsa2048DecryptFileFromUriResult3Mb!!,
-              responseWrapper.executionTime)
+          printDecryptFileResult(
+            "decrypt-file-rsa2048", null, rsa2048DecryptFileFromUriResult3Mb!!,
+            responseWrapper.executionTime
+          )
         }
 
         R.id.req_id_decrypt_email -> {
@@ -298,30 +345,47 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   }
 
   @Suppress("DEPRECATION")
-  private fun printDecryptMsgResult(actionName: String, r: ParseDecryptedMsgResult, executionTime: Long) {
+  private fun printDecryptMsgResult(
+    actionName: String,
+    r: ParseDecryptedMsgResult,
+    executionTime: Long
+  ) {
     if (r.apiError != null) {
       addResultLine(actionName, r, executionTime)
     } else if (r.text?.length != TEST_MSG_HTML.length) {
-      addResultLine(actionName, executionTime,
-          "wrong meta block len " + r.msgBlocks!!.size + "!=" + TEST_MSG_HTML.length, false)
+      addResultLine(
+        actionName, executionTime,
+        "wrong meta block len " + r.msgBlocks!!.size + "!=" + TEST_MSG_HTML.length, false
+      )
     } else if (r.msgBlocks!![0].type !== MsgBlock.Type.PLAIN_HTML) {
-      addResultLine(actionName, executionTime, "wrong meta block type: " + r.msgBlocks!![0].type,
-          false)
+      addResultLine(
+        actionName, executionTime, "wrong meta block type: " + r.msgBlocks!![0].type,
+        false
+      )
     } else {
       val block = r.msgBlocks!![0]
       when {
         block.type !== MsgBlock.Type.PLAIN_HTML ->
           addResultLine(actionName, executionTime, "wrong block type: " + r.msgBlocks!!.size, false)
-        r.text.toString() != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch",
-            false)
-        r.msgBlocks!!.size > 1 -> addResultLine(actionName, executionTime, "unexpected second block", false)
+        r.text.toString() != TEST_MSG_HTML -> addResultLine(
+          actionName, executionTime, "block content mismatch",
+          false
+        )
+        r.msgBlocks!!.size > 1 -> addResultLine(
+          actionName,
+          executionTime,
+          "unexpected second block",
+          false
+        )
         else -> addResultLine(actionName, r, executionTime)
       }
     }
   }
 
-  private fun printDecryptFileResult(actionName: String, originalData: ByteArray?, r: DecryptedFileResult,
-                                     executionTime: Long) {
+  private fun printDecryptFileResult(
+    actionName: String, originalData: ByteArray?, r: DecryptedFileResult,
+    executionTime: Long
+  ) {
     if (r.apiError != null) {
       addResultLine(actionName, r, executionTime)
     } else if ("file.txt" != r.name) {
@@ -344,7 +408,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
     intent.action = Intent.ACTION_OPEN_DOCUMENT
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = "*/*"
-    startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_file)), REQUEST_CODE_CHOOSE_FILE)
+    startActivityForResult(
+      Intent.createChooser(intent, getString(R.string.choose_file)),
+      REQUEST_CODE_CHOOSE_FILE
+    )
   }
 
   private fun chooseEmail() {
@@ -352,7 +419,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
     intent.action = Intent.ACTION_OPEN_DOCUMENT
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = "*/*"
-    startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_email)), REQUEST_CODE_CHOOSE_EMAIL)
+    startActivityForResult(
+      Intent.createChooser(intent, getString(R.string.choose_email)),
+      REQUEST_CODE_CHOOSE_EMAIL
+    )
   }
 
   private fun initViews() {
@@ -371,6 +441,6 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
     private const val TEST_MSG = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all"
     private const val TEST_MSG_HTML =
-        "this is ~<br>a test " + "for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all"
+      "this is ~<br>a test " + "for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all"
   }
 }

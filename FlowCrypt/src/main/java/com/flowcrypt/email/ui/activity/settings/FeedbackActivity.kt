@@ -38,7 +38,7 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedChangeListener,
-    View.OnClickListener, EditScreenshotDialogFragment.OnScreenshotChangeListener {
+  View.OnClickListener, EditScreenshotDialogFragment.OnScreenshotChangeListener {
   override lateinit var rootView: View
   private lateinit var editTextUserMsg: EditText
   private lateinit var editTextUserEmail: EditText
@@ -80,34 +80,43 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
         if (activeAccount == null) {
           if (editTextUserEmail.text.isEmpty()) {
             editTextUserEmail.requestFocus()
-            Toast.makeText(this, getString(R.string.email_must_be_non_empty), Toast
-                .LENGTH_LONG).show()
+            Toast.makeText(
+              this, getString(R.string.email_must_be_non_empty), Toast
+                .LENGTH_LONG
+            ).show()
             return true
           } else if (!GeneralUtil.isEmailValid(editTextUserEmail.text)) {
             editTextUserEmail.requestFocus()
-            Toast.makeText(this, getString(R.string.error_email_is_not_valid), Toast
-                .LENGTH_LONG).show()
+            Toast.makeText(
+              this, getString(R.string.error_email_is_not_valid), Toast
+                .LENGTH_LONG
+            ).show()
             return true
           }
         }
 
         if (editTextUserMsg.text.isEmpty()) {
           editTextUserMsg.requestFocus()
-          Toast.makeText(this, getString(R.string.your_message_must_be_non_empty), Toast
-              .LENGTH_LONG).show()
+          Toast.makeText(
+            this, getString(R.string.your_message_must_be_non_empty), Toast
+              .LENGTH_LONG
+          ).show()
         } else {
           val screenShotBytes = UIUtil.getCompressedByteArrayOfBitmap(
-              if (checkBoxScreenshot.isChecked) {
-                bitmap
-              } else {
-                null
-              }, 100)
+            if (checkBoxScreenshot.isChecked) {
+              bitmap
+            } else {
+              null
+            }, 100
+          )
 
           val nonNullAccount = activeAccount
-              ?: AccountEntity(email = editTextUserEmail.text.toString())
+            ?: AccountEntity(email = editTextUserEmail.text.toString())
 
-          FeedbackJobIntentService.enqueueWork(this, nonNullAccount,
-              editTextUserMsg.text.toString(), screenShotBytes)
+          FeedbackJobIntentService.enqueueWork(
+            this, nonNullAccount,
+            editTextUserMsg.text.toString(), screenShotBytes
+          )
           finish()
         }
         return true
@@ -135,7 +144,10 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
     when (v?.id) {
       R.id.imageButtonScreenshot -> {
         val editScreenShotDialogFragment = EditScreenshotDialogFragment.newInstance(bitmapRaw)
-        editScreenShotDialogFragment.show(supportFragmentManager, EditScreenshotDialogFragment::class.java.simpleName)
+        editScreenShotDialogFragment.show(
+          supportFragmentManager,
+          EditScreenshotDialogFragment::class.java.simpleName
+        )
       }
     }
   }
@@ -168,7 +180,7 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
 
   companion object {
     private val KEY_BITMAP =
-        GeneralUtil.generateUniqueExtraKey("KEY_BITMAP", FeedbackActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_BITMAP", FeedbackActivity::class.java)
 
     fun show(activity: Activity) {
       val screenShotByteArray = UIUtil.getScreenShotByteArray(activity)

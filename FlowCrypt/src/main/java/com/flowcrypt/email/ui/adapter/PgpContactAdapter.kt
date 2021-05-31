@@ -26,9 +26,11 @@ import com.hootsuite.nachos.NachoTextView
  * Time: 17:44
  * E-mail: DenBond7@gmail.com
  */
-class PgpContactAdapter(context: Context,
-                        c: Cursor?,
-                        autoRequery: Boolean) : CursorAdapter(context, c, autoRequery) {
+class PgpContactAdapter(
+  context: Context,
+  c: Cursor?,
+  autoRequery: Boolean
+) : CursorAdapter(context, c, autoRequery) {
 
   override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
     return LayoutInflater.from(context).inflate(R.layout.pgp_contact_item, parent, false)

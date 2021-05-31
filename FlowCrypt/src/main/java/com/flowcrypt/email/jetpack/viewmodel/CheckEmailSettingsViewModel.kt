@@ -45,11 +45,19 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
     viewModelScope.launch {
       val context: Context = getApplication()
       val existedAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao()
-          .getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
+        .getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
 
       if (existedAccount != null && failIfDuplicateFound) {
-        checkEmailSettingsLiveData.postValue(Result.exception(
-            AccountAlreadyAddedException(context.getString(R.string.template_email_already_added, accountEntity.email))))
+        checkEmailSettingsLiveData.postValue(
+          Result.exception(
+            AccountAlreadyAddedException(
+              context.getString(
+                R.string.template_email_already_added,
+                accountEntity.email
+              )
+            )
+          )
+        )
       } else {
         checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.connection)))
         try {
@@ -62,50 +70,55 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
   }
 
   private suspend fun checkAuthCreds(accountEntity: AccountEntity): Result<Boolean?> =
-      withContext(Dispatchers.IO) {
-        val context: Context = getApplication()
-        val authCreds = getAuthCredentials(accountEntity)
-        val props = PropertiesHelper.genProps(accountEntity)
-        props[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT] = 1000 * 10
-        props[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT] = 1000 * 10
+    withContext(Dispatchers.IO) {
+      val context: Context = getApplication()
+      val authCreds = getAuthCredentials(accountEntity)
+      val props = PropertiesHelper.genProps(accountEntity)
+      props[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT] = 1000 * 10
+      props[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT] = 1000 * 10
 
-        val session = OpenStoreHelper.getAccountSess(getApplication(), accountEntity)
+      val session = OpenStoreHelper.getAccountSess(getApplication(), accountEntity)
 
-        try {
-          checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_imap_settings)))
-          testImapConn(accountEntity, authCreds, session)
-        } catch (e: Exception) {
-          e.printStackTrace()
-          return@withContext Result.exception(Exception("IMAP: " + e.message, e))
-        }
-
-        try {
-          checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_smtp_settings)))
-          testSmtpConn(accountEntity, authCreds, session)
-        } catch (e: Exception) {
-          e.printStackTrace()
-          return@withContext Result.exception(Exception("SMTP: " + e.message, e))
-        }
-
-        return@withContext Result.success(true)
+      try {
+        checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_imap_settings)))
+        testImapConn(accountEntity, authCreds, session)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        return@withContext Result.exception(Exception("IMAP: " + e.message, e))
       }
 
-  private suspend fun getAuthCredentials(accountEntity: AccountEntity): AuthCredentials = withContext(Dispatchers.IO) {
-    return@withContext when (accountEntity.accountType) {
-      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-        if (JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2.equals(accountEntity.imapAuthMechanisms, true)) {
-          val token = EmailUtil.getGmailAccountToken(getApplication(), accountEntity)
-          AuthCredentials.from(accountEntity.copy(password = token, smtpPassword = token))
-        } else {
+      try {
+        checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_smtp_settings)))
+        testSmtpConn(accountEntity, authCreds, session)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        return@withContext Result.exception(Exception("SMTP: " + e.message, e))
+      }
+
+      return@withContext Result.success(true)
+    }
+
+  private suspend fun getAuthCredentials(accountEntity: AccountEntity): AuthCredentials =
+    withContext(Dispatchers.IO) {
+      return@withContext when (accountEntity.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          if (JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2.equals(
+              accountEntity.imapAuthMechanisms,
+              true
+            )
+          ) {
+            val token = EmailUtil.getGmailAccountToken(getApplication(), accountEntity)
+            AuthCredentials.from(accountEntity.copy(password = token, smtpPassword = token))
+          } else {
+            AuthCredentials.from(accountEntity)
+          }
+        }
+
+        else -> {
           AuthCredentials.from(accountEntity)
         }
       }
-
-      else -> {
-        AuthCredentials.from(accountEntity)
-      }
     }
-  }
 
   /**
    * Trying to connect to an IMAP server. If an exception will occur than that exception will be throw up.
@@ -114,7 +127,11 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
    * @param session The [Session] which will be used for the connection.
    * @throws MessagingException This operation can throw some exception.
    */
-  private fun testImapConn(accountEntity: AccountEntity, authCreds: AuthCredentials, session: Session) {
+  private fun testImapConn(
+    accountEntity: AccountEntity,
+    authCreds: AuthCredentials,
+    session: Session
+  ) {
     OpenStoreHelper.openStore(accountEntity, authCreds, session).use { store ->
       store.getFolder(JavaEmailConstants.FOLDER_INBOX).use {
         it.open(Folder.READ_ONLY)
@@ -129,7 +146,11 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
    * @param session The [Session] which will be used for the connection.
    * @throws MessagingException This operation can throw some exception.
    */
-  private fun testSmtpConn(accountEntity: AccountEntity, authCreds: AuthCredentials, session: Session) {
+  private fun testSmtpConn(
+    accountEntity: AccountEntity,
+    authCreds: AuthCredentials,
+    session: Session
+  ) {
     val transport = SmtpProtocolUtil.prepareSmtpTransport(session, accountEntity, authCreds)
     transport.close()
   }

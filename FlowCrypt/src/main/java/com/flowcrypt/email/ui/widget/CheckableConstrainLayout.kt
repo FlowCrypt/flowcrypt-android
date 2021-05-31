@@ -22,7 +22,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
  *         Time: 11:49 AM
  *         E-mail: DenBond7@gmail.com
  */
-class CheckableConstrainLayout(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs), Checkable {
+class CheckableConstrainLayout(context: Context, attrs: AttributeSet) :
+  ConstraintLayout(context, attrs), Checkable {
   private var compoundButton: CompoundButton? = null
 
   override fun isChecked(): Boolean {

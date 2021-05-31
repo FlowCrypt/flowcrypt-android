@@ -32,7 +32,8 @@ import com.flowcrypt.email.util.GeneralUtil
  *         Time: 6:44 PM
  *         E-mail: DenBond7@gmail.com
  */
-class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDialogFragment.OnKeySelectedListener {
+class EditContactActivity : BaseImportKeyActivity(),
+  UpdatePublicKeyOfContactDialogFragment.OnKeySelectedListener {
   private val contactsViewModel: ContactsViewModel by viewModels()
   private var contactEntity: ContactEntity? = null
   private var editTextNewPubKey: EditText? = null
@@ -56,13 +57,21 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
     isCheckingClipboardEnabled = false
   }
 
-  override fun onKeyFound(sourceType: KeyImportDetails.SourceType, keyDetailsList: List<PgpKeyDetails>) {
+  override fun onKeyFound(
+    sourceType: KeyImportDetails.SourceType,
+    keyDetailsList: List<PgpKeyDetails>
+  ) {
     if (keyDetailsList.size > 1) {
       showInfoDialogFragment(dialogMsg = getString(R.string.more_than_one_public_key_found))
       return
     }
 
-    showDialogFragment(UpdatePublicKeyOfContactDialogFragment.newInstance(contactEntity?.email, keyDetailsList.first()))
+    showDialogFragment(
+      UpdatePublicKeyOfContactDialogFragment.newInstance(
+        contactEntity?.email,
+        keyDetailsList.first()
+      )
+    )
   }
 
   override fun initViews() {
@@ -76,7 +85,12 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
 
     buttonCheck?.setOnClickListener {
       dismissSnackBar()
-      keyImportModel = KeyImportModel(null, editTextNewPubKey?.text.toString(), isPrivateKeyMode, KeyImportDetails.SourceType.MANUAL_ENTERING)
+      keyImportModel = KeyImportModel(
+        null,
+        editTextNewPubKey?.text.toString(),
+        isPrivateKeyMode,
+        KeyImportDetails.SourceType.MANUAL_ENTERING
+      )
       keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
     }
   }
@@ -87,15 +101,20 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
   }
 
   companion object {
-    val KEY_EXTRA_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_CONTACT", EditContactActivity::class.java)
+    val KEY_EXTRA_CONTACT =
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_CONTACT", EditContactActivity::class.java)
 
-    fun newIntent(context: Context, accountEntity: AccountEntity?, contactEntity: ContactEntity?): Intent {
+    fun newIntent(
+      context: Context,
+      accountEntity: AccountEntity?,
+      contactEntity: ContactEntity?
+    ): Intent {
       return newIntent(
-          context = context,
-          accountEntity = accountEntity,
-          title = context.getString(R.string.enter_a_new_public_key_for_this_contact),
-          throwErrorIfDuplicateFoundEnabled = false,
-          cls = EditContactActivity::class.java
+        context = context,
+        accountEntity = accountEntity,
+        title = context.getString(R.string.enter_a_new_public_key_for_this_contact),
+        throwErrorIfDuplicateFoundEnabled = false,
+        cls = EditContactActivity::class.java
       ).apply {
         putExtra(KEY_EXTRA_CONTACT, contactEntity)
       }

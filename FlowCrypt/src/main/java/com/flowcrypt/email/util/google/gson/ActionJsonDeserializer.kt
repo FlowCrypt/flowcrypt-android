@@ -27,19 +27,38 @@ import java.lang.reflect.Type
  */
 class ActionJsonDeserializer : JsonDeserializer<Action> {
 
-  override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Action {
+  override fun deserialize(
+    json: JsonElement,
+    typeOfT: Type,
+    context: JsonDeserializationContext
+  ): Action {
     val jsonObject = json.asJsonObject
 
     return when (Action.Type.valueOf(jsonObject.get(Action.TAG_NAME_ACTION_TYPE).asString)) {
-      Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX -> context.deserialize(json, BackupPrivateKeyToInboxAction::class.java)
+      Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX -> context.deserialize(
+        json,
+        BackupPrivateKeyToInboxAction::class.java
+      )
 
-      Action.Type.REGISTER_USER_PUBLIC_KEY -> context.deserialize(json, RegisterUserPublicKeyAction::class.java)
+      Action.Type.REGISTER_USER_PUBLIC_KEY -> context.deserialize(
+        json,
+        RegisterUserPublicKeyAction::class.java
+      )
 
-      Action.Type.SEND_WELCOME_TEST_EMAIL -> context.deserialize(json, SendWelcomeTestEmailAction::class.java)
+      Action.Type.SEND_WELCOME_TEST_EMAIL -> context.deserialize(
+        json,
+        SendWelcomeTestEmailAction::class.java
+      )
 
-      Action.Type.ENCRYPT_PRIVATE_KEYS -> context.deserialize(json, EncryptPrivateKeysIfNeededAction::class.java)
+      Action.Type.ENCRYPT_PRIVATE_KEYS -> context.deserialize(
+        json,
+        EncryptPrivateKeysIfNeededAction::class.java
+      )
 
-      Action.Type.LOAD_GMAIL_ALIASES -> context.deserialize(json, LoadGmailAliasesAction::class.java)
+      Action.Type.LOAD_GMAIL_ALIASES -> context.deserialize(
+        json,
+        LoadGmailAliasesAction::class.java
+      )
     }
   }
 }

@@ -32,7 +32,10 @@ import javax.net.ssl.SSLProtocolException
  *         Time: 11:30 AM
  *         E-mail: DenBond7@gmail.com
  */
-class IMAPStoreConnection(override val context: Context, override val accountEntity: AccountEntity) : StoreConnection {
+class IMAPStoreConnection(
+  override val context: Context,
+  override val accountEntity: AccountEntity
+) : StoreConnection {
   override val session = OpenStoreHelper.getAccountSess(context, accountEntity)
 
   @Volatile
@@ -45,46 +48,84 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
 
   override suspend fun connect() = withContext(Dispatchers.IO) {
     mutex.withLock {
-      LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): check connection")
+      LogsUtil.d(
+        IMAPStoreConnection::class.java.simpleName,
+        "connect(${accountEntity.email}): check connection"
+      )
       if (isConnected()) {
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): connected, skip connection")
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "connect(${accountEntity.email}): connected, skip connection"
+        )
         return@withContext
       }
 
       try {
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): try to open a new connection to store")
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "connect(${accountEntity.email}): try to open a new connection to store"
+        )
         OpenStoreHelper.openStore(context, accountEntity, store)
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): connected to store")
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "connect(${accountEntity.email}): connected to store"
+        )
       } catch (e: Throwable) {
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): connection to store failed", e)
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "connect(${accountEntity.email}): connection to store failed",
+          e
+        )
         throw e
       }
     }
   }
 
   override suspend fun reconnect() = withContext(Dispatchers.IO) {
-    LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "reconnect(${accountEntity.email}): begin reconnection")
+    LogsUtil.d(
+      IMAPStoreConnection::class.java.simpleName,
+      "reconnect(${accountEntity.email}): begin reconnection"
+    )
     disconnect()
     connect()
-    LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "reconnect(${accountEntity.email}): reconnection completed")
+    LogsUtil.d(
+      IMAPStoreConnection::class.java.simpleName,
+      "reconnect(${accountEntity.email}): reconnection completed"
+    )
   }
 
   override suspend fun disconnect() = withContext(Dispatchers.IO) {
     mutex.withLock {
-      LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): check connection")
+      LogsUtil.d(
+        IMAPStoreConnection::class.java.simpleName,
+        "disconnect(${accountEntity.email}): check connection"
+      )
       if (!isConnected()) {
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnected, skipping...")
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "disconnect(${accountEntity.email}): disconnected, skipping..."
+        )
         return@withContext
       }
 
       try {
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnecting...")
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "disconnect(${accountEntity.email}): disconnecting..."
+        )
         if (store.isConnected) {
           store.close()
         }
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnected")
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "disconnect(${accountEntity.email}): disconnected"
+        )
       } catch (e: Throwable) {
-        LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "disconnect(${accountEntity.email}): disconnecting failed", e)
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "disconnect(${accountEntity.email}): disconnecting failed",
+          e
+        )
         throw e
       }
     }
@@ -94,53 +135,69 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
     return@withContext store.isConnected
   }
 
-  override suspend fun <T> execute(action: suspend (store: Store) -> T): T = withContext(Dispatchers.IO) {
-    return@withContext try {
-      if (!isConnected()) {
-        connect()
-      }
+  override suspend fun <T> execute(action: suspend (store: Store) -> T): T =
+    withContext(Dispatchers.IO) {
+      return@withContext try {
+        if (!isConnected()) {
+          connect()
+        }
 
-      action.invoke(store)
-    } catch (e: Exception) {
-      throw processException(e)
+        action.invoke(store)
+      } catch (e: Exception) {
+        throw processException(e)
+      }
     }
-  }
 
-  override suspend fun <T> executeWithResult(action: suspend (store: Store) -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
-    return@withContext try {
-      if (!isConnected()) {
-        connect()
-      }
+  override suspend fun <T> executeWithResult(action: suspend (store: Store) -> Result<T>): Result<T> =
+    withContext(Dispatchers.IO) {
+      return@withContext try {
+        if (!isConnected()) {
+          connect()
+        }
 
-      action.invoke(store)
-    } catch (e: Exception) {
-      when (val exception = processException(e)) {
-        is CommonConnectionException -> Result.exception(exception)
+        action.invoke(store)
+      } catch (e: Exception) {
+        when (val exception = processException(e)) {
+          is CommonConnectionException -> Result.exception(exception)
 
-        else -> {
-          ExceptionUtil.handleError(exception)
-          Result.exception(exception)
+          else -> {
+            ExceptionUtil.handleError(exception)
+            Result.exception(exception)
+          }
         }
       }
     }
-  }
 
-  override suspend fun executeIMAPAction(action: suspend (store: Store) -> Unit) = withContext(Dispatchers.IO) {
-    try {
-      LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): start ${action.javaClass}")
-      if (!isConnected()) {
-        connect()
+  override suspend fun executeIMAPAction(action: suspend (store: Store) -> Unit) =
+    withContext(Dispatchers.IO) {
+      try {
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "executeIMAPAction(${accountEntity.email}): start ${action.javaClass}"
+        )
+        if (!isConnected()) {
+          connect()
+        }
+
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "executeIMAPAction(${accountEntity.email}): start invoke ${action.javaClass}"
+        )
+        action.invoke(store)
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} completed"
+        )
+      } catch (e: Exception) {
+        LogsUtil.d(
+          IMAPStoreConnection::class.java.simpleName,
+          "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} failed",
+          e
+        )
+        val exception = processException(e)
+        throw exception
       }
-
-      LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): start invoke ${action.javaClass}")
-      action.invoke(store)
-      LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} completed")
-    } catch (e: Exception) {
-      LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} failed", e)
-      val exception = processException(e)
-      throw exception
     }
-  }
 
   private fun processException(e: Throwable): Throwable {
     return when (e) {

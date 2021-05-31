@@ -33,7 +33,7 @@ import ja.burhanrashid52.photoeditor.PhotoEditorView
  *         E-mail: DenBond7@gmail.com
  */
 class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
-    RadioGroup.OnCheckedChangeListener {
+  RadioGroup.OnCheckedChangeListener {
   private lateinit var photoEditor: PhotoEditor
   private lateinit var bitmap: Bitmap
   private lateinit var photoEditorView: PhotoEditorView
@@ -46,14 +46,18 @@ class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val bitmapByteArray = arguments?.getByteArray(KEY_BITMAP_BYTES) ?: byteArrayOf()
-    bitmapByteArray.let { bitmap = BitmapFactory.decodeByteArray(bitmapByteArray, 0, bitmapByteArray.size) }
+    bitmapByteArray.let {
+      bitmap = BitmapFactory.decodeByteArray(bitmapByteArray, 0, bitmapByteArray.size)
+    }
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val dialog = AlertDialog.Builder(requireContext())
 
-    val view = LayoutInflater.from(context).inflate(R.layout.fragment_screenshot_editor,
-        if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false)
+    val view = LayoutInflater.from(context).inflate(
+      R.layout.fragment_screenshot_editor,
+      if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false
+    )
 
     initViews(view)
 
@@ -93,8 +97,10 @@ class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
           }
 
           override fun onFailure(e: Exception?) {
-            Toast.makeText(context, e?.message ?: e?.javaClass?.simpleName
-            ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+              context, e?.message ?: e?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT
+            ).show()
           }
         })
       }
@@ -129,7 +135,10 @@ class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
 
   companion object {
     private val KEY_BITMAP_BYTES =
-        GeneralUtil.generateUniqueExtraKey("KEY_BITMAP_BYTES", EditScreenshotDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_BITMAP_BYTES",
+        EditScreenshotDialogFragment::class.java
+      )
 
     fun newInstance(bitmapByteArray: ByteArray?): EditScreenshotDialogFragment {
       val fragment = EditScreenshotDialogFragment()

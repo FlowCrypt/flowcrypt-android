@@ -19,39 +19,40 @@ import com.google.gson.annotations.SerializedName
  *         E-mail: DenBond7@gmail.com
  */
 data class MicrosoftOAuth2TokenResponse constructor(
-    @SerializedName("access_token") @Expose val accessToken: String? = null,
-    @SerializedName("token_type") @Expose val tokenType: String? = null,
-    @SerializedName("expires_in") @Expose val expiresIn: Long? = null,
-    @Expose val scope: String? = null,
-    @SerializedName("refresh_token") @Expose val refreshToken: String? = null,
-    @SerializedName("id_token") @Expose val idToken: String? = null,
-    @Expose val error: String? = null,
-    @SerializedName("error_description") @Expose val errorDescription: String? = null,
-    @SerializedName("error_codes") @Expose val errorCodes: IntArray? = null,
-    @Expose val timestamp: String? = null,
-    @SerializedName("trace_id") @Expose val traceId: String? = null,
-    @SerializedName("correlation_id") @Expose val correlationId: String? = null
+  @SerializedName("access_token") @Expose val accessToken: String? = null,
+  @SerializedName("token_type") @Expose val tokenType: String? = null,
+  @SerializedName("expires_in") @Expose val expiresIn: Long? = null,
+  @Expose val scope: String? = null,
+  @SerializedName("refresh_token") @Expose val refreshToken: String? = null,
+  @SerializedName("id_token") @Expose val idToken: String? = null,
+  @Expose val error: String? = null,
+  @SerializedName("error_description") @Expose val errorDescription: String? = null,
+  @SerializedName("error_codes") @Expose val errorCodes: IntArray? = null,
+  @Expose val timestamp: String? = null,
+  @SerializedName("trace_id") @Expose val traceId: String? = null,
+  @SerializedName("correlation_id") @Expose val correlationId: String? = null
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readValue(Long::class.java.classLoader) as? Long,
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.createIntArray(),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.readString())
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readValue(Long::class.java.classLoader) as? Long,
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.createIntArray(),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.readString()
+  )
 
   override val apiError: ApiError?
     get() = if (error != null) {
       ApiError(
-          code = errorCodes?.firstOrNull(),
-          msg = error + "\n" + errorDescription,
-          internal = error
+        code = errorCodes?.firstOrNull(),
+        msg = error + "\n" + errorDescription,
+        internal = error
       )
     } else null
 

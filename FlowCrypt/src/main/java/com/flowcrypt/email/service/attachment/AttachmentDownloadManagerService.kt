@@ -53,7 +53,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.HashMap
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future

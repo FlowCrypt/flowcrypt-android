@@ -48,13 +48,19 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     hasHtml = arguments?.getBoolean(KEY_INFO_HAS_HTML, args.hasHtml) ?: false
     useLinkify = arguments?.getBoolean(KEY_INFO_USE_LINKIFY, args.useLinkify) ?: false
 
-    dialogTitle = arguments?.getString(KEY_DIALOG_TITLE,
-        args.dialogTitle ?: getString(R.string.info))
+    dialogTitle = arguments?.getString(
+      KEY_DIALOG_TITLE,
+      args.dialogTitle ?: getString(R.string.info)
+    )
     dialogMsg = arguments?.getString(KEY_DIALOG_MESSAGE) ?: args.dialogMsg
-    positiveBtnTitle = arguments?.getString(KEY_POSITIVE_BUTTON_TITLE,
-        args.positiveButtonTitle ?: getString(R.string.yes))
-    negativeBtnTitle = arguments?.getString(KEY_NEGATIVE_BUTTON_TITLE,
-        args.negativeButtonTitle ?: getString(R.string.no))
+    positiveBtnTitle = arguments?.getString(
+      KEY_POSITIVE_BUTTON_TITLE,
+      args.positiveButtonTitle ?: getString(R.string.yes)
+    )
+    negativeBtnTitle = arguments?.getString(
+      KEY_NEGATIVE_BUTTON_TITLE,
+      args.negativeButtonTitle ?: getString(R.string.no)
+    )
     isCancelable = arguments?.getBoolean(KEY_IS_CANCELABLE, args.isCancelable) ?: false
     requestCode = arguments?.getInt(KEY_REQUEST_CODE, args.requestCode) ?: 0
   }
@@ -69,14 +75,16 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     }
     dialogBuilder.setMessage(msg)
 
-    dialogBuilder.setPositiveButton(positiveBtnTitle
+    dialogBuilder.setPositiveButton(
+      positiveBtnTitle
     ) { _, _ ->
       sendResult(RESULT_OK)
       listener?.onDialogButtonClick(requestCode, RESULT_OK)
       setNavigationResult(KEY_RESULT, Result(requestCode, RESULT_OK))
     }
 
-    dialogBuilder.setNegativeButton(negativeBtnTitle
+    dialogBuilder.setNegativeButton(
+      negativeBtnTitle
     ) { _, _ ->
       sendResult(RESULT_CANCELED)
       listener?.onDialogButtonClick(requestCode, RESULT_CANCELED)
@@ -106,8 +114,9 @@ class TwoWayDialogFragment : BaseDialogFragment() {
 
   data class Result(val requestCode: Int, val resultCode: Int) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readInt(),
-        parcel.readInt())
+      parcel.readInt(),
+      parcel.readInt()
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
       parcel.writeInt(requestCode)
@@ -131,7 +140,7 @@ class TwoWayDialogFragment : BaseDialogFragment() {
 
   companion object {
     val KEY_RESULT =
-        GeneralUtil.generateUniqueExtraKey("KEY_RESULT", TwoWayDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_RESULT", TwoWayDialogFragment::class.java)
 
     /** Standard activity result: operation canceled.  */
     const val RESULT_CANCELED = 0
@@ -140,26 +149,34 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     const val RESULT_OK = 1
 
     private val KEY_REQUEST_CODE =
-        GeneralUtil.generateUniqueExtraKey("KEY_REQUEST_CODE", TwoWayDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_REQUEST_CODE", TwoWayDialogFragment::class.java)
     private val KEY_DIALOG_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_TITLE", TwoWayDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_TITLE", TwoWayDialogFragment::class.java)
     private val KEY_DIALOG_MESSAGE =
-        GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_MESSAGE", TwoWayDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_MESSAGE", TwoWayDialogFragment::class.java)
     private val KEY_POSITIVE_BUTTON_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_POSITIVE_BUTTON_TITLE", TwoWayDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_POSITIVE_BUTTON_TITLE",
+        TwoWayDialogFragment::class.java
+      )
     private val KEY_NEGATIVE_BUTTON_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_NEGATIVE_BUTTON_TITLE", TwoWayDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_NEGATIVE_BUTTON_TITLE",
+        TwoWayDialogFragment::class.java
+      )
     private val KEY_IS_CANCELABLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_IS_CANCELABLE", TwoWayDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_IS_CANCELABLE", TwoWayDialogFragment::class.java)
 
     @JvmStatic
-    fun newInstance(requestCode: Int = 0, dialogTitle: String? = null,
-                    dialogMsg: String? = null,
-                    positiveButtonTitle: String? = null,
-                    negativeButtonTitle: String? = null,
-                    isCancelable: Boolean = true,
-                    hasHtml: Boolean = false,
-                    useLinkify: Boolean = false): TwoWayDialogFragment {
+    fun newInstance(
+      requestCode: Int = 0, dialogTitle: String? = null,
+      dialogMsg: String? = null,
+      positiveButtonTitle: String? = null,
+      negativeButtonTitle: String? = null,
+      isCancelable: Boolean = true,
+      hasHtml: Boolean = false,
+      useLinkify: Boolean = false
+    ): TwoWayDialogFragment {
       val args = Bundle()
       args.putInt(KEY_REQUEST_CODE, requestCode)
       args.putString(KEY_DIALOG_TITLE, dialogTitle)

@@ -83,7 +83,11 @@ abstract class BaseFragment : Fragment() {
     initAccountViewModel()
   }
 
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View? {
     return if (contentResourceId > 0) {
       inflater.inflate(contentResourceId, container, false)
     } else super.onCreateView(inflater, container, savedInstanceState)
@@ -135,12 +139,16 @@ abstract class BaseFragment : Fragment() {
    * @param duration How long to display the message.
    */
   @JvmOverloads
-  fun showInfoSnackbar(view: View? = getView(), msgText: String?, duration: Int = Snackbar
-      .LENGTH_INDEFINITE)
+  fun showInfoSnackbar(
+    view: View? = getView(), msgText: String?, duration: Int = Snackbar
+      .LENGTH_INDEFINITE
+  )
       : Snackbar? {
     view?.let {
-      snackBar = Snackbar.make(it, msgText
-          ?: "", duration).setAction(android.R.string.ok) {}.apply {
+      snackBar = Snackbar.make(
+        it, msgText
+          ?: "", duration
+      ).setAction(android.R.string.ok) {}.apply {
         show()
       }
       return snackBar
@@ -157,8 +165,10 @@ abstract class BaseFragment : Fragment() {
    * @param btnName         The text of the Snackbar button
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View, msgText: String, btnName: String,
-                   onClickListener: View.OnClickListener): Snackbar? {
+  fun showSnackbar(
+    view: View, msgText: String, btnName: String,
+    onClickListener: View.OnClickListener
+  ): Snackbar? {
     return showSnackbar(view, msgText, btnName, Snackbar.LENGTH_INDEFINITE, onClickListener)
   }
 
@@ -171,8 +181,10 @@ abstract class BaseFragment : Fragment() {
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View? = getView(), msgText: String, btnName: String, duration: Int,
-                   onClickListener: View.OnClickListener): Snackbar? {
+  fun showSnackbar(
+    view: View? = getView(), msgText: String, btnName: String, duration: Int,
+    onClickListener: View.OnClickListener
+  ): Snackbar? {
     view?.let {
       snackBar = Snackbar.make(it, msgText, duration).setAction(btnName, onClickListener).apply {
         show()
@@ -210,19 +222,26 @@ abstract class BaseFragment : Fragment() {
     }
   }
 
-  protected fun showAuthIssueHint(recoverableIntent: Intent? = null, duration: Int = Snackbar.LENGTH_LONG) {
+  protected fun showAuthIssueHint(
+    recoverableIntent: Intent? = null,
+    duration: Int = Snackbar.LENGTH_LONG
+  ) {
     val msgText = when (account?.accountType) {
-      AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> getString(R.string.auth_failure_hint, getString(R.string.app_name))
+      AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> getString(
+        R.string.auth_failure_hint,
+        getString(R.string.app_name)
+      )
       else -> getString(R.string.auth_failure_hint_regular_accounts)
     }
     showSnackbar(
-        view = requireView(),
-        msgText = msgText,
-        btnName = getString(R.string.fix),
-        duration = duration
+      view = requireView(),
+      msgText = msgText,
+      btnName = getString(R.string.fix),
+      duration = duration
     ) {
       context?.let { context ->
-        val intent = ErrorNotificationManager.getFixAuthIssueIntent(context, account, recoverableIntent)
+        val intent =
+          ErrorNotificationManager.getFixAuthIssueIntent(context, account, recoverableIntent)
         if (intent.resolveActivity(context.packageManager) != null) {
           startActivity(intent)
         }

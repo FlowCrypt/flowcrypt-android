@@ -63,10 +63,10 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testErrorLogin() {
@@ -93,7 +93,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     intended(hasComponent(CreateOrImportKeyActivity::class.java.name))
 
     onView(withId(R.id.buttonCreateNewKey))
-        .check(matches(not(isDisplayed())))
+      .check(matches(not(isDisplayed())))
   }
 
   companion object {
@@ -102,48 +102,67 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     const val EMAIL_LOGIN_NOT_VERIFIED = "login_not_verified@example.com"
     const val EMAIL_DOMAIN_RULES_ERROR = "domain_rules_error@example.com"
 
-    val LOGIN_API_ERROR_RESPONSE = LoginResponse(ApiError(400, "Something wrong happened.",
-        "api input: missing key: token"), null)
+    val LOGIN_API_ERROR_RESPONSE = LoginResponse(
+      ApiError(
+        400, "Something wrong happened.",
+        "api input: missing key: token"
+      ), null
+    )
 
-    val DOMAIN_RULES_ERROR_RESPONSE = DomainRulesResponse(ApiError(401,
-        "Not logged in or unknown account", "auth"), null)
+    val DOMAIN_RULES_ERROR_RESPONSE = DomainRulesResponse(
+      ApiError(
+        401,
+        "Not logged in or unknown account", "auth"
+      ), null
+    )
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
+    val mockWebServerRule =
+      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          val gson =
+            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+          val model =
+            gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
 
-        if (request.path.equals("/account/login")) {
-          when (model.account) {
-            EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
+          if (request.path.equals("/account/login")) {
+            when (model.account) {
+              EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
 
-            EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
+              EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
 
-            EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
+              EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
 
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+              EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+            }
           }
-        }
 
-        if (request.path.equals("/account/get")) {
-          when (model.account) {
-            EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
+          if (request.path.equals("/account/get")) {
+            when (model.account) {
+              EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(DOMAIN_RULES_ERROR_RESPONSE))
 
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(DomainRulesResponse(null, DomainRules(listOf
-                ("NO_PRV_CREATE", "NO_PRV_BACKUP")))))
+              EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+                .setBody(
+                  gson.toJson(
+                    DomainRulesResponse(
+                      null, DomainRules(
+                        listOf
+                          ("NO_PRV_CREATE", "NO_PRV_BACKUP")
+                      )
+                    )
+                  )
+                )
+            }
           }
-        }
 
-        return MockResponse().setResponseCode(404)
-      }
-    })
+          return MockResponse().setResponseCode(404)
+        }
+      })
   }
 }

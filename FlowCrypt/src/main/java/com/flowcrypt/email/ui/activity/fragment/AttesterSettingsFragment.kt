@@ -103,13 +103,17 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
 
           Result.Status.EXCEPTION -> {
             sRL?.isRefreshing = false
-            showStatus(it.exception?.message ?: it.exception?.javaClass?.simpleName ?: getString(R
-                .string.unknown_error))
+            showStatus(
+              it.exception?.message
+                ?: it.exception?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error)
+            )
             showSnackbar(
-                view = contentView,
-                msgText = getString(R.string.an_error_has_occurred),
-                btnName = getString(R.string.retry),
-                duration = Snackbar.LENGTH_LONG) {
+              view = contentView,
+              msgText = getString(R.string.an_error_has_occurred),
+              btnName = getString(R.string.retry),
+              duration = Snackbar.LENGTH_LONG
+            ) {
               accountKeysInfoViewModel.refreshData()
             }
 

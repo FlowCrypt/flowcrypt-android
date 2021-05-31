@@ -19,7 +19,7 @@ import com.google.gson.GsonBuilder
  */
 object NodeGson {
   val gson: Gson = GsonBuilder()
-      .registerTypeAdapter(MsgBlock::class.java, MsgBlockDeserializer())
-      .excludeFieldsWithoutExposeAnnotation()
-      .create()
+    .registerTypeAdapter(MsgBlock::class.java, MsgBlockDeserializer())
+    .excludeFieldsWithoutExposeAnnotation()
+    .create()
 }

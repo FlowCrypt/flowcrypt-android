@@ -59,20 +59,22 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ImportPrivateKeyActivity>(
-      intent = ImportPrivateKeyActivity.getIntent(
-          context = getTargetContext(),
-          accountEntity = account,
-          isSyncEnabled = false,
-          title = getTargetContext().getString(R.string.import_private_key),
-          throwErrorIfDuplicateFoundEnabled = true,
-          cls = ImportPrivateKeyActivity::class.java))
+    intent = ImportPrivateKeyActivity.getIntent(
+      context = getTargetContext(),
+      accountEntity = account,
+      isSyncEnabled = false,
+      title = getTargetContext().getString(R.string.import_private_key),
+      throwErrorIfDuplicateFoundEnabled = true,
+      cls = ImportPrivateKeyActivity::class.java
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testErrorWhenImportingKeyFromFile() {
@@ -80,8 +82,8 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     addTextToClipboard("private key", privateKey)
 
     Espresso.onView(ViewMatchers.withId(R.id.buttonLoadFromClipboard))
-        .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        .perform(ViewActions.click())
+      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+      .perform(ViewActions.click())
 
     isDialogWithTextDisplayed(decorView, ERROR_MESSAGE_FROM_ATTESTER)
   }
@@ -92,16 +94,24 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     list.add(keyDetails)
     intent.putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
 
-    Intents.intending(IntentMatchers.hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
+    Intents.intending(
+      IntentMatchers.hasComponent(
+        ComponentName(
+          getTargetContext(),
+          CheckKeysActivity::class.java
+        )
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
   }
 
   companion object {
-    private const val ERROR_MESSAGE_FROM_ATTESTER = "Could not find LDAP pubkey on a LDAP-only domain for email no.pub@org-rules-test.flowcrypt.com on server keys.flowcrypt.com"
+    private const val ERROR_MESSAGE_FROM_ATTESTER =
+      "Could not find LDAP pubkey on a LDAP-only domain for email no.pub@org-rules-test.flowcrypt.com on server keys.flowcrypt.com"
 
     private lateinit var privateKey: String
     private var keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/no.pub@org-rules-test.flowcrypt.test_orv_default.asc")
+      PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/no.pub@org-rules-test.flowcrypt.test_orv_default.asc")
 
     @BeforeClass
     @JvmStatic
@@ -112,24 +122,36 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        if (request.path.equals("/initial/legacy_submit")) {
-          val requestModel = gson.fromJson(InputStreamReader(request.body.inputStream()), InitialLegacySubmitModel::class.java)
+    val mockWebServerRule =
+      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          val gson =
+            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+          if (request.path.equals("/initial/legacy_submit")) {
+            val requestModel = gson.fromJson(
+              InputStreamReader(request.body.inputStream()),
+              InitialLegacySubmitModel::class.java
+            )
 
-          when {
-            requestModel.email.equals("no.pub@org-rules-test.flowcrypt.com", true) -> {
-              val model = gson.fromJson(
-                  InputStreamReader(ByteArrayInputStream(TestGeneralUtil.readObjectFromResourcesAsByteArray("4.json"))),
-                  InitialLegacySubmitResponse::class.java)
-              return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+            when {
+              requestModel.email.equals("no.pub@org-rules-test.flowcrypt.com", true) -> {
+                val model = gson.fromJson(
+                  InputStreamReader(
+                    ByteArrayInputStream(
+                      TestGeneralUtil.readObjectFromResourcesAsByteArray(
+                        "4.json"
+                      )
+                    )
+                  ),
+                  InitialLegacySubmitResponse::class.java
+                )
+                return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+              }
             }
           }
-        }
 
-        return MockResponse().setResponseCode(404)
-      }
-    })
+          return MockResponse().setResponseCode(404)
+        }
+      })
   }
 }

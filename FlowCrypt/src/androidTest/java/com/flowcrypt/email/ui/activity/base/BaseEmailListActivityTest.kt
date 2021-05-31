@@ -33,14 +33,19 @@ abstract class BaseEmailListActivityTest : BaseTest() {
 
   protected fun testRunMsgDetailsActivity(position: Int) {
     onView(withId(R.id.rVMsgs))
-        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(position, click()))
+      .perform(
+        RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
+          position,
+          click()
+        )
+      )
 
     intended(hasComponent(MessageDetailsActivity::class.java.name))
     onView(withId(R.id.textViewSenderAddress))
-        .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
+      .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
     onView(withId(R.id.textViewSubject))
-        .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
+      .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
     onView(withId(R.id.textViewDate))
-        .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
+      .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
   }
 }

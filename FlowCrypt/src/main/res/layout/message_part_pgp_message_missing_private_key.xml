@@ -29,8 +29,8 @@ Recusandae velit sit veniam asperiores nisi. Eius tempore ab voluptatum dolorum 
         style="@style/AppWidget.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:text="@string/import_missing_key"
         android:theme="@style/AppWidget.Button.Green" />
 
@@ -39,8 +39,8 @@ Recusandae velit sit veniam asperiores nisi. Eius tempore ab voluptatum dolorum 
         style="@style/AppWidget.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:text="@string/have_not_any_other_key"
         android:theme="@style/AppWidget.Button.Green" />
 </LinearLayout>

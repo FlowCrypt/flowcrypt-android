@@ -68,16 +68,18 @@ abstract class BaseDialogFragment : DialogFragment() {
   }
 
   private fun registerNodeIdlingResources() {
-    Node.getInstance(requireActivity().application).liveData.observe(this, Observer { nodeInitResult ->
-      onNodeStateChanged(nodeInitResult)
-      nodeIdlingResource.setIdleState(nodeInitResult.isReady)
-    })
+    Node.getInstance(requireActivity().application).liveData.observe(
+      this,
+      Observer { nodeInitResult ->
+        onNodeStateChanged(nodeInitResult)
+        nodeIdlingResource.setIdleState(nodeInitResult.isReady)
+      })
   }
 
   companion object {
     val KEY_INFO_HAS_HTML =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_HAS_HTML", BaseDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_INFO_HAS_HTML", BaseDialogFragment::class.java)
     val KEY_INFO_USE_LINKIFY =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_USE_LINKIFY", BaseDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_INFO_USE_LINKIFY", BaseDialogFragment::class.java)
   }
 }

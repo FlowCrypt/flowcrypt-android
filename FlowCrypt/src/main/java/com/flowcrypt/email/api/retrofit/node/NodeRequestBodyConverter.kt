@@ -23,8 +23,9 @@ import java.nio.charset.StandardCharsets
  * E-mail: DenBond7@gmail.com
  */
 class NodeRequestBodyConverter<F> internal constructor(
-    private val gson: Gson,
-    private val adapter: TypeAdapter<F>) : Converter<F, RequestBody> {
+  private val gson: Gson,
+  private val adapter: TypeAdapter<F>
+) : Converter<F, RequestBody> {
 
   override fun convert(value: F): RequestBody {
     if (value !is NodeRequest) {

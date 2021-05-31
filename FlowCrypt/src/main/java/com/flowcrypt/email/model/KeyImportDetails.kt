@@ -23,14 +23,22 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  * Time: 12:56
  * E-mail: DenBond7@gmail.com
  */
-data class KeyImportDetails constructor(val keyName: String? = null,
-                                        val value: String,
-                                        val sourceType: SourceType,
-                                        val isPrivateKey: Boolean = false,
-                                        val pgpContact: PgpContact? = null) : Parcelable {
+data class KeyImportDetails constructor(
+  val keyName: String? = null,
+  val value: String,
+  val sourceType: SourceType,
+  val isPrivateKey: Boolean = false,
+  val pgpContact: PgpContact? = null
+) : Parcelable {
 
   constructor(value: String, sourceType: SourceType) : this(null, value, sourceType, true)
-  constructor(value: String, sourceType: SourceType, isPrivateKey: Boolean) : this(null, value, sourceType, isPrivateKey, null)
+  constructor(value: String, sourceType: SourceType, isPrivateKey: Boolean) : this(
+    null,
+    value,
+    sourceType,
+    isPrivateKey,
+    null
+  )
 
   /**
    * The key available types.
@@ -64,11 +72,11 @@ data class KeyImportDetails constructor(val keyName: String? = null,
   }
 
   constructor(source: Parcel) : this(
-      source.readString(),
-      source.readString()!!,
-      source.readParcelable(SourceType::class.java.classLoader)!!,
-      source.readInt() == 1,
-      source.readParcelable(PgpContact::class.java.classLoader)!!
+    source.readString(),
+    source.readString()!!,
+    source.readParcelable(SourceType::class.java.classLoader)!!,
+    source.readInt() == 1,
+    source.readParcelable(PgpContact::class.java.classLoader)!!
   )
 
   override fun describeContents(): Int {
@@ -76,19 +84,20 @@ data class KeyImportDetails constructor(val keyName: String? = null,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeString(keyName)
-        writeString(value)
-        writeParcelable(sourceType, flags)
-        writeInt((if (isPrivateKey) 1 else 0))
-        writeParcelable(pgpContact, flags)
-      }
+    with(dest) {
+      writeString(keyName)
+      writeString(value)
+      writeParcelable(sourceType, flags)
+      writeInt((if (isPrivateKey) 1 else 0))
+      writeParcelable(pgpContact, flags)
+    }
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<KeyImportDetails> = object : Parcelable.Creator<KeyImportDetails> {
-      override fun createFromParcel(source: Parcel): KeyImportDetails = KeyImportDetails(source)
-      override fun newArray(size: Int): Array<KeyImportDetails?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<KeyImportDetails> =
+      object : Parcelable.Creator<KeyImportDetails> {
+        override fun createFromParcel(source: Parcel): KeyImportDetails = KeyImportDetails(source)
+        override fun newArray(size: Int): Array<KeyImportDetails?> = arrayOfNulls(size)
+      }
   }
 }

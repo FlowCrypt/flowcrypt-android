@@ -38,7 +38,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
   override fun onConfirmPassPhraseSuccess() {
     privateKeysViewModel.changePassphrase(
-        Passphrase.fromPassword(editTextKeyPassword.text.toString()))
+      Passphrase.fromPassword(editTextKeyPassword.text.toString())
+    )
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +53,11 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
     if (isBackEnabled) {
       super.onBackPressed()
     } else {
-      Toast.makeText(this, R.string.please_wait_while_pass_phrase_will_be_changed, Toast.LENGTH_SHORT).show()
+      Toast.makeText(
+        this,
+        R.string.please_wait_while_pass_phrase_will_be_changed,
+        Toast.LENGTH_SHORT
+      ).show()
     }
   }
 
@@ -71,7 +76,11 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
     when (requestCode) {
       REQUEST_CODE_BACKUP_WITH_OPTION -> {
         when (resultCode) {
-          Activity.RESULT_OK -> Toast.makeText(this, R.string.backed_up_successfully, Toast.LENGTH_SHORT).show()
+          Activity.RESULT_OK -> Toast.makeText(
+            this,
+            R.string.backed_up_successfully,
+            Toast.LENGTH_SHORT
+          ).show()
         }
         setResult(Activity.RESULT_OK)
         finish()
@@ -94,7 +103,10 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private fun runBackupKeysActivity() {
     isBackEnabled = true
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
-    startActivityForResult(Intent(this, BackupKeysActivity::class.java), REQUEST_CODE_BACKUP_WITH_OPTION)
+    startActivityForResult(
+      Intent(this, BackupKeysActivity::class.java),
+      REQUEST_CODE_BACKUP_WITH_OPTION
+    )
   }
 
   private fun setupLoadPrivateKeysViewModel() {
@@ -144,7 +156,11 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
                 setResult(Activity.RESULT_OK)
                 finish()
               } else {
-                activeAccount?.let { accountEntity -> loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity) }
+                activeAccount?.let { accountEntity ->
+                  loadPrivateKeysViewModel.fetchAvailableKeys(
+                    accountEntity
+                  )
+                }
               }
             }
 

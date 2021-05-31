@@ -27,8 +27,10 @@ class RepeatedRule : BaseRule() {
     return result
   }
 
-  private class RepeatStatement internal constructor(private val statement: Statement, private val repeat: Int)
-    : Statement() {
+  private class RepeatStatement(
+    private val statement: Statement,
+    private val repeat: Int
+  ) : Statement() {
 
     override fun evaluate() {
       for (i in 0 until repeat) {

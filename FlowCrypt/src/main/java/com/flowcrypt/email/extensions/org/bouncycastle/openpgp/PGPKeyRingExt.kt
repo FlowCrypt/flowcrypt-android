@@ -32,23 +32,23 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
   val keyRingInfo = KeyRingInfo(this)
 
   val algo = Algo(
-      algorithm = keyRingInfo.algorithm.name,
-      algorithmId = keyRingInfo.algorithm.algorithmId,
-      bits = if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else 0,
-      curve = when (keyRingInfo.algorithm) {
-        PublicKeyAlgorithm.ECDSA, PublicKeyAlgorithm.ECDH -> KeyInfo.getCurveName(publicKey)
-        PublicKeyAlgorithm.EDDSA -> EdDSACurve._Ed25519.getName() // for EDDSA KeyInfo.getCurveName(publicKey) return null
-        else -> null
-      }
+    algorithm = keyRingInfo.algorithm.name,
+    algorithmId = keyRingInfo.algorithm.algorithmId,
+    bits = if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else 0,
+    curve = when (keyRingInfo.algorithm) {
+      PublicKeyAlgorithm.ECDSA, PublicKeyAlgorithm.ECDH -> KeyInfo.getCurveName(publicKey)
+      PublicKeyAlgorithm.EDDSA -> EdDSACurve._Ed25519.getName() // for EDDSA KeyInfo.getCurveName(publicKey) return null
+      else -> null
+    }
   )
 
   val keyIdList = publicKeys.iterator().asSequence().toList()
-      .map {
-        val fingerprint = OpenPgpV4Fingerprint(it)
-        KeyId(
-            fingerprint = fingerprint.toString()
-        )
-      }
+    .map {
+      val fingerprint = OpenPgpV4Fingerprint(it)
+      KeyId(
+        fingerprint = fingerprint.toString()
+      )
+    }
 
   if (keyIdList.isEmpty()) {
     throw IllegalArgumentException("There are no fingerprints")

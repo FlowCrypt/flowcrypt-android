@@ -21,33 +21,37 @@ import java.util.concurrent.TimeUnit
  *         Time: 5:32 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MsgsCacheCleanerWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class MsgsCacheCleanerWorker(context: Context, params: WorkerParameters) :
+  CoroutineWorker(context, params) {
   override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        if (isStopped) {
-          return@withContext Result.success()
-        }
-
-        try {
-          val msgDiskLruCache = MsgsCacheManager.diskLruCache
-          val snapshots = msgDiskLruCache.snapshots()
-
-          val currentTimeInMilliseconds = System.currentTimeMillis()
-          while (snapshots.hasNext()) {
-            val snapshot = snapshots.next()
-            if (currentTimeInMilliseconds - snapshot.creationDateInMilliseconds > MAX_FILE_LIFETIME_DURATION) {
-              msgDiskLruCache.remove(snapshot.key())
-              LogsUtil.d(MsgsCacheCleanerWorker::class.java.simpleName, "${snapshot.key()} has been removed")
-            }
-          }
-
-          return@withContext Result.success()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          return@withContext Result.failure()
-        }
+    withContext(Dispatchers.IO) {
+      if (isStopped) {
+        return@withContext Result.success()
       }
+
+      try {
+        val msgDiskLruCache = MsgsCacheManager.diskLruCache
+        val snapshots = msgDiskLruCache.snapshots()
+
+        val currentTimeInMilliseconds = System.currentTimeMillis()
+        while (snapshots.hasNext()) {
+          val snapshot = snapshots.next()
+          if (currentTimeInMilliseconds - snapshot.creationDateInMilliseconds > MAX_FILE_LIFETIME_DURATION) {
+            msgDiskLruCache.remove(snapshot.key())
+            LogsUtil.d(
+              MsgsCacheCleanerWorker::class.java.simpleName,
+              "${snapshot.key()} has been removed"
+            )
+          }
+        }
+
+        return@withContext Result.success()
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        return@withContext Result.failure()
+      }
+    }
 
   companion object {
     val NAME = MsgsCacheCleanerWorker::class.java.simpleName

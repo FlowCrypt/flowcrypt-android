@@ -41,32 +41,35 @@ import org.junit.runner.RunWith
 class CreatePrivateKeyActivityTest : BasePassphraseActivityTest() {
 
   override val activityScenarioRule = activityScenarioRule<CreatePrivateKeyActivity>(
-      CreatePrivateKeyActivity.newIntent(this@CreatePrivateKeyActivityTest.getTargetContext(), AccountDaoManager.getUserWithMoreThan21Letters())
+    CreatePrivateKeyActivity.newIntent(
+      this@CreatePrivateKeyActivityTest.getTargetContext(),
+      AccountDaoManager.getUserWithMoreThan21Letters()
+    )
   )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   @DependsOnMailServer
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
-        .check(matches(isDisplayed()))
-        .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonSetPassPhrase))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.editTextKeyPasswordSecond))
-        .check(matches(isDisplayed()))
-        .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonConfirmPassPhrases))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.buttonSuccess))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 }

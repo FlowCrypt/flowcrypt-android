@@ -30,7 +30,7 @@ import com.sun.mail.imap.protocol.SearchSequence
  * E-mail: DenBond7@gmail.com
  */
 class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextListener,
-    MenuItem.OnActionExpandListener {
+  MenuItem.OnActionExpandListener {
 
   private var initQuery: String? = null
   override var currentFolder: LocalFolder? = null
@@ -52,8 +52,10 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
       this.initQuery = intent.getStringExtra(EXTRA_KEY_QUERY)
       val incomingFolder: LocalFolder? = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
       if (incomingFolder != null) {
-        this.currentFolder = incomingFolder.copy(folderAlias = SEARCH_FOLDER_NAME,
-            searchQuery = initQuery, msgCount = 0)
+        this.currentFolder = incomingFolder.copy(
+          folderAlias = SEARCH_FOLDER_NAME,
+          searchQuery = initQuery, msgCount = 0
+        )
       }
 
       onFolderChanged(true)
@@ -95,7 +97,8 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
 
   override fun onQueryTextSubmit(query: String): Boolean {
     if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
-        && !SearchSequence.isAscii(query)) {
+      && !SearchSequence.isAscii(query)
+    ) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }
@@ -138,9 +141,11 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   companion object {
     const val SEARCH_FOLDER_NAME = ""
     val EXTRA_KEY_QUERY = GeneralUtil.generateUniqueExtraKey(
-        "EXTRA_KEY_QUERY", SearchMessagesActivity::class.java)
+      "EXTRA_KEY_QUERY", SearchMessagesActivity::class.java
+    )
     val EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey(
-        "EXTRA_KEY_FOLDER", SearchMessagesActivity::class.java)
+      "EXTRA_KEY_FOLDER", SearchMessagesActivity::class.java
+    )
 
     fun newIntent(context: Context, query: String, localFolder: LocalFolder?): Intent {
       val intent = Intent(context, SearchMessagesActivity::class.java)

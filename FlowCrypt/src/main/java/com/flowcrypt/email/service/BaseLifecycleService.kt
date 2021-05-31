@@ -22,8 +22,10 @@ abstract class BaseLifecycleService : LifecycleService() {
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    LogsUtil.d(javaClass.simpleName,
-        "onStartCommand |intent =$intent |flags = $flags |startId = $startId")
+    LogsUtil.d(
+      javaClass.simpleName,
+      "onStartCommand |intent =$intent |flags = $flags |startId = $startId"
+    )
     return super.onStartCommand(intent, flags, startId)
   }
 

@@ -41,6 +41,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
 
   @Volatile
   private lateinit var serviceWorkerLooper: Looper
+
   @Volatile
   private lateinit var serviceWorkerHandler: ServiceWorkerHandler
 
@@ -113,9 +114,10 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private class ReplyHandler(checkClipboardToFindKeyService: CheckClipboardToFindKeyService)
-    : Handler() {
-    private val weakRef: WeakReference<CheckClipboardToFindKeyService> = WeakReference(checkClipboardToFindKeyService)
+  private class ReplyHandler(checkClipboardToFindKeyService: CheckClipboardToFindKeyService) :
+    Handler() {
+    private val weakRef: WeakReference<CheckClipboardToFindKeyService> =
+      WeakReference(checkClipboardToFindKeyService)
 
     override fun handleMessage(message: Message) {
       when (message.what) {
@@ -124,8 +126,10 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
 
           val key = message.obj as String
 
-          checkClipboardToFindKeyService?.keyImportModel = KeyImportModel(null, key,
-              weakRef.get()!!.isPrivateKeyMode, KeyImportDetails.SourceType.CLIPBOARD)
+          checkClipboardToFindKeyService?.keyImportModel = KeyImportModel(
+            null, key,
+            weakRef.get()!!.isPrivateKeyMode, KeyImportDetails.SourceType.CLIPBOARD
+          )
           LogsUtil.d(TAG, "Found a valid private key in clipboard")
         }
       }

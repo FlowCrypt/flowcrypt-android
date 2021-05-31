@@ -6,7 +6,7 @@
 package com.flowcrypt.email.jfixture
 
 import java.lang.reflect.Constructor
-import java.util.*
+import java.util.Comparator
 
 /**
  * @author Denis Bondarenko
@@ -16,11 +16,15 @@ import java.util.*
  */
 class KotlinConstructorParameterCountComparator : Comparator<Constructor<*>> {
   override fun compare(ctor1: Constructor<*>, ctor2: Constructor<*>): Int {
-    val ctor1IsDefaultConstructorMarkerFound = ctor1.genericParameterTypes.any { it.typeName == "kotlin.jvm.internal.DefaultConstructorMarker" }
-    val ctor2IsDefaultConstructorMarkerFound = ctor2.genericParameterTypes.any { it.typeName == "kotlin.jvm.internal.DefaultConstructorMarker" }
+    val ctor1IsDefaultConstructorMarkerFound =
+      ctor1.genericParameterTypes.any { it.typeName == "kotlin.jvm.internal.DefaultConstructorMarker" }
+    val ctor2IsDefaultConstructorMarkerFound =
+      ctor2.genericParameterTypes.any { it.typeName == "kotlin.jvm.internal.DefaultConstructorMarker" }
 
-    val ctor1Parameters = if (ctor1IsDefaultConstructorMarkerFound) 0 else ctor1.genericParameterTypes.size
-    val ctor2Parameters = if (ctor2IsDefaultConstructorMarkerFound) 0 else ctor2.genericParameterTypes.size
+    val ctor1Parameters =
+      if (ctor1IsDefaultConstructorMarkerFound) 0 else ctor1.genericParameterTypes.size
+    val ctor2Parameters =
+      if (ctor2IsDefaultConstructorMarkerFound) 0 else ctor2.genericParameterTypes.size
     return ctor1Parameters.compareTo(ctor2Parameters)
   }
 }

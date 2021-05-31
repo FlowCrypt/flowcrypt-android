@@ -25,4 +25,3 @@ interface ActionQueueDao : BaseDao<ActionQueueEntity> {
   @Query("DELETE FROM action_queue WHERE _id = :id")
   suspend fun deleteByIdSuspend(id: Long)
 }
-

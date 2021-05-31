@@ -42,22 +42,37 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity.newIntent(getTargetContext(), AccountDaoManager.getDefaultAccountDao(), true))
+  override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(
+    CreateOrImportKeyActivity.newIntent(
+      getTargetContext(),
+      AccountDaoManager.getDefaultAccountDao(),
+      true
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testClickOnButtonCreateNewKey() {
-    intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java))))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+    intending(
+      allOf(
+        hasComponent(
+          ComponentName(
+            getTargetContext(),
+            CreatePrivateKeyActivity::class.java
+          )
+        )
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     onView(withId(R.id.buttonCreateNewKey))
-        .check(matches(ViewMatchers.isDisplayed()))
-        .perform(click())
+      .check(matches(ViewMatchers.isDisplayed()))
+      .perform(click())
 
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }

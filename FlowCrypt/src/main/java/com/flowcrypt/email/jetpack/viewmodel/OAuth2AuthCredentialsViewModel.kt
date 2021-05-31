@@ -59,22 +59,40 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
             val jsonObject = getJsonObjectForOpenidConfiguration(requestCode, provider)
             val authorizationServiceDiscovery = AuthorizationServiceDiscovery(jsonObject)
             OAuth2Helper.getMicrosoftAuthorizationRequest(
-                configuration = AuthorizationServiceConfiguration(authorizationServiceDiscovery),
-                redirectUri = context.getString(R.string.microsoft_redirect_uri))
+              configuration = AuthorizationServiceConfiguration(authorizationServiceDiscovery),
+              redirectUri = context.getString(R.string.microsoft_redirect_uri)
+            )
           }
         }
         authorizationRequestLiveData.postValue(Result.success(authRequest))
       } catch (e: IOException) {
         e.printStackTrace()
-        authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(AuthorizationException.GeneralErrors.NETWORK_ERROR, e)))
+        authorizationRequestLiveData.postValue(
+          Result.exception(
+            AuthorizationException.fromTemplate(
+              AuthorizationException.GeneralErrors.NETWORK_ERROR,
+              e
+            )
+          )
+        )
       } catch (e: JSONException) {
         e.printStackTrace()
-        authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(
-            AuthorizationException.GeneralErrors.JSON_DESERIALIZATION_ERROR, e)))
+        authorizationRequestLiveData.postValue(
+          Result.exception(
+            AuthorizationException.fromTemplate(
+              AuthorizationException.GeneralErrors.JSON_DESERIALIZATION_ERROR, e
+            )
+          )
+        )
       } catch (e: AuthorizationServiceDiscovery.MissingArgumentException) {
         e.printStackTrace()
-        authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(
-            AuthorizationException.GeneralErrors.INVALID_DISCOVERY_DOCUMENT, e)))
+        authorizationRequestLiveData.postValue(
+          Result.exception(
+            AuthorizationException.fromTemplate(
+              AuthorizationException.GeneralErrors.INVALID_DISCOVERY_DOCUMENT, e
+            )
+          )
+        )
       } catch (e: Exception) {
         e.printStackTrace()
         authorizationRequestLiveData.postValue(Result.exception(e))
@@ -82,16 +100,20 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
     }
   }
 
-  fun getMicrosoftOAuth2Token(requestCode: Long = 0L, authorizeCode: String, authRequest: AuthorizationRequest) {
+  fun getMicrosoftOAuth2Token(
+    requestCode: Long = 0L,
+    authorizeCode: String,
+    authRequest: AuthorizationRequest
+  ) {
     viewModelScope.launch {
       microsoftOAuth2TokenLiveData.postValue(Result.loading())
       try {
         val response = apiRepository.getMicrosoftOAuth2Token(
-            requestCode = requestCode,
-            context = getApplication(),
-            authorizeCode = authorizeCode,
-            scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
-            codeVerifier = authRequest.codeVerifier ?: ""
+          requestCode = requestCode,
+          context = getApplication(),
+          authorizeCode = authorizeCode,
+          scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
+          codeVerifier = authRequest.codeVerifier ?: ""
         )
 
         if (response.status != Result.Status.SUCCESS) {
@@ -101,8 +123,12 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
             }
 
             Result.Status.EXCEPTION -> {
-              microsoftOAuth2TokenLiveData.postValue(Result.exception(response.exception
-                  ?: RuntimeException()))
+              microsoftOAuth2TokenLiveData.postValue(
+                Result.exception(
+                  response.exception
+                    ?: RuntimeException()
+                )
+              )
             }
 
             else -> {
@@ -112,9 +138,9 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         }
 
         val claims = validateTokenAndGetClaims(
-            idToken = response.data?.idToken ?: "",
-            clientId = authRequest.clientId,
-            jwks = authRequest.configuration.discoveryDoc?.jwksUri.toString()
+          idToken = response.data?.idToken ?: "",
+          clientId = authRequest.clientId,
+          jwks = authRequest.configuration.discoveryDoc?.jwksUri.toString()
         )
 
         val email: String? = claims.getClaimValueAsString(CLAIM_EMAIL)?.toLowerCase(Locale.US)
@@ -126,24 +152,36 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         }
 
         val accessToken = response.data?.accessToken
-            ?: throw NullPointerException("API error: accessToken is null!")
-        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettingsForProvider(email, OAuth2Helper.Provider.MICROSOFT)?.copy(
-            password = "",
-            smtpSignInPassword = null,
-            useOAuth2 = true,
-            displayName = displayName,
-            authTokenInfo = AuthTokenInfo(
-                email = email,
-                accessToken = accessToken,
-                expiresAt = OAuth2Helper.getExpiresAtTime(response.data.expiresIn),
-                refreshToken = KeyStoreCryptoManager.encryptSuspend(response.data.refreshToken)
-            )) ?: throw NullPointerException("Couldn't find default settings for $email!")
+          ?: throw NullPointerException("API error: accessToken is null!")
+        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettingsForProvider(
+          email,
+          OAuth2Helper.Provider.MICROSOFT
+        ).copy(
+          password = "",
+          smtpSignInPassword = null,
+          useOAuth2 = true,
+          displayName = displayName,
+          authTokenInfo = AuthTokenInfo(
+            email = email,
+            accessToken = accessToken,
+            expiresAt = OAuth2Helper.getExpiresAtTime(response.data.expiresIn),
+            refreshToken = KeyStoreCryptoManager.encryptSuspend(response.data.refreshToken)
+          )
+        )
 
         microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials))
       } catch (e: Exception) {
         //we don't store stacktrace to prevent tokens leaks
         if (e is InvalidJwtException) {
-          microsoftOAuth2TokenLiveData.postValue(Result.exception(InvalidJwtException("JWT validation was failed!\n\n", e.errorDetails, e.jwtContext)))
+          microsoftOAuth2TokenLiveData.postValue(
+            Result.exception(
+              InvalidJwtException(
+                "JWT validation was failed!\n\n",
+                e.errorDetails,
+                e.jwtContext
+              )
+            )
+          )
         } else {
           microsoftOAuth2TokenLiveData.postValue(Result.exception(e))
         }
@@ -153,39 +191,42 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
 
   private suspend fun validateTokenAndGetClaims(idToken: String, clientId: String, jwks: String):
       JwtClaims =
-      withContext(Dispatchers.IO) {
-        val httpsJkws = HttpsJwks(jwks)
-        val verificationKeyResolver = HttpsJwksVerificationKeyResolver(httpsJkws)
-        val jwtConsumer = JwtConsumerBuilder()
-            .setVerificationKeyResolver(verificationKeyResolver)
-            .setExpectedAudience(clientId)
-            .setRequireIssuedAt()
-            .setRequireNotBefore()
-            .setRequireExpirationTime()
-            .build()
-        return@withContext jwtConsumer.processToClaims(idToken)
-      }
+    withContext(Dispatchers.IO) {
+      val httpsJkws = HttpsJwks(jwks)
+      val verificationKeyResolver = HttpsJwksVerificationKeyResolver(httpsJkws)
+      val jwtConsumer = JwtConsumerBuilder()
+        .setVerificationKeyResolver(verificationKeyResolver)
+        .setExpectedAudience(clientId)
+        .setRequireIssuedAt()
+        .setRequireNotBefore()
+        .setRequireExpirationTime()
+        .build()
+      return@withContext jwtConsumer.processToClaims(idToken)
+    }
 
-  private suspend fun getJsonObjectForOpenidConfiguration(requestCode: Long, provider: OAuth2Helper.Provider): JSONObject =
-      withContext(Dispatchers.IO) {
-        val jsonObjectResult = apiRepository.getOpenIdConfiguration(
-            requestCode = requestCode,
-            context = getApplication(),
-            url = provider.openidConfigurationUrl
-        )
+  private suspend fun getJsonObjectForOpenidConfiguration(
+    requestCode: Long,
+    provider: OAuth2Helper.Provider
+  ): JSONObject =
+    withContext(Dispatchers.IO) {
+      val jsonObjectResult = apiRepository.getOpenIdConfiguration(
+        requestCode = requestCode,
+        context = getApplication(),
+        url = provider.openidConfigurationUrl
+      )
 
-        when (jsonObjectResult.status) {
-          Result.Status.SUCCESS -> {
-            return@withContext JSONObject(jsonObjectResult.data.toString())
-          }
-
-          Result.Status.EXCEPTION -> {
-            throw jsonObjectResult.exception ?: IOException("Couldn't fetch configurations")
-          }
-
-          else -> throw IOException("Couldn't fetch configurations")
+      when (jsonObjectResult.status) {
+        Result.Status.SUCCESS -> {
+          return@withContext JSONObject(jsonObjectResult.data.toString())
         }
+
+        Result.Status.EXCEPTION -> {
+          throw jsonObjectResult.exception ?: IOException("Couldn't fetch configurations")
+        }
+
+        else -> throw IOException("Couldn't fetch configurations")
       }
+    }
 
 
   companion object {

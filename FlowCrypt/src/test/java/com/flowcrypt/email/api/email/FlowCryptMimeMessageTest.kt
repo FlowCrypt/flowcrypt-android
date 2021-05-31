@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.email
 import com.flowcrypt.email.extensions.javax.mail.internet.domain
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.*
+import java.util.Properties
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 
@@ -49,7 +49,7 @@ class FlowCryptMimeMessageTest {
 
   private fun extractDomainFromMessageID(messageId: String): String {
     return messageId
-        .substring(messageId.indexOf('@') + 1)
-        .replace(">", "")
+      .substring(messageId.indexOf('@') + 1)
+      .replace(">", "")
   }
 }

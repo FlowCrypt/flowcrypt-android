@@ -22,8 +22,10 @@ import com.flowcrypt.email.model.DialogItem
  * Time: 11:29
  * E-mail: DenBond7@gmail.com
  */
-class DialogItemAdapter(context: Context,
-                        val items: List<DialogItem> = emptyList()) : BaseAdapter() {
+class DialogItemAdapter(
+  context: Context,
+  val items: List<DialogItem> = emptyList()
+) : BaseAdapter() {
   private val inflater: LayoutInflater = LayoutInflater.from(context)
 
   override fun getCount(): Int {
@@ -59,10 +61,15 @@ class DialogItemAdapter(context: Context,
 
   private fun updateView(dialogItem: DialogItem, viewHolder: ViewHolder) {
     viewHolder.textViewItemTitle!!.text = dialogItem.title
-    viewHolder.textViewItemTitle!!.setCompoundDrawablesWithIntrinsicBounds(dialogItem.iconResourceId, 0, 0, 0)
+    viewHolder.textViewItemTitle!!.setCompoundDrawablesWithIntrinsicBounds(
+      dialogItem.iconResourceId,
+      0,
+      0,
+      0
+    )
   }
 
   private class ViewHolder {
-    internal var textViewItemTitle: TextView? = null
+    var textViewItemTitle: TextView? = null
   }
 }

@@ -12,8 +12,8 @@
     android:ellipsize="end"
     android:gravity="center_vertical"
     android:maxLines="2"
-    android:paddingEnd="@dimen/default_margin_big"
     android:paddingStart="@dimen/default_margin_big"
+    android:paddingEnd="@dimen/default_margin_big"
     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
     tools:drawableLeft="@mipmap/ic_account_default_photo"
     tools:text="Switch to standard email" />

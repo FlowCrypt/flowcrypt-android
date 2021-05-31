@@ -31,8 +31,10 @@ import org.pgpainless.util.Passphrase
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
 
-  fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase,
-                passphraseType: KeyEntity.PassphraseType) {
+  fun checkKeys(
+    keys: List<PgpKeyDetails>, passphrase: Passphrase,
+    passphraseType: KeyEntity.PassphraseType
+  ) {
     viewModelScope.launch {
       checkPrvKeysLiveData.value = Result.loading()
       if (passphrase.isEmpty) {
@@ -40,53 +42,61 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
         return@launch
       }
       checkPrvKeysLiveData.value =
-          Result.success(checkKeysInternal(keys, passphrase, passphraseType))
+        Result.success(checkKeysInternal(keys, passphrase, passphraseType))
     }
   }
 
-  private suspend fun checkKeysInternal(keys: List<PgpKeyDetails>,
-                                        passphrase: Passphrase,
-                                        passphraseType: KeyEntity.PassphraseType):
+  private suspend fun checkKeysInternal(
+    keys: List<PgpKeyDetails>,
+    passphrase: Passphrase,
+    passphraseType: KeyEntity.PassphraseType
+  ):
       List<CheckResult> =
-      withContext(Dispatchers.IO) {
-        val context: Context = getApplication()
-        val resultList = mutableListOf<CheckResult>()
-        for (keyDetails in keys) {
-          val copy = keyDetails.copy(passphraseType = passphraseType)
-          var e: Exception? = null
-          if (copy.isPrivate) {
-            val prvKey = copy.privateKey
-            if (prvKey.isNullOrEmpty()) {
-              e = IllegalArgumentException("Empty source")
+    withContext(Dispatchers.IO) {
+      val context: Context = getApplication()
+      val resultList = mutableListOf<CheckResult>()
+      for (keyDetails in keys) {
+        val copy = keyDetails.copy(passphraseType = passphraseType)
+        var e: Exception? = null
+        if (copy.isPrivate) {
+          val prvKey = copy.privateKey
+          if (prvKey.isNullOrEmpty()) {
+            e = IllegalArgumentException("Empty source")
+          } else {
+            if (copy.isFullyDecrypted) {
+              copy.tempPassphrase = passphrase.chars
             } else {
-              if (copy.isFullyDecrypted) {
+              try {
+                PgpKey.decryptKey(prvKey, passphrase)
                 copy.tempPassphrase = passphrase.chars
-              } else {
-                try {
-                  PgpKey.decryptKey(prvKey, passphrase)
-                  copy.tempPassphrase = passphrase.chars
-                } catch (ex: Exception) {
-                  //to prevent leak sensitive info we skip printing stack trace for release builds
-                  if (GeneralUtil.isDebugBuild()) {
-                    ex.printStackTrace()
-                  }
-                  e = WrongPassPhraseException(
-                      message = context.getString(R.string.password_is_incorrect), cause = ex)
+              } catch (ex: Exception) {
+                //to prevent leak sensitive info we skip printing stack trace for release builds
+                if (GeneralUtil.isDebugBuild()) {
+                  ex.printStackTrace()
                 }
+                e = WrongPassPhraseException(
+                  message = context.getString(R.string.password_is_incorrect), cause = ex
+                )
               }
             }
-          } else {
-            e = IllegalArgumentException(context.getString(R.string.not_private_key))
           }
-
-          resultList.add(CheckResult(
-              pgpKeyDetails = copy,
-              passphrase = passphrase.asString ?: throw IllegalArgumentException(),
-              e = e))
+        } else {
+          e = IllegalArgumentException(context.getString(R.string.not_private_key))
         }
-        return@withContext resultList
-      }
 
-  data class CheckResult(val pgpKeyDetails: PgpKeyDetails,
-                         val passphrase: String, val e: Exception? = null)
+        resultList.add(
+          CheckResult(
+            pgpKeyDetails = copy,
+            passphrase = passphrase.asString ?: throw IllegalArgumentException(),
+            e = e
+          )
+        )
+      }
+      return@withContext resultList
+    }
+
+  data class CheckResult(
+    val pgpKeyDetails: PgpKeyDetails,
+    val passphrase: String, val e: Exception? = null
+  )
 }

@@ -14,8 +14,10 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
  *         Time: 5:03 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SelectionNodeKeyDetailsDetails(private val position: Int,
-                                     private val pgpKeyDetails: PgpKeyDetails?) : ItemDetailsLookup.ItemDetails<PgpKeyDetails>() {
+class SelectionNodeKeyDetailsDetails(
+  private val position: Int,
+  private val pgpKeyDetails: PgpKeyDetails?
+) : ItemDetailsLookup.ItemDetails<PgpKeyDetails>() {
   override fun getSelectionKey() = pgpKeyDetails
   override fun getPosition() = position
 }

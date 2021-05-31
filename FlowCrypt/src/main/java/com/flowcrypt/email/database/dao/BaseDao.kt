@@ -81,8 +81,10 @@ interface BaseDao<T> {
 
 
   companion object {
-    fun <M> doOperationViaSteps(stepValue: Int = 50, list: List<M>,
-                                block: (list: Collection<M>) -> Int) {
+    fun <M> doOperationViaSteps(
+      stepValue: Int = 50, list: List<M>,
+      block: (list: Collection<M>) -> Int
+    ) {
       if (list.isNotEmpty()) {
         if (list.size <= stepValue) {
           block(list)
@@ -101,8 +103,10 @@ interface BaseDao<T> {
       }
     }
 
-    suspend fun <M> doOperationViaStepsSuspend(stepValue: Int = 50, list: List<M>,
-                                               block: suspend (list: Collection<M>) -> Int) = withContext(Dispatchers.IO) {
+    suspend fun <M> doOperationViaStepsSuspend(
+      stepValue: Int = 50, list: List<M>,
+      block: suspend (list: Collection<M>) -> Int
+    ) = withContext(Dispatchers.IO) {
       if (list.isNotEmpty()) {
         if (list.size <= stepValue) {
           block(list)
@@ -121,9 +125,11 @@ interface BaseDao<T> {
       }
     }
 
-    suspend fun <M, F> getEntitiesViaStepsSuspend(stepValue: Int = 50,
-                                                  list: List<F>,
-                                                  step: suspend (list: Collection<F>) -> List<M>): List<M> = withContext(Dispatchers.IO) {
+    suspend fun <M, F> getEntitiesViaStepsSuspend(
+      stepValue: Int = 50,
+      list: List<F>,
+      step: suspend (list: Collection<F>) -> List<M>
+    ): List<M> = withContext(Dispatchers.IO) {
       val results = mutableListOf<M>()
       if (list.isNotEmpty()) {
         if (list.size <= stepValue) {

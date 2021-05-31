@@ -39,44 +39,51 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class CreateMessageActivityReplyAllTest : BaseTest() {
-  override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+  override val activeActivityRule =
+    lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
   private val account = AccountDaoManager.getDefaultAccountDao()
   private val accountAliasesEntity = AccountAliasesEntity(
-      email = account.email,
-      accountType = account.accountType ?: "",
-      sendAsEmail = "alias@flowcrypt.test",
-      displayName = "Alias",
-      isDefault = true,
-      verificationStatus = "accepted")
+    email = account.email,
+    accountType = account.accountType ?: "",
+    sendAsEmail = "alias@flowcrypt.test",
+    displayName = "Alias",
+    isDefault = true,
+    verificationStatus = "accepted"
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule(account))
-      .around(AddPrivateKeyToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activeActivityRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule(account))
+    .around(AddPrivateKeyToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activeActivityRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testReplyAllUsingGmailAlias() {
-    val msgInfo = getMsgInfo("messages/info/standard_msg_reply_all_via_gmail_alias.json",
-        "messages/mime/standard_msg_reply_to_header.txt")
+    val msgInfo = getMsgInfo(
+      "messages/info/standard_msg_reply_all_via_gmail_alias.json",
+      "messages/mime/standard_msg_reply_to_header.txt"
+    )
 
     roomDatabase.accountAliasesDao().insert(accountAliasesEntity)
 
-    activeActivityRule.launch(CreateMessageActivity.generateIntent(
+    activeActivityRule.launch(
+      CreateMessageActivity.generateIntent(
         getTargetContext(),
         msgInfo,
         MessageType.REPLY_ALL,
-        MessageEncryptionType.STANDARD))
+        MessageEncryptionType.STANDARD
+      )
+    )
 
     registerAllIdlingResources()
 
     Espresso.onView(ViewMatchers.withId(R.id.editTextRecipientCc))
-        .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))
+      .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))
   }
 }

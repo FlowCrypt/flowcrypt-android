@@ -30,7 +30,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.ScrollView
-import java.util.*
+import java.util.ArrayList
 
 /**
  * A [ScrollView] that will never lock scrolling in a particular direction.
@@ -50,6 +50,7 @@ class NonLockingScrollView : ScrollView {
    */
   private val childrenNeedingAllTouches = ArrayList<View>()
   private val hitFrame = Rect()
+
   /**
    * Whether or not the contents of this view is being dragged by one of the children in
    * [.childrenNeedingAllTouches].
@@ -61,7 +62,11 @@ class NonLockingScrollView : ScrollView {
 
   constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-  constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(context, attrs, defStyle)
+  constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(
+    context,
+    attrs,
+    defStyle
+  )
 
   override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
     val action = getActionMasked(ev)

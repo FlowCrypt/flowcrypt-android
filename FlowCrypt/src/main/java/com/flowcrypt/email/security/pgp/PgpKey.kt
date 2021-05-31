@@ -39,8 +39,10 @@ object PgpKey {
    *
    * @param armored Should be a single private key.
    */
-  fun changeKeyPassphrase(armored: String,
-                          oldPassphrase: Passphrase, newPassphrase: Passphrase): String {
+  fun changeKeyPassphrase(
+    armored: String,
+    oldPassphrase: Passphrase, newPassphrase: Passphrase
+  ): String {
     return changeKeyPassphrase(extractSecretKeyRing(armored), oldPassphrase, newPassphrase).armor()
   }
 
@@ -59,9 +61,13 @@ object PgpKey {
    *
    * @return parsing result object
    */
-  fun parseKeys(source: InputStream, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
+  fun parseKeys(
+    source: InputStream,
+    throwExceptionIfUnknownSource: Boolean = true
+  ): ParseKeyResult {
     return ParseKeyResult(
-        PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource))
+      PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource)
+    )
   }
 
   fun decryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
@@ -74,16 +80,16 @@ object PgpKey {
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
     return PGPainless.modifyKeyRing(key)
-        .changePassphraseFromOldPassphrase(null)
-        .withSecureDefaultSettings()
-        .toNewPassphrase(passphrase)
-        .done()
+      .changePassphraseFromOldPassphrase(null)
+      .withSecureDefaultSettings()
+      .toNewPassphrase(passphrase)
+      .done()
   }
 
   private fun changeKeyPassphrase(
-      key: PGPSecretKeyRing,
-      oldPassphrase: Passphrase,
-      newPassphrase: Passphrase
+    key: PGPSecretKeyRing,
+    oldPassphrase: Passphrase,
+    newPassphrase: Passphrase
   ): PGPSecretKeyRing {
     return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
   }
@@ -101,8 +107,8 @@ object PgpKey {
 
   data class ParseKeyResult(val pgpKeyRingCollection: PGPKeyRingCollection) {
     fun getAllKeys(): List<PGPKeyRing> =
-        pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
-            pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
+      pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
+          pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
 
     fun toPgpKeyDetailsList() = getAllKeys().map { it.toPgpKeyDetails() }
   }

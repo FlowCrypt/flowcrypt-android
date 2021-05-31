@@ -35,8 +35,9 @@ import java.nio.charset.StandardCharsets
  * E-mail: DenBond7@gmail.com
  */
 class NodeResponseBodyConverter<T> internal constructor(
-    private val gson: Gson,
-    private val adapter: TypeAdapter<T>) : Converter<ResponseBody, T> {
+  private val gson: Gson,
+  private val adapter: TypeAdapter<T>
+) : Converter<ResponseBody, T> {
 
   override fun convert(value: ResponseBody): T? {
     BufferedInputStream(value.source().inputStream()).use { bufferedInputStream ->
@@ -57,7 +58,8 @@ class NodeResponseBodyConverter<T> internal constructor(
 
           bufferedOutputStream.flush()
 
-          val jsonReader = gson.newJsonReader(StringReader(outputStream.toString(getCharset(value)!!.name())))
+          val jsonReader =
+            gson.newJsonReader(StringReader(outputStream.toString(getCharset(value)!!.name())))
 
           value.use {
             val result = adapter.read(jsonReader)

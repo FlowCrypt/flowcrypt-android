@@ -19,7 +19,8 @@ import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
  * Time: 16:45
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnManageEmailsListener {
+abstract class BaseEmailListActivity : BaseSyncActivity(),
+  EmailListFragment.OnManageEmailsListener {
   /**
    * Update the list of emails after changing the folder.
    */
@@ -27,13 +28,14 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
     toolbar?.title = currentFolder?.folderAlias
 
     val emailListFragment = supportFragmentManager
-        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
+      .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     emailListFragment?.onFolderChanged(forceClearCache)
     updateActionProgressState(100, null)
 
     if (currentFolder != null) {
-      val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
+      val isOutbox =
+        JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
       if (currentFolder != null && isOutbox) {
         ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
         MessagesSenderWorker.enqueue(applicationContext)
@@ -55,7 +57,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
    */
   private fun updateActionProgressState(progress: Int, message: String?) {
     val emailListFragment = supportFragmentManager
-        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
+      .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     emailListFragment?.setActionProgress(progress, message)
   }

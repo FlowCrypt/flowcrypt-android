@@ -39,18 +39,21 @@ class SettingsActivityEnterpriseTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule(
-          AccountDaoManager.getAccountDao("enterprise_account_no_prv_backup.json")))
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(
+      AddAccountToDatabaseRule(
+        AccountDaoManager.getAccountDao("enterprise_account_no_prv_backup.json")
+      )
+    )
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testBackupsDisabled() {
     //need to wait database updates
     Thread.sleep(1000)
     onView(withText(getResString(R.string.backups)))
-        .check(doesNotExist())
+      .check(doesNotExist())
   }
 }

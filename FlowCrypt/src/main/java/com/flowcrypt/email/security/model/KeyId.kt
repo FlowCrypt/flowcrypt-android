@@ -16,17 +16,19 @@ import com.google.gson.annotations.Expose
  * E-mail: DenBond7@gmail.com
  */
 data class KeyId constructor(@Expose val fingerprint: String) : Parcelable {
-  constructor(source: Parcel) : this(source.readString()
-      ?: throw IllegalArgumentException("fingerprint can't be null"))
+  constructor(source: Parcel) : this(
+    source.readString()
+      ?: throw IllegalArgumentException("fingerprint can't be null")
+  )
 
   override fun describeContents(): Int {
     return 0
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeString(fingerprint)
-      }
+    with(dest) {
+      writeString(fingerprint)
+    }
 
   companion object {
     @JvmField

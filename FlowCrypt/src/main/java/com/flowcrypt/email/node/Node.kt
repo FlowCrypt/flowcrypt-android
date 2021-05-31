@@ -69,10 +69,17 @@ class Node private constructor(context: Context) {
 
   private fun start(context: Context, nodeSecret: NodeSecret?) {
     if (nativeNode == null) {
-      val isDebugEnabled = GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(PreferenceManager
-          .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_NATIVE_NODE_DEBUG_ENABLED, false)
+      val isDebugEnabled = GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(
+        PreferenceManager
+          .getDefaultSharedPreferences(context),
+        Constants.PREF_KEY_IS_NATIVE_NODE_DEBUG_ENABLED,
+        false
+      )
 
-      nativeNode = NativeNode.getInstance(isDebugEnabled, nodeSecret!!) // takes about 100ms due to static native loads
+      nativeNode = NativeNode.getInstance(
+        isDebugEnabled,
+        nodeSecret!!
+      ) // takes about 100ms due to static native loads
     }
     nativeNode!!.start(context)
   }
@@ -94,9 +101,10 @@ class Node private constructor(context: Context) {
     val gson = NodeGson.gson
     val data = gson.toJson(nodeSecretCerts)
     try {
-      context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE).use { outputStream ->
-        outputStream.write(KeyStoreCryptoManager.encrypt(data).toByteArray())
-      }
+      context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE)
+        .use { outputStream ->
+          outputStream.write(KeyStoreCryptoManager.encrypt(data).toByteArray())
+        }
     } catch (e: Exception) {
       throw RuntimeException("Could not save certs cache", e)
     }

@@ -26,7 +26,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 class MainSettingsFragment : BasePreferenceFragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    (activity as AppCompatActivity?)?.supportActionBar?.title = getString(R.string.title_activity_settings)
+    (activity as AppCompatActivity?)?.supportActionBar?.title =
+      getString(R.string.title_activity_settings)
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -41,7 +42,7 @@ class MainSettingsFragment : BasePreferenceFragment() {
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     findPreference<Preference>(Constants.PREF_KEY_BACKUPS)?.isVisible =
-        !(accountEntity?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) ?: false)
+      !(accountEntity?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) ?: false)
 
     if (accountEntity?.useAPI == false) {
       findPreference<Preference>(Constants.PREF_KEY_SERVER_SETTINGS)?.isVisible = true

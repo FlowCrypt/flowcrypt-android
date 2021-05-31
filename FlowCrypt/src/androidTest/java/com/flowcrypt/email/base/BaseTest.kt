@@ -122,8 +122,8 @@ abstract class BaseTest : BaseActivityTestImplementation {
    */
   protected fun isToastDisplayed(decorView: View?, message: String) {
     onView(withText(message))
-        .inRoot(withDecorView(not(`is`(decorView))))
-        .check(matches(isDisplayed()))
+      .inRoot(withDecorView(not(`is`(decorView))))
+      .check(matches(isDisplayed()))
   }
 
   /**
@@ -133,8 +133,8 @@ abstract class BaseTest : BaseActivityTestImplementation {
    */
   protected fun isDialogWithTextDisplayed(decorView: View?, message: String) {
     onView(withText(message))
-        .inRoot(withDecorView(not(`is`(decorView))))
-        .check(matches(isDisplayed()))
+      .inRoot(withDecorView(not(`is`(decorView))))
+      .check(matches(isDisplayed()))
   }
 
   /**
@@ -143,15 +143,15 @@ abstract class BaseTest : BaseActivityTestImplementation {
   //todo-denbond7 - fix me
   protected fun testHelpScreen() {
     onView(withId(R.id.menuActionHelp))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     onView(withId(R.id.textViewAuthorHint))
-        .check(matches(isDisplayed()))
-        .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)))
 
     onView(withText(R.string.help_feedback_or_question))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   /**
@@ -163,8 +163,8 @@ abstract class BaseTest : BaseActivityTestImplementation {
     onView(withText(message)).check(matches(isDisplayed()))
 
     onView(withId(com.google.android.material.R.id.snackbar_action))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   /**
@@ -173,11 +173,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
   protected fun checkIsSnackBarDisplayed(text: String? = null) {
     if (text.isNullOrEmpty()) {
       onView(withId(com.google.android.material.R.id.snackbar_action))
-          .check(matches(isDisplayed()))
+        .check(matches(isDisplayed()))
     } else {
       onView(withId(com.google.android.material.R.id.snackbar_text))
-          .check(matches(isDisplayed()))
-          .check(matches(withText(text)))
+        .check(matches(isDisplayed()))
+        .check(matches(withText(text)))
     }
   }
 
@@ -186,7 +186,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
    */
   protected fun checkIsSnackBarNotDisplayed() {
     onView(withId(com.google.android.material.R.id.snackbar_action))
-        .check(doesNotExist())
+      .check(doesNotExist())
   }
 
   /**
@@ -198,14 +198,16 @@ abstract class BaseTest : BaseActivityTestImplementation {
    */
   protected fun addTextToClipboard(label: String, text: String) {
     runOnUiThread {
-      val clipboard = getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+      val clipboard =
+        getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
       val clip = ClipData.newPlainText(label, text)
       clipboard.setPrimaryClip(clip)
     }
   }
 
   protected fun checkClipboardText(text: CharSequence) {
-    val clipboardManager = getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clipboardManager =
+      getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val primaryClip: ClipData? = clipboardManager.primaryClip
 
     var clipboardText: CharSequence? = null
@@ -239,14 +241,20 @@ abstract class BaseTest : BaseActivityTestImplementation {
     return InstrumentationRegistry.getInstrumentation().context
   }
 
-  fun getMsgInfo(path: String, mimeMsgPath: String, vararg atts: AttachmentInfo?): IncomingMessageInfo? {
+  fun getMsgInfo(
+    path: String,
+    mimeMsgPath: String,
+    vararg atts: AttachmentInfo?
+  ): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.msgEntity?.let {
       val uri = roomDatabase.msgDao().insert(it)
       val attEntities = mutableListOf<AttachmentEntity>()
 
       for (attInfo in atts) {
-        attInfo?.let { info -> AttachmentEntity.fromAttInfo(info)?.let { candidate -> attEntities.add(candidate) } }
+        attInfo?.let { info ->
+          AttachmentEntity.fromAttInfo(info)?.let { candidate -> attEntities.add(candidate) }
+        }
       }
 
       roomDatabase.attachmentDao().insert(attEntities)

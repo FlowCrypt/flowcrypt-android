@@ -9,7 +9,8 @@ import org.apache.commons.io.FileUtils
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.RandomAccessFile
-import java.util.*
+import java.util.Random
+import java.util.UUID
 
 /**
  * @author Denis Bondarenko

@@ -6,7 +6,7 @@
 package com.flowcrypt.email.node
 
 import com.flowcrypt.email.database.entity.KeyEntity
-import java.util.*
+import java.util.Arrays
 
 @Deprecated(
   "old code. Some of these tests are wrongly having longids " +

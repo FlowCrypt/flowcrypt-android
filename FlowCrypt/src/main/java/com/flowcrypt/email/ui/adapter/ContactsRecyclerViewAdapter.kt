@@ -23,16 +23,21 @@ import com.flowcrypt.email.database.entity.ContactEntity
  * Time: 18:00
  * E-mail: DenBond7@gmail.com
  */
-class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true)
-  : RecyclerView.Adapter<ContactsRecyclerViewAdapter.ViewHolder>() {
+class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true) :
+  RecyclerView.Adapter<ContactsRecyclerViewAdapter.ViewHolder>() {
 
   private val list: MutableList<ContactEntity> = mutableListOf()
   var onDeleteContactListener: OnDeleteContactListener? = null
   var onContactClickListener: OnContactClickListener? = null
 
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactsRecyclerViewAdapter.ViewHolder {
-    return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.contact_item, parent, false))
+  override fun onCreateViewHolder(
+    parent: ViewGroup,
+    viewType: Int
+  ): ContactsRecyclerViewAdapter.ViewHolder {
+    return ViewHolder(
+      LayoutInflater.from(parent.context).inflate(R.layout.contact_item, parent, false)
+    )
   }
 
   override fun onBindViewHolder(viewHolder: ContactsRecyclerViewAdapter.ViewHolder, position: Int) {
@@ -101,8 +106,10 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
     val imageButtonDeleteContact: ImageButton = itemView.findViewById(R.id.imageButtonDeleteContact)
   }
 
-  inner class DiffUtilCallback(private val oldList: List<ContactEntity>,
-                               private val newList: List<ContactEntity>) : DiffUtil.Callback() {
+  inner class DiffUtilCallback(
+    private val oldList: List<ContactEntity>,
+    private val newList: List<ContactEntity>
+  ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldItem = oldList[oldItemPosition]
       val newItem = newList[newItemPosition]

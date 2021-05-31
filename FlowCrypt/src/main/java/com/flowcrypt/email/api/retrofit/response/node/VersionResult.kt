@@ -20,34 +20,36 @@ import java.io.BufferedInputStream
  * Time: 11:42 AM
  * E-mail: DenBond7@gmail.com
  */
-data class VersionResult constructor(@SerializedName("http_parser") @Expose val httpParser: String?,
-                                     @Expose val mobile: String?,
-                                     @Expose val node: String?,
-                                     @Expose val v8: String?,
-                                     @Expose val uv: String?,
-                                     @Expose val zlib: String?,
-                                     @Expose val ares: String?,
-                                     @Expose val modules: String?,
-                                     @Expose val nghttp2: String?,
-                                     @Expose val openssl: String?,
-                                     @SerializedName("error")
-                                     @Expose override val apiError: ApiError?) : BaseNodeResponse {
+data class VersionResult constructor(
+  @SerializedName("http_parser") @Expose val httpParser: String?,
+  @Expose val mobile: String?,
+  @Expose val node: String?,
+  @Expose val v8: String?,
+  @Expose val uv: String?,
+  @Expose val zlib: String?,
+  @Expose val ares: String?,
+  @Expose val modules: String?,
+  @Expose val nghttp2: String?,
+  @Expose val openssl: String?,
+  @SerializedName("error")
+  @Expose override val apiError: ApiError?
+) : BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }
 
   constructor(source: Parcel) : this(
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readParcelable<ApiError>(ApiError::class.java.classLoader)
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader)
   )
 
   override fun describeContents(): Int {
@@ -55,19 +57,19 @@ data class VersionResult constructor(@SerializedName("http_parser") @Expose val 
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeString(httpParser)
-        writeString(mobile)
-        writeString(node)
-        writeString(v8)
-        writeString(uv)
-        writeString(zlib)
-        writeString(ares)
-        writeString(modules)
-        writeString(nghttp2)
-        writeString(openssl)
-        writeParcelable(apiError, flags)
-      }
+    with(dest) {
+      writeString(httpParser)
+      writeString(mobile)
+      writeString(node)
+      writeString(v8)
+      writeString(uv)
+      writeString(zlib)
+      writeString(ares)
+      writeString(modules)
+      writeString(nghttp2)
+      writeString(openssl)
+      writeParcelable(apiError, flags)
+    }
 
   companion object {
     @JvmField

@@ -88,10 +88,10 @@ interface MsgBlock : Parcelable {
 
       val keyBlockTypes = setOf(PUBLIC_KEY, PRIVATE_KEY)
       val replaceableBlockTypes = setOf(
-          PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
+        PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
       )
       val wellKnownBlockTypes = setOf(
-          PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
+        PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
       )
     }
   }

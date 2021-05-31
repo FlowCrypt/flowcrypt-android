@@ -8,7 +8,7 @@ package com.flowcrypt.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.ContactEntity
-import java.util.*
+import java.util.Locale
 
 /**
  * This class describes information about some public key.
@@ -18,10 +18,12 @@ import java.util.*
  * Time: 10:22
  * E-mail: DenBond7@gmail.com
  */
-data class PublicKeyInfo constructor(val fingerprint: String,
-                                     val keyOwner: String,
-                                     var pgpContact: PgpContact? = null,
-                                     val publicKey: String) : Parcelable {
+data class PublicKeyInfo constructor(
+  val fingerprint: String,
+  val keyOwner: String,
+  var pgpContact: PgpContact? = null,
+  val publicKey: String
+) : Parcelable {
   val isUpdateEnabled: Boolean
     get() = pgpContact != null && (pgpContact!!.fingerprint == null || pgpContact!!.fingerprint != fingerprint)
 
@@ -30,10 +32,10 @@ data class PublicKeyInfo constructor(val fingerprint: String,
   }
 
   constructor(source: Parcel) : this(
-      source.readString()!!,
-      source.readString()!!,
-      source.readParcelable<PgpContact>(PgpContact::class.java.classLoader),
-      source.readString()!!
+    source.readString()!!,
+    source.readString()!!,
+    source.readParcelable<PgpContact>(PgpContact::class.java.classLoader),
+    source.readString()!!
   )
 
   override fun describeContents() = 0
@@ -47,22 +49,22 @@ data class PublicKeyInfo constructor(val fingerprint: String,
 
   fun toContactEntity(): ContactEntity {
     return ContactEntity(
-        email = keyOwner.toLowerCase(Locale.getDefault()),
-        publicKey = publicKey.toByteArray(),
-        hasPgp = true,
-        fingerprint = fingerprint
+      email = keyOwner.toLowerCase(Locale.getDefault()),
+      publicKey = publicKey.toByteArray(),
+      hasPgp = true,
+      fingerprint = fingerprint
     )
   }
 
   fun toPgpContact(): PgpContact {
     return PgpContact(
-        email = keyOwner,
-        name = null,
-        pubkey = publicKey,
-        hasPgp = true,
-        client = null,
-        fingerprint = fingerprint,
-        lastUse = 0
+      email = keyOwner,
+      name = null,
+      pubkey = publicKey,
+      hasPgp = true,
+      client = null,
+      fingerprint = fingerprint,
+      lastUse = 0
     )
   }
 

@@ -35,7 +35,9 @@ class ImportPgpContactsRecyclerViewAdapter
   var contactActionsListener: ContactActionsListener? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.import_pgp_contact_item, parent, false))
+    return ViewHolder(
+      LayoutInflater.from(parent.context).inflate(R.layout.import_pgp_contact_item, parent, false)
+    )
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
@@ -46,25 +48,45 @@ class ImportPgpContactsRecyclerViewAdapter
     viewHolder.buttonSaveContact.visibility = View.GONE
 
     if (!TextUtils.isEmpty(publicKeyInfo.keyOwner)) {
-      viewHolder.textViewKeyOwnerTemplate.text = context.getString(R.string.template_message_part_public_key_owner,
-          publicKeyInfo.keyOwner)
+      viewHolder.textViewKeyOwnerTemplate.text = context.getString(
+        R.string.template_message_part_public_key_owner,
+        publicKeyInfo.keyOwner
+      )
     }
 
-    UIUtil.setHtmlTextToTextView(context.getString(R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", publicKeyInfo.fingerprint, 4)), viewHolder.textViewFingerprintTemplate)
+    UIUtil.setHtmlTextToTextView(
+      context.getString(
+        R.string.template_message_part_public_key_fingerprint,
+        GeneralUtil.doSectionsInText(" ", publicKeyInfo.fingerprint, 4)
+      ), viewHolder.textViewFingerprintTemplate
+    )
 
     if (publicKeyInfo.hasPgpContact()) {
       if (publicKeyInfo.isUpdateEnabled) {
         viewHolder.textViewAlreadyImported.visibility = View.GONE
         viewHolder.buttonUpdateContact.visibility = View.VISIBLE
-        viewHolder.buttonUpdateContact.setOnClickListener { v -> updateContact(viewHolder.adapterPosition, v, context, publicKeyInfo) }
+        viewHolder.buttonUpdateContact.setOnClickListener { v ->
+          updateContact(
+            viewHolder.adapterPosition,
+            v,
+            context,
+            publicKeyInfo
+          )
+        }
       } else {
         viewHolder.textViewAlreadyImported.visibility = View.VISIBLE
       }
     } else {
       viewHolder.textViewAlreadyImported.visibility = View.GONE
       viewHolder.buttonSaveContact.visibility = View.VISIBLE
-      viewHolder.buttonSaveContact.setOnClickListener { v -> saveContact(viewHolder.adapterPosition, v, context, publicKeyInfo) }
+      viewHolder.buttonSaveContact.setOnClickListener { v ->
+        saveContact(
+          viewHolder.adapterPosition,
+          v,
+          context,
+          publicKeyInfo
+        )
+      }
     }
   }
 
@@ -79,8 +101,10 @@ class ImportPgpContactsRecyclerViewAdapter
   }
 
   private fun saveContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
-    val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-        null, publicKeyInfo.fingerprint, 0)
+    val pgpContact = PgpContact(
+      publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
+      null, publicKeyInfo.fingerprint, 0
+    )
 
     contactActionsListener?.onSaveContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
@@ -89,9 +113,16 @@ class ImportPgpContactsRecyclerViewAdapter
     notifyItemChanged(position)
   }
 
-  private fun updateContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
-    val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-        null, publicKeyInfo.fingerprint, 0)
+  private fun updateContact(
+    position: Int,
+    v: View,
+    context: Context,
+    publicKeyInfo: PublicKeyInfo
+  ) {
+    val pgpContact = PgpContact(
+      publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
+      null, publicKeyInfo.fingerprint, 0
+    )
 
     contactActionsListener?.onUpdateContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
@@ -105,7 +136,8 @@ class ImportPgpContactsRecyclerViewAdapter
    */
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     var textViewKeyOwnerTemplate: TextView = itemView.findViewById(R.id.textViewKeyOwnerTemplate)
-    var textViewFingerprintTemplate: TextView = itemView.findViewById(R.id.textViewFingerprintTemplate)
+    var textViewFingerprintTemplate: TextView =
+      itemView.findViewById(R.id.textViewFingerprintTemplate)
     var textViewAlreadyImported: TextView = itemView.findViewById(R.id.textViewAlreadyImported)
     var buttonSaveContact: Button = itemView.findViewById(R.id.buttonSaveContact)
     var buttonUpdateContact: Button = itemView.findViewById(R.id.buttonUpdateContact)

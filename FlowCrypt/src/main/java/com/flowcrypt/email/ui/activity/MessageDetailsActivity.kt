@@ -40,8 +40,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity() {
         arguments = intent.extras
       }
       supportFragmentManager.beginTransaction()
-          .add(R.id.fragmentContainerView, fragment)
-          .commit()
+        .add(R.id.fragmentContainerView, fragment)
+        .commit()
     }
   }
 

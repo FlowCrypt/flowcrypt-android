@@ -17,9 +17,11 @@ import org.junit.runners.model.Statement
  *         Time: 1:03 PM
  *         E-mail: DenBond7@gmail.com
  */
-class AddAccountWithAliasesDatabaseRule constructor(val accountEntity: AccountEntity,
-                                                    val accountAliasesEntity: AccountAliasesEntity) :
-    BaseRule() {
+class AddAccountWithAliasesDatabaseRule constructor(
+  val accountEntity: AccountEntity,
+  val accountAliasesEntity: AccountAliasesEntity
+) :
+  BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {

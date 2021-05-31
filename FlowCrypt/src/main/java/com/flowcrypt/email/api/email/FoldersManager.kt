@@ -119,7 +119,10 @@ class FoldersManager constructor(val account: String) {
    */
   fun addFolder(imapFolder: IMAPFolder?) {
     imapFolder?.let {
-      if (!EmailUtil.containsNoSelectAttr(it) && !TextUtils.isEmpty(it.fullName) && !folders.containsKey(it.fullName)) {
+      if (!EmailUtil.containsNoSelectAttr(it) && !TextUtils.isEmpty(it.fullName) && !folders.containsKey(
+          it.fullName
+        )
+      ) {
         this.folders[prepareFolderKey(it)] = generateFolder(account, it, imapFolder.name)
       }
     }
@@ -145,7 +148,10 @@ class FoldersManager constructor(val account: String) {
    * remote folder.
    */
   fun addFolder(localFolder: LocalFolder?) {
-    if (localFolder != null && !TextUtils.isEmpty(localFolder.fullName) && !folders.containsKey(localFolder.fullName)) {
+    if (localFolder != null && !TextUtils.isEmpty(localFolder.fullName) && !folders.containsKey(
+        localFolder.fullName
+      )
+    ) {
       this.folders[prepareFolderKey(localFolder)] = localFolder
     }
   }
@@ -305,7 +311,11 @@ class FoldersManager constructor(val account: String) {
     @WorkerThread
     fun fromDatabase(context: Context, accountEntity: AccountEntity): FoldersManager {
       val appContext = context.applicationContext
-      return build(accountEntity.email, FlowCryptRoomDatabase.getDatabase(appContext).labelDao().getLabels(accountEntity.email, accountEntity.accountType))
+      return build(
+        accountEntity.email,
+        FlowCryptRoomDatabase.getDatabase(appContext).labelDao()
+          .getLabels(accountEntity.email, accountEntity.accountType)
+      )
     }
 
     /**
@@ -317,10 +327,15 @@ class FoldersManager constructor(val account: String) {
      * @return The new [FoldersManager].
      */
     @WorkerThread
-    suspend fun fromDatabaseSuspend(context: Context, accountEntity: AccountEntity): FoldersManager {
+    suspend fun fromDatabaseSuspend(
+      context: Context,
+      accountEntity: AccountEntity
+    ): FoldersManager {
       val appContext = context.applicationContext
-      return build(accountEntity.email, FlowCryptRoomDatabase.getDatabase(appContext).labelDao()
-          .getLabelsSuspend(accountEntity.email, accountEntity.accountType))
+      return build(
+        accountEntity.email, FlowCryptRoomDatabase.getDatabase(appContext).labelDao()
+          .getLabelsSuspend(accountEntity.email, accountEntity.accountType)
+      )
     }
 
     /**
@@ -333,8 +348,12 @@ class FoldersManager constructor(val account: String) {
      * @throws MessagingException
      */
     fun generateFolder(account: String, imapFolder: IMAPFolder, folderAlias: String?): LocalFolder {
-      return LocalFolder(account, imapFolder.fullName, folderAlias, Arrays.asList(*imapFolder
-          .attributes), isCustom(imapFolder), 0, "")
+      return LocalFolder(
+        account, imapFolder.fullName, folderAlias, Arrays.asList(
+          *imapFolder
+            .attributes
+        ), isCustom(imapFolder), 0, ""
+      )
     }
 
     /**
@@ -344,7 +363,15 @@ class FoldersManager constructor(val account: String) {
      * @param folderAlias The folder alias.
      */
     fun generateFolder(account: String, label: Label): LocalFolder {
-      return LocalFolder(account, label.id, label.name, emptyList(), label.type == GmailApiHelper.FOLDER_TYPE_USER, 0, "")
+      return LocalFolder(
+        account,
+        label.id,
+        label.name,
+        emptyList(),
+        label.type == GmailApiHelper.FOLDER_TYPE_USER,
+        0,
+        ""
+      )
     }
 
     /**
@@ -389,14 +416,38 @@ class FoldersManager constructor(val account: String) {
       }
 
       return when {
-        JavaEmailConstants.FOLDER_INBOX.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.INBOX
-        JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.OUTBOX
-        JavaEmailConstants.FOLDER_SENT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.SENT
-        JavaEmailConstants.FOLDER_TRASH.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.TRASH
-        JavaEmailConstants.FOLDER_DRAFT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.DRAFTS
-        JavaEmailConstants.FOLDER_STARRED.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.STARRED
-        JavaEmailConstants.FOLDER_IMPORTANT.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.IMPORTANT
-        JavaEmailConstants.FOLDER_SPAM.equals(localFolder?.fullName, ignoreCase = true) -> FolderType.SPAM
+        JavaEmailConstants.FOLDER_INBOX.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.INBOX
+        JavaEmailConstants.FOLDER_OUTBOX.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.OUTBOX
+        JavaEmailConstants.FOLDER_SENT.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.SENT
+        JavaEmailConstants.FOLDER_TRASH.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.TRASH
+        JavaEmailConstants.FOLDER_DRAFT.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.DRAFTS
+        JavaEmailConstants.FOLDER_STARRED.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.STARRED
+        JavaEmailConstants.FOLDER_IMPORTANT.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.IMPORTANT
+        JavaEmailConstants.FOLDER_SPAM.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.SPAM
         else -> null
       }
     }

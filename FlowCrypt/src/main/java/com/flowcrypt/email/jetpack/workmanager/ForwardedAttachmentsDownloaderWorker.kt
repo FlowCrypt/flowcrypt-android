@@ -54,150 +54,176 @@ import javax.mail.Store
  * Time: 11:48
  * E-mail: DenBond7@gmail.com
  */
-class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
+class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) :
+  BaseWorker(context, params) {
   private val attCacheDir = File(applicationContext.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
   private val fwdAttsCacheDir = File(attCacheDir, Constants.FORWARDED_ATTACHMENTS_CACHE_DIR)
   override val useIndependentConnection: Boolean = false
 
   override suspend fun doWork(): Result =
-      withContext(Dispatchers.IO) {
-        LogsUtil.d(TAG, "doWork")
-        if (isStopped) {
-          return@withContext Result.success()
+    withContext(Dispatchers.IO) {
+      LogsUtil.d(TAG, "doWork")
+      if (isStopped) {
+        return@withContext Result.success()
+      }
+
+      try {
+        if (!attCacheDir.exists()) {
+          if (!attCacheDir.mkdirs()) {
+            throw IllegalStateException("Create cache directory " + attCacheDir.name + " filed!")
+          }
         }
 
+        if (!fwdAttsCacheDir.exists()) {
+          if (!fwdAttsCacheDir.mkdirs()) {
+            throw IllegalStateException("Create cache directory " + fwdAttsCacheDir.name + " filed!")
+          }
+        }
+
+        val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
+          roomDatabase.accountDao().getActiveAccountSuspend()
+        )
+          ?: return@withContext Result.success()
+
+        val newMsgs = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
+          account = account.email,
+          msgStates = listOf(MessageState.NEW_FORWARDED.value)
+        )
+
+        if (!CollectionUtils.isEmpty(newMsgs)) {
+          if (account.useAPI) {
+            when (account.accountType) {
+              AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+                downloadForwardedAtts(account)
+              }
+
+              else -> throw ManualHandledException("Unsupported provider")
+            }
+          } else {
+            OpenStoreHelper.openStore(
+              applicationContext,
+              account,
+              OpenStoreHelper.getAccountSess(applicationContext, account)
+            ).use { store ->
+              downloadForwardedAtts(account, store)
+            }
+          }
+        }
+
+        return@withContext rescheduleIfActiveAccountWasChanged(account)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        return@withContext Result.failure()
+      }
+    }
+
+  private suspend fun downloadForwardedAtts(account: AccountEntity, store: Store? = null) =
+    withContext(Dispatchers.IO) {
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
+      while (true) {
+        val detailsList = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
+          account = account.email,
+          msgStates = listOf(MessageState.NEW_FORWARDED.value)
+        )
+
+        if (CollectionUtils.isEmpty(detailsList)) {
+          break
+        }
+
+        val msgEntity = detailsList[0]
+        val msgAttsDir = File(attCacheDir, msgEntity.attachmentsDirectory!!)
         try {
-          if (!attCacheDir.exists()) {
-            if (!attCacheDir.mkdirs()) {
-              throw IllegalStateException("Create cache directory " + attCacheDir.name + " filed!")
-            }
-          }
-
-          if (!fwdAttsCacheDir.exists()) {
-            if (!fwdAttsCacheDir.mkdirs()) {
-              throw IllegalStateException("Create cache directory " + fwdAttsCacheDir.name + " filed!")
-            }
-          }
-
-          val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
-              roomDatabase.accountDao().getActiveAccountSuspend())
-              ?: return@withContext Result.success()
-
-          val newMsgs = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
-              account = account.email,
-              msgStates = listOf(MessageState.NEW_FORWARDED.value)
+          val atts = roomDatabase.attachmentDao().getAttachmentsSuspend(
+            account.email,
+            JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid
           )
 
-          if (!CollectionUtils.isEmpty(newMsgs)) {
-            if (account.useAPI) {
-              when (account.accountType) {
-                AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-                  downloadForwardedAtts(account)
-                }
-
-                else -> throw ManualHandledException("Unsupported provider")
-              }
-            } else {
-              OpenStoreHelper.openStore(applicationContext, account, OpenStoreHelper.getAccountSess(applicationContext, account)).use { store ->
-                downloadForwardedAtts(account, store)
-              }
-            }
+          if (CollectionUtils.isEmpty(atts)) {
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+            continue
           }
 
-          return@withContext rescheduleIfActiveAccountWasChanged(account)
+          val msgState = getNewMsgState(account, msgEntity, msgAttsDir, atts, store)
+
+          val updateResult =
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = msgState.value))
+          if (updateResult > 0) {
+            if (msgState != MessageState.QUEUED) {
+              val failedOutgoingMsgsCount = roomDatabase.msgDao()
+                .getFailedOutgoingMsgsCountSuspend(account.email) ?: 0
+              if (failedOutgoingMsgsCount > 0) {
+                ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(
+                  account,
+                  failedOutgoingMsgsCount
+                )
+              }
+            }
+
+            MessagesSenderWorker.enqueue(applicationContext)
+          }
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
-          return@withContext Result.failure()
+
+          if (!GeneralUtil.isConnected(applicationContext)) {
+            throw e
+          }
         }
       }
+    }
 
-  private suspend fun downloadForwardedAtts(account: AccountEntity, store: Store? = null) =
-      withContext(Dispatchers.IO) {
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+  private suspend fun getNewMsgState(
+    account: AccountEntity, msgEntity: MessageEntity,
+    msgAttsDir: File, atts: List<AttachmentEntity>, store: Store?
+  ): MessageState =
+    withContext(Dispatchers.IO) {
+      return@withContext if (account.useAPI) {
+        when (account.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+            val msg = atts.first().forwardedUid?.toHex()
+              ?.let { GmailApiHelper.loadMsgFullInfoSuspend(applicationContext, account, it) }
+              ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING
 
-        while (true) {
-          val detailsList = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
-              account = account.email,
-              msgStates = listOf(MessageState.NEW_FORWARDED.value)
-          )
-
-          if (CollectionUtils.isEmpty(detailsList)) {
-            break
-          }
-
-          val msgEntity = detailsList[0]
-          val msgAttsDir = File(attCacheDir, msgEntity.attachmentsDirectory!!)
-          try {
-            val atts = roomDatabase.attachmentDao().getAttachmentsSuspend(account.email,
-                JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
-
-            if (CollectionUtils.isEmpty(atts)) {
-              roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
-              continue
-            }
-
-            val msgState = getNewMsgState(account, msgEntity, msgAttsDir, atts, store)
-
-            val updateResult = roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = msgState.value))
-            if (updateResult > 0) {
-              if (msgState != MessageState.QUEUED) {
-                val failedOutgoingMsgsCount = roomDatabase.msgDao()
-                    .getFailedOutgoingMsgsCountSuspend(account.email) ?: 0
-                if (failedOutgoingMsgsCount > 0) {
-                  ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(account, failedOutgoingMsgsCount)
+            loadAttachments(account, msgEntity, atts, msgAttsDir) { attachmentEntity ->
+              GmailApiHelper.getAttPartByPath(msg.payload, neededPath = attachmentEntity.path)
+                ?.let { attPart ->
+                  GmailApiHelper.getAttInputStream(
+                    applicationContext,
+                    account,
+                    attachmentEntity.uid.toHex(),
+                    attPart.body.attachmentId
+                  )
                 }
-              }
-
-              MessagesSenderWorker.enqueue(applicationContext)
-            }
-          } catch (e: Exception) {
-            e.printStackTrace()
-            ExceptionUtil.handleError(e)
-
-            if (!GeneralUtil.isConnected(applicationContext)) {
-              throw e
             }
           }
+
+          else -> throw ManualHandledException("Unsupported provider")
         }
-      }
-
-  private suspend fun getNewMsgState(account: AccountEntity, msgEntity: MessageEntity,
-                                     msgAttsDir: File, atts: List<AttachmentEntity>, store: Store?): MessageState =
-      withContext(Dispatchers.IO) {
-        return@withContext if (account.useAPI) {
-          when (account.accountType) {
-            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-              val msg = atts.first().forwardedUid?.toHex()?.let { GmailApiHelper.loadMsgFullInfoSuspend(applicationContext, account, it) }
-                  ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING
-
-              loadAttachments(account, msgEntity, atts, msgAttsDir) { attachmentEntity ->
-                GmailApiHelper.getAttPartByPath(msg.payload, neededPath = attachmentEntity.path)?.let { attPart ->
-                  GmailApiHelper.getAttInputStream(applicationContext, account, attachmentEntity.uid.toHex(), attPart.body.attachmentId)
-                }
-              }
+      } else {
+        store?.let {
+          store.getFolder(atts.first().forwardedFolder).use { folder ->
+            val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
+            val fwdMsg = atts.first().forwardedUid?.let { uid -> imapFolder.getMessageByUID(uid) }
+              ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING
+            loadAttachments(account, msgEntity, atts, msgAttsDir) { attachmentEntity ->
+              ImapProtocolUtil.getAttPartByPath(
+                fwdMsg,
+                neededPath = attachmentEntity.path
+              )?.inputStream
             }
-
-            else -> throw ManualHandledException("Unsupported provider")
           }
-        } else {
-          store?.let {
-            store.getFolder(atts.first().forwardedFolder).use { folder ->
-              val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-              val fwdMsg = atts.first().forwardedUid?.let { uid -> imapFolder.getMessageByUID(uid) }
-                  ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING
-              loadAttachments(account, msgEntity, atts, msgAttsDir) { attachmentEntity ->
-                ImapProtocolUtil.getAttPartByPath(fwdMsg, neededPath = attachmentEntity.path)?.inputStream
-              }
-            }
-          } ?: throw NullPointerException("Store == null")
-        }
+        } ?: throw NullPointerException("Store == null")
       }
+    }
 
-  private suspend fun loadAttachments(account: AccountEntity, msgEntity: MessageEntity,
-                                      atts: List<AttachmentEntity>, msgAttsDir: File,
-                                      action: suspend (attachmentEntity: AttachmentEntity)
-                                      -> InputStream?): MessageState = withContext(Dispatchers.IO) {
+  private suspend fun loadAttachments(
+    account: AccountEntity, msgEntity: MessageEntity,
+    atts: List<AttachmentEntity>, msgAttsDir: File,
+    action: suspend (attachmentEntity: AttachmentEntity)
+    -> InputStream?
+  ): MessageState = withContext(Dispatchers.IO) {
     var msgState = MessageState.QUEUED
     var pubKeys: List<String>? = null
 
@@ -205,10 +231,13 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       val senderEmail = EmailUtil.getFirstAddressString(msgEntity.from)
       val recipients = msgEntity.allRecipients.toMutableList()
       pubKeys = SecurityUtils.getRecipientsPubKeys(applicationContext, recipients)
-      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(applicationContext,
-          account, senderEmail)
-      pubKeys.add(senderKeyDetails.publicKey
-          ?: throw IllegalStateException("Sender pub key not found"))
+      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(
+        applicationContext,
+        account, senderEmail
+      )
+      pubKeys.add(
+        senderKeyDetails.publicKey
+      )
     }
 
     for (attachmentEntity in atts) {
@@ -224,7 +253,8 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       val exists = attFile.exists()
 
       if (exists) {
-        attInfo.uri = FileProvider.getUriForFile(applicationContext, Constants.FILE_PROVIDER_AUTHORITY, attFile)
+        attInfo.uri =
+          FileProvider.getUriForFile(applicationContext, Constants.FILE_PROVIDER_AUTHORITY, attFile)
       } else if (attInfo.uri == null) {
         FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
         val inputStream = action.invoke(attachmentEntity)
@@ -234,7 +264,11 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
           if (msgAttsDir.exists()) {
             FileUtils.moveFile(tempFile, attFile)
-            attInfo.uri = FileProvider.getUriForFile(applicationContext, Constants.FILE_PROVIDER_AUTHORITY, attFile)
+            attInfo.uri = FileProvider.getUriForFile(
+              applicationContext,
+              Constants.FILE_PROVIDER_AUTHORITY,
+              attFile
+            )
           } else {
             FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
             //It means the user has already deleted the current message. We don't need to download other attachments.
@@ -248,23 +282,27 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
       if (attInfo.uri != null) {
         val updateCandidate = AttachmentEntity.fromAttInfo(attInfo)?.copy(id = attachmentEntity.id)
-        updateCandidate?.let { FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().updateSuspend(it) }
+        updateCandidate?.let {
+          FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().updateSuspend(it)
+        }
       }
     }
 
     return@withContext msgState
   }
 
-  private suspend fun downloadFile(msgEntity: MessageEntity, pubKeys: List<String>?,
-                                   destFile: File, srcInputStream: InputStream) =
-      withContext(Dispatchers.IO) {
-        if (msgEntity.isEncrypted == true) {
-          requireNotNull(pubKeys)
-          PgpEncrypt.encryptAndOrSign(srcInputStream, destFile.outputStream(), pubKeys)
-        } else {
-          FileUtils.copyInputStreamToFile(srcInputStream, destFile)
-        }
+  private suspend fun downloadFile(
+    msgEntity: MessageEntity, pubKeys: List<String>?,
+    destFile: File, srcInputStream: InputStream
+  ) =
+    withContext(Dispatchers.IO) {
+      if (msgEntity.isEncrypted == true) {
+        requireNotNull(pubKeys)
+        PgpEncrypt.encryptAndOrSign(srcInputStream, destFile.outputStream(), pubKeys)
+      } else {
+        FileUtils.copyInputStreamToFile(srcInputStream, destFile)
       }
+    }
 
   companion object {
     private val TAG = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
@@ -272,18 +310,18 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .build()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
       WorkManager
-          .getInstance(context.applicationContext)
-          .enqueueUniqueWork(
-              NAME,
-              ExistingWorkPolicy.KEEP,
-              OneTimeWorkRequestBuilder<ForwardedAttachmentsDownloaderWorker>()
-                  .setConstraints(constraints)
-                  .build()
-          )
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          NAME,
+          ExistingWorkPolicy.KEEP,
+          OneTimeWorkRequestBuilder<ForwardedAttachmentsDownloaderWorker>()
+            .setConstraints(constraints)
+            .build()
+        )
     }
   }
 }

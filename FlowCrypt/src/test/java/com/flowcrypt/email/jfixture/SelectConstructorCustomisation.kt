@@ -27,11 +27,13 @@ class SelectConstructorCustomisation(type: Type?) : Customisation {
   private val mostParameterCountConstructorQuery: ConstructorQuery
 
   init {
-    mostParameterCountConstructorQuery = DefaultConstructorQuery(InverseComparator(KotlinConstructorParameterCountComparator()))
+    mostParameterCountConstructorQuery =
+      DefaultConstructorQuery(InverseComparator(KotlinConstructorParameterCountComparator()))
   }
 
   override fun customise(fixture: JFixture) {
-    val greedyConstructorRelay: SpecimenBuilder = ClassToConstructorRelay(mostParameterCountConstructorQuery, SpecificTypeSpecification(type))
+    val greedyConstructorRelay: SpecimenBuilder =
+      ClassToConstructorRelay(mostParameterCountConstructorQuery, SpecificTypeSpecification(type))
     fixture.addBuilderToStartOfPipeline(greedyConstructorRelay)
   }
 }

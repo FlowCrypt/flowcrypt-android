@@ -38,9 +38,9 @@ class ContactsSettingsActivity : BaseSettingsActivity() {
       contactsListFragment = ContactsListFragment.newInstance()
       contactsListFragment?.let {
         supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.layoutContent, it)
-            .commitNow()
+          .beginTransaction()
+          .replace(R.id.layoutContent, it)
+          .commitNow()
       }
     }
   }

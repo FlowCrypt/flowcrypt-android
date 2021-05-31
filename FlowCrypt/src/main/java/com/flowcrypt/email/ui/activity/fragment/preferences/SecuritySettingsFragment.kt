@@ -25,15 +25,20 @@ import com.flowcrypt.email.util.UIUtil
 class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener {
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences_security_settings, rootKey)
-    findPreference<Preference>(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)?.onPreferenceClickListener = this
+    findPreference<Preference>(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)?.onPreferenceClickListener =
+      this
   }
 
   override fun onPreferenceClick(preference: Preference): Boolean {
     return when (preference.key) {
       Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
         if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isEmpty()) {
-          UIUtil.showInfoSnackbar(requireView(), getString(R.string.account_has_no_associated_keys,
-              getString(R.string.support_email)))
+          UIUtil.showInfoSnackbar(
+            requireView(), getString(
+              R.string.account_has_no_associated_keys,
+              getString(R.string.support_email)
+            )
+          )
         } else {
           startActivity(ChangePassPhraseActivity.newIntent(context))
         }
