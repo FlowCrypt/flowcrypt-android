@@ -32,4 +32,3 @@ class MessageReplyRequest(
   override val apiName: ApiName = ApiName.POST_MESSAGE_REPLY,
   override val requestModel: MessageReplyModel
 ) : BaseRequest<MessageReplyModel>
-

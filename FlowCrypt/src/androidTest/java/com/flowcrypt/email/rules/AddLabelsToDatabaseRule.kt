@@ -41,4 +41,3 @@ class AddLabelsToDatabaseRule(
     FlowCryptRoomDatabase.getDatabase(targetContext).labelDao().insert(labels)
   }
 }
-

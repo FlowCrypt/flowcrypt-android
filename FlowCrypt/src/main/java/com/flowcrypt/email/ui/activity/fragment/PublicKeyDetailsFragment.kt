@@ -38,7 +38,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
-import java.util.*
+import java.util.Date
 
 /**
  * This fragment shows the given public key details

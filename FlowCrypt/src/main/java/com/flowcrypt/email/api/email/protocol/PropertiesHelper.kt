@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.FlavorSettings
-import java.util.*
+import java.util.Properties
 
 /**
  * This util class help generates Properties to connect for different mail servers.

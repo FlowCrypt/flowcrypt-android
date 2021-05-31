@@ -20,7 +20,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.Locale
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message

@@ -14,7 +14,8 @@ import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.SerializedName
-import java.util.*
+import java.util.ArrayList
+import java.util.Locale
 
 /**
  * This action describes a task which loads Gmail aliases for the given account and save them to

@@ -8,7 +8,8 @@ package com.flowcrypt.email.util
 import android.net.Uri
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.model.ExtraActionInfo
-import java.util.*
+import java.util.ArrayList
+import java.util.Arrays
 
 /**
  * This class defines the parser of 'mailto' URIs.

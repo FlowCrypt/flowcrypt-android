@@ -36,7 +36,7 @@ import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko

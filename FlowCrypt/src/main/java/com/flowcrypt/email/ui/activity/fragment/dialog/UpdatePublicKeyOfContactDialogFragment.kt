@@ -23,7 +23,7 @@ import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.R
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
-import java.util.*
+import java.util.Date
 
 /**
  * @author Denis Bondarenko

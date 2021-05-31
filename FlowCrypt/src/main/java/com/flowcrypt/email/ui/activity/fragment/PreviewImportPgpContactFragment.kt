@@ -41,7 +41,9 @@ import com.google.android.gms.common.util.CollectionUtils
 import java.io.IOException
 import java.io.InputStream
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.ArrayList
+import java.util.HashSet
+import java.util.Locale
 
 /**
  * This fragment displays information about public keys owners and information about keys.

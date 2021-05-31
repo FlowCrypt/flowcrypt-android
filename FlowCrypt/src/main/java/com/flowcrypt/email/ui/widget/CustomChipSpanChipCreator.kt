@@ -15,7 +15,7 @@ import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.chip.ChipCreator
 import com.hootsuite.nachos.chip.ChipSpan
 import com.hootsuite.nachos.chip.ChipSpanChipCreator
-import java.util.*
+import java.util.Locale
 
 /**
  * This [ChipSpanChipCreator] responsible for displaying [Chip].
@@ -114,4 +114,3 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
     }
   }
 }
-

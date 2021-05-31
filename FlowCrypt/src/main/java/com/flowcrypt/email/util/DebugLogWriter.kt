@@ -12,7 +12,8 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 /**
  * The debug log writer which will be used to write logs to the file.

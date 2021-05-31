@@ -108,4 +108,3 @@ class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParam
     }
   }
 }
-

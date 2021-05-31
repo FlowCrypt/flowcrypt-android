@@ -20,7 +20,7 @@ import com.flowcrypt.email.base.BaseTest
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.startsWith
 import org.junit.Test
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko

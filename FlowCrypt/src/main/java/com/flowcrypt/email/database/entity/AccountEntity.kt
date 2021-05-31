@@ -20,7 +20,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko

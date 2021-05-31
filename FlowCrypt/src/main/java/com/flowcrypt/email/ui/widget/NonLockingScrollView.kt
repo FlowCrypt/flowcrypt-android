@@ -30,7 +30,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.ScrollView
-import java.util.*
+import java.util.ArrayList
 
 /**
  * A [ScrollView] that will never lock scrolling in a particular direction.

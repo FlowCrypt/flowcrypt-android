@@ -9,7 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import java.util.*
+import java.util.Locale
 
 data class PgpContact constructor(
   var email: String,

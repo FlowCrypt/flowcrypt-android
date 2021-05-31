@@ -30,7 +30,8 @@ import org.acra.config.httpSender
 import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 import org.acra.sender.HttpSender
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**

@@ -25,7 +25,7 @@ import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.node.TestData
 import com.flowcrypt.email.security.KeysStorageImpl
 import org.apache.commons.io.IOUtils
-import java.util.*
+import java.util.Arrays
 
 //todo-denbond7 Need to refactor this class
 class NodeTestActivity : AppCompatActivity(), View.OnClickListener,

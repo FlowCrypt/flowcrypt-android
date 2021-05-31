@@ -59,7 +59,8 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
-import java.util.*
+import java.util.ArrayList
+import java.util.Date
 
 /**
  * @author Denis Bondarenko

@@ -18,7 +18,8 @@ import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import java.io.FilterInputStream
 import java.io.InputStream
-import java.util.*
+import java.util.Date
+import java.util.Properties
 import javax.mail.Flags
 import javax.mail.Multipart
 import javax.mail.Session

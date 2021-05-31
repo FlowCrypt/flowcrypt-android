@@ -6,7 +6,7 @@
 package com.flowcrypt.email.jfixture
 
 import java.lang.reflect.Constructor
-import java.util.*
+import java.util.Comparator
 
 /**
  * @author Denis Bondarenko

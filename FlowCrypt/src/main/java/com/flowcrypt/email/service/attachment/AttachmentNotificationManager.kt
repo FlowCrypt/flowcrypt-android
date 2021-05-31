@@ -19,7 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
-import java.util.*
+import java.util.Random
 
 /**
  * This manager is responsible for displaying attachment notifications.

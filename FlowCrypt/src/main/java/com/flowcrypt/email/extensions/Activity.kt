@@ -62,4 +62,3 @@ fun FragmentActivity.showTwoWayDialogFragment(
 
   showDialogFragment(infoDialogFragment)
 }
-

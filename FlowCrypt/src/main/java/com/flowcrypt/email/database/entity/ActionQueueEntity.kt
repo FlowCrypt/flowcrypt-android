@@ -13,7 +13,7 @@ import com.flowcrypt.email.service.actionqueue.actions.Action
 import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko

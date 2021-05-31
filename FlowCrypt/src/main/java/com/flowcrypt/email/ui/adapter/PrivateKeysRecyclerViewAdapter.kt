@@ -19,7 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
 import com.flowcrypt.email.util.GeneralUtil
-import java.util.*
+import java.util.Date
 
 /**
  * This adapter will be used to show a list of private keys.

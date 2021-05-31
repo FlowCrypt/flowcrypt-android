@@ -36,7 +36,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.ArrayList
 
 /**
  * This manager is responsible for displaying messages notifications.

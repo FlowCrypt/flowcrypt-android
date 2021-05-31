@@ -23,7 +23,7 @@ import okio.buffer
 import java.io.File
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.UUID
 
 /**
  * This service sends a user feedback to our API

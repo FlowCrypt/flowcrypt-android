@@ -48,7 +48,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.util.*
+import java.util.ArrayList
 
 /**
  * @author Denis Bondarenko

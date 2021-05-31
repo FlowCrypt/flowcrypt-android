@@ -13,7 +13,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import java.util.*
+import java.util.Locale
 
 /**
  * This class describe creating of table which has name

@@ -23,7 +23,7 @@ import org.junit.runner.RunWith
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Properties
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 import javax.mail.Session

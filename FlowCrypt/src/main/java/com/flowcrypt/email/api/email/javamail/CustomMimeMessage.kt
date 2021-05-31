@@ -6,7 +6,7 @@
 package com.flowcrypt.email.api.email.javamail
 
 import java.io.ByteArrayInputStream
-import java.util.*
+import java.util.Properties
 import javax.mail.Session
 import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimeMessage

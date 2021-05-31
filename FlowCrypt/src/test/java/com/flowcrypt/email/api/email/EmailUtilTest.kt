@@ -19,7 +19,7 @@ import java.io.ByteArrayInputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.*
+import java.util.Properties
 import javax.mail.Message
 import javax.mail.Multipart
 import javax.mail.Session

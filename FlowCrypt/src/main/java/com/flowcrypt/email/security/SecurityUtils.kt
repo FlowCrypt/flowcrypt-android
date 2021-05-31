@@ -23,7 +23,7 @@ import org.apache.commons.codec.android.binary.Hex
 import org.apache.commons.codec.android.digest.DigestUtils
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
-import java.util.*
+import java.util.UUID
 
 /**
  * This class help to receive security information.

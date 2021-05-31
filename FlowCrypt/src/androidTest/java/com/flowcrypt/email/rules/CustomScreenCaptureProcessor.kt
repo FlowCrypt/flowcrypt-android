@@ -15,7 +15,7 @@ import androidx.test.runner.screenshot.BasicScreenCaptureProcessor
 import androidx.test.runner.screenshot.ScreenCapture
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedOutputStream
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko

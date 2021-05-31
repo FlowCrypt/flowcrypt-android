@@ -26,4 +26,3 @@ interface OnChangeMessageEncryptionTypeListener {
    */
   fun onMsgEncryptionTypeChanged(messageEncryptionType: MessageEncryptionType)
 }
-

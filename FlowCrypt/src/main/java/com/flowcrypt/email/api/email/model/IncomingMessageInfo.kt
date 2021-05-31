@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
-import java.util.*
+import java.util.Date
 import javax.mail.internet.InternetAddress
 
 /**

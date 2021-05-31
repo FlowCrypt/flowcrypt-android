@@ -15,7 +15,7 @@ import com.flowcrypt.email.model.DialogItem
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.ui.adapter.DialogItemAdapter
 import com.flowcrypt.email.util.GeneralUtil
-import java.util.*
+import java.util.ArrayList
 
 /**
  * This dialog will be used to show for user different options to resolve a PGP not found situation.

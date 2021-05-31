@@ -14,7 +14,8 @@ import com.flowcrypt.email.database.dao.ContactsDao
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.model.PgpContact
-import java.util.*
+import java.util.ArrayList
+import java.util.Locale
 
 /**
  * This service does update a name of some email entry or creates a new email entry if it not

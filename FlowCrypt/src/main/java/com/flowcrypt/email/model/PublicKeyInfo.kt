@@ -8,7 +8,7 @@ package com.flowcrypt.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.ContactEntity
-import java.util.*
+import java.util.Locale
 
 /**
  * This class describes information about some public key.

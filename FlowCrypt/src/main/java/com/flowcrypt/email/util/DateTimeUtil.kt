@@ -8,7 +8,8 @@ package com.flowcrypt.email.util
 import android.content.Context
 import android.text.format.DateFormat
 import android.text.format.DateUtils
-import java.util.*
+import java.util.Calendar
+import java.util.GregorianCalendar
 
 /**
  * This class can be used to work with datea and time.

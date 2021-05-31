@@ -34,7 +34,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
-import java.util.*
+import java.util.ArrayList
 import java.util.regex.Pattern
 import javax.mail.internet.InternetAddress
 

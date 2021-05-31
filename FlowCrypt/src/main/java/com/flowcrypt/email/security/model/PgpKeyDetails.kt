@@ -14,7 +14,8 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.util.exception.FlowCryptException
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import java.util.*
+import java.util.ArrayList
+import java.util.Locale
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 

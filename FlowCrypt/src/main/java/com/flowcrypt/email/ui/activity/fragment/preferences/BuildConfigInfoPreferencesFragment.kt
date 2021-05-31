@@ -10,7 +10,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceDialogFragmentCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import java.util.*
+import java.util.Formatter
+import java.util.Locale
 
 /**
  * This fragment shows a general information about the current build.

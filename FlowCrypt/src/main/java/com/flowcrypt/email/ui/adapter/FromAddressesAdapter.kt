@@ -13,7 +13,7 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.UIUtil
-import java.util.*
+import java.util.HashMap
 
 /**
  * This is a custom realization of [ArrayAdapter] which can be used for showing the sender addresses.
