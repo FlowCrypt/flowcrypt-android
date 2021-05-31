@@ -93,20 +93,18 @@ interface MsgBlock : Parcelable {
         override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
       }
 
-      @JvmField
       val keyBlockTypes = setOf(PUBLIC_KEY, PRIVATE_KEY)
 
-      @JvmField
       val replaceableBlockTypes = setOf(
         PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
       )
 
-      @JvmField
       val wellKnownBlockTypes = setOf(
         PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
       )
 
-      @JvmStatic
+      val signedBlocks = setOf(SIGNED_TEXT, SIGNED_HTML, SIGNED_MSG)
+
       fun ofSerializedName(serializedName: String): Type {
         for (v in values()) {
           val field = Type::class.java.getField(v.name)

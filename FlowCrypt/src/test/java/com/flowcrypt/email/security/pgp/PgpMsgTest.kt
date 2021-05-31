@@ -348,10 +348,7 @@ class PgpMsgTest {
       assertEquals(expectedComplete, actualBlock.complete)
       assertEquals(expectedContent, actualContent)
 
-      if (
-        actualBlock.type == MsgBlock.Type.SIGNED_TEXT
-        || actualBlock.type == MsgBlock.Type.SIGNED_HTML
-      ) {
+      if (actualBlock.type in MsgBlock.Type.signedBlocks) {
         val expectedSignature = expectedBlock["signature"].asString.normalizeEol()
         val actualSignature = ((actualBlock as SignedBlock).signature ?: "").normalizeEol()
         assertEquals(expectedSignature, actualSignature)

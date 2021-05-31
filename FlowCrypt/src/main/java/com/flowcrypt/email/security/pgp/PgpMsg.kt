@@ -54,7 +54,7 @@ object PgpMsg {
         } else { // 10XX XXXX - potential old pgp packet tag
           (firstByte and 0x3c).toInt() ushr (2) // 10TTTTLL where T is tag number bit.
         }
-        if (tagNumber <= maxTagNumber) {
+        if (tagNumber <= MAX_TAG_NUMBER) {
           // Indeed a valid OpenPGP packet tag number
           // This does not 100% mean it's OpenPGP message
           // But it's a good indication that it may be
@@ -92,7 +92,7 @@ object PgpMsg {
     PacketTags.COMPRESSED_DATA
   )
 
-  private const val maxTagNumber = 20
+  private const val MAX_TAG_NUMBER = 20
 
   data class DecryptionError(
     val type: PgpDecrypt.DecryptionErrorType,
@@ -370,34 +370,9 @@ object PgpMsg {
 
   // Typescript:  public static processDecoded = (decoded: MimeContent): MimeProcessedMsg
   fun processDecodedMimeMessage(decoded: MimeContent): MimeProcessedMsg {
-    val blocks = mutableListOf<MsgBlock>()
-    if (decoded.text != null) {
-      val blocksFromTextPart = MsgBlockParser.detectBlocks(decoded.text)
-      val suitableBlock = blocksFromTextPart.firstOrNull {
-        it.type == MsgBlock.Type.ENCRYPTED_MSG || it.type == MsgBlock.Type.SIGNED_MSG
-            || it.type == MsgBlock.Type.PUBLIC_KEY || it.type == MsgBlock.Type.PRIVATE_KEY
-      }
-      when {
-        suitableBlock != null -> {
-          // if there are some encryption-related blocks found in the text section,
-          // which we can use, and not look at the html section, because the html most likely
-          // contains the same thing, just harder to parse pgp sections cause it's html
-          blocks.addAll(blocksFromTextPart)
-        }
-        decoded.html != null -> {
-          // if no pgp blocks found in text part and there is html part, prefer html
-          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, decoded.html))
-        }
-        else -> {
-          // else if no html and just a plain text message, use that
-          blocks.addAll(blocksFromTextPart)
-        }
-      }
-    } else if (decoded.html != null) {
-      blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, decoded.html))
-    }
-
+    val blocks = analyzeDecodedTextAndHtml(decoded)
     var signature: String? = decoded.signature
+
     for (att in decoded.attachments) {
       var content = att.content
       // println("att: ${att.contentType} '${att.fileName}' ${att.size} -> $treatedAs")
@@ -449,12 +424,7 @@ object PgpMsg {
               MsgBlockFactory.fromAttachment(
                 MsgBlock.Type.ENCRYPTED_ATT,
                 null,
-                AttMeta(
-                  name = att.fileName,
-                  type = att.contentType,
-                  data = content,
-                  length = att.size.toLong() // rough size according to description
-                )
+                AttMeta(att.fileName, content, att.size.toLong(), att.contentType)
               )
             )
           }
@@ -466,12 +436,7 @@ object PgpMsg {
               MsgBlockFactory.fromAttachment(
                 MsgBlock.Type.PLAIN_ATT,
                 null,
-                AttMeta(
-                  name = att.fileName,
-                  type = att.contentType,
-                  data = content,
-                  length = att.size.toLong() // rough size according to description
-                )
+                AttMeta(att.fileName, content, att.size.toLong(), att.contentType)
               )
             )
           }
@@ -480,31 +445,64 @@ object PgpMsg {
     }
 
     if (signature != null) {
-      for (i in 0 until blocks.size) {
-        val block = blocks[i]
-        when (block.type) {
-          MsgBlock.Type.PLAIN_TEXT -> {
-            blocks[i] = MsgBlockFactory.fromContent(
-              type = MsgBlock.Type.SIGNED_TEXT,
-              content = block.content,
-              missingEnd = !block.complete,
-              signature = signature
-            )
-          }
-          MsgBlock.Type.PLAIN_HTML -> {
-            blocks[i] = MsgBlockFactory.fromContent(
-              type = MsgBlock.Type.SIGNED_HTML,
-              content = block.content,
-              missingEnd = !block.complete,
-              signature = signature
-            )
-          }
-          else -> {}
-        }
-      }
+      fixSignedBlocks(blocks, signature)
     }
 
     return MimeProcessedMsg(blocks, decoded.from, decoded.to)
+  }
+
+  private fun analyzeDecodedTextAndHtml(decoded: MimeContent): MutableList<MsgBlock> {
+    val blocks = mutableListOf<MsgBlock>()
+    if (decoded.text != null) {
+      val blocksFromTextPart = MsgBlockParser.detectBlocks(decoded.text)
+      val suitableBlock = blocksFromTextPart.firstOrNull {
+        it.type in MsgBlock.Type.wellKnownBlockTypes
+      }
+      when {
+        suitableBlock != null -> {
+          // if there are some encryption-related blocks found in the text section,
+          // which we can use, and not look at the html section, because the html most likely
+          // contains the same thing, just harder to parse pgp sections cause it's html
+          blocks.addAll(blocksFromTextPart)
+        }
+        decoded.html != null -> {
+          // if no pgp blocks found in text part and there is html part, prefer html
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, decoded.html))
+        }
+        else -> {
+          // else if no html and just a plain text message, use that
+          blocks.addAll(blocksFromTextPart)
+        }
+      }
+    } else if (decoded.html != null) {
+      blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, decoded.html))
+    }
+    return blocks
+  }
+
+  private fun fixSignedBlocks(blocks: MutableList<MsgBlock>, signature: String) {
+    for (i in 0 until blocks.size) {
+      val block = blocks[i]
+      when (block.type) {
+        MsgBlock.Type.PLAIN_TEXT -> {
+          blocks[i] = MsgBlockFactory.fromContent(
+            type = MsgBlock.Type.SIGNED_TEXT,
+            content = block.content,
+            missingEnd = !block.complete,
+            signature = signature
+          )
+        }
+        MsgBlock.Type.PLAIN_HTML -> {
+          blocks[i] = MsgBlockFactory.fromContent(
+            type = MsgBlock.Type.SIGNED_HTML,
+            content = block.content,
+            missingEnd = !block.complete,
+            signature = signature
+          )
+        }
+        else -> {}
+      }
+    }
   }
 
   private enum class TreatAs {
@@ -586,6 +584,3 @@ object PgpMsg {
   private val publicKeyRegex1 = Regex("^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.asc\$")
   private val publicKeyRegex2 = Regex("[A-F0-9]{8}.*\\.asc\$")
 }
-
-//                   || ex.message?.contains("Invalid Curve25519 public key") == true
-//               || ex.message?.contains("ECDH requires use of PGPPrivateKey for decryption") == true

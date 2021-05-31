@@ -10,11 +10,9 @@ import javax.mail.BodyPart
 import javax.mail.MessagingException
 
 fun BodyPart.hasFileName(): Boolean {
-  var result = false
-  try {
-    result = this.fileName != null
+  return try {
+    this.fileName != null
   } catch (ex: MessagingException) {
-    // ignore
+    false
   }
-  return result
 }
