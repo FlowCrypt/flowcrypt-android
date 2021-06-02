@@ -510,8 +510,13 @@
     <string name="active_passphrase_session">Active pass phrase session</string>
     <string name="silent">Silent</string>
     <string name="silent_notifications_notification_channel">The silent notifications channel</string>
+    <string name="passphrase_type_undefined">Passphrase type is undefined</string>
     <plurals name="please_provide_passphrase_for_following_keys">
         <item quantity="one">Please provide a passphrase for the following key</item>
         <item quantity="other">Please provide a passphrase for the following keys</item>
+    </plurals>
+    <plurals name="you_have_unlocked_keys">
+        <item quantity="one">You have unlocked one key. Please use a different passphrase to unlock the remaining keys</item>
+        <item quantity="other">You have unlocked %1$d keys. Please use a different passphrase to unlock the remaining keys</item>
     </plurals>
 </resources>

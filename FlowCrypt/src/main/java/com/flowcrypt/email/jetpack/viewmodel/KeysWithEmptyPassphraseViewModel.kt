@@ -33,7 +33,10 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
         emit(Result.loading())
         emit(Result.success(list
           .map { it.toPgpKeyDetails() }
-          .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true })
+          .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true }
+          .map {
+            it.copy(passphraseType = keysStorage.getPassphraseTypeByFingerprint(it.fingerprint))
+          })
         )
       }
     }
@@ -44,7 +47,10 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
         emit(Result.loading())
         emit(
           Result.success(keysStorage.getPgpKeyDetailsList()
-            .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true })
+            .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true }
+            .map {
+              it.copy(passphraseType = keysStorage.getPassphraseTypeByFingerprint(it.fingerprint))
+            })
         )
       }
     }

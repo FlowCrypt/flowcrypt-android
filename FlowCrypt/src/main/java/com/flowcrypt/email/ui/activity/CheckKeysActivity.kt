@@ -148,9 +148,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
           snackBar?.dismiss()
           getPassphraseType()?.let { passphraseType ->
             checkPrivateKeysViewModel.checkKeys(
-              keys = remainingKeys,
-              passphrase = Passphrase.fromPassword(typedText),
-              passphraseType = passphraseType
+              keys = remainingKeys.map { it.copy(passphraseType = passphraseType) },
+              passphrase = Passphrase.fromPassword(typedText)
             )
           }
         }
