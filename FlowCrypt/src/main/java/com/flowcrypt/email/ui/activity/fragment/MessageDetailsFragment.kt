@@ -482,7 +482,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       this@MessageDetailsFragment,
       REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
     )
-    fragment.show(parentFragmentManager, FixEmptyPassphraseDialogFragment::class.java.simpleName)
+    val tag = FixEmptyPassphraseDialogFragment::class.java.simpleName
+    if (parentFragmentManager.findFragmentByTag(tag) == null) {
+      fragment.show(parentFragmentManager, tag)
+    }
   }
 
   /**

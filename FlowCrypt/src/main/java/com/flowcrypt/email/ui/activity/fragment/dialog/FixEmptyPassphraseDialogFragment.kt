@@ -167,7 +167,7 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
 
   @SuppressLint("FragmentLiveDataObserve")
   private fun setupCheckPrivateKeysViewModel() {
-    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(this, { it ->
+    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity?.countingIdlingResource?.incrementSafely()

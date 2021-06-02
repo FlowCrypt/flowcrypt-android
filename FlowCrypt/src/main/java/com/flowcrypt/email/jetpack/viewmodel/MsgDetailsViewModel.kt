@@ -113,6 +113,9 @@ class MsgDetailsViewModel(
     )
   }
 
+  private val afterKeysStorageUpdatedMsgLiveData: MediatorLiveData<MessageEntity?> =
+    MediatorLiveData()
+
   private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> =
     keysStorage.secretKeyRingsLiveData.switchMap {
       liveData {
@@ -125,6 +128,19 @@ class MsgDetailsViewModel(
             )
           )
         }
+      }
+    }
+
+  private val afterPassphrasesUpdatedMsgLiveData: LiveData<MessageEntity?> =
+    keysStorage.passphrasesUpdatesLiveData.switchMap {
+      liveData {
+        emit(
+          roomDatabase.msgDao().getMsgSuspend(
+            account = messageEntity.email,
+            folder = messageEntity.folder,
+            uid = messageEntity.uid
+          )
+        )
       }
     }
 
@@ -248,19 +264,28 @@ class MsgDetailsViewModel(
   )
 
   init {
+    afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
+      afterKeysStorageUpdatedMsgLiveData.value = it
+    }
+    afterKeysStorageUpdatedMsgLiveData.addSource(afterPassphrasesUpdatedMsgLiveData) {
+      afterKeysStorageUpdatedMsgLiveData.value = it
+    }
+
     mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
-    mediatorMsgLiveData.addSource(afterKeysUpdatedMsgLiveData, object : Observer<MessageEntity?> {
-      var isFirstCall = true
-      override fun onChanged(messageEntity: MessageEntity?) {
-        if (isFirstCall) {
-          isFirstCall = false
-        } else {
-          mediatorMsgLiveData.value = messageEntity
+    mediatorMsgLiveData.addSource(
+      afterKeysStorageUpdatedMsgLiveData,
+      object : Observer<MessageEntity?> {
+        var isFirstCall = true
+        override fun onChanged(messageEntity: MessageEntity?) {
+          if (isFirstCall) {
+            isFirstCall = false
+          } else {
+            mediatorMsgLiveData.value = messageEntity
+          }
         }
-      }
-    })
+      })
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) {
