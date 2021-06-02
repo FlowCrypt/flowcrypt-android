@@ -169,7 +169,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
-  override fun updatePassPhrasesCache() {
+  override fun updatePassphrasesCache() {
     for (key in getRawKeys()) {
       if (key.passphraseType == KeyEntity.PassphraseType.RAM) {
         val entry = passPhraseMap[key.fingerprint] ?: continue
@@ -185,7 +185,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
-  override fun putPassPhraseToCache(
+  override fun putPassphraseToCache(
     fingerprint: String,
     passphrase: Passphrase,
     validUntil: Instant,
@@ -198,6 +198,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     )
 
     passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+  }
+
+  override fun hasEmptyPassphrase(): Boolean {
+    return passPhraseMap.values.any { it.passphrase.isEmpty }
   }
 
   private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {

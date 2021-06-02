@@ -79,6 +79,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixEmptyPassphraseDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -473,6 +474,15 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION
     )
     fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
+  }
+
+  private fun showNeedPassphraseDialog() {
+    val fragment = FixEmptyPassphraseDialogFragment.newInstance()
+    fragment.setTargetFragment(
+      this@MessageDetailsFragment,
+      REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
+    )
+    fragment.show(parentFragmentManager, FixEmptyPassphraseDialogFragment::class.java.simpleName)
   }
 
   /**
@@ -1227,6 +1237,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     observerIncomingMessageInfoLiveData()
     observeAttsLiveData()
     observerMsgStatesLiveData()
+    observerPassphraseNeededLiveData()
   }
 
   private fun observeFreshMsgLiveData() {
@@ -1357,6 +1368,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     })
   }
 
+  private fun observerPassphraseNeededLiveData() {
+    msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner, { isPassphraseNeeded ->
+      if (isPassphraseNeeded) {
+        showNeedPassphraseDialog()
+      }
+    })
+  }
+
   private fun messageNotAvailableInFolder(showToast: Boolean = true) {
     msgDetailsViewModel.deleteMsg()
     if (showToast) {
@@ -1369,6 +1388,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
+    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
   }

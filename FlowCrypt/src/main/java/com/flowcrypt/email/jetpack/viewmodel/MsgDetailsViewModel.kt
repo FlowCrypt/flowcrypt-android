@@ -33,6 +33,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -92,6 +94,8 @@ class MsgDetailsViewModel(
   private var lastPercentage = 0
   private var currentPercentage = 0
   private var lastUpdateTime = System.currentTimeMillis()
+
+  val passphraseNeededLiveData: MutableLiveData<Boolean> = MutableLiveData()
 
   val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
     account = messageEntity.email,
@@ -392,6 +396,14 @@ class MsgDetailsViewModel(
           val pgpContact = keyDetails.primaryPgpContact
           val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
           block.existingPgpContact = contactEntity?.toPgpContact()
+        }
+
+        if (block is DecryptErrorMsgBlock) {
+          if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE
+            && keysStorage.hasEmptyPassphrase()
+          ) {
+            passphraseNeededLiveData.postValue(true)
+          }
         }
       }
     }

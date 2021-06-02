@@ -65,7 +65,7 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
 
     lifecycleScope.launch {
       repeatableActionFlow.collect {
-        keysStorage.updatePassPhrasesCache()
+        keysStorage.updatePassphrasesCache()
       }
     }
   }
