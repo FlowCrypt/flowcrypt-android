@@ -47,8 +47,10 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
   private var tVStatusMessage: TextView? = null
   private var pBLoading: View? = null
   private var pBCheckPassphrase: View? = null
-  private var gCheckPassphrase: View? = null
+  private var tILKeyPassword: View? = null
   private var eTKeyPassword: EditText? = null
+  private var btnUpdatePassphrase: View? = null
+
   private val prvKeysRecyclerViewAdapter = PrvKeysRecyclerViewAdapter()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
 
@@ -78,12 +80,13 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
   }
 
   private fun initViews(view: View) {
-    gCheckPassphrase = view.findViewById(R.id.gCheckPassphrase)
     tVStatusMessage = view.findViewById(R.id.tVStatusMessage)
     pBLoading = view.findViewById(R.id.pBLoading)
     pBCheckPassphrase = view.findViewById(R.id.pBCheckPassphrase)
+    tILKeyPassword = view.findViewById(R.id.tILKeyPassword)
     rVKeys = view.findViewById(R.id.rVKeys)
     eTKeyPassword = view.findViewById(R.id.eTKeyPassword)
+    btnUpdatePassphrase = view.findViewById(R.id.btnUpdatePassphrase)
 
     eTKeyPassword?.setOnEditorActionListener { _, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
@@ -105,7 +108,7 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
       adapter = prvKeysRecyclerViewAdapter
     }
 
-    view.findViewById<View>(R.id.btnUpdatePassphrase)?.setOnClickListener {
+    btnUpdatePassphrase?.setOnClickListener {
       checkPassphrase()
     }
   }
@@ -115,7 +118,6 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
     if (typedText.isNullOrEmpty()) {
       toast(getString(R.string.passphrase_must_be_non_empty))
     } else {
-      UIUtil.hideSoftInput(requireContext(), eTKeyPassword)
       eTKeyPassword?.let {
         val passPhrase = Passphrase.fromPassword(typedText)
         val keys = keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData
@@ -143,7 +145,9 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
           if (CollectionUtils.isEmpty(keyDetailsList)) {
             tVStatusMessage?.text = getString(R.string.error_no_keys)
           } else {
-            gCheckPassphrase?.visible()
+            btnUpdatePassphrase?.visible()
+            tILKeyPassword?.visible()
+            rVKeys?.visible()
             if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
               tVStatusMessage?.text = resources.getQuantityString(
                 R.plurals.please_provide_passphrase_for_following_keys, keyDetailsList.size
@@ -210,6 +214,8 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
                 countOfMatchedPassphrases,
                 countOfMatchedPassphrases
               )
+              eTKeyPassword?.text = null
+              UIUtil.hideSoftInput(requireContext(), eTKeyPassword)
             }
 
             isWrongPassphraseExceptionFound -> {
