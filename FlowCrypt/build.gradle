@@ -453,7 +453,7 @@ dependencies {
     implementation 'org.bitbucket.b_c:jose4j:0.7.7'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.0-alpha12') {
+    implementation ('org.pgpainless:pgpainless-core:0.2.0') {
         //exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }
