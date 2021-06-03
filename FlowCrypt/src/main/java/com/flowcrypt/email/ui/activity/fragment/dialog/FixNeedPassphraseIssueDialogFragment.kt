@@ -31,9 +31,8 @@ import com.flowcrypt.email.jetpack.viewmodel.KeysWithEmptyPassphraseViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.adapter.PrvKeysRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
-import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
-import com.google.android.gms.common.util.CollectionUtils
 import org.pgpainless.util.Passphrase
 
 /**
@@ -42,7 +41,7 @@ import org.pgpainless.util.Passphrase
  *         Time: 2:50 PM
  *         E-mail: DenBond7@gmail.com
  */
-class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
+class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
   private var rVKeys: RecyclerView? = null
   private var tVStatusMessage: TextView? = null
   private var pBLoading: View? = null
@@ -55,10 +54,12 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
 
   private val keysWithEmptyPassphraseViewModel: KeysWithEmptyPassphraseViewModel by viewModels()
+  private val fingerprintList = mutableListOf<String>()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     isCancelable = false
+    arguments?.getStringArrayList(KEY_FINGERPRINTS)?.let { fingerprintList.addAll(it) }
     setupKeysWithEmptyPassphraseLiveData()
     setupCheckPrivateKeysViewModel()
   }
@@ -141,8 +142,10 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
 
         Result.Status.SUCCESS -> {
           pBLoading?.gone()
-          val keyDetailsList = it.data ?: emptyList()
-          if (CollectionUtils.isEmpty(keyDetailsList)) {
+          val filteredKeyDetailsList = (it.data ?: emptyList()).filter { pgpKeyDetails ->
+            pgpKeyDetails.fingerprint in fingerprintList
+          }
+          if (filteredKeyDetailsList.isEmpty()) {
             tVStatusMessage?.text = getString(R.string.error_no_keys)
           } else {
             btnUpdatePassphrase?.visible()
@@ -150,11 +153,11 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
             rVKeys?.visible()
             if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
               tVStatusMessage?.text = resources.getQuantityString(
-                R.plurals.please_provide_passphrase_for_following_keys, keyDetailsList.size
+                R.plurals.please_provide_passphrase_for_following_keys, filteredKeyDetailsList.size
               )
             }
 
-            prvKeysRecyclerViewAdapter.submitList(keyDetailsList)
+            prvKeysRecyclerViewAdapter.submitList(filteredKeyDetailsList)
           }
           baseActivity?.countingIdlingResource?.decrementSafely()
         }
@@ -203,19 +206,8 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
           }
 
           when {
-            checkResults.size == countOfMatchedPassphrases -> {
-              //leave this fragment
-              dismiss()
-            }
-
             countOfMatchedPassphrases > 0 -> {
-              tVStatusMessage?.text = resources.getQuantityString(
-                R.plurals.you_have_unlocked_keys,
-                countOfMatchedPassphrases,
-                countOfMatchedPassphrases
-              )
-              eTKeyPassword?.text = null
-              UIUtil.hideSoftInput(requireContext(), eTKeyPassword)
+              dismiss()
             }
 
             isWrongPassphraseExceptionFound -> {
@@ -240,8 +232,17 @@ class FixEmptyPassphraseDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    fun newInstance(): FixEmptyPassphraseDialogFragment {
-      return FixEmptyPassphraseDialogFragment()
+    private val KEY_FINGERPRINTS = GeneralUtil.generateUniqueExtraKey(
+      "KEY_FINGERPRINTS",
+      FixNeedPassphraseIssueDialogFragment::class.java
+    )
+
+    fun newInstance(fingerprints: List<String>): FixNeedPassphraseIssueDialogFragment {
+      return FixNeedPassphraseIssueDialogFragment().apply {
+        arguments = Bundle().apply {
+          putStringArrayList(KEY_FINGERPRINTS, ArrayList(fingerprints))
+        }
+      }
     }
   }
 }

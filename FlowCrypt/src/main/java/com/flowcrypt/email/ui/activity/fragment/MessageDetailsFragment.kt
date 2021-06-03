@@ -79,7 +79,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.FixEmptyPassphraseDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -476,13 +476,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
   }
 
-  private fun showNeedPassphraseDialog() {
-    val fragment = FixEmptyPassphraseDialogFragment.newInstance()
+  private fun showNeedPassphraseDialog(fingerprints: List<String>) {
+    val fragment = FixNeedPassphraseIssueDialogFragment.newInstance(fingerprints)
     fragment.setTargetFragment(
       this@MessageDetailsFragment,
       REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
     )
-    val tag = FixEmptyPassphraseDialogFragment::class.java.simpleName
+    val tag = FixNeedPassphraseIssueDialogFragment::class.java.simpleName
     if (parentFragmentManager.findFragmentByTag(tag) == null) {
       fragment.show(parentFragmentManager, tag)
     }
@@ -1372,9 +1372,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun observerPassphraseNeededLiveData() {
-    msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner, { isPassphraseNeeded ->
-      if (isPassphraseNeeded) {
-        showNeedPassphraseDialog()
+    msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner, { fingerprintList ->
+      if (fingerprintList.isNotEmpty()) {
+        showNeedPassphraseDialog(fingerprintList)
       }
     })
   }

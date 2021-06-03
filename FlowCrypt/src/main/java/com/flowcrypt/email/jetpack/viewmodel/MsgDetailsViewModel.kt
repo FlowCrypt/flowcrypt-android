@@ -95,7 +95,7 @@ class MsgDetailsViewModel(
   private var currentPercentage = 0
   private var lastUpdateTime = System.currentTimeMillis()
 
-  val passphraseNeededLiveData: MutableLiveData<Boolean> = MutableLiveData()
+  val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
 
   val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
     account = messageEntity.email,
@@ -375,6 +375,7 @@ class MsgDetailsViewModel(
       if (uri != null) {
         val list = keysStorage.getPgpKeyDetailsList()
         val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
+        passphraseNeededLiveData.postValue(emptyList())
         val result = if (largerThan1Mb) {
           parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
         } else {
@@ -427,7 +428,7 @@ class MsgDetailsViewModel(
           if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE
             && keysStorage.hasEmptyPassphrase()
           ) {
-            passphraseNeededLiveData.postValue(true)
+            passphraseNeededLiveData.postValue(block.error.longIds?.needPassphrase ?: emptyList())
           }
         }
       }
