@@ -51,6 +51,7 @@ import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ApiException
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
@@ -425,10 +426,13 @@ class MsgDetailsViewModel(
         }
 
         if (block is DecryptErrorMsgBlock) {
-          if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE
-            && keysStorage.hasEmptyPassphrase()
-          ) {
-            passphraseNeededLiveData.postValue(block.error.longIds?.needPassphrase ?: emptyList())
+          if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+            val fingerprints = block.error.longIds?.needPassphrase ?: emptyList()
+            if (fingerprints.isEmpty()) {
+              ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
+            } else {
+              passphraseNeededLiveData.postValue(fingerprints)
+            }
           }
         }
       }

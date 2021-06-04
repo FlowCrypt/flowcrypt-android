@@ -59,9 +59,15 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     isCancelable = false
-    arguments?.getStringArrayList(KEY_FINGERPRINTS)?.let { fingerprintList.addAll(it) }
-    setupKeysWithEmptyPassphraseLiveData()
-    setupCheckPrivateKeysViewModel()
+
+    val providedFingerprints = arguments?.getStringArrayList(KEY_FINGERPRINTS)
+    if (providedFingerprints == null || providedFingerprints.isEmpty()) {
+      dismiss()
+    } else {
+      fingerprintList.addAll(providedFingerprints)
+      setupKeysWithEmptyPassphraseLiveData()
+      setupCheckPrivateKeysViewModel()
+    }
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -143,7 +149,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
         Result.Status.SUCCESS -> {
           pBLoading?.gone()
           val filteredKeyDetailsList = (it.data ?: emptyList()).filter { pgpKeyDetails ->
-            pgpKeyDetails.fingerprint in fingerprintList
+            fingerprintList.any { element -> element.equals(pgpKeyDetails.fingerprint, true) }
           }
           if (filteredKeyDetailsList.isEmpty()) {
             tVStatusMessage?.text = getString(R.string.error_no_keys)
