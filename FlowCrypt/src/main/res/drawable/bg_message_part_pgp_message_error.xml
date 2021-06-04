@@ -6,7 +6,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android"
     android:paddingLeft="@dimen/padding_pgp_message_error_big"
     android:paddingTop="@dimen/padding_pgp_message_error_small"
-    android:paddingRight="@dimen/padding_pgp_message_error_small"
+    android:paddingRight="@dimen/padding_pgp_message_error_big"
     android:paddingBottom="@dimen/padding_pgp_message_error_small">
 
     <item>

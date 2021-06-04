@@ -63,6 +63,7 @@ import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
@@ -1131,20 +1132,37 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 
-      else -> return getView(
-        clipLargeText(block.content), getString(
-          R.string.could_not_decrypt_message_due_to_error,
-          decryptError.details?.type.toString() + ": " + decryptError.details?.message
-        ),
-        layoutInflater
-      )
+      else -> {
+        var btText: String? = null
+        var onClickListener: View.OnClickListener? = null
+        if (decryptError.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+          btText = getString(R.string.fix)
+          onClickListener = View.OnClickListener {
+            val fingerprints = decryptError.longIds?.needPassphrase ?: return@OnClickListener
+            showNeedPassphraseDialog(fingerprints)
+          }
+        }
+
+        return getView(
+          originalMsg = clipLargeText(block.content),
+          errorMsg = getString(
+            R.string.could_not_decrypt_message_due_to_error,
+            decryptError.details?.type.toString() + ": " + decryptError.details?.message
+          ),
+          layoutInflater = layoutInflater,
+          buttonText = btText,
+          onClickListener = onClickListener
+        )
+      }
     }
   }
 
   private fun getView(
     originalMsg: String?,
     errorMsg: String,
-    layoutInflater: LayoutInflater
+    layoutInflater: LayoutInflater,
+    buttonText: String? = null,
+    onClickListener: View.OnClickListener? = null
   ): View {
     val viewGroup = layoutInflater.inflate(
       R.layout.message_part_pgp_message_error,
@@ -1154,6 +1172,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     ExceptionUtil.handleError(ManualHandledException(errorMsg))
     textViewErrorMsg.text = errorMsg
     viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup))
+    onClickListener?.let {
+      val btAction = viewGroup.findViewById<TextView>(R.id.btAction)
+      btAction.text = buttonText
+      btAction.visible()
+      btAction.setOnClickListener(it)
+    }
     return viewGroup
   }
 
