@@ -30,18 +30,21 @@ class PrivateKeysManager {
       accountEntity: AccountEntity, keyPath: String,
       passphrase: String, sourceType: KeyImportDetails.SourceType
     ) {
-      val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
+      val nodeKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
       saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, sourceType)
     }
 
     fun saveKeyToDatabase(
-      accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails,
-      passphrase: String, sourceType: KeyImportDetails.SourceType
+      accountEntity: AccountEntity,
+      pgpKeyDetails: PgpKeyDetails,
+      passphrase: String?,
+      sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL,
+      passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
     ) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       val keyEntity = pgpKeyDetails
-        .copy(passphraseType = KeyEntity.PassphraseType.DATABASE)
+        .copy(passphraseType = passphraseType)
         .toKeyEntity(accountEntity)
         .copy(
           source = sourceType.toString(),
@@ -58,7 +61,7 @@ class PrivateKeysManager {
       Thread.sleep(3000)
     }
 
-    fun getNodeKeyDetailsFromAssets(
+    fun getPgpKeyDetailsFromAssets(
       assetsPath: String,
       onlyPrivate: Boolean = false
     ): PgpKeyDetails {
@@ -98,7 +101,11 @@ class PrivateKeysManager {
     }
 
     fun deleteKey(accountEntity: AccountEntity, keyPath: String) {
-      val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
+      val nodeKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
+      deleteKey(accountEntity, nodeKeyDetails)
+    }
+
+    fun deleteKey(accountEntity: AccountEntity, nodeKeyDetails: PgpKeyDetails) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       nodeKeyDetails.fingerprint.let {

@@ -11,12 +11,9 @@ import android.content.ComponentName
 import android.text.format.DateUtils
 import android.text.format.Formatter
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
-import androidx.test.espresso.IdlingRegistry
-import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -31,11 +28,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.web.assertion.WebViewAssertions.webMatches
-import androidx.test.espresso.web.sugar.Web.onWebView
-import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
-import androidx.test.espresso.web.webdriver.DriverAtoms.getText
-import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -43,21 +35,18 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -67,10 +56,8 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.anything
-import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
-import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -86,16 +73,8 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MessageDetailsActivityTest : BaseTest() {
-  override val useIntents: Boolean = true
-  override val activeActivityRule =
-    lazyActivityScenarioRule<MessageDetailsActivity>(launchActivity = false)
-  override val activityScenario: ActivityScenario<*>?
-    get() = activeActivityRule.scenario
-
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-  private var idlingForWebView: IdlingResource? = null
-
+class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val simpleAttInfo = TestGeneralUtil.getObjectFromJson(
     "messages/attachments/simple_att.json",
     AttachmentInfo::class.java
@@ -113,23 +92,10 @@ class MessageDetailsActivityTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
-    .around(AddPrivateKeyToDatabaseRule())
+    .around(addPrivateKeyToDatabaseRule)
     .around(RetryRule.DEFAULT)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
-
-  private val localFolder: LocalFolder = LocalFolder(
-    addAccountToDatabaseRule.account.email,
-    fullName = "INBOX",
-    folderAlias = "INBOX",
-    msgCount = 1,
-    attributes = listOf("\\HasNoChildren")
-  )
-
-  @After
-  fun unregisterDecryptionIdling() {
-    idlingForWebView?.let { IdlingRegistry.getInstance().unregister(it) }
-  }
 
   @Test
   fun testReplyButton() {
@@ -241,11 +207,7 @@ class MessageDetailsActivityTest : BaseTest() {
         "messages/info/encrypted_msg_info_text_with_missing_key_fixed.json",
         IncomingMessageInfo::class.java
       )
-
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
-      .withElement(findElement(Locator.XPATH, "/html/body"))
-      .check(webMatches(getText(), equalTo(incomingMsgInfoFixed?.text)))
+    checkWebViewText(incomingMsgInfoFixed?.text)
 
     PrivateKeysManager.deleteKey(
       addAccountToDatabaseRule.account,
@@ -375,7 +337,7 @@ class MessageDetailsActivityTest : BaseTest() {
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
     val nodeKeyDetails =
-      PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
     val pgpContact = nodeKeyDetails.primaryPgpContact
 
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(
@@ -571,10 +533,7 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(details)
     matchHeader(incomingMsgInfo)
 
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
-      .withElement(findElement(Locator.XPATH, "/html/body"))
-      .check(webMatches(getText(), equalTo(incomingMsgInfo.text)))
+    checkWebViewText(incomingMsgInfo.text)
     matchReplyButtons(details)
   }
 
@@ -585,10 +544,7 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(msgEntity)
     matchHeader(incomingMsgInfo)
 
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
-      .withElement(findElement(Locator.XPATH, "/html/body"))
-      .check(webMatches(getText(), equalTo(incomingMsgInfo.text)))
+    checkWebViewText(incomingMsgInfo.text)
     onView(withId(R.id.layoutAtt))
       .check(matches(isDisplayed()))
     matchAtt(att)
@@ -662,23 +618,6 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(withDrawable(R.mipmap.ic_reply_all_red)))
       onView(withId(R.id.imageViewFwd))
         .check(matches(withDrawable(R.mipmap.ic_forward_red)))
-    }
-  }
-
-  private fun launchActivity(msgEntity: MessageEntity) {
-    activeActivityRule.launch(
-      MessageDetailsActivity.getIntent(
-        getTargetContext(),
-        localFolder,
-        msgEntity
-      )
-    )
-    registerAllIdlingResources()
-
-    activityScenario?.onActivity { activity ->
-      val messageDetailsActivity = (activity as? MessageDetailsActivity) ?: return@onActivity
-      idlingForWebView = messageDetailsActivity.idlingForWebView
-      idlingForWebView?.let { IdlingRegistry.getInstance().register(it) }
     }
   }
 

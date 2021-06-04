@@ -366,7 +366,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   @DependsOnMailServer
   fun testWhenNoAccountsAndHasBackup() {
     val prvKey = PrivateKeysManager
-      .getNodeKeyDetailsFromAssets("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc")
+      .getPgpKeyDetailsFromAssets("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc")
       .copy(passphraseType = KeyEntity.PassphraseType.DATABASE)
 
     intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))

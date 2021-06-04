@@ -71,19 +71,19 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   @Test
   fun testErrorLogin() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_ERROR))
-    isToastDisplayed(decorView, LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
+    isToastDisplayed(LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
   fun testSuccessLoginNotVerified() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_VERIFIED))
-    isToastDisplayed(decorView, getResString(R.string.user_not_verified))
+    isToastDisplayed(getResString(R.string.user_not_verified))
   }
 
   @Test
   fun testErrorGetDomainRules() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_RULES_ERROR))
-    isToastDisplayed(decorView, DOMAIN_RULES_ERROR_RESPONSE.apiError?.msg!!)
+    isToastDisplayed(DOMAIN_RULES_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test

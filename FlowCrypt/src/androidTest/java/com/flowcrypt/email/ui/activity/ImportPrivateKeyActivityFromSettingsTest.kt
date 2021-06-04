@@ -178,7 +178,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     private lateinit var fileWithoutPrivateKey: File
     private lateinit var privateKey: String
     private var keyDetails =
-      PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/attested_user@flowcrypt.test_prv_default_strong.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/attested_user@flowcrypt.test_prv_default_strong.asc")
 
     @BeforeClass
     @JvmStatic

@@ -100,7 +100,7 @@ class KeysSettingsActivityTest : BaseTest() {
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
     val details =
-      PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@flowcrypt.test_secondKey_prv_default.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = addAccountToDatabaseRule.account,
       pgpKeyDetails = details,
@@ -146,7 +146,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnCopyToClipboard))
       .check(matches(isDisplayed()))
       .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.copied))
+    isToastDisplayed(getResString(R.string.copied))
     UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey) }
   }
 
@@ -157,7 +157,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnShowPrKey))
       .perform(scrollTo())
       .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.see_backups_to_save_your_private_keys))
+    isToastDisplayed(getResString(R.string.see_backups_to_save_your_private_keys))
   }
 
   @Test
@@ -208,7 +208,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   fun testKeyDetailsTestPassPhraseMismatch() {
-    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+    val details = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_secondKey_prv_default.asc"
     )
     PrivateKeysManager.saveKeyToDatabase(
@@ -257,7 +257,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnSaveToFile))
       .check(matches(isDisplayed()))
       .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.saved))
+    isToastDisplayed(getResString(R.string.saved))
   }
 
   private fun selectFirstKey() {

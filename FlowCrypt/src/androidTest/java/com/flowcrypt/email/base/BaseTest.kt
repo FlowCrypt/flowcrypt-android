@@ -31,6 +31,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.isToast
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -115,15 +116,18 @@ abstract class BaseTest : BaseActivityTestImplementation {
   }
 
   /**
-   * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
-   * when some toast is displayed.
+   * Check is [Toast] displayed.
    *
    * @param message  A message which was displayed.
+   * @param delay  If we have to check a few toasts one by one
+   * we need to have some timeout between checking.
    */
-  protected fun isToastDisplayed(decorView: View?, message: String) {
+  protected fun isToastDisplayed(message: String, delay: Long? = null) {
     onView(withText(message))
-      .inRoot(withDecorView(not(`is`(decorView))))
+      .inRoot(isToast())
       .check(matches(isDisplayed()))
+
+    delay?.let { Thread.sleep(it) }
   }
 
   /**
