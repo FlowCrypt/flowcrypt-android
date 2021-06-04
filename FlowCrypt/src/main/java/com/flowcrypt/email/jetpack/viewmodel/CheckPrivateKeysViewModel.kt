@@ -15,6 +15,7 @@ import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ import org.pgpainless.util.Passphrase
  *         E-mail: DenBond7@gmail.com
  */
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
+  private val controlledRunnerForChecking = ControlledRunner<Result<List<CheckResult>>>()
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
 
   fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase) {
@@ -37,8 +39,9 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
         checkPrvKeysLiveData.value = Result.error(emptyList())
         return@launch
       }
-      checkPrvKeysLiveData.value =
-        Result.success(checkKeysInternal(keys, passphrase))
+      checkPrvKeysLiveData.value = controlledRunnerForChecking.cancelPreviousThenRun {
+        return@cancelPreviousThenRun Result.success(checkKeysInternal(keys, passphrase))
+      }
     }
   }
 
