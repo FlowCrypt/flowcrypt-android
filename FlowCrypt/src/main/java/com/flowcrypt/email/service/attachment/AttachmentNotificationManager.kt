@@ -127,13 +127,24 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
   fun errorHappened(context: Context, attInfo: AttachmentInfo, e: Exception) {
     val builder = genDefBuilder(context, attInfo)
 
-    val contentText = if (TextUtils.isEmpty(e.message))
-      context.getString(
-        R.string
-          .error_occurred_please_try_again
-      )
-    else
-      e.message
+    val bitText = StringBuilder()
+    val contentText: String?
+    when {
+      TextUtils.isEmpty(e.message) -> {
+        contentText = context.getString(R.string.error_occurred_please_try_again)
+        bitText.append(e.javaClass.simpleName)
+      }
+
+      e.cause != null -> {
+        contentText = e.cause?.message ?: ""
+        bitText.append(e.javaClass.simpleName + ": " + e.message)
+      }
+
+      else -> {
+        contentText = e.message
+        bitText.append(e.javaClass.simpleName + ": " + e.message)
+      }
+    }
 
     builder.setProgress(0, 0, false)
       .setAutoCancel(true)
@@ -145,6 +156,10 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setContentText(contentText)
       .setGroup(GROUP_NAME_ATTACHMENTS)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+
+    if (bitText.isNotEmpty()) {
+      builder.setStyle(NotificationCompat.BigTextStyle().bigText(bitText))
+    }
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, false)
