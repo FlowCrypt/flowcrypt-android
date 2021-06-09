@@ -33,12 +33,14 @@ interface KeysStorage {
 
   fun getSecretKeyRingProtector(): SecretKeyRingProtector
 
-  fun updatePassPhrasesCache()
+  fun updatePassphrasesCache()
 
-  fun putPassPhraseToCache(
+  fun putPassphraseToCache(
     fingerprint: String,
     passphrase: Passphrase,
     validUntil: Instant,
     passphraseType: KeyEntity.PassphraseType
   )
+
+  fun hasEmptyPassphrase(): Boolean
 }

@@ -125,7 +125,7 @@ class ImportPgpContactActivityTest : BaseTest() {
       .check(matches(isDisplayed()))
       .perform(click())
     //due to realization of MockWebServer I can't produce the same response.
-    isToastDisplayed(decorView, "API error: code = 404, message = ")
+    isToastDisplayed("API error: code = 404, message = ")
   }
 
   @Test

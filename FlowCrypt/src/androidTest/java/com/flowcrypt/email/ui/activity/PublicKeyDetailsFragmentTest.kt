@@ -70,7 +70,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
 
   private val keyDetails =
-    PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
+    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -144,7 +144,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     onView(withId(R.id.menuActionCopy))
       .check(matches(isDisplayed()))
       .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.public_key_copied_to_clipboard))
+    isToastDisplayed(getResString(R.string.public_key_copied_to_clipboard))
     UiThreadStatement.runOnUiThread {
       checkClipboardText(TestGeneralUtil.replaceVersionInKey(keyDetails.publicKey))
     }
@@ -181,7 +181,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    isToastDisplayed(decorView, getResString(R.string.saved))
+    isToastDisplayed(getResString(R.string.saved))
   }
 
   @Test

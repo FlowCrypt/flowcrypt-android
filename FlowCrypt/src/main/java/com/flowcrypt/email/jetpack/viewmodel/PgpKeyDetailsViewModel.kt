@@ -75,7 +75,7 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
 
   fun forgetPassphrase() {
     fingerprint?.let {
-      keysStorage.putPassPhraseToCache(
+      keysStorage.putPassphraseToCache(
         fingerprint = it,
         passphrase = Passphrase.emptyPassphrase(),
         validUntil = Instant.now(),
@@ -86,7 +86,7 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
 
   fun updatePassphrase(passphrase: Passphrase) {
     fingerprint?.let {
-      keysStorage.putPassPhraseToCache(
+      keysStorage.putPassphraseToCache(
         fingerprint = it,
         passphrase = passphrase,
         validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),

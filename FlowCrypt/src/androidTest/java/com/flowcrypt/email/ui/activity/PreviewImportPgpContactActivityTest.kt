@@ -57,7 +57,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   private val singlePublicKeyForUnsavedContact: String? =
-    PrivateKeysManager.getNodeKeyDetailsFromAssets(
+    PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_fisrtKey_pub.asc"
     ).publicKey
 
@@ -135,7 +135,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
           ClickOnViewInRecyclerViewItem(R.id.buttonSaveContact)
         )
       )
-    isToastDisplayed(decorView, getResString(R.string.contact_successfully_saved))
+    isToastDisplayed(getResString(R.string.contact_successfully_saved))
   }
 
   @Test

@@ -33,6 +33,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -49,6 +51,7 @@ import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ApiException
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
@@ -93,6 +96,8 @@ class MsgDetailsViewModel(
   private var currentPercentage = 0
   private var lastUpdateTime = System.currentTimeMillis()
 
+  val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
+
   val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
     account = messageEntity.email,
     folder = messageEntity.folder,
@@ -109,6 +114,9 @@ class MsgDetailsViewModel(
     )
   }
 
+  private val afterKeysStorageUpdatedMsgLiveData: MediatorLiveData<MessageEntity?> =
+    MediatorLiveData()
+
   private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> =
     keysStorage.secretKeyRingsLiveData.switchMap {
       liveData {
@@ -121,6 +129,19 @@ class MsgDetailsViewModel(
             )
           )
         }
+      }
+    }
+
+  private val afterPassphrasesUpdatedMsgLiveData: LiveData<MessageEntity?> =
+    keysStorage.passphrasesUpdatesLiveData.switchMap {
+      liveData {
+        emit(
+          roomDatabase.msgDao().getMsgSuspend(
+            account = messageEntity.email,
+            folder = messageEntity.folder,
+            uid = messageEntity.uid
+          )
+        )
       }
     }
 
@@ -244,19 +265,28 @@ class MsgDetailsViewModel(
   )
 
   init {
+    afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
+      afterKeysStorageUpdatedMsgLiveData.value = it
+    }
+    afterKeysStorageUpdatedMsgLiveData.addSource(afterPassphrasesUpdatedMsgLiveData) {
+      afterKeysStorageUpdatedMsgLiveData.value = it
+    }
+
     mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
-    mediatorMsgLiveData.addSource(afterKeysUpdatedMsgLiveData, object : Observer<MessageEntity?> {
-      var isFirstCall = true
-      override fun onChanged(messageEntity: MessageEntity?) {
-        if (isFirstCall) {
-          isFirstCall = false
-        } else {
-          mediatorMsgLiveData.value = messageEntity
+    mediatorMsgLiveData.addSource(
+      afterKeysStorageUpdatedMsgLiveData,
+      object : Observer<MessageEntity?> {
+        var isFirstCall = true
+        override fun onChanged(messageEntity: MessageEntity?) {
+          if (isFirstCall) {
+            isFirstCall = false
+          } else {
+            mediatorMsgLiveData.value = messageEntity
+          }
         }
-      }
-    })
+      })
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) {
@@ -346,6 +376,7 @@ class MsgDetailsViewModel(
       if (uri != null) {
         val list = keysStorage.getPgpKeyDetailsList()
         val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
+        passphraseNeededLiveData.postValue(emptyList())
         val result = if (largerThan1Mb) {
           parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
         } else {
@@ -392,6 +423,17 @@ class MsgDetailsViewModel(
           val pgpContact = keyDetails.primaryPgpContact
           val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
           block.existingPgpContact = contactEntity?.toPgpContact()
+        }
+
+        if (block is DecryptErrorMsgBlock) {
+          if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+            val fingerprints = block.error.longIds?.needPassphrase ?: emptyList()
+            if (fingerprints.isEmpty()) {
+              ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
+            } else {
+              passphraseNeededLiveData.postValue(fingerprints)
+            }
+          }
         }
       }
     }

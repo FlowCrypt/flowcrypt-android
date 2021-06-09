@@ -63,6 +63,7 @@ import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
@@ -79,6 +80,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -473,6 +475,18 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION
     )
     fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
+  }
+
+  private fun showNeedPassphraseDialog(fingerprints: List<String>) {
+    val fragment = FixNeedPassphraseIssueDialogFragment.newInstance(fingerprints)
+    fragment.setTargetFragment(
+      this@MessageDetailsFragment,
+      REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
+    )
+    val tag = FixNeedPassphraseIssueDialogFragment::class.java.simpleName
+    if (parentFragmentManager.findFragmentByTag(tag) == null) {
+      fragment.show(parentFragmentManager, tag)
+    }
   }
 
   /**
@@ -1118,20 +1132,37 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 
-      else -> return getView(
-        clipLargeText(block.content), getString(
-          R.string.could_not_decrypt_message_due_to_error,
-          decryptError.details?.type.toString() + ": " + decryptError.details?.message
-        ),
-        layoutInflater
-      )
+      else -> {
+        var btText: String? = null
+        var onClickListener: View.OnClickListener? = null
+        if (decryptError.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+          btText = getString(R.string.fix)
+          onClickListener = View.OnClickListener {
+            val fingerprints = decryptError.longIds?.needPassphrase ?: return@OnClickListener
+            showNeedPassphraseDialog(fingerprints)
+          }
+        }
+
+        return getView(
+          originalMsg = clipLargeText(block.content),
+          errorMsg = getString(
+            R.string.could_not_decrypt_message_due_to_error,
+            decryptError.details?.type.toString() + ": " + decryptError.details?.message
+          ),
+          layoutInflater = layoutInflater,
+          buttonText = btText,
+          onClickListener = onClickListener
+        )
+      }
     }
   }
 
   private fun getView(
     originalMsg: String?,
     errorMsg: String,
-    layoutInflater: LayoutInflater
+    layoutInflater: LayoutInflater,
+    buttonText: String? = null,
+    onClickListener: View.OnClickListener? = null
   ): View {
     val viewGroup = layoutInflater.inflate(
       R.layout.message_part_pgp_message_error,
@@ -1141,6 +1172,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     ExceptionUtil.handleError(ManualHandledException(errorMsg))
     textViewErrorMsg.text = errorMsg
     viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup))
+    onClickListener?.let {
+      val btAction = viewGroup.findViewById<TextView>(R.id.btAction)
+      btAction.text = buttonText
+      btAction.visible()
+      btAction.setOnClickListener(it)
+    }
     return viewGroup
   }
 
@@ -1227,6 +1264,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     observerIncomingMessageInfoLiveData()
     observeAttsLiveData()
     observerMsgStatesLiveData()
+    observerPassphraseNeededLiveData()
   }
 
   private fun observeFreshMsgLiveData() {
@@ -1357,6 +1395,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     })
   }
 
+  private fun observerPassphraseNeededLiveData() {
+    msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner, { fingerprintList ->
+      if (fingerprintList.isNotEmpty()) {
+        showNeedPassphraseDialog(fingerprintList)
+      }
+    })
+  }
+
   private fun messageNotAvailableInFolder(showToast: Boolean = true) {
     msgDetailsViewModel.deleteMsg()
     if (showToast) {
@@ -1369,6 +1415,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
+    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
   }

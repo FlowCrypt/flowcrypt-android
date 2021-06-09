@@ -218,7 +218,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
             if (isAdded) {
               if (keyDetails.passphraseType == KeyEntity.PassphraseType.RAM) {
-                keysStorage.putPassPhraseToCache(
+                keysStorage.putPassphraseToCache(
                   fingerprint = fingerprint,
                   passphrase = Passphrase(keyDetails.tempPassphrase),
                   validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),

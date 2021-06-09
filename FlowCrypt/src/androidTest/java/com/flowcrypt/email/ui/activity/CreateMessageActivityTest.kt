@@ -125,7 +125,7 @@ class CreateMessageActivityTest : BaseTest() {
 
   private val pgpContact: PgpContact
     get() {
-      val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+      val details = PrivateKeysManager.getPgpKeyDetailsFromAssets(
         "pgp/not_attester_user@flowcrypt.test_prv_default.asc"
       )
       return details.primaryPgpContact
@@ -461,7 +461,7 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withText(R.string.copy_from_other_contact))
       .check(matches(isDisplayed()))
       .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.key_successfully_copied))
+    isToastDisplayed(getResString(R.string.key_successfully_copied))
   }
 
   @Test
@@ -483,7 +483,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
-      PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
+      PrivateKeysManager.getPgpKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
     PrivateKeysManager.saveKeyToDatabase(
       addAccountToDatabaseRule.account, secondKeyDetails,
       TestConstants.DEFAULT_STRONG_PASSWORD, KeyImportDetails.SourceType.EMAIL
@@ -516,7 +516,7 @@ class CreateMessageActivityTest : BaseTest() {
       addAccountToDatabaseRule.account,
       addPrivateKeyToDatabaseRule.keyPath
     )
-    val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+    val keyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/key_testing@flowcrypt.test_keyB_default.asc"
     )
     PrivateKeysManager.saveKeyToDatabase(
@@ -541,7 +541,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
-      PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
     val contact = keyDetails.primaryPgpContact
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
       .contactsDao().insert(contact.toContactEntity())
@@ -572,7 +572,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
-      PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
     val contact = keyDetailsFromAssets.primaryPgpContact
     val contactsDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
     contactsDao.insert(contact.toContactEntity())

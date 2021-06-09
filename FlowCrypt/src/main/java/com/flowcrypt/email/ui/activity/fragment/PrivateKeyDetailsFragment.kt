@@ -260,8 +260,12 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
         eTKeyPassword?.let {
           val passPhrase = Passphrase.fromPassword(typedText)
           val pgpKeyDetails = pgpKeyDetailsViewModel.getPgpKeyDetails() ?: return@let
-          val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType() ?: return@let
-          checkPrivateKeysViewModel.checkKeys(listOf(pgpKeyDetails), passPhrase, passPhraseType)
+          checkPrivateKeysViewModel.checkKeys(
+            keys = listOf(
+              pgpKeyDetails.copy(passphraseType = pgpKeyDetailsViewModel.getPassphraseType())
+            ),
+            passphrase = passPhrase
+          )
         }
       }
     }
@@ -335,8 +339,12 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private fun matchPassphrase(pgpKeyDetails: PgpKeyDetails) {
     val passPhrase = pgpKeyDetailsViewModel.getPassphrase() ?: return
     if (passPhrase.isEmpty) return
-    val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType() ?: return
-    checkPrivateKeysViewModel.checkKeys(listOf(pgpKeyDetails), passPhrase, passPhraseType)
+    checkPrivateKeysViewModel.checkKeys(
+      keys = listOf(
+        pgpKeyDetails.copy(passphraseType = pgpKeyDetailsViewModel.getPassphraseType())
+      ),
+      passphrase = passPhrase
+    )
   }
 
   private fun setupPrivateKeysViewModel() {
