@@ -511,6 +511,7 @@
     <string name="silent">Silent</string>
     <string name="silent_notifications_notification_channel">The silent notifications channel</string>
     <string name="passphrase_type_undefined">Pass phrase type is undefined</string>
+    <string name="provide_passphrase_to_decrypt_file">Please provide a pass phrase to decrypt this file</string>
     <plurals name="please_provide_passphrase_for_following_keys">
         <item quantity="one">Please provide a pass phrase for the following key</item>
         <item quantity="other">Please provide a pass phrase for at least one of the following keys</item>

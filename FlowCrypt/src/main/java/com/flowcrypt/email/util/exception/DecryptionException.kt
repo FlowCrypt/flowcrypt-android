@@ -15,5 +15,6 @@ import com.flowcrypt.email.security.pgp.PgpDecrypt
  */
 class DecryptionException(
   val decryptionErrorType: PgpDecrypt.DecryptionErrorType,
-  val e: Exception
+  val e: Exception,
+  val fingerprints: List<String> = emptyList()
 ) : FlowCryptException(e)

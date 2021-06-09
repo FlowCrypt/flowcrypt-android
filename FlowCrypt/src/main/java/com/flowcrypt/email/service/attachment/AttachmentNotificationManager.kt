@@ -17,8 +17,11 @@ import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.DecryptionException
 import java.util.Random
 
 /**
@@ -128,21 +131,36 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     val builder = genDefBuilder(context, attInfo)
 
     val bitText = StringBuilder()
-    val contentText: String?
+    val contentText = StringBuilder()
     when {
       TextUtils.isEmpty(e.message) -> {
-        contentText = context.getString(R.string.error_occurred_please_try_again)
+        contentText.append(context.getString(R.string.error_occurred_please_try_again))
         bitText.append(e.javaClass.simpleName)
       }
 
       e.cause != null -> {
-        contentText = e.cause?.message ?: ""
+        contentText.append(e.cause?.message ?: "")
         bitText.append(e.javaClass.simpleName + ": " + e.message)
       }
 
       else -> {
-        contentText = e.message
+        contentText.append(e.message)
         bitText.append(e.javaClass.simpleName + ": " + e.message)
+      }
+    }
+
+    if (e is DecryptionException) {
+      if (e.decryptionErrorType == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+        contentText.clear()
+        contentText.append(context.getString(R.string.provide_passphrase_to_decrypt_file))
+        val fingerprint = e.fingerprints.firstOrNull()
+        fingerprint?.let {
+          val additionalText = context.resources.getQuantityString(
+            R.plurals.please_provide_passphrase_for_following_keys,
+            1
+          ) + "\n" + GeneralUtil.doSectionsInText(" ", it, 4) + "\n\n"
+          bitText.insert(0, additionalText)
+        }
       }
     }
 
