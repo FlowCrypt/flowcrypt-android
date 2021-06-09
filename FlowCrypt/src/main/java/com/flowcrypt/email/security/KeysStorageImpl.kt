@@ -161,10 +161,12 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
           for (secretKey in pgpSecretKeyRing.secretKeys) {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
             val passphrase = getPassphraseByFingerprint(openPgpV4Fingerprint.toString())
-              ?: throw DecryptionException(
+            if (passphrase == null || passphrase.isEmpty) {
+              throw DecryptionException(
                 decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
                 e = PGPException("flowcrypt: need passphrase")
               )
+            }
             return@PasswordBasedSecretKeyRingProtector passphrase
           }
         }
