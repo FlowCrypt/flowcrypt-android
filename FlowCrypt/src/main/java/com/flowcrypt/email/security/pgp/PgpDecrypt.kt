@@ -7,11 +7,11 @@ package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPDataValidationException
-import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
+import org.pgpainless.exception.MissingDecryptionMethodException
 import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -66,24 +66,11 @@ object PgpDecrypt {
         DecryptionException(DecryptionErrorType.BAD_MDC, e)
       }
 
-      is PGPDataValidationException -> {
+      is PGPDataValidationException, is MissingDecryptionMethodException -> {
         DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
       }
 
       is DecryptionException -> e
-
-      is PGPException -> {
-        when {
-          e.message?.contains("exception decrypting session info") == true
-              || e.message?.contains("encoded length out of range") == true
-              || e.message?.contains("Exception recovering session info") == true
-              || e.message?.contains("No suitable decryption key") == true -> {
-            DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
-          }
-
-          else -> DecryptionException(DecryptionErrorType.OTHER, e)
-        }
-      }
 
       else -> DecryptionException(DecryptionErrorType.OTHER, e)
     }
