@@ -93,6 +93,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return secretKeyRingsLiveData.value ?: emptyList()
   }
 
+  @Synchronized
   override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
     val list = mutableListOf<PgpKeyDetails>()
     for (secretKey in getPGPSecretKeyRings()) {
