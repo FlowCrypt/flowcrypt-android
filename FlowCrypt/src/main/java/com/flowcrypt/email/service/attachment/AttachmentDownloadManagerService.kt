@@ -37,6 +37,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -653,8 +654,7 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      val regex = PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN
-      if (regex.find(att.name ?: "") == null) {
+      if (!SecurityUtils.isEncryptedData(att.name)) {
         return file
       }
 
