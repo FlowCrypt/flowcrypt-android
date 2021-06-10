@@ -56,9 +56,43 @@ class PgpDecryptTest {
   }
 
   @Test
-  @Ignore("need to add realization")
   fun testDecryptionErrorKeyMismatch() {
+    val srcFile = temporaryFolder.createFileWithRandomData(fileSizeInBytes = FileUtils.ONE_MB)
+    val sourceBytes = srcFile.readBytes()
+    val outputStreamForEncryptedSource = ByteArrayOutputStream()
+    PgpEncrypt.encryptAndOrSign(
+      srcInputStream = ByteArrayInputStream(sourceBytes),
+      destOutputStream = outputStreamForEncryptedSource,
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+        listOf(
+          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
+          KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
+        )
+      ),
+      doArmor = false
+    )
 
+    val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
+    val outputStreamWithDecryptedData = ByteArrayOutputStream()
+    val randomKey = PGPainless.generateKeyRing()
+      .simpleEcKeyRing("random@flowcrypt.test", "qwerty")
+
+    val exception = Assert.assertThrows(DecryptionException::class.java) {
+      PgpDecrypt.decrypt(
+        srcInputStream = ByteArrayInputStream(encryptedBytes),
+        destOutputStream = outputStreamWithDecryptedData,
+        pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(randomKey)),
+        protector = PasswordBasedSecretKeyRingProtector.forKey(
+          randomKey,
+          Passphrase.fromPassword("qwerty")
+        )
+      )
+    }
+
+    Assert.assertEquals(
+      exception.decryptionErrorType,
+      PgpDecrypt.DecryptionErrorType.KEY_MISMATCH
+    )
   }
 
   @Test
