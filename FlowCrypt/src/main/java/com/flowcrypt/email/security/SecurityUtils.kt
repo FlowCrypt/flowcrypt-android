@@ -13,6 +13,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
@@ -160,6 +161,14 @@ class SecurityUtils {
      */
     fun generateRandomUUID(): String {
       return String(Hex.encodeHex(DigestUtils.sha1(UUID.randomUUID().toString())))
+    }
+
+    /**
+     * Check if the file extension fits the encrypted pattern.
+     * If yes - it can mean the file is encrypted
+     */
+    fun isEncryptedData(fileName: String?): Boolean {
+      return PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find(fileName ?: "") != null
     }
   }
 }

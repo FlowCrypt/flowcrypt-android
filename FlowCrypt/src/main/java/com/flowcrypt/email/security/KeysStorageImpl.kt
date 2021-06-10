@@ -93,6 +93,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return secretKeyRingsLiveData.value ?: emptyList()
   }
 
+  @Synchronized
   override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
     val list = mutableListOf<PgpKeyDetails>()
     for (secretKey in getPGPSecretKeyRings()) {
@@ -160,11 +161,15 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
         if (keyIDs.contains(keyId)) {
           for (secretKey in pgpSecretKeyRing.secretKeys) {
             val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
-            val passphrase = getPassphraseByFingerprint(openPgpV4Fingerprint.toString())
-              ?: throw DecryptionException(
+            val fingerprint = openPgpV4Fingerprint.toString()
+            val passphrase = getPassphraseByFingerprint(fingerprint)
+            if (passphrase == null || passphrase.isEmpty) {
+              throw DecryptionException(
                 decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
-                e = PGPException("flowcrypt: need passphrase")
+                e = PGPException("flowcrypt: need passphrase"),
+                fingerprints = listOf(fingerprint)
               )
+            }
             return@PasswordBasedSecretKeyRingProtector passphrase
           }
         }

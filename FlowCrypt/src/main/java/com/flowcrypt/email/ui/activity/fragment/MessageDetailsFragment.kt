@@ -72,6 +72,7 @@ import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
@@ -129,6 +130,21 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
         lastClickedAtt = attachmentInfo
         lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+
+        if (SecurityUtils.isEncryptedData(attachmentInfo.name)) {
+          for (block in msgInfo?.msgBlocks ?: emptyList()) {
+            if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
+              val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
+              val decryptErrorDetails = decryptErrorMsgBlock.error?.details ?: continue
+              if (decryptErrorDetails.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+                val fingerprints = decryptErrorMsgBlock.error.longIds?.needPassphrase ?: continue
+                showNeedPassphraseDialog(fingerprints)
+                return
+              }
+            }
+          }
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
           ContextCompat.checkSelfPermission(
             requireContext(),

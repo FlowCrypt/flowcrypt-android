@@ -17,8 +17,11 @@ import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.DecryptionException
 import java.util.Random
 
 /**
@@ -127,13 +130,39 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
   fun errorHappened(context: Context, attInfo: AttachmentInfo, e: Exception) {
     val builder = genDefBuilder(context, attInfo)
 
-    val contentText = if (TextUtils.isEmpty(e.message))
-      context.getString(
-        R.string
-          .error_occurred_please_try_again
-      )
-    else
-      e.message
+    val bigText = StringBuilder()
+    val contentText = StringBuilder()
+    when {
+      TextUtils.isEmpty(e.message) -> {
+        contentText.append(context.getString(R.string.error_occurred_please_try_again))
+        bigText.append(e.javaClass.simpleName)
+      }
+
+      e.cause != null -> {
+        contentText.append(e.cause?.message ?: "")
+        bigText.append(e.javaClass.simpleName + ": " + e.message)
+      }
+
+      else -> {
+        contentText.append(e.message)
+        bigText.append(e.javaClass.simpleName + ": " + e.message)
+      }
+    }
+
+    if (e is DecryptionException) {
+      if (e.decryptionErrorType == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+        contentText.clear()
+        contentText.append(context.getString(R.string.provide_passphrase_to_decrypt_file))
+        val fingerprint = e.fingerprints.firstOrNull()
+        fingerprint?.let {
+          val additionalText = context.resources.getQuantityString(
+            R.plurals.please_provide_passphrase_for_following_keys,
+            1
+          ) + "\n" + GeneralUtil.doSectionsInText(" ", it, 4) + "\n\n"
+          bigText.insert(0, additionalText)
+        }
+      }
+    }
 
     builder.setProgress(0, 0, false)
       .setAutoCancel(true)
@@ -145,6 +174,10 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setContentText(contentText)
       .setGroup(GROUP_NAME_ATTACHMENTS)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+
+    if (bigText.isNotEmpty()) {
+      builder.setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
+    }
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, false)
