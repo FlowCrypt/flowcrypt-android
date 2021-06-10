@@ -19,6 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
@@ -231,6 +232,41 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
       )
 
     checkWebView(decryptedInfo)
+  }
+
+  @Test
+  fun testShowNeedPassphraseDialogWhenTryingToDownloadAttachment() {
+    val encryptedAttInfo = TestGeneralUtil.getObjectFromJson(
+      "messages/attachments/encrypted_att.json",
+      AttachmentInfo::class.java
+    )
+
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_info_text_with_one_att.json",
+      "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo
+    )
+
+    launchActivity(msgInfo!!.msgEntity)
+
+    //close a dialog during start up
+    onView(withText(getResString(R.string.cancel)))
+      .inRoot(isDialog())
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    //Click on the download button
+    onView(withId(R.id.imageButtonDownloadAtt))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    //check that a dialog is displayed
+    val tVStatusMessageText = getQuantityString(
+      R.plurals.please_provide_passphrase_for_following_keys,
+      1
+    )
+    onView(withText(tVStatusMessageText))
+      .inRoot(isDialog())
+      .check(matches(isDisplayed()))
   }
 
   private fun checkWebView(decryptedInfo: IncomingMessageInfo?) {
