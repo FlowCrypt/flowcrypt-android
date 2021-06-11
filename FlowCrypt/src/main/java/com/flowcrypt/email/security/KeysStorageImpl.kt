@@ -220,10 +220,6 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return passPhraseMap.values.any { it.passphrase.isEmpty }
   }
 
-  override fun hasKeyWithProvidedPassphrase(): Boolean {
-    return passPhraseMap.values.any { !it.passphrase.isEmpty }
-  }
-
   private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {
     val existedIdList = passPhraseMap.keys
     val refreshedIdList = keyEntityList.map { it.fingerprint }

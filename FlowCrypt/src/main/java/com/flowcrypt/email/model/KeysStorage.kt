@@ -43,6 +43,4 @@ interface KeysStorage {
   )
 
   fun hasEmptyPassphrase(): Boolean
-
-  fun hasKeyWithProvidedPassphrase(): Boolean
 }

@@ -90,6 +90,7 @@ import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator
 import org.apache.commons.io.FileUtils
+import org.pgpainless.key.OpenPgpV4Fingerprint
 import java.io.File
 import java.io.IOException
 import java.util.regex.Pattern
@@ -508,14 +509,23 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
           UIUtil.hideSoftInput(context, view)
           if (isDataCorrect) {
-            val keysStorage = KeysStorageImpl.getInstance(requireContext())
-            if (!keysStorage.hasKeyWithProvidedPassphrase()) {
-              val fingerprints = keysStorage.getRawKeys().map { it.fingerprint }
-              showNeedPassphraseDialog(
-                fingerprints,
-                REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
-              )
-              return true
+            if (listener.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
+              val keysStorage = KeysStorageImpl.getInstance(requireContext())
+              val senderEmail = editTextFrom?.text.toString()
+              val keyRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
+              if (keyRings.isNotEmpty()) {
+                val firstMatchedSecretKey = keyRings.first()
+                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(firstMatchedSecretKey)
+                val fingerprint = openPgpV4Fingerprint.toString()
+                val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
+                if (passphrase?.isEmpty == true) {
+                  showNeedPassphraseDialog(
+                    listOf(fingerprint),
+                    REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
+                  )
+                  return true
+                }
+              }
             }
 
             sendMsg()
