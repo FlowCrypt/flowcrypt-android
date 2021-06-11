@@ -69,6 +69,7 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectContactsActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
@@ -484,6 +485,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         }
       }
 
+      REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG -> when (resultCode) {
+        FixNeedPassphraseIssueDialogFragment.RESULT_OK -> {
+          sendMsg()
+        }
+      }
+
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
@@ -501,6 +508,16 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
           UIUtil.hideSoftInput(context, view)
           if (isDataCorrect) {
+            val keysStorage = KeysStorageImpl.getInstance(requireContext())
+            if (!keysStorage.hasKeyWithProvidedPassphrase()) {
+              val fingerprints = keysStorage.getRawKeys().map { it.fingerprint }
+              showNeedPassphraseDialog(
+                fingerprints,
+                REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
+              )
+              return true
+            }
+
             sendMsg()
             this.isMsgSentToQueue = true
           }
@@ -1774,6 +1791,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
     private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
+    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 107
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
 }

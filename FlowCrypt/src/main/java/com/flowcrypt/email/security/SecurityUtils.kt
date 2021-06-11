@@ -16,12 +16,14 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
+import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import org.apache.commons.codec.android.binary.Hex
 import org.apache.commons.codec.android.digest.DigestUtils
+import org.bouncycastle.openpgp.PGPException
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
 import java.util.UUID
@@ -120,12 +122,12 @@ class SecurityUtils {
     }
 
     /**
-     * Get a public key of the sender. If we will find a few pubkey we will return the first;
+     * Get a sender key details. If we will find a few keys we will return the first;
      *
      * @param context     Interface to global information about an application environment.
      * @param account     The given account
      * @param senderEmail The sender email
-     * @return <tt>String</tt> The sender public key.
+     * @return <tt>String</tt> The sender key.
      * @throws NoKeyAvailableException
      */
     @JvmStatic
@@ -145,7 +147,22 @@ class SecurityUtils {
         }
       }
 
-      return keys.first().toPgpKeyDetails()
+      val rawKeys = keysStorage.getRawKeys()
+      val keysWithPassphrase = rawKeys.mapNotNull {
+        if (keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == false) {
+          return@mapNotNull keysStorage.getPGPSecretKeyRingByFingerprint(it.fingerprint)
+        } else return@mapNotNull null
+      }
+
+      if (keysWithPassphrase.isEmpty()) {
+        throw DecryptionException(
+          decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
+          e = PGPException("flowcrypt: need passphrase"),
+          fingerprints = rawKeys.map { it.fingerprint }
+        )
+      }
+
+      return keysWithPassphrase.first().toPgpKeyDetails()
     }
 
     /**

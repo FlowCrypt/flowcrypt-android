@@ -213,6 +213,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
           when {
             countOfMatchedPassphrases > 0 -> {
+              sendResult(RESULT_OK)
               dismiss()
             }
 
@@ -237,7 +238,16 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     })
   }
 
+  private fun sendResult(result: Int) {
+    if (targetFragment == null) {
+      return
+    }
+    targetFragment?.onActivityResult(targetRequestCode, result, null)
+  }
+
   companion object {
+    const val RESULT_OK = 1
+
     private val KEY_FINGERPRINTS = GeneralUtil.generateUniqueExtraKey(
       "KEY_FINGERPRINTS",
       FixNeedPassphraseIssueDialogFragment::class.java
