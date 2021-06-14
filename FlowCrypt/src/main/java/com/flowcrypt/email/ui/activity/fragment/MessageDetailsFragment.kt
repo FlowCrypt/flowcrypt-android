@@ -81,7 +81,6 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -138,7 +137,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               val decryptErrorDetails = decryptErrorMsgBlock.error?.details ?: continue
               if (decryptErrorDetails.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.error.longIds?.needPassphrase ?: continue
-                showNeedPassphraseDialog(fingerprints)
+                showNeedPassphraseDialog(
+                  fingerprints,
+                  REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
+                )
                 return
               }
             }
@@ -491,18 +493,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION
     )
     fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
-  }
-
-  private fun showNeedPassphraseDialog(fingerprints: List<String>) {
-    val fragment = FixNeedPassphraseIssueDialogFragment.newInstance(fingerprints)
-    fragment.setTargetFragment(
-      this@MessageDetailsFragment,
-      REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
-    )
-    val tag = FixNeedPassphraseIssueDialogFragment::class.java.simpleName
-    if (parentFragmentManager.findFragmentByTag(tag) == null) {
-      fragment.show(parentFragmentManager, tag)
-    }
   }
 
   /**
@@ -1155,7 +1145,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.longIds?.needPassphrase ?: return@OnClickListener
-            showNeedPassphraseDialog(fingerprints)
+            showNeedPassphraseDialog(fingerprints, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
           }
         }
 
@@ -1414,7 +1404,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun observerPassphraseNeededLiveData() {
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner, { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
-        showNeedPassphraseDialog(fingerprintList)
+        showNeedPassphraseDialog(fingerprintList, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
       }
     })
   }

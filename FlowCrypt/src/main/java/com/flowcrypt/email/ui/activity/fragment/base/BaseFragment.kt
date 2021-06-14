@@ -24,6 +24,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
@@ -219,6 +220,18 @@ abstract class BaseFragment : Fragment() {
       }
     } else {
       UIUtil.showInfoSnackbar(requireView(), getString(R.string.error_loader_result_is_empty))
+    }
+  }
+
+  protected fun showNeedPassphraseDialog(fingerprints: List<String>, requestCode: Int) {
+    val fragment = FixNeedPassphraseIssueDialogFragment.newInstance(fingerprints)
+    fragment.setTargetFragment(
+      this@BaseFragment,
+      requestCode
+    )
+    val tag = FixNeedPassphraseIssueDialogFragment::class.java.simpleName
+    if (parentFragmentManager.findFragmentByTag(tag) == null) {
+      fragment.show(parentFragmentManager, tag)
     }
   }
 
