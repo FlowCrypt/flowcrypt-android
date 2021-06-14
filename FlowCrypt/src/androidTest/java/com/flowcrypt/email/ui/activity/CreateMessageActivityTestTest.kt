@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
@@ -40,7 +39,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
@@ -49,14 +47,13 @@ import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -96,14 +93,7 @@ import java.time.Instant
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageActivityTest : BaseTest() {
-  override val useIntents: Boolean = true
-  override val activeActivityRule =
-    lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
-  override val activityScenario: ActivityScenario<*>?
-    get() = activeActivityRule.scenario
-
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val temporaryFolderRule = TemporaryFolder()
 
@@ -117,10 +107,6 @@ class CreateMessageActivityTest : BaseTest() {
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
-  private val intent: Intent = CreateMessageActivity.generateIntent(
-    getTargetContext(), null,
-    MessageEncryptionType.ENCRYPTED
-  )
   private val defaultMsgEncryptionType: MessageEncryptionType = MessageEncryptionType.ENCRYPTED
 
   private val pgpContact: PgpContact
@@ -673,18 +659,6 @@ class CreateMessageActivityTest : BaseTest() {
           )
         )
       )
-  }
-
-  private fun fillInAllFields(recipient: String) {
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(typeText(recipient), closeSoftKeyboard())
-    //need to leave focus from 'To' field. move the focus to the next view
-    onView(withId(R.id.editTextEmailSubject))
-      .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
   }
 
   /**
