@@ -38,6 +38,12 @@ fun View.visible() {
   }
 }
 
+fun View.invisible() {
+  if (visibility != View.INVISIBLE) {
+    visibility = View.INVISIBLE
+  }
+}
+
 fun View.visibleOrGone(isVisible: Boolean) {
   if (isVisible) {
     visible()

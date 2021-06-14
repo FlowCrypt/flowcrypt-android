@@ -37,13 +37,14 @@ import java.io.StringReader
  * E-mail: DenBond7@gmail.com
  */
 data class ParseDecryptedMsgResult constructor(
-    @Expose val text: String?,
-    @Expose val replyType: String,
-    @Expose val subject: String?,
-    @SerializedName("error")
-    @Expose override val apiError: ApiError?,
-    var msgBlocks: MutableList<MsgBlock>?) :
-    BaseNodeResponse {
+  @Expose val text: String?,
+  @Expose val replyType: String,
+  @Expose val subject: String?,
+  @SerializedName("error")
+  @Expose override val apiError: ApiError?,
+  var msgBlocks: MutableList<MsgBlock>?
+) :
+  BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     var isEnabled = true
     val gson = NodeGson.gson
@@ -79,7 +80,8 @@ data class ParseDecryptedMsgResult constructor(
                 if (tempDir != null) {
                   try {
                     val decryptedAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
-                    val fileName = FileAndDirectoryUtils.normalizeFileName(decryptedAtt.attMeta.name)
+                    val fileName =
+                      FileAndDirectoryUtils.normalizeFileName(decryptedAtt.attMeta.name)
                     val file = if (fileName.isNullOrEmpty()) {
                       File.createTempFile("tmp", null, tempDir)
                     } else {
@@ -90,7 +92,10 @@ data class ParseDecryptedMsgResult constructor(
                         file
                       }
                     }
-                    FileUtils.writeByteArrayToFile(file, Base64.decode(decryptedAtt.attMeta.data, Base64.DEFAULT))
+                    FileUtils.writeByteArrayToFile(
+                      file,
+                      Base64.decode(decryptedAtt.attMeta.data, Base64.DEFAULT)
+                    )
                     decryptedAtt.attMeta.data = null //clear raw info to prevent Binder exception
                     decryptedAtt.fileUri = Uri.fromFile(file)
                     msgBlocks?.add(decryptedAtt)
@@ -119,11 +124,11 @@ data class ParseDecryptedMsgResult constructor(
   }
 
   constructor(source: Parcel) : this(
-      source.readString(),
-      source.readString()!!,
-      source.readString(),
-      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-      mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) }
+    source.readString(),
+    source.readString()!!,
+    source.readString(),
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+    mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) }
   )
 
   override fun describeContents() = 0
@@ -138,9 +143,12 @@ data class ParseDecryptedMsgResult constructor(
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<ParseDecryptedMsgResult> = object : Parcelable.Creator<ParseDecryptedMsgResult> {
-      override fun createFromParcel(source: Parcel): ParseDecryptedMsgResult = ParseDecryptedMsgResult(source)
-      override fun newArray(size: Int): Array<ParseDecryptedMsgResult?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<ParseDecryptedMsgResult> =
+      object : Parcelable.Creator<ParseDecryptedMsgResult> {
+        override fun createFromParcel(source: Parcel): ParseDecryptedMsgResult =
+          ParseDecryptedMsgResult(source)
+
+        override fun newArray(size: Int): Array<ParseDecryptedMsgResult?> = arrayOfNulls(size)
+      }
   }
 }

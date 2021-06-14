@@ -17,4 +17,3 @@ Content-Transfer-Encoding: 8bit
 Text: Ваше оголошення
 </body>
 </html>
-

@@ -21,26 +21,35 @@ import com.google.android.gms.common.util.CollectionUtils
  *         Time: 5:57 PM
  *         E-mail: DenBond7@gmail.com
  */
-@Entity(tableName = "labels",
-    indices = [
-      Index(name = "email_account_type_name_in_labels", value = ["email", "account_type", "name"], unique = true)
-    ],
-    foreignKeys = [
-      ForeignKey(entity = AccountEntity::class, parentColumns = ["email", "account_type"],
-          childColumns = ["email", "account_type"], onDelete = ForeignKey.CASCADE)
-    ])
+@Entity(
+  tableName = "labels",
+  indices = [
+    Index(
+      name = "email_account_type_name_in_labels",
+      value = ["email", "account_type", "name"],
+      unique = true
+    )
+  ],
+  foreignKeys = [
+    ForeignKey(
+      entity = AccountEntity::class, parentColumns = ["email", "account_type"],
+      childColumns = ["email", "account_type"], onDelete = ForeignKey.CASCADE
+    )
+  ]
+)
 data class LabelEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
-    val email: String,
-    @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
-    @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "alias", defaultValue = "NULL") val alias: String?,
-    @ColumnInfo(name = "is_custom", defaultValue = "0") val isCustom: Boolean = false,
-    @ColumnInfo(name = "messages_total", defaultValue = "0") val messagesTotal: Int = 0,
-    @ColumnInfo(name = "message_unread", defaultValue = "0") val messagesUnread: Int = 0,
-    @ColumnInfo(name = "attributes", defaultValue = "NULL") val attributes: String? = null,
-    @ColumnInfo(name = "next_page_token", defaultValue = "NULL") val nextPageToken: String? = null,
-    @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null) {
+  @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
+  val email: String,
+  @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
+  @ColumnInfo(name = "name") val name: String,
+  @ColumnInfo(name = "alias", defaultValue = "NULL") val alias: String?,
+  @ColumnInfo(name = "is_custom", defaultValue = "0") val isCustom: Boolean = false,
+  @ColumnInfo(name = "messages_total", defaultValue = "0") val messagesTotal: Int = 0,
+  @ColumnInfo(name = "message_unread", defaultValue = "0") val messagesUnread: Int = 0,
+  @ColumnInfo(name = "attributes", defaultValue = "NULL") val attributes: String? = null,
+  @ColumnInfo(name = "next_page_token", defaultValue = "NULL") val nextPageToken: String? = null,
+  @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null
+) {
 
   @Ignore
   val attributesList: List<String> = parseAttributes(attributes)
@@ -50,13 +59,14 @@ data class LabelEntity(
     fun genLabel(accountEntity: AccountEntity, localFolder: LocalFolder): LabelEntity {
       return with(localFolder) {
         LabelEntity(
-            email = accountEntity.email,
-            accountType = accountEntity.accountType,
-            name = fullName,
-            isCustom = isCustom,
-            alias = folderAlias,
-            messagesTotal = msgCount,
-            attributes = convertAttributesToString(localFolder.attributes))
+          email = accountEntity.email,
+          accountType = accountEntity.accountType,
+          name = fullName,
+          isCustom = isCustom,
+          alias = folderAlias,
+          messagesTotal = msgCount,
+          attributes = convertAttributesToString(localFolder.attributes)
+        )
       }
     }
 
@@ -75,7 +85,8 @@ data class LabelEntity(
 
     private fun parseAttributes(attributesAsString: String?): List<String> {
       val nonNullString = attributesAsString ?: return emptyList()
-      return listOf(*nonNullString.split("\t".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray())
+      return listOf(*nonNullString.split("\t".toRegex()).dropLastWhile { it.isEmpty() }
+        .toTypedArray())
     }
   }
 }

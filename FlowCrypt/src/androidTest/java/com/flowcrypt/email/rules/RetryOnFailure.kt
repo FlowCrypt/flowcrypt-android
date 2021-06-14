@@ -14,8 +14,9 @@ package com.flowcrypt.email.rules
  *         E-mail: DenBond7@gmail.com
  */
 @Target(
-    AnnotationTarget.FUNCTION,
-    AnnotationTarget.PROPERTY_GETTER,
-    AnnotationTarget.PROPERTY_SETTER,
-    AnnotationTarget.ANNOTATION_CLASS)
+  AnnotationTarget.FUNCTION,
+  AnnotationTarget.PROPERTY_GETTER,
+  AnnotationTarget.PROPERTY_SETTER,
+  AnnotationTarget.ANNOTATION_CLASS
+)
 annotation class RetryOnFailure(val value: Int = 0)

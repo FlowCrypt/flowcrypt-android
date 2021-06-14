@@ -27,8 +27,8 @@
             android:layout_marginTop="@dimen/first_button_padding"
             android:text="@string/create_a_new_key"
             android:theme="@style/AppWidget.Button.Green"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/textViewTitle" />
 
@@ -39,8 +39,8 @@
             android:layout_marginTop="@dimen/margin_between_buttons"
             android:text="@string/import_my_key"
             android:theme="@style/AppWidget.Button.Green"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonCreateNewKey" />
 
@@ -51,8 +51,8 @@
             android:layout_marginTop="@dimen/margin_between_buttons"
             android:text="@string/use_another_account"
             android:theme="@style/AppWidget.Button.White"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonImportMyKey" />
 

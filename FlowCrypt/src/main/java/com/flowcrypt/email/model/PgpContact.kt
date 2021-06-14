@@ -7,30 +7,30 @@ package com.flowcrypt.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.ContactEntity
-import java.util.*
+import com.flowcrypt.email.security.model.PgpKeyDetails
+import java.util.Locale
 
-data class PgpContact constructor(var email: String,
-                                  var name: String? = null,
-                                  var pubkey: String? = null,
-                                  var hasPgp: Boolean = false,
-                                  var client: String? = null,
-                                  var fingerprint: String? = null,
-                                  var longid: String? = null,
-                                  var lastUse: Long = 0,
-                                  var nodeKeyDetails: NodeKeyDetails? = null) : Parcelable {
+data class PgpContact constructor(
+  var email: String,
+  var name: String? = null,
+  var pubkey: String? = null,
+  var hasPgp: Boolean = false,
+  var client: String? = null,
+  var fingerprint: String? = null,
+  var lastUse: Long = 0,
+  var pgpKeyDetails: PgpKeyDetails? = null
+) : Parcelable {
 
   constructor(source: Parcel) : this(
-      source.readString()!!,
-      source.readString(),
-      source.readString(),
-      source.readInt() == 1,
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readLong(),
-      source.readParcelable(NodeKeyDetails::class.java.classLoader)
+    source.readString()!!,
+    source.readString(),
+    source.readString(),
+    source.readInt() == 1,
+    source.readString(),
+    source.readString(),
+    source.readLong(),
+    source.readParcelable(PgpKeyDetails::class.java.classLoader)
   )
 
   constructor(email: String, name: String?) : this(email) {
@@ -42,29 +42,27 @@ data class PgpContact constructor(var email: String,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeString(email)
-        writeString(name)
-        writeString(pubkey)
-        writeInt((if (hasPgp) 1 else 0))
-        writeString(client)
-        writeString(fingerprint)
-        writeString(longid)
-        writeLong(lastUse)
-        writeParcelable(nodeKeyDetails, flags)
-      }
+    with(dest) {
+      writeString(email)
+      writeString(name)
+      writeString(pubkey)
+      writeInt((if (hasPgp) 1 else 0))
+      writeString(client)
+      writeString(fingerprint)
+      writeLong(lastUse)
+      writeParcelable(pgpKeyDetails, flags)
+    }
 
   fun toContactEntity(): ContactEntity {
     return ContactEntity(
-        email = email.toLowerCase(Locale.getDefault()),
-        name = name,
-        publicKey = pubkey?.toByteArray(),
-        hasPgp = hasPgp,
-        client = client,
-        fingerprint = fingerprint,
-        longId = longid,
-        lastUse = lastUse,
-        attested = false
+      email = email.toLowerCase(Locale.getDefault()),
+      name = name,
+      publicKey = pubkey?.toByteArray(),
+      hasPgp = hasPgp,
+      client = client,
+      fingerprint = fingerprint,
+      lastUse = lastUse,
+      attested = false
     )
   }
 

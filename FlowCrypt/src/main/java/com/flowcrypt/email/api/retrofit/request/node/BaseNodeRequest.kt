@@ -19,9 +19,10 @@ import retrofit2.Response
  * E-mail: DenBond7@gmail.com
  */
 open class BaseNodeRequest constructor(
-    final override var context: Context?,
-    override val uri: Uri?,
-    override val hasEncryptedDataInUri: Boolean = false) : NodeRequest {
+  final override var context: Context?,
+  override val uri: Uri?,
+  override val hasEncryptedDataInUri: Boolean = false
+) : NodeRequest {
 
   init {
     this.context = context?.applicationContext

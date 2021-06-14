@@ -23,7 +23,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  *         E-mail: DenBond7@gmail.com
  */
 class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMode: Int) :
-    ArrayAdapter<AttachmentInfo>(context, R.layout.pub_key_adapter_item_radio_button, atts) {
+  ArrayAdapter<AttachmentInfo>(context, R.layout.pub_key_adapter_item_radio_button, atts) {
   private val inflater: LayoutInflater = LayoutInflater.from(context)
   private val layoutId = if (choiceMode == ListView.CHOICE_MODE_MULTIPLE) {
     R.layout.pub_key_adapter_item_checkbox
@@ -40,7 +40,7 @@ class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMo
       viewHolder = ViewHolder()
       view = inflater.inflate(layoutId, parent, false)
       viewHolder.textViewEmail = view.findViewById(R.id.textViewEmail)
-      viewHolder.textViewLongId = view.findViewById(R.id.textViewLongId)
+      viewHolder.textViewFingerprint = view.findViewById(R.id.textViewFingerprint)
       view.tag = viewHolder
     } else {
       viewHolder = view.tag as ViewHolder
@@ -53,11 +53,11 @@ class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMo
 
   private fun updateView(att: AttachmentInfo?, viewHolder: ViewHolder) {
     viewHolder.textViewEmail?.text = att?.email
-    viewHolder.textViewLongId?.text = att?.name
+    viewHolder.textViewFingerprint?.text = att?.name
   }
 
   private class ViewHolder {
-    internal var textViewEmail: TextView? = null
-    internal var textViewLongId: TextView? = null
+    var textViewEmail: TextView? = null
+    var textViewFingerprint: TextView? = null
   }
 }

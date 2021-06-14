@@ -51,14 +51,15 @@ class SingleIdlingResources(initialValue: Boolean = true, val delay: Long = 0) :
       if (useDelay) {
         timer = Timer()
         timer?.schedule(
-            object : TimerTask() {
-              override fun run() {
-                mIsIdleNow.set(isIdleNow)
-                if (isIdleNow && resourceCallback != null) {
-                  resourceCallback?.onTransitionToIdle()
-                }
+          object : TimerTask() {
+            override fun run() {
+              mIsIdleNow.set(isIdleNow)
+              if (isIdleNow && resourceCallback != null) {
+                resourceCallback?.onTransitionToIdle()
               }
-            }, delay)
+            }
+          }, delay
+        )
       } else {
         mIsIdleNow.set(isIdleNow)
         if (isIdleNow && resourceCallback != null) {

@@ -14,22 +14,24 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncInboxWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
-import com.flowcrypt.email.util.acra.CustomReportSenderFactory
 import org.acra.ACRA
 import org.acra.ReportField
-import org.acra.annotation.AcraCore
-import org.acra.annotation.AcraHttpSender
+import org.acra.config.httpSender
 import org.acra.data.StringFormat
+import org.acra.ktx.initAcra
 import org.acra.sender.HttpSender
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -40,47 +42,10 @@ import java.util.concurrent.TimeUnit
  * Time: 16:43
  * E-mail: DenBond7@gmail.com
  */
-@AcraCore(
-    reportSenderFactoryClasses = [CustomReportSenderFactory::class],
-    buildConfigClass = BuildConfig::class,
-    reportFormat = StringFormat.JSON,
-    reportContent = [
-      ReportField.ANDROID_VERSION,
-      ReportField.APP_VERSION_CODE,
-      ReportField.APP_VERSION_NAME,
-      ReportField.AVAILABLE_MEM_SIZE,
-      ReportField.BRAND,
-      ReportField.BUILD,
-      ReportField.BUILD_CONFIG,
-      ReportField.CRASH_CONFIGURATION,
-      ReportField.CUSTOM_DATA,
-      ReportField.DEVICE_FEATURES,
-      ReportField.DISPLAY,
-      ReportField.DUMPSYS_MEMINFO,
-      ReportField.ENVIRONMENT,
-      ReportField.FILE_PATH,
-      ReportField.INITIAL_CONFIGURATION,
-      ReportField.INSTALLATION_ID,
-      ReportField.IS_SILENT,
-      ReportField.PACKAGE_NAME,
-      ReportField.PHONE_MODEL,
-      ReportField.PRODUCT,
-      ReportField.REPORT_ID,
-      ReportField.STACK_TRACE,
-      ReportField.TOTAL_MEM_SIZE,
-      ReportField.USER_APP_START_DATE,
-      ReportField.USER_CRASH_DATE,
-      ReportField.USER_EMAIL]
-)
-@AcraHttpSender(
-    uri = "https://flowcrypt.com/api/help/acra",
-    httpMethod = HttpSender.Method.POST
-)
 class FlowCryptApplication : Application(), Configuration.Provider {
-
   override fun onCreate() {
     super.onCreate()
-    KeysStorageImpl.getInstance(this)
+    setupKeysStorage()
     initPerInstallationSharedPrefs()
     CacheManager.init(this)
     MsgsCacheManager.init(this)
@@ -96,26 +61,90 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   }
 
   override fun getWorkManagerConfiguration() =
-      Configuration.Builder()
-          .setJobSchedulerJobIdRange(JobIdManager.JOB_MAX_ID, JobIdManager.JOB_MAX_ID + 10000)
-          .build()
+    Configuration.Builder()
+      .setJobSchedulerJobIdRange(JobIdManager.JOB_MAX_ID, JobIdManager.JOB_MAX_ID + 10000)
+      .build()
+
+  private fun setupKeysStorage() {
+    val keysStorage = KeysStorageImpl.getInstance(this)
+    keysStorage.secretKeyRingsLiveData.observeForever {
+      val hasTemporaryPassPhrases =
+        keysStorage.getRawKeys().any { it.passphraseType == KeyEntity.PassphraseType.RAM }
+      if (hasTemporaryPassPhrases) {
+        PassPhrasesInRAMService.start(this)
+      } else {
+        PassPhrasesInRAMService.stop(this)
+      }
+    }
+  }
 
   private fun initACRA() {
-    if (!GeneralUtil.isDebugBuild()) {
-      setupACRA()
-    } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
-            Constants.PREF_KEY_IS_ACRA_ENABLED, BuildConfig.IS_ACRA_ENABLED)) {
+    if (GeneralUtil.isDebugBuild()) {
+      val isAcraEnabled = SharedPreferencesHelper.getBoolean(
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this),
+        key = Constants.PREF_KEY_IS_ACRA_ENABLED,
+        defaultValue = BuildConfig.IS_ACRA_ENABLED
+      )
+      if (isAcraEnabled) {
+        setupACRA()
+      }
+    } else {
       setupACRA()
     }
   }
 
   private fun setupACRA() {
-    ACRA.init(this)
+    initAcra {
+      reportFormat = StringFormat.JSON
+      buildConfigClass = BuildConfig::class.java
+      reportContent = arrayOf(
+        ReportField.ANDROID_VERSION,
+        ReportField.APP_VERSION_CODE,
+        ReportField.APP_VERSION_NAME,
+        ReportField.AVAILABLE_MEM_SIZE,
+        ReportField.BRAND,
+        ReportField.BUILD,
+        ReportField.BUILD_CONFIG,
+        ReportField.CRASH_CONFIGURATION,
+        ReportField.CUSTOM_DATA,
+        ReportField.DEVICE_FEATURES,
+        ReportField.DISPLAY,
+        ReportField.DUMPSYS_MEMINFO,
+        ReportField.ENVIRONMENT,
+        ReportField.FILE_PATH,
+        ReportField.INITIAL_CONFIGURATION,
+        ReportField.INSTALLATION_ID,
+        ReportField.IS_SILENT,
+        ReportField.PACKAGE_NAME,
+        ReportField.PHONE_MODEL,
+        ReportField.PRODUCT,
+        ReportField.REPORT_ID,
+        ReportField.STACK_TRACE,
+        ReportField.TOTAL_MEM_SIZE,
+        ReportField.USER_APP_START_DATE,
+        ReportField.USER_CRASH_DATE,
+        ReportField.USER_EMAIL
+      )
+
+      httpSender {
+        uri = "https://flowcrypt.com/api/help/acra"
+        httpMethod = HttpSender.Method.POST
+      }
+    }
+
+    putCustomDataToACRAReports()
+  }
+
+  private fun putCustomDataToACRAReports() {
     val installVersion = SharedPreferencesHelper.getString(
-        PreferenceManager.getDefaultSharedPreferences(this),
-        Constants.PREF_KEY_INSTALL_VERSION, "unknown")
-    ACRA.getErrorReporter().putCustomData(
-        Constants.PREF_KEY_INSTALL_VERSION.toUpperCase(Locale.getDefault()), installVersion)
+      PreferenceManager.getDefaultSharedPreferences(this),
+      Constants.PREF_KEY_INSTALL_VERSION, "unknown"
+    ) ?: "unknown"
+
+    ACRA.errorReporter.putCustomData(
+      key = Constants.PREF_KEY_INSTALL_VERSION.toUpperCase(Locale.getDefault()),
+      value = installVersion
+    )
   }
 
   private fun initPerInstallationSharedPrefs() {
@@ -123,16 +152,16 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     if (sharedPreferences.all.isEmpty()) {
       if (!sharedPreferences.contains(Constants.PREF_KEY_INSTALL_VERSION)) {
         sharedPreferences
-            .edit()
-            .putString(Constants.PREF_KEY_INSTALL_VERSION, BuildConfig.VERSION_NAME)
-            .apply()
+          .edit()
+          .putString(Constants.PREF_KEY_INSTALL_VERSION, BuildConfig.VERSION_NAME)
+          .apply()
       }
     }
   }
 
   private fun enqueueMsgsCacheCleanerWorker() {
     val periodicWorkRequestBuilder =
-        PeriodicWorkRequestBuilder<MsgsCacheCleanerWorker>(1, TimeUnit.DAYS)
+      PeriodicWorkRequestBuilder<MsgsCacheCleanerWorker>(1, TimeUnit.DAYS)
 
     val calendar = Calendar.getInstance().apply {
       add(Calendar.DAY_OF_YEAR, 1)
@@ -141,10 +170,12 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     }
 
     val workRequest = periodicWorkRequestBuilder
-        .setInitialDelay(calendar.timeInMillis, TimeUnit.MILLISECONDS)
-        .build()
+      .setInitialDelay(calendar.timeInMillis, TimeUnit.MILLISECONDS)
+      .build()
 
-    WorkManager.getInstance(this).enqueueUniquePeriodicWork(MsgsCacheCleanerWorker.NAME,
-        ExistingPeriodicWorkPolicy.REPLACE, workRequest)
+    WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+      MsgsCacheCleanerWorker.NAME,
+      ExistingPeriodicWorkPolicy.REPLACE, workRequest
+    )
   }
 }

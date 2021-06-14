@@ -6,7 +6,7 @@
 package com.flowcrypt.email.api.email.javamail
 
 import java.io.ByteArrayInputStream
-import java.util.*
+import java.util.Properties
 import javax.mail.Session
 import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimeMessage
@@ -19,7 +19,10 @@ import javax.mail.internet.MimeMessage
  *         Time: 4:26 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CustomMimeMessage constructor(session: Session = Session.getInstance(Properties()), rawHeaders: String?) : MimeMessage(session) {
+class CustomMimeMessage constructor(
+  session: Session = Session.getInstance(Properties()),
+  rawHeaders: String?
+) : MimeMessage(session) {
   init {
     headers = InternetHeaders(ByteArrayInputStream(rawHeaders?.toByteArray() ?: "".toByteArray()))
   }

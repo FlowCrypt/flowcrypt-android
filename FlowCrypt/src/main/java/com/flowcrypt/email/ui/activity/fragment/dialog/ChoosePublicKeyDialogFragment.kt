@@ -22,11 +22,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -69,14 +69,16 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     this.email = arguments?.getString(KEY_EMAIL)
     this.title = arguments?.getInt(KEY_TITLE_RESOURCE_ID)
     this.choiceMode = arguments?.getInt(KEY_CHOICE_MODE, ListView.CHOICE_MODE_NONE)
-        ?: ListView.CHOICE_MODE_NONE
+      ?: ListView.CHOICE_MODE_NONE
     this.returnResultImmediatelyIfSingle =
-        arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
+      arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val view = LayoutInflater.from(context).inflate(R.layout.fragment_send_user_public_key,
-        if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false)
+    val view = LayoutInflater.from(context).inflate(
+      R.layout.fragment_send_user_public_key,
+      if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false
+    )
 
     textViewMsg = view.findViewById(R.id.textViewMessage)
     progressBar = view.findViewById(R.id.progressBar)
@@ -205,15 +207,15 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   /**
-   * Get a list with the matched [NodeKeyDetails]. If the sender email matched email the email from
+   * Get a list with the matched [PgpKeyDetails]. If the sender email matched email the email from
    * [PgpContact] which got from the private key than we return a list with relevant public keys.
    *
-   * @return A matched [NodeKeyDetails] or null.
+   * @return A matched [PgpKeyDetails] or null.
    */
-  private fun getMatchedKeys(nodeKeyDetailsList: List<NodeKeyDetails>): List<NodeKeyDetails> {
-    val keyDetails = ArrayList<NodeKeyDetails>()
+  private fun getMatchedKeys(pgpKeyDetailsList: List<PgpKeyDetails>): List<PgpKeyDetails> {
+    val keyDetails = ArrayList<PgpKeyDetails>()
 
-    for (nodeKeyDetails in nodeKeyDetailsList) {
+    for (nodeKeyDetails in pgpKeyDetailsList) {
       val (email) = nodeKeyDetails.primaryPgpContact
       if (email.equals(this.email, ignoreCase = true)) {
         keyDetails.add(nodeKeyDetails)
@@ -229,25 +231,37 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   companion object {
     val KEY_ATTACHMENT_INFO_LIST =
-        GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST",
-            ChoosePublicKeyDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_ATTACHMENT_INFO_LIST",
+        ChoosePublicKeyDialogFragment::class.java
+      )
 
-    private val KEY_EMAIL = GeneralUtil.generateUniqueExtraKey("KEY_EMAIL",
-        ChoosePublicKeyDialogFragment::class.java)
+    private val KEY_EMAIL = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EMAIL",
+      ChoosePublicKeyDialogFragment::class.java
+    )
 
-    private val KEY_CHOICE_MODE = GeneralUtil.generateUniqueExtraKey("KEY_CHOICE_MODE",
-        ChoosePublicKeyDialogFragment::class.java)
+    private val KEY_CHOICE_MODE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_CHOICE_MODE",
+      ChoosePublicKeyDialogFragment::class.java
+    )
 
-    private val KEY_TITLE_RESOURCE_ID = GeneralUtil.generateUniqueExtraKey("KEY_TITLE_RESOURCE_ID",
-        ChoosePublicKeyDialogFragment::class.java)
+    private val KEY_TITLE_RESOURCE_ID = GeneralUtil.generateUniqueExtraKey(
+      "KEY_TITLE_RESOURCE_ID",
+      ChoosePublicKeyDialogFragment::class.java
+    )
 
     private val KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
-            ChoosePublicKeyDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
+        ChoosePublicKeyDialogFragment::class.java
+      )
 
-    fun newInstance(email: String, choiceMode: Int,
-                    titleResourceId: Int?,
-                    returnResultImmediatelyIfSingle: Boolean = false): ChoosePublicKeyDialogFragment {
+    fun newInstance(
+      email: String, choiceMode: Int,
+      titleResourceId: Int?,
+      returnResultImmediatelyIfSingle: Boolean = false
+    ): ChoosePublicKeyDialogFragment {
       val args = Bundle()
       args.putString(KEY_EMAIL, email)
       args.putInt(KEY_CHOICE_MODE, choiceMode)

@@ -18,7 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -40,48 +40,55 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
 
-  private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("pgp/default@denbond7.com_fisrtKey_prv_default.asc"), true)
+  private val privateKeys = PrivateKeysManager.getKeysFromAssets(
+    arrayOf("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc"),
+    true
+  )
 
   override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
-      CheckKeysActivity.newIntent(getTargetContext(),
-          privateKeys,
-          KeyDetails.Type.EMAIL,
-          getQuantityString(R.plurals.found_backup_of_your_account_key,
-              privateKeys.size, privateKeys.size),
-          getTargetContext().getString(R.string.continue_),
-          getTargetContext().getString(R.string.use_another_account))
+    CheckKeysActivity.newIntent(
+      getTargetContext(),
+      privateKeys,
+      KeyImportDetails.SourceType.EMAIL,
+      getQuantityString(
+        R.plurals.found_backup_of_your_account_key,
+        privateKeys.size, privateKeys.size
+      ),
+      getTargetContext().getString(R.string.continue_),
+      getTargetContext().getString(R.string.use_another_account)
+    )
   )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testShowMsgEmptyWarning() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonPositiveAction))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
     checkIsSnackbarDisplayedAndClick(getResString(R.string.passphrase_must_be_non_empty))
   }
 
   @Test
   fun testUseIncorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
-        .perform(scrollTo(), typeText("some pass phrase"), closeSoftKeyboard())
+      .perform(scrollTo(), typeText("some pass phrase"), closeSoftKeyboard())
     onView(withId(R.id.buttonPositiveAction))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
     checkIsSnackbarDisplayedAndClick(getResString(R.string.password_is_incorrect))
   }
 
   @Test
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
-        .perform(scrollTo(), typeText("android"), closeSoftKeyboard())
+      .perform(scrollTo(), typeText("android"), closeSoftKeyboard())
     onView(withId(R.id.buttonPositiveAction))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
 
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
@@ -90,7 +97,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   fun testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonNegativeAction))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
 
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == CheckKeysActivity.RESULT_NEGATIVE)
   }

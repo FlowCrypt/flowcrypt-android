@@ -35,7 +35,8 @@ import java.util.*
  * Time: 8:52
  * E-mail: DenBond7@gmail.com
  */
-class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTextView(context, attrs) {
+class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) :
+  NachoTextView(context, attrs) {
   private val gestureDetector: GestureDetector
   private var listener: OnChipLongClickListener? = null
   private val gestureListener: ChipLongClickOnGestureListener
@@ -82,19 +83,30 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTex
 
     when (id) {
       android.R.id.cut -> {
-        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))))
+        setClipboardData(
+          ClipData.newPlainText(
+            null,
+            removeSuggestionSpans(getTextWithPlainTextSpans(start, end))
+          )
+        )
         text.delete(selectionStart, selectionEnd)
         return true
       }
 
       android.R.id.copy -> {
-        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))))
+        setClipboardData(
+          ClipData.newPlainText(
+            null,
+            removeSuggestionSpans(getTextWithPlainTextSpans(start, end))
+          )
+        )
         return true
       }
 
       android.R.id.paste -> {
         val stringBuilder = StringBuilder()
-        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboardManager =
+          context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = clipboardManager.primaryClip
         if (clip != null) {
           for (i in 0 until clip.itemCount) {

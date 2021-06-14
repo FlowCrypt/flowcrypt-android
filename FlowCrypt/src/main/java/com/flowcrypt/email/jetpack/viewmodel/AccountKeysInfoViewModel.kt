@@ -17,8 +17,8 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
@@ -40,15 +40,15 @@ import java.util.*
 
 class AccountKeysInfoViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
-  val accountKeysInfoLiveData = MediatorLiveData<Result<List<NodeKeyDetails>>>()
+  val accountKeysInfoLiveData = MediatorLiveData<Result<List<PgpKeyDetails>>>()
   private val initLiveData = Transformations
-      .switchMap(activeAccountLiveData) { accountEntity ->
-        liveData {
-          emit(Result.loading())
-          emit(getResult(accountEntity))
-        }
+    .switchMap(activeAccountLiveData) { accountEntity ->
+      liveData {
+        emit(Result.loading())
+        emit(getResult(accountEntity))
       }
-  private val refreshingLiveData = MutableLiveData<Result<List<NodeKeyDetails>>>()
+    }
+  private val refreshingLiveData = MutableLiveData<Result<List<PgpKeyDetails>>>()
 
   init {
     accountKeysInfoLiveData.addSource(initLiveData) { accountKeysInfoLiveData.value = it }
@@ -61,39 +61,41 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
    * @param account The [AccountEntity] object which contains information about an email account.
    * @return The list of available Gmail aliases.
    */
-  private suspend fun getAvailableGmailAliases(account: Account): Collection<String> = withContext(Dispatchers.IO) {
-    val emails = ArrayList<String>()
+  private suspend fun getAvailableGmailAliases(account: Account): Collection<String> =
+    withContext(Dispatchers.IO) {
+      val emails = ArrayList<String>()
 
-    try {
-      val gmail = GmailApiHelper.generateGmailApiService(getApplication(), account)
-      val aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-      for (alias in aliases.sendAs) {
-        if (alias.verificationStatus != null) {
-          emails.add(alias.sendAsEmail)
+      try {
+        val gmail = GmailApiHelper.generateGmailApiService(getApplication(), account)
+        val aliases =
+          gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
+        for (alias in aliases.sendAs) {
+          if (alias.verificationStatus != null) {
+            emails.add(alias.sendAsEmail)
+          }
         }
+      } catch (e: IOException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
       }
-    } catch (e: IOException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
 
-    return@withContext emails
-  }
+      return@withContext emails
+    }
 
   fun refreshData() {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         refreshingLiveData.postValue(Result.loading())
         val accountEntity = activeAccountLiveData.value
-            ?: roomDatabase.accountDao().getActiveAccountSuspend()
+          ?: roomDatabase.accountDao().getActiveAccountSuspend()
         refreshingLiveData.postValue(getResult(accountEntity))
       }
     }
   }
 
-  private suspend fun getResult(accountEntity: AccountEntity?): Result<List<NodeKeyDetails>> {
+  private suspend fun getResult(accountEntity: AccountEntity?): Result<List<PgpKeyDetails>> {
     return if (accountEntity != null) {
-      val results = mutableListOf<NodeKeyDetails>()
+      val results = mutableListOf<PgpKeyDetails>()
       val emails = ArrayList<String>()
       emails.add(accountEntity.email)
 
@@ -104,7 +106,7 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       for (email in emails) {
         val pubResponseResult = apiRepository.getPub(context = getApplication(), identData = email)
         pubResponseResult.data?.pubkey?.let { key ->
-          results.addAll(PgpKey.parseKeys(key).toNodeKeyDetailsList())
+          results.addAll(PgpKey.parseKeys(key).toPgpKeyDetailsList())
         }
       }
 

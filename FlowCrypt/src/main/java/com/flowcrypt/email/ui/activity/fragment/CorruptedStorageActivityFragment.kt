@@ -27,7 +27,11 @@ import com.flowcrypt.email.ui.activity.CorruptedStorageActivity
  */
 class CorruptedStorageActivityFragment : Fragment(), View.OnClickListener {
 
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View? {
     return inflater.inflate(R.layout.fragment_corrupted_storage, container, false)
   }
 
@@ -35,7 +39,8 @@ class CorruptedStorageActivityFragment : Fragment(), View.OnClickListener {
     super.onViewCreated(view, savedInstanceState)
 
     val textViewHeader = view.findViewById<TextView>(R.id.textViewHeader)
-    textViewHeader.text = getString(R.string.store_space_was_corrupted, getString(R.string.support_email))
+    textViewHeader.text =
+      getString(R.string.store_space_was_corrupted, getString(R.string.support_email))
 
     val textViewFooter = view.findViewById<TextView>(R.id.textViewFooter)
     textViewFooter.text = getString(R.string.wipe_app_settings, getString(R.string.app_name))

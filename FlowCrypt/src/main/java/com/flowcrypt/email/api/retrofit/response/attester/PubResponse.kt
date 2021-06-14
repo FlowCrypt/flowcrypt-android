@@ -21,12 +21,14 @@ import com.google.gson.annotations.SerializedName
  * Time: 14:01
  * E-mail: DenBond7@gmail.com
  */
-data class PubResponse constructor(@SerializedName("error")
-                                   @Expose override val apiError: ApiError? = null,
-                                   @Expose val pubkey: String?) : ApiResponse {
+data class PubResponse constructor(
+  @SerializedName("error")
+  @Expose override val apiError: ApiError? = null,
+  @Expose val pubkey: String?
+) : ApiResponse {
   constructor(source: Parcel) : this(
-      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-      source.readString()
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+    source.readString()
   )
 
   override fun describeContents(): Int {
@@ -34,10 +36,10 @@ data class PubResponse constructor(@SerializedName("error")
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeParcelable(apiError, 0)
-        writeString(pubkey)
-      }
+    with(dest) {
+      writeParcelable(apiError, 0)
+      writeString(pubkey)
+    }
 
   companion object {
     @JvmField

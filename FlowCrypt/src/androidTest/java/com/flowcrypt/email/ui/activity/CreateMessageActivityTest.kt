@@ -42,10 +42,10 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.pgp.expiration
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -99,7 +99,7 @@ import java.time.Instant
 class CreateMessageActivityTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activeActivityRule =
-      lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+    lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
@@ -109,22 +109,25 @@ class CreateMessageActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(addAccountToDatabaseRule)
-      .around(addPrivateKeyToDatabaseRule)
-      .around(temporaryFolderRule)
-      .around(RetryRule.DEFAULT)
-      .around(activeActivityRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(addAccountToDatabaseRule)
+    .around(addPrivateKeyToDatabaseRule)
+    .around(temporaryFolderRule)
+    .around(RetryRule.DEFAULT)
+    .around(activeActivityRule)
+    .around(ScreenshotTestRule())
 
-  private val intent: Intent = CreateMessageActivity.generateIntent(getTargetContext(), null,
-      MessageEncryptionType.ENCRYPTED)
+  private val intent: Intent = CreateMessageActivity.generateIntent(
+    getTargetContext(), null,
+    MessageEncryptionType.ENCRYPTED
+  )
   private val defaultMsgEncryptionType: MessageEncryptionType = MessageEncryptionType.ENCRYPTED
 
   private val pgpContact: PgpContact
     get() {
-      val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-          "pgp/not_attester_user@denbond7.com_prv_default.asc")
+      val details = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+        "pgp/not_attester_user@flowcrypt.test_prv_default.asc"
+      )
       return details.primaryPgpContact
     }
 
@@ -133,13 +136,16 @@ class CreateMessageActivityTest : BaseTest() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
     onView(withId(R.id.editTextRecipientTo))
-        .check(matches(withText(isEmptyString())))
+      .check(matches(withText(isEmptyString())))
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    onView(withText(
-        getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_recipients_to))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(
+      withText(
+        getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_recipients_to))
+      )
+    )
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -148,17 +154,24 @@ class CreateMessageActivityTest : BaseTest() {
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
+      .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
     onView(withId(R.id.editTextEmailSubject))
-        .perform(scrollTo(), click(), typeText("subject"), clearText())
-        .check(matches(withText(isEmptyString())))
+      .perform(scrollTo(), click(), typeText("subject"), clearText())
+      .check(matches(withText(isEmptyString())))
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    onView(withText(getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_subject))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(
+      withText(
+        getResString(
+          R.string.text_must_not_be_empty,
+          getResString(R.string.prompt_subject)
+        )
+      )
+    )
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -167,20 +180,20 @@ class CreateMessageActivityTest : BaseTest() {
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
+      .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
     onView(withId(R.id.editTextEmailSubject))
-        .check(matches(isDisplayed()))
-        .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT))
+      .check(matches(isDisplayed()))
+      .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT))
     onView(withId(R.id.editTextEmailMessage))
-        .perform(scrollTo())
-        .check(matches(withText(isEmptyString())))
+      .perform(scrollTo())
+      .check(matches(withText(isEmptyString())))
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(getResString(R.string.your_message_must_be_non_empty)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -191,8 +204,8 @@ class CreateMessageActivityTest : BaseTest() {
     if (defaultMsgEncryptionType != MessageEncryptionType.STANDARD) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
       onView(withText(R.string.switch_to_standard_email))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
     }
 
     checkIsDisplayedStandardAttributes()
@@ -206,8 +219,8 @@ class CreateMessageActivityTest : BaseTest() {
     if (defaultMsgEncryptionType != MessageEncryptionType.ENCRYPTED) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
       onView(withText(R.string.switch_to_secure_email))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
     }
     checkIsDisplayedEncryptedAttributes()
   }
@@ -223,15 +236,15 @@ class CreateMessageActivityTest : BaseTest() {
       checkIsDisplayedEncryptedAttributes()
       openActionBarOverflowOrOptionsMenu(getTargetContext())
       onView(withText(R.string.switch_to_standard_email))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
       checkIsDisplayedStandardAttributes()
     } else {
       checkIsDisplayedStandardAttributes()
       openActionBarOverflowOrOptionsMenu(getTargetContext())
       onView(withText(R.string.switch_to_secure_email))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
       checkIsDisplayedEncryptedAttributes()
     }
   }
@@ -247,17 +260,17 @@ class CreateMessageActivityTest : BaseTest() {
     registerAllIdlingResources()
 
     onView(withText(R.string.compose))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
-        .perform(scrollTo())
-        .check(matches(withText(not(isEmptyString()))))
+      .perform(scrollTo())
+      .check(matches(withText(not(isEmptyString()))))
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .check(matches(withText(isEmptyString())))
+      .check(matches(withText(isEmptyString())))
     onView(withId(R.id.editTextEmailSubject))
-        .perform(scrollTo())
-        .check(matches(withText(isEmptyString())))
+      .perform(scrollTo())
+      .check(matches(withText(isEmptyString())))
   }
 
   @Test
@@ -265,21 +278,21 @@ class CreateMessageActivityTest : BaseTest() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
 
-    val invalidEmailAddresses = arrayOf("test", "test@", "test@@denbond7.com", "@denbond7.com")
+    val invalidEmailAddresses = arrayOf("test", "test@", "test@@flowcrypt.test", "@flowcrypt.test")
 
     for (invalidEmailAddress in invalidEmailAddresses) {
       onView(withId(R.id.layoutTo))
-          .perform(scrollTo())
+        .perform(scrollTo())
       onView(withId(R.id.editTextRecipientTo))
-          .perform(clearText(), typeText(invalidEmailAddress), closeSoftKeyboard())
+        .perform(clearText(), typeText(invalidEmailAddress), closeSoftKeyboard())
       onView(withId(R.id.menuActionSend))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
       onView(withText(getResString(R.string.error_some_email_is_not_valid, invalidEmailAddress)))
-          .check(matches(isDisplayed()))
+        .check(matches(isDisplayed()))
       onView(withId(com.google.android.material.R.id.snackbar_action))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
     }
   }
 
@@ -289,9 +302,9 @@ class CreateMessageActivityTest : BaseTest() {
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(closeSoftKeyboard())
+      .perform(closeSoftKeyboard())
 
     for (att in atts) {
       addAttAndCheck(att)
@@ -304,22 +317,26 @@ class CreateMessageActivityTest : BaseTest() {
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(closeSoftKeyboard())
+      .perform(closeSoftKeyboard())
 
     val fileWithBiggerSize = TestGeneralUtil.createFileWithGivenSize(
-        Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule)
+      Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule
+    )
     addAtt(fileWithBiggerSize)
 
-    val sizeWarningMsg = getResString(R.string.template_warning_max_total_attachments_size,
-        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES))
+    val sizeWarningMsg = getResString(
+      R.string.template_warning_max_total_attachments_size,
+      FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
+    )
 
     onView(withText(sizeWarningMsg))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
 
     val fileWithLowerSize = TestGeneralUtil.createFileWithGivenSize(
-        Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES - 1024, temporaryFolderRule)
+      Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES - 1024, temporaryFolderRule
+    )
     addAttAndCheck(fileWithLowerSize)
   }
 
@@ -329,9 +346,9 @@ class CreateMessageActivityTest : BaseTest() {
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(closeSoftKeyboard())
+      .perform(closeSoftKeyboard())
 
     for (att in atts) {
       addAttAndCheck(att)
@@ -345,7 +362,7 @@ class CreateMessageActivityTest : BaseTest() {
     }
 
     onView(withId(R.id.textViewAttachmentName))
-        .check(doesNotExist())
+      .check(doesNotExist())
   }
 
   @Test
@@ -355,14 +372,14 @@ class CreateMessageActivityTest : BaseTest() {
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     intending(hasComponent(ComponentName(getTargetContext(), ImportPublicKeyActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     savePublicKeyInDatabase()
     onView(withText(R.string.import_their_public_key))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   @Test
@@ -372,11 +389,11 @@ class CreateMessageActivityTest : BaseTest() {
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(R.string.switch_to_standard_email))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     checkIsDisplayedStandardAttributes()
   }
 
@@ -386,28 +403,46 @@ class CreateMessageActivityTest : BaseTest() {
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(
-            typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
-            closeSoftKeyboard())
+      .perform(
+        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        closeSoftKeyboard()
+      )
     //move the focus to the next view
     onView(withId(R.id.editTextEmailMessage))
-        .perform(scrollTo(), click(),
-            typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard())
+      .perform(
+        scrollTo(), click(),
+        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard()
+      )
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    onView(withText(getResString(R.string.template_remove_recipient,
-        TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(
+      withText(
+        getResString(
+          R.string.template_remove_recipient,
+          TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+        )
+      )
+    )
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .check(matches(isDisplayed()))
-        .check(matches(withText(not(containsString(
-            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))))
+      .check(matches(isDisplayed()))
+      .check(
+        matches(
+          withText(
+            not(
+              containsString(
+                TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+              )
+            )
+          )
+        )
+      )
   }
 
   @Test
@@ -419,14 +454,14 @@ class CreateMessageActivityTest : BaseTest() {
     val result = Intent()
     result.putExtra(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT, pgpContact.toContactEntity())
     intending(hasComponent(ComponentName(getTargetContext(), SelectContactsActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, result))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, result))
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(R.string.copy_from_other_contact))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.key_successfully_copied))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    isToastDisplayed(getResString(R.string.key_successfully_copied))
   }
 
   @Test
@@ -436,21 +471,23 @@ class CreateMessageActivityTest : BaseTest() {
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
-    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.nodeKeyDetails)
+    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.pgpKeyDetails)
 
     onView(withText(att?.name))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
-    PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, secondKeyDetails,
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+      PrivateKeysManager.getPgpKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
+    PrivateKeysManager.saveKeyToDatabase(
+      addAccountToDatabaseRule.account, secondKeyDetails,
+      TestConstants.DEFAULT_STRONG_PASSWORD, KeyImportDetails.SourceType.EMAIL
+    )
     val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
 
     activeActivityRule.launch(intent)
@@ -458,51 +495,56 @@ class CreateMessageActivityTest : BaseTest() {
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     onData(withPubKeyName(att?.name))
-        .inAdapterView(withId(R.id.listViewKeys))
-        .perform(click())
+      .inAdapterView(withId(R.id.listViewKeys))
+      .perform(click())
 
     onView(withId(R.id.buttonOk))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     onView(withText(att?.name))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testSharePubKeyNoOwnKeys() {
-    PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,
-        addPrivateKeyToDatabaseRule.keyPath)
-    val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-        "pgp/key_testing@denbond7.com_keyB_default.asc")
-    PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, keyDetails,
-        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.deleteKey(
+      addAccountToDatabaseRule.account,
+      addPrivateKeyToDatabaseRule.keyPath
+    )
+    val keyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc"
+    )
+    PrivateKeysManager.saveKeyToDatabase(
+      addAccountToDatabaseRule.account, keyDetails,
+      TestConstants.DEFAULT_PASSWORD, KeyImportDetails.SourceType.EMAIL
+    )
 
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     val att = EmailUtil.genAttInfoFromPubKey(keyDetails)
 
     onView(withText(att?.name))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired@denbond7.com-expired-pub.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
     val contact = keyDetails.primaryPgpContact
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
-        .contactsDao().insert(contact.toContactEntity())
+      .contactsDao().insert(contact.toContactEntity())
 
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -510,31 +552,38 @@ class CreateMessageActivityTest : BaseTest() {
     fillInAllFields(contact.email)
 
     onView(withId(R.id.editTextRecipientTo))
-        .check(matches(withChipsBackgroundColor(contact.email,
-            UIUtil.getColor(getTargetContext(), R.color.orange))))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            contact.email,
+            UIUtil.getColor(getTargetContext(), R.color.orange)
+          )
+        )
+      )
 
     onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(R.string.warning_one_of_pub_keys_is_expired))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   @Test
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/expired_fixed@denbond7.com-expired-pub.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
     val contact = keyDetailsFromAssets.primaryPgpContact
     val contactsDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
     contactsDao.insert(contact.toContactEntity())
     val existedContact = contactsDao.getContactByEmail(contact.email)
-        ?: throw IllegalArgumentException("Contact not found")
+      ?: throw IllegalArgumentException("Contact not found")
 
     val existedKeyExpiration = PgpKey.parseKeys(
-        existedContact.publicKey ?: throw IllegalArgumentException("Empty pub key"))
-        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
-        ?: throw IllegalArgumentException("No expiration date")
+      existedContact.publicKey ?: throw IllegalArgumentException("Empty pub key")
+    )
+      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
+      ?: throw IllegalArgumentException("No expiration date")
 
     Assert.assertTrue(existedKeyExpiration.isBefore(Instant.now()))
 
@@ -544,76 +593,98 @@ class CreateMessageActivityTest : BaseTest() {
     fillInAllFields(contact.email)
 
     onView(withId(R.id.editTextRecipientTo))
-        .check(matches(withChipsBackgroundColor(contact.email,
-            UIUtil.getColor(getTargetContext(), R.color.colorPrimary))))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            contact.email,
+            UIUtil.getColor(getTargetContext(), R.color.colorPrimary)
+          )
+        )
+      )
   }
 
   private fun checkIsDisplayedEncryptedAttributes() {
     onView(withId(R.id.underToolbarTextTextView))
-        .check(doesNotExist())
+      .check(doesNotExist())
     onView(withId(R.id.appBarLayout))
-        .check(matches(withAppBarLayoutBackgroundColor(
-            UIUtil.getColor(getTargetContext(), R.color.colorPrimary))))
+      .check(
+        matches(
+          withAppBarLayoutBackgroundColor(
+            UIUtil.getColor(getTargetContext(), R.color.colorPrimary)
+          )
+        )
+      )
   }
 
   private fun savePublicKeyInDatabase() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
-        .insert(pgpContact.toContactEntity())
+      .insert(pgpContact.toContactEntity())
   }
 
   private fun deleteAtt(att: File) {
-    onView(allOf(withId(R.id.imageButtonClearAtt), ViewMatchers.withParent(
-        allOf(withId(R.id.actionButtons), hasSibling(withText(att.name))))))
-        .check(matches(isDisplayed()))
-        .perform(click())
+    onView(
+      allOf(
+        withId(R.id.imageButtonClearAtt), ViewMatchers.withParent(
+          allOf(withId(R.id.actionButtons), hasSibling(withText(att.name)))
+        )
+      )
+    )
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(att.name))
-        .check(doesNotExist())
+      .check(doesNotExist())
   }
 
   private fun addAtt(att: File) {
     val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
     intending(
-        allOf(
-            hasAction(Intent.ACTION_CHOOSER),
-            hasExtra(`is`(Intent.EXTRA_INTENT),
-                allOf(
-                    hasAction(Intent.ACTION_OPEN_DOCUMENT),
-                    hasType("*/*"),
-                    hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))
-                )
-            )
+      allOf(
+        hasAction(Intent.ACTION_CHOOSER),
+        hasExtra(
+          `is`(Intent.EXTRA_INTENT),
+          allOf(
+            hasAction(Intent.ACTION_OPEN_DOCUMENT),
+            hasType("*/*"),
+            hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))
+          )
         )
+      )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
     onView(withId(R.id.menuActionAttachFile))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   private fun addAttAndCheck(att: File) {
     addAtt(att)
     onView(withText(att.name))
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+      .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
   }
 
   private fun checkIsDisplayedStandardAttributes() {
     onView(withId(R.id.underToolbarTextTextView))
-        .check(matches(isDisplayed()))
-        .check(matches(withText(R.string.this_message_will_not_be_encrypted)))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(R.string.this_message_will_not_be_encrypted)))
     onView(withId(R.id.appBarLayout))
-        .check(matches(withAppBarLayoutBackgroundColor(
-            UIUtil.getColor(getTargetContext(), R.color.red))))
+      .check(
+        matches(
+          withAppBarLayoutBackgroundColor(
+            UIUtil.getColor(getTargetContext(), R.color.red)
+          )
+        )
+      )
   }
 
   private fun fillInAllFields(recipient: String) {
     onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
+      .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-        .perform(typeText(recipient), closeSoftKeyboard())
+      .perform(typeText(recipient), closeSoftKeyboard())
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
-        .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
+      .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
     onView(withId(R.id.editTextEmailMessage))
-        .perform(scrollTo(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
+      .perform(scrollTo(), typeText(EMAIL_SUBJECT), closeSoftKeyboard())
   }
 
   /**
@@ -645,38 +716,43 @@ class CreateMessageActivityTest : BaseTest() {
     @get:ClassRule
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
-        object : Dispatcher() {
-          override fun dispatch(request: RecordedRequest): MockResponse {
-            if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
-              val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+      object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+            val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
-              when {
-                TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
-                    lastSegment, true) -> {
-                  return MockResponse()
-                      .setResponseCode(404)
-                      .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
-                }
+            when {
+              TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
+                lastSegment, true
+              ) -> {
+                return MockResponse()
+                  .setResponseCode(404)
+                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+              }
 
-                TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
-                    lastSegment, true) -> {
-                  return MockResponse()
-                      .setResponseCode(200)
-                      .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
-                }
+              TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
+                lastSegment, true
+              ) -> {
+                return MockResponse()
+                  .setResponseCode(200)
+                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+              }
 
-                "B9D1AD05A2A329630DCF2A279ABFF9E583B49BF6".equals(lastSegment, true) -> {
-                  return MockResponse()
-                      .setResponseCode(200)
-                      .setBody(TestGeneralUtil.readFileFromAssetsAsString(
-                          "pgp/expired_fixed@denbond7.com-not_expired-pub.asc"))
-                }
+              "95FC072E853C9C333C68EDD34B9CA2FBCA5B5FE7".equals(lastSegment, true) -> {
+                return MockResponse()
+                  .setResponseCode(200)
+                  .setBody(
+                    TestGeneralUtil.readFileFromAssetsAsString(
+                      "pgp/expired_fixed@flowcrypt.test_not_expired_pub.asc"
+                    )
+                  )
               }
             }
-
-            return MockResponse().setResponseCode(404)
           }
-        })
+
+          return MockResponse().setResponseCode(404)
+        }
+      })
 
     @BeforeClass
     @JvmStatic
@@ -686,8 +762,12 @@ class CreateMessageActivityTest : BaseTest() {
 
     private fun createFilesForCommonAtts() {
       for (i in 0 until ATTACHMENTS_COUNT) {
-        atts.add(TestGeneralUtil.createFileAndFillWithContent(temporaryFolderRule,
-            "$i.txt", "Text for filling the attached file"))
+        atts.add(
+          TestGeneralUtil.createFileAndFillWithContent(
+            temporaryFolderRule,
+            "$i.txt", "Text for filling the attached file"
+          )
+        )
       }
     }
   }

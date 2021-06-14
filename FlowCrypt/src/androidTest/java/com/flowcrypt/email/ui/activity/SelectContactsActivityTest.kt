@@ -59,12 +59,12 @@ class SelectContactsActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(AddContactsToDatabaseRule(CONTACTS))
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(AddContactsToDatabaseRule(CONTACTS))
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Before
   open fun registerFilterIdling() {
@@ -95,21 +95,28 @@ class SelectContactsActivityTest : BaseTest() {
     Thread.sleep(1000)
 
     onView(withId(R.id.emptyView))
-        .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
+      .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
 
   @Test
   fun testShowListContacts() {
     onView(withId(R.id.emptyView))
-        .check(matches(not(isDisplayed())))
+      .check(matches(not(isDisplayed())))
 
     for (i in EMAILS.indices) {
       if (i % 2 == 0) {
-        onView(withId(R.id.recyclerViewContacts)).perform(actionOnItem<RecyclerView.ViewHolder>
-        (hasDescendant(allOf(withId(R.id.textViewName), withText(getUserName(EMAILS[i])))), doNothing()))
+        onView(withId(R.id.recyclerViewContacts)).perform(
+          actionOnItem<RecyclerView.ViewHolder>
+            (
+            hasDescendant(allOf(withId(R.id.textViewName), withText(getUserName(EMAILS[i])))),
+            doNothing()
+          )
+        )
       } else {
-        onView(withId(R.id.recyclerViewContacts)).perform(actionOnItem<RecyclerView.ViewHolder>
-        (hasDescendant(allOf(withId(R.id.textViewOnlyEmail), withText(EMAILS[i]))), doNothing()))
+        onView(withId(R.id.recyclerViewContacts)).perform(
+          actionOnItem<RecyclerView.ViewHolder>
+            (hasDescendant(allOf(withId(R.id.textViewOnlyEmail), withText(EMAILS[i]))), doNothing())
+        )
       }
     }
   }
@@ -117,8 +124,8 @@ class SelectContactsActivityTest : BaseTest() {
   @Test
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     for (i in EMAILS.indices) {
       if (i % 2 == 0) {
@@ -132,13 +139,13 @@ class SelectContactsActivityTest : BaseTest() {
   @Test
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(com.google.android.material.R.id.search_src_text))
-        .perform(clearText(), typeText("some email"))
+      .perform(clearText(), typeText("some email"))
     closeSoftKeyboard()
     onView(withId(R.id.emptyView))
-        .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
+      .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
 
   private fun clearContactsFromDatabase() {
@@ -151,27 +158,28 @@ class SelectContactsActivityTest : BaseTest() {
 
   private fun checkIsTypedUserFound(viewId: Int, viewText: String) {
     onView(withId(com.google.android.material.R.id.search_src_text))
-        .perform(clearText(), typeText(viewText))
+      .perform(clearText(), typeText(viewText))
     closeSoftKeyboard()
     onView(withId(viewId))
-        .check(matches(isDisplayed())).check(matches(withText(viewText)))
+      .check(matches(isDisplayed())).check(matches(withText(viewText)))
   }
 
   companion object {
     private val EMAILS = arrayOf(
-        "contact_0@denbond7.com",
-        "contact_1@denbond7.com",
-        "contact_2@denbond7.com",
-        "contact_3@denbond7.com")
+      "contact_0@flowcrypt.test",
+      "contact_1@flowcrypt.test",
+      "contact_2@flowcrypt.test",
+      "contact_3@flowcrypt.test"
+    )
     private val CONTACTS = ArrayList<PgpContact>()
 
     init {
       for (i in EMAILS.indices) {
         val email = EMAILS[i]
         val pgpContact = if (i % 2 == 0) {
-          PgpContact(email, getUserName(email), "publicKey", true, null, null, null, 0)
+          PgpContact(email, getUserName(email), "publicKey", true, null, null, 0)
         } else {
-          PgpContact(email, null, "publicKey", true, null, null, null, 0)
+          PgpContact(email, null, "publicKey", true, null, null, 0)
         }
         CONTACTS.add(pgpContact)
       }

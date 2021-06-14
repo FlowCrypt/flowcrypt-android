@@ -71,19 +71,19 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   @Test
   fun testErrorLogin() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_ERROR))
-    isToastDisplayed(decorView, LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
+    isToastDisplayed(LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
   fun testSuccessLoginNotVerified() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_VERIFIED))
-    isToastDisplayed(decorView, getResString(R.string.user_not_verified))
+    isToastDisplayed(getResString(R.string.user_not_verified))
   }
 
   @Test
   fun testErrorGetDomainRules() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_RULES_ERROR))
-    isToastDisplayed(decorView, DOMAIN_RULES_ERROR_RESPONSE.apiError?.msg!!)
+    isToastDisplayed(DOMAIN_RULES_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
@@ -102,59 +102,67 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     const val EMAIL_LOGIN_NOT_VERIFIED = "login_not_verified@example.com"
     const val EMAIL_DOMAIN_RULES_ERROR = "domain_rules_error@example.com"
 
-    val LOGIN_API_ERROR_RESPONSE = LoginResponse(ApiError(400, "Something wrong happened.",
-        "api input: missing key: token"), null)
+    val LOGIN_API_ERROR_RESPONSE = LoginResponse(
+        ApiError(
+            400, "Something wrong happened.",
+            "api input: missing key: token"
+        ), null
+    )
 
-    val DOMAIN_RULES_ERROR_RESPONSE = DomainRulesResponse(ApiError(401,
-        "Not logged in or unknown account", "auth"), null)
+    val DOMAIN_RULES_ERROR_RESPONSE = DomainRulesResponse(
+        ApiError(
+            401,
+            "Not logged in or unknown account", "auth"
+        ), null
+    )
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
+    val mockWebServerRule =
+        FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+          override fun dispatch(request: RecordedRequest): MockResponse {
+            val gson =
+                ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+            val model =
+                gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
 
-        if (request.path.equals("/account/login")) {
-          when (model.account) {
-            EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
+            if (request.path.equals("/account/login")) {
+              when (model.account) {
+                EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
+                    .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
 
-            EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
+                EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
+                    .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
 
-            EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+                EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
+                    .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
 
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+                EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+                    .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+              }
+            }
+
+            if (request.path.equals("/account/get")) {
+              when (model.account) {
+                EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
+                    .setBody(gson.toJson(DOMAIN_RULES_ERROR_RESPONSE))
+
+                EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+                    .setBody(
+                        gson.toJson(
+                            DomainRulesResponse(
+                                null,
+                                DomainRules(listOf(
+                                    OrgRules.DomainRule.NO_PRV_CREATE,
+                                    OrgRules.DomainRule.NO_PRV_BACKUP))
+                            )
+                        )
+                    )
+              }
+            }
+
+            return MockResponse().setResponseCode(404)
           }
-        }
-
-        if (request.path.equals("/account/get")) {
-          when (model.account) {
-            EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(DOMAIN_RULES_ERROR_RESPONSE))
-
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(
-                    DomainRulesResponse(
-                        apiError = null,
-                        orgRules = OrgRules(
-                            flags = listOf(
-                                OrgRules.DomainRule.NO_PRV_CREATE,
-                                OrgRules.DomainRule.NO_PRV_BACKUP),
-                            customKeyserverUrl = null,
-                            keyManagerUrl = null,
-                            disallowAttesterSearchForDomains = null,
-                            enforceKeygenAlgo = null,
-                            enforceKeygenExpireMonths = null)
-                    )))
-          }
-        }
-
-        return MockResponse().setResponseCode(404)
-      }
-    })
+        })
   }
 }

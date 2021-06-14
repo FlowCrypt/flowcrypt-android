@@ -53,22 +53,22 @@ abstract class BaseOAuthFragment : BaseFragment() {
           getOAuthToken(schema, code)
         } else {
           showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = getString(R.string.could_not_verify_response),
-              useLinkify = true
+            dialogTitle = "",
+            dialogMsg = getString(R.string.could_not_verify_response),
+            useLinkify = true
           )
         }
       } else if (authException != null) {
         showInfoDialog(
-            dialogTitle = getString(R.string.error_with_value, authException.error),
-            dialogMsg = authException.errorDescription,
-            useLinkify = true
+          dialogTitle = getString(R.string.error_with_value, authException.error),
+          dialogMsg = authException.errorDescription,
+          useLinkify = true
         )
       } else {
         showInfoDialog(
-            dialogTitle = getString(R.string.oauth_error),
-            dialogMsg = getString(R.string.could_not_verify_response),
-            useLinkify = true
+          dialogTitle = getString(R.string.oauth_error),
+          dialogMsg = getString(R.string.could_not_verify_response),
+          useLinkify = true
         )
       }
     }
@@ -90,8 +90,8 @@ abstract class BaseOAuthFragment : BaseFragment() {
       when (schema) {
         OAuth2Helper.MICROSOFT_OAUTH2_SCHEMA -> {
           oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(
-              authorizeCode = code,
-              authRequest = request
+            authorizeCode = code,
+            authRequest = request
           )
         }
       }
@@ -100,6 +100,6 @@ abstract class BaseOAuthFragment : BaseFragment() {
 
   companion object {
     val KEY_AUTH_REQUEST =
-        GeneralUtil.generateUniqueExtraKey("KEY_AUTH_REQUEST", BaseOAuthFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_AUTH_REQUEST", BaseOAuthFragment::class.java)
   }
 }

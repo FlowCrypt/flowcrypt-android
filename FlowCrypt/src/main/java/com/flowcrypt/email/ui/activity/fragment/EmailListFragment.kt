@@ -79,7 +79,7 @@ import javax.mail.AuthenticationFailedException
  * E-mail: DenBond7@gmail.com
  */
 class EmailListFragment : BaseFragment(), ListProgressBehaviour,
-    SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
+  SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
 
   override val emptyView: View?
     get() = view?.findViewById(R.id.empty)
@@ -111,7 +111,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
   private val isOutboxFolder: Boolean
     get() {
-      return JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
+      return JavaEmailConstants.FOLDER_OUTBOX.equals(
+        listener?.currentFolder?.fullName,
+        ignoreCase = true
+      )
     }
 
   private val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
@@ -121,7 +124,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         tracker?.hasSelection() == true -> {
           if (actionMode == null) {
             actionMode = (this@EmailListFragment.activity as AppCompatActivity)
-                .startSupportActionMode(genActionModeForMsgs())
+              .startSupportActionMode(genActionModeForMsgs())
           }
           actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
         }
@@ -140,8 +143,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     if (context is OnManageEmailsListener) {
       this.listener = context
     } else
-      throw IllegalArgumentException(context.toString() + " must implement " +
-          OnManageEmailsListener::class.java.simpleName)
+      throw IllegalArgumentException(
+        context.toString() + " must implement " +
+            OnManageEmailsListener::class.java.simpleName
+      )
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -220,7 +225,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             listener?.currentFolder?.let { localFolder ->
               val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
               if (ids.isNotEmpty()) {
-                msgsViewModel.changeMsgsState(ids, localFolder, MessageState.PENDING_DELETING_PERMANENTLY)
+                msgsViewModel.changeMsgsState(
+                  ids,
+                  localFolder,
+                  MessageState.PENDING_DELETING_PERMANENTLY
+                )
               }
             }
 
@@ -271,7 +280,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           showStatus(msg = getString(R.string.no_connection))
         }
 
-        showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
+        showInfoSnackbar(
+          view,
+          getString(R.string.internet_connection_is_not_available),
+          Snackbar.LENGTH_LONG
+        )
       }
     }
   }
@@ -298,9 +311,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
     newFolder?.let {
       msgsViewModel.switchFolder(
-          newFolder = it.copy(),
-          forceClearFolderCache = isForceClearCacheNeeded,
-          deleteAllMsgs = deleteAllMsgs)
+        newFolder = it.copy(),
+        forceClearFolderCache = isForceClearCacheNeeded,
+        deleteAllMsgs = deleteAllMsgs
+      )
     } ?: labelsViewModel.loadLabels()
   }
 
@@ -330,7 +344,8 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       return
     }
 
-    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
+    val isOutbox =
+      JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
     val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
     if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
       when (msgEntity.msgState) {
@@ -340,24 +355,39 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         MessageState.ERROR_DURING_CREATION,
         MessageState.ERROR_SENDING_FAILED,
         MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
-        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> handleOutgoingMsgWhichHasSomeError(msgEntity)
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> handleOutgoingMsgWhichHasSomeError(
+          msgEntity
+        )
         else -> {
           if (isOutbox && !isRawMsgAvailable) {
-            val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
-                dialogMsg = getString(R.string.message_failed_to_create),
-                positiveButtonTitle = getString(R.string.delete_message),
-                negativeButtonTitle = getString(R.string.cancel),
-                isCancelable = true)
+            val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+              dialogTitle = "",
+              dialogMsg = getString(R.string.message_failed_to_create),
+              positiveButtonTitle = getString(R.string.delete_message),
+              negativeButtonTitle = getString(R.string.cancel),
+              isCancelable = true
+            )
             twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE)
-            twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
+            twoWayDialogFragment.show(
+              parentFragmentManager,
+              TwoWayDialogFragment::class.java.simpleName
+            )
           } else {
-            startActivityForResult(MessageDetailsActivity.getIntent(context,
-                listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+            startActivityForResult(
+              MessageDetailsActivity.getIntent(
+                context,
+                listener?.currentFolder, msgEntity
+              ), REQUEST_CODE_SHOW_MESSAGE_DETAILS
+            )
           }
         }
       }
     } else {
-      showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
+      showInfoSnackbar(
+        view,
+        getString(R.string.internet_connection_is_not_available),
+        Snackbar.LENGTH_LONG
+      )
     }
   }
 
@@ -390,19 +420,19 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
   private fun showConnProblemHint() {
     showSnackbar(
-        view = requireView(),
-        msgText = getString(R.string.can_not_connect_to_the_server),
-        btnName = getString(R.string.retry),
-        duration = Snackbar.LENGTH_LONG
+      view = requireView(),
+      msgText = getString(R.string.can_not_connect_to_the_server),
+      btnName = getString(R.string.retry),
+      duration = Snackbar.LENGTH_LONG
     ) { onRefresh() }
   }
 
   private fun showConnLostHint(msgText: String = getString(R.string.can_not_connect_to_the_server)) {
     showSnackbar(
-        view = requireView(),
-        msgText = msgText,
-        btnName = getString(R.string.retry),
-        duration = Snackbar.LENGTH_LONG
+      view = requireView(),
+      msgText = msgText,
+      btnName = getString(R.string.retry),
+      duration = Snackbar.LENGTH_LONG
     ) {
       loadNextMsgs()
     }
@@ -413,42 +443,61 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
     when (messageEntity.msgState) {
       MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-      MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND -> message = getString(R.string.message_failed_to_forward)
+      MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND -> message =
+        getString(R.string.message_failed_to_forward)
 
       MessageState.ERROR_CACHE_PROBLEM -> message = getString(R.string.there_is_problem_with_cache)
 
       MessageState.ERROR_DURING_CREATION -> {
-        message = getString(R.string.error_happened_during_creation, getString(R.string
-            .support_email), messageEntity.errorMsg ?: "none")
+        message = getString(
+          R.string.error_happened_during_creation,
+          getString(R.string.support_email),
+          messageEntity.errorMsg ?: "none"
+        )
 
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
-            dialogMsg = message,
-            positiveButtonTitle = getString(R.string.write_us),
-            negativeButtonTitle = getString(R.string.delete_message),
-            isCancelable = true)
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+          dialogTitle = "",
+          dialogMsg = message,
+          positiveButtonTitle = getString(R.string.write_us),
+          negativeButtonTitle = getString(R.string.delete_message),
+          isCancelable = true
+        )
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_ERROR_DURING_CREATION)
-        twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
+        twoWayDialogFragment.show(
+          parentFragmentManager,
+          TwoWayDialogFragment::class.java.simpleName
+        )
         return
       }
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         val errorMsg = messageEntity.errorMsg
         message = if (errorMsg?.equals(messageEntity.email, ignoreCase = true) == true) {
-          getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email))
+          getString(
+            R.string.no_key_available_for_your_email_account,
+            getString(R.string.support_email)
+          )
         } else {
-          getString(R.string.no_key_available_for_your_emails, errorMsg, messageEntity.email,
-              getString(R.string.support_email))
+          getString(
+            R.string.no_key_available_for_your_emails, errorMsg, messageEntity.email,
+            getString(R.string.support_email)
+          )
         }
       }
 
       MessageState.ERROR_SENDING_FAILED, MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> {
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
-            dialogMsg = getString(R.string.message_failed_to_send, message),
-            positiveButtonTitle = getString(R.string.retry),
-            negativeButtonTitle = getString(R.string.cancel),
-            isCancelable = true)
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+          dialogTitle = "",
+          dialogMsg = getString(R.string.message_failed_to_send, message),
+          positiveButtonTitle = getString(R.string.retry),
+          negativeButtonTitle = getString(R.string.cancel),
+          isCancelable = true
+        )
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES)
-        twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
+        twoWayDialogFragment.show(
+          parentFragmentManager,
+          TwoWayDialogFragment::class.java.simpleName
+        )
         return
       }
 
@@ -456,19 +505,32 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       }
     }
 
-    val infoDialogFragment = InfoDialogFragment.newInstance(dialogTitle = null,
-        dialogMsg = message, buttonTitle = null, isPopBackStack = false, isCancelable = true, hasHtml = false)
-    infoDialogFragment.onInfoDialogButtonClickListener = object : InfoDialogFragment.OnInfoDialogButtonClickListener {
-      override fun onInfoDialogButtonClick(requestCode: Int) {
-        msgsViewModel.deleteOutgoingMsgs(listOf(messageEntity))
+    val infoDialogFragment = InfoDialogFragment.newInstance(
+      dialogTitle = null,
+      dialogMsg = message,
+      buttonTitle = null,
+      isPopBackStack = false,
+      isCancelable = true,
+      hasHtml = false
+    )
+    infoDialogFragment.onInfoDialogButtonClickListener =
+      object : InfoDialogFragment.OnInfoDialogButtonClickListener {
+        override fun onInfoDialogButtonClick(requestCode: Int) {
+          msgsViewModel.deleteOutgoingMsgs(listOf(messageEntity))
+        }
       }
-    }
 
-    infoDialogFragment.show(requireActivity().supportFragmentManager, InfoDialogFragment::class.java.simpleName)
+    infoDialogFragment.show(
+      requireActivity().supportFragmentManager,
+      InfoDialogFragment::class.java.simpleName
+    )
   }
 
   private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {
-    return localFolder?.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true) || isOutboxFolder
+    return localFolder?.fullName.equals(
+      JavaEmailConstants.FOLDER_INBOX,
+      ignoreCase = true
+    ) || isOutboxFolder
   }
 
   /**
@@ -502,7 +564,12 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     } else {
       footerProgressView?.visibility = View.GONE
 
-      showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry), Snackbar.LENGTH_LONG) {
+      showSnackbar(
+        view,
+        getString(R.string.internet_connection_is_not_available),
+        getString(R.string.retry),
+        Snackbar.LENGTH_LONG
+      ) {
         loadNextMsgs()
       }
     }
@@ -515,12 +582,14 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     recyclerViewMsgs = view.findViewById(R.id.rVMsgs)
     setupRecyclerView()
 
-    footerProgressView = LayoutInflater.from(context).inflate(R.layout.list_view_progress_footer, recyclerViewMsgs, false)
+    footerProgressView = LayoutInflater.from(context)
+      .inflate(R.layout.list_view_progress_footer, recyclerViewMsgs, false)
     footerProgressView?.visibility = View.GONE
 
     swipeRefreshLayout = view.findViewById(R.id.sRL)
     swipeRefreshLayout?.setColorSchemeResources(
-        R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
+      R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary
+    )
     swipeRefreshLayout?.setOnRefreshListener(this)
   }
 
@@ -543,11 +612,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
         keyProvider?.let {
           tracker = SelectionTracker.Builder(
-              EmailListFragment::class.java.simpleName,
-              recyclerView,
-              it,
-              MsgItemDetailsLookup(recyclerView),
-              StorageStrategy.createLongStorage()
+            EmailListFragment::class.java.simpleName,
+            recyclerView,
+            it,
+            MsgItemDetailsLookup(recyclerView),
+            StorageStrategy.createLongStorage()
           ).build()
           tracker?.addObserver(selectionObserver)
           adapter.tracker = tracker
@@ -558,18 +627,24 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
   private fun setupItemTouchHelper() {
     val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-        0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+      0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+    ) {
       private val icon: Drawable?
         get() = context?.let { ContextCompat.getDrawable(it, R.drawable.ic_archive_white_24dp) }
       private val background: ColorDrawable?
         get() = context?.let { ColorDrawable(ContextCompat.getColor(it, R.color.colorPrimaryDark)) }
 
-      override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
-                          target: RecyclerView.ViewHolder): Boolean {
+      override fun onMove(
+        recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder
+      ): Boolean {
         return false
       }
 
-      override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+      override fun getSwipeDirs(
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder
+      ): Int {
         val position = viewHolder.adapterPosition
         return if (position != RecyclerView.NO_POSITION) {
           val msgEntity = adapter.getMsgEntity(position)
@@ -587,15 +662,17 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         if (position != RecyclerView.NO_POSITION) {
           val item = adapter.getItemId(position)
           listener?.currentFolder?.let {
-            msgsViewModel.changeMsgsState(listOf(item), it, MessageState
-                .PENDING_ARCHIVING, false)
+            msgsViewModel.changeMsgsState(
+              listOf(item), it, MessageState
+                .PENDING_ARCHIVING, false
+            )
           }
 
           val snackBar = showSnackbar(
-              view = view,
-              msgText = getString(R.string.marked_for_archiving),
-              btnName = getString(R.string.undo),
-              duration = Snackbar.LENGTH_LONG
+            view = view,
+            msgText = getString(R.string.marked_for_archiving),
+            btnName = getString(R.string.undo),
+            duration = Snackbar.LENGTH_LONG
           ) {
             listener?.currentFolder?.let {
               msgsViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
@@ -619,9 +696,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         return isArchiveActionEnabled()
       }
 
-      override fun onChildDraw(c: Canvas, recyclerView: RecyclerView,
-                               viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,
-                               actionState: Int, isCurrentlyActive: Boolean) {
+      override fun onChildDraw(
+        c: Canvas, recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,
+        actionState: Int, isCurrentlyActive: Boolean
+      ) {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
         if (this.icon == null || this.background == null) {
           c.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY)
@@ -644,8 +723,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             val iconRight = itemView.left + iconMargin + icon.intrinsicWidth
             icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
 
-            background.setBounds(itemView.left, itemView.top,
-                itemView.left + dX.toInt() + backgroundCornerOffset, itemView.bottom)
+            background.setBounds(
+              itemView.left, itemView.top,
+              itemView.left + dX.toInt() + backgroundCornerOffset, itemView.bottom
+            )
           }
 
           dX < 0 -> { // Swiping to the left
@@ -653,8 +734,10 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             val iconRight = itemView.right - iconMargin
             icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
 
-            background.setBounds(itemView.right + dX.toInt() - backgroundCornerOffset,
-                itemView.top, itemView.right, itemView.bottom)
+            background.setBounds(
+              itemView.right + dX.toInt() - backgroundCornerOffset,
+              itemView.top, itemView.right, itemView.bottom
+            )
           }
 
           else -> { // view is unSwiped
@@ -682,31 +765,36 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       }
 
       VerticalOverScrollBounceEffectDecorator(overScrollAdapter).setOverScrollStateListener(
-          object : IOverScrollStateListener {
-            private val TIMEOUT_BETWEEN_ACTIONS = 100
-            private var lastCallTime = 0L
+        object : IOverScrollStateListener {
+          private val TIMEOUT_BETWEEN_ACTIONS = 100
+          private var lastCallTime = 0L
 
-            override fun onOverScrollStateChange(decor: IOverScrollDecor?, oldState: Int, newState: Int) {
-              when (newState) {
-                IOverScrollState.STATE_IDLE, IOverScrollState.STATE_DRAG_START_SIDE -> {
-                  lastCallTime = 0
-                }
+          override fun onOverScrollStateChange(
+            decor: IOverScrollDecor?,
+            oldState: Int,
+            newState: Int
+          ) {
+            when (newState) {
+              IOverScrollState.STATE_IDLE, IOverScrollState.STATE_DRAG_START_SIDE -> {
+                lastCallTime = 0
+              }
 
-                IOverScrollState.STATE_DRAG_END_SIDE -> {
-                  lastCallTime = System.currentTimeMillis()
-                }
+              IOverScrollState.STATE_DRAG_END_SIDE -> {
+                lastCallTime = System.currentTimeMillis()
+              }
 
-                IOverScrollState.STATE_BOUNCE_BACK -> {
-                  if (oldState == IOverScrollState.STATE_DRAG_END_SIDE
-                      && System.currentTimeMillis() - lastCallTime >= TIMEOUT_BETWEEN_ACTIONS) {
-                    if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
-                      msgsViewModel.loadMsgsFromRemoteServer()
-                    }
+              IOverScrollState.STATE_BOUNCE_BACK -> {
+                if (oldState == IOverScrollState.STATE_DRAG_END_SIDE
+                  && System.currentTimeMillis() - lastCallTime >= TIMEOUT_BETWEEN_ACTIONS
+                ) {
+                  if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
+                    msgsViewModel.loadMsgsFromRemoteServer()
                   }
                 }
               }
             }
-          })
+          }
+        })
     }
   }
 
@@ -726,12 +814,16 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             R.id.menuActionDeleteMessage -> {
               if (it.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
-                    dialogTitle = "",
-                    dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_msg_question, ids.size, ids.size),
-                    positiveButtonTitle = getString(android.R.string.ok),
-                    negativeButtonTitle = getString(android.R.string.cancel),
-                    requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
-                    isCancelable = false
+                  dialogTitle = "",
+                  dialogMsg = requireContext().resources.getQuantityString(
+                    R.plurals.delete_msg_question,
+                    ids.size,
+                    ids.size
+                  ),
+                  positiveButtonTitle = getString(android.R.string.ok),
+                  negativeButtonTitle = getString(android.R.string.cancel),
+                  requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
+                  isCancelable = false
                 )
               } else {
                 msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
@@ -827,23 +919,38 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           val progress = it.progress?.toInt() ?: 0
 
           when (it.resultCode) {
-            R.id.progress_id_start_of_loading_new_messages -> setActionProgress(progress, "Starting")
+            R.id.progress_id_start_of_loading_new_messages -> setActionProgress(
+              progress,
+              "Starting"
+            )
 
             R.id.progress_id_adding_task_to_queue -> setActionProgress(progress, "Queuing")
 
             R.id.progress_id_running_task -> setActionProgress(progress, "Running task")
 
-            R.id.progress_id_resetting_connection -> setActionProgress(progress, "Resetting connection")
+            R.id.progress_id_resetting_connection -> setActionProgress(
+              progress,
+              "Resetting connection"
+            )
 
             R.id.progress_id_connecting_to_email_server -> setActionProgress(progress, "Connecting")
 
-            R.id.progress_id_running_smtp_action -> setActionProgress(progress, "Running SMTP action")
+            R.id.progress_id_running_smtp_action -> setActionProgress(
+              progress,
+              "Running SMTP action"
+            )
 
-            R.id.progress_id_running_imap_action -> setActionProgress(progress, "Running IMAP action")
+            R.id.progress_id_running_imap_action -> setActionProgress(
+              progress,
+              "Running IMAP action"
+            )
 
             R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
 
-            R.id.progress_id_getting_list_of_emails -> setActionProgress(progress, "Getting list of emails")
+            R.id.progress_id_getting_list_of_emails -> setActionProgress(
+              progress,
+              "Getting list of emails"
+            )
 
             R.id.progress_id_gmail_list -> setActionProgress(progress, "Getting list of emails")
 
@@ -863,13 +970,17 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           if (adapter.itemCount == 0) {
             if (it.exception is CommonConnectionException) {
               showStatus(msg = getString(R.string.can_not_connect_to_the_server))
-            } else showStatus(msg = it.exception?.message
-                ?: getString(R.string.can_not_connect_to_the_server))
+            } else showStatus(
+              msg = it.exception?.message
+                ?: getString(R.string.can_not_connect_to_the_server)
+            )
           } else {
             if (it.exception is CommonConnectionException) {
               showConnLostHint()
-            } else showConnLostHint(it.exception?.message
-                ?: getString(R.string.can_not_connect_to_the_server))
+            } else showConnLostHint(
+              it.exception?.message
+                ?: getString(R.string.can_not_connect_to_the_server)
+            )
           }
           baseActivity.countingIdlingResource.decrementSafely()
         }
@@ -889,7 +1000,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
           MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
           MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
-          MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderWorker.enqueue(nonNullContext) }
+          MessageState.QUEUED -> context?.let { nonNullContext ->
+            MessagesSenderWorker.enqueue(
+              nonNullContext
+            )
+          }
           else -> {
           }
         }

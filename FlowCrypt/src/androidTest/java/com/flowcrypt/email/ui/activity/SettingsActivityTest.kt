@@ -45,11 +45,11 @@ class SettingsActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testShowHelpScreen() {
@@ -85,7 +85,10 @@ class SettingsActivityTest : BaseTest() {
 
   @Test
   fun testShowLegalScreen() {
-    checkIsScreenDisplaying(getResString(R.string.experimental), getResString(R.string.experimental_settings))
+    checkIsScreenDisplaying(
+      getResString(R.string.experimental),
+      getResString(R.string.experimental_settings)
+    )
   }
 
   private fun checkIsScreenDisplaying(screenName: String) {
@@ -94,9 +97,9 @@ class SettingsActivityTest : BaseTest() {
 
   private fun checkIsScreenDisplaying(commandName: String, screenName: String) {
     onView(withText(commandName))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(allOf<View>(withText(screenName), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 }

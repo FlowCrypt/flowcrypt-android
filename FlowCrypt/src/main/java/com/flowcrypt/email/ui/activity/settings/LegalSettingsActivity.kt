@@ -77,8 +77,10 @@ class LegalSettingsActivity : BaseSettingsActivity() {
       isRefreshEnabled = arguments?.getBoolean(KEY_IS_REFRESH_ENABLED, false) ?: false
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+      inflater: LayoutInflater, container: ViewGroup?,
+      savedInstanceState: Bundle?
+    ): View? {
 
       return inflater.inflate(R.layout.swipe_to_refrech_with_webview, container, false)
     }
@@ -88,7 +90,11 @@ class LegalSettingsActivity : BaseSettingsActivity() {
       val webView = view.findViewById<WebView>(R.id.webView)
       val swipeRefreshLayout = view.findViewById<SwipeRefreshLayout>(R.id.swipeRefreshLayout)
       if (isRefreshEnabled) {
-        swipeRefreshLayout?.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
+        swipeRefreshLayout?.setColorSchemeResources(
+          R.color.colorPrimary,
+          R.color.colorPrimary,
+          R.color.colorPrimary
+        )
         swipeRefreshLayout.setOnRefreshListener {
           assetsPath?.let { webView?.loadUrl(it) }
         }
@@ -96,10 +102,16 @@ class LegalSettingsActivity : BaseSettingsActivity() {
         swipeRefreshLayout.isEnabled = false
       }
 
-      webView?.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-          ViewGroup.LayoutParams.MATCH_PARENT)
+      webView?.layoutParams = ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
+      )
       webView?.webViewClient = object : WebViewClient() {
-        override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+        override fun onReceivedError(
+          view: WebView?,
+          request: WebResourceRequest?,
+          error: WebResourceError?
+        ) {
           if (error?.description == "net::ERR_INTERNET_DISCONNECTED") {
             webView?.loadUrl("file:///android_asset/html/no_connection.htm")
           } else {
@@ -117,7 +129,8 @@ class LegalSettingsActivity : BaseSettingsActivity() {
 
     companion object {
       internal const val KEY_URL = BuildConfig.APPLICATION_ID + ".KEY_URL"
-      internal const val KEY_IS_REFRESH_ENABLED = BuildConfig.APPLICATION_ID + ".KEY_IS_REFRESH_ENABLED"
+      internal const val KEY_IS_REFRESH_ENABLED =
+        BuildConfig.APPLICATION_ID + ".KEY_IS_REFRESH_ENABLED"
 
       /**
        * Generate an instance of the [WebViewFragment].
@@ -158,16 +171,24 @@ class LegalSettingsActivity : BaseSettingsActivity() {
   /**
    * The adapter which contains information about tabs.
    */
-  private inner class TabPagerAdapter(fragmentManager: FragmentManager)
-    : FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+  private inner class TabPagerAdapter(fragmentManager: FragmentManager) :
+    FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     override fun getItem(i: Int): Fragment {
       when (i) {
-        TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(Uri.parse(Constants
-            .FLOWCRYPT_PRIVACY_URL), true)
+        TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(
+          Uri.parse(
+            Constants
+              .FLOWCRYPT_PRIVACY_URL
+          ), true
+        )
 
-        TAB_POSITION_TERMS -> return WebViewFragment.newInstance(Uri.parse(Constants
-            .FLOWCRYPT_TERMS_URL), true)
+        TAB_POSITION_TERMS -> return WebViewFragment.newInstance(
+          Uri.parse(
+            Constants
+              .FLOWCRYPT_TERMS_URL
+          ), true
+        )
 
         TAB_POSITION_LICENCE -> return WebViewFragment.newInstance("html/license.htm")
 

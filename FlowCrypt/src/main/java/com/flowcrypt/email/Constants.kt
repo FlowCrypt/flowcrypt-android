@@ -44,7 +44,8 @@ class Constants {
     /**
      * The preference keys.
      */
-    const val PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED = "preferences_key_is_write_logs_to_file_enabled"
+    const val PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED =
+      "preferences_key_is_write_logs_to_file_enabled"
     const val PREF_KEY_IS_ACRA_ENABLED = "pref_key_is_acra_enabled"
     const val PREF_KEY_IS_MAIL_DEBUG_ENABLED = "preferences_key_is_mail_debug_enabled"
     const val PREF_KEY_IS_HTTP_LOG_ENABLED = "pref_key_is_http_log_enabled"
@@ -75,11 +76,6 @@ class Constants {
      */
     const val MAX_PUB_KEY_SIZE = 1024 * 256
 
-    /**
-     * The max size off an attachment which can be decrypted via the app.
-     */
-    const val MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED = 1024 * 1024 * 3
-
     const val PGP_CACHE_DIR = "PGP"
     const val FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded"
     const val ATTACHMENTS_CACHE_DIR = "attachments"
@@ -97,11 +93,49 @@ class Constants {
 
     const val PGP_FILE_EXT = ".pgp"
 
-    val PASSWORD_WEAK_WORDS = arrayOf("crypt", "up", "cryptup", "flow", "flowcrypt", "encryption", "pgp", "email",
-        "set", "backup", "passphrase", "best", "pass", "phrases", "are", "long", "and", "have", "several", "words",
-        "in", "them", "Best pass phrases are long", "have several words", "in them", "bestpassphrasesarelong",
-        "haveseveralwords", "inthem", "Loss of this pass phrase", "cannot be recovered", "Note it down", "on a paper",
-        "lossofthispassphrase", "cannotberecovered", "noteitdown", "onapaper", "setpassword", "set password",
-        "set pass word", "setpassphrase", "set pass phrase", "set passphrase")
+    val PASSWORD_WEAK_WORDS = arrayOf(
+      "crypt",
+      "up",
+      "cryptup",
+      "flow",
+      "flowcrypt",
+      "encryption",
+      "pgp",
+      "email",
+      "set",
+      "backup",
+      "passphrase",
+      "best",
+      "pass",
+      "phrases",
+      "are",
+      "long",
+      "and",
+      "have",
+      "several",
+      "words",
+      "in",
+      "them",
+      "Best pass phrases are long",
+      "have several words",
+      "in them",
+      "bestpassphrasesarelong",
+      "haveseveralwords",
+      "inthem",
+      "Loss of this pass phrase",
+      "cannot be recovered",
+      "Note it down",
+      "on a paper",
+      "lossofthispassphrase",
+      "cannotberecovered",
+      "noteitdown",
+      "onapaper",
+      "setpassword",
+      "set password",
+      "set pass word",
+      "setpassphrase",
+      "set pass phrase",
+      "set passphrase"
+    )
   }
 }

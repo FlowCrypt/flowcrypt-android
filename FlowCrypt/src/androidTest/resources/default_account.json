@@ -1,7 +1,7 @@
 {
-  "accountType": "denbond7.com",
+  "accountType": "flowcrypt.test",
   "areContactsLoaded": true,
-  "email": "default@denbond7.com",
+  "email": "default@flowcrypt.test",
   "imapIsUseSslTls": true,
   "imapIsUseStarttls": false,
   "imapPort": 993,
@@ -16,7 +16,7 @@
   "smtpPassword": "qwerty1234",
   "smtpPort": 587,
   "smtpServer": "10.0.2.2",
-  "smtpUsername": "default@denbond7.com",
+  "smtpUsername": "default@flowcrypt.test",
   "useCustomSignForSmtp": true,
-  "username": "default@denbond7.com"
+  "username": "default@flowcrypt.test"
 }

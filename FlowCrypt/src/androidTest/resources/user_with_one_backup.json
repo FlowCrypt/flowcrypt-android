@@ -1,5 +1,5 @@
 {
-  "email": "user_with_one_backup@denbond7.com",
+  "email": "user_with_one_backup@flowcrypt.test",
   "imapPort": 993,
   "imapOpt": "NONE",
   "imapServer": "10.0.2.2",
@@ -8,5 +8,5 @@
   "smtpPort": 587,
   "smtpOpt": "NONE",
   "smtpServer": "10.0.2.2",
-  "username": "user_with_one_backup@denbond7.com"
+  "username": "user_with_one_backup@flowcrypt.test"
 }

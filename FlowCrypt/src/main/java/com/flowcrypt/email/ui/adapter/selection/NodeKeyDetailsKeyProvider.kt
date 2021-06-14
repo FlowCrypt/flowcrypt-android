@@ -6,7 +6,7 @@
 package com.flowcrypt.email.ui.adapter.selection
 
 import androidx.recyclerview.selection.ItemKeyProvider
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
  * @author Denis Bondarenko
@@ -14,7 +14,8 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
  *         Time: 4:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-class NodeKeyDetailsKeyProvider(private val items: List<NodeKeyDetails>) : ItemKeyProvider<NodeKeyDetails>(SCOPE_CACHED) {
+class NodeKeyDetailsKeyProvider(private val items: List<PgpKeyDetails>) :
+  ItemKeyProvider<PgpKeyDetails>(SCOPE_CACHED) {
   override fun getKey(position: Int) = items.getOrNull(position)
-  override fun getPosition(key: NodeKeyDetails) = items.indexOf(key)
+  override fun getPosition(key: PgpKeyDetails) = items.indexOf(key)
 }

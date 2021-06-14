@@ -30,17 +30,19 @@ import java.io.IOException
 class MigrationTest {
   // Array of all migrations which we are going to test
   private val arrayOfMigrations = arrayOf(
-      FlowCryptRoomDatabase.MIGRATION_19_20,
-      FlowCryptRoomDatabase.MIGRATION_20_21,
-      FlowCryptRoomDatabase.MIGRATION_21_22,
-      FlowCryptRoomDatabase.MIGRATION_22_23,
-      FlowCryptRoomDatabase.MIGRATION_23_24)
+    FlowCryptRoomDatabase.MIGRATION_19_20,
+    FlowCryptRoomDatabase.MIGRATION_20_21,
+    FlowCryptRoomDatabase.MIGRATION_21_22,
+    FlowCryptRoomDatabase.MIGRATION_22_23,
+    FlowCryptRoomDatabase.MIGRATION_23_24,
+    FlowCryptRoomDatabase.MIGRATION_24_25
+  )
 
   @get:Rule
   val migrationTestHelper: MigrationTestHelper = MigrationTestHelper(
-      InstrumentationRegistry.getInstrumentation(),
-      FlowCryptRoomDatabase::class.java.canonicalName,
-      FrameworkSQLiteOpenHelperFactory()
+    InstrumentationRegistry.getInstrumentation(),
+    FlowCryptRoomDatabase::class.java.canonicalName,
+    FrameworkSQLiteOpenHelperFactory()
   )
 
   @Test
@@ -53,8 +55,8 @@ class MigrationTest {
 
     // Open latest version of the DB. Room will validate the schema once all migrations execute.
     Room.databaseBuilder(
-        InstrumentationRegistry.getInstrumentation().targetContext,
-        FlowCryptRoomDatabase::class.java, FlowCryptRoomDatabase.DB_NAME
+      InstrumentationRegistry.getInstrumentation().targetContext,
+      FlowCryptRoomDatabase::class.java, FlowCryptRoomDatabase.DB_NAME
     ).addMigrations(*arrayOfMigrations).build().apply {
       openHelper.writableDatabase
       close()

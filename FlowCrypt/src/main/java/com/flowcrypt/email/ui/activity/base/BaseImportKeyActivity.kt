@@ -22,14 +22,14 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -85,17 +85,25 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
 
-  abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>)
+  abstract fun onKeyFound(
+    sourceType: KeyImportDetails.SourceType,
+    keyDetailsList: List<PgpKeyDetails>
+  )
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    bindService(Intent(this, CheckClipboardToFindKeyService::class.java), clipboardConn, Context.BIND_AUTO_CREATE)
+    bindService(
+      Intent(this, CheckClipboardToFindKeyService::class.java),
+      clipboardConn,
+      Context.BIND_AUTO_CREATE
+    )
 
     this.tempAccount = intent?.getParcelableExtra(KEY_EXTRA_ACCOUNT)
     this.throwErrorIfDuplicateFound =
-        intent?.getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false) ?: false
-    this.keyImportModel = intent?.getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD)
+      intent?.getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false) ?: false
+    this.keyImportModel =
+      intent?.getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD)
     this.title = intent?.getStringExtra(KEY_EXTRA_TITLE)
 
     clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -141,17 +149,21 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
                  * due to using the given [Uri] out of the current activity
                  */
                 contentResolver?.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                  uri,
+                  Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
               } catch (e: Exception) {
-                showInfoSnackbar(rootView,
-                    getString(R.string.please_use_another_app_to_choose_file), Snackbar.LENGTH_LONG)
+                showInfoSnackbar(
+                  rootView,
+                  getString(R.string.please_use_another_app_to_choose_file), Snackbar.LENGTH_LONG
+                )
               }
               handleSelectedFile(uri)
             } else {
-              showInfoSnackbar(rootView, getString(R.string.please_use_another_app_to_choose_file),
-                  Snackbar.LENGTH_LONG)
+              showInfoSnackbar(
+                rootView, getString(R.string.please_use_another_app_to_choose_file),
+                Snackbar.LENGTH_LONG
+              )
             }
           }
         }
@@ -186,8 +198,10 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             val item = clipData.getItemAt(0)
             val privateKeyFromClipboard = item.text
             if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
-              keyImportModel = KeyImportModel(null, privateKeyFromClipboard.toString(),
-                  isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
+              keyImportModel = KeyImportModel(
+                null, privateKeyFromClipboard.toString(),
+                isPrivateKeyMode, KeyImportDetails.SourceType.CLIPBOARD
+              )
               keyImportModel?.let { privateKeysViewModel.parseKeys(it, false, isPrivateKeyMode) }
             } else {
               showClipboardIsEmptyInfoDialog()
@@ -206,7 +220,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
    * @param uri A [Uri] of the selected file.
    */
   protected open fun handleSelectedFile(uri: Uri) {
-    keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyDetails.Type.FILE)
+    keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyImportDetails.SourceType.FILE)
     privateKeysViewModel.parseKeys(keyImportModel, true, isPrivateKeyMode)
   }
 
@@ -243,22 +257,33 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             val parseKeyResult = it.data
 
             if (parseKeyResult == null || parseKeyResult.pgpKeyRingCollection.size() == 0) {
-              val msg = when (keyImportModel?.type) {
-                KeyDetails.Type.FILE ->
-                  getString(R.string.file_has_wrong_pgp_structure,
-                      if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
+              val msg = when (keyImportModel?.sourceType) {
+                KeyImportDetails.SourceType.FILE ->
+                  getString(
+                    R.string.file_has_wrong_pgp_structure,
+                    if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
+                  )
 
-                KeyDetails.Type.CLIPBOARD ->
-                  getString(R.string.clipboard_has_wrong_structure,
-                      if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
+                KeyImportDetails.SourceType.CLIPBOARD ->
+                  getString(
+                    R.string.clipboard_has_wrong_structure,
+                    if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
+                  )
 
                 else ->
-                  getString(R.string.source_has_wrong_pgp_structure,
-                      if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
+                  getString(
+                    R.string.source_has_wrong_pgp_structure,
+                    if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
+                  )
               }
               showInfoDialogFragment(dialogMsg = msg)
             } else {
-              keyImportModel?.type?.let { type -> onKeyFound(type, parseKeyResult.toNodeKeyDetailsList()) }
+              keyImportModel?.sourceType?.let { type ->
+                onKeyFound(
+                  type,
+                  parseKeyResult.toPgpKeyDetailsList()
+                )
+              }
             }
 
             countingIdlingResource.decrementSafely()
@@ -278,9 +303,10 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               val nodeException = it.exception as NodeException?
 
               if (WRONG_STRUCTURE_ERROR == nodeException?.nodeError?.msg) {
-                val mode = if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
-                msg = when (keyImportModel?.type) {
-                  KeyDetails.Type.FILE ->
+                val mode =
+                  if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
+                msg = when (keyImportModel?.sourceType) {
+                  KeyImportDetails.SourceType.FILE ->
                     getString(R.string.file_has_wrong_pgp_structure, mode)
 
                   else ->
@@ -303,15 +329,19 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     intent.action = Intent.ACTION_OPEN_DOCUMENT
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = "*/*"
-    startActivityForResult(Intent.createChooser(intent, getString(R.string.select_key_to_import)),
-        REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM)
+    startActivityForResult(
+      Intent.createChooser(intent, getString(R.string.select_key_to_import)),
+      REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM
+    )
   }
 
   private fun showClipboardIsEmptyInfoDialog() {
-    val dialogMsg = getString(R.string.hint_clipboard_is_empty, if (isPrivateKeyMode)
-      getString(R.string.private_)
-    else
-      getString(R.string.public_), getString(R.string.app_name))
+    val dialogMsg = getString(
+      R.string.hint_clipboard_is_empty, if (isPrivateKeyMode)
+        getString(R.string.private_)
+      else
+        getString(R.string.public_), getString(R.string.app_name)
+    )
     val infoDialogFragment = InfoDialogFragment.newInstance(getString(R.string.hint), dialogMsg)
     infoDialogFragment.show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
   }
@@ -319,33 +349,45 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   companion object {
 
     val KEY_EXTRA_ACCOUNT =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BaseImportKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BaseImportKeyActivity::class.java)
 
     val KEY_EXTRA_IS_SYNC_ENABLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_IS_SYNC_ENABLE",
+        BaseImportKeyActivity::class.java
+      )
 
     val KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
-            BaseImportKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
+        BaseImportKeyActivity::class.java
+      )
 
     val KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
-            BaseImportKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
+        BaseImportKeyActivity::class.java
+      )
 
     val KEY_EXTRA_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
     private const val WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType"
     private const val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
 
-    fun newIntent(context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
-                  title: String, model: KeyImportModel? = null,
-                  throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>): Intent {
+    fun newIntent(
+      context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
+      title: String, model: KeyImportModel? = null,
+      throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>
+    ): Intent {
       val intent = Intent(context, cls)
       intent.putExtra(KEY_EXTRA_ACCOUNT, accountEntity)
       intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled)
       intent.putExtra(KEY_EXTRA_TITLE, title)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model)
-      intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, throwErrorIfDuplicateFoundEnabled)
+      intent.putExtra(
+        KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND,
+        throwErrorIfDuplicateFoundEnabled
+      )
       return intent
     }
   }

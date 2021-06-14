@@ -1,0 +1,76 @@
+{
+  "encryptionType": "STANDARD",
+  "inlineSubject": "Encrypted for 2 keys of the same user",
+  "msgBlocks": [
+    {
+      "complete": true,
+      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003c/body\u003e\n  \u003c/html\u003e",
+      "type": "plainHtml"
+    },
+    {
+      "complete": true,
+      "content": "-----BEGIN PGP MESSAGE-----\nVersion: PGPainless\n\nhF4D16Pe22XLHvsSAQdAxqcSL8seB8mOidOEBRcPACKryPXXKq2jrtwruoD8MFMw\nvDLuOIH2W+rzutFU/jzKtFLDSJ7Mr6k7s8UVhTl6YZK86ySa/Ogj18PRmcWI6+76\nhF4DzOvPyaVBcXgSAQdADiHBi+jiXT+3q9tO6+ilNSo2NksxI/4KDcJdNEBfgTww\nraKaLewf34KyzSeZhYyQyLyENkyh9mLOg18iAnr6viZ+7YOgEN4wWDjeHRsHaOjS\nhF4DTxRYvSK3u1MSAQdAuJHoXzys9YJ7ouefXQEEOIDENo6bqTfjtxQJdb4izgAw\n6bE655LLAOY7m94M/kVL1FGxRdLkS0fe7psGStHAlEkSfaoI9AB4xZ25ZHHNHXkJ\n0rYBOgiXQaebTpvPOITdU+cVm5oYsd3eAdgwNvSyK23gof5W5qpSlFZouZpXCwRQ\nM7IU2AY4mWbsu9zzvna1MUFXVwNYUXV8mHBnCxVZohTIvpgKvi/BSQzS/1ecYoU+\nGYhHSzsrdwW8tYHjEsEDKaytzDwPLxrAYjm/V76FNpYrK/pG4U6b5OPjmOAY4oE9\n24SaOxbNNhhZC5a/bqRTFr2nSUWxQ2K7a6xxw9VmUntrvoWYL1fJBw\u003d\u003d\n\u003d79d6\n-----END PGP MESSAGE-----",
+      "decryptErr": {
+        "error": {
+          "message": "Missing pass phrase",
+          "type": "need_passphrase"
+        },
+        "isEncrypted": true,
+        "isSuccess": false,
+        "longids": {
+          "chosen": [],
+          "matching": [
+            "45F0A5260A80F238598DD081C669001D0A6DCAC8",
+            "3DEBE9F677D5B9BB38E5A244225F8023C20D0957"
+          ],
+          "message": [
+            "D7A3DEDB65CB1EFB",
+            "CCEBCFC9A5417178",
+            "4F1458BD22B7BB53"
+          ],
+          "needPassphrase": [
+            "45F0A5260A80F238598DD081C669001D0A6DCAC8",
+            "3DEBE9F677D5B9BB38E5A244225F8023C20D0957"
+          ]
+        }
+      },
+      "type": "decryptErr"
+    }
+  ],
+  "msgEntity": {
+    "cc": [],
+    "email": "default@flowcrypt.test",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
+    "from": [
+      {
+        "address": "denbond7@flowcrypt.test"
+      }
+    ],
+    "fromAddress": "denbond7@flowcrypt.test",
+    "hasAttachments": false,
+    "id": 17,
+    "isEncrypted": true,
+    "isSeen": true,
+    "msgState": "NONE",
+    "receivedDate": 1623067471000,
+    "replyTo": "denbond7@flowcrypt.test",
+    "replyToAddress": [
+      {
+        "address": "denbond7@flowcrypt.test"
+      }
+    ],
+    "sentDate": 1623067467000,
+    "state": -1,
+    "subject": "Encrypted for 2 keys of the same user",
+    "to": [
+      {
+        "address": "default@flowcrypt.test"
+      }
+    ],
+    "toAddress": "default@flowcrypt.test",
+    "uid": 18,
+    "uidAsHEX": "12"
+  },
+  "text": ""
+}

@@ -17,9 +17,10 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  * E-mail: DenBond7@gmail.com
  */
 data class DownloadAttachmentTaskResult constructor(
-    val attInfo: AttachmentInfo? = null,
-    val exception: Exception? = null,
-    val uri: Uri? = null,
-    val progressInPercentage: Int = 0,
-    val timeLeft: Long = 0,
-    val isLast: Boolean = false)
+  val attInfo: AttachmentInfo? = null,
+  val exception: Exception? = null,
+  val uri: Uri? = null,
+  val progressInPercentage: Int = 0,
+  val timeLeft: Long = 0,
+  val isLast: Boolean = false
+)

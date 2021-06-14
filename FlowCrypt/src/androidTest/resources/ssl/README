@@ -1,0 +1,17 @@
+# Instruction how to generate self-signed certs that can be used with the mock web server
+# We use the following password = 'android'
+
+# Generate certificate for localhost
+openssl req -new -nodes -keyout localhost-key.pem -out localhost-req.pem -days 3650 -subj \
+"/C=CZ/ST=Debug/O=FlowCrypt/CN=localhost/emailAddress=admin@flowcrypt.test" -config openssl-req.cnf
+
+# Sign certificate for localhost via CA
+openssl ca -config openssl-ca.cnf -days 3650 -out localhost-cert.pem -infiles localhost-req.pem
+
+# Combine certificates for courier, should contains the following info
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----

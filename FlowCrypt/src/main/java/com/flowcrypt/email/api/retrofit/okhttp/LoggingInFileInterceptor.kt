@@ -73,7 +73,8 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
 
     val connection = chain.connection()
     val protocol = connection?.protocol() ?: Protocol.HTTP_1_1
-    var requestStartMsg = "--> " + request.method + ' '.toString() + request.url + ' '.toString() + protocol
+    var requestStartMsg =
+      "--> " + request.method + ' '.toString() + request.url + ' '.toString() + protocol
     if (!logHeaders && hasRequestBody) {
       requestStartMsg += " (" + requestBody!!.contentLength() + "-byte body)"
     }
@@ -99,7 +100,8 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
         val name = headers.name(i)
         // Skip headers from the request body as they are explicitly logged above.
         if (!"Content-Type".equals(name, ignoreCase = true) && !"Content-Length".equals
-            (name, ignoreCase = true)) {
+            (name, ignoreCase = true)
+        ) {
           logger.log(name + ": " + headers.value(i))
         }
         i++
@@ -122,11 +124,15 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
         logger.log("")
         if (isPlainText(buffer)) {
           logger.log(buffer.readString(charset!!))
-          logger.log("--> END " + request.method
-              + " (" + requestBody.contentLength() + "-byte body)")
+          logger.log(
+            "--> END " + request.method
+                + " (" + requestBody.contentLength() + "-byte body)"
+          )
         } else {
-          logger.log("--> END " + request.method + " (binary "
-              + requestBody.contentLength() + "-byte body omitted)")
+          logger.log(
+            "--> END " + request.method + " (binary "
+                + requestBody.contentLength() + "-byte body omitted)"
+          )
         }
       }
     }
@@ -145,9 +151,11 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
     val responseBody = response.body
     val contentLength = responseBody?.contentLength() ?: 0
     val bodySize = if (contentLength != (-1).toLong()) "$contentLength-byte" else "unknown-length"
-    logger.log("<-- " + response.code + ' '.toString() + response.message
-        + ' '.toString() + response.request.url + " (" + tookMs +
-        "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
+    logger.log(
+      "<-- " + response.code + ' '.toString() + response.message
+          + ' '.toString() + response.request.url + " (" + tookMs +
+          "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString()
+    )
 
     if (logHeaders) {
       val headers = response.headers
@@ -219,6 +227,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
      * No logs.
      */
     NONE,
+
     /**
      * Logs request and response lines.
      *
@@ -231,6 +240,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
     `</pre> *
      */
     BASIC,
+
     /**
      * Logs request and response lines and their respective headers.
      *
@@ -250,6 +260,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
     `</pre> *
      */
     HEADERS,
+
     /**
      * Logs request and response lines and their respective headers and bodies (if present).
      *

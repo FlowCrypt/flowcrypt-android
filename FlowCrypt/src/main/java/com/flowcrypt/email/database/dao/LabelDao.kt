@@ -72,9 +72,12 @@ interface LabelDao : BaseDao<LabelEntity> {
             if (existedLabel.attributes == freshLabel.attributes) {
               updateCandidates.add(existedLabel.copy(alias = freshLabel.alias))
             } else {
-              updateCandidates.add(existedLabel.copy(
+              updateCandidates.add(
+                existedLabel.copy(
                   alias = freshLabel.alias,
-                  attributes = freshLabel.attributes))
+                  attributes = freshLabel.attributes
+                )
+              )
             }
           }
           break

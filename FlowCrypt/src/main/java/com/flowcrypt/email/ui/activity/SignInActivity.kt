@@ -44,25 +44,26 @@ class SignInActivity : BaseNodeActivity() {
     super.onCreate(savedInstanceState)
     ErrorNotificationManager.isShowingAuthErrorEnabled = false
 
-    accountAuthenticatorResponse = intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
+    accountAuthenticatorResponse =
+      intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
     accountAuthenticatorResponse?.onRequestContinued()
 
     if (savedInstanceState == null) {
       when (intent.action) {
         ACTION_UPDATE_OAUTH_ACCOUNT -> {
           supportFragmentManager.beginTransaction().add(
-              R.id.fragmentContainerView,
-              UserRecoverableAuthExceptionFragment().apply {
-                arguments = intent.extras
-              },
-              UserRecoverableAuthExceptionFragment::class.java.simpleName
+            R.id.fragmentContainerView,
+            UserRecoverableAuthExceptionFragment().apply {
+              arguments = intent.extras
+            },
+            UserRecoverableAuthExceptionFragment::class.java.simpleName
           ).commitNow()
         }
 
         else -> supportFragmentManager.beginTransaction().add(
-            R.id.fragmentContainerView,
-            MainSignInFragment(),
-            MainSignInFragment::class.java.simpleName
+          R.id.fragmentContainerView,
+          MainSignInFragment(),
+          MainSignInFragment::class.java.simpleName
         ).commitNow()
       }
     }
@@ -91,12 +92,12 @@ class SignInActivity : BaseNodeActivity() {
     val fragment = when (intent?.action) {
       ACTION_UPDATE_OAUTH_ACCOUNT -> {
         supportFragmentManager
-            .findFragmentByTag(UserRecoverableAuthExceptionFragment::class.java.simpleName) as UserRecoverableAuthExceptionFragment?
+          .findFragmentByTag(UserRecoverableAuthExceptionFragment::class.java.simpleName) as UserRecoverableAuthExceptionFragment?
       }
 
       else -> {
         supportFragmentManager
-            .findFragmentByTag(AddOtherAccountFragment::class.java.simpleName) as AddOtherAccountFragment?
+          .findFragmentByTag(AddOtherAccountFragment::class.java.simpleName) as AddOtherAccountFragment?
       }
     }
 
@@ -104,11 +105,14 @@ class SignInActivity : BaseNodeActivity() {
   }
 
   companion object {
-    const val ACTION_ADD_ONE_MORE_ACCOUNT = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
-    const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
-    const val ACTION_UPDATE_OAUTH_ACCOUNT = BuildConfig.APPLICATION_ID + ".ACTION_UPDATE_OAUTH_ACCOUNT"
+    const val ACTION_ADD_ONE_MORE_ACCOUNT =
+      BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
+    const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
+      BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
+    const val ACTION_UPDATE_OAUTH_ACCOUNT =
+      BuildConfig.APPLICATION_ID + ".ACTION_UPDATE_OAUTH_ACCOUNT"
 
     val KEY_EXTRA_NEW_ACCOUNT =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)
   }
 }

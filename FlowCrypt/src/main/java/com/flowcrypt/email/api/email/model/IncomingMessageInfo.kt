@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
-import java.util.*
+import java.util.Date
 import javax.mail.internet.InternetAddress
 
 /**
@@ -23,13 +23,15 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 
-data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
-                                           var atts: List<AttachmentInfo>? = null,
-                                           var localFolder: LocalFolder? = null,
-                                           var text: String? = null,
-                                           var inlineSubject: String? = null,
-                                           val msgBlocks: List<@JvmSuppressWildcards MsgBlock>? = null,
-                                           val encryptionType: MessageEncryptionType) : Parcelable {
+data class IncomingMessageInfo constructor(
+  val msgEntity: MessageEntity,
+  var atts: List<AttachmentInfo>? = null,
+  var localFolder: LocalFolder? = null,
+  var text: String? = null,
+  var inlineSubject: String? = null,
+  val msgBlocks: List<@JvmSuppressWildcards MsgBlock>? = null,
+  val encryptionType: MessageEncryptionType
+) : Parcelable {
   fun getSubject(): String? = msgEntity.subject
 
   fun getFrom(): List<InternetAddress> = msgEntity.from
@@ -54,15 +56,18 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
 
   fun getUid(): Int = msgEntity.uid.toInt()
 
-  constructor(msgEntity: MessageEntity, text: String?, subject: String?, msgBlocks: List<MsgBlock>,
-              encryptionType: MessageEncryptionType) : this(
-      msgEntity,
-      null,
-      null,
-      text,
-      subject,
-      msgBlocks,
-      encryptionType)
+  constructor(
+    msgEntity: MessageEntity, text: String?, subject: String?, msgBlocks: List<MsgBlock>,
+    encryptionType: MessageEncryptionType
+  ) : this(
+    msgEntity,
+    null,
+    null,
+    text,
+    subject,
+    msgBlocks,
+    encryptionType
+  )
 
   fun hasHtmlText(): Boolean {
     return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML)
@@ -83,13 +88,13 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader)!!,
-      source.createTypedArrayList(AttachmentInfo.CREATOR),
-      source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
-      source.readString(),
-      source.readString(),
-      mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
-      source.readParcelable(MessageEncryptionType::class.java.classLoader)!!
+    source.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader)!!,
+    source.createTypedArrayList(AttachmentInfo.CREATOR),
+    source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
+    source.readString(),
+    source.readString(),
+    mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
+    source.readParcelable(MessageEncryptionType::class.java.classLoader)!!
   )
 
   override fun describeContents() = 0
@@ -107,9 +112,12 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
   companion object {
     @JvmField
     @Suppress("unused")
-    val CREATOR: Parcelable.Creator<IncomingMessageInfo> = object : Parcelable.Creator<IncomingMessageInfo> {
-      override fun createFromParcel(source: Parcel): IncomingMessageInfo = IncomingMessageInfo(source)
-      override fun newArray(size: Int): Array<IncomingMessageInfo?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<IncomingMessageInfo> =
+      object : Parcelable.Creator<IncomingMessageInfo> {
+        override fun createFromParcel(source: Parcel): IncomingMessageInfo =
+          IncomingMessageInfo(source)
+
+        override fun newArray(size: Int): Array<IncomingMessageInfo?> = arrayOfNulls(size)
+      }
   }
 }

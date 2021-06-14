@@ -66,7 +66,8 @@ class LauncherActivity : BaseActivity() {
   private fun setupLauncherViewModel() {
     launcherViewModel.mediatorLiveData.observe(this, {
       if (launcherViewModel.isAccountInfoReceivedLiveData.value == true
-          && launcherViewModel.isNodeInfoReceivedLiveData.value == true) {
+        && launcherViewModel.isNodeInfoReceivedLiveData.value == true
+      ) {
         if (isAccountInfoReceived) {
           if (activeAccount != null) {
             showEmailManagerActivity()
@@ -84,11 +85,19 @@ class LauncherActivity : BaseActivity() {
   }
 
   private fun showEmailManagerActivity() {
-    val isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
-        .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
+    val isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(
+      PreferenceManager
+        .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true
+    )
 
     if (isCheckKeysNeeded) {
-      roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, activeAccount!!.email, 0))
+      roomBasicViewModel.addActionToQueue(
+        EncryptPrivateKeysIfNeededAction(
+          0,
+          activeAccount!!.email,
+          0
+        )
+      )
     }
 
     IdleService.start(this)

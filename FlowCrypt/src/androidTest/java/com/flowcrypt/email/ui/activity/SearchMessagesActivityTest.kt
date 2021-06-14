@@ -54,21 +54,27 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
-  private val accountRule = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true))
+  private val accountRule = AddAccountToDatabaseRule(
+    AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true)
+  )
 
   override val activityScenarioRule = activityScenarioRule<SearchMessagesActivity>(
-      intent = SearchMessagesActivity.newIntent(getTargetContext(), DEFAULT_QUERY_TEXT, LocalFolder(
-          account = accountRule.account.email,
-          fullName = FOLDER_NAME,
-          folderAlias = FOLDER_NAME)))
+    intent = SearchMessagesActivity.newIntent(
+      getTargetContext(), DEFAULT_QUERY_TEXT, LocalFolder(
+        account = accountRule.account.email,
+        fullName = FOLDER_NAME,
+        folderAlias = FOLDER_NAME
+      )
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(accountRule)
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(accountRule)
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Before
   fun waitData() {
@@ -80,51 +86,51 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   @NotReadyForCI
   fun testDefaultSearchQueryAtStart() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
-        .check(matches(withText(DEFAULT_QUERY_TEXT)))
+      .check(matches(withText(DEFAULT_QUERY_TEXT)))
     onView(withId(R.id.rVMsgs))
-        .check(matches(not(withEmptyRecyclerView())))
+      .check(matches(not(withEmptyRecyclerView())))
   }
 
   @Test
   @NotReadyForCI
   fun testSearchQuery() {
     onView(withId(R.id.rVMsgs))
-        .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
 
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
-        .check(matches(withText(DEFAULT_QUERY_TEXT)))
-        .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
+      .check(matches(withText(DEFAULT_QUERY_TEXT)))
+      .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
     //todo-denbond7 Need to improve this code
     Thread.sleep(2000)
     onView(withId(R.id.rVMsgs))
-        .check(matches(withRecyclerViewItemCount(2))).check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(2))).check(matches(isDisplayed()))
   }
 
   @Test
   @NotReadyForCI
   fun testSearchOverSubjectBodyFrom() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
-        .check(matches(withText(DEFAULT_QUERY_TEXT)))
-        .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
+      .check(matches(withText(DEFAULT_QUERY_TEXT)))
+      .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
     //todo-denbond7 Need to improve this code
     Thread.sleep(2000)
     onView(withId(R.id.rVMsgs))
-        .check(matches(withRecyclerViewItemCount(4))).check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(3))).check(matches(isDisplayed()))
   }
 
   @Test
   @NotReadyForCI
   fun testShowNotEmptyList() {
     onView(withId(R.id.rVMsgs))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(withId(R.id.rVMsgs))
-        .check(matches(not(withEmptyRecyclerView())))
+      .check(matches(not(withEmptyRecyclerView())))
   }
 
   @Test
@@ -138,30 +144,31 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   @NotReadyForCI
   fun testCheckNoResults() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(isAssignableFrom(EditText::class.java))
-        .perform(
-            clearText(),
-            typeText("The string with no results"),
-            pressImeActionButton())
+      .perform(
+        clearText(),
+        typeText("The string with no results"),
+        pressImeActionButton()
+      )
     //todo-denbond7 Need to improve this code
     Thread.sleep(2000)
     onView(withId(R.id.tVEmpty))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   @NotReadyForCI
   fun testClearSearchView() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(androidx.appcompat.R.id.search_close_btn))
-        .perform(click())
+      .perform(click())
     onView(isAssignableFrom(EditText::class.java))
-        .check(matches(withText(isEmptyString())))
-        .check(matches(withHint(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.search))))
+      .check(matches(withText(isEmptyString())))
+      .check(matches(withHint(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.search))))
   }
 
   companion object {

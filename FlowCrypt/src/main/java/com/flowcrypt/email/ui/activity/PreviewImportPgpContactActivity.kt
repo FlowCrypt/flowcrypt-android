@@ -38,7 +38,8 @@ class PreviewImportPgpContactActivity : BaseBackStackActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     if (intent == null || !intent.hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING)
-        && !intent.hasExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)) {
+      && !intent.hasExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)
+    ) {
       setResult(Activity.RESULT_CANCELED)
       finish()
     }
@@ -47,7 +48,8 @@ class PreviewImportPgpContactActivity : BaseBackStackActivity() {
     val publicKeysFileUri = intent.getParcelableExtra<Uri>(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)
 
     val fragmentManager = supportFragmentManager
-    var fragment = fragmentManager.findFragmentById(R.id.layoutContent) as PreviewImportPgpContactFragment?
+    var fragment =
+      fragmentManager.findFragmentById(R.id.layoutContent) as PreviewImportPgpContactFragment?
 
     if (fragment == null) {
       fragment = PreviewImportPgpContactFragment.newInstance(publicKeysString, publicKeysFileUri)
@@ -73,10 +75,15 @@ class PreviewImportPgpContactActivity : BaseBackStackActivity() {
 
   companion object {
     val KEY_EXTRA_PUBLIC_KEY_STRING =
-        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_PUBLIC_KEY_STRING",
+        PreviewImportPgpContactActivity::class.java
+      )
 
-    val KEY_EXTRA_PUBLIC_KEYS_FILE_URI = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
-        PreviewImportPgpContactActivity::class.java)
+    val KEY_EXTRA_PUBLIC_KEYS_FILE_URI = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
+      PreviewImportPgpContactActivity::class.java
+    )
 
     fun newIntent(context: Context, publicKeysString: String?): Intent {
       val intent = Intent(context, PreviewImportPgpContactActivity::class.java)

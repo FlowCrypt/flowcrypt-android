@@ -20,7 +20,7 @@ import com.flowcrypt.email.base.BaseTest
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.startsWith
 import org.junit.Test
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -32,22 +32,22 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   @Test
   fun testShowDialogWithPasswordRecommendation() {
     onView(withId(R.id.imageButtonShowPasswordHint))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.webView))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(withId(R.id.buttonOk))
-        .perform(click())
+      .perform(click())
     onView(withId(R.id.textViewFirstPasswordCheckTitle))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testEmptyFirstPassPhrase() {
     closeSoftKeyboard()
     onView(withId(R.id.buttonSetPassPhrase))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     checkIsNonEmptyHintShown()
   }
@@ -56,7 +56,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   fun testEmptySecondPassPhrase() {
     testShowRepeatingPassPhraseScreen()
     onView(withId(R.id.buttonConfirmPassPhrases))
-        .perform(click())
+      .perform(click())
 
     checkIsNonEmptyHintShown()
   }
@@ -64,12 +64,12 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   @Test
   fun testShowRepeatingPassPhraseScreen() {
     onView(withId(R.id.editTextKeyPassword))
-        .perform(scrollTo(), replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .perform(scrollTo(), replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonSetPassPhrase))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.buttonConfirmPassPhrases))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -77,14 +77,14 @@ abstract class BasePassphraseActivityTest : BaseTest() {
     testShowRepeatingPassPhraseScreen()
 
     onView(withId(R.id.editTextKeyPasswordSecond))
-        .check(matches(isDisplayed()))
-        .perform(scrollTo(), replaceText("some text"), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(scrollTo(), replaceText("some text"), closeSoftKeyboard())
     onView(withId(R.id.buttonConfirmPassPhrases))
-        .perform(click())
+      .perform(click())
     onView(withText(getResString(R.string.pass_phrases_do_not_match)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(withId(com.google.android.material.R.id.snackbar_action))
-        .check(matches(isDisplayed())).perform(click())
+      .check(matches(isDisplayed())).perform(click())
   }
 
   @Test
@@ -92,10 +92,10 @@ abstract class BasePassphraseActivityTest : BaseTest() {
     testShowRepeatingPassPhraseScreen()
 
     onView(withId(R.id.buttonUseAnotherPassPhrase))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.imageButtonShowPasswordHint))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -103,40 +103,44 @@ abstract class BasePassphraseActivityTest : BaseTest() {
     testShowRepeatingPassPhraseScreen()
 
     onView(withId(R.id.editTextKeyPasswordSecond))
-        .check(matches(isDisplayed()))
-        .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
+      .check(matches(isDisplayed()))
+      .perform(replaceText(PERFECT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonUseAnotherPassPhrase))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.buttonSetPassPhrase))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
 
     testShowRepeatingPassPhraseScreen()
     onView(withId(R.id.editTextKeyPasswordSecond))
-        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+      .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
   }
 
   @Test
   fun testChangingQualityOfPassPhrase() {
-    val passPhrases = arrayOf(WEAK_PASSWORD, POOR_PASSWORD, REASONABLE_PASSWORD, GOOD_PASSWORD,
-        GREAT_PASSWORD, PERFECT_PASSWORD)
+    val passPhrases = arrayOf(
+      WEAK_PASSWORD, POOR_PASSWORD, REASONABLE_PASSWORD, GOOD_PASSWORD,
+      GREAT_PASSWORD, PERFECT_PASSWORD
+    )
 
-    val degreeOfReliabilityOfPassPhrase = arrayOf(getResString(R.string.password_quality_weak),
-        getResString(R.string.password_quality_poor),
-        getResString(R.string.password_quality_reasonable),
-        getResString(R.string.password_quality_good),
-        getResString(R.string.password_quality_great),
-        getResString(R.string.password_quality_perfect))
+    val degreeOfReliabilityOfPassPhrase = arrayOf(
+      getResString(R.string.password_quality_weak),
+      getResString(R.string.password_quality_poor),
+      getResString(R.string.password_quality_reasonable),
+      getResString(R.string.password_quality_good),
+      getResString(R.string.password_quality_great),
+      getResString(R.string.password_quality_perfect)
+    )
 
     for (i in passPhrases.indices) {
       onView(withId(R.id.editTextKeyPassword))
-          .check(matches(isDisplayed()))
-          .perform(replaceText(passPhrases[i]))
+        .check(matches(isDisplayed()))
+        .perform(replaceText(passPhrases[i]))
       onView(withId(R.id.textViewPasswordQualityInfo))
-          .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].toUpperCase(Locale.getDefault())))))
+        .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].toUpperCase(Locale.getDefault())))))
       onView(withId(R.id.editTextKeyPassword))
-          .check(matches(isDisplayed()))
-          .perform(clearText())
+        .check(matches(isDisplayed()))
+        .perform(clearText())
     }
   }
 
@@ -146,28 +150,28 @@ abstract class BasePassphraseActivityTest : BaseTest() {
 
     for (passPhrase in badPassPhrases) {
       onView(withId(R.id.editTextKeyPassword))
-          .check(matches(isDisplayed()))
-          .perform(replaceText(passPhrase), closeSoftKeyboard())
+        .check(matches(isDisplayed()))
+        .perform(replaceText(passPhrase), closeSoftKeyboard())
       onView(withId(R.id.buttonSetPassPhrase))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
       onView(withText(getResString(R.string.select_stronger_pass_phrase)))
-          .check(matches(isDisplayed()))
+        .check(matches(isDisplayed()))
       onView(withId(android.R.id.button1))
-          .check(matches(isDisplayed()))
-          .perform(click())
+        .check(matches(isDisplayed()))
+        .perform(click())
       onView(withId(R.id.editTextKeyPassword))
-          .check(matches(isDisplayed()))
-          .perform(clearText())
+        .check(matches(isDisplayed()))
+        .perform(clearText())
     }
   }
 
   protected fun checkIsNonEmptyHintShown() {
     onView(withText(getResString(R.string.passphrase_must_be_non_empty)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
     onView(withId(com.google.android.material.R.id.snackbar_action))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   companion object {

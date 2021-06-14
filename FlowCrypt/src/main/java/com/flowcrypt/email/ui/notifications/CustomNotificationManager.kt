@@ -24,7 +24,8 @@ import androidx.core.content.ContextCompat
  * E-mail: DenBond7@gmail.com
  */
 abstract class CustomNotificationManager(protected var context: Context) {
-  protected var notificationManagerCompat: NotificationManagerCompat = NotificationManagerCompat.from(context)
+  protected var notificationManagerCompat: NotificationManagerCompat =
+    NotificationManagerCompat.from(context)
 
   abstract val groupName: String
   abstract val groupId: Int
@@ -55,7 +56,8 @@ abstract class CustomNotificationManager(protected var context: Context) {
    */
   fun cancel(tag: String?, notificationId: Int) {
     notificationManagerCompat.cancel(tag, notificationId)
-    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager =
+      context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     var messageCount = 0
     for (statusBarNotification in notificationManager.activeNotifications) {
@@ -77,7 +79,11 @@ abstract class CustomNotificationManager(protected var context: Context) {
    * @param subject  An incoming message subject.
    * @return A formatted line.
    */
-  protected fun formatInboxStyleLine(context: Context, username: String, subject: String?): Spannable {
+  protected fun formatInboxStyleLine(
+    context: Context,
+    username: String,
+    subject: String?
+  ): Spannable {
     val builder = StringBuilder()
     if (!TextUtils.isEmpty(username)) {
       builder.append(username).append("   ")
@@ -90,7 +96,12 @@ abstract class CustomNotificationManager(protected var context: Context) {
     val spannable = SpannableString(builder)
     if (!TextUtils.isEmpty(username)) {
       val color = ContextCompat.getColor(context, android.R.color.black)
-      spannable.setSpan(ForegroundColorSpan(color), 0, username.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+      spannable.setSpan(
+        ForegroundColorSpan(color),
+        0,
+        username.length,
+        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+      )
     }
     return spannable
   }
@@ -108,7 +119,12 @@ abstract class CustomNotificationManager(protected var context: Context) {
     }
 
     val spannable = SpannableString(text)
-    spannable.setSpan(ForegroundColorSpan(color), 0, text!!.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    spannable.setSpan(
+      ForegroundColorSpan(color),
+      0,
+      text!!.length,
+      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
     return spannable
   }
 }

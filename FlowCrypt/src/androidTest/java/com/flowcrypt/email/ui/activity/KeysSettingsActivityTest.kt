@@ -39,7 +39,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -59,8 +59,8 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
-import java.util.*
-import java.util.concurrent.TimeUnit
+import java.util.ArrayList
+import java.util.Date
 
 /**
  * @author Denis Bondarenko
@@ -80,12 +80,12 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(addAccountToDatabaseRule)
-      .around(addPrivateKeyToDatabaseRule)
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(addAccountToDatabaseRule)
+    .around(addPrivateKeyToDatabaseRule)
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Before
   fun waitData() {
@@ -97,30 +97,31 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testAddNewKeys() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
-    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@denbond7.com_secondKey_prv_default.asc")
+    val details =
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/default@flowcrypt.test_secondKey_prv_default.asc")
     PrivateKeysManager.saveKeyToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        nodeKeyDetails = details,
-        passphrase = TestConstants.DEFAULT_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+      accountEntity = addAccountToDatabaseRule.account,
+      pgpKeyDetails = details,
+      passphrase = TestConstants.DEFAULT_PASSWORD,
+      sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.floatActionButtonAddKey))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.recyclerViewKeys))
-        .check(matches(isDisplayed()))
-        .check(matches(withRecyclerViewItemCount(2)))
+      .check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(2)))
   }
 
   @Test
   fun testKeyExists() {
     onView(withId(R.id.recyclerViewKeys))
-        .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
+      .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
     onView(withId(R.id.emptyView))
-        .check(matches(not(isDisplayed())))
+      .check(matches(not(isDisplayed())))
   }
 
   @Test
@@ -131,22 +132,22 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
-    val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnShowPubKey))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(keyDetails.publicKey))
   }
 
   @Test
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnCopyToClipboard))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.copied))
-    UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey ?: "") }
+      .check(matches(isDisplayed()))
+      .perform(click())
+    isToastDisplayed(getResString(R.string.copied))
+    UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey) }
   }
 
   @Test
@@ -154,30 +155,46 @@ class KeysSettingsActivityTest : BaseTest() {
   fun testKeyDetailsShowPrivateKey() {
     selectFirstKey()
     onView(withId(R.id.btnShowPrKey))
-        .perform(scrollTo())
-        .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.see_backups_to_save_your_private_keys))
+      .perform(scrollTo())
+      .perform(click())
+    isToastDisplayed(getResString(R.string.see_backups_to_save_your_private_keys))
   }
 
   @Test
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
 
     onView(withId(R.id.textViewFingerprint))
-        .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
-            GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)!!)))))
-
-    onView(withId(R.id.textViewLongId)).check(
-        matches(withText(getResString(R.string.template_longid, details.longId ?: ""))))
+      .check(
+        matches(
+          withText(
+            getHtmlString(
+              getResString(
+                R.string.template_fingerprint,
+                GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)!!
+              )
+            )
+          )
+        )
+      )
 
     onView(withId(R.id.textViewDate))
-        .check(matches(withText(getHtmlString(getResString(R.string.template_date,
-            DateFormat.getMediumDateFormat(getTargetContext()).format(
-                Date(TimeUnit.MILLISECONDS.convert(details.created, TimeUnit.SECONDS))))))))
+      .check(
+        matches(
+          withText(
+            getHtmlString(
+              getResString(
+                R.string.template_date,
+                DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created))
+              )
+            )
+          )
+        )
+      )
 
     onView(withId(R.id.tVPassPhraseVerification))
-        .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
+      .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
 
     val emails = ArrayList<String>()
 
@@ -186,56 +203,65 @@ class KeysSettingsActivityTest : BaseTest() {
     }
 
     onView(withId(R.id.textViewUsers))
-        .check(matches(withText(getResString(R.string.template_users, TextUtils.join(", ", emails)))))
+      .check(matches(withText(getResString(R.string.template_users, TextUtils.join(", ", emails)))))
   }
 
   @Test
   fun testKeyDetailsTestPassPhraseMismatch() {
-    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets(
-        "pgp/default@denbond7.com_secondKey_prv_default.asc")
+    val details = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      "pgp/default@flowcrypt.test_secondKey_prv_default.asc"
+    )
     PrivateKeysManager.saveKeyToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        nodeKeyDetails = details,
-        passphrase = "wrong passphrase",
-        type = KeyDetails.Type.EMAIL
+      accountEntity = addAccountToDatabaseRule.account,
+      pgpKeyDetails = details,
+      passphrase = "wrong passphrase",
+      sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
     onView(withId(R.id.recyclerViewKeys))
-        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
 
     onView(withId(R.id.tVPassPhraseVerification))
-        .check(matches(withText(getResString(R.string.stored_pass_phrase_mismatch))))
-        .check(matches(hasTextColor(R.color.red)))
+      .check(matches(withText(getResString(R.string.stored_pass_phrase_mismatch))))
+      .check(matches(hasTextColor(R.color.red)))
   }
 
   @Test
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()
-    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
 
     val file =
-        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "0x" + details.longId + ".asc")
+      File(
+        getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+        "0x" + details.fingerprint + ".asc"
+      )
 
     if (file.exists()) {
       file.delete()
     }
 
     val resultData = Intent()
-    resultData.data = FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
+    resultData.data =
+      FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
 
-    intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_CREATE_DOCUMENT),
         hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
-        hasType(Constants.MIME_TYPE_PGP_KEY)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+        hasType(Constants.MIME_TYPE_PGP_KEY)
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
 
     onView(withId(R.id.btnSaveToFile))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    isToastDisplayed(decorView, getResString(R.string.saved))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    isToastDisplayed(getResString(R.string.saved))
   }
 
   private fun selectFirstKey() {
     onView(withId(R.id.recyclerViewKeys))
-        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
   }
 }

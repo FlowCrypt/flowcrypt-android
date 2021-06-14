@@ -34,13 +34,13 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
@@ -135,10 +135,16 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           parentFragmentManager.popBackStack()
         }
 
-        CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> handleResultFromCheckKeysActivity(resultCode, data)
+        CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> handleResultFromCheckKeysActivity(
+          resultCode,
+          data
+        )
       }
 
-      REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL -> handleResultFromCheckKeysActivity(resultCode, data)
+      REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL -> handleResultFromCheckKeysActivity(
+        resultCode,
+        data
+      )
 
       REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
         when (resultCode) {
@@ -188,11 +194,12 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   override fun getTempAccount(): AccountEntity? {
     val authCreds = generateAuthCreds()
     return AccountEntity(
-        if (authCreds.useOAuth2) {
-          authCreds.copy(password = "", smtpSignInPassword = null)
-        } else {
-          authCreds
-        })
+      if (authCreds.useOAuth2) {
+        authCreds.copy(password = "", smtpSignInPassword = null)
+      } else {
+        authCreds
+      }
+    )
   }
 
   override fun returnResultOk() {
@@ -248,7 +255,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     editTextPassword?.doAfterTextChanged {
       if (checkBoxAdvancedMode?.isChecked == false) {
         val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
-            editTextEmail?.text.toString(), editTextPassword?.text.toString())
+          editTextEmail?.text.toString(), editTextPassword?.text.toString()
+        )
 
         editTextSmtpPassword?.setText(recommendAuthCredentials?.smtpSignInPassword)
       }
@@ -266,7 +274,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
     checkBoxAdvancedMode?.setOnCheckedChangeListener { buttonView, isChecked ->
       buttonView.hideKeyboard()
-      view.findViewById<View>(R.id.groupAdvancedSettings)?.visibility = if (isChecked) View.VISIBLE else View.GONE
+      view.findViewById<View>(R.id.groupAdvancedSettings)?.visibility =
+        if (isChecked) View.VISIBLE else View.GONE
       if ((checkBoxRequireSignInForSmtp?.isChecked == true) && isChecked) {
         groupRequireSignInForSmtp?.visibility = View.VISIBLE
       } else {
@@ -281,8 +290,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     spinnerImapSecurityType = view.findViewById(R.id.spinnerImapSecurityType)
     spinnerSmtpSecurityType = view.findViewById(R.id.spinnerSmtpSecyrityType)
 
-    val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item,
-        SecurityType.generateSecurityTypes(requireContext()))
+    val adapter = ArrayAdapter(
+      requireContext(), android.R.layout.simple_spinner_dropdown_item,
+      SecurityType.generateSecurityTypes(requireContext())
+    )
 
     spinnerImapSecurityType?.adapter = adapter
     spinnerSmtpSecurityType?.adapter = adapter
@@ -304,8 +315,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       importCandidates.clear()
       it.isEnabled = false
       oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
-          requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
-          provider = OAuth2Helper.Provider.MICROSOFT)
+        requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
+        provider = OAuth2Helper.Provider.MICROSOFT
+      )
     }
   }
 
@@ -345,7 +357,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   @Suppress("UNCHECKED_CAST")
   private fun subscribeToCheckAccountSettings() {
     setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
-      val result: Result<*>? = bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+      val result: Result<*>? =
+        bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
 
       if (result != null) {
         when (result.status) {
@@ -361,10 +374,12 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             if (original != null) {
               if (original is AuthenticationFailedException) {
                 val isGmailImapServer = editTextImapServer?.text.toString()
-                    .equals(GmailConstants.GMAIL_IMAP_SERVER, ignoreCase = true)
+                  .equals(GmailConstants.GMAIL_IMAP_SERVER, ignoreCase = true)
                 val isMsgEmpty = TextUtils.isEmpty(original.message)
-                val hasAlert = original.message?.startsWith(GmailConstants
-                    .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)
+                val hasAlert = original.message?.startsWith(
+                  GmailConstants
+                    .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED
+                )
                 if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
                   showLessSecurityWarning()
                   return@setFragmentResultListener
@@ -378,7 +393,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             }
 
             val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
-                editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
+              editTextEmail?.text.toString(), editTextPassword?.text.toString()
+            )?.faqUrl
 
             val dialogMsg = if (checkBoxAdvancedMode?.isChecked == false) {
               getString(R.string.show_error_msg_with_recommendations, msg)
@@ -387,13 +403,14 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             } + if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl)
 
             showTwoWayDialog(
-                requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
-                dialogTitle = title,
-                dialogMsg = dialogMsg,
-                positiveButtonTitle = getString(R.string.retry),
-                negativeButtonTitle = getString(R.string.cancel),
-                isCancelable = true,
-                useLinkify = true)
+              requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
+              dialogTitle = title,
+              dialogMsg = dialogMsg,
+              positiveButtonTitle = getString(R.string.retry),
+              negativeButtonTitle = getString(R.string.cancel),
+              isCancelable = true,
+              useLinkify = true
+            )
           }
 
           else -> {
@@ -407,35 +424,38 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   @Suppress("UNCHECKED_CAST")
   private fun subscribeToAuthorizeAndSearchBackups() {
     setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS) { _, bundle ->
-      val result: Result<*>? = bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+      val result: Result<*>? =
+        bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
 
       if (result != null) {
         when (result.status) {
           Result.Status.SUCCESS -> {
             dismissCurrentSnackBar()
 
-            val keyDetailsList = result.data as ArrayList<NodeKeyDetails>?
+            val keyDetailsList = result.data as ArrayList<PgpKeyDetails>?
             if (keyDetailsList?.isEmpty() == true) {
               authCreds?.let { authCredentials ->
                 val account = AccountEntity(authCredentials)
-                startActivityForResult(CreateOrImportKeyActivity.newIntent(requireContext(), account, true),
-                    REQUEST_CODE_ADD_NEW_ACCOUNT)
+                startActivityForResult(
+                  CreateOrImportKeyActivity.newIntent(requireContext(), account, true),
+                  REQUEST_CODE_ADD_NEW_ACCOUNT
+                )
                 showContent()
               }
             } else {
               val subTitle = resources.getQuantityString(
-                  R.plurals.found_backup_of_your_account_key,
-                  keyDetailsList?.size ?: 0,
-                  keyDetailsList?.size ?: 0
+                R.plurals.found_backup_of_your_account_key,
+                keyDetailsList?.size ?: 0,
+                keyDetailsList?.size ?: 0
               )
 
               val intent = CheckKeysActivity.newIntent(
-                  context = requireContext(),
-                  privateKeys = keyDetailsList ?: ArrayList(),
-                  type = KeyDetails.Type.EMAIL,
-                  subTitle = subTitle,
-                  positiveBtnTitle = getString(R.string.continue_),
-                  negativeBtnTitle = getString(R.string.use_another_account)
+                context = requireContext(),
+                privateKeys = keyDetailsList ?: ArrayList(),
+                sourceType = KeyImportDetails.SourceType.EMAIL,
+                subTitle = subTitle,
+                positiveBtnTitle = getString(R.string.continue_),
+                negativeBtnTitle = getString(R.string.use_another_account)
               )
               startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
             }
@@ -444,9 +464,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             showContent()
             showInfoDialog(
-                dialogMsg = result.exception?.message
-                    ?: result.exception?.javaClass?.simpleName
-                    ?: getString(R.string.could_not_load_private_keys))
+              dialogMsg = result.exception?.message
+                ?: result.exception?.javaClass?.simpleName
+                ?: getString(R.string.could_not_load_private_keys)
+            )
           }
 
           else -> {
@@ -475,20 +496,29 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
             if (existedAccount == null) {
               val account = AccountEntity(authCredentials).copy(
-                  password = authCredentials.peekPassword(),
-                  smtpPassword = authCredentials.peekSmtpPassword()
+                password = authCredentials.peekPassword(),
+                smtpPassword = authCredentials.peekSmtpPassword()
               )
 
               val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
               activity?.supportFragmentManager?.beginTransaction()
-                  ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-                  ?.addToBackStack(null)
-                  ?.commit()
+                ?.replace(
+                  R.id.fragmentContainerView,
+                  nextFrag,
+                  AuthorizeAndSearchBackupsFragment::class.java.simpleName
+                )
+                ?.addToBackStack(null)
+                ?.commit()
 
               return@let
             } else {
               showContent()
-              showInfoSnackbar(msgText = getString(R.string.template_email_already_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
+              showInfoSnackbar(
+                msgText = getString(
+                  R.string.template_email_already_added,
+                  existedAccount.email
+                ), duration = Snackbar.LENGTH_LONG
+              )
             }
           }
         }
@@ -497,8 +527,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
           showContent()
           showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't fetch token")
+            dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: "Couldn't fetch token"
+          )
         }
       }
     })
@@ -518,9 +549,15 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             authRequest = authorizationRequest
             authRequest?.let { request ->
               AuthorizationService(requireContext())
-                  .performAuthorizationRequest(
-                      request,
-                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
+                .performAuthorizationRequest(
+                  request,
+                  PendingIntent.getActivity(
+                    requireContext(),
+                    0,
+                    Intent(requireContext(), SignInActivity::class.java),
+                    0
+                  )
+                )
             }
           }
         }
@@ -530,8 +567,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           buttonSignInWithOutlook?.isEnabled = true
           showContent()
           showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: getString(R.string.could_not_load_oauth_server_configuration))
+            dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: getString(R.string.could_not_load_oauth_server_configuration)
+          )
         }
       }
     })
@@ -542,8 +580,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
    */
   private fun getTempAuthCreds(): AuthCredentials? {
     val authCredsJson =
-        SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(requireContext()),
-            Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
+      SharedPreferencesHelper.getString(
+        PreferenceManager.getDefaultSharedPreferences(requireContext()),
+        Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, ""
+      )
 
     if (authCredsJson?.isNotEmpty() == true) {
       try {
@@ -564,8 +604,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     authCreds?.let { if (it.useOAuth2) return }
 
     val authCreds = generateAuthCreds().copy(password = "", smtpSignInPassword = "")
-    SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(requireContext()),
-        Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, Gson().toJson(authCreds))
+    SharedPreferencesHelper.setString(
+      PreferenceManager.getDefaultSharedPreferences(requireContext()),
+      Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, Gson().toJson(authCreds)
+    )
   }
 
   /**
@@ -589,24 +631,26 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       Integer.parseInt(editTextSmtpPort?.text.toString())
 
     return AuthCredentials(
-        email = editTextEmail?.text.toString(),
-        username = editTextUserName?.text.toString(),
-        password = editTextPassword?.text.toString(),
-        imapServer = editTextImapServer?.text.toString(),
-        imapPort = imapPort,
-        imapOpt = (spinnerImapSecurityType?.selectedItem as SecurityType).opt,
-        smtpServer = editTextSmtpServer?.text.toString(),
-        smtpPort = smtpPort,
-        smtpOpt = (spinnerSmtpSecurityType?.selectedItem as SecurityType).opt,
-        hasCustomSignInForSmtp = checkBoxRequireSignInForSmtp?.isChecked ?: false,
-        smtpSigInUsername = editTextSmtpUsername?.text.toString(),
-        smtpSignInPassword = editTextSmtpPassword?.text.toString()
+      email = editTextEmail?.text.toString(),
+      username = editTextUserName?.text.toString(),
+      password = editTextPassword?.text.toString(),
+      imapServer = editTextImapServer?.text.toString(),
+      imapPort = imapPort,
+      imapOpt = (spinnerImapSecurityType?.selectedItem as SecurityType).opt,
+      smtpServer = editTextSmtpServer?.text.toString(),
+      smtpPort = smtpPort,
+      smtpOpt = (spinnerSmtpSecurityType?.selectedItem as SecurityType).opt,
+      hasCustomSignInForSmtp = checkBoxRequireSignInForSmtp?.isChecked ?: false,
+      smtpSigInUsername = editTextSmtpUsername?.text.toString(),
+      smtpSignInPassword = editTextSmtpPassword?.text.toString()
     )
   }
 
   private fun showLessSecurityWarning() {
-    showSnackbar(view, getString(R.string.less_secure_login_is_not_allowed),
-        getString(android.R.string.ok), Snackbar.LENGTH_LONG) {
+    showSnackbar(
+      view, getString(R.string.less_secure_login_is_not_allowed),
+      getString(android.R.string.ok), Snackbar.LENGTH_LONG
+    ) {
       parentFragmentManager.popBackStack()
     }
   }
@@ -619,7 +663,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   private fun isDataCorrect(): Boolean {
     when {
       editTextEmail?.text.isNullOrEmpty() -> {
-        showInfoSnackbar(editTextEmail, getString(R.string.text_must_not_be_empty, getString(R.string.e_mail)))
+        showInfoSnackbar(
+          editTextEmail,
+          getString(R.string.text_must_not_be_empty, getString(R.string.e_mail))
+        )
         editTextEmail?.requestFocus()
       }
 
@@ -627,8 +674,12 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         if (checkBoxAdvancedMode?.isChecked == false) {
           when {
             editTextPassword?.text.isNullOrEmpty() -> {
-              showInfoSnackbar(editTextPassword, getString(R.string.text_must_not_be_empty,
-                  getString(R.string.password)))
+              showInfoSnackbar(
+                editTextPassword, getString(
+                  R.string.text_must_not_be_empty,
+                  getString(R.string.password)
+                )
+              )
               editTextPassword?.requestFocus()
             }
 
@@ -638,51 +689,83 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
         when {
           editTextUserName?.text.isNullOrEmpty() -> {
-            showInfoSnackbar(editTextUserName, getString(R.string.text_must_not_be_empty,
-                getString(R.string.username)))
+            showInfoSnackbar(
+              editTextUserName, getString(
+                R.string.text_must_not_be_empty,
+                getString(R.string.username)
+              )
+            )
             editTextUserName?.requestFocus()
           }
 
           editTextPassword?.text.isNullOrEmpty() -> {
-            showInfoSnackbar(editTextPassword, getString(R.string.text_must_not_be_empty,
-                getString(R.string.password)))
+            showInfoSnackbar(
+              editTextPassword, getString(
+                R.string.text_must_not_be_empty,
+                getString(R.string.password)
+              )
+            )
             editTextPassword?.requestFocus()
           }
 
           editTextImapServer?.text.isNullOrEmpty() -> {
-            showInfoSnackbar(editTextImapServer, getString(R.string.text_must_not_be_empty,
-                getString(R.string.imap_server)))
+            showInfoSnackbar(
+              editTextImapServer, getString(
+                R.string.text_must_not_be_empty,
+                getString(R.string.imap_server)
+              )
+            )
             editTextImapServer?.requestFocus()
           }
 
           editTextImapPort?.text.isNullOrEmpty() -> {
-            showInfoSnackbar(editTextImapPort, getString(R.string.text_must_not_be_empty,
-                getString(R.string.imap_port)))
+            showInfoSnackbar(
+              editTextImapPort, getString(
+                R.string.text_must_not_be_empty,
+                getString(R.string.imap_port)
+              )
+            )
             editTextImapPort?.requestFocus()
           }
 
           editTextSmtpServer?.text.isNullOrEmpty() -> {
-            showInfoSnackbar(editTextSmtpServer, getString(R.string.text_must_not_be_empty,
-                getString(R.string.smtp_server)))
+            showInfoSnackbar(
+              editTextSmtpServer, getString(
+                R.string.text_must_not_be_empty,
+                getString(R.string.smtp_server)
+              )
+            )
             editTextSmtpServer?.requestFocus()
           }
 
           editTextSmtpPort?.text.isNullOrEmpty() -> {
-            showInfoSnackbar(editTextSmtpPort, getString(R.string.text_must_not_be_empty,
-                getString(R.string.smtp_port)))
+            showInfoSnackbar(
+              editTextSmtpPort, getString(
+                R.string.text_must_not_be_empty,
+                getString(R.string.smtp_port)
+              )
+            )
             editTextSmtpPort?.requestFocus()
           }
 
           checkBoxRequireSignInForSmtp?.isChecked == true -> when {
             editTextSmtpUsername?.text.isNullOrEmpty() -> {
-              showInfoSnackbar(editTextSmtpUsername, getString(R.string.text_must_not_be_empty,
-                  getString(R.string.smtp_username)))
+              showInfoSnackbar(
+                editTextSmtpUsername, getString(
+                  R.string.text_must_not_be_empty,
+                  getString(R.string.smtp_username)
+                )
+              )
               editTextSmtpUsername?.requestFocus()
             }
 
             editTextSmtpPassword?.text.isNullOrEmpty() -> {
-              showInfoSnackbar(editTextSmtpPassword, getString(R.string.text_must_not_be_empty,
-                  getString(R.string.smtp_password)))
+              showInfoSnackbar(
+                editTextSmtpPassword, getString(
+                  R.string.text_must_not_be_empty,
+                  getString(R.string.smtp_password)
+                )
+              )
               editTextSmtpPassword?.requestFocus()
             }
             else -> return true
@@ -709,9 +792,13 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         val account = AccountEntity(authCredentials)
         val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
         activity?.supportFragmentManager?.beginTransaction()
-            ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-            ?.addToBackStack(null)
-            ?.commit()
+          ?.replace(
+            R.id.fragmentContainerView,
+            nextFrag,
+            AuthorizeAndSearchBackupsFragment::class.java.simpleName
+          )
+          ?.addToBackStack(null)
+          ?.commit()
       }
     }
   }
@@ -719,8 +806,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   private fun handleResultFromCheckKeysActivity(resultCode: Int, data: Intent?) {
     when (resultCode) {
       Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
-        val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
-            CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+        val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
+          CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS
+        )
 
         if (keys.isNullOrEmpty()) {
           showContent()
@@ -734,8 +822,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       }
 
       CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
-        Toast.makeText(requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast
-            .LENGTH_SHORT).show()
+        Toast.makeText(
+          requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast
+            .LENGTH_SHORT
+        ).show()
         if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
       }
 
@@ -749,7 +839,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   private fun applyRecommendSettings(): Boolean {
     val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
-        editTextEmail?.text.toString(), editTextPassword?.text.toString())
+      editTextEmail?.text.toString(), editTextPassword?.text.toString()
+    )
 
     if (recommendAuthCredentials != null) {
       updateView(recommendAuthCredentials, false)
@@ -761,7 +852,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   private fun storeAccountInfoToAccountManager() {
     getTempAccount()?.let { accountEntity ->
       val accountManager = AccountManager.get(requireContext())
-      val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
+      val account = Account(
+        accountEntity.email.toLowerCase(Locale.US),
+        FlowcryptAccountAuthenticator.ACCOUNT_TYPE
+      )
       accountManager.addAccountExplicitly(account, null, Bundle().apply {
         with(authCreds?.authTokenInfo) {
           putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)

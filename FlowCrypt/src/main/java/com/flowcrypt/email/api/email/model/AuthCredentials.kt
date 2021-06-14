@@ -18,39 +18,41 @@ import com.flowcrypt.email.database.entity.AccountEntity
  * Time: 15:11.
  * E-mail: DenBond7@gmail.com
  */
-data class AuthCredentials constructor(val email: String,
-                                       val username: String,
-                                       var password: String,
-                                       val imapServer: String,
-                                       val imapPort: Int = 143,
-                                       val imapOpt: SecurityType.Option = SecurityType.Option.NONE,
-                                       val smtpServer: String,
-                                       val smtpPort: Int = 25,
-                                       val smtpOpt: SecurityType.Option = SecurityType.Option.NONE,
-                                       val hasCustomSignInForSmtp: Boolean = false,
-                                       val smtpSigInUsername: String? = null,
-                                       var smtpSignInPassword: String? = null,
-                                       val faqUrl: String? = null,
-                                       val useOAuth2: Boolean = false,
-                                       val displayName: String? = null,
-                                       val authTokenInfo: AuthTokenInfo? = null) : Parcelable {
+data class AuthCredentials constructor(
+  val email: String,
+  val username: String,
+  var password: String,
+  val imapServer: String,
+  val imapPort: Int = 143,
+  val imapOpt: SecurityType.Option = SecurityType.Option.NONE,
+  val smtpServer: String,
+  val smtpPort: Int = 25,
+  val smtpOpt: SecurityType.Option = SecurityType.Option.NONE,
+  val hasCustomSignInForSmtp: Boolean = false,
+  val smtpSigInUsername: String? = null,
+  var smtpSignInPassword: String? = null,
+  val faqUrl: String? = null,
+  val useOAuth2: Boolean = false,
+  val displayName: String? = null,
+  val authTokenInfo: AuthTokenInfo? = null
+) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readString()!!,
-      source.readString()!!,
-      source.readString()!!,
-      source.readString()!!,
-      source.readInt(),
-      source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
-      source.readString()!!,
-      source.readInt(),
-      source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
-      source.readByte() != 0.toByte(),
-      source.readString(),
-      source.readString(),
-      source.readString(),
-      source.readByte() != 0.toByte(),
-      source.readString(),
-      source.readParcelable(AuthTokenInfo::class.java.classLoader)
+    source.readString()!!,
+    source.readString()!!,
+    source.readString()!!,
+    source.readString()!!,
+    source.readInt(),
+    source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
+    source.readString()!!,
+    source.readInt(),
+    source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
+    source.readByte() != 0.toByte(),
+    source.readString(),
+    source.readString(),
+    source.readString(),
+    source.readByte() != 0.toByte(),
+    source.readString(),
+    source.readParcelable(AuthTokenInfo::class.java.classLoader)
   )
 
   override fun describeContents() = 0
@@ -87,10 +89,11 @@ data class AuthCredentials constructor(val email: String,
   companion object {
     @JvmField
     @Suppress("unused")
-    val CREATOR: Parcelable.Creator<AuthCredentials> = object : Parcelable.Creator<AuthCredentials> {
-      override fun createFromParcel(source: Parcel): AuthCredentials = AuthCredentials(source)
-      override fun newArray(size: Int): Array<AuthCredentials?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<AuthCredentials> =
+      object : Parcelable.Creator<AuthCredentials> {
+        override fun createFromParcel(source: Parcel): AuthCredentials = AuthCredentials(source)
+        override fun newArray(size: Int): Array<AuthCredentials?> = arrayOfNulls(size)
+      }
 
     fun from(accountEntity: AccountEntity): AuthCredentials {
       with(accountEntity) {
@@ -111,19 +114,20 @@ data class AuthCredentials constructor(val email: String,
         }
 
         return AuthCredentials(
-            email = email,
-            username = username,
-            password = password,
-            imapServer = imapServer,
-            imapPort = imapPort ?: JavaEmailConstants.DEFAULT_IMAP_PORT,
-            imapOpt = imapOpt,
-            smtpServer = smtpServer,
-            smtpPort = smtpPort ?: JavaEmailConstants.DEFAULT_SMTP_PORT,
-            smtpOpt = smtpOpt,
-            hasCustomSignInForSmtp = smtpUsername?.isNotEmpty() == true && smtpPassword?.isNotEmpty() == true,
-            smtpSigInUsername = if (smtpUsername.isNullOrEmpty()) null else smtpUsername,
-            smtpSignInPassword = if (smtpPassword.isNullOrEmpty()) null else smtpPassword,
-            useOAuth2 = accountEntity.imapAuthMechanisms == JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2)
+          email = email,
+          username = username,
+          password = password,
+          imapServer = imapServer,
+          imapPort = imapPort ?: JavaEmailConstants.DEFAULT_IMAP_PORT,
+          imapOpt = imapOpt,
+          smtpServer = smtpServer,
+          smtpPort = smtpPort ?: JavaEmailConstants.DEFAULT_SMTP_PORT,
+          smtpOpt = smtpOpt,
+          hasCustomSignInForSmtp = smtpUsername?.isNotEmpty() == true && smtpPassword?.isNotEmpty() == true,
+          smtpSigInUsername = if (smtpUsername.isNullOrEmpty()) null else smtpUsername,
+          smtpSignInPassword = if (smtpPassword.isNullOrEmpty()) null else smtpPassword,
+          useOAuth2 = accountEntity.imapAuthMechanisms == JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
+        )
       }
     }
   }

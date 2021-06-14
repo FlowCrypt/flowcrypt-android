@@ -1,5 +1,23 @@
-#Instruction how to generate self-signed certs
-# password for CA = 'android'
+# Instruction how to generate self-signed certs
+# Details here https://github.com/docker-mailserver/docker-mailserver/blob/master/target/bin/generate-ssl-certificate
+# We use the following password = 'android'
+
+# here we will generate:
+# config/ssl/mail.flowcrypt.test-key.pem (used in postfix)
+# config/ssl/mail.flowcrypt.test-req.pem (only used to generate other files)
+# config/ssl/mail.flowcrypt.test-cert.pem (used in postfix)
+# config/ssl/mail.flowcrypt.test-combined.pem (used in courier)
+# config/ssl/demoCA/cacert.pem (certificate authority)
+# debug_certificate.crt (used in Android to trust our server)
+
+# Generation:
+# Fill information like Country, Organisation name
+# Fill "flowcrypt.test" as CN for CA, and "mail.flowcrypt.test" for the certificate.
+# They HAVE to be different, otherwise you'll get a `TXT_DB error number 2`
+# Don't fill extras
+# Enter same password when needed
+# Sign the certificate? [y/n]:y
+# 1 out of 1 certificate requests certified, commit? [y/n]y
 
 # generate CA
 ./CA.pl -newca
@@ -8,10 +26,14 @@
 openssl genrsa -out root-ca.privkey.pem 2048
 
 # Generate certificate for some host
-openssl req -new -nodes -keyout localhost-key.pem -out localhost-req.pem -days 3650 -subj "/C=UA/ST=Kirovograd region/L=Kropyvnytskyi/O=Bondarenko Denys Serhiiovych/OU=Android Team/CN=localhost/emailAddress=admin@denbond7.com"
+openssl req -new -nodes -keyout mail.flowcrypt.test-key.pem -out mail.flowcrypt.test-req.pem \
+-days 3650 -subj "/C=CZ/ST=Debug/O=FlowCrypt/CN=mail.flowcrypt.test/emailAddress=admin@flowcrypt.test"
 
 # Sign certificate for some host via CA
-openssl ca -days 3650 -out localhost-cert.pem -infiles localhost-req.pem
+openssl ca -days 3650 -out mail.flowcrypt.test-cert.pem -infiles mail.flowcrypt.test-req.pem
 
-# create DER format crt for Android
-openssl x509 -outform der -in localhost-cert.pem -out localhost_certificate.crt
+# Combine certificates for courier
+cat mail.flowcrypt.test-key.pem mail.flowcrypt.test-cert.pem > mail.flowcrypt.test-combined.pem
+
+# create DER format of cacert.pem for Android
+openssl x509 -outform der -in ./demoCA/cacert.pem -out debug_certificate.crt

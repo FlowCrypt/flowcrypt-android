@@ -17,6 +17,10 @@ import com.flowcrypt.email.R
  * Time: 12:12
  * E-mail: DenBond7@gmail.com
  */
-class NoKeyAvailableException(context: Context, val email: String, val alias: String? = null)
-  : FlowCryptException(context.getString(R.string.no_key_available_for_your_email_account,
-    context.getString(R.string.support_email)))
+class NoKeyAvailableException(context: Context, val email: String, val alias: String? = null) :
+  FlowCryptException(
+    context.getString(
+      R.string.no_key_available_for_your_email_account,
+      context.getString(R.string.support_email)
+    )
+  )

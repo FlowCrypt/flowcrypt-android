@@ -20,7 +20,7 @@ import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 import android.text.TextUtils
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.LogsUtil
@@ -41,6 +41,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
 
   @Volatile
   private lateinit var serviceWorkerLooper: Looper
+
   @Volatile
   private lateinit var serviceWorkerHandler: ServiceWorkerHandler
 
@@ -113,9 +114,10 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private class ReplyHandler(checkClipboardToFindKeyService: CheckClipboardToFindKeyService)
-    : Handler() {
-    private val weakRef: WeakReference<CheckClipboardToFindKeyService> = WeakReference(checkClipboardToFindKeyService)
+  private class ReplyHandler(checkClipboardToFindKeyService: CheckClipboardToFindKeyService) :
+    Handler() {
+    private val weakRef: WeakReference<CheckClipboardToFindKeyService> =
+      WeakReference(checkClipboardToFindKeyService)
 
     override fun handleMessage(message: Message) {
       when (message.what) {
@@ -124,8 +126,10 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
 
           val key = message.obj as String
 
-          checkClipboardToFindKeyService?.keyImportModel = KeyImportModel(null, key,
-              weakRef.get()!!.isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
+          checkClipboardToFindKeyService?.keyImportModel = KeyImportModel(
+            null, key,
+            weakRef.get()!!.isPrivateKeyMode, KeyImportDetails.SourceType.CLIPBOARD
+          )
           LogsUtil.d(TAG, "Found a valid private key in clipboard")
         }
       }
@@ -147,7 +151,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
         MESSAGE_WHAT -> {
           val clipboardText = msg.obj as String
           try {
-            val nodeKeyDetails = PgpKey.parseKeys(clipboardText).toNodeKeyDetailsList()
+            val nodeKeyDetails = PgpKey.parseKeys(clipboardText).toPgpKeyDetailsList()
             if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
               sendReply(msg)
             }

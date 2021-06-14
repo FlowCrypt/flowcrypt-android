@@ -36,61 +36,73 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
       action = EmailManagerActivity.ACTION_OPEN_OUTBOX_FOLDER
     }
 
-    val pendingIntent = PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
+    val pendingIntent =
+      PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
 
-    val contentText = context.resources.getQuantityString(R.plurals.has_failed_outgoing_msgs,
-        messageCount, messageCount)
+    val contentText = context.resources.getQuantityString(
+      R.plurals.has_failed_outgoing_msgs,
+      messageCount, messageCount
+    )
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_ERRORS)
-        .setSmallIcon(R.drawable.ic_create_message_failed_grey_24dp)
-        .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
-        .setContentText(contentText)
-        .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
-        .setContentIntent(pendingIntent)
-        .setPriority(NotificationCompat.PRIORITY_HIGH)
-        .setCategory(NotificationCompat.CATEGORY_ERROR)
-        .setAutoCancel(true)
-        .setGroup(GROUP_NAME_ERRORS)
-        .setSubText(account.email)
-        .setOngoing(true)
-        .setDefaults(Notification.DEFAULT_ALL)
-        .setGroup(GROUP_NAME_ERRORS)
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
+      .setSmallIcon(R.drawable.ic_create_message_failed_grey_24dp)
+      .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
+      .setContentText(contentText)
+      .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
+      .setContentIntent(pendingIntent)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
+      .setCategory(NotificationCompat.CATEGORY_ERROR)
+      .setAutoCancel(true)
+      .setGroup(GROUP_NAME_ERRORS)
+      .setSubText(account.email)
+      .setOngoing(true)
+      .setDefaults(Notification.DEFAULT_ALL)
+      .setGroup(GROUP_NAME_ERRORS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
     prepareAndShowNotificationsGroup(context)
 
-    notificationManagerCompat.notify(groupName, R.id.notification_id_has_failed_outgoing_msgs, builder.build())
+    notificationManagerCompat.notify(
+      groupName,
+      R.id.notification_id_has_failed_outgoing_msgs,
+      builder.build()
+    )
   }
 
   fun notifyUserAboutAuthFailure(account: AccountEntity, recoverableIntent: Intent? = null) {
     if (!isShowingAuthErrorEnabled) return
 
-    val refreshedAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccountById(account.id)
+    val refreshedAccount =
+      FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccountById(account.id)
     if (refreshedAccount?.isActive == false) return
 
     val intent = getFixAuthIssueIntent(context, account, recoverableIntent)
 
-    val pendingIntent = PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
+    val pendingIntent =
+      PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
 
     val contentText = when (account.accountType) {
-      AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> context.getString(R.string.auth_failure_hint, context.getString(R.string.app_name))
+      AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> context.getString(
+        R.string.auth_failure_hint,
+        context.getString(R.string.app_name)
+      )
       else -> context.getString(R.string.auth_failure_hint_regular_accounts)
     }
 
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_ERRORS)
-        .setSmallIcon(android.R.drawable.stat_sys_warning)
-        .setContentTitle(context.getString(R.string.auth_failure))
-        .setContentText(contentText)
-        .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
-        .setContentIntent(pendingIntent)
-        .setPriority(NotificationCompat.PRIORITY_HIGH)
-        .setCategory(NotificationCompat.CATEGORY_ERROR)
-        .setAutoCancel(true)
-        .setGroup(GROUP_NAME_ERRORS)
-        .setSubText(account.email)
-        .setOngoing(false)
-        .setOnlyAlertOnce(true)
-        .setDefaults(Notification.DEFAULT_ALL)
-        .setGroup(GROUP_NAME_ERRORS)
+      .setSmallIcon(android.R.drawable.stat_sys_warning)
+      .setContentTitle(context.getString(R.string.auth_failure))
+      .setContentText(contentText)
+      .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
+      .setContentIntent(pendingIntent)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
+      .setCategory(NotificationCompat.CATEGORY_ERROR)
+      .setAutoCancel(true)
+      .setGroup(GROUP_NAME_ERRORS)
+      .setSubText(account.email)
+      .setOngoing(false)
+      .setOnlyAlertOnce(true)
+      .setDefaults(Notification.DEFAULT_ALL)
+      .setGroup(GROUP_NAME_ERRORS)
 
     prepareAndShowNotificationsGroup(context)
 
@@ -104,14 +116,15 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
    */
   private fun prepareAndShowNotificationsGroup(context: Context) {
     val groupBuilder = NotificationCompat.Builder(
-        context, NotificationChannelManager.CHANNEL_ID_ERRORS)
-        .setSmallIcon(android.R.drawable.stat_sys_warning)
-        .setGroup(GROUP_NAME_ERRORS)
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-        .setDefaults(Notification.DEFAULT_ALL)
-        .setAutoCancel(true)
-        .setGroupSummary(true)
-        .setOnlyAlertOnce(true)
+      context, NotificationChannelManager.CHANNEL_ID_ERRORS
+    )
+      .setSmallIcon(android.R.drawable.stat_sys_warning)
+      .setGroup(GROUP_NAME_ERRORS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
+      .setDefaults(Notification.DEFAULT_ALL)
+      .setAutoCancel(true)
+      .setGroupSummary(true)
+      .setOnlyAlertOnce(true)
     notificationManagerCompat.notify(groupName, groupId, groupBuilder.build())
   }
 
@@ -121,7 +134,11 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     const val GROUP_NAME_ERRORS = BuildConfig.APPLICATION_ID + ".ERRORS"
     const val NOTIFICATIONS_GROUP_ERROR = -4
 
-    fun getFixAuthIssueIntent(context: Context, account: AccountEntity?, recoverableIntent: Intent?): Intent {
+    fun getFixAuthIssueIntent(
+      context: Context,
+      account: AccountEntity?,
+      recoverableIntent: Intent?
+    ): Intent {
       return when (account?.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
           Intent(context, SignInActivity::class.java).apply {

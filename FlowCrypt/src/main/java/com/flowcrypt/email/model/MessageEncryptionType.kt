@@ -29,9 +29,12 @@ enum class MessageEncryptionType : Parcelable {
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<MessageEncryptionType> = object : Parcelable.Creator<MessageEncryptionType> {
-      override fun createFromParcel(source: Parcel): MessageEncryptionType = values()[source.readInt()]
-      override fun newArray(size: Int): Array<MessageEncryptionType?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<MessageEncryptionType> =
+      object : Parcelable.Creator<MessageEncryptionType> {
+        override fun createFromParcel(source: Parcel): MessageEncryptionType =
+          values()[source.readInt()]
+
+        override fun newArray(size: Int): Array<MessageEncryptionType?> = arrayOfNulls(size)
+      }
   }
 }

@@ -11,11 +11,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -48,14 +48,22 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: List<NodeKeyDetails>) {
+  override fun onKeyFound(
+    sourceType: KeyImportDetails.SourceType,
+    keyDetailsList: List<PgpKeyDetails>
+  ) {
     if (keyDetailsList.isNotEmpty()) {
       if (keyDetailsList.size == 1) {
         val key = keyDetailsList.first()
 
         if (key.isPrivate) {
-          showInfoSnackbar(rootView, getString(R.string.file_has_wrong_pgp_structure, getString(R
-              .string.public_)), Snackbar.LENGTH_LONG)
+          showInfoSnackbar(
+            view = rootView,
+            messageText = getString(
+              R.string.file_has_wrong_pgp_structure, getString(R.string.public_)
+            ),
+            duration = Snackbar.LENGTH_LONG
+          )
           return
         }
 
@@ -70,19 +78,28 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  private fun updateInformationAboutPgpContact(keyDetails: NodeKeyDetails) {
+  private fun updateInformationAboutPgpContact(keyDetails: PgpKeyDetails) {
     val pgpContactFromKey = keyDetails.primaryPgpContact
     pgpContact?.pubkey = pgpContactFromKey.pubkey
     pgpContact?.let { contactsViewModel.updateContactPgpInfo(it, pgpContactFromKey) }
   }
 
   companion object {
-    val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
-        ImportPublicKeyActivity::class.java)
+    val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EXTRA_PGP_CONTACT",
+      ImportPublicKeyActivity::class.java
+    )
 
-    fun newIntent(context: Context?, accountEntity: AccountEntity?, title: String, pgpContact: PgpContact): Intent {
-      val intent = newIntent(context = context, accountEntity = accountEntity, title = title,
-          throwErrorIfDuplicateFoundEnabled = false, cls = ImportPublicKeyActivity::class.java)
+    fun newIntent(
+      context: Context?,
+      accountEntity: AccountEntity?,
+      title: String,
+      pgpContact: PgpContact
+    ): Intent {
+      val intent = newIntent(
+        context = context, accountEntity = accountEntity, title = title,
+        throwErrorIfDuplicateFoundEnabled = false, cls = ImportPublicKeyActivity::class.java
+      )
       intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact)
       return intent
     }

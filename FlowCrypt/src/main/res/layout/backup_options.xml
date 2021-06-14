@@ -56,8 +56,8 @@
         android:layout_marginTop="@dimen/default_margin_content"
         android:text="@string/backup_as_email_hint"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonBackupAction" />
 

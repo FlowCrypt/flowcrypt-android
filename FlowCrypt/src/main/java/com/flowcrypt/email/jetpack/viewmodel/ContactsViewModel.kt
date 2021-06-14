@@ -17,9 +17,9 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
@@ -41,25 +41,26 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   private val pgpApiRepository = NodeRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 
-  val allContactsLiveData: LiveData<List<ContactEntity>> = roomDatabase.contactsDao().getAllContactsLD()
+  val allContactsLiveData: LiveData<List<ContactEntity>> =
+    roomDatabase.contactsDao().getAllContactsLD()
   val contactsWithPgpLiveData: LiveData<Result<List<ContactEntity>>> =
-      Transformations.switchMap(roomDatabase.contactsDao().getAllContactsWithPgpLD()) {
-        liveData {
-          emit(Result.success(it))
-        }
+    Transformations.switchMap(roomDatabase.contactsDao().getAllContactsWithPgpLD()) {
+      liveData {
+        emit(Result.success(it))
       }
+    }
   val contactsWithPgpSearchLiveData: LiveData<Result<List<ContactEntity>>> =
-      Transformations.switchMap(searchPatternLiveData) {
-        liveData {
-          emit(Result.loading())
-          val foundContacts = if (it.isNullOrEmpty()) {
-            roomDatabase.contactsDao().getAllContactsWithPgp()
-          } else {
-            roomDatabase.contactsDao().getAllContactsWithPgpWhichMatched("%$it%")
-          }
-          emit(Result.success(foundContacts))
+    Transformations.switchMap(searchPatternLiveData) {
+      liveData {
+        emit(Result.loading())
+        val foundContacts = if (it.isNullOrEmpty()) {
+          roomDatabase.contactsDao().getAllContactsWithPgp()
+        } else {
+          roomDatabase.contactsDao().getAllContactsWithPgpWhichMatched("%$it%")
         }
+        emit(Result.success(foundContacts))
       }
+    }
   val contactsToLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
@@ -75,7 +76,8 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       }
 
       if (!pgpContact.email.equals(pgpContactFromKey.email, ignoreCase = true)) {
-        val existedContact = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContactFromKey.email)
+        val existedContact =
+          roomDatabase.contactsDao().getContactByEmailSuspend(pgpContactFromKey.email)
         if (existedContact == null) {
           roomDatabase.contactsDao().insertSuspend(pgpContactFromKey.toContactEntity())
         }
@@ -86,13 +88,14 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   fun updateContactPgpInfo(email: String, contactEntity: ContactEntity) {
     viewModelScope.launch {
       val originalContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(email)
-          ?: return@launch
+        ?: return@launch
       roomDatabase.contactsDao().updateSuspend(
-          originalContactEntity.copy(
-              publicKey = contactEntity.publicKey,
-              fingerprint = contactEntity.fingerprint,
-              longId = contactEntity.longId,
-              hasPgp = true))
+        originalContactEntity.copy(
+          publicKey = contactEntity.publicKey,
+          fingerprint = contactEntity.fingerprint,
+          hasPgp = true
+        )
+      )
     }
   }
 
@@ -114,7 +117,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    *  1. save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
    *  1. look up the email on `flowcrypt.com/attester/pub/EMAIL>`
    *  1. if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
-   * client);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
+   * client);`. The PgpContact constructor will define has_pgp, fingerprint, etc
    * for you. Then save that object into database.
    *  1. if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
    * means we know they don't currently have PGP
@@ -132,33 +135,41 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
             val emailLowerCase = email.toLowerCase(Locale.getDefault())
-            var cachedContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
+            var cachedContactEntity =
+              roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
             if (cachedContactEntity == null) {
               cachedContactEntity = PgpContact(emailLowerCase, null).toContactEntity()
               roomDatabase.contactsDao().insertSuspend(cachedContactEntity)
-              cachedContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
+              cachedContactEntity =
+                roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
             } else {
               cachedContactEntity.publicKey?.let {
-                val result = PgpKey.parseKeys(it).toNodeKeyDetailsList()
-                cachedContactEntity?.nodeKeyDetails = result.firstOrNull()
+                val result = PgpKey.parseKeys(it).toPgpKeyDetailsList()
+                cachedContactEntity?.pgpKeyDetails = result.firstOrNull()
               }
             }
 
             try {
               if (cachedContactEntity?.hasPgp == false) {
                 getPgpContactInfoFromServer(email = emailLowerCase)?.let {
-                  cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                  cachedContactEntity =
+                    updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
                 }
               } else {
-                cachedContactEntity?.nodeKeyDetails?.fingerprint?.let { fingerprint ->
+                cachedContactEntity?.pgpKeyDetails?.fingerprint?.let { fingerprint ->
                   getPgpContactInfoFromServer(fingerprint = fingerprint)?.let {
-                    val cacheLastModified = cachedContactEntity?.nodeKeyDetails?.lastModified ?: 0
-                    val attesterLastModified = it.nodeKeyDetails?.lastModified ?: 0
-                    val attesterFingerprint = it.nodeKeyDetails?.fingerprint
+                    val cacheLastModified = cachedContactEntity?.pgpKeyDetails?.lastModified ?: 0
+                    val attesterLastModified = it.pgpKeyDetails?.lastModified ?: 0
+                    val attesterFingerprint = it.pgpKeyDetails?.fingerprint
 
-                    if (attesterLastModified > cacheLastModified && fingerprint.equals(attesterFingerprint, true)) {
-                      cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                    if (attesterLastModified > cacheLastModified && fingerprint.equals(
+                        attesterFingerprint,
+                        true
+                      )
+                    ) {
+                      cachedContactEntity =
+                        updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
                     }
                   }
                 }
@@ -180,28 +191,33 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  private suspend fun updateCachedInfoWithAttesterInfo(cachedContactEntity: ContactEntity?,
-                                                       attesterPgpContact: PgpContact, emailLowerCase: String): ContactEntity? {
+  private suspend fun updateCachedInfoWithAttesterInfo(
+    cachedContactEntity: ContactEntity?,
+    attesterPgpContact: PgpContact, emailLowerCase: String
+  ): ContactEntity? {
     cachedContactEntity ?: return null
     val updateCandidate = if (
-        cachedContactEntity.name.isNullOrEmpty()
-        && cachedContactEntity.email.equals(attesterPgpContact.email, ignoreCase = true)) {
+      cachedContactEntity.name.isNullOrEmpty()
+      && cachedContactEntity.email.equals(attesterPgpContact.email, ignoreCase = true)
+    ) {
       attesterPgpContact.toContactEntity().copy(
-          id = cachedContactEntity.id,
-          email = cachedContactEntity.email)
+        id = cachedContactEntity.id,
+        email = cachedContactEntity.email
+      )
     } else {
       attesterPgpContact.toContactEntity().copy(
-          id = cachedContactEntity.id,
-          name = cachedContactEntity.name,
-          email = cachedContactEntity.email)
+        id = cachedContactEntity.id,
+        name = cachedContactEntity.name,
+        email = cachedContactEntity.email
+      )
     }
 
     roomDatabase.contactsDao().updateSuspend(updateCandidate)
     val lastVersion = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
     lastVersion?.publicKey?.let {
-      val result = PgpKey.parseKeys(it).toNodeKeyDetailsList()
-      lastVersion.nodeKeyDetails = result.firstOrNull()
+      val result = PgpKey.parseKeys(it).toPgpKeyDetailsList()
+      lastVersion.pgpKeyDetails = result.firstOrNull()
     }
 
     return lastVersion
@@ -232,15 +248,17 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun updateContactPgpInfo(contactEntity: ContactEntity?, nodeKeyDetails: NodeKeyDetails) {
+  fun updateContactPgpInfo(contactEntity: ContactEntity?, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
       contactEntity?.let {
-        val contactEntityFromPrimaryPgpContact = nodeKeyDetails.primaryPgpContact.toContactEntity()
-        roomDatabase.contactsDao().updateSuspend(contactEntityFromPrimaryPgpContact.copy(
+        val contactEntityFromPrimaryPgpContact = pgpKeyDetails.primaryPgpContact.toContactEntity()
+        roomDatabase.contactsDao().updateSuspend(
+          contactEntityFromPrimaryPgpContact.copy(
             id = contactEntity.id,
             email = contactEntity.email.toLowerCase(Locale.US),
             client = ContactEntity.CLIENT_PGP,
-        ))
+          )
+        )
       }
     }
   }
@@ -260,11 +278,18 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
     viewModelScope.launch {
       pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
-      pubKeysFromAttesterLiveData.value = apiRepository.getPub(requestCode = requestCode, context = getApplication(), identData = keyIdOrEmail)
+      pubKeysFromAttesterLiveData.value = apiRepository.getPub(
+        requestCode = requestCode,
+        context = getApplication(),
+        identData = keyIdOrEmail
+      )
     }
   }
 
-  private fun setResultForRemoteContactsLiveData(type: ContactEntity.Type, result: Result<List<ContactEntity>>) {
+  private fun setResultForRemoteContactsLiveData(
+    type: ContactEntity.Type,
+    result: Result<List<ContactEntity>>
+  ) {
     when (type) {
       ContactEntity.Type.TO -> {
         contactsToLiveData.value = result
@@ -287,42 +312,48 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    * @return [PgpContact]
    * @throws IOException
    */
-  private suspend fun getPgpContactInfoFromServer(email: String? = null, fingerprint: String? = null):
+  private suspend fun getPgpContactInfoFromServer(
+    email: String? = null,
+    fingerprint: String? = null
+  ):
       PgpContact? =
-      withContext(Dispatchers.IO) {
-        try {
-          val response = apiRepository.getPub(
-              context = getApplication(),
-              identData = email ?: fingerprint ?: "")
+    withContext(Dispatchers.IO) {
+      try {
+        val response = apiRepository.getPub(
+          context = getApplication(),
+          identData = email ?: fingerprint ?: ""
+        )
 
-          when (response.status) {
-            Result.Status.SUCCESS -> {
-              val pubKeyString = response.data?.pubkey
-              val client = ContactEntity.CLIENT_PGP
+        when (response.status) {
+          Result.Status.SUCCESS -> {
+            val pubKeyString = response.data?.pubkey
+            val client = ContactEntity.CLIENT_PGP
 
-              if (pubKeyString?.isNotEmpty() == true) {
-                PgpKey.parseKeys(pubKeyString).toNodeKeyDetailsList().firstOrNull()?.let {
-                  val pgpContact = it.primaryPgpContact
-                  pgpContact.client = client
-                  pgpContact.nodeKeyDetails = it
-                  return@withContext pgpContact
-                }
+            if (pubKeyString?.isNotEmpty() == true) {
+              PgpKey.parseKeys(pubKeyString).toPgpKeyDetailsList().firstOrNull()?.let {
+                val pgpContact = it.primaryPgpContact
+                pgpContact.client = client
+                pgpContact.pgpKeyDetails = it
+                return@withContext pgpContact
               }
             }
-
-            Result.Status.ERROR -> {
-              throw ApiException(response.data?.apiError
-                  ?: ApiError(code = -1, msg = "Unknown API error"))
-            }
-
-            else -> {
-              throw response.exception ?: java.lang.Exception()
-            }
           }
-        } catch (e: IOException) {
-          e.printStackTrace()
-        }
 
-        null
+          Result.Status.ERROR -> {
+            throw ApiException(
+              response.data?.apiError
+                ?: ApiError(code = -1, msg = "Unknown API error")
+            )
+          }
+
+          else -> {
+            throw response.exception ?: java.lang.Exception()
+          }
+        }
+      } catch (e: IOException) {
+        e.printStackTrace()
       }
+
+      null
+    }
 }

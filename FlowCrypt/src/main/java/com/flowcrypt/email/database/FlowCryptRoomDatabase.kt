@@ -13,8 +13,10 @@ import androidx.annotation.WorkerThread
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.converters.PassphraseTypeConverter
 import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
@@ -31,6 +33,8 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.security.pgp.PgpKey
+import org.pgpainless.key.OpenPgpV4Fingerprint
 
 
 /**
@@ -42,18 +46,20 @@ import com.flowcrypt.email.database.entity.MessageEntity
  * Time: 12:20
  * E-mail: DenBond7@gmail.com
  */
-@Database(entities =
-[
-  AccountAliasesEntity::class,
-  AccountEntity::class,
-  ActionQueueEntity::class,
-  AttachmentEntity::class,
-  ContactEntity::class,
-  KeyEntity::class,
-  LabelEntity::class,
-  MessageEntity::class
-],
-    version = FlowCryptRoomDatabase.DB_VERSION)
+@Database(
+  entities = [
+    AccountAliasesEntity::class,
+    AccountEntity::class,
+    ActionQueueEntity::class,
+    AttachmentEntity::class,
+    ContactEntity::class,
+    KeyEntity::class,
+    LabelEntity::class,
+    MessageEntity::class
+  ],
+  version = FlowCryptRoomDatabase.DB_VERSION
+)
+@TypeConverters(PassphraseTypeConverter::class)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun msgDao(): MessageDao
 
@@ -78,7 +84,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 24
+    const val DB_VERSION = 25
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -189,7 +195,11 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
     private val MIGRATION_14_15 = object : FlowCryptMigration(14, 15) {
       override fun doMigration(database: SupportSQLiteDatabase) {
-        database.delete("attachment", "folder NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
+        database.delete(
+          "attachment",
+          "folder NOT IN (?)",
+          arrayOf(JavaEmailConstants.FOLDER_OUTBOX)
+        )
 
         val tempTableName = "attachment_temp"
 
@@ -210,7 +220,13 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         val contentValues = ContentValues()
         contentValues.putNull("raw_message_without_attachments")
-        database.update("messages", SQLiteDatabase.CONFLICT_NONE, contentValues, "folder = ? ", arrayOf("INBOX"))
+        database.update(
+          "messages",
+          SQLiteDatabase.CONFLICT_NONE,
+          contentValues,
+          "folder = ? ",
+          arrayOf("INBOX")
+        )
       }
     }
 
@@ -261,7 +277,11 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         //Recreate 'attachment' table to use an ability of foreign keys
         //delete non-OUTBOX attachments
-        database.delete("attachment", "folder NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
+        database.delete(
+          "attachment",
+          "folder NOT IN (?)",
+          arrayOf(JavaEmailConstants.FOLDER_OUTBOX)
+        )
         val tempTableAtts = "attachment_temp"
 
         database.execSQL("CREATE TEMP TABLE IF NOT EXISTS $tempTableAtts AS SELECT * FROM attachment;")
@@ -343,6 +363,39 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_24_25 = object : FlowCryptMigration(24, 25) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //create temp table with existed content
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS keys_temp AS SELECT * FROM keys;")
+        //drop old table
+        database.execSQL("DROP TABLE IF EXISTS keys;")
+        //create a new table 'keys' with 'fingerprint' instead of 'long_id'
+        database.execSQL("CREATE TABLE IF NOT EXISTS `keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `fingerprint` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, `passphrase_type` INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+        //create indices for new table
+        database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `fingerprint_account_account_type_in_keys` ON `keys` (`fingerprint`, `account`, `account_type`)")
+        //fill new keys table with existed data. Later we will update fingerprints
+        database.execSQL("INSERT INTO keys(_id, fingerprint, account, account_type, source, public_key, private_key, passphrase) SELECT * FROM keys_temp;")
+        //drop temp table
+        database.execSQL("DROP TABLE IF EXISTS keys_temp;")
+
+        val cursor = database.query("SELECT * FROM keys;")
+        if (cursor.count > 0) {
+          while (cursor.moveToNext()) {
+            val longId = cursor.getString(cursor.getColumnIndexOrThrow("fingerprint"))
+            val pubKeyAsByteArray = cursor.getBlob(cursor.getColumnIndexOrThrow("public_key"))
+            val pubKey = PgpKey.parseKeys(pubKeyAsByteArray)
+              .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
+            val fingerprint = OpenPgpV4Fingerprint(pubKey).toString()
+            database.execSQL(
+              "UPDATE keys SET fingerprint = ?, passphrase_type = 0 WHERE fingerprint = ?;",
+              arrayOf(fingerprint, longId)
+            )
+          }
+        }
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -355,33 +408,34 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
       synchronized(this) {
         val instance = Room.databaseBuilder(
-            context.applicationContext,
-            FlowCryptRoomDatabase::class.java,
-            DB_NAME)
-            .addMigrations(
-                MIGRATION_1_3,
-                MIGRATION_3_4,
-                MIGRATION_4_5,
-                MIGRATION_5_6,
-                MIGRATION_6_7,
-                MIGRATION_7_8,
-                MIGRATION_8_9,
-                MIGRATION_9_10,
-                MIGRATION_10_11,
-                MIGRATION_11_12,
-                MIGRATION_12_13,
-                MIGRATION_13_14,
-                MIGRATION_14_15,
-                MIGRATION_15_16,
-                MIGRATION_16_17,
-                MIGRATION_17_18,
-                MIGRATION_18_19,
-                MIGRATION_19_20,
-                MIGRATION_20_21,
-                MIGRATION_21_22,
-                MIGRATION_22_23,
-                MIGRATION_23_24)
-            .build()
+          context.applicationContext,
+          FlowCryptRoomDatabase::class.java,
+          DB_NAME
+        ).addMigrations(
+          MIGRATION_1_3,
+          MIGRATION_3_4,
+          MIGRATION_4_5,
+          MIGRATION_5_6,
+          MIGRATION_6_7,
+          MIGRATION_7_8,
+          MIGRATION_8_9,
+          MIGRATION_9_10,
+          MIGRATION_10_11,
+          MIGRATION_11_12,
+          MIGRATION_12_13,
+          MIGRATION_13_14,
+          MIGRATION_14_15,
+          MIGRATION_15_16,
+          MIGRATION_16_17,
+          MIGRATION_17_18,
+          MIGRATION_18_19,
+          MIGRATION_19_20,
+          MIGRATION_20_21,
+          MIGRATION_21_22,
+          MIGRATION_22_23,
+          MIGRATION_23_24,
+          MIGRATION_24_25
+        ).build()
         INSTANCE = instance
         return instance
       }

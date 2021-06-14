@@ -19,8 +19,8 @@ import org.hamcrest.Matcher
  * Time: 11:14
  * E-mail: DenBond7@gmail.com
  */
-class ToolBarTitleMatcher(private val textMatcher: Matcher<String>)
-  : BoundedMatcher<View, Toolbar>(Toolbar::class.java) {
+class ToolBarTitleMatcher(private val textMatcher: Matcher<String>) :
+  BoundedMatcher<View, Toolbar>(Toolbar::class.java) {
 
   override fun matchesSafely(toolbar: Toolbar): Boolean {
     return textMatcher.matches(toolbar.title)

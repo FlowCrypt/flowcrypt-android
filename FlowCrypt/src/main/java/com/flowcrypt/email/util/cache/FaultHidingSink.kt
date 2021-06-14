@@ -28,8 +28,8 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 internal open class FaultHidingSink(
-    delegate: Sink,
-    val onException: (IOException) -> Unit
+  delegate: Sink,
+  val onException: (IOException) -> Unit
 ) : ForwardingSink(delegate) {
   private var hasErrors = false
 

@@ -19,7 +19,9 @@ class OtherTestsFilter : ParentFilter() {
   private val doesNotNeedMailServerFilter = DoesNotNeedMailServerFilter()
 
   override fun evaluateTest(description: Description?): Boolean {
-    return (!dependsOnMailServerFilter.shouldRun(description) && !doesNotNeedMailServerFilter.shouldRun(description))
+    return (!dependsOnMailServerFilter.shouldRun(description) && !doesNotNeedMailServerFilter.shouldRun(
+      description
+    ))
   }
 
   override fun describe() = "Filter tests that are not related to any conditions"

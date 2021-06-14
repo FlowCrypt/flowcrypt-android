@@ -6,7 +6,10 @@
 package com.flowcrypt.email.util.acra
 
 import android.content.Context
+import com.google.auto.service.AutoService
 import org.acra.config.CoreConfiguration
+import org.acra.config.HttpSenderConfiguration
+import org.acra.plugins.HasConfigPlugin
 import org.acra.sender.ReportSender
 import org.acra.sender.ReportSenderFactory
 
@@ -18,7 +21,9 @@ import org.acra.sender.ReportSenderFactory
  *         Time: 3:17 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CustomReportSenderFactory : ReportSenderFactory {
+@AutoService(ReportSenderFactory::class)
+class CustomReportSenderFactory :
+  HasConfigPlugin(HttpSenderConfiguration::class.java), ReportSenderFactory {
   override fun create(context: Context, config: CoreConfiguration): ReportSender {
     return CustomReportSender(config)
   }

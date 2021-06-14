@@ -56,51 +56,79 @@ import java.io.File
 class ImportPublicKeyActivityTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ImportPublicKeyActivity>(
-      intent = Intent(getTargetContext(), ImportPublicKeyActivity::class.java).apply {
-        putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true)
-        putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, getResString(R.string.import_public_key))
-        putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false)
-        putExtra(ImportPublicKeyActivity.KEY_EXTRA_PGP_CONTACT, PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER))
-      })
+    intent = Intent(getTargetContext(), ImportPublicKeyActivity::class.java).apply {
+      putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true)
+      putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, getResString(R.string.import_public_key))
+      putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false)
+      putExtra(
+        ImportPublicKeyActivity.KEY_EXTRA_PGP_CONTACT,
+        PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
+      )
+    })
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(AddAccountToDatabaseRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testImportKeyFromFile() {
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPublicKey)
-    intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT), allOf(hasAction(Intent
-        .ACTION_OPEN_DOCUMENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_CHOOSER),
+        hasExtra(
+          `is`(Intent.EXTRA_INTENT),
+          allOf(
+            hasAction(Intent.ACTION_OPEN_DOCUMENT),
+            hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+            hasType("*/*")
+          )
+        )
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
     onView(withId(R.id.buttonLoadFromFile))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
   fun testShowErrorWhenImportingKeyFromFile() {
-    val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithoutPublicKey)
-    intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(`is`(Intent.EXTRA_INTENT), allOf(hasAction(Intent
-        .ACTION_OPEN_DOCUMENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+    val resultData =
+      TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithoutPublicKey)
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_CHOOSER), hasExtra(
+          `is`(Intent.EXTRA_INTENT), allOf(
+            hasAction(
+              Intent
+                .ACTION_OPEN_DOCUMENT
+            ), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")
+          )
+        )
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
     onView(withId(R.id.buttonLoadFromFile))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    isDialogWithTextDisplayed(decorView, getResString(R.string.file_has_wrong_pgp_structure, getResString(R.string.public_)))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    isDialogWithTextDisplayed(
+      decorView,
+      getResString(R.string.file_has_wrong_pgp_structure, getResString(R.string.public_))
+    )
   }
 
   @Test
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
@@ -108,9 +136,12 @@ class ImportPublicKeyActivityTest : BaseTest() {
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not public key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    isDialogWithTextDisplayed(decorView, getResString(R.string.clipboard_has_wrong_structure, getResString(R.string.public_)))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    isDialogWithTextDisplayed(
+      decorView,
+      getResString(R.string.clipboard_has_wrong_structure, getResString(R.string.public_))
+    )
   }
 
   companion object {
@@ -123,11 +154,14 @@ class ImportPublicKeyActivityTest : BaseTest() {
     @JvmStatic
     fun createResources() {
       publicKey = TestGeneralUtil.readFileFromAssetsAsString(
-          "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc")
+        "pgp/not_attested_user@flowcrypt.test-pub.asc"
+      )
       fileWithPublicKey = TestGeneralUtil.createFileAndFillWithContent(
-          TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc", publicKey)
+        TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc", publicKey
+      )
       fileWithoutPublicKey = TestGeneralUtil.createFileAndFillWithContent(
-          TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + ".txt", SOME_TEXT)
+        TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + ".txt", SOME_TEXT
+      )
     }
 
     @AfterClass

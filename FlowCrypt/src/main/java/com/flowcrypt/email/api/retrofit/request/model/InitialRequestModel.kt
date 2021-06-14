@@ -16,6 +16,8 @@ import com.google.gson.annotations.SerializedName
  * Time: 16:48
  * E-mail: DenBond7@gmail.com
  */
-data class InitialRequestModel(@SerializedName("email") @Expose val email: String,
-                               @SerializedName("pubkey") @Expose val pubKey: String,
-                               @SerializedName("attest") @Expose val isAttest: Boolean = false) : RequestModel
+data class InitialRequestModel(
+  @SerializedName("email") @Expose val email: String,
+  @SerializedName("pubkey") @Expose val pubKey: String,
+  @SerializedName("attest") @Expose val isAttest: Boolean = false
+) : RequestModel

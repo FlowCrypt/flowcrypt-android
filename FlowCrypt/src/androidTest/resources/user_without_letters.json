@@ -1,10 +1,10 @@
 {
-  "accountType": "denbond7.com",
+  "accountType": "flowcrypt.test",
   "displayName": "displayName",
   "givenName": "givenName",
   "familyName": "familyName",
   "areContactsLoaded": true,
-  "email": "user_without_letters@denbond7.com",
+  "email": "user_without_letters@flowcrypt.test",
   "imapIsUseSslTls": true,
   "imapIsUseStarttls": false,
   "imapPort": 993,
@@ -20,7 +20,7 @@
   "smtpPassword": "qwerty1234",
   "smtpPort": 587,
   "smtpServer": "10.0.2.2",
-  "smtpUsername": "user_without_letters@denbond7.com",
+  "smtpUsername": "user_without_letters@flowcrypt.test",
   "useCustomSignForSmtp": true,
-  "username": "user_without_letters@denbond7.com"
+  "username": "user_without_letters@flowcrypt.test"
 }

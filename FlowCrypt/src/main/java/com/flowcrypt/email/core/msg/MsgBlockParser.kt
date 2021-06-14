@@ -7,8 +7,8 @@ package com.flowcrypt.email.core.msg
 
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlockFactory
+import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
-import com.flowcrypt.email.extensions.lang.normalize
 
 @Suppress("unused")
 object MsgBlockParser {
@@ -32,12 +32,12 @@ object MsgBlockParser {
     val initialBlockCount = blocks.size
     var continueAt = -1
     val beginIndex = text.indexOf(
-        PgpArmor.ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!.begin, startAt
+      PgpArmor.ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!.begin, startAt
     )
     if (beginIndex != -1) { // found
       val potentialHeaderBegin = text.substring(
-          beginIndex,
-          (beginIndex + ARMOR_HEADER_MAX_LENGTH).coerceAtMost(text.length)
+        beginIndex,
+        (beginIndex + ARMOR_HEADER_MAX_LENGTH).coerceAtMost(text.length)
       )
       for (blockHeaderKvp in PgpArmor.ARMOR_HEADER_DICT) {
         val blockHeaderDef = blockHeaderKvp.value
@@ -71,15 +71,15 @@ object MsgBlockParser {
           // identified end of the same block
           continueAt = endHeaderIndex + endHeaderLength
           blocks.add(
-              MsgBlockFactory.fromContent(
-                  blockHeaderKvp.key,
-                  text.substring(beginIndex, continueAt).trim()
-              )
+            MsgBlockFactory.fromContent(
+              blockHeaderKvp.key,
+              text.substring(beginIndex, continueAt).trim()
+            )
           )
         } else {
           // corresponding end not found
           blocks.add(
-              MsgBlockFactory.fromContent(blockHeaderKvp.key, text.substring(beginIndex), true)
+            MsgBlockFactory.fromContent(blockHeaderKvp.key, text.substring(beginIndex), true)
           )
         }
         break

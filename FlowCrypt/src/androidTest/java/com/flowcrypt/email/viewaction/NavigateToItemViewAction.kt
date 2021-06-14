@@ -57,10 +57,10 @@ class NavigateToItemViewAction(private val menuItemName: String) : ViewAction {
 
     if (matchedMenuItem == null) {
       throw PerformException.Builder()
-          .withActionDescription(this.description)
-          .withViewDescription(HumanReadables.describe(view))
-          .withCause(RuntimeException(getErrorMsg(navigationMenu, view)))
-          .build()
+        .withActionDescription(this.description)
+        .withViewDescription(HumanReadables.describe(view))
+        .withCause(RuntimeException(getErrorMsg(navigationMenu, view)))
+        .build()
     }
     navigationMenu.performItemAction(matchedMenuItem, 0)
   }
@@ -71,9 +71,10 @@ class NavigateToItemViewAction(private val menuItemName: String) : ViewAction {
 
   override fun getConstraints(): Matcher<View> {
     return allOf(
-        isAssignableFrom(NavigationView::class.java),
-        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
-        isDisplayingAtLeast(90))
+      isAssignableFrom(NavigationView::class.java),
+      withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+      isDisplayingAtLeast(90)
+    )
   }
 
   private fun getErrorMsg(menu: Menu, view: View): String {

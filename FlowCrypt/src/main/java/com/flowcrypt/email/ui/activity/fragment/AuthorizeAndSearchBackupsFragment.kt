@@ -92,7 +92,10 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           else -> {
-            setFragmentResult(REQUEST_KEY_CHECK_ACCOUNT_SETTINGS, bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it))
+            setFragmentResult(
+              REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
+              bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
+            )
             baseActivity.countingIdlingResource.decrementSafely()
             parentFragmentManager.popBackStack()
           }
@@ -110,7 +113,10 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
         }
 
         else -> {
-          setFragmentResult(REQUEST_KEY_SEARCH_BACKUPS, bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it))
+          setFragmentResult(
+            REQUEST_KEY_SEARCH_BACKUPS,
+            bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it)
+          )
           baseActivity.countingIdlingResource.decrementSafely()
           parentFragmentManager.popBackStack()
         }
@@ -119,14 +125,27 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   companion object {
-    val REQUEST_KEY_SEARCH_BACKUPS = GeneralUtil.generateUniqueExtraKey("REQUEST_KEY_SEARCH_BACKUPS",
-        AuthorizeAndSearchBackupsFragment::class.java)
-    val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS = GeneralUtil.generateUniqueExtraKey("REQUEST_KEY_CHECK_ACCOUNT_SETTINGS", AuthorizeAndSearchBackupsFragment::class.java)
-    val KEY_PRIVATE_KEY_BACKUPS_RESULT = GeneralUtil.generateUniqueExtraKey("KEY_PRIVATE_KEY_BACKUPS_RESULT",
-        AuthorizeAndSearchBackupsFragment::class.java)
-    val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey("KEY_CHECK_ACCOUNT_SETTINGS_RESULT", AuthorizeAndSearchBackupsFragment::class.java)
+    val REQUEST_KEY_SEARCH_BACKUPS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_SEARCH_BACKUPS",
+      AuthorizeAndSearchBackupsFragment::class.java
+    )
+    val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS",
+      AuthorizeAndSearchBackupsFragment::class.java
+    )
+    val KEY_PRIVATE_KEY_BACKUPS_RESULT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_PRIVATE_KEY_BACKUPS_RESULT",
+      AuthorizeAndSearchBackupsFragment::class.java
+    )
+    val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_CHECK_ACCOUNT_SETTINGS_RESULT",
+      AuthorizeAndSearchBackupsFragment::class.java
+    )
 
-    private val KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_ACCOUNT", AuthorizeAndSearchBackupsFragment::class.java)
+    private val KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_ACCOUNT",
+      AuthorizeAndSearchBackupsFragment::class.java
+    )
 
     fun newInstance(accountEntity: AccountEntity): AuthorizeAndSearchBackupsFragment {
       val fragment = AuthorizeAndSearchBackupsFragment()

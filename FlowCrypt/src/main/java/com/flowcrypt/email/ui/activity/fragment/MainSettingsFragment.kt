@@ -27,7 +27,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 class MainSettingsFragment : BasePreferenceFragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    (activity as AppCompatActivity?)?.supportActionBar?.title = getString(R.string.title_activity_settings)
+    (activity as AppCompatActivity?)?.supportActionBar?.title =
+      getString(R.string.title_activity_settings)
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

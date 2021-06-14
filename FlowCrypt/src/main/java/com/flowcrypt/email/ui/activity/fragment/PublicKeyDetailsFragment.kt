@@ -25,11 +25,11 @@ import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -38,8 +38,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
-import java.util.*
-import java.util.concurrent.TimeUnit
+import java.util.Date
 
 /**
  * This fragment shows the given public key details
@@ -54,11 +53,11 @@ class PublicKeyDetailsFragment : BaseFragment() {
   private val parseKeysViewModel: ParseKeysViewModel by viewModels()
 
   private var contactEntity: ContactEntity? = null
-  private var details: NodeKeyDetails? = null
+  private var details: PgpKeyDetails? = null
   private var progressBar: View? = null
   private var content: View? = null
   private var layoutUsers: ViewGroup? = null
-  private var layoutLongIds: ViewGroup? = null
+  private var layoutFingerprints: ViewGroup? = null
   private var textViewAlgorithm: TextView? = null
   private var textViewCreated: TextView? = null
 
@@ -128,10 +127,13 @@ class PublicKeyDetailsFragment : BaseFragment() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionCopy -> {
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard =
+          requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
-        Toast.makeText(context, getString(R.string.public_key_copied_to_clipboard),
-            Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+          context, getString(R.string.public_key_copied_to_clipboard),
+          Toast.LENGTH_SHORT
+        ).show()
         return true
       }
 
@@ -210,7 +212,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
     progressBar = view.findViewById(R.id.progressBar)
     content = view.findViewById(R.id.layoutContent)
     layoutUsers = view.findViewById(R.id.layoutUsers)
-    layoutLongIds = view.findViewById(R.id.layoutLongIds)
+    layoutFingerprints = view.findViewById(R.id.layoutFingerprints)
     textViewAlgorithm = view.findViewById(R.id.textViewAlgorithm)
     textViewCreated = view.findViewById(R.id.textViewCreated)
   }
@@ -223,17 +225,19 @@ class PublicKeyDetailsFragment : BaseFragment() {
       layoutUsers?.addView(textView)
     }
 
-    layoutLongIds?.removeAllViews()
+    layoutFingerprints?.removeAllViews()
     details?.ids?.forEachIndexed { index, s ->
-      val textViewLongId = TextView(context)
-      textViewLongId.text = getString(R.string.template_long_id, index + 1, s.longId)
-      layoutLongIds?.addView(textViewLongId)
+      val textViewFingerprint = TextView(context)
+      textViewFingerprint.text =
+        getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
+      layoutFingerprints?.addView(textViewFingerprint)
     }
 
     textViewAlgorithm?.text = getString(R.string.template_algorithm, details?.algo?.algorithm)
-    textViewCreated?.text = getString(R.string.template_created,
-        DateFormat.getMediumDateFormat(context).format(
-            Date(TimeUnit.MILLISECONDS.convert(details?.created ?: 0, TimeUnit.SECONDS))))
+    textViewCreated?.text = getString(
+      R.string.template_created,
+      DateFormat.getMediumDateFormat(context).format(Date(details?.created ?: 0))
+    )
   }
 
   private fun chooseDest() {
@@ -242,15 +246,17 @@ class PublicKeyDetailsFragment : BaseFragment() {
     intent.type = Constants.MIME_TYPE_PGP_KEY
 
     val sanitizedEmail = contactEntity?.email?.replace("[^a-z0-9]".toRegex(), "")
-    val fileName = "0x" + details?.longId + "-" + sanitizedEmail + "-publickey" + ".asc"
+    val fileName = "0x" + details?.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     intent.putExtra(Intent.EXTRA_TITLE, fileName)
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
   }
 
   companion object {
-    private val KEY_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_CONTACT",
-        PublicKeyDetailsFragment::class.java)
+    private val KEY_CONTACT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_CONTACT",
+      PublicKeyDetailsFragment::class.java
+    )
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
 
     fun newInstance(contactEntity: ContactEntity): PublicKeyDetailsFragment {

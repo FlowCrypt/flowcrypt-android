@@ -28,20 +28,23 @@ import com.flowcrypt.email.util.RFC6068Parser
  * Time: 16:16
  * E-mail: DenBond7@gmail.com
  */
-data class ExtraActionInfo constructor(var atts: List<AttachmentInfo> = emptyList(),
-                                       val toAddresses: List<String> = arrayListOf(),
-                                       val ccAddresses: List<String> = arrayListOf(),
-                                       val bccAddresses: List<String> = arrayListOf(),
-                                       var subject: String = "",
-                                       var body: String = "") : Parcelable {
+data class ExtraActionInfo constructor(
+  var atts: List<AttachmentInfo> = emptyList(),
+  val toAddresses: List<String> = arrayListOf(),
+  val ccAddresses: List<String> = arrayListOf(),
+  val bccAddresses: List<String> = arrayListOf(),
+  var subject: String = "",
+  var body: String = ""
+) : Parcelable {
 
   constructor(parcel: Parcel) : this(
-      mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
-      parcel.createStringArrayList()!!,
-      parcel.createStringArrayList()!!,
-      parcel.createStringArrayList()!!,
-      parcel.readString()!!,
-      parcel.readString()!!)
+    mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
+    parcel.createStringArrayList()!!,
+    parcel.createStringArrayList()!!,
+    parcel.createStringArrayList()!!,
+    parcel.readString()!!,
+    parcel.readString()!!
+  )
 
   override fun describeContents(): Int {
     return 0
@@ -59,10 +62,11 @@ data class ExtraActionInfo constructor(var atts: List<AttachmentInfo> = emptyLis
   companion object {
     @JvmField
     @Suppress("unused")
-    val CREATOR: Parcelable.Creator<ExtraActionInfo> = object : Parcelable.Creator<ExtraActionInfo> {
-      override fun createFromParcel(source: Parcel): ExtraActionInfo = ExtraActionInfo(source)
-      override fun newArray(size: Int): Array<ExtraActionInfo?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<ExtraActionInfo> =
+      object : Parcelable.Creator<ExtraActionInfo> {
+        override fun createFromParcel(source: Parcel): ExtraActionInfo = ExtraActionInfo(source)
+        override fun newArray(size: Int): Array<ExtraActionInfo?> = arrayOfNulls(size)
+      }
 
     /**
      * Parse incoming information from the intent which can have the next actions:

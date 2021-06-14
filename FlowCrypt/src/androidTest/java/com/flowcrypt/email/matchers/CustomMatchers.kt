@@ -7,6 +7,7 @@ package com.flowcrypt.email.matchers
 
 import android.view.View
 import android.widget.ListView
+import androidx.test.espresso.Root
 import androidx.test.espresso.matcher.BoundedMatcher
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
@@ -103,6 +104,10 @@ class CustomMatchers {
     fun withChipsBackgroundColor(chipText: String, backgroundColor: Int):
         BoundedMatcher<View, NachoTextView> {
       return NachoTextViewChipBackgroundColorMatcher(chipText, backgroundColor)
+    }
+
+    fun isToast(): BaseMatcher<Root?> {
+      return ToastMatcher()
     }
   }
 }

@@ -6,8 +6,10 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.nulabinc.zxcvbn.Zxcvbn
+import org.pgpainless.util.Passphrase
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -16,17 +18,17 @@ import java.util.concurrent.TimeUnit
 
 object PgpPwd {
   data class Word(
-      val match: String,
-      val word: String,
-      val bar: Long,
-      var color: String,
-      val pass: Boolean
+    val match: String,
+    val word: String,
+    val bar: Long,
+    var color: String,
+    val pass: Boolean
   )
 
   data class PwdStrengthResult(
-      val word: Word,
-      val seconds: BigInteger,
-      val time: String
+    val word: Word,
+    val seconds: BigInteger,
+    val time: String
   )
 
   enum class PwdType {
@@ -39,8 +41,11 @@ object PgpPwd {
    * @throws [PrivateKeyStrengthException] if the given passphrase is weak
    * @throws [IllegalArgumentException] if missing passphrase strength evaluation
    */
-  fun checkForWeakPassphrase(passphrase: String) {
-    val measure = Zxcvbn().measure(passphrase, listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
+  fun checkForWeakPassphrase(passphrase: Passphrase) {
+    val measure = Zxcvbn().measure(
+      passphrase.asString,
+      listOf(*Constants.PASSWORD_WEAK_WORDS)
+    ).guesses
     val passwordStrength = estimateStrength(measure)
 
     when (passwordStrength.word.word) {
@@ -92,8 +97,8 @@ object PgpPwd {
     val minLength = 16
     if (bytes.size < minLength) {
       throw IllegalArgumentException(
-          "Source byte array is too short: required minimum length is $minLength, " +
-              "but the actual length is ${bytes.size}"
+        "Source byte array is too short: required minimum length is $minLength, " +
+            "but the actual length is ${bytes.size}"
       )
     }
     val s = StringBuilder()
@@ -177,37 +182,37 @@ object PgpPwd {
   private val SECONDS_PER_SECONDS = TimeUnit.SECONDS.toSeconds(1).toBigDecimal()
 
   private val CRACK_TIME_WORDS_PASSWORD = arrayOf(
-      // the requirements for a one-time password are less strict
-      Word(match = "millenni", word = "perfect", bar = 100, color = "green", pass = true),
-      Word(match = "centu", word = "perfect", bar = 95, color = "green", pass = true),
-      Word(match = "year", word = "great", bar = 80, color = "orange", pass = true),
-      Word(match = "month", word = "good", bar = 70, color = "darkorange", pass = true),
-      Word(match = "week", word = "good", bar = 30, color = "darkred", pass = true),
-      Word(match = "day", word = "reasonable", bar = 40, color = "darkorange", pass = true),
-      Word(match = "hour", word = "bare minimum", bar = 20, color = "darkred", pass = true),
-      Word(match = "minute", word = "poor", bar = 15, color = "red", pass = false),
-      Word(match = "", word = "weak", bar = 10, color = "red", pass = false)
+    // the requirements for a one-time password are less strict
+    Word(match = "millenni", word = "perfect", bar = 100, color = "green", pass = true),
+    Word(match = "centu", word = "perfect", bar = 95, color = "green", pass = true),
+    Word(match = "year", word = "great", bar = 80, color = "orange", pass = true),
+    Word(match = "month", word = "good", bar = 70, color = "darkorange", pass = true),
+    Word(match = "week", word = "good", bar = 30, color = "darkred", pass = true),
+    Word(match = "day", word = "reasonable", bar = 40, color = "darkorange", pass = true),
+    Word(match = "hour", word = "bare minimum", bar = 20, color = "darkred", pass = true),
+    Word(match = "minute", word = "poor", bar = 15, color = "red", pass = false),
+    Word(match = "", word = "weak", bar = 10, color = "red", pass = false)
   )
 
   private val CRACK_TIME_WORDS_PASSPHRASE = arrayOf(
-      // the requirements for a pass phrase are meant to be strict
-      Word(match = "millenni", word = "perfect", bar = 100, color = "green", pass = true),
-      Word(match = "centu", word = "great", bar = 80, color = "green", pass = true),
-      Word(match = "year", word = "good", bar = 60, color = "orange", pass = true),
-      Word(match = "month", word = "reasonable", bar = 40, color = "darkorange", pass = true),
-      Word(match = "week", word = "poor", bar = 30, color = "darkred", pass = false),
-      Word(match = "day", word = "poor", bar = 20, color = "darkred", pass = false),
-      Word(match = "", word = "weak", bar = 10, color = "red", pass = false)
+    // the requirements for a pass phrase are meant to be strict
+    Word(match = "millenni", word = "perfect", bar = 100, color = "green", pass = true),
+    Word(match = "centu", word = "great", bar = 80, color = "green", pass = true),
+    Word(match = "year", word = "good", bar = 60, color = "orange", pass = true),
+    Word(match = "month", word = "reasonable", bar = 40, color = "darkorange", pass = true),
+    Word(match = "week", word = "poor", bar = 30, color = "darkred", pass = false),
+    Word(match = "day", word = "poor", bar = 20, color = "darkred", pass = false),
+    Word(match = "", word = "weak", bar = 10, color = "red", pass = false)
   )
 
   @Suppress("unused")
   val weakWords = listOf(
-      "crypt", "up", "cryptup", "flow", "flowcrypt", "encryption", "pgp", "email", "set",
-      "backup", "passphrase", "best", "pass", "phrases", "are", "long", "and", "have",
-      "several", "words", "in", "them", "Best pass phrases are long", "have several words",
-      "in them", "bestpassphrasesarelong", "haveseveralwords", "inthem",
-      "Loss of this pass phrase", "cannot be recovered", "Note it down", "on a paper",
-      "lossofthispassphrase", "cannotberecovered", "noteitdown", "onapaper", "setpassword",
-      "set password", "set pass word", "setpassphrase", "set pass phrase", "set passphrase"
+    "crypt", "up", "cryptup", "flow", "flowcrypt", "encryption", "pgp", "email", "set",
+    "backup", "passphrase", "best", "pass", "phrases", "are", "long", "and", "have",
+    "several", "words", "in", "them", "Best pass phrases are long", "have several words",
+    "in them", "bestpassphrasesarelong", "haveseveralwords", "inthem",
+    "Loss of this pass phrase", "cannot be recovered", "Note it down", "on a paper",
+    "lossofthispassphrase", "cannotberecovered", "noteitdown", "onapaper", "setpassword",
+    "set password", "set pass word", "setpassphrase", "set pass phrase", "set passphrase"
   )
 }

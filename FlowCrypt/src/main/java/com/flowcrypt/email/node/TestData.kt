@@ -6,8 +6,12 @@
 package com.flowcrypt.email.node
 
 import com.flowcrypt.email.database.entity.KeyEntity
-import java.util.*
+import java.util.Arrays
 
+@Deprecated(
+  "old code. Some of these tests are wrongly having longids " +
+      "in them, and we plan to remove the class soon."
+)
 class TestData internal constructor() {
   companion object {
     private const val ECC_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
@@ -322,38 +326,47 @@ class TestData internal constructor() {
 
     @JvmStatic
     fun eccPrvKeyInfo(): Array<KeyEntity> {
-      return arrayOf(KeyEntity(
-          longId = "063635B3E33EB14C",
+      return arrayOf(
+        KeyEntity(
+          fingerprint = "063635B3E33EB14C",
           account = "usr@usr.com",
           source = "TEST",
           privateKey = ECC_PRV_KEY.toByteArray(),
           publicKey = ECC_PUB_KEY.toByteArray(),
-          passphrase = "some long pp"
-      ))
+          storedPassphrase = "some long pp",
+          passphraseType = KeyEntity.PassphraseType.DATABASE
+        )
+      )
     }
 
     @JvmStatic
     fun rsa2048PrvKeyInfo(): Array<KeyEntity> {
-      return arrayOf(KeyEntity(
-          longId = "3A30F4CC0A9A8F10",
+      return arrayOf(
+        KeyEntity(
+          fingerprint = "3A30F4CC0A9A8F10",
           account = "t@est.com",
           source = "TEST",
           privateKey = RSA_2048_PRV_KEY.toByteArray(),
           publicKey = RSA_2048_PUB_KEY.toByteArray(),
-          passphrase = "some long pp"
-      ))
+          storedPassphrase = "some long pp",
+          passphraseType = KeyEntity.PassphraseType.DATABASE
+        )
+      )
     }
 
     @JvmStatic
     fun rsa4096PrvKeyInfo(): Array<KeyEntity> {
-      return arrayOf(KeyEntity(
-          longId = "7C307E6F2092962D",
+      return arrayOf(
+        KeyEntity(
+          fingerprint = "7C307E6F2092962D",
           account = "usr@usr.com",
           source = "TEST",
           privateKey = RSA_4096_PRV_KEY.toByteArray(),
           publicKey = RSA_4096_PUB_KEY.toByteArray(),
-          passphrase = "some long pp"
-      ))
+          storedPassphrase = "some long pp",
+          passphraseType = KeyEntity.PassphraseType.DATABASE
+        )
+      )
     }
 
     @JvmStatic

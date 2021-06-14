@@ -19,7 +19,7 @@ import java.io.ByteArrayInputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.*
+import java.util.Properties
 import javax.mail.Message
 import javax.mail.Multipart
 import javax.mail.Session
@@ -56,20 +56,21 @@ class EmailUtilTest {
     val bccRecipients = listOf(InternetAddress("bccRecipient@example.com"))
 
     val outgoingMessageInfo = OutgoingMessageInfo(
-        account = accountEntity.email,
-        subject = subject,
-        msg = msg,
-        toRecipients = toRecipients,
-        ccRecipients = ccRecipients,
-        bccRecipients = bccRecipients,
-        from = accountEntity.email,
-        encryptionType = MessageEncryptionType.STANDARD,
-        messageType = MessageType.NEW,
-        uid = 1000
+      account = accountEntity.email,
+      subject = subject,
+      msg = msg,
+      toRecipients = toRecipients,
+      ccRecipients = ccRecipients,
+      bccRecipients = bccRecipients,
+      from = accountEntity.email,
+      encryptionType = MessageEncryptionType.STANDARD,
+      messageType = MessageType.NEW,
+      uid = 1000
     )
     val newMsg = EmailUtil.prepareNewMsg(
-        session = Session.getInstance(Properties()),
-        info = outgoingMessageInfo)
+      session = Session.getInstance(Properties()),
+      info = outgoingMessageInfo
+    )
     newMsg.saveChanges()
 
     assertEquals(subject, newMsg.subject)
@@ -78,57 +79,67 @@ class EmailUtilTest {
     assertEquals(toRecipients, newMsg.getRecipients(Message.RecipientType.TO).toList())
     assertEquals(ccRecipients, newMsg.getRecipients(Message.RecipientType.CC).toList())
     assertEquals(bccRecipients, newMsg.getRecipients(Message.RecipientType.BCC).toList())
-    assertEquals(LocalDate.now(), newMsg.sentDate.toInstant()
+    assertEquals(
+      LocalDate.now(), newMsg.sentDate.toInstant()
         .atZone(ZoneId.systemDefault())
-        .toLocalDate())
+        .toLocalDate()
+    )
     assertTrue(newMsg.getHeader("MIME-Version").first() == "1.0")
   }
 
   @Test
   fun testGenReplyMessagePlain() {
     val session = Session.getInstance(Properties())
-    val replyToMIME = MimeMessage(session,
-        ByteArrayInputStream(REPLY_TO_MIME_MESSAGE.toByteArray()))
+    val replyToMIME = MimeMessage(
+      session,
+      ByteArrayInputStream(REPLY_TO_MIME_MESSAGE.toByteArray())
+    )
     val replyToText = replyToMIME.content as String
     val accountEntity = AccountEntity("receiver@receiver.com")
     val receivedDate = Instant.now()
     val incomingMessageInfo = IncomingMessageInfo(
-        msgEntity = MessageEntity(
-            email = accountEntity.email,
-            folder = "INBOX",
-            uid = 123,
-            fromAddress = InternetAddress.toString(replyToMIME.from),
-            receivedDate = receivedDate.toEpochMilli()
-        ),
-        text = replyToText,
-        encryptionType = MessageEncryptionType.STANDARD
+      msgEntity = MessageEntity(
+        email = accountEntity.email,
+        folder = "INBOX",
+        uid = 123,
+        fromAddress = InternetAddress.toString(replyToMIME.from),
+        receivedDate = receivedDate.toEpochMilli()
+      ),
+      text = replyToText,
+      encryptionType = MessageEncryptionType.STANDARD
     )
 
     val replyText = "Reply text" + EmailUtil.genReplyContent(incomingMessageInfo)
 
     val outgoingMessageInfo = OutgoingMessageInfo(
-        account = accountEntity.email,
-        //need to clarify should we override subject or not. Currently we override
-        subject = "subject that will be overridden",
-        msg = replyText,
-        toRecipients = replyToMIME.from.toList().map { it as InternetAddress },
-        from = accountEntity.email,
-        encryptionType = MessageEncryptionType.STANDARD,
-        messageType = MessageType.REPLY,
-        uid = 1000
+      account = accountEntity.email,
+      //need to clarify should we override subject or not. Currently we override
+      subject = "subject that will be overridden",
+      msg = replyText,
+      toRecipients = replyToMIME.from.toList().map { it as InternetAddress },
+      from = accountEntity.email,
+      encryptionType = MessageEncryptionType.STANDARD,
+      messageType = MessageType.REPLY,
+      uid = 1000
     )
 
     val replyMIME = EmailUtil.genReplyMessage(replyToMsg = replyToMIME, info = outgoingMessageInfo)
     replyMIME.saveChanges()
 
     assertEquals("Re: " + replyToMIME.subject, replyMIME.subject)
-    assertEquals(replyToMIME.getRecipients(Message.RecipientType.TO).toList(),
-        replyMIME.from.toList())
+    assertEquals(
+      replyToMIME.getRecipients(Message.RecipientType.TO).toList(),
+      replyMIME.from.toList()
+    )
     assertArrayEquals(replyToMIME.from, replyMIME.getRecipients(Message.RecipientType.TO))
-    assertArrayEquals(replyToMIME.getHeader("Message-ID"),
-        replyMIME.getHeader("In-Reply-To"))
-    assertArrayEquals(replyToMIME.getHeader("Message-ID"),
-        replyMIME.getHeader("References"))
+    assertArrayEquals(
+      replyToMIME.getHeader("Message-ID"),
+      replyMIME.getHeader("In-Reply-To")
+    )
+    assertArrayEquals(
+      replyToMIME.getHeader("Message-ID"),
+      replyMIME.getHeader("References")
+    )
   }
 
   companion object {

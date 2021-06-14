@@ -25,11 +25,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -46,7 +46,8 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 10:30
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKeysRecyclerViewAdapter.OnKeySelectedListener {
+class PrivateKeysListFragment : BaseFragment(), View.OnClickListener,
+  PrivateKeysRecyclerViewAdapter.OnKeySelectedListener {
 
   private var progressBar: View? = null
   private var emptyView: View? = null
@@ -57,15 +58,18 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   override val contentResourceId: Int = R.layout.fragment_private_keys
 
-  private var tracker: SelectionTracker<NodeKeyDetails>? = null
+  private var tracker: SelectionTracker<PgpKeyDetails>? = null
   private var actionMode: ActionMode? = null
-  private val selectionObserver = object : SelectionTracker.SelectionObserver<NodeKeyDetails>() {
+  private val selectionObserver = object : SelectionTracker.SelectionObserver<PgpKeyDetails>() {
     override fun onSelectionChanged() {
       super.onSelectionChanged()
       when {
         tracker?.hasSelection() == true -> {
           if (actionMode == null) {
-            actionMode = (this@PrivateKeysListFragment.activity as AppCompatActivity).startSupportActionMode(genActionModeForKeys())
+            actionMode =
+              (this@PrivateKeysListFragment.activity as AppCompatActivity).startSupportActionMode(
+                genActionModeForKeys()
+              )
           }
           actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
         }
@@ -111,14 +115,19 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
-        Activity.RESULT_OK -> Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
+        Activity.RESULT_OK -> Toast.makeText(
+          context,
+          R.string.key_successfully_imported,
+          Toast.LENGTH_SHORT
+        ).show()
       }
 
       REQUEST_CODE_DELETE_KEYS_DIALOG -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
             account?.let { accountEntity ->
-              tracker?.selection?.map { it }?.let { privateKeysViewModel.deleteKeys(accountEntity, it) }
+              tracker?.selection?.map { it }
+                ?.let { privateKeysViewModel.deleteKeys(accountEntity, it) }
             }
 
             actionMode?.finish()
@@ -132,7 +141,8 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.floatActionButtonAddKey -> startActivityForResult(ImportPrivateKeyActivity.getIntent(
+      R.id.floatActionButtonAddKey -> startActivityForResult(
+        ImportPrivateKeyActivity.getIntent(
           context = requireContext(),
           title = getString(R.string.import_private_key),
           throwErrorIfDuplicateFoundEnabled = true,
@@ -140,22 +150,24 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
           isSubmittingPubKeysEnabled = false,
           accountEntity = account,
           isSyncEnabled = true,
-          skipImportedKeys = true),
-          REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
+          skipImportedKeys = true
+        ),
+        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY
+      )
     }
   }
 
-  override fun onKeySelected(position: Int, nodeKeyDetails: NodeKeyDetails?) {
+  override fun onKeySelected(position: Int, pgpKeyDetails: PgpKeyDetails?) {
     if (tracker?.hasSelection() == true) {
       return
     }
 
-    nodeKeyDetails?.let {
+    pgpKeyDetails?.let {
       parentFragmentManager
-          .beginTransaction()
-          .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it))
-          .addToBackStack(null)
-          .commit()
+        .beginTransaction()
+        .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it.fingerprint))
+        .addToBackStack(null)
+        .commit()
     }
   }
 
@@ -197,7 +209,8 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     recyclerView.setHasFixedSize(true)
     val manager = LinearLayoutManager(context)
     val decoration = DividerItemDecoration(recyclerView.context, manager.orientation)
-    val drawable = ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, requireContext().theme)
+    val drawable =
+      ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, requireContext().theme)
     drawable?.let { decoration.setDrawable(drawable) }
     recyclerView.addItemDecoration(decoration)
     recyclerView.layoutManager = manager
@@ -216,11 +229,11 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   private fun setupSelectionTracker(recyclerView: RecyclerView) {
     tracker = SelectionTracker.Builder(
-        javaClass.simpleName,
-        recyclerView,
-        NodeKeyDetailsKeyProvider(recyclerViewAdapter.nodeKeyDetailsList),
-        PrivateKeyItemDetailsLookup(recyclerView),
-        StorageStrategy.createParcelableStorage(NodeKeyDetails::class.java)
+      javaClass.simpleName,
+      recyclerView,
+      NodeKeyDetailsKeyProvider(recyclerViewAdapter.pgpKeyDetailsList),
+      PrivateKeyItemDetailsLookup(recyclerView),
+      StorageStrategy.createParcelableStorage(PgpKeyDetails::class.java)
     ).build()
 
     recyclerViewAdapter.tracker = tracker
@@ -234,12 +247,16 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
         return when (item?.itemId) {
           R.id.menuActionDeleteKey -> {
             showTwoWayDialog(
-                dialogTitle = "",
-                dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_key_question, count, count),
-                positiveButtonTitle = getString(android.R.string.ok),
-                negativeButtonTitle = getString(android.R.string.cancel),
-                requestCode = REQUEST_CODE_DELETE_KEYS_DIALOG,
-                isCancelable = false
+              dialogTitle = "",
+              dialogMsg = requireContext().resources.getQuantityString(
+                R.plurals.delete_key_question,
+                count,
+                count
+              ),
+              positiveButtonTitle = getString(android.R.string.ok),
+              negativeButtonTitle = getString(android.R.string.cancel),
+              requestCode = REQUEST_CODE_DELETE_KEYS_DIALOG,
+              isCancelable = false
             )
             true
           }

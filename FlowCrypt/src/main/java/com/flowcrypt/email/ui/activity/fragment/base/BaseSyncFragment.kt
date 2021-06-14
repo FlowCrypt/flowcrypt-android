@@ -28,7 +28,8 @@ abstract class BaseSyncFragment : BaseFragment() {
   protected val baseSyncActivity: BaseSyncActivity
     get() {
       return activity as? BaseSyncActivity ?: throw IllegalArgumentException(
-          "Can't use outside ${BaseSyncActivity::class.java}")
+        "Can't use outside ${BaseSyncActivity::class.java}"
+      )
     }
 
   /**

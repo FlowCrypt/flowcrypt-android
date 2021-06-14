@@ -29,7 +29,8 @@ class PasswordStrengthViewModel(application: Application) : BaseNodeApiViewModel
   private val zxcvbn: Zxcvbn = Zxcvbn()
   private val controlledRunnerForZxcvbn = ControlledRunner<Result<PgpPwd.PwdStrengthResult?>>()
 
-  val pwdStrengthResultLiveData: MutableLiveData<Result<PgpPwd.PwdStrengthResult?>> = MutableLiveData()
+  val pwdStrengthResultLiveData: MutableLiveData<Result<PgpPwd.PwdStrengthResult?>> =
+    MutableLiveData()
 
   fun check(passphrase: String) {
     viewModelScope.launch {

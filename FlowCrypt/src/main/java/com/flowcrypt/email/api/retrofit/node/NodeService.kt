@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.retrofit.node
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
+import com.flowcrypt.email.api.retrofit.request.node.KeyCacheWipeRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
@@ -38,4 +39,7 @@ interface NodeService {
   @POST("/")
   @Streaming
   fun decryptFile(@Body request: DecryptFileRequest): Call<DecryptedFileResult>
+
+  @POST("/")
+  suspend fun keyCacheWipe(@Body request: KeyCacheWipeRequest)
 }

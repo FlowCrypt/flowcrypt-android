@@ -16,23 +16,26 @@ import android.os.Parcelable
  * Time: 10:57
  * E-mail: DenBond7@gmail.com
  */
-data class ServiceInfo constructor(val isToFieldEditable: Boolean = false,
-                                   val isFromFieldEditable: Boolean = false,
-                                   val isMsgEditable: Boolean = false,
-                                   val isSubjectEditable: Boolean = false,
-                                   val isMsgTypeSwitchable: Boolean = false,
-                                   val hasAbilityToAddNewAtt: Boolean = false,
-                                   val systemMsg: String? = null,
-                                   val atts: List<AttachmentInfo>? = null) : Parcelable {
+data class ServiceInfo constructor(
+  val isToFieldEditable: Boolean = false,
+  val isFromFieldEditable: Boolean = false,
+  val isMsgEditable: Boolean = false,
+  val isSubjectEditable: Boolean = false,
+  val isMsgTypeSwitchable: Boolean = false,
+  val hasAbilityToAddNewAtt: Boolean = false,
+  val systemMsg: String? = null,
+  val atts: List<AttachmentInfo>? = null
+) : Parcelable {
   constructor(parcel: Parcel) : this(
-      parcel.readByte() != 0.toByte(),
-      parcel.readByte() != 0.toByte(),
-      parcel.readByte() != 0.toByte(),
-      parcel.readByte() != 0.toByte(),
-      parcel.readByte() != 0.toByte(),
-      parcel.readByte() != 0.toByte(),
-      parcel.readString(),
-      parcel.createTypedArrayList(AttachmentInfo.CREATOR))
+    parcel.readByte() != 0.toByte(),
+    parcel.readByte() != 0.toByte(),
+    parcel.readByte() != 0.toByte(),
+    parcel.readByte() != 0.toByte(),
+    parcel.readByte() != 0.toByte(),
+    parcel.readByte() != 0.toByte(),
+    parcel.readString(),
+    parcel.createTypedArrayList(AttachmentInfo.CREATOR)
+  )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeByte(if (isToFieldEditable) 1 else 0)

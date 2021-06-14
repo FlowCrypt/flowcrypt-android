@@ -27,8 +27,9 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
  * Time: 12:04
  * E-mail: DenBond7@gmail.com
  */
-open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener,
-    Preference.OnPreferenceChangeListener {
+open class NotificationsSettingsFragment : BasePreferenceFragment(),
+  Preference.OnPreferenceClickListener,
+  Preference.OnPreferenceChangeListener {
 
   private var levels: Array<CharSequence>? = null
   private var entries: Array<String>? = null
@@ -69,14 +70,16 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
 
       if (isEncryptedModeEnabled == true) {
         levels = arrayOf(
-            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-            NOTIFICATION_LEVEL_NEVER)
+          NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+          NOTIFICATION_LEVEL_NEVER
+        )
         entries = resources.getStringArray(R.array.notification_level_encrypted_entries)
       } else {
         levels = arrayOf(
-            NOTIFICATION_LEVEL_ALL_MESSAGES,
-            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-            NOTIFICATION_LEVEL_NEVER)
+          NOTIFICATION_LEVEL_ALL_MESSAGES,
+          NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+          NOTIFICATION_LEVEL_NEVER
+        )
         entries = resources.getStringArray(R.array.notification_level_entries)
       }
 
@@ -90,16 +93,21 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
   }
 
   private fun initPreferences(isEncryptedModeEnabled: Boolean) {
-    val preferenceSettingsSecurity = findPreference<Preference>(Constants.PREF_KEY_MANAGE_NOTIFICATIONS)
+    val preferenceSettingsSecurity =
+      findPreference<Preference>(Constants.PREF_KEY_MANAGE_NOTIFICATIONS)
     preferenceSettingsSecurity?.onPreferenceClickListener = this
 
-    val filter = findPreference<Preference>(Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER) as ListPreference
+    val filter =
+      findPreference<Preference>(Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER) as ListPreference
     filter.entryValues = levels
     filter.entries = entries
     filter.onPreferenceChangeListener = this
 
-    var currentValue = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(
-        requireContext()), Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+    var currentValue = SharedPreferencesHelper.getString(
+      PreferenceManager.getDefaultSharedPreferences(
+        requireContext()
+      ), Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
+    )
 
     if (isEncryptedModeEnabled && NOTIFICATION_LEVEL_ALL_MESSAGES == currentValue) {
       filter.value = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY

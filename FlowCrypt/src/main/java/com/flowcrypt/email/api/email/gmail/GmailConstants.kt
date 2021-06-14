@@ -16,10 +16,12 @@ package com.flowcrypt.email.api.email.gmail
 class GmailConstants {
   companion object {
     const val PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE = "mail.gimaps.ssl.enable"
-    const val PROPERTY_NAME_MAIL_GIMAPS_SSL_CHECK_SERVER_IDENTITY = "mail.gimaps.ssl.checkserveridentity"
+    const val PROPERTY_NAME_MAIL_GIMAPS_SSL_CHECK_SERVER_IDENTITY =
+      "mail.gimaps.ssl.checkserveridentity"
     const val PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS = "mail.gimaps.auth.mechanisms"
     const val PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE = "mail.gimaps.fetchsize"
-    const val GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED = "[ALERT] Please log in via your web browser"
+    const val GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED =
+      "[ALERT] Please log in via your web browser"
     const val PROPERTY_NAME_MAIL_GIMAPS_CONNECTIONTIMEOUT = "mail.gimaps.connectiontimeout"
     const val PROPERTY_NAME_MAIL_GIMAPS_TIMEOUT = "mail.gimaps.timeout"
 

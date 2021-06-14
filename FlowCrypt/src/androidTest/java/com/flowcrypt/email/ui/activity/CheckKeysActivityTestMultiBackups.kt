@@ -22,7 +22,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -45,16 +45,17 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class CheckKeysActivityTestMultiBackups : BaseTest() {
-  override val activeActivityRule = lazyActivityScenarioRule<CheckKeysActivity>(launchActivity = false)
+  override val activeActivityRule =
+    lazyActivityScenarioRule<CheckKeysActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activeActivityRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activeActivityRule)
+    .around(ScreenshotTestRule())
 
   /**
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.
@@ -62,8 +63,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -78,8 +80,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -96,8 +99,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysWithSamePasswordThirdCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -113,8 +117,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysFourthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(1)
@@ -130,8 +135,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseTwoKeysFifthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(1)
@@ -147,9 +153,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -165,9 +172,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -183,9 +191,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysThirdCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -203,9 +212,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysFourthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -223,9 +233,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -241,9 +252,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysSixthCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -259,9 +271,10 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseThreeKeysSeventhCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(2)
@@ -280,10 +293,11 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -300,10 +314,11 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testUseFourKeysSecondCombination() {
     val keysPaths = arrayOf(
-        "pgp/key_testing@denbond7.com_keyA_strong.asc",
-        "pgp/key_testing@denbond7.com_keyB_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_default.asc",
-        "pgp/key_testing@denbond7.com_keyC_strong.asc")
+      "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
+      "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_default.asc",
+      "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
+    )
     launchActivity(keysPaths)
 
     checkKeysTitleAtStart(3)
@@ -320,9 +335,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleSingleBinaryKeyFromFile() {
     val keysPaths = arrayOf("pgp/keys/single_prv_key_binary.key")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(1, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(1, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -331,9 +346,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyBinaryKeysFromFile() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_binary.key")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -342,9 +357,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyBinaryKeysPrvAndPubFromFile() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_binary.key")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(5, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(5, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -353,9 +368,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleSingleArmoredKeyFromFile() {
     val keysPaths = arrayOf("pgp/keys/single_prv_key_armored.asc")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(1, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(1, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -365,9 +380,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileOwnHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_own_header.asc")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -377,9 +392,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileSingleHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_single_header.asc")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -390,9 +405,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileOwnWithSingleHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_own_with_single_header.asc")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(10, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -402,9 +417,9 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredPrvPubKeysFromFileOwnHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_armored_own_header.asc")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(6, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(6, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
   /**
@@ -415,19 +430,22 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   @Test
   fun testSubTitleManyArmoredPrvPubKeysFromFileOwnWithSingleHeaderdd() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_armored_own_with_single_header.asc")
-    launchActivity(keysPaths, KeyDetails.Type.FILE)
+    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
 
-    checkKeysTitleAtStart(4, keysPaths, KeyDetails.Type.FILE)
+    checkKeysTitleAtStart(4, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
-  private fun launchActivity(keysPaths: Array<String>, type: KeyDetails.Type = KeyDetails.Type.EMAIL) {
-    activeActivityRule.launch(getStartCheckKeysActivityIntent(keysPaths, type))
+  private fun launchActivity(
+    keysPaths: Array<String>,
+    sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
+  ) {
+    activeActivityRule.launch(getStartCheckKeysActivityIntent(keysPaths, sourceType))
     registerAllIdlingResources()
   }
 
   private fun checkSkipRemainingBackupsButton() {
     onView(withId(R.id.buttonSkipRemainingBackups))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
 
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS)
   }
@@ -439,64 +457,92 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   private fun typePassword(password: String) {
     onView(withId(R.id.editTextKeyPassword))
-        .perform(scrollTo(), typeText(password), closeSoftKeyboard())
+      .perform(scrollTo(), typeText(password), closeSoftKeyboard())
     onView(withId(R.id.buttonPositiveAction))
-        .perform(scrollTo(), click())
+      .perform(scrollTo(), click())
   }
 
-  private fun checkKeysTitle(quantityOfKeysUsed: Int, totalQuantityOfKeys: Int, quantityOfRemainingKeys: Int) {
+  private fun checkKeysTitle(
+    quantityOfKeysUsed: Int,
+    totalQuantityOfKeys: Int,
+    quantityOfRemainingKeys: Int
+  ) {
     onView(withId(R.id.textViewSubTitle))
-        .check(matches(isDisplayed()))
-        .check(matches(withText(getQuantityString(R.plurals.not_recovered_all_keys,
-            quantityOfRemainingKeys, quantityOfKeysUsed, totalQuantityOfKeys, quantityOfRemainingKeys))))
+      .check(matches(isDisplayed()))
+      .check(
+        matches(
+          withText(
+            getQuantityString(
+              R.plurals.not_recovered_all_keys,
+              quantityOfRemainingKeys,
+              quantityOfKeysUsed,
+              totalQuantityOfKeys,
+              quantityOfRemainingKeys
+            )
+          )
+        )
+      )
   }
 
-  private fun checkKeysTitleAtStart(expectedKeyCount: Int, keysPaths: Array<String>? = null,
-                                    type: KeyDetails.Type = KeyDetails.Type.EMAIL) {
+  private fun checkKeysTitleAtStart(
+    expectedKeyCount: Int, keysPaths: Array<String>? = null,
+    sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
+  ) {
     val text: String
-    when (type) {
-      KeyDetails.Type.FILE -> {
+    when (sourceType) {
+      KeyImportDetails.SourceType.FILE -> {
         assert(keysPaths?.size == 1)
         val fileName = FilenameUtils.getName(keysPaths?.first())
-        text = getQuantityString(R.plurals.file_contains_some_amount_of_keys,
-            expectedKeyCount, fileName, expectedKeyCount)
+        text = getQuantityString(
+          R.plurals.file_contains_some_amount_of_keys,
+          expectedKeyCount, fileName, expectedKeyCount
+        )
       }
       else -> {
-        text = getQuantityString(R.plurals.found_backup_of_your_account_key,
-            expectedKeyCount, expectedKeyCount)
+        text = getQuantityString(
+          R.plurals.found_backup_of_your_account_key,
+          expectedKeyCount, expectedKeyCount
+        )
       }
     }
 
     onView(withId(R.id.textViewSubTitle))
-        .check(matches(isDisplayed()))
-        .check(matches(withText(text)))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(text)))
   }
 
-  private fun getStartCheckKeysActivityIntent(keysPaths: Array<String>, type: KeyDetails.Type = KeyDetails.Type.EMAIL): Intent {
+  private fun getStartCheckKeysActivityIntent(
+    keysPaths: Array<String>,
+    sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
+  ): Intent {
     val keyDetailsList = PrivateKeysManager.getKeysFromAssets(keysPaths, true)
 
     val bottomTitle: String
-    when (type) {
-      KeyDetails.Type.FILE -> {
+    when (sourceType) {
+      KeyImportDetails.SourceType.FILE -> {
         assert(keysPaths.size == 1)
         val fileName = FilenameUtils.getName(keysPaths.first())
-        bottomTitle = getQuantityString(R.plurals.file_contains_some_amount_of_keys,
-            keyDetailsList.size, fileName, keyDetailsList.size)
+        bottomTitle = getQuantityString(
+          R.plurals.file_contains_some_amount_of_keys,
+          keyDetailsList.size, fileName, keyDetailsList.size
+        )
       }
       else -> {
-        bottomTitle = getQuantityString(R.plurals.found_backup_of_your_account_key,
-            keyDetailsList.size, keyDetailsList.size)
+        bottomTitle = getQuantityString(
+          R.plurals.found_backup_of_your_account_key,
+          keyDetailsList.size, keyDetailsList.size
+        )
       }
     }
 
     return CheckKeysActivity.newIntent(
-        context = getTargetContext(),
-        privateKeys = keyDetailsList,
-        type = type,
-        subTitle = bottomTitle,
-        positiveBtnTitle = getTargetContext().getString(R.string.continue_),
-        negativeBtnTitle = getTargetContext().getString(R.string.choose_another_key),
-        isExtraImportOpt = type != KeyDetails.Type.EMAIL
+      context = getTargetContext(),
+      privateKeys = keyDetailsList,
+      sourceType = sourceType,
+      subTitle = bottomTitle,
+      positiveBtnTitle = getTargetContext().getString(R.string.continue_),
+      negativeBtnTitle = getTargetContext().getString(R.string.choose_another_key),
+      isExtraImportOpt = sourceType != KeyImportDetails.SourceType.EMAIL
     )
   }
 }

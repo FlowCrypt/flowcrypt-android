@@ -73,9 +73,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     LogsUtil.d(TAG, "onHandleWork")
 
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    val outgoingMsgInfo = intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
+    val outgoingMsgInfo =
+      intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
         ?: return
-    val accountEntity = roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.toLowerCase(Locale.US))
+    val accountEntity =
+      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.toLowerCase(Locale.US))
         ?: return
 
     val uid = outgoingMsgInfo.uid
@@ -83,8 +85,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     val label = JavaEmailConstants.FOLDER_OUTBOX
 
     if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
-      ExceptionUtil.handleError(ForceHandlingException(
-          IllegalStateException("Message with the same uid is already exists")))
+      ExceptionUtil.handleError(
+        ForceHandlingException(
+          IllegalStateException("Message with the same uid is already exists")
+        )
+      )
       return
     }
 
@@ -95,9 +100,9 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       updateContactsLastUseDateTime(outgoingMsgInfo)
 
       val msg = EmailUtil.genMessage(
-          context = applicationContext,
-          accountEntity = accountEntity,
-          outgoingMsgInfo = outgoingMsgInfo
+        context = applicationContext,
+        accountEntity = accountEntity,
+        outgoingMsgInfo = outgoingMsgInfo
       )
 
       val attsCacheDir = getAttsCacheDir()
@@ -108,12 +113,13 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
       //todo-denbond7 need to think about that. It'll be better to store a message as a file
       val msgEntity = prepareMessageEntity(
-          accountEntity = accountEntity,
-          msgInfo = outgoingMsgInfo,
-          generatedUID = uid,
-          msg = msg,
-          rawMsg = String(out.toByteArray()),
-          attsCacheDir = msgAttsCacheDir)
+        accountEntity = accountEntity,
+        msgInfo = outgoingMsgInfo,
+        generatedUID = uid,
+        msg = msg,
+        rawMsg = String(out.toByteArray()),
+        attsCacheDir = msgAttsCacheDir
+      )
       newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
       if (newMsgId > 0) {
@@ -134,7 +140,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
         if (outgoingMsgInfo.forwardedAtts?.isEmpty() == true) {
           val insertedMsgEntity = roomDatabase.msgDao().getMsg(
-              msgEntity.email, msgEntity.folder, msgEntity.uid)
+            msgEntity.email, msgEntity.folder, msgEntity.uid
+          )
           insertedMsgEntity?.let {
             roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
             MessagesSenderWorker.enqueue(applicationContext)
@@ -148,7 +155,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       ExceptionUtil.handleError(ForceHandlingException(e))
 
       var msgEntity = roomDatabase.msgDao().getMsg(email, label, uid)
-          ?: MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
+        ?: MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
 
       if (newMsgId <= 0) {
         newMsgId = roomDatabase.msgDao().insert(msgEntity)
@@ -158,26 +165,34 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       if (newMsgId > 0) {
         when (e) {
           is NoKeyAvailableException -> {
-            roomDatabase.msgDao().update(msgEntity.copy(
+            roomDatabase.msgDao().update(
+              msgEntity.copy(
                 state = MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
                 errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
-            ))
+              )
+            )
           }
 
           else -> {
-            roomDatabase.msgDao().update(msgEntity.copy(
+            roomDatabase.msgDao().update(
+              msgEntity.copy(
                 state = MessageState.ERROR_DURING_CREATION.value,
                 errorMsg = e.message
-            ))
+              )
+            )
           }
         }
       } else {
         ExceptionUtil.handleError(IllegalStateException("An error occurred during inserting a new message"))
       }
 
-      val failedOutgoingMsgsCount = roomDatabase.msgDao().getFailedOutgoingMsgsCount(accountEntity.email)
+      val failedOutgoingMsgsCount =
+        roomDatabase.msgDao().getFailedOutgoingMsgsCount(accountEntity.email)
       if (failedOutgoingMsgsCount > 0) {
-        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(accountEntity, failedOutgoingMsgsCount)
+        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(
+          accountEntity,
+          failedOutgoingMsgsCount
+        )
       }
     }
 
@@ -196,38 +211,50 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     return attsCacheDir
   }
 
-  private fun updateOutgoingMsgCount(email: String, accountType: String?, roomDatabase: FlowCryptRoomDatabase) {
+  private fun updateOutgoingMsgCount(
+    email: String,
+    accountType: String?,
+    roomDatabase: FlowCryptRoomDatabase
+  ) {
     val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgs(email).size
-    val outboxLabel = roomDatabase.labelDao().getLabel(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
+    val outboxLabel =
+      roomDatabase.labelDao().getLabel(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {
       roomDatabase.labelDao().update(it.copy(messagesTotal = outgoingMsgCount))
     }
   }
 
-  private fun prepareMessageEntity(accountEntity: AccountEntity, msgInfo: OutgoingMessageInfo, generatedUID: Long,
-                                   msg: Message, rawMsg: String, attsCacheDir: File): MessageEntity {
+  private fun prepareMessageEntity(
+    accountEntity: AccountEntity, msgInfo: OutgoingMessageInfo, generatedUID: Long,
+    msg: Message, rawMsg: String, attsCacheDir: File
+  ): MessageEntity {
 
-    val messageEntity = MessageEntity.genMsgEntity(accountEntity.email,
-        JavaEmailConstants.FOLDER_OUTBOX, msg, generatedUID, false)
+    val messageEntity = MessageEntity.genMsgEntity(
+      accountEntity.email,
+      JavaEmailConstants.FOLDER_OUTBOX, msg, generatedUID, false
+    )
 
     val hasAtts = msgInfo.atts?.isNotEmpty() == true || msgInfo.forwardedAtts?.isNotEmpty() == true
     val isEncrypted = msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
-    val msgStateValue = if (msgInfo.messageType == MessageType.FORWARD) MessageState.NEW_FORWARDED.value else MessageState.NEW.value
+    val msgStateValue =
+      if (msgInfo.messageType == MessageType.FORWARD) MessageState.NEW_FORWARDED.value else MessageState.NEW.value
 
     return messageEntity.copy(
-        hasAttachments = hasAtts,
-        rawMessageWithoutAttachments = rawMsg,
-        flags = MessageFlag.SEEN.value,
-        isEncrypted = isEncrypted,
-        state = msgStateValue,
-        attachmentsDirectory = attsCacheDir.name
+      hasAttachments = hasAtts,
+      rawMessageWithoutAttachments = rawMsg,
+      flags = MessageFlag.SEEN.value,
+      isEncrypted = isEncrypted,
+      state = msgStateValue,
+      attachmentsDirectory = attsCacheDir.name
     )
   }
 
-  private fun addAttsToCache(roomDatabase: FlowCryptRoomDatabase, accountEntity: AccountEntity,
-                             outgoingMsgInfo: OutgoingMessageInfo,
-                             uid: Long, attsCacheDir: File) {
+  private fun addAttsToCache(
+    roomDatabase: FlowCryptRoomDatabase, accountEntity: AccountEntity,
+    outgoingMsgInfo: OutgoingMessageInfo,
+    uid: Long, attsCacheDir: File
+  ) {
     val cachedAtts = ArrayList<AttachmentInfo>()
     var pubKeys: List<String>? = null
 
@@ -235,10 +262,13 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val senderEmail = outgoingMsgInfo.from
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
       pubKeys = SecurityUtils.getRecipientsPubKeys(applicationContext, recipients)
-      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(applicationContext,
-          accountEntity, senderEmail)
-      pubKeys.add(senderKeyDetails.publicKey
-          ?: throw IllegalStateException("Sender pub key not found"))
+      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(
+        applicationContext,
+        accountEntity, senderEmail
+      )
+      pubKeys.add(
+        senderKeyDetails.publicKey
+      )
     }
 
     if (outgoingMsgInfo.atts?.isNotEmpty() == true) {
@@ -269,23 +299,33 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           }
 
           if (att.isEncryptionAllowed &&
-              outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+            outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
+          ) {
             val fileName = att.getSafeName() + Constants.PGP_FILE_EXT
             var encryptedTempFile = File(attsCacheDir, fileName)
 
             if (encryptedTempFile.exists()) {
-              encryptedTempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, encryptedTempFile.name)
+              encryptedTempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(
+                attsCacheDir,
+                encryptedTempFile.name
+              )
             }
             requireNotNull(pubKeys)
 
-            PgpEncrypt.encryptAndOrSign(originalFileInputStream, encryptedTempFile.outputStream(), pubKeys)
-            val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile)
+            PgpEncrypt.encryptAndOrSign(
+              originalFileInputStream,
+              encryptedTempFile.outputStream(),
+              pubKeys
+            )
+            val uri =
+              FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile)
             att.uri = uri
             att.name = encryptedTempFile.name
           } else {
             var cachedAtt = File(attsCacheDir, att.getSafeName())
             if (cachedAtt.exists()) {
-              cachedAtt = FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
+              cachedAtt =
+                FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
             }
 
             FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
@@ -295,7 +335,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
           cachedAtts.add(att)
           if (origFileUri != null) {
-            if (Constants.FILE_PROVIDER_AUTHORITY.equals(origFileUri.authority!!, ignoreCase = true)) {
+            if (Constants.FILE_PROVIDER_AUTHORITY.equals(
+                origFileUri.authority!!,
+                ignoreCase = true
+              )
+            ) {
               contentResolver.delete(origFileUri, null, null)
             }
           }
@@ -350,8 +394,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
   companion object {
     private val EXTRA_KEY_OUTGOING_MESSAGE_INFO =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_OUTGOING_MESSAGE_INFO",
-            PrepareOutgoingMessagesJobIntentService::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_OUTGOING_MESSAGE_INFO",
+        PrepareOutgoingMessagesJobIntentService::class.java
+      )
     private val TAG = PrepareOutgoingMessagesJobIntentService::class.java.simpleName
 
     /**
@@ -365,8 +411,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         val intent = Intent(context, PrepareOutgoingMessagesJobIntentService::class.java)
         intent.putExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO, outgoingMsgInfo)
 
-        enqueueWork(context, PrepareOutgoingMessagesJobIntentService::class.java,
-            JobIdManager.JOB_TYPE_PREPARE_OUT_GOING_MESSAGE, intent)
+        enqueueWork(
+          context, PrepareOutgoingMessagesJobIntentService::class.java,
+          JobIdManager.JOB_TYPE_PREPARE_OUT_GOING_MESSAGE, intent
+        )
       }
     }
   }

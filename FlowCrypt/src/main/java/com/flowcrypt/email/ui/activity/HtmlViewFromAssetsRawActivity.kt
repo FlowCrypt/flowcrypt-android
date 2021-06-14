@@ -45,9 +45,15 @@ class HtmlViewFromAssetsRawActivity : BaseBackStackActivity() {
   companion object {
 
     val EXTRA_KEY_ACTIVITY_TITLE =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIVITY_TITLE", HtmlViewFromAssetsRawActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_ACTIVITY_TITLE",
+        HtmlViewFromAssetsRawActivity::class.java
+      )
     val EXTRA_KEY_HTML_RESOURCES_ID =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_HTML_RESOURCES_ID", HtmlViewFromAssetsRawActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_HTML_RESOURCES_ID",
+        HtmlViewFromAssetsRawActivity::class.java
+      )
 
     fun newIntent(context: Context, title: String, pathToHtmlInAssets: String): Intent {
       val intent = Intent(context, HtmlViewFromAssetsRawActivity::class.java)

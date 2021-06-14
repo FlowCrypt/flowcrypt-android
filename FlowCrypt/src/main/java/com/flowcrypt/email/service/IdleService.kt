@@ -19,7 +19,7 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.lang.toHex
+import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsAddedWorker
@@ -112,11 +112,12 @@ class IdleService : LifecycleService() {
 
   private fun observeActiveAccountChanges() {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(this)
-    val activeAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD().switchMap { accountEntity ->
-      liveData {
-        emit(AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+    val activeAccountLiveData: LiveData<AccountEntity?> =
+      roomDatabase.accountDao().getActiveAccountLD().switchMap { accountEntity ->
+        liveData {
+          emit(AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+        }
       }
-    }
 
     activeAccountLiveData.observe(this, {
       cachedAccountEntity = it
@@ -128,41 +129,66 @@ class IdleService : LifecycleService() {
     cleanPool()
     stopIdleThread()
 
-    idleSyncRunnable = IdleSyncRunnable(applicationContext, accountEntity, object : IdleSyncRunnable.ActionsListener {
-      override fun syncFolderState() {
-        InboxIdleSyncWorker.enqueue(applicationContext)
-      }
-
-      override fun messageChanged(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageChangedEvent?) {
-        LogsUtil.d(TAG, "messageChanged")
-        lifecycleScope.launch {
-          handleMsgChangedEvent(e, accountEntity, localFolder, remoteFolder)
+    idleSyncRunnable = IdleSyncRunnable(
+      applicationContext,
+      accountEntity,
+      object : IdleSyncRunnable.ActionsListener {
+        override fun syncFolderState() {
+          InboxIdleSyncWorker.enqueue(applicationContext)
         }
-      }
 
-      override fun messagesAdded(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageCountEvent?) {
-        LogsUtil.d(TAG, "messagesAdded: " + e?.messages?.size)
-        InboxIdleMsgsAddedWorker.enqueue(applicationContext)
-      }
+        override fun messageChanged(
+          accountEntity: AccountEntity,
+          localFolder: LocalFolder,
+          remoteFolder: IMAPFolder,
+          e: MessageChangedEvent?
+        ) {
+          LogsUtil.d(TAG, "messageChanged")
+          lifecycleScope.launch {
+            handleMsgChangedEvent(e, accountEntity, localFolder, remoteFolder)
+          }
+        }
 
-      override fun messagesRemoved(accountEntity: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, e: MessageCountEvent?) {
-        LogsUtil.d(TAG, "messagesRemoved")
-        InboxIdleMsgsRemovedWorker.enqueue(applicationContext)
-      }
-    })
+        override fun messagesAdded(
+          accountEntity: AccountEntity,
+          localFolder: LocalFolder,
+          remoteFolder: IMAPFolder,
+          e: MessageCountEvent?
+        ) {
+          LogsUtil.d(TAG, "messagesAdded: " + e?.messages?.size)
+          InboxIdleMsgsAddedWorker.enqueue(applicationContext)
+        }
+
+        override fun messagesRemoved(
+          accountEntity: AccountEntity,
+          localFolder: LocalFolder,
+          remoteFolder: IMAPFolder,
+          e: MessageCountEvent?
+        ) {
+          LogsUtil.d(TAG, "messagesRemoved")
+          InboxIdleMsgsRemovedWorker.enqueue(applicationContext)
+        }
+      })
 
     idleSyncRunnable?.let { runnable ->
       idleFuture = if (accountEntity.useAPI) null else idleExecutorService.submit(runnable)
     }
   }
 
-  private suspend fun handleMsgChangedEvent(e: MessageChangedEvent?, accountEntity: AccountEntity,
-                                            localFolder: LocalFolder, remoteFolder: IMAPFolder) = withContext(Dispatchers.IO) {
+  private suspend fun handleMsgChangedEvent(
+    e: MessageChangedEvent?, accountEntity: AccountEntity,
+    localFolder: LocalFolder, remoteFolder: IMAPFolder
+  ) = withContext(Dispatchers.IO) {
     val msg = e?.message
     if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
       try {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-        roomDatabase.msgDao().updateLocalMsgFlags(accountEntity.email, localFolder.fullName, remoteFolder.getUID(msg), msg.flags)
+        roomDatabase.msgDao().updateLocalMsgFlags(
+          accountEntity.email,
+          localFolder.fullName,
+          remoteFolder.getUID(msg),
+          msg.flags
+        )
 
         if (!GeneralUtil.isAppForegrounded()) {
           if (msg.flags.contains(Flags.Flag.SEEN)) {

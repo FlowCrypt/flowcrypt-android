@@ -9,10 +9,8 @@ import android.content.Context
 import android.net.Uri
 import android.os.AsyncTask
 import androidx.lifecycle.LiveData
-import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
-import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
@@ -22,8 +20,7 @@ import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
 /**
  * @author DenBond7
  */
-//todo-denbond7 It's old code. Need to remove this and replace with a better approach. We use it
-// only for debugging
+//todo-denbond7 It's old code. We should drop this file
 @Deprecated("We should drop this file")
 object RequestsManager {
   private var data: SingleLiveEvent<NodeResponseWrapper<*>> = SingleLiveEvent()
@@ -37,24 +34,22 @@ object RequestsManager {
   }
 
   fun encryptMsg(requestCode: Int, msg: String) {
-    //load(requestCode, EncryptMsgRequest(msg, listOf(*TestData.mixedPubKeys)))
+
   }
 
-  fun decryptMsg(requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
-                 prvKeys: Array<KeyEntity>, isEmail: Boolean = false) {
-    load(requestCode, ParseDecryptMsgRequest(data = data, uri = uri, keyEntities = listOf(*prvKeys), isEmail = isEmail))
+  fun decryptMsg(
+    requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
+    prvKeys: Array<KeyEntity>, isEmail: Boolean = false
+  ) {
+
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
-    //load(requestCode, EncryptFileRequest(data, "file.txt", listOf(*TestData.mixedPubKeys)))
+
   }
 
   fun encryptFile(requestCode: Int, context: Context, fileUri: Uri) {
-    //load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", listOf(*TestData.mixedPubKeys)))
-  }
 
-  fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<KeyEntity>) {
-    load(requestCode, DecryptFileRequest(encryptedData, listOf(*prvKeys)))
   }
 
   private fun load(requestCode: Int, nodeRequest: NodeRequest) {
@@ -62,7 +57,8 @@ object RequestsManager {
   }
 
   private class Worker(
-      private val data: SingleLiveEvent<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void,
+    private val data: SingleLiveEvent<NodeResponseWrapper<*>>
+  ) : AsyncTask<NodeRequestWrapper<*>, Void,
       NodeResponseWrapper<*>>() {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {

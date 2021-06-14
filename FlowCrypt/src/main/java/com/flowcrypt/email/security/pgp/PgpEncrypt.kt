@@ -9,12 +9,17 @@ import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.DocumentSignatureType
+import org.pgpainless.encryption_signing.EncryptionOptions
+import org.pgpainless.encryption_signing.ProducerOptions
+import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+
 
 /**
  * @author Denis Bondarenko
@@ -23,27 +28,32 @@ import java.io.OutputStream
  *         E-mail: DenBond7@gmail.com
  */
 object PgpEncrypt {
-  fun encryptAndOrSignMsg(msg: String,
-                          pubKeys: List<String>,
-                          prvKeys: List<String>? = null,
-                          secretKeyRingProtector: SecretKeyRingProtector? = null): String {
+  fun encryptAndOrSignMsg(
+    msg: String,
+    pubKeys: List<String>,
+    prvKeys: List<String>? = null,
+    secretKeyRingProtector: SecretKeyRingProtector? = null
+  ): String {
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
     encryptAndOrSign(
-        srcInputStream = ByteArrayInputStream(msg.toByteArray()),
-        destOutputStream = outputStreamForEncryptedSource,
-        pubKeys = pubKeys,
-        prvKeys = prvKeys,
-        secretKeyRingProtector = secretKeyRingProtector,
-        doArmor = true)
+      srcInputStream = ByteArrayInputStream(msg.toByteArray()),
+      destOutputStream = outputStreamForEncryptedSource,
+      pubKeys = pubKeys,
+      prvKeys = prvKeys,
+      secretKeyRingProtector = secretKeyRingProtector,
+      doArmor = true
+    )
     return String(outputStreamForEncryptedSource.toByteArray())
   }
 
-  fun encryptAndOrSign(srcInputStream: InputStream,
-                       destOutputStream: OutputStream,
-                       pubKeys: List<String>,
-                       prvKeys: List<String>? = null,
-                       secretKeyRingProtector: SecretKeyRingProtector? = null,
-                       doArmor: Boolean = false) {
+  fun encryptAndOrSign(
+    srcInputStream: InputStream,
+    destOutputStream: OutputStream,
+    pubKeys: List<String>,
+    prvKeys: List<String>? = null,
+    secretKeyRingProtector: SecretKeyRingProtector? = null,
+    doArmor: Boolean = false
+  ) {
     val pubKeysStream = ByteArrayInputStream(pubKeys.joinToString(separator = "\n").toByteArray())
     val pgpPublicKeyRingCollection = pubKeysStream.use {
       ArmoredInputStream(it).use { armoredInputStream ->
@@ -63,37 +73,51 @@ object PgpEncrypt {
     }
 
     encryptAndOrSign(
-        srcInputStream = srcInputStream,
-        destOutputStream = destOutputStream,
-        pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-        pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
-        secretKeyRingProtector = secretKeyRingProtector,
-        doArmor = doArmor
+      srcInputStream = srcInputStream,
+      destOutputStream = destOutputStream,
+      pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
+      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      secretKeyRingProtector = secretKeyRingProtector,
+      doArmor = doArmor
     )
   }
 
   @Throws(IOException::class)
-  fun encryptAndOrSign(srcInputStream: InputStream, destOutputStream: OutputStream,
-                       pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
-                       pgpSecretKeyRingCollection: PGPSecretKeyRingCollection? = null,
-                       secretKeyRingProtector: SecretKeyRingProtector? = null,
-                       doArmor: Boolean = false) {
+  fun encryptAndOrSign(
+    srcInputStream: InputStream, destOutputStream: OutputStream,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
+    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection? = null,
+    secretKeyRingProtector: SecretKeyRingProtector? = null,
+    doArmor: Boolean = false
+  ) {
     srcInputStream.use { srcStream ->
       destOutputStream.use { outStream ->
-        val builder = PGPainless.encryptAndOrSign()
-            .onOutputStream(outStream)
-            .toRecipients(pgpPublicKeyRingCollection)
-            .usingSecureAlgorithms()
-
-        if (pgpSecretKeyRingCollection != null) {
-          val keyRings = pgpSecretKeyRingCollection.keyRings.asSequence().toList().toTypedArray()
-          secretKeyRingProtector?.let { builder.signWith(it, *keyRings) }
+        val encOpt = EncryptionOptions().apply {
+          pgpPublicKeyRingCollection.forEach {
+            addRecipient(it)
+          }
         }
 
-        val out = if (doArmor) builder.doNotSign().asciiArmor() else builder.doNotSign().noArmor()
-        out.use { encryptionStream ->
-          srcStream.copyTo(encryptionStream)
-        }
+        val producerOptions: ProducerOptions =
+          if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
+            ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
+              pgpSecretKeyRingCollection.forEach {
+                addInlineSignature(
+                  secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
+                )
+              }
+            })
+          } else {
+            ProducerOptions.encrypt(encOpt)
+          }
+
+        PGPainless.encryptAndOrSign()
+          .onOutputStream(outStream)
+          .withOptions(
+            producerOptions.setAsciiArmor(doArmor)
+          ).use { encryptionStream ->
+            srcStream.copyTo(encryptionStream)
+          }
       }
     }
   }

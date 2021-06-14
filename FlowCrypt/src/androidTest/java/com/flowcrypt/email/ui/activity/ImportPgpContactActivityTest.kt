@@ -67,95 +67,98 @@ class ImportPgpContactActivityTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ImportPgpContactActivity>(
-      intent = ImportPgpContactActivity.newIntent(
-          context = getTargetContext(),
-          accountEntity = addAccountToDatabaseRule.account))
+    intent = ImportPgpContactActivity.newIntent(
+      context = getTargetContext(),
+      accountEntity = addAccountToDatabaseRule.account
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(addAccountToDatabaseRule)
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(addAccountToDatabaseRule)
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testFetchKeyFromAttesterForExistedUser() {
     onView(withId(R.id.editTextKeyIdOrEmail))
-        .perform(
-            scrollTo(),
-            clearText(),
-            typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
-            closeSoftKeyboard()
-        )
+      .perform(
+        scrollTo(),
+        clearText(),
+        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        closeSoftKeyboard()
+      )
     onView(withId(R.id.iBSearchKey))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(containsString(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testFetchKeyFromAttesterForExistedUserImeAction() {
     onView(withId(R.id.editTextKeyIdOrEmail))
-        .perform(
-            scrollTo(),
-            clearText(),
-            typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
-            closeSoftKeyboard(),
-            pressImeActionButton()
-        )
+      .perform(
+        scrollTo(),
+        clearText(),
+        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        closeSoftKeyboard(),
+        pressImeActionButton()
+      )
 
     onView(withText(containsString(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testFetchKeyFromAttesterForNotExistedUser() {
     onView(withId(R.id.editTextKeyIdOrEmail))
-        .perform(
-            scrollTo(),
-            clearText(),
-            typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
-            closeSoftKeyboard()
-        )
+      .perform(
+        scrollTo(),
+        clearText(),
+        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        closeSoftKeyboard()
+      )
     onView(withId(R.id.iBSearchKey))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     //due to realization of MockWebServer I can't produce the same response.
-    isToastDisplayed(decorView, "API error: code = 404, message = ")
+    isToastDisplayed("API error: code = 404, message = ")
   }
 
   @Test
   fun testImportKeyFromFile() {
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPublicKey)
     intending(
-        allOf(
-            hasAction(Intent.ACTION_CHOOSER),
-            hasExtra(
-                `is`(Intent.EXTRA_INTENT),
-                allOf(
-                    hasAction(Intent.ACTION_OPEN_DOCUMENT),
-                    hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
-                    hasType("*/*"))
-            )
+      allOf(
+        hasAction(Intent.ACTION_CHOOSER),
+        hasExtra(
+          `is`(Intent.EXTRA_INTENT),
+          allOf(
+            hasAction(Intent.ACTION_OPEN_DOCUMENT),
+            hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+            hasType("*/*")
+          )
         )
+      )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
     onView(withId(R.id.buttonLoadFromFile))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(containsString(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(containsString(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   companion object {
@@ -165,40 +168,44 @@ class ImportPgpContactActivityTest : BaseTest() {
     @get:ClassRule
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
-        object : Dispatcher() {
-          override fun dispatch(request: RecordedRequest): MockResponse {
-            if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
-              val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+      object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+            val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
-              when {
-                TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
-                    lastSegment, true) -> {
-                  return MockResponse()
-                      .setStatus("HTTP/1.1 404 Not Found")
-                      .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
-                }
+            when {
+              TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
+                lastSegment, true
+              ) -> {
+                return MockResponse()
+                  .setStatus("HTTP/1.1 404 Not Found")
+                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+              }
 
-                TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
-                    lastSegment, true) -> {
-                  return MockResponse()
-                      .setResponseCode(200)
-                      .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
-                }
+              TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
+                lastSegment, true
+              ) -> {
+                return MockResponse()
+                  .setResponseCode(200)
+                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
               }
             }
-
-            return MockResponse().setResponseCode(404)
           }
-        })
+
+          return MockResponse().setResponseCode(404)
+        }
+      })
 
     @BeforeClass
     @JvmStatic
     fun createResources() {
       publicKey = TestGeneralUtil.readFileFromAssetsAsString(
-          "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc")
+        "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc"
+      )
       fileWithPublicKey = TestGeneralUtil.createFileAndFillWithContent(
-          fileName = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
-          fileText = publicKey)
+        fileName = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
+        fileText = publicKey
+      )
     }
 
     @AfterClass

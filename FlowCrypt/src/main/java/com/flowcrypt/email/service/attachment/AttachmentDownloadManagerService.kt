@@ -32,48 +32,45 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
-import com.flowcrypt.email.api.retrofit.node.NodeService
-import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
-import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.lang.toHex
+import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.FlowCryptLimitException
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.HashMap
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import javax.mail.Folder
 
 /**
- * This service will be use to download email attachments. To start load an attachment just run service via the intent
+ * This service can be used to download email attachments.
+ * To start loading an attachment just run service via the intent
  * [AttachmentDownloadManagerService.newIntent]
  *
+ * This service provides the following:
  *
- * This service can do:
- *
- *
- *
- *  * Can download simultaneously 3 attachments. The other attachments will be added to the queue.
+ *  * Can download simultaneously 3 attachments. Other attachments will be added to the queue.
  *  * All loading attachments will visible in the status bar
- *  * The user can stop loading an attachment at any time.
+ *  * A user can stop loading an attachment at any time.
  *
  *
  * @author Denis Bondarenko
@@ -84,17 +81,13 @@ import javax.mail.Folder
 class AttachmentDownloadManagerService : Service() {
 
   @Volatile
-  private var looper: Looper? = null
+  private lateinit var looper: Looper
 
   @Volatile
   private lateinit var workerHandler: ServiceWorkerHandler
 
-  private val replyMessenger: Messenger
+  private val replyMessenger: Messenger = Messenger(ReplyHandler(this))
   private lateinit var attsNotificationManager: AttachmentNotificationManager
-
-  init {
-    this.replyMessenger = Messenger(ReplyHandler(this))
-  }
 
   override fun onCreate() {
     super.onCreate()
@@ -104,7 +97,7 @@ class AttachmentDownloadManagerService : Service() {
     handlerThread.start()
 
     looper = handlerThread.looper
-    workerHandler = ServiceWorkerHandler(looper!!, replyMessenger)
+    workerHandler = ServiceWorkerHandler(looper, replyMessenger)
     attsNotificationManager = AttachmentNotificationManager(applicationContext)
   }
 
@@ -182,10 +175,13 @@ class AttachmentDownloadManagerService : Service() {
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private class ReplyHandler(attDownloadManagerService: AttachmentDownloadManagerService)
-    : Handler() {
+  //todo-denbond7 need to fix deprecation
+  private class ReplyHandler(
+    attDownloadManagerService: AttachmentDownloadManagerService
+  ) : Handler() {
 
-    private val weakRef: WeakReference<AttachmentDownloadManagerService> = WeakReference(attDownloadManagerService)
+    private val weakRef: WeakReference<AttachmentDownloadManagerService> =
+      WeakReference(attDownloadManagerService)
 
     override fun handleMessage(message: Message) {
       if (weakRef.get() != null) {
@@ -196,11 +192,16 @@ class AttachmentDownloadManagerService : Service() {
             = message.obj as DownloadAttachmentTaskResult
 
         when (message.what) {
-          MESSAGE_EXCEPTION_HAPPENED -> notificationManager?.errorHappened(attDownloadManagerService, attInfo!!,
-              exception!!)
+          MESSAGE_EXCEPTION_HAPPENED -> notificationManager?.errorHappened(
+            attDownloadManagerService, attInfo!!,
+            exception!!
+          )
 
           MESSAGE_TASK_ALREADY_EXISTS -> {
-            val msg = attDownloadManagerService?.getString(R.string.template_attachment_already_loading, attInfo!!.name)
+            val msg = attDownloadManagerService?.getString(
+              R.string.template_attachment_already_loading,
+              attInfo!!.name
+            )
             Toast.makeText(attDownloadManagerService, msg, Toast.LENGTH_SHORT).show()
           }
 
@@ -212,8 +213,10 @@ class AttachmentDownloadManagerService : Service() {
           MESSAGE_ATTACHMENT_ADDED_TO_QUEUE ->
             notificationManager?.attachmentAddedToLoadQueue(attDownloadManagerService, attInfo!!)
 
-          MESSAGE_PROGRESS -> notificationManager?.updateLoadingProgress(attDownloadManagerService, attInfo!!,
-              progressInPercentage, timeLeft)
+          MESSAGE_PROGRESS -> notificationManager?.updateLoadingProgress(
+            attDownloadManagerService, attInfo!!,
+            progressInPercentage, timeLeft
+          )
 
           MESSAGE_RELEASE_RESOURCES -> attDownloadManagerService?.looper!!.quit()
 
@@ -247,8 +250,8 @@ class AttachmentDownloadManagerService : Service() {
    * This handler will be used by the instance of [HandlerThread] to receive message from
    * the UI thread.
    */
-  private class ServiceWorkerHandler(looper: Looper, private val messenger: Messenger)
-    : Handler(looper), OnDownloadAttachmentListener {
+  private class ServiceWorkerHandler(looper: Looper, private val messenger: Messenger) :
+    Handler(looper), OnDownloadAttachmentListener {
     private val executorService: ExecutorService = Executors.newFixedThreadPool(QUEUE_SIZE)
 
     @Volatile
@@ -275,7 +278,13 @@ class AttachmentDownloadManagerService : Service() {
               attDownloadRunnable.setListener(this)
               futureMap[attInfo.uniqueStringId] = executorService.submit(attDownloadRunnable)
               val result = DownloadAttachmentTaskResult(attInfo)
-              messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_ADDED_TO_QUEUE, result))
+              messenger.send(
+                Message.obtain(
+                  null,
+                  ReplyHandler.MESSAGE_ATTACHMENT_ADDED_TO_QUEUE,
+                  result
+                )
+              )
             } else {
               taskAlreadyExists(attInfo)
             }
@@ -345,8 +354,10 @@ class AttachmentDownloadManagerService : Service() {
 
     override fun onProgress(attInfo: AttachmentInfo, progressInPercentage: Int, timeLeft: Long) {
       try {
-        val result = DownloadAttachmentTaskResult(attInfo, progressInPercentage = progressInPercentage,
-            timeLeft = timeLeft)
+        val result = DownloadAttachmentTaskResult(
+          attInfo, progressInPercentage = progressInPercentage,
+          timeLeft = timeLeft
+        )
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_PROGRESS, result))
       } catch (remoteException: RemoteException) {
         remoteException.printStackTrace()
@@ -398,20 +409,21 @@ class AttachmentDownloadManagerService : Service() {
     }
   }
 
-  private class AttDownloadRunnable(private val context: Context,
-                                    private val att: AttachmentInfo) : Runnable {
+  private class AttDownloadRunnable(
+    private val context: Context,
+    private val att: AttachmentInfo
+  ) : Runnable {
     private var listener: OnDownloadAttachmentListener? = null
     private var attTempFile: File = File.createTempFile("tmp", null, context.externalCacheDir)
 
     override fun run() {
       if (GeneralUtil.isDebugBuild()) {
-        Thread.currentThread().name = AttDownloadRunnable::class.java.simpleName + "|" + att.getSafeName()
+        Thread.currentThread().name =
+          AttDownloadRunnable::class.java.simpleName + "|" + att.getSafeName()
       }
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       try {
-        checkFileSize()
-
         if (att.uri != null) {
           val inputStream = context.contentResolver.openInputStream(att.uri!!)
           if (inputStream != null) {
@@ -427,7 +439,9 @@ class AttachmentDownloadManagerService : Service() {
         }
 
         val email = att.email ?: return
-        val account = AccountViewModel.getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getAccount(email))
+        val account = AccountViewModel.getAccountEntityWithDecryptedInfo(
+          roomDatabase.accountDao().getAccount(email)
+        )
 
         if (account == null) {
           listener?.onCanceled(this.att)
@@ -439,9 +453,14 @@ class AttachmentDownloadManagerService : Service() {
             AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
               val msg = GmailApiHelper.loadMsgFullInfo(context, account, att.uid.toHex())
               val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = att.path)
-                  ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
+                ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
 
-              GmailApiHelper.getAttInputStream(context, account, att.uid.toHex(), attPart.body.attachmentId).use { inputStream ->
+              GmailApiHelper.getAttInputStream(
+                context,
+                account,
+                att.uid.toHex(),
+                attPart.body.attachmentId
+              ).use { inputStream ->
                 handleAttachmentInputStream(inputStream)
               }
             }
@@ -452,18 +471,20 @@ class AttachmentDownloadManagerService : Service() {
           val session = OpenStoreHelper.getAttsSess(context, account)
           OpenStoreHelper.openStore(context, account, session).use { store ->
             val label = roomDatabase.labelDao().getLabel(email, account.accountType, att.folder!!)
-                ?: if (roomDatabase.accountDao().getAccount(email) == null) {
-                  listener?.onCanceled(this.att)
-                  store.close()
-                  return
-                } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
+              ?: if (roomDatabase.accountDao().getAccount(email) == null) {
+                listener?.onCanceled(this.att)
+                store.close()
+                return
+              } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
 
             store.getFolder(label.name).use { folder ->
               val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
               val msg = remoteFolder.getMessageByUID(att.uid)
-                  ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
+                ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
 
-              ImapProtocolUtil.getAttPartByPath(msg, neededPath = this.att.path)?.inputStream?.let { inputStream ->
+              ImapProtocolUtil.getAttPartByPath(
+                msg, neededPath = this.att.path
+              )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(inputStream)
               } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
             }
@@ -520,7 +541,8 @@ class AttachmentDownloadManagerService : Service() {
       requireNotNull(imageUri)
 
       //we should check maybe a file is already exist. Then we will use the file name from the system
-      val cursor = resolver.query(imageUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
+      val cursor =
+        resolver.query(imageUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
       cursor?.let {
         if (it.moveToFirst()) {
           val nameIndex = it.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
@@ -534,7 +556,12 @@ class AttachmentDownloadManagerService : Service() {
       }
       cursor?.close()
 
-      IOUtils.copy(attFile.inputStream(), resolver.openOutputStream(imageUri))
+      val srcInputStream = attFile.inputStream()
+      val destOutputStream = resolver.openOutputStream(imageUri)
+        ?: throw IllegalArgumentException("provided URI could not be opened")
+      srcInputStream.use { srcStream ->
+        destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
+      }
 
       //notify the system that the file is ready
       resolver.update(imageUri, ContentValues().apply {
@@ -559,7 +586,11 @@ class AttachmentDownloadManagerService : Service() {
       }
 
       att.name = sharedFile.name
-      IOUtils.copy(attFile.inputStream(), FileUtils.openOutputStream(sharedFile))
+      val srcInputStream = attFile.inputStream()
+      val destOutputStream = FileUtils.openOutputStream(sharedFile)
+      srcInputStream.use { srcStream ->
+        destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
+      }
       return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
     }
 
@@ -591,7 +622,8 @@ class AttachmentDownloadManagerService : Service() {
               outputStream.write(buffer, 0, numberOfReadBytes)
               count += numberOfReadBytes.toDouble()
               currentPercentage = (count / size * 100f).toInt()
-              val isUpdateNeeded = System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL
+              val isUpdateNeeded =
+                System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL
               if (currentPercentage - lastPercentage >= 1 && isUpdateNeeded) {
                 lastPercentage = currentPercentage
                 lastUpdateTime = System.currentTimeMillis()
@@ -611,23 +643,7 @@ class AttachmentDownloadManagerService : Service() {
     }
 
     /**
-     * Check is decrypted file has size not more than
-     * [Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED]. If the file greater then
-     * [Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED] we throw an exception. This is only for files
-     * with the "pgp" extension.
-     */
-    private fun checkFileSize() {
-      if ("pgp".equals(FilenameUtils.getExtension(att.name), ignoreCase = true)) {
-        if (att.encodedSize > Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED) {
-          val errorMsg = context.getString(R.string.template_warning_max_attachments_size_for_decryption,
-              FileUtils.byteCountToDisplaySize(Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED.toLong()))
-          throw FlowCryptLimitException(errorMsg)
-        }
-      }
-    }
-
-    /**
-     * Do decryption of the downloaded file if it need.
+     * Do decryption of the downloaded file if needed.
      *
      * @param context Interface to global information about an application environment;
      * @param file    The downloaded file which can be encrypted.
@@ -638,40 +654,39 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      if (!"pgp".equals(FilenameUtils.getExtension(att.name), ignoreCase = true)) {
+      if (!SecurityUtils.isEncryptedData(att.name)) {
         return file
       }
 
       FileInputStream(file).use { inputStream ->
-        val decryptedFileResult = getDecryptedFileResult(context, inputStream)
-
         val decryptedFile = File.createTempFile("tmp", null, context.externalCacheDir)
-        att.name = FilenameUtils.getBaseName(att.name)
+        val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()
+        val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(pgpSecretKeyRings)
+        val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
 
-        FileUtils.openOutputStream(decryptedFile).use { outputStream ->
-          IOUtils.write(decryptedFileResult.decryptedBytes, outputStream)
-          deleteTempFile(file)
+        try {
+          val result = PgpDecrypt.decrypt(
+            srcInputStream = inputStream,
+            destOutputStream = decryptedFile.outputStream(),
+            pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+            protector = protector
+          )
+
+          att.name = FilenameUtils.getBaseName(att.name)
+          result.fileInfo?.fileName?.let { fileName ->
+            if (att.name == null) {
+              att.name = fileName
+            }
+          }
+
           return decryptedFile
+        } catch (e: Exception) {
+          deleteTempFile(decryptedFile)
+          throw e
+        } finally {
+          deleteTempFile(file)
         }
       }
-    }
-
-    private fun getDecryptedFileResult(context: Context, inputStream: InputStream): DecryptedFileResult {
-      val keysStorage = KeysStorageImpl.getInstance(context)
-      val list = keysStorage.getAllPgpPrivateKeys()
-      val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-      val request = DecryptFileRequest(IOUtils.toByteArray(inputStream), list)
-      val response = nodeService.decryptFile(request).execute()
-      val result = response.body() ?: throw NullPointerException("Node.js returned an empty result")
-      if (result.apiError != null) {
-        var exceptionMsg = result.apiError.msg
-        if ("use_password" == result.apiError.type) {
-          exceptionMsg = context.getString(R.string.opening_password_encrypted_msg_not_implemented_yet)
-        }
-        throw Exception(exceptionMsg)
-      }
-
-      return result
     }
 
     /**
@@ -702,12 +717,18 @@ class AttachmentDownloadManagerService : Service() {
   }
 
   companion object {
-    const val ACTION_START_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + ".ACTION_START_DOWNLOAD_ATTACHMENT"
-    const val ACTION_CANCEL_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + ".ACTION_CANCEL_DOWNLOAD_ATTACHMENT"
-    const val ACTION_RETRY_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + ".ACTION_RETRY_DOWNLOAD_ATTACHMENT"
+    const val ACTION_START_DOWNLOAD_ATTACHMENT =
+      BuildConfig.APPLICATION_ID + ".ACTION_START_DOWNLOAD_ATTACHMENT"
+    const val ACTION_CANCEL_DOWNLOAD_ATTACHMENT =
+      BuildConfig.APPLICATION_ID + ".ACTION_CANCEL_DOWNLOAD_ATTACHMENT"
+    const val ACTION_RETRY_DOWNLOAD_ATTACHMENT =
+      BuildConfig.APPLICATION_ID + ".ACTION_RETRY_DOWNLOAD_ATTACHMENT"
 
     val EXTRA_KEY_ATTACHMENT_INFO =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ATTACHMENT_INFO", AttachmentDownloadManagerService::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_ATTACHMENT_INFO",
+        AttachmentDownloadManagerService::class.java
+      )
 
     private val TAG = AttachmentDownloadManagerService::class.java.simpleName
 

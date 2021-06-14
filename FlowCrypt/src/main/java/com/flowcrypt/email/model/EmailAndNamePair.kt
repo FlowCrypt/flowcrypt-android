@@ -16,10 +16,11 @@ import android.os.Parcelable
  * Time: 22:31
  * E-mail: DenBond7@gmail.com
  */
-data class EmailAndNamePair constructor(val email: String? = null, val name: String? = null) : Parcelable {
+data class EmailAndNamePair constructor(val email: String? = null, val name: String? = null) :
+  Parcelable {
   constructor(source: Parcel) : this(
-      source.readString(),
-      source.readString()
+    source.readString(),
+    source.readString()
   )
 
   override fun describeContents(): Int {
@@ -33,9 +34,10 @@ data class EmailAndNamePair constructor(val email: String? = null, val name: Str
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<EmailAndNamePair> = object : Parcelable.Creator<EmailAndNamePair> {
-      override fun createFromParcel(source: Parcel): EmailAndNamePair = EmailAndNamePair(source)
-      override fun newArray(size: Int): Array<EmailAndNamePair?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<EmailAndNamePair> =
+      object : Parcelable.Creator<EmailAndNamePair> {
+        override fun createFromParcel(source: Parcel): EmailAndNamePair = EmailAndNamePair(source)
+        override fun newArray(size: Int): Array<EmailAndNamePair?> = arrayOfNulls(size)
+      }
   }
 }

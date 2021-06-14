@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.node
 
-import java.util.*
+import java.util.Arrays
 
 class Debug {
   companion object {

@@ -28,9 +28,17 @@ class PGPContactChipSpan : ChipSpan {
    */
   var chipBackgroundColor: ColorStateList? = null
 
-  constructor(context: Context, text: CharSequence, icon: Drawable?, data: Any?) : super(context, text, icon, data)
+  constructor(context: Context, text: CharSequence, icon: Drawable?, data: Any?) : super(
+    context,
+    text,
+    icon,
+    data
+  )
 
-  constructor(context: Context, pgpContactChipSpan: PGPContactChipSpan) : super(context, pgpContactChipSpan) {
+  constructor(context: Context, pgpContactChipSpan: PGPContactChipSpan) : super(
+    context,
+    pgpContactChipSpan
+  ) {
     this.hasPgp = pgpContactChipSpan.hasPgp
     this.isExpired = pgpContactChipSpan.isExpired
   }

@@ -23,10 +23,12 @@ import com.google.gson.annotations.SerializedName
  * Time: 18:01
  * E-mail: DenBond7@gmail.com
  */
-data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id: Long = 0,
-                                                                 override var email: String? = null,
-                                                                 override val version: Int = 0,
-                                                                 private val publicKey: String) : Action {
+data class RegisterUserPublicKeyAction @JvmOverloads constructor(
+  override var id: Long = 0,
+  override var email: String? = null,
+  override val version: Int = 0,
+  private val publicKey: String
+) : Action {
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.REGISTER_USER_PUBLIC_KEY
 
@@ -46,10 +48,10 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id
   }
 
   constructor(source: Parcel) : this(
-      source.readLong(),
-      source.readString(),
-      source.readInt(),
-      source.readString()!!
+    source.readLong(),
+    source.readString(),
+    source.readInt(),
+    source.readString()!!
   )
 
   override fun describeContents(): Int {
@@ -57,19 +59,21 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeLong(id)
-        writeString(email)
-        writeInt(version)
-        writeString(publicKey)
-      }
+    with(dest) {
+      writeLong(id)
+      writeString(email)
+      writeInt(version)
+      writeString(publicKey)
+    }
 
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<RegisterUserPublicKeyAction> =
-        object : Parcelable.Creator<RegisterUserPublicKeyAction> {
-          override fun createFromParcel(source: Parcel): RegisterUserPublicKeyAction = RegisterUserPublicKeyAction(source)
-          override fun newArray(size: Int): Array<RegisterUserPublicKeyAction?> = arrayOfNulls(size)
-        }
+      object : Parcelable.Creator<RegisterUserPublicKeyAction> {
+        override fun createFromParcel(source: Parcel): RegisterUserPublicKeyAction =
+          RegisterUserPublicKeyAction(source)
+
+        override fun newArray(size: Int): Array<RegisterUserPublicKeyAction?> = arrayOfNulls(size)
+      }
   }
 }

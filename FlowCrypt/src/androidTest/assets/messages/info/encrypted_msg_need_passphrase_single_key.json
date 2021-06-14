@@ -1,0 +1,82 @@
+{
+  "encryptionType": "STANDARD",
+  "inlineSubject": "Simple encrypted message",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 14
+  },
+  "msgBlocks": [
+    {
+      "complete": true,
+      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003c/body\u003e\n  \u003c/html\u003e",
+      "type": "plainHtml"
+    },
+    {
+      "complete": true,
+      "content": "-----BEGIN PGP MESSAGE-----\nVersion: PGPainless\n\nhF4D16Pe22XLHvsSAQdAfIIpNkCZvyOeQ+WY3ZuqJVaCaGuTj+gafXZsjZEGUBkw\nFEoutq0LAaIoZgTpVdcjFhOuUmfiyy0NLYoenh+45SQcUDFuD6DwO+sb0BeiurqW\nhF4DTxRYvSK3u1MSAQdA6ZqfNCDVMRS4E/jKqY2GZZO1dfaAG8QtAvgRp5yjClsw\nq0nR6a/jIv6JrAjI49xCAqTpLYyKSxyQAMlGgWnLn0Ltpq+4VA30nvQquFuFllK1\n0rUBNuGZH/Nvb44aCpthISzFUxbMlRSTW4ITqfx7Vu3Y7ECn/B4kvSXJx2HN/L47\nqO+fe3DPRAB7u+r8yRgJlSExOu7yodkJuIpm2RKHRk2WLaJilwK84/M6fjmvoO9n\nC9Y9EoJiCLfbXCTx/G0Y5iKvq2338oYd0LA/DHFUZpExkb21hsG37P0DubF/ZeKp\nRL/EpOo+vBKRrPp1nBpOXuiVwIecCnsRHS5GMnndVv1BpigYpDr1\n\u003dfWI0\n-----END PGP MESSAGE-----",
+      "decryptErr": {
+        "error": {
+          "message": "Missing pass phrase",
+          "type": "need_passphrase"
+        },
+        "isEncrypted": true,
+        "isSuccess": false,
+        "longids": {
+          "chosen": [],
+          "matching": [
+            "3DEBE9F677D5B9BB38E5A244225F8023C20D0957"
+          ],
+          "message": [
+            "D7A3DEDB65CB1EFB",
+            "4F1458BD22B7BB53"
+          ],
+          "needPassphrase": [
+            "3DEBE9F677D5B9BB38E5A244225F8023C20D0957"
+          ]
+        }
+      },
+      "type": "decryptErr"
+    }
+  ],
+  "msgEntity": {
+    "cc": [],
+    "email": "default@flowcrypt.test",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
+    "from": [
+      {
+        "address": "denbond7@flowcrypt.test"
+      }
+    ],
+    "fromAddress": "denbond7@flowcrypt.test",
+    "hasAttachments": false,
+    "id": 292,
+    "isSeen": true,
+    "msgState": "NONE",
+    "receivedDate": 1619763416000,
+    "replyTo": "denbond7@flowcrypt.test",
+    "replyToAddress": [
+      {
+        "address": "denbond7@flowcrypt.test"
+      }
+    ],
+    "sentDate": 1619763414000,
+    "state": -1,
+    "subject": "Simple encrypted message",
+    "to": [
+      {
+        "address": "default@flowcrypt.test"
+      }
+    ],
+    "toAddress": "default@flowcrypt.test",
+    "uid": 14,
+    "uidAsHEX": "e"
+  },
+  "text": ""
+}

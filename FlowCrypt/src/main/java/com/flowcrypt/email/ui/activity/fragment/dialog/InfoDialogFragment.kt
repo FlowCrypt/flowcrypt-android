@@ -77,20 +77,25 @@ class InfoDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener
     const val RESULT_OK = -1
 
     private val KEY_INFO_DIALOG_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", InfoDialogFragment::class.java)
     private val KEY_INFO_DIALOG_MESSAGE =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", InfoDialogFragment::class.java)
     private val KEY_INFO_BUTTON_TITLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_BUTTON_TITLE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_INFO_BUTTON_TITLE", InfoDialogFragment::class.java)
     private val KEY_INFO_IS_POP_BACK_STACK =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_POP_BACK_STACK", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_IS_POP_BACK_STACK",
+        InfoDialogFragment::class.java
+      )
     private val KEY_INFO_IS_CANCELABLE =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", InfoDialogFragment::class.java)
 
-    fun newInstance(dialogTitle: String? = null, dialogMsg: String? = null,
-                    buttonTitle: String? = null, isPopBackStack: Boolean = false,
-                    isCancelable: Boolean = false, hasHtml: Boolean = false,
-                    useLinkify: Boolean = false): InfoDialogFragment {
+    fun newInstance(
+      dialogTitle: String? = null, dialogMsg: String? = null,
+      buttonTitle: String? = null, isPopBackStack: Boolean = false,
+      isCancelable: Boolean = false, hasHtml: Boolean = false,
+      useLinkify: Boolean = false
+    ): InfoDialogFragment {
       val dialogFragment = InfoDialogFragment()
 
       val args = Bundle()

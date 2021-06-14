@@ -47,9 +47,9 @@ object NodeRetrofitHelper {
     okHttpClient = getOkHttpClientBuilder(context, nodeSecret).build()
 
     val retrofitBuilder = Retrofit.Builder()
-        .baseUrl("https://localhost:" + nodeSecret.port + "/")
-        .addConverterFactory(NodeConverterFactory.create(gson))
-        .client(okHttpClient!!)
+      .baseUrl("https://localhost:" + nodeSecret.port + "/")
+      .addConverterFactory(NodeConverterFactory.create(gson))
+      .client(okHttpClient!!)
 
     retrofit = retrofitBuilder.build()
     countDownLatch.countDown()
@@ -64,29 +64,40 @@ object NodeRetrofitHelper {
     return retrofit
   }
 
-  private fun getOkHttpClientBuilder(context: Context, nodeSecret: NodeSecret): OkHttpClient.Builder {
+  private fun getOkHttpClientBuilder(
+    context: Context,
+    nodeSecret: NodeSecret
+  ): OkHttpClient.Builder {
     val builder = OkHttpClient.Builder()
-        .connectTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
-        .readTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
-        .writeTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
-        .addInterceptor(headersInterceptor(nodeSecret))
-        .sslSocketFactory(nodeSecret.sslSocketFactory, nodeSecret.sslTrustManager)
-        .followRedirects(false)
-        .followSslRedirects(false)
-        .hostnameVerifier(trustOurOwnCrtHostnameVerifier(nodeSecret))
+      .connectTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+      .readTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+      .writeTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+      .addInterceptor(headersInterceptor(nodeSecret))
+      .sslSocketFactory(nodeSecret.sslSocketFactory, nodeSecret.sslTrustManager)
+      .followRedirects(false)
+      .followSslRedirects(false)
+      .hostnameVerifier(trustOurOwnCrtHostnameVerifier(nodeSecret))
 
     if (GeneralUtil.isDebugBuild()) {
       val isNodeHttpLogEnabled =
-          SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREF_KEY_IS_NODE_HTTP_DEBUG_ENABLED, BuildConfig.IS_NODE_HTTP_DEBUG_ENABLED)
+        SharedPreferencesHelper.getBoolean(
+          PreferenceManager.getDefaultSharedPreferences(context),
+          Constants.PREF_KEY_IS_NODE_HTTP_DEBUG_ENABLED, BuildConfig.IS_NODE_HTTP_DEBUG_ENABLED
+        )
 
       if (isNodeHttpLogEnabled) {
-        val levelString = SharedPreferencesHelper.getString(PreferenceManager
-            .getDefaultSharedPreferences(context), Constants.PREF_KEY_NODE_HTTP_LOG_LEVEL, BuildConfig.NODE_HTTP_LOG_LEVEL)
+        val levelString = SharedPreferencesHelper.getString(
+          PreferenceManager
+            .getDefaultSharedPreferences(context),
+          Constants.PREF_KEY_NODE_HTTP_LOG_LEVEL,
+          BuildConfig.NODE_HTTP_LOG_LEVEL
+        )
 
         val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(levelString
-            ?: HttpLoggingInterceptor.Level.NONE.name)
+        loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(
+          levelString
+            ?: HttpLoggingInterceptor.Level.NONE.name
+        )
         builder.addInterceptor(loggingInterceptor)
       }
     }
@@ -98,11 +109,11 @@ object NodeRetrofitHelper {
     return Interceptor { chain ->
       var request: okhttp3.Request = chain.request()
       val headers = request
-          .headers
-          .newBuilder()
-          .add("Authorization", nodeSecret.authHeader)
-          .add("Connection", "Keep-Alive")
-          .build()
+        .headers
+        .newBuilder()
+        .add("Authorization", nodeSecret.authHeader)
+        .add("Connection", "Keep-Alive")
+        .build()
       request = request.newBuilder().headers(headers).build()
       chain.proceed(request)
     }

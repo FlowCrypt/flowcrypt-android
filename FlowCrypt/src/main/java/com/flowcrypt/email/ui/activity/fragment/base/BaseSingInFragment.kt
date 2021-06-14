@@ -13,13 +13,13 @@ import androidx.fragment.app.viewModels
 import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
@@ -37,7 +37,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   protected val existedAccounts = mutableListOf<AccountEntity>()
-  protected val importCandidates = mutableListOf<NodeKeyDetails>()
+  protected val importCandidates = mutableListOf<PgpKeyDetails>()
 
   abstract fun getTempAccount(): AccountEntity?
 
@@ -68,18 +68,24 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
               showSnackbar(
-                  msgText = e.message ?: e.javaClass.simpleName,
-                  btnName = getString(R.string.retry),
-                  duration = Snackbar.LENGTH_INDEFINITE,
-                  onClickListener = {
-                    getTempAccount()?.let { accountEntity ->
-                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyDetails.Type.EMAIL)
-                    }
+                msgText = e.message ?: e.javaClass.simpleName,
+                btnName = getString(R.string.retry),
+                duration = Snackbar.LENGTH_INDEFINITE,
+                onClickListener = {
+                  getTempAccount()?.let { accountEntity ->
+                    privateKeysViewModel.encryptAndSaveKeysToDatabase(
+                      accountEntity,
+                      e.keys,
+                      KeyImportDetails.SourceType.EMAIL
+                    )
                   }
+                }
               )
             } else {
-              showInfoSnackbar(msgText = e?.message ?: e?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error))
+              showInfoSnackbar(
+                msgText = e?.message ?: e?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error)
+              )
             }
           }
         }
@@ -98,21 +104,27 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
           if (it.data == true) {
             //clear LiveData value to prevent duplicate running
             accountViewModel.addNewAccountLiveData.value = Result.success(null)
-            context?.let { context -> WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC) }
+            context?.let { context ->
+              WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
+            }
 
             getTempAccount()?.let { accountEntity ->
-              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)
+              privateKeysViewModel.encryptAndSaveKeysToDatabase(
+                accountEntity,
+                importCandidates,
+                KeyImportDetails.SourceType.EMAIL
+              )
             }
           }
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           val msg = StringBuilder()
-              .append(getString(R.string.could_not_add_new_account))
-              .append("/n/n")
-              .append(it.exception?.message)
-              .append(it.exception?.javaClass?.simpleName)
-              .toString()
+            .append(getString(R.string.could_not_add_new_account))
+            .append("/n/n")
+            .append(it.exception?.message)
+            .append(it.exception?.javaClass?.simpleName)
+            .toString()
 
           showInfoDialog(dialogMsg = msg)
         }

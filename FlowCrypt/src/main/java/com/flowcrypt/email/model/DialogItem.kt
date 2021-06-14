@@ -16,13 +16,15 @@ import android.os.Parcelable
  * Time: 11:29
  * E-mail: DenBond7@gmail.com
  */
-data class DialogItem constructor(val iconResourceId: Int = 0,
-                                  val title: String = "",
-                                  val id: Int = 0) : Parcelable {
+data class DialogItem constructor(
+  val iconResourceId: Int = 0,
+  val title: String = "",
+  val id: Int = 0
+) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readInt(),
-      source.readString()!!,
-      source.readInt()
+    source.readInt(),
+    source.readString()!!,
+    source.readInt()
   )
 
   override fun describeContents(): Int {
@@ -30,11 +32,11 @@ data class DialogItem constructor(val iconResourceId: Int = 0,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeInt(iconResourceId)
-        writeString(title)
-        writeInt(id)
-      }
+    with(dest) {
+      writeInt(iconResourceId)
+      writeString(title)
+      writeInt(id)
+    }
 
   companion object {
     @JvmField

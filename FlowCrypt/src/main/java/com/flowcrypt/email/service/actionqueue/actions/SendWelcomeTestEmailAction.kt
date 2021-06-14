@@ -23,10 +23,12 @@ import com.google.gson.annotations.SerializedName
  * Time: 18:10
  * E-mail: DenBond7@gmail.com
  */
-data class SendWelcomeTestEmailAction @JvmOverloads constructor(override var id: Long = 0,
-                                                                override var email: String? = null,
-                                                                override val version: Int = 0,
-                                                                private val publicKey: String) : Action, Parcelable {
+data class SendWelcomeTestEmailAction @JvmOverloads constructor(
+  override var id: Long = 0,
+  override var email: String? = null,
+  override val version: Int = 0,
+  private val publicKey: String
+) : Action, Parcelable {
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.SEND_WELCOME_TEST_EMAIL
 
@@ -43,10 +45,10 @@ data class SendWelcomeTestEmailAction @JvmOverloads constructor(override var id:
   }
 
   constructor(source: Parcel) : this(
-      source.readLong(),
-      source.readString(),
-      source.readInt(),
-      source.readString()!!
+    source.readLong(),
+    source.readString(),
+    source.readInt(),
+    source.readString()!!
   )
 
   override fun describeContents(): Int {
@@ -54,19 +56,21 @@ data class SendWelcomeTestEmailAction @JvmOverloads constructor(override var id:
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeLong(id)
-        writeString(email)
-        writeInt(version)
-        writeString(publicKey)
-      }
+    with(dest) {
+      writeLong(id)
+      writeString(email)
+      writeInt(version)
+      writeString(publicKey)
+    }
 
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<SendWelcomeTestEmailAction> =
-        object : Parcelable.Creator<SendWelcomeTestEmailAction> {
-      override fun createFromParcel(source: Parcel): SendWelcomeTestEmailAction = SendWelcomeTestEmailAction(source)
-      override fun newArray(size: Int): Array<SendWelcomeTestEmailAction?> = arrayOfNulls(size)
-    }
+      object : Parcelable.Creator<SendWelcomeTestEmailAction> {
+        override fun createFromParcel(source: Parcel): SendWelcomeTestEmailAction =
+          SendWelcomeTestEmailAction(source)
+
+        override fun newArray(size: Int): Array<SendWelcomeTestEmailAction?> = arrayOfNulls(size)
+      }
   }
 }

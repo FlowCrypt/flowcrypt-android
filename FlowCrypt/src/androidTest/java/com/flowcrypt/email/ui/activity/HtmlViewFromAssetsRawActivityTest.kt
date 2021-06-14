@@ -38,36 +38,37 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
-  override val activeActivityRule = lazyActivityScenarioRule<HtmlViewFromAssetsRawActivity>(launchActivity = false)
+  override val activeActivityRule =
+    lazyActivityScenarioRule<HtmlViewFromAssetsRawActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activeActivityRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activeActivityRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testShowPrivacyTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.privacy))
     onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testShowTermsTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.terms))
     onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testShowSecurityTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.security))
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   private fun startActivity(title: String) {
@@ -79,4 +80,3 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
     registerAllIdlingResources()
   }
 }
-

@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStr
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
@@ -28,6 +27,7 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -86,7 +86,8 @@ import javax.net.ssl.SSLException
 class GmailApiHelper {
   companion object {
     const val DEFAULT_USER_ID = "me"
-    const val PATTERN_SEARCH_ENCRYPTED_MESSAGES = "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg"
+    const val PATTERN_SEARCH_ENCRYPTED_MESSAGES =
+      "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg"
 
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
     const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
@@ -101,45 +102,48 @@ class GmailApiHelper {
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
     private val HIDDEN_LABEL_IDS = arrayOf(
-        "CHAT",
-        "CATEGORY_FORUMS",
-        "CATEGORY_UPDATES",
-        "CATEGORY_PERSONAL",
-        "CATEGORY_PROMOTIONS",
-        "CATEGORY_SOCIAL")
-    private const val COUNT_OF_LOADED_EMAILS_BY_STEP = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
+      "CHAT",
+      "CATEGORY_FORUMS",
+      "CATEGORY_UPDATES",
+      "CATEGORY_PERSONAL",
+      "CATEGORY_PROMOTIONS",
+      "CATEGORY_SOCIAL"
+    )
+    private const val COUNT_OF_LOADED_EMAILS_BY_STEP =
+      JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
-        "id",
-        "threadId",
-        "labelIds",
-        "snippet",
-        "sizeEstimate",
-        "historyId",
-        "internalDate",
-        "payload/partId",
-        "payload/mimeType",
-        "payload/filename",
-        "payload/headers",
-        "payload/body",
-        "payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)"
+      "id",
+      "threadId",
+      "labelIds",
+      "snippet",
+      "sizeEstimate",
+      "historyId",
+      "internalDate",
+      "payload/partId",
+      "payload/mimeType",
+      "payload/filename",
+      "payload/headers",
+      "payload/body",
+      "payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)"
     )
 
-    suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
-      return@withContext try {
-        action.invoke()
-      } catch (e: Exception) {
-        e.printStackTrace()
-        when (val exception = processException(e)) {
-          is CommonConnectionException -> Result.exception(exception)
+    suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> =
+      withContext(Dispatchers.IO) {
+        return@withContext try {
+          action.invoke()
+        } catch (e: Exception) {
+          e.printStackTrace()
+          when (val exception = processException(e)) {
+            is CommonConnectionException -> Result.exception(exception)
 
-          else -> {
-            ExceptionUtil.handleError(exception)
-            Result.exception(exception)
+            else -> {
+              ExceptionUtil.handleError(exception)
+              Result.exception(exception)
+            }
           }
         }
       }
-    }
 
     /**
      * Generate [Gmail] using incoming [AccountEntity]. [Gmail] class is the main point of
@@ -172,8 +176,10 @@ class GmailApiHelper {
       return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
     }
 
-    suspend fun <M> doOperationViaStepsSuspend(stepValue: Int = 50, list: List<M>,
-                                               block: suspend (list: List<M>) -> List<M>): List<M> = withContext(Dispatchers.IO) {
+    suspend fun <M> doOperationViaStepsSuspend(
+      stepValue: Int = 50, list: List<M>,
+      block: suspend (list: List<M>) -> List<M>
+    ): List<M> = withContext(Dispatchers.IO) {
       val resultList = mutableListOf<M>()
       if (list.isNotEmpty()) {
         if (list.size <= stepValue) {
@@ -195,36 +201,43 @@ class GmailApiHelper {
       return@withContext resultList
     }
 
-    suspend fun getWholeMimeMessageInputStream(context: Context, account: AccountEntity?, messageEntity: MessageEntity): InputStream = withContext(Dispatchers.IO) {
+    suspend fun getWholeMimeMessageInputStream(
+      context: Context,
+      account: AccountEntity?,
+      messageEntity: MessageEntity
+    ): InputStream = withContext(Dispatchers.IO) {
       val msgId = messageEntity.uidAsHEX
       val gmailApiService = generateGmailApiService(context, account)
 
       val message = gmailApiService
-          .users()
-          .messages()
-          .get(DEFAULT_USER_ID, msgId)
-          .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
+        .users()
+        .messages()
+        .get(DEFAULT_USER_ID, msgId)
+        .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
       message.fields = "raw"
 
       return@withContext Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()))
     }
 
-    suspend fun loadMsgsBaseInfo(context: Context, accountEntity: AccountEntity, localFolder:
-    LocalFolder, nextPageToken: String? = null): ListMessagesResponse = withContext(Dispatchers.IO) {
+    suspend fun loadMsgsBaseInfo(
+      context: Context, accountEntity: AccountEntity, localFolder:
+      LocalFolder, nextPageToken: String? = null
+    ): ListMessagesResponse = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val request = gmailApiService
-          .users()
-          .messages()
-          .list(DEFAULT_USER_ID)
-          .setPageToken(nextPageToken)
-          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+        .users()
+        .messages()
+        .list(DEFAULT_USER_ID)
+        .setPageToken(nextPageToken)
+        .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
 
       if (!localFolder.isAll()) {
         request.labelIds = listOf(localFolder.fullName)
       }
 
       if (accountEntity.isShowOnlyEncrypted == true) {
-        request.q = (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+        request.q =
+          (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
       }
 
       return@withContext request.execute()
@@ -234,9 +247,11 @@ class GmailApiHelper {
      * This method is responsible for loading messages. If the input list of Message large than the
      * twice value of <code>stepValue</code> we will use parallel requests to minimize latency
      */
-    suspend fun loadMsgsInParallel(context: Context, accountEntity: AccountEntity, messages: List<Message>,
-                                   localFolder: LocalFolder,
-                                   format: String = MESSAGE_RESPONSE_FORMAT_FULL, stepValue: Int = 10): List<Message> = withContext(Dispatchers.IO)
+    suspend fun loadMsgsInParallel(
+      context: Context, accountEntity: AccountEntity, messages: List<Message>,
+      localFolder: LocalFolder,
+      format: String = MESSAGE_RESPONSE_FORMAT_FULL, stepValue: Int = 10
+    ): List<Message> = withContext(Dispatchers.IO)
     {
       val useParallel = messages.size > stepValue * 2
       val steps = mutableListOf<Deferred<List<Message>>>()
@@ -263,9 +278,10 @@ class GmailApiHelper {
       return@withContext awaitAll(*steps.toTypedArray()).flatten()
     }
 
-    suspend fun loadMsgs(context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
-                         localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_FULL,
-                         metadataHeaders: List<String>? = null, fields: List<String>? = FULL_INFO_WITHOUT_DATA
+    suspend fun loadMsgs(
+      context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
+      localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      metadataHeaders: List<String>? = null, fields: List<String>? = FULL_INFO_WITHOUT_DATA
     ): List<Message> = withContext(Dispatchers.IO)
     {
       val gmailApiService = generateGmailApiService(context, accountEntity)
@@ -276,10 +292,10 @@ class GmailApiHelper {
 
       for (message in messages) {
         val request = gmailApiService
-            .users()
-            .messages()
-            .get(DEFAULT_USER_ID, message.id)
-            .setFormat(format)
+          .users()
+          .messages()
+          .get(DEFAULT_USER_ID, message.id)
+          .setFormat(format)
 
         metadataHeaders?.let { metadataHeaders ->
           request.metadataHeaders = metadataHeaders
@@ -309,115 +325,123 @@ class GmailApiHelper {
       return@withContext listResult
     }
 
-    suspend fun getLabels(context: Context, account: AccountEntity?): List<Label> = withContext(Dispatchers.IO) {
-      val gmailApiService = generateGmailApiService(context, account)
+    suspend fun getLabels(context: Context, account: AccountEntity?): List<Label> =
+      withContext(Dispatchers.IO) {
+        val gmailApiService = generateGmailApiService(context, account)
 
-      val response = gmailApiService
+        val response = gmailApiService
           .users()
           .labels()
           .list(DEFAULT_USER_ID)
           .execute()
 
-      return@withContext response.labels?.filterNot { it.id in HIDDEN_LABEL_IDS } ?: emptyList()
-    }
+        return@withContext response.labels?.filterNot { it.id in HIDDEN_LABEL_IDS } ?: emptyList()
+      }
 
-    suspend fun changeLabels(context: Context, accountEntity: AccountEntity,
-                             ids: List<String>,
-                             addLabelIds: List<String>? = null,
-                             removeLabelIds: List<String>? = null) = withContext(Dispatchers.IO) {
+    suspend fun changeLabels(
+      context: Context, accountEntity: AccountEntity,
+      ids: List<String>,
+      addLabelIds: List<String>? = null,
+      removeLabelIds: List<String>? = null
+    ) = withContext(Dispatchers.IO) {
       if (addLabelIds == null && removeLabelIds == null) return@withContext
       val gmailApiService = generateGmailApiService(context, accountEntity)
 
       gmailApiService
-          .users()
-          .messages()
-          .batchModify(DEFAULT_USER_ID, BatchModifyMessagesRequest().apply {
-            this.ids = ids
-            this.addLabelIds = addLabelIds
-            this.removeLabelIds = removeLabelIds
-          })
-          .execute()
+        .users()
+        .messages()
+        .batchModify(DEFAULT_USER_ID, BatchModifyMessagesRequest().apply {
+          this.ids = ids
+          this.addLabelIds = addLabelIds
+          this.removeLabelIds = removeLabelIds
+        })
+        .execute()
     }
 
-    suspend fun deleteMsgsPermanently(context: Context, accountEntity: AccountEntity,
-                                      ids: List<String>) = withContext(Dispatchers.IO) {
+    suspend fun deleteMsgsPermanently(
+      context: Context, accountEntity: AccountEntity,
+      ids: List<String>
+    ) = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       gmailApiService
-          .users()
-          .messages()
-          .batchDelete(DEFAULT_USER_ID, BatchDeleteMessagesRequest().apply {
-            this.ids = ids
-          })
-          .execute()
+        .users()
+        .messages()
+        .batchDelete(DEFAULT_USER_ID, BatchDeleteMessagesRequest().apply {
+          this.ids = ids
+        })
+        .execute()
     }
 
-    suspend fun moveToTrash(context: Context, accountEntity: AccountEntity, ids: List<String>) = withContext(Dispatchers.IO) {
-      val gmailApiService = generateGmailApiService(context, accountEntity)
-      val batch = gmailApiService.batch()
+    suspend fun moveToTrash(context: Context, accountEntity: AccountEntity, ids: List<String>) =
+      withContext(Dispatchers.IO) {
+        val gmailApiService = generateGmailApiService(context, accountEntity)
+        val batch = gmailApiService.batch()
 
-      for (id in ids) {
-        val request = gmailApiService
+        for (id in ids) {
+          val request = gmailApiService
             .users()
             .messages()
             .trash(DEFAULT_USER_ID, id)
-        request.queue(batch, object : JsonBatchCallback<Message>() {
-          override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
-            //need to think about it
-          }
+          request.queue(batch, object : JsonBatchCallback<Message>() {
+            override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
+              //need to think about it
+            }
 
-          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-            //need to think about it
-          }
-        })
+            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+              //need to think about it
+            }
+          })
+        }
+
+        batch.execute()
       }
 
-      batch.execute()
-    }
+    suspend fun loadTrashMsgs(context: Context, accountEntity: AccountEntity): List<Message> =
+      withContext(Dispatchers.IO) {
+        val gmailApiService = generateGmailApiService(context, accountEntity)
 
-    suspend fun loadTrashMsgs(context: Context, accountEntity: AccountEntity): List<Message> = withContext(Dispatchers.IO) {
-      val gmailApiService = generateGmailApiService(context, accountEntity)
-
-      var response = gmailApiService
+        var response = gmailApiService
           .users()
           .messages()
           .list(DEFAULT_USER_ID)
           .setLabelIds(listOf(LABEL_TRASH))
           .execute()
 
-      val msgs = mutableListOf<Message>()
+        val msgs = mutableListOf<Message>()
 
-      //Try to load all messages. Only base info
-      while (response.messages != null) {
-        msgs.addAll(response.messages)
-        if (response.nextPageToken != null) {
-          response = gmailApiService
+        //Try to load all messages. Only base info
+        while (response.messages != null) {
+          msgs.addAll(response.messages)
+          if (response.nextPageToken != null) {
+            response = gmailApiService
               .users()
               .messages()
               .list(DEFAULT_USER_ID)
               .setPageToken(response.nextPageToken)
               .execute()
-        } else {
-          break
+          } else {
+            break
+          }
         }
+
+        return@withContext msgs
       }
 
-      return@withContext msgs
-    }
-
-    suspend fun loadHistoryInfo(context: Context, accountEntity: AccountEntity,
-                                localFolder: LocalFolder, historyId: BigInteger
+    suspend fun loadHistoryInfo(
+      context: Context, accountEntity: AccountEntity,
+      localFolder: LocalFolder, historyId: BigInteger
     ): List<History> = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       var response = gmailApiService
-          .users()
-          .history()
-          .list(DEFAULT_USER_ID)
-          .setStartHistoryId(historyId).apply {
-            if (!localFolder.isAll()) {
-              labelId = localFolder.fullName
-            }
+        .users()
+        .history()
+        .list(DEFAULT_USER_ID)
+        .setStartHistoryId(historyId).apply {
+          if (!localFolder.isAll()) {
+            labelId = localFolder.fullName
           }
-          .execute()
+        }
+        .execute()
 
       val historyList = mutableListOf<History>()
       response.history?.let { historyList.addAll(it) }
@@ -425,33 +449,37 @@ class GmailApiHelper {
       //Try to load all history
       while (response.nextPageToken?.isNotEmpty() == true) {
         response = gmailApiService
-            .users()
-            .history()
-            .list(DEFAULT_USER_ID)
-            .setStartHistoryId(historyId)
-            .apply {
-              if (!localFolder.isAll()) {
-                labelId = localFolder.fullName
-              }
+          .users()
+          .history()
+          .list(DEFAULT_USER_ID)
+          .setStartHistoryId(historyId)
+          .apply {
+            if (!localFolder.isAll()) {
+              labelId = localFolder.fullName
             }
-            .setPageToken(response.nextPageToken)
-            .execute()
+          }
+          .setPageToken(response.nextPageToken)
+          .execute()
 
         response.history?.let { historyList.addAll(it) }
       }
 
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val labelEntity = roomDatabase.labelDao().getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
+      val labelEntity = roomDatabase.labelDao()
+        .getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
       labelEntity?.let { folder ->
-        roomDatabase.labelDao().updateSuspend(folder.copy(historyId = response?.historyId?.toString()))
+        roomDatabase.labelDao()
+          .updateSuspend(folder.copy(historyId = response?.historyId?.toString()))
       }
 
       return@withContext historyList
     }
 
-    suspend fun processHistory(localFolder: LocalFolder,
-                               historyList: List<History>,
-                               action: suspend (deleteCandidatesUIDs: Set<Long>, newCandidatesMap: Map<Long, Message>, updateCandidatesMap: Map<Long, Flags>) -> Unit) = withContext(Dispatchers.IO)
+    suspend fun processHistory(
+      localFolder: LocalFolder,
+      historyList: List<History>,
+      action: suspend (deleteCandidatesUIDs: Set<Long>, newCandidatesMap: Map<Long, Message>, updateCandidatesMap: Map<Long, Flags>) -> Unit
+    ) = withContext(Dispatchers.IO)
     {
       val deleteCandidatesUIDs = mutableSetOf<Long>()
       val newCandidatesMap = mutableMapOf<Long, Message>()
@@ -529,8 +557,10 @@ class GmailApiHelper {
       }
     }
 
-    suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: List<Message>,
-                                    account: AccountEntity, localFolder: LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
+    suspend fun identifyAttachments(
+      msgEntities: List<MessageEntity>, msgs: List<Message>,
+      account: AccountEntity, localFolder: LocalFolder, roomDatabase: FlowCryptRoomDatabase
+    ) = withContext(Dispatchers.IO) {
       val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
       val attachments = mutableListOf<AttachmentEntity>()
       for (msg in msgs) {
@@ -552,19 +582,26 @@ class GmailApiHelper {
       roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
     }
 
-    suspend fun loadMsgsBaseInfoUsingSearch(context: Context, accountEntity: AccountEntity,
-                                            localFolder: LocalFolder, nextPageToken: String? = null):
+    suspend fun loadMsgsBaseInfoUsingSearch(
+      context: Context, accountEntity: AccountEntity,
+      localFolder: LocalFolder, nextPageToken: String? = null
+    ):
         ListMessagesResponse = withContext(Dispatchers.IO) {
 
 
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val list = gmailApiService
-          .users()
-          .messages()
-          .list(DEFAULT_USER_ID)
-          .setQ((EmailUtil.generateSearchTerm(accountEntity, localFolder) as? GmailRawSearchTerm)?.pattern)
-          .setPageToken(nextPageToken)
-          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+        .users()
+        .messages()
+        .list(DEFAULT_USER_ID)
+        .setQ(
+          (EmailUtil.generateSearchTerm(
+            accountEntity,
+            localFolder
+          ) as? GmailRawSearchTerm)?.pattern
+        )
+        .setPageToken(nextPageToken)
+        .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
       return@withContext list.execute()
     }
 
@@ -576,64 +613,77 @@ class GmailApiHelper {
      * @return The input message thread id.
      * @throws IOException
      */
-    suspend fun getGmailMsgThreadID(service: Gmail, rfc822msgidValue: String): String? = withContext(Dispatchers.IO) {
-      val response = service
+    suspend fun getGmailMsgThreadID(service: Gmail, rfc822msgidValue: String): String? =
+      withContext(Dispatchers.IO) {
+        val response = service
           .users()
           .messages()
           .list(DEFAULT_USER_ID)
           .setQ("rfc822msgid:$rfc822msgidValue")
           .execute()
 
-      return@withContext if (response.messages != null && response.messages.size == 1) {
-        response.messages[0].threadId
-      } else null
-    }
+        return@withContext if (response.messages != null && response.messages.size == 1) {
+          response.messages[0].threadId
+        } else null
+      }
 
-    suspend fun sendMsg(context: Context, account: AccountEntity, mimeMessage: javax.mail.Message): Boolean = withContext(Dispatchers.IO) {
+    suspend fun sendMsg(
+      context: Context,
+      account: AccountEntity,
+      mimeMessage: javax.mail.Message
+    ): Boolean = withContext(Dispatchers.IO) {
       val gmail = generateGmailApiService(context, account)
       val outputStream = ByteArrayOutputStream()
       mimeMessage.writeTo(outputStream)
 
       val sentMsg = Message().apply {
-        raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+        raw = Base64.encodeToString(
+          outputStream.toByteArray(),
+          Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+        )
       }
 
       gmail
-          .users()
-          .messages()
-          .send(DEFAULT_USER_ID, sentMsg)
-          .execute()
+        .users()
+        .messages()
+        .send(DEFAULT_USER_ID, sentMsg)
+        .execute()
 
       return@withContext sentMsg.id == null
     }
 
-    suspend fun loadMsgFullInfoSuspend(context: Context, accountEntity: AccountEntity, msgId:
-    String, fields: List<String>? = FULL_INFO_WITHOUT_DATA): Message = withContext(Dispatchers.IO) {
+    suspend fun loadMsgFullInfoSuspend(
+      context: Context, accountEntity: AccountEntity, msgId:
+      String, fields: List<String>? = FULL_INFO_WITHOUT_DATA
+    ): Message = withContext(Dispatchers.IO) {
       return@withContext loadMsgFullInfo(context, accountEntity, msgId, fields)
     }
 
     /**
-     * Get a list of [NodeKeyDetails] using the **Gmail API**
+     * Get a list of [PgpKeyDetails] using the **Gmail API**
      *
      * @param context context Interface to global information about an application environment;
      * @param account An [AccountEntity] object.
-     * @return A list of [NodeKeyDetails]
+     * @return A list of [PgpKeyDetails]
      * @throws MessagingException
      * @throws IOException
      */
-    suspend fun getPrivateKeyBackups(context: Context, account: AccountEntity): List<NodeKeyDetails> = withContext(Dispatchers.IO) {
+    suspend fun getPrivateKeyBackups(
+      context: Context,
+      account: AccountEntity
+    ): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
       try {
-        val list = mutableListOf<NodeKeyDetails>()
+        val list = mutableListOf<PgpKeyDetails>()
 
         val searchQuery = EmailUtil.getGmailBackupSearchQuery(account.email)
         val gmailApiService = generateGmailApiService(context, account)
 
         var response = gmailApiService
-            .users()
-            .messages()
-            .list(DEFAULT_USER_ID)
-            .setQ(searchQuery)
-            .execute()
+          .users()
+          .messages()
+          .list(DEFAULT_USER_ID)
+          .setQ(searchQuery)
+          .execute()
 
         val msgs = mutableListOf<Message>()
 
@@ -642,12 +692,12 @@ class GmailApiHelper {
           msgs.addAll(response.messages)
           if (response.nextPageToken != null) {
             response = gmailApiService
-                .users()
-                .messages()
-                .list(DEFAULT_USER_ID)
-                .setQ(searchQuery)
-                .setPageToken(response.nextPageToken)
-                .execute()
+              .users()
+              .messages()
+              .list(DEFAULT_USER_ID)
+              .setQ(searchQuery)
+              .setPageToken(response.nextPageToken)
+              .execute()
           } else {
             break
           }
@@ -655,11 +705,11 @@ class GmailApiHelper {
 
         for (origMsg in msgs) {
           val message = gmailApiService
-              .users()
-              .messages()
-              .get(DEFAULT_USER_ID, origMsg.id)
-              .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
-              .execute()
+            .users()
+            .messages()
+            .get(DEFAULT_USER_ID, origMsg.id)
+            .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
+            .execute()
 
           val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
           val msg = MimeMessage(Session.getInstance(Properties()), stream)
@@ -670,7 +720,7 @@ class GmailApiHelper {
           }
 
           try {
-            list.addAll(PgpKey.parseKeys(backup).toNodeKeyDetailsList())
+            list.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
           } catch (e: NodeException) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)
@@ -687,16 +737,21 @@ class GmailApiHelper {
       }
     }
 
-    fun loadMsgFullInfo(context: Context, accountEntity: AccountEntity, msgId: String, fields: List<String>? = FULL_INFO_WITHOUT_DATA): Message {
+    fun loadMsgFullInfo(
+      context: Context,
+      accountEntity: AccountEntity,
+      msgId: String,
+      fields: List<String>? = FULL_INFO_WITHOUT_DATA
+    ): Message {
       val gmailApiService = generateGmailApiService(context, accountEntity)
 
       return gmailApiService
-          .users()
-          .messages()
-          .get(DEFAULT_USER_ID, msgId)
-          .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
-          .setFields(fields?.joinToString(separator = ","))
-          .execute()
+        .users()
+        .messages()
+        .get(DEFAULT_USER_ID, msgId)
+        .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
+        .setFields(fields?.joinToString(separator = ","))
+        .execute()
     }
 
     /**
@@ -706,11 +761,19 @@ class GmailApiHelper {
      * @param messagePart    The given [MessagePart]
      * @return a list of found attachments
      */
-    fun getAttsInfoFromMessagePart(messagePart: MessagePart, depth: String = "0"): MutableList<AttachmentInfo> {
+    fun getAttsInfoFromMessagePart(
+      messagePart: MessagePart,
+      depth: String = "0"
+    ): MutableList<AttachmentInfo> {
       val attachmentInfoList = mutableListOf<AttachmentInfo>()
       if (messagePart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
         for ((index, part) in (messagePart.parts ?: emptyList()).withIndex()) {
-          attachmentInfoList.addAll(getAttsInfoFromMessagePart(part, "$depth${AttachmentInfo.DEPTH_SEPARATOR}${index}"))
+          attachmentInfoList.addAll(
+            getAttsInfoFromMessagePart(
+              part,
+              "$depth${AttachmentInfo.DEPTH_SEPARATOR}${index}"
+            )
+          )
         }
       } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
         val attachmentInfo = AttachmentInfo()
@@ -718,7 +781,7 @@ class GmailApiHelper {
         attachmentInfo.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
         attachmentInfo.type = messagePart.mimeType ?: ""
         attachmentInfo.id = messagePart.contentId()
-            ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
+          ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
         attachmentInfo.path = depth
         attachmentInfoList.add(attachmentInfo)
       }
@@ -734,9 +797,14 @@ class GmailApiHelper {
      * @param neededPath   The path where the needed attachment exists.
      * @return [Part] which has attachment or null if message doesn't have such attachment.
      */
-    fun getAttPartByPath(part: MessagePart, currentPath: String = "0/", neededPath: String): MessagePart? {
+    fun getAttPartByPath(
+      part: MessagePart,
+      currentPath: String = "0/",
+      neededPath: String
+    ): MessagePart? {
       if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        val neededParentPath = neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
+        val neededParentPath =
+          neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
         val partsCount = (part.parts ?: emptyList()).size
 
         if (currentPath == neededParentPath) {
@@ -750,10 +818,14 @@ class GmailApiHelper {
           }
         } else {
           val nextDepth = neededParentPath
-              .replaceFirst(currentPath, "")
-              .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
+            .replaceFirst(currentPath, "")
+            .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
           val bodyPart = part.parts[nextDepth]
-          return getAttPartByPath(bodyPart, currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR, neededPath)
+          return getAttPartByPath(
+            bodyPart,
+            currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR,
+            neededPath
+          )
         }
         return null
       } else {
@@ -761,15 +833,21 @@ class GmailApiHelper {
       }
     }
 
-    fun getAttInputStream(context: Context, accountEntity: AccountEntity, msgId: String, attId: String, decodeBase64: Boolean = true): InputStream {
+    fun getAttInputStream(
+      context: Context,
+      accountEntity: AccountEntity,
+      msgId: String,
+      attId: String,
+      decodeBase64: Boolean = true
+    ): InputStream {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val request = gmailApiService
-          .users()
-          .messages()
-          .attachments()
-          .get(DEFAULT_USER_ID, msgId, attId)
-          .setPrettyPrint(false)
-          .setFields("data")
+        .users()
+        .messages()
+        .attachments()
+        .get(DEFAULT_USER_ID, msgId, attId)
+        .setPrettyPrint(false)
+        .setFields("data")
 
       return if (decodeBase64) {
         Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
@@ -785,8 +863,12 @@ class GmailApiHelper {
      * @param account The Gmail account.
      * @return Generated [GoogleAccountCredential].
      */
-    private fun generateGoogleAccountCredential(context: Context, account: Account?): GoogleAccountCredential {
-      return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES)).setSelectedAccount(account)
+    private fun generateGoogleAccountCredential(
+      context: Context,
+      account: Account?
+    ): GoogleAccountCredential {
+      return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES))
+        .setSelectedAccount(account)
     }
 
     private fun processException(e: Throwable): Throwable {

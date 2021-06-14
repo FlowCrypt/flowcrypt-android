@@ -26,9 +26,10 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class LabelsViewModel(application: Application) : AccountViewModel(application) {
-  val labelsLiveData: LiveData<List<LabelEntity>> = Transformations.switchMap(activeAccountLiveData) {
-    roomDatabase.labelDao().getLabelsLD(it?.email ?: "", it?.accountType)
-  }
+  val labelsLiveData: LiveData<List<LabelEntity>> =
+    Transformations.switchMap(activeAccountLiveData) {
+      roomDatabase.labelDao().getLabelsLD(it?.email ?: "", it?.accountType)
+    }
 
   val foldersManagerLiveData: LiveData<FoldersManager> = Transformations.switchMap(labelsLiveData) {
     liveData {
@@ -61,10 +62,15 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
         } else {
           val connection = IMAPStoreManager.activeConnections[accountEntity.id]
           if (connection == null) {
-            loadLabelsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+            loadLabelsFromRemoteServerLiveData.value =
+              Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
           } else {
             loadLabelsFromRemoteServerLiveData.value = connection.executeWithResult {
-              UpdateLabelsWorker.fetchAndSaveLabels(getApplication(), accountEntity, connection.store)
+              UpdateLabelsWorker.fetchAndSaveLabels(
+                getApplication(),
+                accountEntity,
+                connection.store
+              )
               Result.success(true)
             }
           }

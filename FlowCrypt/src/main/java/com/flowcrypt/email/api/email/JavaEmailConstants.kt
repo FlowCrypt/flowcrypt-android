@@ -22,7 +22,8 @@ class JavaEmailConstants {
 
     /*IMAP*/
     const val PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE = "mail.imap.ssl.enable"
-    const val PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY = "mail.imap.ssl.checkserveridentity"
+    const val PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY =
+      "mail.imap.ssl.checkserveridentity"
     const val PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE = "mail.imap.starttls.enable"
     const val PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS = "mail.imap.auth.mechanisms"
     const val PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE = "mail.imap.fetchsize"
@@ -41,7 +42,8 @@ class JavaEmailConstants {
     /*SMTP*/
     const val PROPERTY_NAME_MAIL_SMTP_AUTH = "mail.smtp.auth"
     const val PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable"
-    const val PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY = "mail.smtp.ssl.checkserveridentity"
+    const val PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY =
+      "mail.smtp.ssl.checkserveridentity"
     const val PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE = "mail.smtp.starttls.enable"
     const val PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS = "mail.smtp.auth.mechanisms"
     const val PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT = "mail.smtp.connectiontimeout"

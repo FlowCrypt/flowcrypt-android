@@ -30,7 +30,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -65,52 +65,66 @@ class BackupKeysActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(addAccountToDatabaseRule)
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(addAccountToDatabaseRule)
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(getResString(R.string.backup_as_email_hint)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(getResString(R.string.backup_as_download_hint)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    onView(withText(getResString(R.string.there_are_no_private_keys, AccountDaoManager.getDefaultAccountDao().email)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(
+      withText(
+        getResString(
+          R.string.there_are_no_private_keys,
+          AccountDaoManager.getDefaultAccountDao().email
+        )
+      )
+    )
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    onView(withText(getResString(R.string.there_are_no_private_keys, AccountDaoManager.getDefaultAccountDao().email)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(
+      withText(
+        getResString(
+          R.string.there_are_no_private_keys,
+          AccountDaoManager.getDefaultAccountDao().email
+        )
+      )
+    )
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -118,8 +132,8 @@ class BackupKeysActivityTest : BaseTest() {
   fun testSuccessEmailOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
@@ -134,15 +148,15 @@ class BackupKeysActivityTest : BaseTest() {
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
 
     intendingFileChoose(file)
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
 
@@ -159,14 +173,14 @@ class BackupKeysActivityTest : BaseTest() {
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intendingFileChoose(File(""))
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -174,24 +188,24 @@ class BackupKeysActivityTest : BaseTest() {
   fun testShowWeakPasswordHintForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intendingFileChoose(File(""))
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
 
     assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
@@ -202,10 +216,10 @@ class BackupKeysActivityTest : BaseTest() {
   fun testFixWeakPasswordForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
     assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
@@ -216,10 +230,10 @@ class BackupKeysActivityTest : BaseTest() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
     assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
@@ -229,14 +243,14 @@ class BackupKeysActivityTest : BaseTest() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
     onView(withId(R.id.radioButtonDownload))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intendingFileChoose(File(""))
     onView(withId(R.id.buttonBackupAction))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
     assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
@@ -244,45 +258,49 @@ class BackupKeysActivityTest : BaseTest() {
   private fun intendingFileChoose(file: File) {
     val resultData = Intent()
     resultData.data = Uri.fromFile(file)
-    intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_CREATE_DOCUMENT),
         hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
-        hasType(Constants.MIME_TYPE_PGP_KEY)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+        hasType(Constants.MIME_TYPE_PGP_KEY)
+      )
+    )
+      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
   }
 
   private fun addFirstKeyWithDefaultPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "pgp/default@denbond7.com_fisrtKey_prv_default.asc",
-        passphrase = TestConstants.DEFAULT_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+      accountEntity = addAccountToDatabaseRule.account,
+      keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc",
+      passphrase = TestConstants.DEFAULT_PASSWORD,
+      sourceType = KeyImportDetails.SourceType.EMAIL
     )
   }
 
   private fun addFirstKeyWithStrongPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "pgp/default@denbond7.com_fisrtKey_prv_strong.asc",
-        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+      accountEntity = addAccountToDatabaseRule.account,
+      keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
+      passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+      sourceType = KeyImportDetails.SourceType.EMAIL
     )
   }
 
   private fun addSecondKeyWithStrongPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
-        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+      accountEntity = addAccountToDatabaseRule.account,
+      keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
+      passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+      sourceType = KeyImportDetails.SourceType.EMAIL
     )
   }
 
   private fun addSecondKeyWithStrongSecondPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "pgp/default@denbond7.com_secondKey_prv_strong_second.asc",
-        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
-        type = KeyDetails.Type.EMAIL
+      accountEntity = addAccountToDatabaseRule.account,
+      keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc",
+      passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
+      sourceType = KeyImportDetails.SourceType.EMAIL
     )
   }
 }

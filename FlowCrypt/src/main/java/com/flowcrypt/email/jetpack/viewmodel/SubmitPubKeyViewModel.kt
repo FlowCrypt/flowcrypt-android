@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import kotlinx.coroutines.launch
 
@@ -33,7 +34,7 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
   private val repository: ApiRepository = FlowcryptApiRepository()
   val submitPubKeyLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
-  fun submitPubKey(account: AccountEntity, keys: List<NodeKeyDetails>) {
+  fun submitPubKey(account: AccountEntity, keys: List<PgpKeyDetails>) {
     submitPubKeyLiveData.value = Result.loading()
     val context: Context = getApplication()
 
@@ -41,17 +42,21 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
 
     keyDetails?.publicKey?.let {
       viewModelScope.launch {
-        val result = repository.submitPubKey(context,
-            InitialLegacySubmitModel(account.email, it))
+        val result = repository.submitPubKey(
+          context,
+          InitialLegacySubmitModel(account.email, it)
+        )
 
         when (result.status) {
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             if (account.isRuleExist(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
               submitPubKeyLiveData.value = result
             } else {
-              val registerAction = ActionQueueEntity.fromAction(RegisterUserPublicKeyAction(0, account.email, 0, it))
+              val registerAction =
+                ActionQueueEntity.fromAction(RegisterUserPublicKeyAction(0, account.email, 0, it))
               registerAction?.let { action ->
-                FlowCryptRoomDatabase.getDatabase(getApplication()).actionQueueDao().insertSuspend(action)
+                FlowCryptRoomDatabase.getDatabase(getApplication()).actionQueueDao()
+                  .insertSuspend(action)
               }
               submitPubKeyLiveData.value = Result.success(InitialLegacySubmitResponse(null, false))
             }
@@ -64,3 +69,4 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
     }
   }
 }
+

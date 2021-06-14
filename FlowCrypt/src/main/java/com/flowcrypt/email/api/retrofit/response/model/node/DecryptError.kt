@@ -17,15 +17,17 @@ import com.google.gson.annotations.SerializedName
  * Time: 3:30 PM
  * E-mail: DenBond7@gmail.com
  */
-data class DecryptError constructor(@Expose val isSuccess: Boolean,
-                                    @SerializedName("error") @Expose val details: DecryptErrorDetails?,
-                                    @SerializedName("longids") @Expose val longids: Longids?,
-                                    @Expose val isEncrypted: Boolean) : Parcelable {
+data class DecryptError constructor(
+  @Expose val isSuccess: Boolean,
+  @SerializedName("error") @Expose val details: DecryptErrorDetails?,
+  @SerializedName("longids") @Expose val longIds: LongIds?,
+  @Expose val isEncrypted: Boolean
+) : Parcelable {
   constructor(source: Parcel) : this(
-      1 == source.readInt(),
-      source.readParcelable<DecryptErrorDetails>(DecryptErrorDetails::class.java.classLoader),
-      source.readParcelable<Longids>(Longids::class.java.classLoader),
-      1 == source.readInt()
+    1 == source.readInt(),
+    source.readParcelable<DecryptErrorDetails>(DecryptErrorDetails::class.java.classLoader),
+    source.readParcelable<LongIds>(LongIds::class.java.classLoader),
+    1 == source.readInt()
   )
 
   override fun describeContents(): Int {
@@ -33,12 +35,12 @@ data class DecryptError constructor(@Expose val isSuccess: Boolean,
   }
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeInt((if (isSuccess) 1 else 0))
-        writeParcelable(details, flags)
-        writeParcelable(longids, flags)
-        writeInt((if (isEncrypted) 1 else 0))
-      }
+    with(dest) {
+      writeInt((if (isSuccess) 1 else 0))
+      writeParcelable(details, flags)
+      writeParcelable(longIds, flags)
+      writeInt((if (isEncrypted) 1 else 0))
+    }
 
   companion object {
     @JvmField

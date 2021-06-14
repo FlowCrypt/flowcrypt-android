@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<com.flowcrypt.email.ui.widget.CheckableConstrainLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:paddingStart="@dimen/default_margin_content_small"
+    android:paddingEnd="@dimen/default_margin_content_small">
+
+    <TextView
+        android:id="@+id/tVEmail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/default_margin_small"
+        android:ellipsize="middle"
+        android:maxLines="1"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        app:layout_constraintBottom_toTopOf="@+id/tVFingerprint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="flowcrypt@flowcrypt.com" />
+
+    <TextView
+        android:id="@+id/tVFingerprint"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textSize="@dimen/default_text_size_very_small"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tVEmail"
+        tools:text="4545 4545 0A80 F238 598D D081 C669 001D 0A45 4545" />
+
+</com.flowcrypt.email.ui.widget.CheckableConstrainLayout>

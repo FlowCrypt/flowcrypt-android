@@ -1,25 +1,25 @@
-Return-Path: <denbond7@denbond7.com>
-Delivered-To: default@denbond7.com
-Received: from mail.denbond7.com (localhost [127.0.0.1])
-by mail.denbond7.com (Postfix) with ESMTP id BA5EC20325
-for <default@denbond7.com>; Sun, 17 Mar 2019 11:46:54 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at mail.denbond7.com
-Received: from mail.denbond7.com ([127.0.0.1])
-by mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)
-with ESMTP id QfBqy8XfDrlt for <default@denbond7.com>;
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test (localhost [127.0.0.1])
+by mail.flowcrypt.test (Postfix) with ESMTP id BA5EC20325
+for <default@flowcrypt.test>; Sun, 17 Mar 2019 11:46:54 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.flowcrypt.test
+Received: from mail.flowcrypt.test ([127.0.0.1])
+by mail.flowcrypt.test (mail.flowcrypt.test [127.0.0.1]) (amavisd-new, port 10024)
+with ESMTP id QfBqy8XfDrlt for <default@flowcrypt.test>;
 Sun, 17 Mar 2019 11:46:40 +0000 (UTC)
 Received: from localhost (WorkPC [192.168.3.7])
-by mail.denbond7.com (Postfix) with ESMTP id 7BBCF20319
-for <default@denbond7.com>; Sun, 17 Mar 2019 11:46:40 +0000 (UTC)
+by mail.flowcrypt.test (Postfix) with ESMTP id 7BBCF20319
+for <default@flowcrypt.test>; Sun, 17 Mar 2019 11:46:40 +0000 (UTC)
 Content-Type: multipart/mixed;
 boundary="----sinikael-?=_1-15528231978580.3180550080538431"
 In-Reply-To: <>
 References: <>
-To: default@denbond7.com
-From: denbond7@denbond7.com
+To: default@flowcrypt.test
+From: denbond7@flowcrypt.test
 Subject: encrypted message with missing key error
 Date: Sun, 17 Mar 2019 11:46:37 +0000
-Message-Id: <1552823197874-dd5800d9-54ca1a01-c548da66@denbond7.com>
+Message-Id: <1552823197874-dd5800d9-54ca1a01-c548da66@flowcrypt.test>
 MIME-Version: 1.0
 
 ------sinikael-?=_1-15528231978580.3180550080538431

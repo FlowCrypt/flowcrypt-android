@@ -57,7 +57,10 @@ abstract class BaseActivity : AppCompatActivity() {
   protected var isAccountInfoReceived = false
   protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
 
-  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(this::class.java), GeneralUtil.isDebugBuild())
+  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(
+    GeneralUtil.genIdlingResourcesName(this::class.java),
+    GeneralUtil.isDebugBuild()
+  )
 
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
@@ -162,7 +165,11 @@ abstract class BaseActivity : AppCompatActivity() {
    * @param messageText The text to show.  Can be formatted text.
    * @param duration    How long to display the message.
    */
-  fun showInfoSnackbar(view: View?, messageText: String?, duration: Int = Snackbar.LENGTH_INDEFINITE) {
+  fun showInfoSnackbar(
+    view: View?,
+    messageText: String?,
+    duration: Int = Snackbar.LENGTH_INDEFINITE
+  ) {
     view?.let {
       snackBar = Snackbar.make(it, messageText ?: "", duration).setAction(android.R.string.ok) { }
       snackBar?.show()
@@ -177,8 +184,10 @@ abstract class BaseActivity : AppCompatActivity() {
    * @param buttonName      The text of the Snackbar button
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View, messageText: String, buttonName: String,
-                   onClickListener: View.OnClickListener) {
+  fun showSnackbar(
+    view: View, messageText: String, buttonName: String,
+    onClickListener: View.OnClickListener
+  ) {
     showSnackbar(view, messageText, buttonName, Snackbar.LENGTH_INDEFINITE, onClickListener)
   }
 
@@ -191,8 +200,10 @@ abstract class BaseActivity : AppCompatActivity() {
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View, messageText: String, buttonName: String, duration: Int,
-                   onClickListener: View.OnClickListener) {
+  fun showSnackbar(
+    view: View, messageText: String, buttonName: String, duration: Int,
+    onClickListener: View.OnClickListener
+  ) {
     snackBar = Snackbar.make(view, messageText, duration).setAction(buttonName, onClickListener)
     snackBar?.show()
   }

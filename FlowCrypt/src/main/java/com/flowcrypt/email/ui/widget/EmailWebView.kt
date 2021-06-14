@@ -35,7 +35,11 @@ class EmailWebView : WebView {
 
   constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(
+    context,
+    attrs,
+    defStyleAttr
+  )
 
   /**
    * This method does job of configure the current [WebView]
@@ -79,7 +83,8 @@ class EmailWebView : WebView {
   /**
    * The custom realization of [WebViewClient]
    */
-  private class CustomWebClient internal constructor(private val context: Context) : WebViewClient() {
+  private class CustomWebClient(private val context: Context) :
+    WebViewClient() {
 
     override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
       return if (url.startsWith(SCHEME_MAILTO)) {
@@ -107,7 +112,8 @@ class EmailWebView : WebView {
      * @param uri [Uri] with mailto: scheme.
      */
     private fun handleEmailLinks(uri: Uri) {
-      val intent = CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED)
+      val intent =
+        CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED)
       intent.action = Intent.ACTION_SENDTO
       intent.data = uri
       context.startActivity(intent)

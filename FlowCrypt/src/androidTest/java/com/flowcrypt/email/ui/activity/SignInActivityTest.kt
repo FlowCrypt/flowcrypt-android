@@ -45,25 +45,25 @@ class SignInActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-      .outerRule(ClearAppSettingsRule())
-      .around(RetryRule.DEFAULT)
-      .around(activityScenarioRule)
-      .around(ScreenshotTestRule())
+    .outerRule(ClearAppSettingsRule())
+    .around(RetryRule.DEFAULT)
+    .around(activityScenarioRule)
+    .around(ScreenshotTestRule())
 
   @Test
   fun testUseOtherEmailProviders() {
     onView(withId(R.id.buttonOtherEmailProvider))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(R.string.or_use_your_credentials_to_connect))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testUseGmail() {
     onView(withId(R.id.buttonSignInWithGmail))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     //check that the Google Sign-in screen displayed
     intended(toPackage("com.google.android.gms"))
   }
@@ -71,9 +71,9 @@ class SignInActivityTest : BaseTest() {
   @Test
   fun testShowSecurityScreen() {
     onView(withId(R.id.buttonSecurity))
-        .check(matches(isDisplayed()))
-        .perform(click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
+      .check(matches(isDisplayed()))
   }
 }

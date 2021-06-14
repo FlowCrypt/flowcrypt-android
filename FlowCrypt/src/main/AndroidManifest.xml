@@ -23,6 +23,9 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- android.permission.WAKE_LOCK will be used by classes which extend JobIntentService -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Request the foreground service permission. Details here
+     https://developer.android.com/guide/components/foreground-services#request-foreground-service-permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".FlowCryptApplication"
@@ -264,6 +267,10 @@
             android:exported="false"
             tools:node="remove" />
         <!-- Services -->
+        <service
+            android:name=".service.PassPhrasesInRAMService"
+            android:exported="false" />
+
         <service
             android:name=".service.EmailAndNameUpdaterService"
             android:exported="false"

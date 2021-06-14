@@ -10,26 +10,26 @@
   ],
   "msgEntity": {
     "cc": [],
-    "email": "default@denbond7.com",
+    "email": "default@flowcrypt.test",
     "flags": "\\SEEN",
     "folder": "INBOX",
     "from": [
       {
-        "address": "denbond7@denbond7.com",
+        "address": "denbond7@flowcrypt.test",
         "encodedPersonal": "Denis Bondarenko",
         "personal": "Denis Bondarenko"
       }
     ],
-    "fromAddress": "Denis Bondarenko \u003cdenbond7@denbond7.com\u003e",
+    "fromAddress": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
     "hasAttachments": true,
     "id": 52,
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1601887254000,
-    "replyTo": "Denis Bondarenko \u003cdenbond7@denbond7.com\u003e",
+    "replyTo": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
     "replyToAddress": [
       {
-        "address": "denbond7@denbond7.com",
+        "address": "denbond7@flowcrypt.test",
         "encodedPersonal": "Denis Bondarenko"
       }
     ],
@@ -37,12 +37,12 @@
     "subject": "Standard message + one attachment",
     "to": [
       {
-        "address": "default@denbond7.com"
+        "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@denbond7.com",
+    "toAddress": "default@flowcrypt.test",
     "uid": 6
   },
-  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com\r\n\tby mail.denbond7.com with LMTP\r\n\tid YISlMxbcel9GEwAAZlazJA\r\n\t(envelope-from \u003cdenbond7@denbond7.com\u003e)\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon, 05 Oct 2020 08:40:54 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id D03A0A2098A\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon,  5 Oct 2020 08:40:54 +0000 (UTC)\r\nTo: default@denbond7.com\r\nFrom: Denis Bondarenko \u003cdenbond7@denbond7.com\u003e\r\nX-Pep-Version: 2.0\r\nMessage-ID: \u003cfacd4f6d-9e74-977b-3f11-abbe7cd467eb@denbond7.com\u003e\r\nDate: Mon, 5 Oct 2020 11:40:54 +0300\r\nMime-Version: 1.0\r\nSubject: Standard message + one attachment\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"------------9575DD1DBF2C2FFA08F4568A\"\r\nContent-Language: en-US",
+  "origMsgHeaders": "Return-Path: \u003cdenbond7@flowcrypt.test\u003e\r\nDelivered-To: default@flowcrypt.test\r\nReceived: from mail.flowcrypt.test\r\n\tby mail.flowcrypt.test with LMTP\r\n\tid YISlMxbcel9GEwAAZlazJA\r\n\t(envelope-from \u003cdenbond7@flowcrypt.test\u003e)\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon, 05 Oct 2020 08:40:54 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.flowcrypt.test (Postfix) with ESMTP id D03A0A2098A\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon,  5 Oct 2020 08:40:54 +0000 (UTC)\r\nTo: default@flowcrypt.test\r\nFrom: Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e\r\nX-Pep-Version: 2.0\r\nMessage-ID: \u003cfacd4f6d-9e74-977b-3f11-abbe7cd467eb@flowcrypt.test\u003e\r\nDate: Mon, 5 Oct 2020 11:40:54 +0300\r\nMime-Version: 1.0\r\nSubject: Standard message + one attachment\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"------------9575DD1DBF2C2FFA08F4568A\"\r\nContent-Language: en-US",
   "text": "It\u0027s a standard message with plaintext and one attachment"
 }

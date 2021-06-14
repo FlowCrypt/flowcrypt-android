@@ -23,7 +23,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.RandomAccessFile
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.UUID
 
 /**
  * @author Denis Bondarenko
@@ -35,7 +35,8 @@ class TestGeneralUtil {
   companion object {
     @JvmStatic
     fun <T> readObjectFromResources(path: String, aClass: Class<T>): T {
-      val json = IOUtils.toString(aClass.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
+      val json =
+        IOUtils.toString(aClass.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
       return Gson().fromJson(json, aClass)
     }
 
@@ -46,7 +47,10 @@ class TestGeneralUtil {
 
     @JvmStatic
     fun readResourcesAsString(path: String): String {
-      return IOUtils.toString(TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
+      return IOUtils.toString(
+        TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path),
+        StandardCharsets.UTF_8
+      )
     }
 
     @JvmStatic
@@ -56,22 +60,25 @@ class TestGeneralUtil {
 
     @JvmStatic
     fun readFileFromAssetsAsString(
-        filePath: String,
-        context: Context = InstrumentationRegistry.getInstrumentation().context): String {
+      filePath: String,
+      context: Context = InstrumentationRegistry.getInstrumentation().context
+    ): String {
       return IOUtils.toString(context.assets.open(filePath), "UTF-8")
     }
 
     @JvmStatic
     fun readFileFromAssetsAsByteArray(
-        filePath: String,
-        context: Context = InstrumentationRegistry.getInstrumentation().context): ByteArray {
+      filePath: String,
+      context: Context = InstrumentationRegistry.getInstrumentation().context
+    ): ByteArray {
       return context.assets.open(filePath).readBytes()
     }
 
     @JvmStatic
     fun readFileFromAssetsAsStream(
-        filePath: String,
-        context: Context = InstrumentationRegistry.getInstrumentation().context): InputStream {
+      filePath: String,
+      context: Context = InstrumentationRegistry.getInstrumentation().context
+    ): InputStream {
       return context.assets.open(filePath)
     }
 
@@ -86,8 +93,10 @@ class TestGeneralUtil {
 
     @JvmStatic
     fun createFileAndFillWithContent(fileName: String, fileText: String): File {
-      val file = File(InstrumentationRegistry.getInstrumentation().targetContext
-          .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
+      val file = File(
+        InstrumentationRegistry.getInstrumentation().targetContext
+          .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName
+      )
       try {
         FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
       } catch (e: Exception) {
@@ -98,8 +107,10 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
-    fun createFileAndFillWithContent(temporaryFolder: TemporaryFolder,
-                                     fileName: String, fileText: String): File {
+    fun createFileAndFillWithContent(
+      temporaryFolder: TemporaryFolder,
+      fileName: String, fileText: String
+    ): File {
       val file = temporaryFolder.newFile(fileName)
       try {
         FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
@@ -111,8 +122,10 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
-    fun createFileWithGivenSize(fileSizeInBytes: Long, temporaryFolder: TemporaryFolder,
-                                fileName: String = UUID.randomUUID().toString()): File {
+    fun createFileWithGivenSize(
+      fileSizeInBytes: Long, temporaryFolder: TemporaryFolder,
+      fileName: String = UUID.randomUUID().toString()
+    ): File {
       return temporaryFolder.newFile(fileName).apply {
         RandomAccessFile(this, "rw").apply {
           setLength(fileSizeInBytes)
@@ -156,9 +169,11 @@ class TestGeneralUtil {
       return Intent().apply {
         val context: Context = ApplicationProvider.getApplicationContext()
         val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, file)
-        context.grantUriPermission(BuildConfig.APPLICATION_ID, uri,
-            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-                Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.grantUriPermission(
+          BuildConfig.APPLICATION_ID, uri,
+          Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+              Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
         data = uri
         flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
             Intent.FLAG_GRANT_READ_URI_PERMISSION

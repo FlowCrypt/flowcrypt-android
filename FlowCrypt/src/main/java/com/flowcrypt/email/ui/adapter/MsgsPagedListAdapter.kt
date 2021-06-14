@@ -34,7 +34,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
-import java.util.*
+import java.util.ArrayList
 import java.util.regex.Pattern
 import javax.mail.internet.InternetAddress
 
@@ -47,7 +47,7 @@ import javax.mail.internet.InternetAddress
  *         E-mail: DenBond7@gmail.com
  */
 class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
-    PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
+  PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
   var tracker: SelectionTracker<Long>? = null
   var currentFolder: LocalFolder? = null
@@ -59,13 +59,17 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
   override fun onCreateViewHolder(parent: ViewGroup, @ItemType viewType: Int): BaseViewHolder {
     return when (viewType) {
-      FOOTER -> object : BaseViewHolder(LayoutInflater.from(parent.context)
-          .inflate(R.layout.list_view_progress_footer, parent, false)) {
+      FOOTER -> object : BaseViewHolder(
+        LayoutInflater.from(parent.context)
+          .inflate(R.layout.list_view_progress_footer, parent, false)
+      ) {
         override val itemType = FOOTER
       }
 
-      MESSAGE -> MessageViewHolder(LayoutInflater.from(parent.context)
-          .inflate(R.layout.messages_list_item, parent, false))
+      MESSAGE -> MessageViewHolder(
+        LayoutInflater.from(parent.context)
+          .inflate(R.layout.messages_list_item, parent, false)
+      )
 
       else -> object : BaseViewHolder(ProgressBar(parent.context)) {
         override val itemType = NONE
@@ -95,7 +99,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     return getItem(position)?.id ?: super.getItemId(position)
   }
 
-  override fun onCurrentListChanged(previousList: PagedList<MessageEntity>?, currentList: PagedList<MessageEntity>?) {
+  override fun onCurrentListChanged(
+    previousList: PagedList<MessageEntity>?,
+    currentList: PagedList<MessageEntity>?
+  ) {
     super.onCurrentListChanged(previousList, currentList)
     val currentIds = currentList?.map { it?.id }?.toSet()
     val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
@@ -134,11 +141,13 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       if (folderType != null) {
         when (folderType) {
           FoldersManager.FolderType.SENT -> viewHolder.textViewSenderAddress?.text =
-              generateAddresses(messageEntity.to)
+            generateAddresses(messageEntity.to)
 
           FoldersManager.FolderType.OUTBOX -> {
-            val status = generateOutboxStatus(viewHolder.textViewSenderAddress?.context,
-                messageEntity.msgState)
+            val status = generateOutboxStatus(
+              viewHolder.textViewSenderAddress?.context,
+              messageEntity.msgState
+            )
             viewHolder.textViewSenderAddress?.text = status
           }
 
@@ -150,9 +159,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
       viewHolder.textViewSubject?.text = subject
       if (folderType === FoldersManager.FolderType.OUTBOX) {
-        viewHolder.textViewDate?.text = DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate)
+        viewHolder.textViewDate?.text =
+          DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate)
       } else {
-        viewHolder.textViewDate?.text = DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate)
+        viewHolder.textViewDate?.text =
+          DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate)
       }
 
       if (messageEntity.isSeen) {
@@ -161,12 +172,19 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, R.color.gray))
       } else {
         changeViewsTypeface(viewHolder, Typeface.BOLD)
-        viewHolder.textViewSenderAddress?.setTextColor(UIUtil.getColor(context, android.R.color.black))
+        viewHolder.textViewSenderAddress?.setTextColor(
+          UIUtil.getColor(
+            context,
+            android.R.color.black
+          )
+        )
         viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, android.R.color.black))
       }
 
-      viewHolder.imageViewAtts?.visibility = if (messageEntity.hasAttachments == true) View.VISIBLE else View.GONE
-      viewHolder.viewIsEncrypted?.visibility = if (messageEntity.isEncrypted == true) View.VISIBLE else View.GONE
+      viewHolder.imageViewAtts?.visibility =
+        if (messageEntity.hasAttachments == true) View.VISIBLE else View.GONE
+      viewHolder.viewIsEncrypted?.visibility =
+        if (messageEntity.isEncrypted == true) View.VISIBLE else View.GONE
 
       when (messageEntity.msgState) {
         MessageState.PENDING_ARCHIVING -> {
@@ -282,7 +300,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     var i = 0
     while (true) {
       val address = internetAddresses[i]
-      val displayName = if (TextUtils.isEmpty(address.personal)) address.address else address.personal
+      val displayName =
+        if (TextUtils.isEmpty(address.personal)) address.address else address.personal
       b.append(displayName)
       if (i == iMax) {
         return prepareSenderName(b.toString())
@@ -329,12 +348,14 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
           MessageState.ERROR_DURING_CREATION -> state = context.getString(R.string.could_not_create)
 
-          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING -> state = context.getString(R.string.original_message_missing)
+          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING -> state =
+            context.getString(R.string.original_message_missing)
 
           MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND ->
             state = context.getString(R.string.original_attachment_not_found)
 
-          MessageState.ERROR_SENDING_FAILED -> state = context.getString(R.string.cannot_send_message_unknown_error)
+          MessageState.ERROR_SENDING_FAILED -> state =
+            context.getString(R.string.cannot_send_message_unknown_error)
 
           MessageState.ERROR_PRIVATE_KEY_NOT_FOUND ->
             state = context.getString(R.string.could_not_create_no_key_available)
@@ -355,14 +376,30 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
 
     val meTextSize = context.resources.getDimensionPixelSize(R.dimen.default_text_size_big)
-    val statusTextSize = context.resources.getDimensionPixelSize(R.dimen.default_text_size_very_small)
+    val statusTextSize =
+      context.resources.getDimensionPixelSize(R.dimen.default_text_size_very_small)
 
     val spannableStringMe = SpannableString(me)
-    spannableStringMe.setSpan(AbsoluteSizeSpan(meTextSize), 0, me.length, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+    spannableStringMe.setSpan(
+      AbsoluteSizeSpan(meTextSize),
+      0,
+      me.length,
+      Spanned.SPAN_INCLUSIVE_INCLUSIVE
+    )
 
     val status = SpannableString(state)
-    status.setSpan(AbsoluteSizeSpan(statusTextSize), 0, state.length, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
-    status.setSpan(ForegroundColorSpan(stateTextColor), 0, state.length, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+    status.setSpan(
+      AbsoluteSizeSpan(statusTextSize),
+      0,
+      state.length,
+      Spanned.SPAN_INCLUSIVE_INCLUSIVE
+    )
+    status.setSpan(
+      ForegroundColorSpan(stateTextColor),
+      0,
+      state.length,
+      Spanned.SPAN_INCLUSIVE_INCLUSIVE
+    )
 
     return TextUtils.concat(spannableStringMe, " ", status)
   }
@@ -371,10 +408,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     @ItemType
     abstract val itemType: Int
 
-    fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> = object : ItemDetailsLookup.ItemDetails<Long>() {
-      override fun getPosition(): Int = adapterPosition
-      override fun getSelectionKey(): Long? = itemId
-    }
+    fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> =
+      object : ItemDetailsLookup.ItemDetails<Long>() {
+        override fun getPosition(): Int = adapterPosition
+        override fun getSelectionKey(): Long? = itemId
+      }
 
     fun setActivatedState(isActivated: Boolean) {
       itemView.isActivated = isActivated
@@ -398,9 +436,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
   companion object {
     private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<MessageEntity>() {
-      override fun areItemsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) = oldMsg.id == newMsg.id
+      override fun areItemsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) =
+        oldMsg.id == newMsg.id
 
-      override fun areContentsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) = oldMsg == newMsg
+      override fun areContentsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) =
+        oldMsg == newMsg
     }
 
     @IntDef(NONE, FOOTER, MESSAGE)
