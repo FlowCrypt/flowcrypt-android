@@ -120,12 +120,12 @@ class SecurityUtils {
     }
 
     /**
-     * Get a public key of the sender. If we will find a few pubkey we will return the first;
+     * Get a sender key details. If we will find a few keys we will return the first;
      *
      * @param context     Interface to global information about an application environment.
      * @param account     The given account
      * @param senderEmail The sender email
-     * @return <tt>String</tt> The sender public key.
+     * @return <tt>String</tt> The sender key.
      * @throws NoKeyAvailableException
      */
     @JvmStatic
