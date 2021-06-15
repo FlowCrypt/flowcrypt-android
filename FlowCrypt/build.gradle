@@ -240,6 +240,10 @@ android {
         targetCompatibility rootProject.ext.javaSourceCompatibility
     }
 
+    buildFeatures {
+        viewBinding true
+    }
+
     kotlinOptions {
         jvmTarget = "1.8"
         //need for ACRA, maybe will be deleted in the upcoming updates

@@ -21,7 +21,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="@string/backups_found_message" />
+        tools:text="@string/backups_found" />
 
     <Button
         android:id="@+id/buttonSeeMoreBackupOptions"

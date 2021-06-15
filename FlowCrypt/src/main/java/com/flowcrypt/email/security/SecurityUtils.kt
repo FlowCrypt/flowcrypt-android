@@ -66,7 +66,7 @@ class SecurityUtils {
       }
 
       val fingerprintsWithEmptyPassphrase = keysStorage.getFingerprintsWithEmptyPassphrase()
-      if (keys.isNotEmpty()) {
+      if (fingerprintsWithEmptyPassphrase.isNotEmpty()) {
         throw EmptyPassphraseException(
           fingerprints = fingerprintsWithEmptyPassphrase,
           message = context.getString(R.string.empty_pass_phrase)

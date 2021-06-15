@@ -34,7 +34,16 @@ class MainSettingsFragment : BasePreferenceFragment() {
     addPreferencesFromResource(R.xml.preferences_main_settings)
 
     findPreference<Preference>(getString(R.string.pref_key_server_settings))?.setOnPreferenceClickListener {
-      navController?.navigate(MainSettingsFragmentDirections.actionMainSettingsFragmentToServerSettingsFragment())
+      navController?.navigate(
+        MainSettingsFragmentDirections.actionMainSettingsFragmentToServerSettingsFragment()
+      )
+      true
+    }
+
+    findPreference<Preference>("rrrr")?.setOnPreferenceClickListener {
+      navController?.navigate(
+        MainSettingsFragmentDirections.actionMainSettingsFragmentToSearchBackupsInEmailFragment()
+      )
       true
     }
   }

@@ -102,7 +102,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
 
   private fun showBackupFoundView() {
     layoutBackupFound.visibility = View.VISIBLE
-    textViewBackupFound.text = getString(R.string.backups_found_message, privateKeys.size)
+    textViewBackupFound.text = getString(R.string.backups_found, privateKeys.size)
   }
 
   private fun initBackupsViewModel() {

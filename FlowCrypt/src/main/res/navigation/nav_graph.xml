@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_serverSettingsFragment"
             app:destination="@id/serverSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_searchBackupsInEmailFragment"
+            app:destination="@id/searchBackupsInEmailFragment" />
     </fragment>
 
     <fragment
@@ -66,6 +69,20 @@
             app:nullable="true" />
     </fragment>
 
+    <fragment
+        android:id="@+id/searchBackupsInEmailFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragmentTemp"
+        tools:layout="@layout/fragment_search_backups_in_email_temp">
+        <action
+            android:id="@+id/action_searchBackupsInEmailFragment_to_backupKeysFragment"
+            app:destination="@id/backupKeysFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/backupKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.BackupKeysFragmentTemp"
+        tools:layout="@layout/fragment_backup_keys_temp" />
+
     <dialog
         android:id="@+id/twoWayDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment"
@@ -107,7 +124,52 @@
             android:defaultValue="false"
             app:argType="boolean" />
     </dialog>
+
+    <dialog
+        android:id="@+id/infoDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment"
+        android:label="InfoDialogFragment">
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="dialogTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="dialogMsg"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="buttonTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="isCancelable"
+            android:defaultValue="true"
+            app:argType="boolean" />
+        <argument
+            android:name="useNavigationUp"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="hasHtml"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="useLinkify"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </dialog>
+
     <action
         android:id="@+id/action_global_twoWayDialogFragment"
         app:destination="@id/twoWayDialogFragment" />
+    <action
+        android:id="@+id/action_global_infoDialogFragment"
+        app:destination="@id/infoDialogFragment" />
 </navigation>
