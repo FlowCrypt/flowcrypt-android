@@ -43,4 +43,6 @@ interface KeysStorage {
   )
 
   fun hasEmptyPassphrase(): Boolean
+
+  fun getFingerprintsWithEmptyPassphrase(): List<String>
 }

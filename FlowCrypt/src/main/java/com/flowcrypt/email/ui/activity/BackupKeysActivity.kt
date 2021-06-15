@@ -30,6 +30,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
+import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
@@ -294,6 +295,11 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
           val e = it.exception
           isPrivateKeySendingNow = false
           when (e) {
+            is EmptyPassphraseException -> {
+              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+              showPassWeakHint()
+            }
+
             is PrivateKeyStrengthException -> {
               UIUtil.exchangeViewVisibility(false, progressBar, rootView)
               showPassWeakHint()

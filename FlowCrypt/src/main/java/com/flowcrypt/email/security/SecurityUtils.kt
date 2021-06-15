@@ -17,6 +17,7 @@ import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
+import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
@@ -62,6 +63,14 @@ class SecurityUtils {
 
       if (keys.isEmpty()) {
         throw NoPrivateKeysAvailableException(context, account.email)
+      }
+
+      val fingerprintsWithEmptyPassphrase = keysStorage.getFingerprintsWithEmptyPassphrase()
+      if (keys.isNotEmpty()) {
+        throw EmptyPassphraseException(
+          fingerprints = fingerprintsWithEmptyPassphrase,
+          message = context.getString(R.string.empty_pass_phrase)
+        )
       }
 
       var firstPassPhrase: Passphrase? = null
