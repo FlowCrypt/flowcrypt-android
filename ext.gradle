@@ -24,7 +24,7 @@ ext {
     /* https://developer.android.com/jetpack/androidx/releases/paging#declaring_dependencies*/
     pagingVersion = '2.1.2'
     /*https://developer.android.com/jetpack/androidx/releases/navigation*/
-    navVersion = '2.3.3'
+    navVersion = '2.3.5'
     /* https://mvnrepository.com/artifact/androidx.test.espresso*/
     espressoVersion = '3.3.0'
     /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
