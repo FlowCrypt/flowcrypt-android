@@ -166,10 +166,23 @@
             app:argType="boolean" />
     </dialog>
 
+    <dialog
+        android:id="@+id/fixNeedPassphraseIssueDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment"
+        android:label="FixNeedPassphraseIssueDialogFragment">
+        <argument
+            android:name="fingerprints"
+            app:argType="string[]"
+            app:nullable="true" />
+    </dialog>
+
     <action
         android:id="@+id/action_global_twoWayDialogFragment"
         app:destination="@id/twoWayDialogFragment" />
     <action
         android:id="@+id/action_global_infoDialogFragment"
         app:destination="@id/infoDialogFragment" />
+    <action
+        android:id="@+id/action_global_fixNeedPassphraseIssueDialogFragment"
+        app:destination="@id/fixNeedPassphraseIssueDialogFragment" />
 </navigation>

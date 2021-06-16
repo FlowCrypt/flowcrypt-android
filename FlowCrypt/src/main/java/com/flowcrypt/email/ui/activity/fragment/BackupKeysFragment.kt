@@ -175,6 +175,14 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
             showContent()
             areBackupsSavingNow = false
             when (it.exception) {
+              is EmptyPassphraseException -> {
+                navController?.navigate(
+                  NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
+                    it.exception.fingerprints.toTypedArray()
+                  )
+                )
+              }
+
               is PrivateKeyStrengthException -> {
                 showHint(
                   msgText = getString(R.string.pass_phrase_is_too_weak),
@@ -226,13 +234,13 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
 
         Result.Status.EXCEPTION -> {
           showContent()
-          val e = it.exception
           isPrivateKeySendingNow = false
-          when (e) {
+          when (it.exception) {
             is EmptyPassphraseException -> {
-              showHint(
-                msgText = getString(R.string.pass_phrase_is_too_weak),
-                btnName = getString(R.string.change_pass_phrase)
+              navController?.navigate(
+                NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
+                  it.exception.fingerprints.toTypedArray()
+                )
               )
             }
 
@@ -251,7 +259,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
             }
 
             is NoPrivateKeysAvailableException -> {
-              showInfoSnackbar(binding?.root, e.message, Snackbar.LENGTH_LONG)
+              showInfoSnackbar(binding?.root, it.exception.message, Snackbar.LENGTH_LONG)
             }
 
             else -> {
