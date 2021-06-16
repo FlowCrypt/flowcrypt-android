@@ -47,7 +47,7 @@ class SearchBackupsInEmailFragment : BaseSettingsBackStackSyncActivity(), View.O
   private var privateKeys = mutableListOf<PgpKeyDetails>()
 
   override val contentViewResourceId: Int
-    get() = R.layout.activity_backup_settings
+    get() = R.layout.fragment_search_backups_in_email
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
