@@ -40,7 +40,7 @@ class MainSettingsFragment : BasePreferenceFragment() {
       true
     }
 
-    findPreference<Preference>("rrrr")?.setOnPreferenceClickListener {
+    findPreference<Preference>(getString(R.string.pref_key_backups))?.setOnPreferenceClickListener {
       navController?.navigate(
         MainSettingsFragmentDirections.actionMainSettingsFragmentToSearchBackupsInEmailFragment()
       )

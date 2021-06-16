@@ -5,22 +5,22 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.viewModels
+import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.databinding.FragmentSearchBackupsInEmailBinding
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
-import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 
 /**
  * This activity helps a user to backup his private keys via next methods:
@@ -34,117 +34,75 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 15:27
  * E-mail: DenBond7@gmail.com
  */
-class SearchBackupsInEmailFragment : BaseSettingsBackStackSyncActivity(), View.OnClickListener {
+class SearchBackupsInEmailFragment : BaseFragment(), ProgressBehaviour {
+  private var binding: FragmentSearchBackupsInEmailBinding? = null
   private val backupsViewModel: BackupsViewModel by viewModels()
 
-  private lateinit var progressBar: View
-  override lateinit var rootView: View
-  private lateinit var layoutSyncStatus: View
-  private lateinit var layoutBackupFound: View
-  private lateinit var layoutBackupNotFound: View
-  private lateinit var textViewBackupFound: TextView
+  override val progressView: View?
+    get() = binding?.iProgress?.root
+  override val contentView: View?
+    get() = binding?.gContent
+  override val statusView: View?
+    get() = binding?.iStatus?.root
 
-  private var privateKeys = mutableListOf<PgpKeyDetails>()
+  override val contentResourceId: Int = R.layout.fragment_search_backups_in_email
 
-  override val contentViewResourceId: Int
-    get() = R.layout.fragment_search_backups_in_email
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentSearchBackupsInEmailBinding.inflate(inflater, container, false)
+    return binding?.root
+  }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    supportActionBar?.title = getString(R.string.backups)
     initViews()
     initBackupsViewModel()
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_BACKUP_WITH_OPTION -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          Toast.makeText(this, R.string.backed_up_successfully, Toast.LENGTH_SHORT).show()
-          finish()
-        }
-      }
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.buttonSeeMoreBackupOptions,
-      R.id.buttonBackupMyKey ->
-        startActivityForResult(
-          Intent(this, BackupKeysFragment::class.java),
-          REQUEST_CODE_BACKUP_WITH_OPTION
-        )
-    }
-  }
-
   private fun initViews() {
-    this.progressBar = findViewById(R.id.progressBar)
-    this.rootView = findViewById(R.id.layoutContent)
-    this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus)
-    this.layoutBackupFound = findViewById(R.id.layoutBackupFound)
-    this.layoutBackupNotFound = findViewById(R.id.layoutBackupNotFound)
-    this.textViewBackupFound = findViewById(R.id.textViewBackupFound)
-
-    if (findViewById<View>(R.id.buttonSeeMoreBackupOptions) != null) {
-      findViewById<View>(R.id.buttonSeeMoreBackupOptions).setOnClickListener(this)
+    binding?.btBackup?.setOnClickListener {
+      navController?.navigate(
+        SearchBackupsInEmailFragmentDirections
+          .actionSearchBackupsInEmailFragmentToBackupKeysFragment()
+      )
     }
-
-    if (findViewById<View>(R.id.buttonBackupMyKey) != null) {
-      findViewById<View>(R.id.buttonBackupMyKey).setOnClickListener(this)
-    }
-  }
-
-  private fun showNoBackupFoundView() {
-    layoutBackupNotFound.visibility = View.VISIBLE
-  }
-
-  private fun showBackupFoundView() {
-    layoutBackupFound.visibility = View.VISIBLE
-    textViewBackupFound.text = getString(R.string.backups_found, privateKeys.size)
   }
 
   private fun initBackupsViewModel() {
-    backupsViewModel.onlineBackupsLiveData.observe(this, {
+    backupsViewModel.onlineBackupsLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
-          UIUtil.exchangeViewVisibility(true, progressBar, rootView)
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress()
         }
 
         Result.Status.SUCCESS -> {
-          UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-
           val keys = it.data
-
-          privateKeys.clear()
           if (keys.isNullOrEmpty()) {
-            showNoBackupFoundView()
+            binding?.tVTitle?.text = getText(R.string.there_are_no_backups_on_this_account)
+            binding?.btBackup?.text = getString(R.string.back_up_my_key)
           } else {
-            privateKeys.addAll(keys)
-            showBackupFoundView()
+            binding?.tVTitle?.text = getString(R.string.backups_found, keys.size)
+            binding?.btBackup?.text = getString(R.string.see_more_backup_options)
           }
-          countingIdlingResource.decrementSafely()
+          showContent()
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
-          toast(
-            it.exception?.message
-              ?: it.exception?.cause?.message
-              ?: getString(R.string.unknown_error)
-          )
-          countingIdlingResource.decrementSafely()
-          finish()
+          toast(it.exceptionMsg)
+          baseActivity.countingIdlingResource.decrementSafely()
+          navController?.navigateUp()
         }
 
         else -> {
-          countingIdlingResource.decrementSafely()
+          baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })
-  }
-
-  companion object {
-    private const val REQUEST_CODE_BACKUP_WITH_OPTION = 100
   }
 }

@@ -9,27 +9,27 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
-import android.widget.RadioGroup
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.viewModels
-import androidx.annotation.IdRes
+import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.databinding.FragmentBackupKeysBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.showInfoDialogFragment
+import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
-import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -45,103 +45,41 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:06
  * E-mail: DenBond7@gmail.com
  */
-class BackupKeysFragment : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
-  RadioGroup.OnCheckedChangeListener {
+class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
+  private var binding: FragmentBackupKeysBinding? = null
+
+  override val progressView: View?
+    get() = binding?.iProgress?.root
+  override val contentView: View?
+    get() = binding?.gContent
+  override val statusView: View?
+    get() = binding?.iStatus?.root
+
   private val backupsViewModel: BackupsViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  private var progressBar: View? = null
-  override lateinit var rootView: View
-  private var layoutSyncStatus: View? = null
-  private var textViewOptionsHint: TextView? = null
-  private var radioGroupBackupsVariants: RadioGroup? = null
-  private var btnBackupAction: Button? = null
-
-  private var destinationUri: Uri? = null
-
   private var isPrivateKeySendingNow: Boolean = false
   private var areBackupsSavingNow: Boolean = false
+  private var destinationUri: Uri? = null
 
-  override val contentViewResourceId: Int
-    get() = R.layout.fragment_backup_keys
+  override val contentResourceId: Int = R.layout.fragment_backup_keys
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
+  override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentBackupKeysBinding.inflate(inflater, container, false)
+    return binding?.root
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    supportActionBar?.title = getString(R.string.backup_options)
     initViews()
     setupPrivateKeysViewModel()
     initBackupsViewModel()
   }
 
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.buttonBackupAction -> {
-        if (KeysStorageImpl.getInstance(application).getRawKeys().isNullOrEmpty()) {
-          showInfoSnackbar(
-            rootView, getString(
-              R.string.there_are_no_private_keys,
-              activeAccount?.email
-            ), Snackbar.LENGTH_LONG
-          )
-        } else {
-          when (radioGroupBackupsVariants?.checkedRadioButtonId) {
-            R.id.radioButtonEmail -> {
-              dismissSnackBar()
-              if (GeneralUtil.isConnected(this)) {
-                isPrivateKeySendingNow = true
-                UIUtil.exchangeViewVisibility(true, progressBar, rootView)
-                backupsViewModel.postBackup()
-              } else {
-                UIUtil.showInfoSnackbar(
-                  rootView,
-                  getString(R.string.internet_connection_is_not_available)
-                )
-              }
-            }
-
-            R.id.radioButtonDownload -> {
-              dismissSnackBar()
-              destinationUri = null
-              chooseDestForExportedKey()
-            }
-          }
-        }
-      }
-    }
-  }
-
-  override fun onBackPressed() {
-    when {
-      areBackupsSavingNow -> {
-        areBackupsSavingNow = false
-        UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-      }
-
-      isPrivateKeySendingNow -> Toast.makeText(
-        this, R.string.please_wait_while_message_will_be_sent,
-        Toast.LENGTH_SHORT
-      ).show()
-
-      else -> super.onBackPressed()
-    }
-  }
-
-  override fun onCheckedChanged(group: RadioGroup, @IdRes checkedId: Int) {
-    when (group.id) {
-      R.id.radioGroupBackupsVariants -> when (checkedId) {
-        R.id.radioButtonEmail -> if (textViewOptionsHint != null) {
-          textViewOptionsHint?.setText(R.string.backup_as_email_hint)
-          btnBackupAction?.setText(R.string.backup_as_email)
-        }
-
-        R.id.radioButtonDownload -> if (textViewOptionsHint != null) {
-          textViewOptionsHint?.setText(R.string.backup_as_download_hint)
-          btnBackupAction?.setText(R.string.backup_as_a_file)
-        }
-      }
-    }
-  }
-
-  public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
     when (requestCode) {
       REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY -> when (resultCode) {
@@ -152,125 +90,119 @@ class BackupKeysFragment : BaseSettingsBackStackSyncActivity(), View.OnClickList
           } catch (e: Exception) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)
-            UIUtil.showInfoSnackbar(rootView, e.message ?: "")
+            showInfoSnackbar(binding?.root, e.message ?: "")
           }
         }
       }
-
-      REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY -> {
-        layoutSyncStatus?.visibility = View.GONE
-        UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-      }
-    }
-  }
-
-  private fun showBackupingErrorHint() {
-    showSnackbar(
-      rootView, getString(R.string.backup_was_not_sent), getString(R.string.retry),
-      Snackbar.LENGTH_LONG
-    ) {
-      layoutSyncStatus?.visibility = View.GONE
-      UIUtil.exchangeViewVisibility(true, progressBar, rootView)
-      countingIdlingResource.incrementSafely()
-      backupsViewModel.postBackup()
-    }
-  }
-
-  private fun showDifferentPassHint() {
-    showSnackbar(
-      rootView, getString(R.string.different_pass_phrases), getString(R.string.fix),
-      Snackbar.LENGTH_LONG
-    ) {
-      startActivityForResult(
-        ChangePassPhraseActivity.newIntent(this@BackupKeysFragment),
-        REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY
-      )
-    }
-  }
-
-  private fun showPassWeakHint() {
-    showSnackbar(
-      rootView, getString(R.string.pass_phrase_is_too_weak),
-      getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG
-    ) {
-      startActivityForResult(
-        ChangePassPhraseActivity.newIntent(this@BackupKeysFragment),
-        REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY
-      )
     }
   }
 
   private fun initViews() {
-    this.progressBar = findViewById(R.id.progressBar)
-    this.rootView = findViewById(R.id.layoutContent)
-    this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus)
-    this.textViewOptionsHint = findViewById(R.id.textViewOptionsHint)
-    this.radioGroupBackupsVariants = findViewById(R.id.radioGroupBackupsVariants)
+    binding?.rGBackupOptions?.setOnCheckedChangeListener { group, checkedId ->
+      when (group.id) {
+        R.id.rGBackupOptions -> when (checkedId) {
+          R.id.rBEmailOption -> {
+            binding?.tVHint?.text = getString(R.string.backup_as_email_hint)
+            binding?.btBackup?.text = getString(R.string.backup_as_email)
+          }
 
-    radioGroupBackupsVariants?.setOnCheckedChangeListener(this)
+          R.id.rBDownloadOption -> {
+            binding?.tVHint?.text = getString(R.string.backup_as_download_hint)
+            binding?.btBackup?.text = getString(R.string.backup_as_a_file)
+          }
+        }
+      }
+    }
 
-    btnBackupAction = findViewById(R.id.buttonBackupAction)
-    btnBackupAction?.setOnClickListener(this)
-  }
+    binding?.btBackup?.setOnClickListener {
+      if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isNullOrEmpty()) {
+        showInfoSnackbar(
+          view = binding?.root,
+          msgText = getString(
+            R.string.there_are_no_private_keys,
+            account?.email
+          ), duration = Snackbar.LENGTH_LONG
+        )
+      } else {
+        when (binding?.rGBackupOptions?.checkedRadioButtonId) {
+          R.id.rBEmailOption -> {
+            dismissCurrentSnackBar()
+            if (GeneralUtil.isConnected(requireContext())) {
+              isPrivateKeySendingNow = true
+              backupsViewModel.postBackup()
+            } else {
+              showInfoSnackbar(
+                view = binding?.root,
+                msgText = getString(R.string.internet_connection_is_not_available)
+              )
+            }
+          }
 
-  /**
-   * Start a new Activity with return results to choose a destination for an exported key.
-   */
-  private fun chooseDestForExportedKey() {
-    activeAccount?.let {
-      val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-      intent.addCategory(Intent.CATEGORY_OPENABLE)
-      intent.type = Constants.MIME_TYPE_PGP_KEY
-      intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(it.email))
-      startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY)
-    } ?: ExceptionUtil.handleError(NullPointerException("account is null"))
+          R.id.rBDownloadOption -> {
+            dismissCurrentSnackBar()
+            destinationUri = null
+            chooseDestForExportedKey()
+          }
+        }
+      }
+    }
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.saveBackupAsFileLiveData.observe(this, {
+    privateKeysViewModel.saveBackupAsFileLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            baseActivity.countingIdlingResource.incrementSafely()
+            showProgress(getString(R.string.processing))
             areBackupsSavingNow = true
-            UIUtil.exchangeViewVisibility(true, progressBar, rootView)
           }
 
           Result.Status.SUCCESS -> {
             areBackupsSavingNow = false
             val result = it.data
             if (result == true) {
-              setResult(Activity.RESULT_OK)
-              finish()
+              toast(R.string.backed_up_successfully)
+              navController?.popBackStack(R.id.mainSettingsFragment, false)
             } else {
-              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-              showInfoSnackbar(rootView, getString(R.string.error_occurred_please_try_again))
+              showContent()
+              showInfoSnackbar(binding?.root, getString(R.string.error_occurred_please_try_again))
             }
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            showContent()
             areBackupsSavingNow = false
             when (it.exception) {
               is PrivateKeyStrengthException -> {
-                UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-                showPassWeakHint()
+                showHint(
+                  msgText = getString(R.string.pass_phrase_is_too_weak),
+                  btnName = getString(R.string.change_pass_phrase)
+                )
               }
 
               is DifferentPassPhrasesException -> {
-                UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-                showDifferentPassHint()
+                showHint(
+                  msgText = getString(R.string.different_pass_phrases),
+                  btnName = getString(R.string.fix)
+                )
               }
 
               else -> {
-                UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-                showInfoDialogFragment(
-                  dialogMsg = it.exception?.message
-                    ?: getString(R.string.error_could_not_save_private_keys)
+                navController?.navigate(
+                  NavGraphDirections.actionGlobalInfoDialogFragment(
+                    requestCode = 0,
+                    dialogTitle = "",
+                    dialogMsg = it.exception?.message
+                      ?: getString(R.string.error_could_not_save_private_keys)
+                  )
                 )
               }
             }
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+          else -> {
           }
         }
       }
@@ -278,51 +210,56 @@ class BackupKeysFragment : BaseSettingsBackStackSyncActivity(), View.OnClickList
   }
 
   private fun initBackupsViewModel() {
-    backupsViewModel.postBackupLiveData.observe(this, {
+    backupsViewModel.postBackupLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
-          UIUtil.exchangeViewVisibility(true, progressBar, rootView)
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress()
         }
 
         Result.Status.SUCCESS -> {
           isPrivateKeySendingNow = false
-          setResult(Activity.RESULT_OK)
-          finish()
-          countingIdlingResource.decrementSafely()
+          toast(R.string.backed_up_successfully)
+          navController?.popBackStack(R.id.mainSettingsFragment, false)
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
+          showContent()
           val e = it.exception
           isPrivateKeySendingNow = false
           when (e) {
             is EmptyPassphraseException -> {
-              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-              showPassWeakHint()
+              showHint(
+                msgText = getString(R.string.pass_phrase_is_too_weak),
+                btnName = getString(R.string.change_pass_phrase)
+              )
             }
 
             is PrivateKeyStrengthException -> {
-              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-              showPassWeakHint()
+              showHint(
+                msgText = getString(R.string.pass_phrase_is_too_weak),
+                btnName = getString(R.string.change_pass_phrase)
+              )
             }
 
             is DifferentPassPhrasesException -> {
-              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-              showDifferentPassHint()
+              showHint(
+                msgText = getString(R.string.different_pass_phrases),
+                btnName = getString(R.string.fix)
+              )
             }
 
             is NoPrivateKeysAvailableException -> {
-              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-              showInfoSnackbar(rootView, e.message, Snackbar.LENGTH_LONG)
+              showInfoSnackbar(binding?.root, e.message, Snackbar.LENGTH_LONG)
             }
 
             else -> {
-              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
               showBackupingErrorHint()
             }
           }
 
-          countingIdlingResource.decrementSafely()
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
         else -> {
@@ -331,8 +268,42 @@ class BackupKeysFragment : BaseSettingsBackStackSyncActivity(), View.OnClickList
     })
   }
 
+  private fun showBackupingErrorHint() {
+    showSnackbar(
+      view = binding?.root,
+      msgText = getString(R.string.backup_was_not_sent),
+      btnName = getString(R.string.retry),
+      duration = Snackbar.LENGTH_LONG
+    ) {
+      backupsViewModel.postBackup()
+    }
+  }
+
+  private fun showHint(msgText: String, btnName: String) {
+    showSnackbar(
+      view = binding?.root,
+      msgText = msgText,
+      btnName = btnName,
+      duration = Snackbar.LENGTH_LONG
+    ) {
+      startActivityForResult(ChangePassPhraseActivity.newIntent(requireContext()), 0)
+    }
+  }
+
+  /**
+   * Start a new Activity with return results to choose a destination for an exported key.
+   */
+  private fun chooseDestForExportedKey() {
+    account?.let {
+      val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+      intent.addCategory(Intent.CATEGORY_OPENABLE)
+      intent.type = Constants.MIME_TYPE_PGP_KEY
+      intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(it.email))
+      startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY)
+    } ?: ExceptionUtil.handleError(NullPointerException("account is null"))
+  }
+
   companion object {
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10
-    private const val REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY = 11
   }
 }

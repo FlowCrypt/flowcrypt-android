@@ -2,104 +2,119 @@
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragment">
+    android:layout_height="match_parent">
 
-    <include layout="@layout/toolbar" />
+    <RadioGroup
+        android:id="@+id/rGBackupOptions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toTopOf="@+id/guidelineTop">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <LinearLayout
-            android:id="@+id/progressBar"
+        <RadioButton
+            android:id="@+id/rBEmailOption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:layout_weight="1"
+            android:checked="true"
+            android:text="@string/email"
+            android:textAllCaps="true"
+            android:theme="@style/AppWidget.RadioButton" />
 
-            <ProgressBar
-                style="?android:attr/progressBarStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="@dimen/default_margin_big"
-                android:fontFamily="sans-serif-light"
-                android:text="@string/loading"
-                android:textColor="@color/dark"
-                android:textSize="@dimen/default_text_size_big" />
-        </LinearLayout>
-
-
-        <ScrollView
-            android:id="@+id/layoutContent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <include
-                    android:id="@+id/layoutBackupOptions"
-                    layout="@layout/backup_options"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
-
-                <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/guidelineLeft"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    app:layout_constraintGuide_begin="@dimen/default_margin_content" />
-
-                <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/guidelineTop"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    app:layout_constraintGuide_begin="@dimen/default_margin_content" />
-
-                <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/guidelineRight"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    app:layout_constraintGuide_end="@dimen/default_margin_content" />
-
-                <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/guidelineBottom"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    app:layout_constraintGuide_end="@dimen/default_margin_content" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </ScrollView>
-
-        <include
-            android:id="@+id/layoutSyncStatus"
-            layout="@layout/sync_status"
+        <RadioButton
+            android:id="@+id/rBDownloadOption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+            android:layout_marginTop="@dimen/default_margin_medium"
+            android:layout_weight="1"
+            android:text="@string/download"
+            android:textAllCaps="true"
+            android:theme="@style/AppWidget.RadioButton" />
+    </RadioGroup>
 
-    </FrameLayout>
+    <Button
+        android:id="@+id/btBackup"
+        style="@style/AppWidget.Button.Green"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:text="@string/backup_as_email"
+        android:textAllCaps="true"
+        android:theme="@style/AppWidget.Button.Green"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/rGBackupOptions" />
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/tVHint"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:text="@string/backup_as_email_hint"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/btBackup" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/gContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="rGBackupOptions,btBackup,tVHint" />
+
+    <include
+        android:id="@+id/iProgress"
+        layout="@layout/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
+
+    <include
+        android:id="@+id/iStatus"
+        layout="@layout/sync_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

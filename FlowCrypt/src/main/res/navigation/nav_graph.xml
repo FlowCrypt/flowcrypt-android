@@ -71,8 +71,8 @@
 
     <fragment
         android:id="@+id/searchBackupsInEmailFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragmentTemp"
-        tools:layout="@layout/fragment_search_backups_in_email_temp">
+        android:name="com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragment"
+        tools:layout="@layout/fragment_search_backups_in_email">
         <action
             android:id="@+id/action_searchBackupsInEmailFragment_to_backupKeysFragment"
             app:destination="@id/backupKeysFragment" />
@@ -80,8 +80,8 @@
 
     <fragment
         android:id="@+id/backupKeysFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.BackupKeysFragmentTemp"
-        tools:layout="@layout/fragment_backup_keys_temp" />
+        android:name="com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment"
+        tools:layout="@layout/fragment_backup_keys" />
 
     <dialog
         android:id="@+id/twoWayDialogFragment"
