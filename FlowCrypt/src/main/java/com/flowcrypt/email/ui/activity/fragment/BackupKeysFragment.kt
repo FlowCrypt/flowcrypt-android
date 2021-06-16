@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
 import android.content.Intent
@@ -26,6 +26,7 @@ import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil

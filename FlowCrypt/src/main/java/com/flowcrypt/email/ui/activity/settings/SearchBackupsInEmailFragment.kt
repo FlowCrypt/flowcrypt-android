@@ -19,8 +19,8 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.BackupKeysFragment
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
+import com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment
 import com.flowcrypt.email.util.UIUtil
 
 /**
