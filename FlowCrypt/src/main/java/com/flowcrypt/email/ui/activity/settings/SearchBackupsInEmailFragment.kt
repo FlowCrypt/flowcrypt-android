@@ -19,7 +19,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.BackupKeysActivity
+import com.flowcrypt.email.ui.activity.BackupKeysFragment
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
 import com.flowcrypt.email.util.UIUtil
 
@@ -35,7 +35,7 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 15:27
  * E-mail: DenBond7@gmail.com
  */
-class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener {
+class SearchBackupsInEmailFragment : BaseSettingsBackStackSyncActivity(), View.OnClickListener {
   private val backupsViewModel: BackupsViewModel by viewModels()
 
   private lateinit var progressBar: View
@@ -73,7 +73,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
       R.id.buttonSeeMoreBackupOptions,
       R.id.buttonBackupMyKey ->
         startActivityForResult(
-          Intent(this, BackupKeysActivity::class.java),
+          Intent(this, BackupKeysFragment::class.java),
           REQUEST_CODE_BACKUP_WITH_OPTION
         )
     }

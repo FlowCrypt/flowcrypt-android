@@ -44,7 +44,7 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:06
  * E-mail: DenBond7@gmail.com
  */
-class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
+class BackupKeysFragment : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
   RadioGroup.OnCheckedChangeListener {
   private val backupsViewModel: BackupsViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
@@ -181,7 +181,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       Snackbar.LENGTH_LONG
     ) {
       startActivityForResult(
-        ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
+        ChangePassPhraseActivity.newIntent(this@BackupKeysFragment),
         REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY
       )
     }
@@ -193,7 +193,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG
     ) {
       startActivityForResult(
-        ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
+        ChangePassPhraseActivity.newIntent(this@BackupKeysFragment),
         REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY
       )
     }

@@ -24,7 +24,7 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity
+import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailFragment
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -40,8 +40,8 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class SearchBackupsInEmailActivityTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<SearchBackupsInEmailActivity>()
+class SearchBackupsInEmailFragmentTest : BaseTest() {
+  override val activityScenarioRule = activityScenarioRule<SearchBackupsInEmailFragment>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

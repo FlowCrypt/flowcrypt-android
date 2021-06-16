@@ -57,9 +57,9 @@ import java.io.File
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysActivityTest : BaseTest() {
+class BackupKeysFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<BackupKeysActivity>()
+  override val activityScenarioRule = activityScenarioRule<BackupKeysFragment>()
 
   val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 

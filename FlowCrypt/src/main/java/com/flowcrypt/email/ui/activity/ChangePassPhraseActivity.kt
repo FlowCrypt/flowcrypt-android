@@ -103,8 +103,9 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private fun runBackupKeysActivity() {
     isBackEnabled = true
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
+    //todo-denbond7 fixme
     startActivityForResult(
-      Intent(this, BackupKeysActivity::class.java),
+      Intent(this, BackupKeysFragment::class.java),
       REQUEST_CODE_BACKUP_WITH_OPTION
     )
   }

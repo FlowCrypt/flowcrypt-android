@@ -9,7 +9,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity">
+    tools:context="com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailFragment">
 
     <include layout="@layout/toolbar" />
 
