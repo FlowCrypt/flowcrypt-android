@@ -63,7 +63,7 @@ class BackupKeysFragment : BaseSettingsBackStackSyncActivity(), View.OnClickList
   private var areBackupsSavingNow: Boolean = false
 
   override val contentViewResourceId: Int
-    get() = R.layout.activity_backup_keys
+    get() = R.layout.fragment_backup_keys
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
