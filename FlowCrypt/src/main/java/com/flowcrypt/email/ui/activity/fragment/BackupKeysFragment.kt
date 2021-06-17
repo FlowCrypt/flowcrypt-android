@@ -128,31 +128,23 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
         when (binding?.rGBackupOptions?.checkedRadioButtonId) {
           R.id.rBEmailOption -> {
             dismissCurrentSnackBar()
-            if (GeneralUtil.isConnected(requireContext())) {
-              isPrivateKeySendingNow = true
-              backupsViewModel.postBackup()
-            } else {
-              showInfoSnackbar(
-                view = binding?.root,
-                msgText = getString(R.string.internet_connection_is_not_available)
-              )
+            checkForEmptyPassphraseOrRunAction {
+              if (GeneralUtil.isConnected(requireContext())) {
+                isPrivateKeySendingNow = true
+                backupsViewModel.postBackup()
+              } else {
+                showInfoSnackbar(
+                  view = binding?.root,
+                  msgText = getString(R.string.internet_connection_is_not_available)
+                )
+              }
             }
           }
 
           R.id.rBDownloadOption -> {
             dismissCurrentSnackBar()
             destinationUri = null
-
-            val keysStorage = KeysStorageImpl.getInstance(requireContext())
-            val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
-            if (fingerprints.isNotEmpty()) {
-              navController?.navigate(
-                NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
-                  fingerprints = fingerprints.toTypedArray(),
-                  logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
-                )
-              )
-            } else {
+            checkForEmptyPassphraseOrRunAction {
               chooseDestForExportedKey()
             }
           }
@@ -311,6 +303,21 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(it.email))
       startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY)
     } ?: ExceptionUtil.handleError(NullPointerException("account is null"))
+  }
+
+  private fun checkForEmptyPassphraseOrRunAction(action: () -> Unit) {
+    val keysStorage = KeysStorageImpl.getInstance(requireContext())
+    val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
+    if (fingerprints.isNotEmpty()) {
+      navController?.navigate(
+        NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
+          fingerprints = fingerprints.toTypedArray(),
+          logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
+        )
+      )
+    } else {
+      action.invoke()
+    }
   }
 
   companion object {
