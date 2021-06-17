@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
@@ -64,6 +65,17 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
   private var destinationUri: Uri? = null
 
   override val contentResourceId: Int = R.layout.fragment_backup_keys
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    requireActivity().onBackPressedDispatcher.addCallback(this) {
+      when {
+        areBackupsSavingNow -> toast(R.string.please_wait_while_backup_will_be_saved)
+        isPrivateKeySendingNow -> toast(R.string.please_wait_while_message_will_be_sent)
+        else -> navController?.navigateUp()
+      }
+    }
+  }
 
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -130,7 +142,6 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
             dismissCurrentSnackBar()
             checkForEmptyPassphraseOrRunAction {
               if (GeneralUtil.isConnected(requireContext())) {
-                isPrivateKeySendingNow = true
                 backupsViewModel.postBackup()
               } else {
                 showInfoSnackbar(
@@ -206,6 +217,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
+          isPrivateKeySendingNow = true
           showProgress()
         }
 

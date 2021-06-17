@@ -46,6 +46,7 @@
     <string name="password_is_incorrect">Incorrect pass phrase, please try again</string>
     <string name="use_another_account">Use another account</string>
     <string name="reply_all">Reply All</string>
+    <string name="please_wait_while_backup_will_be_saved">Making a backup, please wait</string>
     <string name="please_wait_while_message_will_be_sent">Sending message, please wait</string>
     <string name="please_wait_while_information_about_contacts_will_be_updated">Loading information about contacts, please wait</string>
     <string name="create_a_new_key">Create a new key</string>
@@ -67,7 +68,6 @@
     <string name="your_message">Your message</string>
     <string name="back">Back</string>
     <string name="see_more_backup_options">See more backup options</string>
-    <string name="warning_if_you_lose_your_device_and_have_not_backup">If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
     <string name="there_are_no_backups_on_this_account"><b>There are no backups on this account</b>\n\n If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
     <string name="email">Email</string>
     <string name="download">Download</string>
