@@ -27,11 +27,14 @@ import java.util.ArrayList
 class PrivateKeysManager {
   companion object {
     fun saveKeyFromAssetsToDatabase(
-      accountEntity: AccountEntity, keyPath: String,
-      passphrase: String, sourceType: KeyImportDetails.SourceType
+      accountEntity: AccountEntity,
+      keyPath: String,
+      passphrase: String,
+      sourceType: KeyImportDetails.SourceType,
+      passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
     ) {
-      val nodeKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
-      saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, sourceType)
+      val pgpKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
+      saveKeyToDatabase(accountEntity, pgpKeyDetails, passphrase, sourceType, passphraseType)
     }
 
     fun saveKeyToDatabase(

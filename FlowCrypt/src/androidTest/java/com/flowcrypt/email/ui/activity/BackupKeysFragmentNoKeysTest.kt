@@ -17,121 +17,104 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
-import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.util.AccountDaoManager
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
 import java.io.File
 
 /**
  * @author Denis Bondarenko
- * Date: 17.08.2018
- * Time: 16:28
- * E-mail: DenBond7@gmail.com
+ *         Date: 6/17/21
+ *         Time: 5:13 PM
+ *         E-mail: DenBond7@gmail.com
  */
-@MediumTest
-@RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentNoKeysTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
-    .around(AddPrivateKeyToDatabaseRule())
     .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
-  fun testEmailOptionHint() {
+  fun testNoKeysEmailOption() {
     onView(withId(R.id.rBEmailOption))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withText(getResString(R.string.backup_as_email_hint)))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testDownloadOptionHint() {
-    onView(withId(R.id.rBDownloadOption))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(getResString(R.string.backup_as_download_hint)))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  @DependsOnMailServer
-  fun testSuccessEmailOption() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withText(getResString(R.string.title_activity_settings)))
+    onView(
+      withText(
+        getResString(
+          R.string.there_are_no_private_keys,
+          AccountDaoManager.getDefaultAccountDao().email
+        )
+      )
+    )
       .check(matches(isDisplayed()))
-      .perform(click())
   }
 
   @Test
-  @DependsOnMailServer
-  fun testSuccessWithTwoKeysEmailOption() {
-    addSecondKeyWithStrongPassword()
-    testSuccessEmailOption()
-  }
-
-  @Test
-  fun testSuccessDownloadOption() {
+  fun testNoKeysDownloadOption() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
-
-    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
-
-    intendingFileChoose(file)
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-
-    TestGeneralUtil.deleteFiles(listOf(file))
-
-    onView(withText(getResString(R.string.title_activity_settings)))
+    onView(
+      withText(
+        getResString(
+          R.string.there_are_no_private_keys,
+          AccountDaoManager.getDefaultAccountDao().email
+        )
+      )
+    )
       .check(matches(isDisplayed()))
-      .perform(click())
   }
 
   @Test
-  fun testSuccessWithTwoKeysDownloadOption() {
-    addSecondKeyWithStrongPassword()
-    testSuccessDownloadOption()
+  fun testShowWeakPasswordHintForDownloadOption() {
+    addFirstKeyWithDefaultPassword()
+    onView(withId(R.id.rBDownloadOption))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    intendingFileChoose(File(""))
+    onView(withId(R.id.btBackup))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   @DependsOnMailServer
-  fun testDiffPassphrasesForEmailOption() {
-    addSecondKeyWithStrongSecondPassword()
+  fun testFixWeakPasswordForEmailOption() {
+    addFirstKeyWithDefaultPassword()
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
     assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
 
   @Test
-  fun testDiffPassphrasesForDownloadOption() {
-    addSecondKeyWithStrongSecondPassword()
+  fun testFixWeakPasswordForDownloadOption() {
+    addFirstKeyWithDefaultPassword()
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -141,7 +124,19 @@ class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
       .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
     assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
+
+  @Test
+  @DependsOnMailServer
+  fun testShowWeakPasswordHintForEmailOption() {
+    addFirstKeyWithDefaultPassword()
+    onView(withId(R.id.btBackup))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
+      .check(matches(isDisplayed()))
+  }
 }
+

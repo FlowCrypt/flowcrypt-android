@@ -33,9 +33,12 @@ class AddPrivateKeyToDatabaseRule(
   lateinit var pgpKeyDetails: PgpKeyDetails
     private set
 
-  constructor(passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE) : this(
+  constructor(
+    keyPath: String = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
+    passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
+  ) : this(
     accountEntity = AccountDaoManager.getDefaultAccountDao(),
-    keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
+    keyPath,
     passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
     sourceType = KeyImportDetails.SourceType.EMAIL,
     passphraseType = passphraseType
