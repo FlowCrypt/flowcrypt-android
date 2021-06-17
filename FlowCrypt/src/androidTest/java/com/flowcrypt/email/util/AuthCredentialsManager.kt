@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
  */
 class AuthCredentialsManager {
   companion object {
-    fun getAuthCredentials(resName: String = "default_account.json"): AuthCredentials {
+    fun getAuthCredentials(resName: String = "base_account_settings.json"): AuthCredentials {
       return TestGeneralUtil.readObjectFromResources(resName, AuthCredentials::class.java)
     }
 

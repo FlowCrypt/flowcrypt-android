@@ -5,27 +5,29 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
+import android.content.Intent
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragment
-import org.hamcrest.Matchers.not
+import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.PrivateKeysManager
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,70 +42,66 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@DependsOnMailServer
 class SearchBackupsInEmailFragmentTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<SearchBackupsInEmailFragment>()
+  override val activeActivityRule =
+    lazyActivityScenarioRule<SettingsActivity>(launchActivity = false)
+  override val activityScenario: ActivityScenario<*>?
+    get() = activeActivityRule.scenario
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
-    .around(AddAccountToDatabaseRule())
-    .around(AddPrivateKeyToDatabaseRule())
     .around(RetryRule.DEFAULT)
-    .around(activityScenarioRule)
+    .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
   @Test
-  @NotReadyForCI
-  fun testShowHelpScreen() {
-    testHelpScreen()
+  fun testBackupFound() {
+    doPreparationAndGoToSearchBackupsInEmailFragment {
+      val user = AccountDaoManager.getUserWithSingleBackup()
+      FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(user)
+      PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = user,
+        keyPath = "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        passphrase = TestConstants.DEFAULT_PASSWORD,
+        sourceType = KeyImportDetails.SourceType.EMAIL
+      )
+    }
+
+    onView(withId(R.id.tVTitle))
+      .check(matches(withText(getResString(R.string.backups_found, 1))))
+    onView(withId(R.id.btBackup))
+      .check(matches(withText(getResString(R.string.see_more_backup_options))))
   }
 
   @Test
-  @NotReadyForCI
-  fun testIsBackupFound() {
-    onView(withId(R.id.buttonSeeMoreBackupOptions))
-      .check(matches(isDisplayed()))
-    onView(withId(R.id.textViewBackupFound))
-      .check(matches(isDisplayed()))
+  fun testBackupNotFound() {
+    doPreparationAndGoToSearchBackupsInEmailFragment {
+      val user = AccountDaoManager.getUserWithoutBackup()
+      FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(user)
+      PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = user,
+        keyPath = "pgp/key_testing@flowcrypt.test_keyB_default.asc",
+        passphrase = TestConstants.DEFAULT_PASSWORD,
+        sourceType = KeyImportDetails.SourceType.EMAIL
+      )
+    }
+
+    onView(withId(R.id.tVTitle))
+      .check(matches(withText(getResString(R.string.there_are_no_backups_on_this_account))))
+    onView(withId(R.id.btBackup))
+      .check(matches(withText(getResString(R.string.back_up_my_key))))
   }
 
-  @Test
-  @NotReadyForCI
-  fun testShowBackupOptions() {
-    testIsBackupFound()
-    onView(withId(R.id.buttonSeeMoreBackupOptions))
+  private fun doPreparationAndGoToSearchBackupsInEmailFragment(action: () -> Unit) {
+    action.invoke()
+
+    activeActivityRule.launch(Intent(getTargetContext(), SettingsActivity::class.java))
+    registerAllIdlingResources()
+
+    onView(withText(getResString(R.string.backups)))
+      .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(R.id.buttonBackupAction))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  @NotReadyForCI
-  fun testSelectEmailForSavingBackup() {
-    testShowBackupOptions()
-    onView(withId(R.id.radioButtonEmail))
-      .check(matches(isDisplayed()))
-      .perform(click()).check(matches(isChecked()))
-    onView(withId(R.id.textViewOptionsHint))
-      .check(matches(isDisplayed())).check(matches(withText(R.string.backup_as_email_hint)))
-    onView(withId(R.id.buttonBackupAction))
-      .check(matches(withText(R.string.backup_as_email)))
-    onView(withId(R.id.radioButtonDownload))
-      .check(matches(isDisplayed())).check(matches(not<View>(isChecked())))
-  }
-
-  @Test
-  @NotReadyForCI
-  fun testSelectDownloadToFileForSavingBackup() {
-    testShowBackupOptions()
-    onView(withId(R.id.radioButtonDownload))
-      .check(matches(isDisplayed()))
-      .perform(click()).check(matches(isChecked()))
-    onView(withId(R.id.textViewOptionsHint))
-      .check(matches(isDisplayed())).check(matches(withText(R.string.backup_as_download_hint)))
-    onView(withId(R.id.buttonBackupAction))
-      .check(matches(withText(R.string.backup_as_a_file)))
-    onView(withId(R.id.radioButtonEmail))
-      .check(matches(isDisplayed())).check(matches(not<View>(isChecked())))
   }
 }
