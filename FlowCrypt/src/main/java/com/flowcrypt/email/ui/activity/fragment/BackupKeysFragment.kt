@@ -29,6 +29,7 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
@@ -76,7 +77,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     supportActionBar?.title = getString(R.string.backup_options)
     initViews()
     setupPrivateKeysViewModel()
-    initBackupsViewModel()
+    setupBackupsViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -141,7 +142,19 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           R.id.rBDownloadOption -> {
             dismissCurrentSnackBar()
             destinationUri = null
-            chooseDestForExportedKey()
+
+            val keysStorage = KeysStorageImpl.getInstance(requireContext())
+            val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
+            if (fingerprints.isNotEmpty()) {
+              navController?.navigate(
+                NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
+                  fingerprints = fingerprints.toTypedArray(),
+                  logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
+                )
+              )
+            } else {
+              chooseDestForExportedKey()
+            }
           }
         }
       }
@@ -174,42 +187,21 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             showContent()
             areBackupsSavingNow = false
-            when (it.exception) {
-              is EmptyPassphraseException -> {
-                navController?.navigate(
-                  NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
-                    it.exception.fingerprints.toTypedArray()
-                  )
-                )
-              }
 
-              is PrivateKeyStrengthException -> {
-                showHint(
-                  msgText = getString(R.string.pass_phrase_is_too_weak),
-                  btnName = getString(R.string.change_pass_phrase)
+            if (!handleKnownException(it.exception)) {
+              navController?.navigate(
+                NavGraphDirections.actionGlobalInfoDialogFragment(
+                  requestCode = 0,
+                  dialogTitle = "",
+                  dialogMsg = it.exception?.message
+                    ?: getString(R.string.error_could_not_save_private_keys)
                 )
-              }
-
-              is DifferentPassPhrasesException -> {
-                showHint(
-                  msgText = getString(R.string.different_pass_phrases),
-                  btnName = getString(R.string.fix)
-                )
-              }
-
-              else -> {
-                navController?.navigate(
-                  NavGraphDirections.actionGlobalInfoDialogFragment(
-                    requestCode = 0,
-                    dialogTitle = "",
-                    dialogMsg = it.exception?.message
-                      ?: getString(R.string.error_could_not_save_private_keys)
-                  )
-                )
-              }
+              )
             }
+
             baseActivity.countingIdlingResource.decrementSafely()
           }
+
           else -> {
           }
         }
@@ -217,7 +209,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     })
   }
 
-  private fun initBackupsViewModel() {
+  private fun setupBackupsViewModel() {
     backupsViewModel.postBackupLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
@@ -235,36 +227,9 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
         Result.Status.EXCEPTION -> {
           showContent()
           isPrivateKeySendingNow = false
-          when (it.exception) {
-            is EmptyPassphraseException -> {
-              navController?.navigate(
-                NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
-                  it.exception.fingerprints.toTypedArray()
-                )
-              )
-            }
 
-            is PrivateKeyStrengthException -> {
-              showHint(
-                msgText = getString(R.string.pass_phrase_is_too_weak),
-                btnName = getString(R.string.change_pass_phrase)
-              )
-            }
-
-            is DifferentPassPhrasesException -> {
-              showHint(
-                msgText = getString(R.string.different_pass_phrases),
-                btnName = getString(R.string.fix)
-              )
-            }
-
-            is NoPrivateKeysAvailableException -> {
-              showInfoSnackbar(binding?.root, it.exception.message, Snackbar.LENGTH_LONG)
-            }
-
-            else -> {
-              showBackupingErrorHint()
-            }
+          if (!handleKnownException(it.exception)) {
+            showBackupingErrorHint()
           }
 
           baseActivity.countingIdlingResource.decrementSafely()
@@ -274,6 +239,43 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
         }
       }
     })
+  }
+
+  private fun handleKnownException(e: Throwable?): Boolean {
+    when (e) {
+      is EmptyPassphraseException -> {
+        navController?.navigate(
+          NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
+            fingerprints = e.fingerprints.toTypedArray(),
+            logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
+          )
+        )
+      }
+
+      is PrivateKeyStrengthException -> {
+        showFixPassphraseIssueHint(
+          msgText = getString(R.string.pass_phrase_is_too_weak),
+          btnName = getString(R.string.change_pass_phrase)
+        )
+      }
+
+      is DifferentPassPhrasesException -> {
+        showFixPassphraseIssueHint(
+          msgText = getString(R.string.different_pass_phrases),
+          btnName = getString(R.string.fix)
+        )
+      }
+
+      is NoPrivateKeysAvailableException -> {
+        showInfoSnackbar(binding?.root, e.message, Snackbar.LENGTH_LONG)
+      }
+
+      else -> {
+        return false
+      }
+    }
+
+    return true
   }
 
   private fun showBackupingErrorHint() {
@@ -287,7 +289,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
-  private fun showHint(msgText: String, btnName: String) {
+  private fun showFixPassphraseIssueHint(msgText: String, btnName: String) {
     showSnackbar(
       view = binding?.root,
       msgText = msgText,

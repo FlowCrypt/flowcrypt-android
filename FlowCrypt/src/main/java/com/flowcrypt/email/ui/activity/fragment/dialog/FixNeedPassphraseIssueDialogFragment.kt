@@ -8,6 +8,8 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -49,6 +51,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
   private val keysWithEmptyPassphraseViewModel: KeysWithEmptyPassphraseViewModel by viewModels()
   private val fingerprintList = mutableListOf<String>()
+  private lateinit var logicType: LogicType
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -56,6 +59,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
     val providedFingerprints =
       arguments?.getStringArrayList(KEY_FINGERPRINTS) ?: args.fingerprints?.toList()
+    logicType = arguments?.getParcelable(KEY_LOGIC_TYPE) ?: args.logicType
     if (providedFingerprints == null || providedFingerprints.isEmpty()) {
       dismiss()
       navController?.navigateUp()
@@ -148,12 +152,22 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             binding?.btnUpdatePassphrase?.visible()
             binding?.tILKeyPassword?.visible()
             binding?.rVKeys?.visible()
-            if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
-              binding?.tVStatusMessage?.text = resources.getQuantityString(
-                R.plurals.please_provide_passphrase_for_following_keys, filteredKeyDetailsList.size
-              )
+            when (logicType) {
+              LogicType.ALL -> {
+                binding?.tVStatusMessage?.text = resources.getQuantityString(
+                  R.plurals.please_provide_passphrase_for_all_following_keys,
+                  filteredKeyDetailsList.size
+                )
+              }
+              LogicType.AT_LEAST_ONE -> {
+                if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
+                  binding?.tVStatusMessage?.text = resources.getQuantityString(
+                    R.plurals.please_provide_passphrase_for_following_keys,
+                    filteredKeyDetailsList.size
+                  )
+                }
+              }
             }
-
             prvKeysRecyclerViewAdapter.submitList(filteredKeyDetailsList)
           }
           baseActivity?.countingIdlingResource?.decrementSafely()
@@ -164,6 +178,8 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           binding?.tVStatusMessage?.visible()
           binding?.tVStatusMessage?.text = it.exception?.message
           baseActivity?.countingIdlingResource?.decrementSafely()
+        }
+        else -> {
         }
       }
     })
@@ -204,9 +220,20 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
           when {
             countOfMatchedPassphrases > 0 -> {
-              sendResult(RESULT_OK)
-              dismiss()
-              navController?.navigateUp()
+              when (logicType) {
+                LogicType.ALL -> {
+                  if (countOfMatchedPassphrases == checkResults.size) {
+                    sendResult(RESULT_OK)
+                    dismiss()
+                    navController?.navigateUp()
+                  }
+                }
+                LogicType.AT_LEAST_ONE -> {
+                  sendResult(RESULT_OK)
+                  dismiss()
+                  navController?.navigateUp()
+                }
+              }
             }
 
             isWrongPassphraseExceptionFound -> {
@@ -226,6 +253,8 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           )
           baseActivity?.countingIdlingResource?.decrementSafely()
         }
+        else -> {
+        }
       }
     })
   }
@@ -237,6 +266,23 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     targetFragment?.onActivityResult(targetRequestCode, result, null)
   }
 
+  enum class LogicType : Parcelable {
+    ALL, AT_LEAST_ONE;
+
+    override fun describeContents(): Int {
+      return 0
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+      dest.writeInt(ordinal)
+    }
+
+    companion object CREATOR : Parcelable.Creator<LogicType> {
+      override fun createFromParcel(source: Parcel): LogicType = values()[source.readInt()]
+      override fun newArray(size: Int): Array<LogicType?> = arrayOfNulls(size)
+    }
+  }
+
   companion object {
     const val RESULT_OK = 1
 
@@ -245,10 +291,17 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
       FixNeedPassphraseIssueDialogFragment::class.java
     )
 
-    fun newInstance(fingerprints: List<String>): FixNeedPassphraseIssueDialogFragment {
+    private val KEY_LOGIC_TYPE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_LOGIC_TYPE",
+      FixNeedPassphraseIssueDialogFragment::class.java
+    )
+
+    fun newInstance(fingerprints: List<String>, logicType: LogicType = LogicType.AT_LEAST_ONE):
+        FixNeedPassphraseIssueDialogFragment {
       return FixNeedPassphraseIssueDialogFragment().apply {
         arguments = Bundle().apply {
           putStringArrayList(KEY_FINGERPRINTS, ArrayList(fingerprints))
+          putParcelable(KEY_LOGIC_TYPE, logicType)
         }
       }
     }

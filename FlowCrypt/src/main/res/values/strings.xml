@@ -516,4 +516,8 @@
         <item quantity="one">Please provide a pass phrase for the following key</item>
         <item quantity="other">Please provide a pass phrase for at least one of the following keys</item>
     </plurals>
+    <plurals name="please_provide_passphrase_for_all_following_keys">
+        <item quantity="one">Please provide a pass phrase for the following key</item>
+        <item quantity="other">Please provide a pass phrase for the following keys</item>
+    </plurals>
 </resources>
