@@ -35,7 +35,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -43,6 +43,7 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -60,7 +61,7 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class BackupKeysFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<BackupKeysFragment>()
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>()
 
   val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
@@ -72,9 +73,20 @@ class BackupKeysFragmentTest : BaseTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
+  @Before
+  fun goToBackupKeysFragment() {
+    onView(withText(getResString(R.string.backups)))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    onView(withId(R.id.btBackup))
+      .check(matches(isDisplayed()))
+      .perform(click())
+  }
+
   @Test
   fun testEmailOptionHint() {
-    onView(withId(R.id.radioButtonEmail))
+    onView(withId(R.id.rBEmailOption))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(getResString(R.string.backup_as_email_hint)))
@@ -83,7 +95,7 @@ class BackupKeysFragmentTest : BaseTest() {
 
   @Test
   fun testDownloadOptionHint() {
-    onView(withId(R.id.radioButtonDownload))
+    onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(getResString(R.string.backup_as_download_hint)))
@@ -92,10 +104,10 @@ class BackupKeysFragmentTest : BaseTest() {
 
   @Test
   fun testNoKeysEmailOption() {
-    onView(withId(R.id.radioButtonEmail))
+    onView(withId(R.id.rBEmailOption))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(
@@ -111,10 +123,10 @@ class BackupKeysFragmentTest : BaseTest() {
 
   @Test
   fun testNoKeysDownloadOption() {
-    onView(withId(R.id.radioButtonDownload))
+    onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(
@@ -132,10 +144,12 @@ class BackupKeysFragmentTest : BaseTest() {
   @DependsOnMailServer
   fun testSuccessEmailOption() {
     addFirstKeyWithStrongPassword()
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-    assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
+    onView(withText(getResString(R.string.title_activity_settings)))
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   @Test
@@ -148,20 +162,22 @@ class BackupKeysFragmentTest : BaseTest() {
   @Test
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
-    onView(withId(R.id.radioButtonDownload))
+    onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
 
     val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
 
     intendingFileChoose(file)
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
 
-    assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
-
     TestGeneralUtil.deleteFiles(listOf(file))
+
+    onView(withText(getResString(R.string.title_activity_settings)))
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   @Test
@@ -173,11 +189,11 @@ class BackupKeysFragmentTest : BaseTest() {
   @Test
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
-    onView(withId(R.id.radioButtonDownload))
+    onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
     intendingFileChoose(File(""))
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
@@ -188,7 +204,7 @@ class BackupKeysFragmentTest : BaseTest() {
   @DependsOnMailServer
   fun testShowWeakPasswordHintForEmailOption() {
     addFirstKeyWithDefaultPassword()
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
@@ -198,17 +214,16 @@ class BackupKeysFragmentTest : BaseTest() {
   @Test
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
-    onView(withId(R.id.radioButtonDownload))
+    onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
     intendingFileChoose(File(""))
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
-
     assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
 
@@ -216,7 +231,7 @@ class BackupKeysFragmentTest : BaseTest() {
   @DependsOnMailServer
   fun testFixWeakPasswordForEmailOption() {
     addFirstKeyWithDefaultPassword()
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
@@ -230,7 +245,7 @@ class BackupKeysFragmentTest : BaseTest() {
   fun testDiffPassphrasesForEmailOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
@@ -243,11 +258,11 @@ class BackupKeysFragmentTest : BaseTest() {
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
-    onView(withId(R.id.radioButtonDownload))
+    onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
     intendingFileChoose(File(""))
-    onView(withId(R.id.buttonBackupAction))
+    onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
