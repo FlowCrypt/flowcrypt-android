@@ -74,7 +74,6 @@ class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
   }
 
   @Test
-  @DependsOnMailServer
   fun testSuccessEmailOption() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
@@ -85,7 +84,6 @@ class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
   }
 
   @Test
-  @DependsOnMailServer
   fun testSuccessWithTwoKeysEmailOption() {
     addSecondKeyWithStrongPassword()
     testSuccessEmailOption()
@@ -118,7 +116,6 @@ class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
   }
 
   @Test
-  @DependsOnMailServer
   fun testDiffPassphrasesForEmailOption() {
     addSecondKeyWithStrongSecondPassword()
     onView(withId(R.id.btBackup))

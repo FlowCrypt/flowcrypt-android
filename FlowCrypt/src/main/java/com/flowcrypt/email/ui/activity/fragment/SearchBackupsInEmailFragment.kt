@@ -23,12 +23,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 
 /**
- * This activity helps a user to backup his private keys via next methods:
- *
- *  * BACKUP AS EMAIL
- *  * BACKUP AS A FILE
- *
- *
  * @author DenBond7
  * Date: 30.05.2017
  * Time: 15:27

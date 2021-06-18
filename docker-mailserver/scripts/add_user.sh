@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# build docker image
+# add a new user to the local email server with the predefined password = "qwerty1234"
 
 if [ $# -eq 0 ]
   then

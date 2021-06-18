@@ -218,7 +218,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
           isPrivateKeySendingNow = true
-          showProgress()
+          showProgress(getString(R.string.processing))
         }
 
         Result.Status.SUCCESS -> {
