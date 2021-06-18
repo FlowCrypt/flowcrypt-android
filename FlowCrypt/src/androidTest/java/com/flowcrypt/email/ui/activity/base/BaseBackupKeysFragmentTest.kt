@@ -45,6 +45,12 @@ abstract class BaseBackupKeysFragmentTest : BaseTest() {
 
   @Before
   fun goToBackupKeysFragment() {
+    if (!useLazyInit) {
+      goToBackupKeysFragmentInternal()
+    }
+  }
+
+  protected fun goToBackupKeysFragmentInternal() {
     onView(withText(getResString(R.string.backups)))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -52,6 +58,7 @@ abstract class BaseBackupKeysFragmentTest : BaseTest() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
+
   }
 
   protected fun intendingFileChoose(file: File) {

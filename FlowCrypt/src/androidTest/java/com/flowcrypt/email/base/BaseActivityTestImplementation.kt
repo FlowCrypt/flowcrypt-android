@@ -27,4 +27,7 @@ interface BaseActivityTestImplementation {
 
   val useIntents: Boolean
     get() = false
+
+  val useLazyInit: Boolean
+    get() = false
 }
