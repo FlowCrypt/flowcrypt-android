@@ -42,7 +42,7 @@ import com.google.api.client.googleapis.json.GoogleJsonError
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpHeaders
 import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
 import com.google.api.services.gmail.model.BatchDeleteMessagesRequest
@@ -171,7 +171,7 @@ class GmailApiHelper {
         }
       }*/
 
-      val factory = JacksonFactory.getDefaultInstance()
+      val factory = GsonFactory.getDefaultInstance()
       val appName = context.getString(R.string.app_name)
       return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
     }
