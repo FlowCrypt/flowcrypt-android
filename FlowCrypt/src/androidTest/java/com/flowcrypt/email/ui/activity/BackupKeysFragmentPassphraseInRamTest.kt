@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.content.Intent
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
@@ -24,16 +22,12 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
-import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
@@ -51,12 +45,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @DependsOnMailServer
 class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
-  override val useLazyInit: Boolean = true
-  override val activeActivityRule =
-    lazyActivityScenarioRule<SettingsActivity>(launchActivity = false)
-  override val activityScenario: ActivityScenario<*>?
-    get() = activeActivityRule.scenario
-
   val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule(passphraseType = KeyEntity.PassphraseType.RAM)
 
@@ -66,13 +54,11 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
     .around(RetryRule.DEFAULT)
-    .around(activeActivityRule)
+    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
   fun testNeedPassphraseEmailOptionSingleFingerprint() {
-    doPreparationAndGoToBackupKeysFragment { }
-
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -89,8 +75,6 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
 
   @Test
   fun testNeedPassphraseDownloadOptionSingleFingerprint() {
-    doPreparationAndGoToBackupKeysFragment { }
-
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -116,18 +100,7 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
 
   @Test
   fun testNeedPassphraseEmailOptionMultiplyFingerprints() {
-    doPreparationAndGoToBackupKeysFragment {
-      val secondKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-        "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc"
-      )
-      PrivateKeysManager.saveKeyToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        pgpKeyDetails = secondKeyDetails,
-        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
-        sourceType = KeyImportDetails.SourceType.EMAIL,
-        passphraseType = KeyEntity.PassphraseType.RAM
-      )
-    }
+    addSecondKeyWithStrongSecondPassword(passphraseType = KeyEntity.PassphraseType.RAM)
 
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
@@ -139,23 +112,12 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
+    checkIsSnackBarDisplayed(getResString(R.string.different_pass_phrases))
   }
 
   @Test
   fun testNeedPassphraseDownloadOptionMultiplyFingerprints() {
-    doPreparationAndGoToBackupKeysFragment {
-      val secondKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-        "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc"
-      )
-      PrivateKeysManager.saveKeyToDatabase(
-        accountEntity = addAccountToDatabaseRule.account,
-        pgpKeyDetails = secondKeyDetails,
-        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
-        sourceType = KeyImportDetails.SourceType.EMAIL,
-        passphraseType = KeyEntity.PassphraseType.RAM
-      )
-    }
+    addSecondKeyWithStrongSecondPassword(passphraseType = KeyEntity.PassphraseType.RAM)
 
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
@@ -176,7 +138,7 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
 
     TestGeneralUtil.deleteFiles(listOf(file))
 
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
+    checkIsSnackBarDisplayed(getResString(R.string.different_pass_phrases))
   }
 
   private fun checkSingleFingerprintWithSuccess() {
@@ -239,14 +201,5 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
         replaceText(TestConstants.DEFAULT_SECOND_STRONG_PASSWORD),
         pressImeActionButton()
       )
-  }
-
-  private fun doPreparationAndGoToBackupKeysFragment(action: () -> Unit) {
-    action.invoke()
-
-    activeActivityRule.launch(Intent(getTargetContext(), SettingsActivity::class.java))
-    registerAllIdlingResources()
-
-    goToBackupKeysFragmentInternal()
   }
 }
