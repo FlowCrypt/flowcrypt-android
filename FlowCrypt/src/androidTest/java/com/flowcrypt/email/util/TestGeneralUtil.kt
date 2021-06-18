@@ -13,6 +13,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.Gson
 import org.apache.commons.io.IOUtils
@@ -178,6 +180,14 @@ class TestGeneralUtil {
         flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
             Intent.FLAG_GRANT_READ_URI_PERMISSION
       }
+    }
+
+    fun clearApp(context: Context) {
+      SharedPreferencesHelper.clear(context)
+      FileAndDirectoryUtils.cleanDir(context.cacheDir)
+      FileAndDirectoryUtils.cleanDir(File(context.filesDir, MsgsCacheManager.CACHE_DIR_NAME))
+      FlowCryptRoomDatabase.getDatabase(context).forceDatabaseCreationIfNeeded()
+      FlowCryptRoomDatabase.getDatabase(context).clearAllTables()
     }
   }
 }

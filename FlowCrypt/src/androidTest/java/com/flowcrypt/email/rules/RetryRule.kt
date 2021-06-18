@@ -6,6 +6,7 @@
 package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.rules.RetryRule.Companion.MAX_RETRY_VALUE
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
@@ -44,6 +45,7 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
           runCatching { base.evaluate() }
             .onSuccess { return }
             .onFailure {
+              TestGeneralUtil.clearApp(targetContext)
               caughtThrowable = it
               System.err.println(description.displayName.toString() + ": run $times failed")
             }

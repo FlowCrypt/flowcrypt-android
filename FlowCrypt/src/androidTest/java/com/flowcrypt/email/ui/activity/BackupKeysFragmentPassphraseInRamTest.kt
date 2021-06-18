@@ -123,7 +123,7 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
       PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
         pgpKeyDetails = secondKeyDetails,
-        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
         sourceType = KeyImportDetails.SourceType.EMAIL,
         passphraseType = KeyEntity.PassphraseType.RAM
       )
@@ -151,7 +151,7 @@ class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
       PrivateKeysManager.saveKeyToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
         pgpKeyDetails = secondKeyDetails,
-        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
         sourceType = KeyImportDetails.SourceType.EMAIL,
         passphraseType = KeyEntity.PassphraseType.RAM
       )

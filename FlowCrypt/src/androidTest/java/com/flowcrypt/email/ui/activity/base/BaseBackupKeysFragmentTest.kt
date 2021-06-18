@@ -58,7 +58,6 @@ abstract class BaseBackupKeysFragmentTest : BaseTest() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-
   }
 
   protected fun intendingFileChoose(file: File) {
