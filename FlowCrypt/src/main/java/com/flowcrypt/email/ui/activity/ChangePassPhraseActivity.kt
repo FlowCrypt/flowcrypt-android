@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -20,7 +21,6 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
-import com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
 import org.pgpainless.util.Passphrase
@@ -73,23 +73,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
     }
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_BACKUP_WITH_OPTION -> {
-        when (resultCode) {
-          Activity.RESULT_OK -> Toast.makeText(
-            this,
-            R.string.backed_up_successfully,
-            Toast.LENGTH_SHORT
-          ).show()
-        }
-        setResult(Activity.RESULT_OK)
-        finish()
-      }
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
   override fun initViews() {
     super.initViews()
 
@@ -104,11 +87,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private fun runBackupKeysActivity() {
     isBackEnabled = true
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
-    //todo-denbond7 fixme
-    startActivityForResult(
-      Intent(this, BackupKeysFragment::class.java),
-      REQUEST_CODE_BACKUP_WITH_OPTION
-    )
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://make_backup"))
+    startActivity(intent)
   }
 
   private fun setupLoadPrivateKeysViewModel() {
@@ -159,9 +139,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
                 finish()
               } else {
                 activeAccount?.let { accountEntity ->
-                  loadPrivateKeysViewModel.fetchAvailableKeys(
-                    accountEntity
-                  )
+                  loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity)
                 }
               }
             }
@@ -212,9 +190,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   }
 
   companion object {
-
-    const val REQUEST_CODE_BACKUP_WITH_OPTION = 100
-
     fun newIntent(context: Context?): Intent {
       return Intent(context, ChangePassPhraseActivity::class.java)
     }

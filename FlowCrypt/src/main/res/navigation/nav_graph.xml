@@ -81,7 +81,11 @@
     <fragment
         android:id="@+id/backupKeysFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment"
-        tools:layout="@layout/fragment_backup_keys" />
+        tools:layout="@layout/fragment_backup_keys">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://make_backup" />
+    </fragment>
 
     <dialog
         android:id="@+id/twoWayDialogFragment"
