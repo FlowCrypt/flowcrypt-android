@@ -43,6 +43,7 @@ import java.io.File
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@DependsOnMailServer
 class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule
