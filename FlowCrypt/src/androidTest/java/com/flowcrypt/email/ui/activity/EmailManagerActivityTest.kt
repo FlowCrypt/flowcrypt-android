@@ -89,6 +89,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testRunMsgDetailsActivity() {
     //need to add some timeout while database will be updated
     Thread.sleep(1000)
@@ -97,6 +98,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testForceLoadMsgs() {
     //need to add some timeout while database will be updated
     Thread.sleep(1000)
