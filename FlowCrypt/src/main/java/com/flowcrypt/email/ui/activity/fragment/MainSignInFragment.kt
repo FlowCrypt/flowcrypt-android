@@ -197,7 +197,13 @@ class MainSignInFragment : BaseSingInFragment() {
         val account = googleSignInAccount?.account?.name ?: return
         val idToken = googleSignInAccount?.idToken ?: return
         uuid = SecurityUtils.generateRandomUUID()
-        if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equals(EmailUtil.getDomain(account), true)) {
+
+        val regularDomains = arrayOf(
+          JavaEmailConstants.EMAIL_PROVIDER_GMAIL,
+          JavaEmailConstants.EMAIL_PROVIDER_GOOGLEMAIL
+        )
+
+        if (EmailUtil.getDomain(account).toLowerCase(Locale.US) in regularDomains) {
           domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
@@ -232,9 +238,10 @@ class MainSignInFragment : BaseSingInFragment() {
 
     if (existedAccount == null) {
       getTempAccount()?.let {
-        if (domainRules?.first { rule -> rule == OrgRules.DomainRule.NO_PRV_BACKUP } != null) {
+        if (domainRules?.firstOrNull { rule -> rule == OrgRules.DomainRule.NO_PRV_BACKUP } != null) {
           requireContext().startService(
-              Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
+            Intent(requireContext(), CheckClipboardToFindKeyService::class.java)
+          )
           val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
           startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
         } else {
