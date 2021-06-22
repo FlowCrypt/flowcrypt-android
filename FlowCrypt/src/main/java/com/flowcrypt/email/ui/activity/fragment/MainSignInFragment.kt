@@ -40,6 +40,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
+import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -129,7 +130,7 @@ class MainSignInFragment : BaseSingInFragment() {
             val id = uuid ?: return
             val account = googleSignInAccount?.account?.name ?: return
             val idToken = googleSignInAccount?.idToken ?: return
-            ekmLoginViewModel.login(account, id, idToken)
+            ekmLoginViewModel.fetchPrvKeys(account, id, idToken)
           }
         }
       }
@@ -222,7 +223,7 @@ class MainSignInFragment : BaseSingInFragment() {
           domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
-          uuid?.let { ekmLoginViewModel.login(account, it, idToken) }
+          uuid?.let { ekmLoginViewModel.fetchPrvKeys(account, it, idToken) }
         }
       } else {
         val error = task.exception
@@ -408,23 +409,30 @@ class MainSignInFragment : BaseSingInFragment() {
             val result = it.data as? DomainRulesResponse
             domainRules = result?.orgRules?.flags ?: emptyList()
             onSignSuccess(googleSignInAccount)
-            ekmLoginViewModel.ekmLiveData.value = null
+            ekmLoginViewModel.ekmLiveData.value = Result.none()
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             showContent()
-            val errorMsg = it.data?.apiError?.msg
-              ?: it.exception?.message
-              ?: getString(R.string.could_not_load_domain_rules)
-            showTwoWayDialog(
-              requestCode = REQUEST_CODE_RETRY_EKM_LOGIN,
-              dialogTitle = "",
-              dialogMsg = errorMsg,
-              positiveButtonTitle = getString(R.string.retry),
-              negativeButtonTitle = getString(R.string.cancel),
-              isCancelable = true
-            )
+
+            if (it.exception is EkmNotSupportedException) {
+              domainRules = it.exception.orgRules.flags
+              onSignSuccess(googleSignInAccount)
+            } else {
+              val errorMsg = it.data?.apiError?.msg
+                ?: it.exception?.message
+                ?: getString(R.string.could_not_load_domain_rules)
+              showTwoWayDialog(
+                requestCode = REQUEST_CODE_RETRY_EKM_LOGIN,
+                dialogTitle = "",
+                dialogMsg = errorMsg,
+                positiveButtonTitle = getString(R.string.retry),
+                negativeButtonTitle = getString(R.string.cancel),
+                isCancelable = true
+              )
+            }
+            ekmLoginViewModel.ekmLiveData.value = Result.none()
             baseActivity.countingIdlingResource.decrementSafely()
           }
         }

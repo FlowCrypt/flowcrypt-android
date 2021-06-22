@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import kotlinx.coroutines.launch
 
 /**
@@ -36,7 +37,7 @@ class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(applica
   private val repository: ApiRepository = FlowcryptApiRepository()
   val ekmLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
-  fun login(account: String, uuid: String, tokenId: String) {
+  fun fetchPrvKeys(account: String, uuid: String, tokenId: String) {
     ekmLiveData.value = Result.loading()
     val context: Context = getApplication()
 
@@ -62,7 +63,18 @@ class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(applica
               context,
               DomainRulesRequest(ApiName.POST_GET_DOMAIN_RULES, LoginModel(account, uuid))
             )
-            ekmLiveData.value = domainRulesResult
+
+            if (domainRulesResult.status == Result.Status.SUCCESS) {
+              if (domainRulesResult.data?.orgRules?.usesKeyManager() == false) {
+                ekmLiveData.value =
+                  Result.exception(EkmNotSupportedException(domainRulesResult.data.orgRules))
+                return@launch
+              }
+
+              ekmLiveData.value = domainRulesResult
+            } else {
+              ekmLiveData.value = domainRulesResult
+            }
           } else {
             ekmLiveData.value = Result.error(
               LoginResponse(
