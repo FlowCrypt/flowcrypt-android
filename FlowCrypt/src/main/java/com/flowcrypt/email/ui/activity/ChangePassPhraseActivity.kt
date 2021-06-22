@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -72,23 +73,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
     }
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_BACKUP_WITH_OPTION -> {
-        when (resultCode) {
-          Activity.RESULT_OK -> Toast.makeText(
-            this,
-            R.string.backed_up_successfully,
-            Toast.LENGTH_SHORT
-          ).show()
-        }
-        setResult(Activity.RESULT_OK)
-        finish()
-      }
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
   override fun initViews() {
     super.initViews()
 
@@ -103,10 +87,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private fun runBackupKeysActivity() {
     isBackEnabled = true
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
-    startActivityForResult(
-      Intent(this, BackupKeysActivity::class.java),
-      REQUEST_CODE_BACKUP_WITH_OPTION
-    )
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://make_backup"))
+    startActivity(intent)
   }
 
   private fun setupLoadPrivateKeysViewModel() {
@@ -157,9 +139,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
                 finish()
               } else {
                 activeAccount?.let { accountEntity ->
-                  loadPrivateKeysViewModel.fetchAvailableKeys(
-                    accountEntity
-                  )
+                  loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity)
                 }
               }
             }
@@ -210,9 +190,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   }
 
   companion object {
-
-    const val REQUEST_CODE_BACKUP_WITH_OPTION = 100
-
     fun newIntent(context: Context?): Intent {
       return Intent(context, ChangePassPhraseActivity::class.java)
     }

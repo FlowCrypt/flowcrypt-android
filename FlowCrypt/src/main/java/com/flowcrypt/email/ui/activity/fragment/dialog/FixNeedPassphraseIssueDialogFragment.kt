@@ -8,22 +8,23 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.EditText
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.databinding.FragmentFixEmptyPassphraseBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
@@ -42,27 +43,26 @@ import org.pgpainless.util.Passphrase
  *         E-mail: DenBond7@gmail.com
  */
 class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
-  private var rVKeys: RecyclerView? = null
-  private var tVStatusMessage: TextView? = null
-  private var pBLoading: View? = null
-  private var pBCheckPassphrase: View? = null
-  private var tILKeyPassword: View? = null
-  private var eTKeyPassword: EditText? = null
-  private var btnUpdatePassphrase: View? = null
+  private var binding: FragmentFixEmptyPassphraseBinding? = null
+  private val args by navArgs<FixNeedPassphraseIssueDialogFragmentArgs>()
 
   private val prvKeysRecyclerViewAdapter = PrvKeysRecyclerViewAdapter()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
 
   private val keysWithEmptyPassphraseViewModel: KeysWithEmptyPassphraseViewModel by viewModels()
   private val fingerprintList = mutableListOf<String>()
+  private lateinit var logicType: LogicType
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     isCancelable = false
 
-    val providedFingerprints = arguments?.getStringArrayList(KEY_FINGERPRINTS)
+    val providedFingerprints =
+      arguments?.getStringArrayList(KEY_FINGERPRINTS) ?: args.fingerprints?.toList()
+    logicType = arguments?.getParcelable(KEY_LOGIC_TYPE) ?: args.logicType
     if (providedFingerprints == null || providedFingerprints.isEmpty()) {
       dismiss()
+      navController?.navigateUp()
     } else {
       fingerprintList.addAll(providedFingerprints)
       setupKeysWithEmptyPassphraseLiveData()
@@ -71,31 +71,26 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val view = LayoutInflater.from(context).inflate(
-      R.layout.fragment_fix_empty_passphrase,
-      if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false
+    binding = FragmentFixEmptyPassphraseBinding.inflate(
+      LayoutInflater.from(requireContext()),
+      if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null,
+      false
     )
 
-    initViews(view)
+    initViews()
 
     val builder = AlertDialog.Builder(requireContext()).apply {
-      setView(view)
-      setNegativeButton(R.string.cancel) { _, _ -> }
+      setView(binding?.root)
+      setNegativeButton(R.string.cancel) { _, _ ->
+        navController?.navigateUp()
+      }
     }
 
     return builder.create()
   }
 
-  private fun initViews(view: View) {
-    tVStatusMessage = view.findViewById(R.id.tVStatusMessage)
-    pBLoading = view.findViewById(R.id.pBLoading)
-    pBCheckPassphrase = view.findViewById(R.id.pBCheckPassphrase)
-    tILKeyPassword = view.findViewById(R.id.tILKeyPassword)
-    rVKeys = view.findViewById(R.id.rVKeys)
-    eTKeyPassword = view.findViewById(R.id.eTKeyPassword)
-    btnUpdatePassphrase = view.findViewById(R.id.btnUpdatePassphrase)
-
-    eTKeyPassword?.setOnEditorActionListener { _, actionId, _ ->
+  private fun initViews() {
+    binding?.eTKeyPassword?.setOnEditorActionListener { _, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
           checkPassphrase()
@@ -105,7 +100,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
       }
     }
 
-    rVKeys?.apply {
+    binding?.rVKeys?.apply {
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
         MarginItemDecoration(
@@ -115,17 +110,17 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
       adapter = prvKeysRecyclerViewAdapter
     }
 
-    btnUpdatePassphrase?.setOnClickListener {
+    binding?.btnUpdatePassphrase?.setOnClickListener {
       checkPassphrase()
     }
   }
 
   private fun checkPassphrase() {
-    val typedText = eTKeyPassword?.text?.toString()
+    val typedText = binding?.eTKeyPassword?.text?.toString()
     if (typedText.isNullOrEmpty()) {
       toast(getString(R.string.passphrase_must_be_non_empty))
     } else {
-      eTKeyPassword?.let {
+      binding?.eTKeyPassword?.let {
         val passPhrase = Passphrase.fromPassword(typedText)
         val keys = keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData
           .value?.data?.filter { it.fingerprint in fingerprintList } ?: return@let
@@ -143,36 +138,48 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity?.countingIdlingResource?.incrementSafely()
-          pBLoading?.visible()
+          binding?.pBLoading?.visible()
         }
 
         Result.Status.SUCCESS -> {
-          pBLoading?.gone()
+          binding?.pBLoading?.gone()
           val filteredKeyDetailsList = (it.data ?: emptyList()).filter { pgpKeyDetails ->
             fingerprintList.any { element -> element.equals(pgpKeyDetails.fingerprint, true) }
           }
           if (filteredKeyDetailsList.isEmpty()) {
-            tVStatusMessage?.text = getString(R.string.error_no_keys)
+            binding?.tVStatusMessage?.text = getString(R.string.error_no_keys)
           } else {
-            btnUpdatePassphrase?.visible()
-            tILKeyPassword?.visible()
-            rVKeys?.visible()
-            if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
-              tVStatusMessage?.text = resources.getQuantityString(
-                R.plurals.please_provide_passphrase_for_following_keys, filteredKeyDetailsList.size
-              )
+            binding?.btnUpdatePassphrase?.visible()
+            binding?.tILKeyPassword?.visible()
+            binding?.rVKeys?.visible()
+            when (logicType) {
+              LogicType.ALL -> {
+                binding?.tVStatusMessage?.text = resources.getQuantityString(
+                  R.plurals.please_provide_passphrase_for_all_following_keys,
+                  filteredKeyDetailsList.size
+                )
+              }
+              LogicType.AT_LEAST_ONE -> {
+                if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
+                  binding?.tVStatusMessage?.text = resources.getQuantityString(
+                    R.plurals.please_provide_passphrase_for_following_keys,
+                    filteredKeyDetailsList.size
+                  )
+                }
+              }
             }
-
             prvKeysRecyclerViewAdapter.submitList(filteredKeyDetailsList)
           }
           baseActivity?.countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
-          pBLoading?.gone()
-          tVStatusMessage?.visible()
-          tVStatusMessage?.text = it.exception?.message
+          binding?.pBLoading?.gone()
+          binding?.tVStatusMessage?.visible()
+          binding?.tVStatusMessage?.text = it.exception?.message
           baseActivity?.countingIdlingResource?.decrementSafely()
+        }
+        else -> {
         }
       }
     })
@@ -184,11 +191,11 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity?.countingIdlingResource?.incrementSafely()
-          pBCheckPassphrase?.visible()
+          binding?.pBCheckPassphrase?.visible()
         }
 
         Result.Status.SUCCESS -> {
-          pBCheckPassphrase?.invisible()
+          binding?.pBCheckPassphrase?.invisible()
           val checkResults = it.data ?: emptyList()
           var isWrongPassphraseExceptionFound = false
           var countOfMatchedPassphrases = 0
@@ -213,8 +220,20 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
           when {
             countOfMatchedPassphrases > 0 -> {
-              sendResult(RESULT_OK)
-              dismiss()
+              when (logicType) {
+                LogicType.ALL -> {
+                  if (countOfMatchedPassphrases == checkResults.size) {
+                    sendResult(RESULT_OK)
+                    dismiss()
+                    navController?.navigateUp()
+                  }
+                }
+                LogicType.AT_LEAST_ONE -> {
+                  sendResult(RESULT_OK)
+                  dismiss()
+                  navController?.navigateUp()
+                }
+              }
             }
 
             isWrongPassphraseExceptionFound -> {
@@ -226,13 +245,15 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          pBCheckPassphrase?.invisible()
+          binding?.pBCheckPassphrase?.invisible()
           toast(
             it.exception?.message
               ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_check_pass_phrase)
           )
           baseActivity?.countingIdlingResource?.decrementSafely()
+        }
+        else -> {
         }
       }
     })
@@ -245,6 +266,23 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     targetFragment?.onActivityResult(targetRequestCode, result, null)
   }
 
+  enum class LogicType : Parcelable {
+    ALL, AT_LEAST_ONE;
+
+    override fun describeContents(): Int {
+      return 0
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+      dest.writeInt(ordinal)
+    }
+
+    companion object CREATOR : Parcelable.Creator<LogicType> {
+      override fun createFromParcel(source: Parcel): LogicType = values()[source.readInt()]
+      override fun newArray(size: Int): Array<LogicType?> = arrayOfNulls(size)
+    }
+  }
+
   companion object {
     const val RESULT_OK = 1
 
@@ -253,10 +291,17 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
       FixNeedPassphraseIssueDialogFragment::class.java
     )
 
-    fun newInstance(fingerprints: List<String>): FixNeedPassphraseIssueDialogFragment {
+    private val KEY_LOGIC_TYPE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_LOGIC_TYPE",
+      FixNeedPassphraseIssueDialogFragment::class.java
+    )
+
+    fun newInstance(fingerprints: List<String>, logicType: LogicType = LogicType.AT_LEAST_ONE):
+        FixNeedPassphraseIssueDialogFragment {
       return FixNeedPassphraseIssueDialogFragment().apply {
         arguments = Bundle().apply {
           putStringArrayList(KEY_FINGERPRINTS, ArrayList(fingerprints))
+          putParcelable(KEY_LOGIC_TYPE, logicType)
         }
       }
     }

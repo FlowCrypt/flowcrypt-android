@@ -7,10 +7,12 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 
 import android.app.Dialog
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.setNavigationResult
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -22,7 +24,8 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 17:34
  * E-mail: DenBond7@gmail.com
  */
-class InfoDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
+class InfoDialogFragment : BaseDialogFragment() {
+  private val args by navArgs<InfoDialogFragmentArgs>()
 
   private var dialogTitle: String? = null
   private var dialogMsg: String? = null
@@ -40,33 +43,37 @@ class InfoDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    dialogTitle = arguments?.getString(KEY_INFO_DIALOG_TITLE, getString(R.string.info))
-    dialogMsg = arguments?.getString(KEY_INFO_DIALOG_MESSAGE)
-    buttonTitle = arguments?.getString(KEY_INFO_BUTTON_TITLE, getString(android.R.string.ok))
-    isPopBackStack = arguments?.getBoolean(KEY_INFO_IS_POP_BACK_STACK, false) ?: false
-    isCancelable = arguments?.getBoolean(KEY_INFO_IS_CANCELABLE, false) ?: false
+    hasHtml = arguments?.getBoolean(KEY_INFO_HAS_HTML, args.hasHtml) ?: false
+    useLinkify = arguments?.getBoolean(KEY_INFO_USE_LINKIFY, args.useLinkify) ?: false
+    dialogTitle = arguments?.getString(
+      KEY_INFO_DIALOG_TITLE, args.dialogTitle ?: getString(R.string.info)
+    )
+    dialogMsg = arguments?.getString(KEY_INFO_DIALOG_MESSAGE, args.dialogMsg)
+    buttonTitle = arguments?.getString(
+      KEY_INFO_BUTTON_TITLE, args.buttonTitle ?: getString(android.R.string.ok)
+    )
+    isPopBackStack = arguments?.getBoolean(
+      KEY_INFO_IS_POP_BACK_STACK, args.useNavigationUp
+    ) ?: false
+    isCancelable = arguments?.getBoolean(KEY_INFO_IS_CANCELABLE, args.isCancelable) ?: false
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val dialog = AlertDialog.Builder(requireActivity())
     dialog.setTitle(dialogTitle)
     dialog.setMessage(if (hasHtml) UIUtil.getHtmlSpannedFromText(dialogMsg) else dialogMsg)
-    dialog.setPositiveButton(buttonTitle, this)
-    return dialog.create()
-  }
+    dialog.setPositiveButton(buttonTitle) { _, _ ->
+      targetFragment?.onActivityResult(targetRequestCode, RESULT_OK, null)
+      onInfoDialogButtonClickListener?.onInfoDialogButtonClick(targetRequestCode)
+      setNavigationResult(KEY_RESULT, RESULT_OK)
 
-  override fun onClick(dialog: DialogInterface, which: Int) {
-    when (which) {
-      Dialog.BUTTON_POSITIVE -> {
-        targetFragment?.onActivityResult(targetRequestCode, RESULT_OK, null)
-        onInfoDialogButtonClickListener?.onInfoDialogButtonClick(targetRequestCode)
-
-        if (isPopBackStack) {
-          val fragmentManager = requireActivity().supportFragmentManager
-          fragmentManager.popBackStackImmediate()
-        }
+      if (isPopBackStack) {
+        val fragmentManager = requireActivity().supportFragmentManager
+        fragmentManager.popBackStackImmediate()
+        navController?.navigateUp()
       }
     }
+    return dialog.create()
   }
 
   interface OnInfoDialogButtonClickListener {
@@ -74,26 +81,43 @@ class InfoDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener
   }
 
   companion object {
+    val KEY_RESULT =
+      GeneralUtil.generateUniqueExtraKey("KEY_RESULT", InfoDialogFragment::class.java)
     const val RESULT_OK = -1
 
     private val KEY_INFO_DIALOG_TITLE =
-      GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_DIALOG_TITLE",
+        InfoDialogFragment::class.java
+      )
     private val KEY_INFO_DIALOG_MESSAGE =
-      GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_DIALOG_MESSAGE",
+        InfoDialogFragment::class.java
+      )
     private val KEY_INFO_BUTTON_TITLE =
-      GeneralUtil.generateUniqueExtraKey("KEY_INFO_BUTTON_TITLE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_BUTTON_TITLE",
+        InfoDialogFragment::class.java
+      )
     private val KEY_INFO_IS_POP_BACK_STACK =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_INFO_IS_POP_BACK_STACK",
         InfoDialogFragment::class.java
       )
     private val KEY_INFO_IS_CANCELABLE =
-      GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", InfoDialogFragment::class.java)
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_INFO_IS_CANCELABLE",
+        InfoDialogFragment::class.java
+      )
 
     fun newInstance(
-      dialogTitle: String? = null, dialogMsg: String? = null,
-      buttonTitle: String? = null, isPopBackStack: Boolean = false,
-      isCancelable: Boolean = false, hasHtml: Boolean = false,
+      dialogTitle: String? = null,
+      dialogMsg: String? = null,
+      buttonTitle: String? = null,
+      isPopBackStack: Boolean = false,
+      isCancelable: Boolean = false,
+      hasHtml: Boolean = false,
       useLinkify: Boolean = false
     ): InfoDialogFragment {
       val dialogFragment = InfoDialogFragment()

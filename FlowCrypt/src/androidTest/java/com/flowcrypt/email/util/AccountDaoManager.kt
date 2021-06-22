@@ -15,24 +15,36 @@ import com.flowcrypt.email.database.entity.AccountEntity
  */
 class AccountDaoManager {
   companion object {
-    @JvmStatic
+
     fun getDefaultAccountDao(): AccountEntity {
-      return TestGeneralUtil.readObjectFromResources(
-        "default_account.json",
-        AccountEntity::class.java
-      )
+      return getAccountDao("base_account_settings.json")
     }
 
-    @JvmStatic
     fun getAccountDao(accountPath: String): AccountEntity {
       return TestGeneralUtil.readObjectFromResources(accountPath, AccountEntity::class.java)
     }
 
-    @JvmStatic
     fun getUserWithMoreThan21Letters(): AccountEntity {
-      return TestGeneralUtil.readObjectFromResources(
-        "user_with_more_than_21_letters_account.json",
-        AccountEntity::class.java
+      return getUserFromBaseSettings("user_with_more_than_21_letters@flowcrypt.test")
+    }
+
+    fun getUserWithoutLetters(): AccountEntity {
+      return getUserFromBaseSettings("user_without_letters@flowcrypt.test")
+    }
+
+    fun getUserWithSingleBackup(): AccountEntity {
+      return getUserFromBaseSettings("single_backup@flowcrypt.test")
+    }
+
+    fun getUserWithoutBackup(): AccountEntity {
+      return getUserFromBaseSettings("no_backups@flowcrypt.test")
+    }
+
+    private fun getUserFromBaseSettings(user: String): AccountEntity {
+      return getDefaultAccountDao().copy(
+        email = user,
+        smtpUsername = user,
+        username = user,
       )
     }
   }

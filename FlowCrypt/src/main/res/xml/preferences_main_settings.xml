@@ -9,9 +9,6 @@
         android:key="@string/pref_key_backups"
         android:title="@string/backups"
         app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity"
-            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference

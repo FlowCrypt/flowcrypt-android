@@ -164,11 +164,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.settings.SearchBackupsInEmailActivity"
-            android:label="@string/backups"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait"
@@ -222,11 +217,6 @@
 
         <activity
             android:name=".ui.activity.ChangePassPhraseActivity"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.BackupKeysActivity"
-            android:label="@string/backup_options"
             android:screenOrientation="portrait" />
 
         <activity
