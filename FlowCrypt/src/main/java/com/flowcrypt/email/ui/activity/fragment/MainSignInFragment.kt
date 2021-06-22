@@ -21,7 +21,10 @@ import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.EkmLoginViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.SecurityUtils
@@ -33,6 +36,7 @@ import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
@@ -117,6 +121,17 @@ class MainSignInFragment : BaseSingInFragment() {
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> {
         handleResultFromCheckKeysActivity(resultCode, data)
+      }
+
+      REQUEST_CODE_RETRY_EKM_LOGIN -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            val id = uuid ?: return
+            val account = googleSignInAccount?.account?.name ?: return
+            val idToken = googleSignInAccount?.idToken ?: return
+            ekmLoginViewModel.login(account, id, idToken)
+          }
+        }
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -207,7 +222,7 @@ class MainSignInFragment : BaseSingInFragment() {
           domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
-          uuid?.let { ekmLoginViewModel.getDomainRules(account, it, idToken) }
+          uuid?.let { ekmLoginViewModel.login(account, it, idToken) }
         }
       } else {
         val error = task.exception
@@ -379,34 +394,38 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun setupEnterpriseViewModel() {
-    ekmLoginViewModel.domainRulesLiveData.observe(viewLifecycleOwner, {
+    ekmLoginViewModel.ekmLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            showProgress(progressMsg = getString(R.string.loading_domain_rules))
+            if (it.progressMsg == null) {
+              baseActivity.countingIdlingResource.incrementSafely()
+            }
+            showProgress(progressMsg = it.progressMsg)
           }
 
           Result.Status.SUCCESS -> {
             val result = it.data as? DomainRulesResponse
             domainRules = result?.orgRules?.flags ?: emptyList()
             onSignSuccess(googleSignInAccount)
-            ekmLoginViewModel.domainRulesLiveData.value = null
+            ekmLoginViewModel.ekmLiveData.value = null
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          Result.Status.ERROR -> {
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
             showContent()
-            Toast.makeText(
-              requireContext(), it.data?.apiError?.msg
-                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT
-            ).show()
-          }
-
-          Result.Status.EXCEPTION -> {
-            showContent()
-            Toast.makeText(
-              requireContext(), it.exception?.message
-                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT
-            ).show()
+            val errorMsg = it.data?.apiError?.msg
+              ?: it.exception?.message
+              ?: getString(R.string.could_not_load_domain_rules)
+            showTwoWayDialog(
+              requestCode = REQUEST_CODE_RETRY_EKM_LOGIN,
+              dialogTitle = "",
+              dialogMsg = errorMsg,
+              positiveButtonTitle = getString(R.string.retry),
+              negativeButtonTitle = getString(R.string.cancel),
+              isCancelable = true
+            )
+            baseActivity.countingIdlingResource.decrementSafely()
           }
         }
       }
@@ -463,5 +482,6 @@ class MainSignInFragment : BaseSingInFragment() {
     private const val REQUEST_CODE_RESOLVE_SIGN_IN_ERROR = 101
     private const val REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 103
+    private const val REQUEST_CODE_RETRY_EKM_LOGIN = 104
   }
 }

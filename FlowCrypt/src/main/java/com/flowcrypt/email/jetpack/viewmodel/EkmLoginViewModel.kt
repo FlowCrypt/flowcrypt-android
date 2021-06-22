@@ -34,13 +34,15 @@ import kotlinx.coroutines.launch
  */
 class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository: ApiRepository = FlowcryptApiRepository()
-  val domainRulesLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
+  val ekmLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
-  fun getDomainRules(account: String, uuid: String, tokenId: String) {
-    domainRulesLiveData.value = Result.loading()
+  fun login(account: String, uuid: String, tokenId: String) {
+    ekmLiveData.value = Result.loading()
     val context: Context = getApplication()
 
     viewModelScope.launch {
+      ekmLiveData.value =
+        Result.loading(progressMsg = context.getString(R.string.loading))
       val loginResult = repository.login(
         context,
         LoginRequest(ApiName.POST_LOGIN, LoginModel(account, uuid), tokenId)
@@ -48,19 +50,21 @@ class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(applica
 
       when (loginResult.status) {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          domainRulesLiveData.value = loginResult
+          ekmLiveData.value = loginResult
           return@launch
         }
 
         Result.Status.SUCCESS -> {
           if (loginResult.data?.isVerified == true) {
+            ekmLiveData.value =
+              Result.loading(progressMsg = context.getString(R.string.loading_domain_rules))
             val domainRulesResult = repository.getDomainRules(
               context,
               DomainRulesRequest(ApiName.POST_GET_DOMAIN_RULES, LoginModel(account, uuid))
             )
-            domainRulesLiveData.value = domainRulesResult
+            ekmLiveData.value = domainRulesResult
           } else {
-            domainRulesLiveData.value = Result.error(
+            ekmLiveData.value = Result.error(
               LoginResponse(
                 ApiError(
                   -1,
@@ -72,7 +76,7 @@ class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(applica
         }
 
         else -> {
-          domainRulesLiveData.value = Result.exception(IllegalStateException("Unhandled error"))
+          ekmLiveData.value = Result.exception(IllegalStateException("Unhandled error"))
         }
       }
     }
