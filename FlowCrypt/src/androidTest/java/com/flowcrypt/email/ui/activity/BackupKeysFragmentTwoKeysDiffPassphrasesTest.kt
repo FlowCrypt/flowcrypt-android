@@ -21,6 +21,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -64,6 +65,7 @@ class BackupKeysFragmentTwoKeysDiffPassphrasesTest : BaseBackupKeysFragmentTest(
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testDiffPassphrasesForEmailOption() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
