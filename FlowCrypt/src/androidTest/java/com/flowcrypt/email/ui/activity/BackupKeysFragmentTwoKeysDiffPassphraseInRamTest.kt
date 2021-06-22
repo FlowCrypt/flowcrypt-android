@@ -84,6 +84,7 @@ class BackupKeysFragmentTwoKeysDiffPassphraseInRamTest : BaseBackupKeysFragmentT
   }
 
   @Test
+  @NotReadyForCI
   fun testNeedPassphraseDownloadOptionMultiplyFingerprints() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
