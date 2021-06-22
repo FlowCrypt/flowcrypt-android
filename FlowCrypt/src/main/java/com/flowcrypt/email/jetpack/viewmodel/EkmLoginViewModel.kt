@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
  *         Time: 12:36 PM
  *         E-mail: DenBond7@gmail.com
  */
-class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidViewModel(application) {
+class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository: ApiRepository = FlowcryptApiRepository()
   val domainRulesLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 

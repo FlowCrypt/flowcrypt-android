@@ -22,7 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
+import com.flowcrypt.email.jetpack.viewmodel.EkmLoginViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -62,7 +62,7 @@ class MainSignInFragment : BaseSingInFragment() {
   private var uuid: String? = null
   private var domainRules: List<OrgRules.DomainRule>? = null
 
-  private val enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel by viewModels()
+  private val ekmLoginViewModel: EkmLoginViewModel by viewModels()
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -207,7 +207,7 @@ class MainSignInFragment : BaseSingInFragment() {
           domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
-          uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
+          uuid?.let { ekmLoginViewModel.getDomainRules(account, it, idToken) }
         }
       } else {
         val error = task.exception
@@ -379,7 +379,7 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun setupEnterpriseViewModel() {
-    enterpriseDomainRulesViewModel.domainRulesLiveData.observe(viewLifecycleOwner, {
+    ekmLoginViewModel.domainRulesLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -390,7 +390,7 @@ class MainSignInFragment : BaseSingInFragment() {
             val result = it.data as? DomainRulesResponse
             domainRules = result?.orgRules?.flags ?: emptyList()
             onSignSuccess(googleSignInAccount)
-            enterpriseDomainRulesViewModel.domainRulesLiveData.value = null
+            ekmLoginViewModel.domainRulesLiveData.value = null
           }
 
           Result.Status.ERROR -> {
