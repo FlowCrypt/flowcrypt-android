@@ -77,6 +77,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testComposeFloatButton() {
     onView(withId(R.id.floatActionButtonCompose))
       .check(matches(isDisplayed()))
