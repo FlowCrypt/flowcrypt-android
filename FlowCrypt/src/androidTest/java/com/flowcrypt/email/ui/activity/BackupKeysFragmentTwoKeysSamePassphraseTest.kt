@@ -10,11 +10,12 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -29,44 +30,35 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- * Date: 17.08.2018
- * Time: 16:28
- * E-mail: DenBond7@gmail.com
+ *         Date: 6/22/21
+ *         Time: 11:27 AM
+ *         E-mail: DenBond7@gmail.com
  */
+
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentTwoKeysSamePassphraseTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
+    .around(
+      AddPrivateKeyToDatabaseRule(
+        accountEntity = addAccountToDatabaseRule.account,
+        keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
+        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+        sourceType = KeyImportDetails.SourceType.EMAIL
+      )
+    )
     .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
-  fun testEmailOptionHint() {
-    onView(withId(R.id.rBEmailOption))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(getResString(R.string.backup_as_email_hint)))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testDownloadOptionHint() {
-    onView(withId(R.id.rBDownloadOption))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(getResString(R.string.backup_as_download_hint)))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
   @DependsOnMailServer
-  fun testSuccessEmailOption() {
+  fun testSuccessWithTwoKeysEmailOption() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -74,7 +66,7 @@ class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
   }
 
   @Test
-  fun testSuccessDownloadOption() {
+  fun testSuccessWithTwoKeysDownloadOption() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())

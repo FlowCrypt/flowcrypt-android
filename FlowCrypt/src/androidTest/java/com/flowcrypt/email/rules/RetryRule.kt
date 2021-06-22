@@ -46,6 +46,7 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
             .onSuccess { return }
             .onFailure {
               TestGeneralUtil.clearApp(targetContext)
+              Thread.sleep(1000)
               caughtThrowable = it
               System.err.println(description.displayName.toString() + ": run $times failed")
             }
