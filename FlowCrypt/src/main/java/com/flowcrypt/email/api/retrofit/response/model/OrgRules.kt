@@ -18,26 +18,27 @@ import com.google.gson.annotations.SerializedName
  *         E-mail: DenBond7@gmail.com
  */
 data class OrgRules constructor(
-    @Expose val flags: List<DomainRule>?,
-    @SerializedName("custom_keyserver_url")
-    @Expose val customKeyserverUrl: String?,
-    @SerializedName("key_manager_url")
-    @Expose val keyManagerUrl: String?,
-    @SerializedName("disallow_attester_search_for_domains")
-    @Expose val disallowAttesterSearchForDomains: List<String>?,
-    @SerializedName("enforce_keygen_algo")
-    @Expose val enforceKeygenAlgo: KeyAlgo?,
-    @SerializedName("enforce_keygen_expire_months")
-    @Expose val enforceKeygenExpireMonths: Int?
+  @Expose val flags: List<DomainRule>?,
+  @SerializedName("custom_keyserver_url")
+  @Expose val customKeyserverUrl: String?,
+  @SerializedName("key_manager_url")
+  @Expose val keyManagerUrl: String?,
+  @SerializedName("disallow_attester_search_for_domains")
+  @Expose val disallowAttesterSearchForDomains: List<String>?,
+  @SerializedName("enforce_keygen_algo")
+  @Expose val enforceKeygenAlgo: KeyAlgo?,
+  @SerializedName("enforce_keygen_expire_months")
+  @Expose val enforceKeygenExpireMonths: Int?
 ) : Parcelable {
 
   constructor(parcel: Parcel) : this(
-      parcel.createTypedArrayList(DomainRule.CREATOR),
-      parcel.readString(),
-      parcel.readString(),
-      parcel.createStringArrayList(),
-      parcel.readParcelable(KeyAlgo::class.java.classLoader),
-      parcel.readValue(Int::class.java.classLoader) as? Int)
+    parcel.createTypedArrayList(DomainRule.CREATOR),
+    parcel.readString(),
+    parcel.readString(),
+    parcel.createStringArrayList(),
+    parcel.readParcelable(KeyAlgo::class.java.classLoader),
+    parcel.readValue(Int::class.java.classLoader) as? Int
+  )
 
   override fun writeToParcel(parcel: Parcel, flagsList: Int) {
     parcel.writeTypedList(flags)
@@ -135,6 +136,18 @@ data class OrgRules constructor(
         || this.mustAutoGenPassPhraseQuietly()
   }
 
+  fun forbidStoringPassPhrase(): Boolean {
+    return flags?.firstOrNull { it == DomainRule.FORBID_STORING_PASS_PHRASE } != null
+  }
+
+  fun passPhraseMustBeChosenByUser(): Boolean {
+    return true
+  }
+
+  fun forbidCreatingPrivateKey(): Boolean {
+    return true
+  }
+
   /**
    * This is to be used for customers who run their own FlowCrypt Email Key Manager
    * If a key can be found on FEKM, it will be auto imported
@@ -144,7 +157,7 @@ data class OrgRules constructor(
     if (flags?.firstOrNull { it == DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN } == null) {
       return false
     }
-    if (getKeyManagerUrlForPrivateKeys() != null) {
+    if (getKeyManagerUrlForPrivateKeys() == null) {
       throw IllegalStateException(
         "Wrong org rules config: using PRV_AUTOIMPORT_OR_AUTOGEN without key_manager_url"
       )
@@ -209,7 +222,9 @@ data class OrgRules constructor(
     NO_KEY_MANAGER_PUB_LOOKUP,
     USE_LEGACY_ATTESTER_SUBMIT,
     DEFAULT_REMEMBER_PASS_PHRASE,
-    HIDE_ARMOR_META;
+    HIDE_ARMOR_META,
+    FORBID_STORING_PASS_PHRASE,
+    PASS_PHRASE_CHOSEN_BY_USER;
 
     companion object CREATOR : Parcelable.Creator<DomainRule> {
       override fun createFromParcel(parcel: Parcel): DomainRule = values()[parcel.readInt()]
