@@ -44,7 +44,7 @@ import java.io.File
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentSingleKeyWeakPassphraseDatabaseTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentSingleKeyWeakPassphraseTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

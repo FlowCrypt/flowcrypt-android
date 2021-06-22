@@ -43,7 +43,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentPassphraseInRamTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentSingleKeyPassphraseInRamTest : BaseBackupKeysFragmentTest() {
   val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule(passphraseType = KeyEntity.PassphraseType.RAM)
 
