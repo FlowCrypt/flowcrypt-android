@@ -130,8 +130,8 @@ class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(applica
     )
 
     when {
-      !orgRules.passPhraseMustBeChosenByUser() -> {
-        notSupportedCombination[OrgRules.DomainRule.PASS_PHRASE_CHOSEN_BY_USER] = false
+      orgRules.mustAutoGenPassPhraseQuietly() -> {
+        notSupportedCombination[OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN] = true
       }
 
       !orgRules.forbidStoringPassPhrase() -> {

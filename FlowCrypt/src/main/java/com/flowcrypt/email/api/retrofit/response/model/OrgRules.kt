@@ -140,12 +140,8 @@ data class OrgRules constructor(
     return flags?.firstOrNull { it == DomainRule.FORBID_STORING_PASS_PHRASE } != null
   }
 
-  fun passPhraseMustBeChosenByUser(): Boolean {
-    return true
-  }
-
   fun forbidCreatingPrivateKey(): Boolean {
-    return true
+    return flags?.firstOrNull { it == DomainRule.NO_PRV_CREATE } != null
   }
 
   /**
@@ -223,8 +219,7 @@ data class OrgRules constructor(
     USE_LEGACY_ATTESTER_SUBMIT,
     DEFAULT_REMEMBER_PASS_PHRASE,
     HIDE_ARMOR_META,
-    FORBID_STORING_PASS_PHRASE,
-    PASS_PHRASE_CHOSEN_BY_USER;
+    FORBID_STORING_PASS_PHRASE;
 
     companion object CREATOR : Parcelable.Creator<DomainRule> {
       override fun createFromParcel(parcel: Parcel): DomainRule = values()[parcel.readInt()]
