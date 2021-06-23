@@ -13,6 +13,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 
@@ -136,4 +137,18 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
   )
   fragment.setTargetFragment(this, requestCode)
   showDialogFragment(fragment)
+}
+
+fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
+  fingerprints: List<String>,
+  requestCode: Int,
+  logicType: FixNeedPassphraseIssueDialogFragment.LogicType
+  = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
+) {
+  val tag = FixNeedPassphraseIssueDialogFragment::class.java.simpleName
+  if (parentFragmentManager.findFragmentByTag(tag) == null) {
+    val fragment = FixNeedPassphraseIssueDialogFragment.newInstance(fingerprints, logicType)
+    fragment.setTargetFragment(this, requestCode)
+    fragment.show(parentFragmentManager, tag)
+  }
 }

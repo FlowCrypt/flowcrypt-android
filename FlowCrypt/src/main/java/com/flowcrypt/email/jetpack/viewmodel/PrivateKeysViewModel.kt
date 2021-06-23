@@ -47,7 +47,6 @@ import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
-import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,34 +88,58 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     viewModelScope.launch {
       try {
         changePassphraseLiveData.value = Result.loading()
+
+        if (newPassphrase.isEmpty) {
+          throw IllegalStateException("new Passphrase can't be empty")
+        }
+
         val account = roomDatabase.accountDao().getActiveAccountSuspend()
         requireNotNull(account)
 
-        val list = keysStorage.getRawKeys()
+        val rawKeys = keysStorage.getRawKeys()
 
-        if (list.isEmpty()) {
+        if (rawKeys.isEmpty()) {
           throw NoPrivateKeysAvailableException(getApplication(), account.email)
         }
 
-        roomDatabase.keysDao().updateSuspend(list.map { keyEntity ->
-          with(
-            getModifiedNodeKeyDetails(
-              keyEntity.passphrase,
-              newPassphrase,
-              keyEntity.privateKeyAsString
+        val updateCandidates = rawKeys.map { keyEntity ->
+          val fingerprint = keyEntity.fingerprint
+          val oldPassphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
+            ?: throw IllegalStateException(
+              "Passphrase for key with fingerprint $fingerprint not defined"
             )
-          ) {
-            if (isFullyDecrypted) {
-              throw IllegalArgumentException("Error. The key is decrypted!")
-            }
 
-            keyEntity.copy(
-              privateKey = KeyStoreCryptoManager.encryptSuspend(privateKey).toByteArray(),
-              publicKey = publicKey.toByteArray(),
-              storedPassphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.asString)
-            )
+          val modifiedPgpKeyDetails = getModifiedPgpKeyDetails(
+            oldPassphrase = oldPassphrase,
+            newPassphrase = newPassphrase,
+            originalPrivateKey = keyEntity.privateKeyAsString,
+            fingerprint = fingerprint
+          )
+
+          if (modifiedPgpKeyDetails.isFullyDecrypted) {
+            throw IllegalArgumentException("Error. The key is decrypted!")
           }
-        })
+
+          keyEntity.copy(
+            privateKey = KeyStoreCryptoManager.encryptSuspend(modifiedPgpKeyDetails.privateKey)
+              .toByteArray(),
+            publicKey = modifiedPgpKeyDetails.publicKey.toByteArray(),
+            storedPassphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.asString)
+          )
+        }
+
+        roomDatabase.keysDao().updateSuspend(updateCandidates)
+
+        //update passphrases in RAM
+        rawKeys.filter { it.passphraseType == KeyEntity.PassphraseType.RAM }.forEach { rawKey ->
+          keysStorage.putPassphraseToCache(
+            fingerprint = rawKey.fingerprint,
+            passphrase = newPassphrase,
+            validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
+            passphraseType = KeyEntity.PassphraseType.RAM
+          )
+        }
+
         changePassphraseLiveData.value = Result.success(true)
       } catch (e: Exception) {
         e.printStackTrace()
@@ -455,47 +478,32 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  private suspend fun getModifiedNodeKeyDetails(
+  private suspend fun getModifiedPgpKeyDetails(
     oldPassphrase: Passphrase,
     newPassphrase: Passphrase,
-    originalPrivateKey: String?
-  ): PgpKeyDetails =
-    withContext(Dispatchers.IO) {
-      val keyDetailsList = PgpKey.parseKeys(originalPrivateKey!!.toByteArray())
-        .toPgpKeyDetailsList()
-      if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
-        throw IllegalStateException("Parse keys error")
-      }
-
-      val nodeKeyDetails = keyDetailsList[0]
-      val fingerprint = nodeKeyDetails.fingerprint
-
-      if (oldPassphrase.isEmpty) {
-        throw IllegalStateException("Passphrase for key with fingerprint $fingerprint not found")
-      }
-
-      val encryptedKey: String
-      try {
-        encryptedKey = PgpKey.changeKeyPassphrase(
-          nodeKeyDetails.privateKey!!,
-          oldPassphrase,
-          newPassphrase
-        )
-      } catch (e: Exception) {
-        throw IllegalStateException(
-          "Can't change passphrase for the key with fingerprint " + fingerprint,
-          e
-        )
-      }
-
-      val modifiedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray())
-        .toPgpKeyDetailsList()
-      if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
-        throw IllegalStateException("Parse keys error")
-      }
-
-      modifiedKeyDetailsList[0]
+    originalPrivateKey: String,
+    fingerprint: String
+  ): PgpKeyDetails = withContext(Dispatchers.IO) {
+    val keyEncryptedWithNewPassphrase = try {
+      PgpKey.changeKeyPassphrase(
+        armored = originalPrivateKey,
+        oldPassphrase = oldPassphrase,
+        newPassphrase = newPassphrase
+      )
+    } catch (e: Exception) {
+      throw IllegalStateException(
+        "Can't change passphrase for the key with fingerprint $fingerprint", e
+      )
     }
+
+    val modifiedPgpKeyDetailsList =
+      PgpKey.parseKeys(keyEncryptedWithNewPassphrase.toByteArray()).toPgpKeyDetailsList()
+    if (modifiedPgpKeyDetailsList.isEmpty() || modifiedPgpKeyDetailsList.size != 1) {
+      throw IllegalStateException("Parse keys error")
+    }
+
+    return@withContext modifiedPgpKeyDetailsList.first()
+  }
 
   /**
    * Check that the key size not bigger then [.MAX_SIZE_IN_BYTES].
