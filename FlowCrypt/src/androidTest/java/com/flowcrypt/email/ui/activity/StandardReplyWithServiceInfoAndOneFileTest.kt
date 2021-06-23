@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -156,6 +157,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
+  @NotReadyForCI
   fun testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage))
       .perform(scrollTo())
