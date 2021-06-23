@@ -62,7 +62,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<EmailManagerActivity>()
 
-  private val userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json")
+  private val userWithoutLetters = AccountDaoManager.getUserWithoutLetters()
   private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWithMoreThan21Letters()
 
   @get:Rule
@@ -77,6 +77,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testComposeFloatButton() {
     onView(withId(R.id.floatActionButtonCompose))
       .check(matches(isDisplayed()))
@@ -88,6 +89,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testRunMsgDetailsActivity() {
     //need to add some timeout while database will be updated
     Thread.sleep(1000)
@@ -96,6 +98,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testForceLoadMsgs() {
     //need to add some timeout while database will be updated
     Thread.sleep(1000)

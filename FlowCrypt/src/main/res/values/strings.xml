@@ -46,6 +46,7 @@
     <string name="password_is_incorrect">Incorrect pass phrase, please try again</string>
     <string name="use_another_account">Use another account</string>
     <string name="reply_all">Reply All</string>
+    <string name="please_wait_while_backup_will_be_saved">Making a backup, please wait</string>
     <string name="please_wait_while_message_will_be_sent">Sending message, please wait</string>
     <string name="please_wait_while_information_about_contacts_will_be_updated">Loading information about contacts, please wait</string>
     <string name="create_a_new_key">Create a new key</string>
@@ -67,8 +68,7 @@
     <string name="your_message">Your message</string>
     <string name="back">Back</string>
     <string name="see_more_backup_options">See more backup options</string>
-    <string name="warning_if_you_lose_your_device_and_have_not_backup">If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
-    <string name="there_are_no_backups_on_this_account">There are no backups on this account</string>
+    <string name="there_are_no_backups_on_this_account"><b>There are no backups on this account</b>\n\n If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
     <string name="email">Email</string>
     <string name="download">Download</string>
     <string name="backup_as_a_file">backup as a file</string>
@@ -77,7 +77,7 @@
         is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place.</string>
     <string name="backup_as_email_hint">This will back up private key(s) in your Email Inbox. The security depends on
         the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
-    <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
+    <string name="backups_found">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
     <string name="your_key_backup">Your FlowCrypt Backup</string>
     <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
@@ -515,6 +515,10 @@
     <plurals name="please_provide_passphrase_for_following_keys">
         <item quantity="one">Please provide a pass phrase for the following key</item>
         <item quantity="other">Please provide a pass phrase for at least one of the following keys</item>
+    </plurals>
+    <plurals name="please_provide_passphrase_for_all_following_keys">
+        <item quantity="one">Please provide a pass phrase for the following key</item>
+        <item quantity="other">Please provide a pass phrase for the following keys</item>
     </plurals>
     <string name="combination_of_org_rules_is_not_supported">Combination of the following OrgRules\n\n%1$s\n\nis not supported</string>
 </resources>
