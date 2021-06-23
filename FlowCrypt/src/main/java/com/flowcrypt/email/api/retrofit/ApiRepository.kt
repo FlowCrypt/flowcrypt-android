@@ -12,11 +12,13 @@ import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
 
@@ -55,7 +57,7 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param model An instance of [PostLookUpEmailsModel].
+   * @param model An instance of [InitialLegacySubmitModel].
    */
   suspend fun postInitialLegacySubmit(
     context: Context,
@@ -103,4 +105,15 @@ interface ApiRepository : BaseApiRepository {
     context: Context,
     url: String
   ): Result<JsonObject>
+
+  /**
+   * Get private keys via "<ekm>/v1/keys/private"
+   *
+   * @param context Interface to global information about an application environment.
+   * @param ekmUrl key_manager_url from [OrgRules].
+   * @param tokenId OIDC token.
+   */
+  suspend fun getPrivateKeysViaEkm(
+    context: Context, ekmUrl: String, tokenId: String
+  ): Result<EkmPrivateKeysResponse>
 }

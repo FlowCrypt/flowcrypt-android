@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
@@ -139,4 +140,13 @@ interface ApiService {
 
   @GET
   suspend fun getOpenIdConfiguration(@Url url: String): Response<JsonObject>
+
+  /**
+   * Get private keys via "<ekm>/v1/keys/private"
+   */
+  @GET
+  suspend fun getPrivateKeysViaEkm(
+    @Url ekmUrl: String,
+    @Header("Authorization") tokenId: String
+  ): Response<EkmPrivateKeysResponse>
 }

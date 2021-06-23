@@ -97,7 +97,14 @@ class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(applica
                   return@launch
                 }
 
-                ekmLiveData.value = domainRulesResult
+                val ekmPrivateResult = repository.getPrivateKeysViaEkm(
+                  context = context,
+                  ekmUrl = domainRulesResult.data.orgRules.keyManagerUrl
+                    ?: throw java.lang.IllegalArgumentException("key_manager_url is empty"),
+                  tokenId = tokenId
+                )
+
+                ekmLiveData.value = ekmPrivateResult
               } else {
                 ekmLiveData.value = domainRulesResult
               }

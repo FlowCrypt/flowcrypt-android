@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
@@ -135,5 +136,16 @@ class FlowcryptApiRepository : ApiRepository {
       getResult {
         apiService.getOpenIdConfiguration(url)
       }
+    }
+
+  override suspend fun getPrivateKeysViaEkm(
+    context: Context,
+    ekmUrl: String,
+    tokenId: String
+  ): Result<EkmPrivateKeysResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val url = if (ekmUrl.endsWith("/")) ekmUrl else "$ekmUrl/"
+      getResult { apiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $tokenId") }
     }
 }
