@@ -49,6 +49,14 @@ class MainSettingsFragment : BasePreferenceFragment() {
         true
       }
 
+    findPreference<Preference>(getString(R.string.pref_key_notification))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToNotificationsSettingsFragment()
+        )
+        true
+      }
+
     findPreference<Preference>(getString(R.string.pref_key_server_settings))
       ?.setOnPreferenceClickListener {
         navController?.navigate(

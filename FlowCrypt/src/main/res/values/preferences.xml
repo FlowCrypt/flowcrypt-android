@@ -12,6 +12,7 @@
     <string name="pref_key_server_settings" translatable="false">pref_key_server_settings</string>
     <string name="pref_key_attester">pref_key_attester</string>
     <string name="pref_key_legal">pref_key_legal</string>
+    <string name="pref_key_notification">pref_key_notification</string>
 
     <string name="pref_title_allow_anonymous_crash_reports">Allow anonymous crash reports</string>
 </resources>

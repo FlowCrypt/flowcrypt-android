@@ -195,16 +195,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.settings.NotificationsSettingsActivity"
-            android:label="@string/notifications"
-            android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:name=".ui.activity.ChangePassPhraseActivity"
             android:screenOrientation="portrait" />
 

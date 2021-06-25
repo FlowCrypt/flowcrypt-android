@@ -41,12 +41,9 @@
         app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_notification"
         android:title="@string/notifications"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.NotificationsSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="@string/pref_key_server_settings"

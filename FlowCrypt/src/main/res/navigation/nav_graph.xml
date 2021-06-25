@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_legalSettingsFragment"
             app:destination="@id/legalSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_notificationsSettingsFragment"
+            app:destination="@id/notificationsSettingsFragment" />
     </fragment>
 
     <fragment
@@ -35,6 +38,15 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/attester" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/notificationsSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment"
+        android:label="NotificationsSettingsFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/notification" />
     </fragment>
 
     <fragment
