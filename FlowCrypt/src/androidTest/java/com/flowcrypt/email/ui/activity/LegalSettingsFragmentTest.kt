@@ -23,7 +23,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity
+import com.flowcrypt.email.ui.activity.settings.LegalSettingsFragment
 import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
@@ -39,8 +39,8 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class LegalSettingsActivityTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<LegalSettingsActivity>()
+class LegalSettingsFragmentTest : BaseTest() {
+  override val activityScenarioRule = activityScenarioRule<LegalSettingsFragment>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

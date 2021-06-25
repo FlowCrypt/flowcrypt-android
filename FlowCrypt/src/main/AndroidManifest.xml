@@ -143,12 +143,6 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.settings.LegalSettingsActivity"
-            android:label="@string/legal"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar.NoElevation" />
-
-        <activity
             android:name=".ui.activity.settings.ContactsSettingsActivity"
             android:label="@string/contacts"
             android:screenOrientation="portrait" />
