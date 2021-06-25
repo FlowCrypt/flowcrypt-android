@@ -26,11 +26,14 @@ import java.util.Locale
  * E-mail: DenBond7@gmail.com
  */
 class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSpan> {
-  private val backgroundColorPgpExists: Int = UIUtil.getColor(context, R.color.colorPrimary)
-  private val backgroundColorPgpExistsButKeyExpired: Int = UIUtil.getColor(context, R.color.orange)
-  private val backgroundColorPgpNotExists: Int = UIUtil.getColor(context, R.color.aluminum)
-  private val textColorPgpExists: Int = UIUtil.getColor(context, android.R.color.white)
-  private val textColorNoPgpNoExists: Int = UIUtil.getColor(context, R.color.dark)
+  private val backgroundColorPgpExists =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_EXISTS)
+  private val backgroundColorPgpExistsButKeyExpired =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED)
+  private val backgroundColorPgpNotExist =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_NOT_EXISTS)
+  private val textColorPgpExists = UIUtil.getColor(context, android.R.color.white)
+  private val textColorNoPgpNoExists = UIUtil.getColor(context, R.color.dark)
 
   override fun createChip(context: Context, text: CharSequence, data: Any?): PGPContactChipSpan {
     return PGPContactChipSpan(context, text.toString().toLowerCase(Locale.getDefault()), null, data)
@@ -109,8 +112,14 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
       }
       span.setTextColor(textColorPgpExists)
     } else {
-      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExists))
+      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExist))
       span.setTextColor(textColorNoPgpNoExists)
     }
+  }
+
+  companion object {
+    const val CHIP_COLOR_RES_ID_PGP_EXISTS = R.color.colorPrimary
+    const val CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED = R.color.orange
+    const val CHIP_COLOR_RES_ID_PGP_NOT_EXISTS = R.color.aluminum
   }
 }
