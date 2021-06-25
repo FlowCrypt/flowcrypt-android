@@ -59,6 +59,22 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/contacts" />
+        <action
+            android:id="@+id/action_contactsListFragment_to_publicKeyDetailsFragment"
+            app:destination="@id/publicKeyDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/publicKeyDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragment"
+        android:label="PublicKeyDetailsFragment"
+        tools:layout="@layout/fragment_public_key_details">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts/details" />
+        <argument
+            android:name="contactEntity"
+            app:argType="com.flowcrypt.email.database.entity.ContactEntity" />
     </fragment>
 
     <fragment

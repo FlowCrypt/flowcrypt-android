@@ -22,6 +22,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -49,6 +50,8 @@ import java.util.Date
  *         E-mail: DenBond7@gmail.com
  */
 class PublicKeyDetailsFragment : BaseFragment() {
+  private val args by navArgs<PublicKeyDetailsFragmentArgs>()
+
   private val contactsViewModel: ContactsViewModel by viewModels()
   private val parseKeysViewModel: ParseKeysViewModel by viewModels()
 
@@ -66,10 +69,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    contactEntity = arguments?.getParcelable(KEY_CONTACT)
-    if (contactEntity == null) {
-      parentFragmentManager.popBackStack()
-    }
+    contactEntity = args.contactEntity
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -253,18 +253,6 @@ class PublicKeyDetailsFragment : BaseFragment() {
   }
 
   companion object {
-    private val KEY_CONTACT = GeneralUtil.generateUniqueExtraKey(
-      "KEY_CONTACT",
-      PublicKeyDetailsFragment::class.java
-    )
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
-
-    fun newInstance(contactEntity: ContactEntity): PublicKeyDetailsFragment {
-      val fragment = PublicKeyDetailsFragment()
-      val args = Bundle()
-      args.putParcelable(KEY_CONTACT, contactEntity)
-      fragment.arguments = args
-      return fragment
-    }
   }
 }

@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -73,11 +74,10 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
   }
 
   override fun onContactClick(contactEntity: ContactEntity) {
-    parentFragmentManager
-      .beginTransaction()
-      .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(contactEntity))
-      .addToBackStack(null)
-      .commit()
+    navController?.navigate(
+      ContactsListFragmentDirections
+        .actionContactsListFragmentToPublicKeyDetailsFragment(contactEntity)
+    )
   }
 
   override fun onDeleteContact(contactEntity: ContactEntity) {
@@ -137,9 +137,5 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
 
   companion object {
     private const val REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY = 0
-
-    fun newInstance(): ContactsListFragment {
-      return ContactsListFragment()
-    }
   }
 }

@@ -69,7 +69,10 @@ import java.util.Date
 class PublicKeyDetailsFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(Intent.ACTION_VIEW, Uri.parse("fixme"))
+    Intent(
+      Intent.ACTION_VIEW,
+      Uri.parse("flowcrypt://email.flowcrypt.com/settings/contacts/details")
+    )
   )
 
   private val keyDetails =
