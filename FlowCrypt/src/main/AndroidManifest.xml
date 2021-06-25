@@ -148,11 +148,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.settings.KeysSettingsActivity"
-            android:label="@string/keys"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait"

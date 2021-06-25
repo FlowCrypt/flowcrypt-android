@@ -24,12 +24,9 @@
     </Preference>
 
     <Preference
+        android:key="@string/pref_key_keys"
         android:title="@string/keys"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="@string/pref_key_attester"

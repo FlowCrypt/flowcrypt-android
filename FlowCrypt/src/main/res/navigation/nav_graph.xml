@@ -31,6 +31,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_securitySettingsFragment"
             app:destination="@id/securitySettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_privateKeysListFragment"
+            app:destination="@id/privateKeysListFragment" />
     </fragment>
 
     <fragment
@@ -40,6 +43,16 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/privateKeysListFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment"
+        android:label="PrivateKeysListFragment"
+        tools:layout="@layout/fragment_private_keys">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/keys" />
     </fragment>
 
     <fragment
