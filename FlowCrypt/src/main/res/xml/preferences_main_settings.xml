@@ -11,13 +11,9 @@
         app:iconSpaceReserved="false" />
 
     <Preference
-        android:key="@string/preferences_key_settings_security"
+        android:key="@string/pref_key_security"
         android:title="@string/security_and_privacy"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.SecurityAndPrivacySettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:title="@string/contacts"

@@ -199,11 +199,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.settings.SecurityAndPrivacySettingsActivity"
-            android:label="@string/security_and_privacy"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.CorruptedStorageActivity"
             android:launchMode="singleTop" />
 
