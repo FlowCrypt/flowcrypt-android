@@ -27,6 +27,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -89,7 +90,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener,
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-
+    supportActionBar?.setTitle(R.string.keys)
     initViews(view)
     setupPrivateKeysViewModel()
   }
@@ -106,11 +107,6 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener,
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     tracker?.onSaveInstanceState(outState)
-  }
-
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
-    supportActionBar?.setTitle(R.string.keys)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -164,11 +160,10 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener,
     }
 
     pgpKeyDetails?.let {
-      parentFragmentManager
-        .beginTransaction()
-        .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it.fingerprint))
-        .addToBackStack(null)
-        .commit()
+      navController?.navigate(
+        PrivateKeysListFragmentDirections
+          .actionPrivateKeysListFragmentToPrivateKeyDetailsFragment(it.fingerprint)
+      )
     }
   }
 
