@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings
+package com.flowcrypt.email.ui.activity.fragment
 
 import android.net.Uri
 import android.os.Bundle

@@ -46,7 +46,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class AttesterSettingsActivityTest : BaseTest() {
+class AttesterSettingsFragmentTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
     Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/attester"))
   )

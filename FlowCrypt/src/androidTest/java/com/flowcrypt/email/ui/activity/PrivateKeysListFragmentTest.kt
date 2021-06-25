@@ -71,7 +71,7 @@ import java.util.Date
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class KeysSettingsActivityTest : BaseTest() {
+class PrivateKeysListFragmentTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(

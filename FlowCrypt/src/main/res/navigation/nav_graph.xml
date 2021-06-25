@@ -124,7 +124,7 @@
 
     <fragment
         android:id="@+id/legalSettingsFragment"
-        android:name="com.flowcrypt.email.ui.activity.settings.LegalSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment"
         android:label="LegalSettingsFragment"
         tools:layout="@layout/fragment_legal">
         <deepLink
