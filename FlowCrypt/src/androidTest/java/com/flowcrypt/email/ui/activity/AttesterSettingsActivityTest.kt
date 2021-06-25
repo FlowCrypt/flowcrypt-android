@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.content.Intent
+import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -22,7 +24,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
@@ -45,7 +47,9 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class AttesterSettingsActivityTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<AttesterSettingsActivity>()
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://attester"))
+  )
   private val accountRule = AddAccountToDatabaseRule()
 
   @get:Rule

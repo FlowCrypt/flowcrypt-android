@@ -159,11 +159,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.settings.AttesterSettingsActivity"
-            android:label="@string/attester"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait"

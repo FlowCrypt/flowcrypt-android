@@ -37,11 +37,9 @@
     </Preference>
 
     <Preference
+        android:key="@string/pref_key_attester"
         android:title="@string/attester"
         app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity"
-            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference

@@ -33,19 +33,29 @@ class MainSettingsFragment : BasePreferenceFragment() {
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     addPreferencesFromResource(R.xml.preferences_main_settings)
 
-    findPreference<Preference>(getString(R.string.pref_key_server_settings))?.setOnPreferenceClickListener {
-      navController?.navigate(
-        MainSettingsFragmentDirections.actionMainSettingsFragmentToServerSettingsFragment()
-      )
-      true
-    }
+    findPreference<Preference>(getString(R.string.pref_key_backups))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToSearchBackupsInEmailFragment()
+        )
+        true
+      }
 
-    findPreference<Preference>(getString(R.string.pref_key_backups))?.setOnPreferenceClickListener {
-      navController?.navigate(
-        MainSettingsFragmentDirections.actionMainSettingsFragmentToSearchBackupsInEmailFragment()
-      )
-      true
-    }
+    findPreference<Preference>(getString(R.string.pref_key_attester))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToAttesterSettingsFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_server_settings))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToServerSettingsFragment()
+        )
+        true
+      }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

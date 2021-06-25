@@ -19,6 +19,19 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_searchBackupsInEmailFragment"
             app:destination="@id/searchBackupsInEmailFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_attesterSettingsFragment"
+            app:destination="@id/attesterSettingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/attesterSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment"
+        android:label="AttesterSettingsFragment"
+        tools:layout="@layout/fragment_attester_settings">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://attester" />
     </fragment>
 
     <fragment
