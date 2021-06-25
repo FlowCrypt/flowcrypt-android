@@ -48,7 +48,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AttesterSettingsActivityTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://attester"))
+    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/attester"))
   )
   private val accountRule = AddAccountToDatabaseRule()
 

@@ -87,7 +87,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private fun runBackupKeysActivity() {
     isBackEnabled = true
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://make_backup"))
+    val intent =
+      Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/make_backup"))
     startActivity(intent)
   }
 

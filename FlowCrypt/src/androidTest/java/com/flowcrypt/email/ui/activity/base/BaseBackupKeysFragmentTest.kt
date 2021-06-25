@@ -28,7 +28,7 @@ import java.io.File
 abstract class BaseBackupKeysFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://make_backup"))
+    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/make_backup"))
   )
 
   val addAccountToDatabaseRule = AddAccountToDatabaseRule()

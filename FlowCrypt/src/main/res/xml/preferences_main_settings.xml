@@ -8,8 +8,7 @@
     <Preference
         android:key="@string/pref_key_backups"
         android:title="@string/backups"
-        app:iconSpaceReserved="false">
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="@string/preferences_key_settings_security"
@@ -39,8 +38,7 @@
     <Preference
         android:key="@string/pref_key_attester"
         android:title="@string/attester"
-        app:iconSpaceReserved="false">
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:title="@string/notifications"
@@ -57,12 +55,9 @@
         app:isPreferenceVisible="false" />
 
     <Preference
+        android:key="@string/pref_key_legal"
         android:title="@string/legal"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:title="@string/experimental"

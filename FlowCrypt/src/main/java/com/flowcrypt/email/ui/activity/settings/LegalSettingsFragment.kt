@@ -26,38 +26,32 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.google.android.material.tabs.TabLayout
 
 /**
- * This Activity consists information about a legal.
+ * This [Fragment] consists information about a legal.
  *
  * @author DenBond7
  * Date: 26.05.2017
  * Time: 13:27
  * E-mail: DenBond7@gmail.com
  */
-class LegalSettingsFragment : BaseSettingsActivity() {
-
-  private var tabPagerAdapter: TabPagerAdapter = TabPagerAdapter(supportFragmentManager)
+class LegalSettingsFragment : BaseFragment() {
   private var viewPager: ViewPager? = null
   private var tabLayout: TabLayout? = null
 
-  override val contentViewResourceId: Int
-    get() = R.layout.activity_legal
+  override val contentResourceId: Int = R.layout.fragment_legal
 
-  override val rootView: View
-    get() = View(this)
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    initViews()
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    initViews(view)
     updateViews()
   }
 
-  private fun initViews() {
-    viewPager = findViewById(R.id.viewPager)
-    tabLayout = findViewById(R.id.tabLayout)
+  private fun initViews(view: View) {
+    viewPager = view.findViewById(R.id.viewPager)
+    tabLayout = view.findViewById(R.id.tabLayout)
   }
 
   private fun updateViews() {
-    viewPager?.adapter = tabPagerAdapter
+    viewPager?.adapter = TabPagerAdapter(childFragmentManager)
     tabLayout?.setupWithViewPager(viewPager)
   }
 

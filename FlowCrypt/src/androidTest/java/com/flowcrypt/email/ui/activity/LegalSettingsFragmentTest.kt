@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.content.Intent
+import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.swipeLeft
@@ -23,7 +25,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.LegalSettingsFragment
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
@@ -40,7 +42,9 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class LegalSettingsFragmentTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<LegalSettingsFragment>()
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/legal"))
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

@@ -56,6 +56,14 @@ class MainSettingsFragment : BasePreferenceFragment() {
         )
         true
       }
+
+    findPreference<Preference>(getString(R.string.pref_key_legal))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToLegalSettingsFragment()
+        )
+        true
+      }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

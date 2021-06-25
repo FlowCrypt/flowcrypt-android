@@ -22,6 +22,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_attesterSettingsFragment"
             app:destination="@id/attesterSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_legalSettingsFragment"
+            app:destination="@id/legalSettingsFragment" />
     </fragment>
 
     <fragment
@@ -31,7 +34,17 @@
         tools:layout="@layout/fragment_attester_settings">
         <deepLink
             android:id="@+id/deepLink"
-            app:uri="flowcrypt://attester" />
+            app:uri="flowcrypt://email.flowcrypt.com/settings/attester" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/legalSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.settings.LegalSettingsFragment"
+        android:label="LegalSettingsFragment"
+        tools:layout="@layout/fragment_legal">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/legal" />
     </fragment>
 
     <fragment
@@ -97,7 +110,7 @@
         tools:layout="@layout/fragment_backup_keys">
         <deepLink
             android:id="@+id/deepLink"
-            app:uri="flowcrypt://make_backup" />
+            app:uri="flowcrypt://email.flowcrypt.com/settings/make_backup" />
     </fragment>
 
     <dialog
