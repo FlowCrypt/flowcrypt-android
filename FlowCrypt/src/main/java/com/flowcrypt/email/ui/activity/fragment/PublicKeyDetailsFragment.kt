@@ -28,6 +28,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -89,12 +90,12 @@ class PublicKeyDetailsFragment : BaseFragment() {
         }
 
         Result.Status.SUCCESS -> {
-          val nodeKeyDetailsList = it.data
-          if (nodeKeyDetailsList.isNullOrEmpty()) {
+          val pgpKeyDetailsList = it.data
+          if (pgpKeyDetailsList.isNullOrEmpty()) {
             Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
+            navController?.navigateUp()
           } else {
-            details = nodeKeyDetailsList.first()
+            details = pgpKeyDetailsList.first()
             updateViews()
             UIUtil.exchangeViewVisibility(false, progressBar, content)
           }
@@ -146,7 +147,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
         lifecycleScope.launch {
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
           contactEntity?.let { roomDatabase.contactsDao().deleteSuspend(it) }
-          parentFragmentManager.popBackStack()
+          navController?.navigateUp()
         }
         return true
       }

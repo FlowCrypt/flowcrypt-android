@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import android.os.Environment
 import android.text.TextUtils
 import android.text.format.DateFormat
@@ -49,6 +48,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
@@ -75,7 +75,9 @@ class PrivateKeysListFragmentTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/keys"))
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/keys"
+    )
   )
 
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()

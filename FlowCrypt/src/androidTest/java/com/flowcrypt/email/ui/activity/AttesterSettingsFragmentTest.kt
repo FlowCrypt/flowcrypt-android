@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.content.Intent
-import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -48,7 +46,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AttesterSettingsFragmentTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/attester"))
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/attester"
+    )
   )
   private val accountRule = AddAccountToDatabaseRule()
 

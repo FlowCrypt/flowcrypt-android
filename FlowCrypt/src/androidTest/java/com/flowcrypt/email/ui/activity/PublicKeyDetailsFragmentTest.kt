@@ -9,17 +9,15 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
 import android.database.Cursor
-import android.net.Uri
+import android.os.Bundle
 import android.os.Environment
 import android.text.format.DateFormat
 import androidx.core.content.FileProvider
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.BoundedMatcher
@@ -49,7 +47,6 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.AllOf
 import org.junit.AfterClass
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -67,16 +64,23 @@ import java.util.Date
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class PublicKeyDetailsFragmentTest : BaseTest() {
-  override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(
-      Intent.ACTION_VIEW,
-      Uri.parse("flowcrypt://email.flowcrypt.com/settings/contacts/details")
-    )
-  )
-
   private val keyDetails =
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
+
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/details",
+      extras = Bundle().apply {
+        putParcelable(
+          "contactEntity", PgpContact(
+            EMAIL_DENBOND7, USER_DENBOND7,
+            keyDetails.publicKey, true, null, null, 0
+          ).toContactEntity()
+        )
+      }
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -96,17 +100,8 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  @Before
-  fun waitData() {
-    //todo-denbond7 need to wait while activity lunches a fragment and loads data via ROOM.
-    // Need to improve this code after espresso updates
-    Thread.sleep(1000)
-  }
-
   @Test
   fun testPubKeyDetails() {
-    chooseContact()
-
     keyDetails.users.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_user, index + 1, s)))
         .check(matches(isDisplayed()))
@@ -145,8 +140,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @Test
   fun testActionCopy() {
-    chooseContact()
-
     onView(withId(R.id.menuActionCopy))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -158,8 +151,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @Test
   fun testActionSave() {
-    chooseContact()
-
     val sanitizedEmail = EMAIL_DENBOND7.replace("[^a-z0-9]".toRegex(), "")
     val fileName = "0x" + keyDetails.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
@@ -191,26 +182,15 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  fun testActionDelete() {
-    chooseContact()
-
+  fun testActionDeleteVisibility() {
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.delete))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    onView(withText(R.string.no_results))
       .check(matches(isDisplayed()))
   }
 
   @Test
   fun testActionHelp() {
     testHelpScreen()
-  }
-
-  private fun chooseContact() {
-    onView(withId(R.id.recyclerViewContacts))
-      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
   }
 
   /**

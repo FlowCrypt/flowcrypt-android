@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.content.Intent
-import android.net.Uri
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -29,6 +27,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
@@ -49,7 +48,9 @@ import org.junit.runner.RunWith
 class ContactsListFragmentTest : BaseTest() {
 
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/contacts"))
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/contacts"
+    )
   )
 
   @get:Rule
