@@ -41,6 +41,7 @@ class LegalSettingsFragment : BaseFragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    supportActionBar?.title = getString(R.string.legal)
     initViews(view)
     updateViews()
   }
