@@ -9,6 +9,7 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
 import android.database.Cursor
+import android.net.Uri
 import android.os.Environment
 import android.text.format.DateFormat
 import androidx.core.content.FileProvider
@@ -39,7 +40,7 @@ import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers
@@ -67,7 +68,9 @@ import java.util.Date
 @RunWith(AndroidJUnit4::class)
 class PublicKeyDetailsFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+    Intent(Intent.ACTION_VIEW, Uri.parse("fixme"))
+  )
 
   private val keyDetails =
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")

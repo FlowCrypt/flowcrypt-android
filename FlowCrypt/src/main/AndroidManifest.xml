@@ -143,11 +143,6 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.settings.ContactsSettingsActivity"
-            android:label="@string/contacts"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait"

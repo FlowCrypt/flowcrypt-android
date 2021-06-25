@@ -49,6 +49,14 @@ class MainSettingsFragment : BasePreferenceFragment() {
         true
       }
 
+    findPreference<Preference>(getString(R.string.pref_key_contacts))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToContactsListFragment()
+        )
+        true
+      }
+
     findPreference<Preference>(getString(R.string.pref_key_keys))
       ?.setOnPreferenceClickListener {
         navController?.navigate(

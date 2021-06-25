@@ -16,12 +16,9 @@
         app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_contacts"
         android:title="@string/contacts"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="@string/pref_key_keys"

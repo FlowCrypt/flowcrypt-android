@@ -37,6 +37,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_experimentalSettingsFragment"
             app:destination="@id/experimentalSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_contactsListFragment"
+            app:destination="@id/contactsListFragment" />
     </fragment>
 
     <fragment
@@ -46,6 +49,16 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/contactsListFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ContactsListFragment"
+        android:label="ContactsListFragment"
+        tools:layout="@layout/fragment_contacts_list">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts" />
     </fragment>
 
     <fragment

@@ -53,12 +53,8 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews(view)
-  }
-
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
     supportActionBar?.setTitle(R.string.contacts)
+    initViews(view)
     setupContactsViewModel()
   }
 
