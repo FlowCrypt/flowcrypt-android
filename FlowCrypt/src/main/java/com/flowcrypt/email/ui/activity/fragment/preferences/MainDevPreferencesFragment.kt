@@ -10,7 +10,9 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
@@ -32,6 +34,12 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    (activity as AppCompatActivity?)?.supportActionBar?.title =
+      getString(R.string.action_dev_settings)
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

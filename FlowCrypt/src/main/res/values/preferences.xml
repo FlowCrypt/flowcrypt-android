@@ -14,6 +14,7 @@
     <string name="pref_key_notification">pref_key_notification</string>
     <string name="pref_key_security">pref_key_security</string>
     <string name="pref_key_keys">pref_key_keys</string>
+    <string name="pref_key_experimental">pref_key_experimental</string>
 
     <string name="pref_title_allow_anonymous_crash_reports">Allow anonymous crash reports</string>
 </resources>

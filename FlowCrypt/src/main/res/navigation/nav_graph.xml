@@ -34,6 +34,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_privateKeysListFragment"
             app:destination="@id/privateKeysListFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_experimentalSettingsFragment"
+            app:destination="@id/experimentalSettingsFragment" />
     </fragment>
 
     <fragment
@@ -165,6 +168,20 @@
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/make_backup" />
     </fragment>
+
+    <fragment
+        android:id="@+id/experimentalSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.ExperimentalSettingsFragment"
+        android:label="ExperimentalSettingsFragment">
+        <action
+            android:id="@+id/action_experimentalSettingsFragment_to_mainDevPreferencesFragment"
+            app:destination="@id/mainDevPreferencesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/mainDevPreferencesFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.MainDevPreferencesFragment"
+        android:label="MainDevPreferencesFragment" />
 
     <dialog
         android:id="@+id/twoWayDialogFragment"

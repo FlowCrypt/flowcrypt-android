@@ -5,11 +5,12 @@
 
 package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ui.activity.DevSettingsActivity
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.util.GeneralUtil
 
@@ -21,6 +22,12 @@ import com.flowcrypt.email.util.GeneralUtil
  */
 class ExperimentalSettingsFragment : BasePreferenceFragment() {
 
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    (activity as AppCompatActivity?)?.supportActionBar?.title =
+      getString(R.string.experimental_settings)
+  }
+
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences_experimental_settings, rootKey)
 
@@ -28,7 +35,13 @@ class ExperimentalSettingsFragment : BasePreferenceFragment() {
       val preference = Preference(context)
       preference.setTitle(R.string.action_dev_settings)
       preference.isIconSpaceReserved = false
-      preference.intent = Intent(context, DevSettingsActivity::class.java)
+      preference.setOnPreferenceClickListener {
+        navController?.navigate(
+          ExperimentalSettingsFragmentDirections
+            .actionExperimentalSettingsFragmentToMainDevPreferencesFragment()
+        )
+        true
+      }
 
       preferenceScreen.addPreference(preference)
     }

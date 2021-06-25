@@ -88,6 +88,14 @@ class MainSettingsFragment : BasePreferenceFragment() {
         )
         true
       }
+
+    findPreference<Preference>(getString(R.string.pref_key_experimental))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToExperimentalSettingsFragment()
+        )
+        true
+      }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

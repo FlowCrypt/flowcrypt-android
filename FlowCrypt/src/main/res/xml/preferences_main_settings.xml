@@ -50,10 +50,7 @@
         app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_experimental"
         android:title="@string/experimental"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.ExperimentalSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 </PreferenceScreen>
