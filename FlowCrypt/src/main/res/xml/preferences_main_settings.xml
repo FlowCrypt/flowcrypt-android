@@ -8,49 +8,32 @@
     <Preference
         android:key="@string/pref_key_backups"
         android:title="@string/backups"
-        app:iconSpaceReserved="false">
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
-        android:key="@string/preferences_key_settings_security"
+        android:key="@string/pref_key_security"
         android:title="@string/security_and_privacy"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.SecurityAndPrivacySettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_contacts"
         android:title="@string/contacts"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_keys"
         android:title="@string/keys"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_attester"
         android:title="@string/attester"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_notification"
         android:title="@string/notifications"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.NotificationsSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="@string/pref_key_server_settings"
@@ -59,18 +42,12 @@
         app:isPreferenceVisible="false" />
 
     <Preference
+        android:key="@string/pref_key_legal"
         android:title="@string/legal"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_experimental"
         android:title="@string/experimental"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.ExperimentalSettingsActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
+        app:iconSpaceReserved="false" />
 </PreferenceScreen>

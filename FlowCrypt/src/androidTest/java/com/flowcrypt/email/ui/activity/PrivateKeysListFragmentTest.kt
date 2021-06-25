@@ -45,9 +45,10 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
@@ -70,10 +71,14 @@ import java.util.Date
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class KeysSettingsActivityTest : BaseTest() {
+class PrivateKeysListFragmentTest : BaseTest() {
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<KeysSettingsActivity>()
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/keys"
+    )
+  )
 
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()

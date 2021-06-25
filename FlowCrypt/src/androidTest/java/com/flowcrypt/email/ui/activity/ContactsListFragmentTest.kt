@@ -26,7 +26,8 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
@@ -44,9 +45,13 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ContactsSettingsActivityTest : BaseTest() {
+class ContactsListFragmentTest : BaseTest() {
 
-  override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/contacts"
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

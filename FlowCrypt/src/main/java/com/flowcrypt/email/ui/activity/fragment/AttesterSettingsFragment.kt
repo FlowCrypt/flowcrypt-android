@@ -24,6 +24,9 @@ import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter
 import com.google.android.material.snackbar.Snackbar
 
 /**
+ * Basically, this Fragment gets all known addresses of the user, and then submits one call with all addresses to
+ * /lookup/email/ Attester API, then compares the results.
+ *
  * @author Denis Bondarenko
  *         Date: 2/18/20
  *         Time: 9:46 AM
@@ -47,6 +50,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    supportActionBar?.title = getString(R.string.attester)
     initViews(view)
     setupAccountKeysInfoViewModel()
   }
