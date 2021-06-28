@@ -48,8 +48,8 @@ import java.util.Locale
  * Time: 20:15
  * E-mail: DenBond7@gmail.com
  */
-class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
-  private val args by navArgs<ApplyNewPassphraseFirstStepFragmentArgs>()
+class CheckPassphraseStrengthFragment : BaseFragment() {
+  private val args by navArgs<CheckPassphraseStrengthFragmentArgs>()
   private var binding: FragmentApplyNewPassphraseFirstStepBinding? = null
   private val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
   private var pwdStrengthResult: PgpPwd.PwdStrengthResult? = null

@@ -51,13 +51,13 @@
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
         <action
             android:id="@+id/action_securitySettingsFragment_to_changePassphraseOfImportedKeysFragment"
-            app:destination="@id/applyNewPassphraseFirstStepFragment" />
+            app:destination="@id/checkPassphraseStrengthFragment" />
     </fragment>
 
     <fragment
-        android:id="@+id/applyNewPassphraseFirstStepFragment"
-        android:name="com.flowcrypt.email.ui.activity.ApplyNewPassphraseFirstStepFragment"
-        android:label="ApplyNewPassphraseFirstStepFragment"
+        android:id="@+id/checkPassphraseStrengthFragment"
+        android:name="com.flowcrypt.email.ui.activity.CheckPassphraseStrengthFragment"
+        android:label="CheckPassphraseStrengthFragment"
         tools:layout="@layout/fragment_apply_new_passphrase_first_step">
         <deepLink
             android:id="@+id/deepLink"
