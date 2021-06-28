@@ -56,7 +56,7 @@
 
     <fragment
         android:id="@+id/changePassphraseOfImportedKeysFragment"
-        android:name="com.flowcrypt.email.ui.activity.ChangePassphraseOfImportedKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.ApplyNewPassphraseFirstStepFragment"
         android:label="ChangePassphraseOfImportedKeysFragment"
         tools:layout="@layout/fragment_apply_new_passphrase_first_step">
         <deepLink

@@ -39,11 +39,11 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ChangePassphraseOfImportedKeysFragmentTest : BasePassphraseActivityTest() {
+class ApplyNewPassphraseFirstStepFragmentTest : BasePassphraseActivityTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<ChangePassphraseOfImportedKeysFragment>()
+  override val activityScenarioRule = activityScenarioRule<ApplyNewPassphraseFirstStepFragment>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

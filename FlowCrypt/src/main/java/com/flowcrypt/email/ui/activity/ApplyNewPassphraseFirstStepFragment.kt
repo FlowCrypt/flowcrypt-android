@@ -32,7 +32,7 @@ import com.flowcrypt.email.ui.notifications.SystemNotificationManager
  * Time: 20:15
  * E-mail: DenBond7@gmail.com
  */
-class ChangePassphraseOfImportedKeysFragment : BaseFragment() {
+class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
   private var binding: FragmentApplyNewPassphraseFirstStepBinding? = null
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
@@ -203,7 +203,7 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment() {
 
   companion object {
     fun newIntent(context: Context?): Intent {
-      return Intent(context, ChangePassphraseOfImportedKeysFragment::class.java)
+      return Intent(context, ApplyNewPassphraseFirstStepFragment::class.java)
     }
   }
 }
