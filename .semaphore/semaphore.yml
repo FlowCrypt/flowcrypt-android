@@ -12,8 +12,8 @@ fail_fast:
     when: "branch != 'master'" # Stopping all jobs on the first failure
 
 auto_cancel:
-  queued:
-    when: "true" # enable auto-cancel for branches, tags and pull-requests
+  running:
+    when: "branch != 'master'" # Auto-cancel all pipelines on a new push to a non-master branch
 
 global_job_config:
   env_vars:
