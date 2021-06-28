@@ -59,12 +59,31 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment"
         android:label="CheckPassphraseStrengthFragment"
         tools:layout="@layout/fragment_check_passphrase_strength">
-        <deepLink
-            android:id="@+id/deepLink"
-            app:uri="flowcrypt://email.flowcrypt.com/settings/security/change_passphrase" />
         <argument
             android:name="title"
             app:argType="string" />
+        <action
+            android:id="@+id/action_checkPassphraseStrengthFragment_to_recheckProvidedPassphraseFragment"
+            app:destination="@id/recheckProvidedPassphraseFragment" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/check_passphrase" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recheckProvidedPassphraseFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment"
+        android:label="RecheckProvidedPassphraseFragment"
+        tools:layout="@layout/fragment_recheck_provided_passphrase">
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/recheck_passphrase" />
     </fragment>
 
     <fragment

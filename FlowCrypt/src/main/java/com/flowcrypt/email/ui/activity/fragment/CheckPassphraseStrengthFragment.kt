@@ -17,6 +17,7 @@ import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -100,29 +101,49 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
       }
     }
 
-    binding?.btSetPassphrase?.setOnClickListener {
-      if (binding?.eTPassphrase?.text?.isEmpty() == true) {
-        showInfoSnackbar(
-          view = binding?.root,
-          msgText = getString(R.string.passphrase_must_be_non_empty),
-          duration = Snackbar.LENGTH_LONG
-        )
-      } else {
-        snackBar?.dismiss()
-        pwdStrengthResult?.word?.let { word ->
-          when (word.word) {
-            Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> {
-              navController?.navigate(
-                NavGraphDirections.actionGlobalInfoDialogFragment(
-                  dialogTitle = "",
-                  dialogMsg = getString(R.string.select_stronger_pass_phrase)
-                )
-              )
-            }
+    binding?.eTPassphrase?.setOnEditorActionListener { _, actionId, _ ->
+      return@setOnEditorActionListener when (actionId) {
+        EditorInfo.IME_ACTION_DONE -> {
+          checkAndMoveOn()
+          true
+        }
+        else -> false
+      }
+    }
 
-            else -> {
-              //go to the next fragment
-            }
+    binding?.btSetPassphrase?.setOnClickListener {
+      checkAndMoveOn()
+    }
+  }
+
+  private fun checkAndMoveOn() {
+    if (binding?.eTPassphrase?.text?.isEmpty() == true) {
+      showInfoSnackbar(
+        view = binding?.root,
+        msgText = getString(R.string.passphrase_must_be_non_empty),
+        duration = Snackbar.LENGTH_LONG
+      )
+    } else {
+      snackBar?.dismiss()
+      pwdStrengthResult?.word?.let { word ->
+        when (word.word) {
+          Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> {
+            navController?.navigate(
+              NavGraphDirections.actionGlobalInfoDialogFragment(
+                dialogTitle = "",
+                dialogMsg = getString(R.string.select_stronger_pass_phrase)
+              )
+            )
+          }
+
+          else -> {
+            navController?.navigate(
+              CheckPassphraseStrengthFragmentDirections
+                .actionCheckPassphraseStrengthFragmentToRecheckProvidedPassphraseFragment(
+                  title = args.title,
+                  passphrase = binding?.eTPassphrase?.text.toString()
+                )
+            )
           }
         }
       }
