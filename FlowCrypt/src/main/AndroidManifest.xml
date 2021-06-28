@@ -176,7 +176,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.ChangePassPhraseActivity"
+            android:name=".ui.activity.ChangePassphraseOfImportedKeysFragment"
             android:screenOrientation="portrait" />
 
         <activity

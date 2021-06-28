@@ -14,7 +14,7 @@ import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
+import com.flowcrypt.email.ui.activity.ChangePassphraseOfImportedKeysFragment
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 
 /**
@@ -42,7 +42,7 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
     val intent = if (account?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
       Intent(context, EmailManagerActivity::class.java)
     } else {
-      ChangePassPhraseActivity.newIntent(context)
+      ChangePassphraseOfImportedKeysFragment.newIntent(context)
     }
 
     val pendingIntent =

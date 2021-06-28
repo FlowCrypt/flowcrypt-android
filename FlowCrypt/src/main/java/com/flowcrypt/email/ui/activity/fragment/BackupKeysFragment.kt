@@ -27,7 +27,7 @@ import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
+import com.flowcrypt.email.ui.activity.ChangePassphraseOfImportedKeysFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -300,7 +300,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       btnName = btnName,
       duration = Snackbar.LENGTH_LONG
     ) {
-      startActivityForResult(ChangePassPhraseActivity.newIntent(requireContext()), 0)
+      startActivityForResult(ChangePassphraseOfImportedKeysFragment.newIntent(requireContext()), 0)
     }
   }
 

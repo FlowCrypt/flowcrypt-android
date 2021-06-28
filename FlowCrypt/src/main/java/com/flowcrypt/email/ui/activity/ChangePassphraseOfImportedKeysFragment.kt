@@ -33,7 +33,7 @@ import org.pgpainless.util.Passphrase
  * Time: 20:15
  * E-mail: DenBond7@gmail.com
  */
-class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
+class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
@@ -192,7 +192,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
   companion object {
     fun newIntent(context: Context?): Intent {
-      return Intent(context, ChangePassPhraseActivity::class.java)
+      return Intent(context, ChangePassphraseOfImportedKeysFragment::class.java)
     }
   }
 }
