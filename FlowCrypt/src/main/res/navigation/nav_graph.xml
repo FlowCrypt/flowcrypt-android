@@ -51,17 +51,20 @@
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
         <action
             android:id="@+id/action_securitySettingsFragment_to_changePassphraseOfImportedKeysFragment"
-            app:destination="@id/changePassphraseOfImportedKeysFragment" />
+            app:destination="@id/applyNewPassphraseFirstStepFragment" />
     </fragment>
 
     <fragment
-        android:id="@+id/changePassphraseOfImportedKeysFragment"
+        android:id="@+id/applyNewPassphraseFirstStepFragment"
         android:name="com.flowcrypt.email.ui.activity.ApplyNewPassphraseFirstStepFragment"
-        android:label="ChangePassphraseOfImportedKeysFragment"
+        android:label="ApplyNewPassphraseFirstStepFragment"
         tools:layout="@layout/fragment_apply_new_passphrase_first_step">
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security/change_passphrase" />
+        <argument
+            android:name="title"
+            app:argType="string" />
     </fragment>
 
     <fragment
@@ -300,6 +303,10 @@
             app:argType="boolean" />
         <argument
             android:name="hasHtml"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="useWebViewToRender"
             android:defaultValue="false"
             app:argType="boolean" />
         <argument

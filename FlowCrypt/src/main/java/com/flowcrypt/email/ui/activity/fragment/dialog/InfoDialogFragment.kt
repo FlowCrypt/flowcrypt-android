@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.webkit.WebView
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -15,6 +16,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.setNavigationResult
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import java.nio.charset.StandardCharsets
 
 /**
  * This class can be used to show an info dialog to the user.
@@ -59,21 +61,40 @@ class InfoDialogFragment : BaseDialogFragment() {
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialog = AlertDialog.Builder(requireActivity())
-    dialog.setTitle(dialogTitle)
-    dialog.setMessage(if (hasHtml) UIUtil.getHtmlSpannedFromText(dialogMsg) else dialogMsg)
-    dialog.setPositiveButton(buttonTitle) { _, _ ->
-      targetFragment?.onActivityResult(targetRequestCode, RESULT_OK, null)
-      onInfoDialogButtonClickListener?.onInfoDialogButtonClick(targetRequestCode)
-      setNavigationResult(KEY_RESULT, RESULT_OK)
+    val builder = AlertDialog.Builder(requireActivity()).apply {
+      setTitle(dialogTitle)
+      if (!args.useWebViewToRender) {
+        setMessage(if (hasHtml) UIUtil.getHtmlSpannedFromText(dialogMsg) else dialogMsg)
+      }
+      setPositiveButton(buttonTitle) { _, _ ->
+        targetFragment?.onActivityResult(targetRequestCode, RESULT_OK, null)
+        onInfoDialogButtonClickListener?.onInfoDialogButtonClick(targetRequestCode)
+        setNavigationResult(KEY_RESULT, RESULT_OK)
 
-      if (isPopBackStack) {
-        val fragmentManager = requireActivity().supportFragmentManager
-        fragmentManager.popBackStackImmediate()
-        navController?.navigateUp()
+        if (isPopBackStack) {
+          val fragmentManager = requireActivity().supportFragmentManager
+          fragmentManager.popBackStackImmediate()
+          navController?.navigateUp()
+        }
       }
     }
-    return dialog.create()
+
+    val dialog = builder.create()
+    if (args.useWebViewToRender) {
+      val webView = WebView(requireContext())
+      dialogMsg?.let {
+        webView.loadDataWithBaseURL(
+          null,
+          it,
+          "text/html",
+          StandardCharsets.UTF_8.displayName(),
+          null
+        )
+      }
+      val padding = requireContext().resources.getDimensionPixelSize(R.dimen.default_margin_content)
+      dialog.setView(webView, padding, padding, padding, padding)
+    }
+    return dialog
   }
 
   interface OnInfoDialogButtonClickListener {
@@ -111,6 +132,12 @@ class InfoDialogFragment : BaseDialogFragment() {
         InfoDialogFragment::class.java
       )
 
+    private val KEY_USE_WEB_VIEW_TO_RENDER =
+      GeneralUtil.generateUniqueExtraKey(
+        "KEY_USE_WEB_VIEW_TO_RENDER",
+        InfoDialogFragment::class.java
+      )
+
     fun newInstance(
       dialogTitle: String? = null,
       dialogMsg: String? = null,
@@ -118,6 +145,7 @@ class InfoDialogFragment : BaseDialogFragment() {
       isPopBackStack: Boolean = false,
       isCancelable: Boolean = false,
       hasHtml: Boolean = false,
+      useWebViewToRender: Boolean = false,
       useLinkify: Boolean = false
     ): InfoDialogFragment {
       val dialogFragment = InfoDialogFragment()
@@ -129,6 +157,7 @@ class InfoDialogFragment : BaseDialogFragment() {
       args.putBoolean(KEY_INFO_IS_POP_BACK_STACK, isPopBackStack)
       args.putBoolean(KEY_INFO_IS_CANCELABLE, isCancelable)
       args.putBoolean(KEY_INFO_HAS_HTML, hasHtml)
+      args.putBoolean(KEY_USE_WEB_VIEW_TO_RENDER, useWebViewToRender)
       args.putBoolean(KEY_INFO_USE_LINKIFY, useLinkify)
       dialogFragment.arguments = args
 

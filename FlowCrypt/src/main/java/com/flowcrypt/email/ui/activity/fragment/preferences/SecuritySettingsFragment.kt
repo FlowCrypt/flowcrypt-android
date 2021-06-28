@@ -46,7 +46,9 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
         FixNeedPassphraseIssueDialogFragment.RESULT_OK -> {
           navController?.navigate(
             SecuritySettingsFragmentDirections
-              .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment()
+              .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment(
+                title = getString(R.string.change_pass_phrase)
+              )
           )
         }
       }
@@ -77,7 +79,9 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
           } else {
             navController?.navigate(
               SecuritySettingsFragmentDirections
-                .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment()
+                .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment(
+                  title = getString(R.string.change_pass_phrase)
+                )
             )
           }
         }

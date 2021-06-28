@@ -13,15 +13,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentApplyNewPassphraseFirstStepBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
+import org.apache.commons.io.IOUtils
+import java.nio.charset.StandardCharsets
 
 /**
  * This fragment describes a logic of changing the passphrase of all imported private keys of
@@ -33,6 +38,7 @@ import com.flowcrypt.email.ui.notifications.SystemNotificationManager
  * E-mail: DenBond7@gmail.com
  */
 class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
+  private val args by navArgs<ApplyNewPassphraseFirstStepFragmentArgs>()
   private var binding: FragmentApplyNewPassphraseFirstStepBinding? = null
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
@@ -57,8 +63,27 @@ class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = getString(R.string.security)
+    initViews()
+
     setupLoadPrivateKeysViewModel()
     setupPrivateKeysViewModel()
+  }
+
+  private fun initViews() {
+    binding?.tVTitle?.text = args.title
+    binding?.iBShowPasswordHint?.setOnClickListener {
+      navController?.navigate(
+        NavGraphDirections.actionGlobalInfoDialogFragment(
+          requestCode = 0,
+          dialogTitle = "",
+          dialogMsg = IOUtils.toString(
+            requireContext().assets.open("html/pass_phrase_hint.htm"),
+            StandardCharsets.UTF_8
+          ),
+          useWebViewToRender = true
+        )
+      )
+    }
   }
 
   /*override fun onBackPressed() {
