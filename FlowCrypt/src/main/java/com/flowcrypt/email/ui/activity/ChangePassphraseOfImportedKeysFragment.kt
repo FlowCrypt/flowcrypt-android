@@ -5,52 +5,63 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.Toast
-import androidx.activity.viewModels
+import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.databinding.FragmentApplyNewPassphraseFirstStepBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
-import com.flowcrypt.email.util.UIUtil
-import org.pgpainless.util.Passphrase
 
 /**
- * This activity describes a logic of changing the pass phrase of all imported private keys of an active account.
+ * This fragment describes a logic of changing the passphrase of all imported private keys of
+ * an active account.
  *
  * @author Denis Bondarenko
  * Date: 05.08.2018
  * Time: 20:15
  * E-mail: DenBond7@gmail.com
  */
-class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
+class ChangePassphraseOfImportedKeysFragment : BaseFragment() {
+  private var binding: FragmentApplyNewPassphraseFirstStepBinding? = null
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  override fun onConfirmPassPhraseSuccess() {
-    privateKeysViewModel.changePassphrase(
-      Passphrase.fromPassword(editTextKeyPassword.text.toString())
-    )
+  override val contentResourceId: Int = R.layout.fragment_apply_new_passphrase_first_step
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+    SystemNotificationManager(context)
+      .cancel(SystemNotificationManager.NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
   }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    SystemNotificationManager(this).cancel(SystemNotificationManager.NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentApplyNewPassphraseFirstStepBinding.inflate(inflater, container, false)
+    return binding?.root
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    supportActionBar?.title = getString(R.string.security)
     setupLoadPrivateKeysViewModel()
     setupPrivateKeysViewModel()
   }
 
-  override fun onBackPressed() {
+  /*override fun onBackPressed() {
     if (isBackEnabled) {
       super.onBackPressed()
     } else {
@@ -71,9 +82,9 @@ class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
 
       else -> super.onClick(v)
     }
-  }
+  }*/
 
-  override fun initViews() {
+  /*override fun initViews() {
     super.initViews()
 
     textViewFirstPasswordCheckTitle.setText(R.string.change_pass_phrase)
@@ -82,22 +93,22 @@ class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
     textViewSuccessTitle.setText(R.string.done)
     textViewSuccessSubTitle.setText(R.string.pass_phrase_changed)
     btnSuccess.setText(R.string.back)
-  }
+  }*/
 
   private fun runBackupKeysActivity() {
-    isBackEnabled = true
-    Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
+    //isBackEnabled = true
+    //Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
     val intent =
       Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/make_backup"))
     startActivity(intent)
   }
 
   private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(this, {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            baseActivity.countingIdlingResource.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -107,28 +118,28 @@ class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
             } else {
               privateKeysViewModel.saveBackupsToInbox()
             }
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             runBackupKeysActivity()
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          else -> countingIdlingResource.decrementSafely()
+          else -> baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.changePassphraseLiveData.observe(this, {
+    privateKeysViewModel.changePassphraseLiveData.observe(viewLifecycleOwner, {
       it?.let {
-        when (it.status) {
+        /*when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
-            isBackEnabled = false
-            UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+            baseActivity.countingIdlingResource.incrementSafely()
+            //isBackEnabled = false
+            //UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
 
           Result.Status.SUCCESS -> {
@@ -145,7 +156,7 @@ class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
               }
             }
 
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -154,19 +165,19 @@ class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
 
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          else -> countingIdlingResource.decrementSafely()
-        }
+          else -> baseActivity.countingIdlingResource.decrementSafely()
+        }*/
       }
     })
 
-    privateKeysViewModel.saveBackupToInboxLiveData.observe(this, {
+    privateKeysViewModel.saveBackupToInboxLiveData.observe(viewLifecycleOwner, {
       it?.let {
-        when (it.status) {
+        /*when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            baseActivity.countingIdlingResource.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -174,18 +185,18 @@ class ChangePassphraseOfImportedKeysFragment : BasePassPhraseManagerActivity() {
 
             Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
             setResult(Activity.RESULT_OK)
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
             finish()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             isBackEnabled = true
             runBackupKeysActivity()
-            countingIdlingResource.decrementSafely()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          else -> countingIdlingResource.decrementSafely()
-        }
+          else -> baseActivity.countingIdlingResource.decrementSafely()
+        }*/
       }
     })
   }

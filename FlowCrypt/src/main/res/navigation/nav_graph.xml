@@ -49,6 +49,19 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
+        <action
+            android:id="@+id/action_securitySettingsFragment_to_changePassphraseOfImportedKeysFragment"
+            app:destination="@id/changePassphraseOfImportedKeysFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/changePassphraseOfImportedKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.ChangePassphraseOfImportedKeysFragment"
+        android:label="ChangePassphraseOfImportedKeysFragment"
+        tools:layout="@layout/fragment_apply_new_passphrase_first_step">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/change_passphrase" />
     </fragment>
 
     <fragment

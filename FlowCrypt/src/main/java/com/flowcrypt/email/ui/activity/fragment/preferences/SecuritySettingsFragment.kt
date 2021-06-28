@@ -12,9 +12,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.ui.activity.ChangePassphraseOfImportedKeysFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.util.UIUtil
@@ -44,7 +44,10 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
     when (requestCode) {
       REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG -> when (resultCode) {
         FixNeedPassphraseIssueDialogFragment.RESULT_OK -> {
-          startActivity(ChangePassphraseOfImportedKeysFragment.newIntent(context))
+          navController?.navigate(
+            SecuritySettingsFragmentDirections
+              .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment()
+          )
         }
       }
 
@@ -72,7 +75,10 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
               logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
             )
           } else {
-            startActivity(ChangePassphraseOfImportedKeysFragment.newIntent(context))
+            navController?.navigate(
+              SecuritySettingsFragmentDirections
+                .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment()
+            )
           }
         }
         true
