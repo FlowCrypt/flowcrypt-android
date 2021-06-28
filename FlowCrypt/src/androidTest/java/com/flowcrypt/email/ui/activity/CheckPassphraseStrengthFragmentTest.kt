@@ -24,6 +24,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
+import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test

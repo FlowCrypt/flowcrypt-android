@@ -56,7 +56,7 @@
 
     <fragment
         android:id="@+id/checkPassphraseStrengthFragment"
-        android:name="com.flowcrypt.email.ui.activity.CheckPassphraseStrengthFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment"
         android:label="CheckPassphraseStrengthFragment"
         tools:layout="@layout/fragment_check_passphrase_strength">
         <deepLink
