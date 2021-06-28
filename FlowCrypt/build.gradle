@@ -393,7 +393,7 @@ dependencies {
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
-    testImplementation "org.jetbrains.kotlin:kotlin-reflect:1.5.10"
+    testImplementation "org.jetbrains.kotlin:kotlin-reflect:1.5.20"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -457,7 +457,7 @@ dependencies {
     implementation 'org.bitbucket.b_c:jose4j:0.7.8'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.1') {
+    implementation ('org.pgpainless:pgpainless-core:0.2.3') {
         //exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }

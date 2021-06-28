@@ -24,6 +24,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -61,12 +62,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
-  override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
-  override val contentView: View?
-    get() = view?.findViewById(R.id.content)
-  override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+  private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
 
   private var tVFingerprint: TextView? = null
   private var tVDate: TextView? = null
@@ -78,11 +74,15 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
   private val pgpKeyDetailsViewModel: PgpKeyDetailsViewModel by viewModels {
-    PgpKeyDetailsViewModelFactory(
-      arguments?.getString(KEY_PGP_KEY_FINGERPRINT),
-      requireActivity().application
-    )
+    PgpKeyDetailsViewModelFactory(args.fingerprint, requireActivity().application)
   }
+
+  override val progressView: View?
+    get() = view?.findViewById(R.id.progress)
+  override val contentView: View?
+    get() = view?.findViewById(R.id.content)
+  override val statusView: View?
+    get() = view?.findViewById(R.id.status)
 
   override val contentResourceId: Int = R.layout.fragment_private_key_details
 
@@ -435,20 +435,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   companion object {
-    private val KEY_PGP_KEY_FINGERPRINT =
-      GeneralUtil.generateUniqueExtraKey(
-        "KEY_PGP_KEY_FINGERPRINT",
-        PrivateKeyDetailsFragment::class.java
-      )
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
     private const val REQUEST_CODE_DELETE_KEY_DIALOG = 100
-
-    fun newInstance(fingerprint: String): PrivateKeyDetailsFragment {
-      val keyDetailsFragment = PrivateKeyDetailsFragment()
-      val args = Bundle()
-      args.putString(KEY_PGP_KEY_FINGERPRINT, fingerprint)
-      keyDetailsFragment.arguments = args
-      return keyDetailsFragment
-    }
   }
 }

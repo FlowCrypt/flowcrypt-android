@@ -54,6 +54,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
+import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -355,17 +356,59 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
-
-    fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     intending(hasComponent(ComponentName(getTargetContext(), ImportPublicKeyActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+
+    fillInAllFields(pgpContact.email)
+
+    //check that we show the right background for a chip
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = pgpContact.email,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+            )
+          )
+        )
+      )
+
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
-    savePublicKeyInDatabase()
+
     onView(withText(R.string.import_their_public_key))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    val database = FlowCryptRoomDatabase.getDatabase(getTargetContext())
+    val existedContact = requireNotNull(database.contactsDao().getContactByEmail(pgpContact.email))
+    database.contactsDao().update(
+      existedContact.copy(
+        publicKey = pgpContact.pubkey?.toByteArray(),
+        hasPgp = true
+      )
+    )
+
+    //move focus to request the field updates
+    onView(withId(R.id.editTextRecipientTo))
+      .perform(scrollTo(), click())
+    onView(withId(R.id.editTextEmailSubject))
+      .perform(scrollTo(), click())
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = pgpContact.email,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+            )
+          )
+        )
+      )
   }
 
   @Test
