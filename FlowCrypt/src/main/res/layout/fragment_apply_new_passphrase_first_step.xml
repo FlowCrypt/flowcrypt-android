@@ -61,7 +61,7 @@
         app:passwordToggleEnabled="true">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editTextKeyPassword"
+            android:id="@+id/eTPassphrase"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@null"
@@ -69,14 +69,14 @@
             android:inputType="textPassword" />
 
         <ProgressBar
-            android:id="@+id/progressBarPasswordQuality"
+            android:id="@+id/pBarPassphraseQuality"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="@dimen/default_margin_content_small"
             android:progress="0" />
 
         <TextView
-            android:id="@+id/textViewPasswordQualityInfo"
+            android:id="@+id/tVPassphraseQuality"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_small"

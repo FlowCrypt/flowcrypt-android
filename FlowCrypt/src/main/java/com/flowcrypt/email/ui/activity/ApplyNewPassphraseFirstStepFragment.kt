@@ -6,31 +6,42 @@
 package com.flowcrypt.email.ui.activity
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.TextUtils
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentApplyNewPassphraseFirstStepBinding
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
-import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
+import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
+import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.nio.charset.StandardCharsets
+import java.util.Locale
 
 /**
- * This fragment describes a logic of changing the passphrase of all imported private keys of
- * an active account.
+ * This fragment does a reliability check of a provided passphrase.
  *
  * @author Denis Bondarenko
  * Date: 05.08.2018
@@ -40,8 +51,8 @@ import java.nio.charset.StandardCharsets
 class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
   private val args by navArgs<ApplyNewPassphraseFirstStepFragmentArgs>()
   private var binding: FragmentApplyNewPassphraseFirstStepBinding? = null
-  private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+  private val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
+  private var pwdStrengthResult: PgpPwd.PwdStrengthResult? = null
 
   override val contentResourceId: Int = R.layout.fragment_apply_new_passphrase_first_step
 
@@ -52,9 +63,7 @@ class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
   }
 
   override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
+    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
   ): View? {
     binding = FragmentApplyNewPassphraseFirstStepBinding.inflate(inflater, container, false)
     return binding?.root
@@ -64,9 +73,7 @@ class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = getString(R.string.security)
     initViews()
-
-    setupLoadPrivateKeysViewModel()
-    setupPrivateKeysViewModel()
+    initPasswordStrengthViewModel()
   }
 
   private fun initViews() {
@@ -84,151 +91,147 @@ class ApplyNewPassphraseFirstStepFragment : BaseFragment() {
         )
       )
     }
-  }
 
-  /*override fun onBackPressed() {
-    if (isBackEnabled) {
-      super.onBackPressed()
-    } else {
-      Toast.makeText(
-        this,
-        R.string.please_wait_while_pass_phrase_will_be_changed,
-        Toast.LENGTH_SHORT
-      ).show()
-    }
-  }
-
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.buttonSuccess -> {
-        setResult(Activity.RESULT_OK)
-        finish()
+    binding?.eTPassphrase?.addTextChangedListener { editable ->
+      val passphrase = editable.toString()
+      passwordStrengthViewModel.check(passphrase)
+      if (TextUtils.isEmpty(editable)) {
+        binding?.tVPassphraseQuality?.setText(R.string.passphrase_must_be_non_empty)
       }
-
-      else -> super.onClick(v)
     }
-  }*/
 
-  /*override fun initViews() {
-    super.initViews()
-
-    textViewFirstPasswordCheckTitle.setText(R.string.change_pass_phrase)
-    textViewSecondPasswordCheckTitle.setText(R.string.change_pass_phrase)
-
-    textViewSuccessTitle.setText(R.string.done)
-    textViewSuccessSubTitle.setText(R.string.pass_phrase_changed)
-    btnSuccess.setText(R.string.back)
-  }*/
-
-  private fun runBackupKeysActivity() {
-    //isBackEnabled = true
-    //Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
-    val intent =
-      Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://email.flowcrypt.com/settings/make_backup"))
-    startActivity(intent)
-  }
-
-  private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, {
-      it?.let {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
-          }
-
-          Result.Status.SUCCESS -> {
-            val keyDetailsList = it.data
-            if (keyDetailsList?.isEmpty() == true) {
-              runBackupKeysActivity()
-            } else {
-              privateKeysViewModel.saveBackupsToInbox()
+    binding?.btSetPassphrase?.setOnClickListener {
+      if (binding?.eTPassphrase?.text?.isEmpty() == true) {
+        showInfoSnackbar(
+          view = binding?.root,
+          msgText = getString(R.string.passphrase_must_be_non_empty),
+          duration = Snackbar.LENGTH_LONG
+        )
+      } else {
+        snackBar?.dismiss()
+        pwdStrengthResult?.word?.let { word ->
+          when (word.word) {
+            Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> {
+              navController?.navigate(
+                NavGraphDirections.actionGlobalInfoDialogFragment(
+                  dialogTitle = "",
+                  dialogMsg = getString(R.string.select_stronger_pass_phrase)
+                )
+              )
             }
-            baseActivity.countingIdlingResource.decrementSafely()
-          }
 
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            runBackupKeysActivity()
-            baseActivity.countingIdlingResource.decrementSafely()
+            else -> {
+              //go to the next fragment
+            }
           }
-
-          else -> baseActivity.countingIdlingResource.decrementSafely()
         }
       }
-    })
-  }
-
-  private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.changePassphraseLiveData.observe(viewLifecycleOwner, {
-      it?.let {
-        /*when (it.status) {
-          Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
-            //isBackEnabled = false
-            //UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-          }
-
-          Result.Status.SUCCESS -> {
-            if (it.data == true) {
-              if (activeAccount?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
-                isBackEnabled = true
-                Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
-                setResult(Activity.RESULT_OK)
-                finish()
-              } else {
-                activeAccount?.let { accountEntity ->
-                  loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity)
-                }
-              }
-            }
-
-            baseActivity.countingIdlingResource.decrementSafely()
-          }
-
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            isBackEnabled = true
-            editTextKeyPasswordSecond.text = null
-            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
-
-            baseActivity.countingIdlingResource.decrementSafely()
-          }
-
-          else -> baseActivity.countingIdlingResource.decrementSafely()
-        }*/
-      }
-    })
-
-    privateKeysViewModel.saveBackupToInboxLiveData.observe(viewLifecycleOwner, {
-      it?.let {
-        /*when (it.status) {
-          Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
-          }
-
-          Result.Status.SUCCESS -> {
-            isBackEnabled = true
-
-            Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
-            setResult(Activity.RESULT_OK)
-            baseActivity.countingIdlingResource.decrementSafely()
-            finish()
-          }
-
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            isBackEnabled = true
-            runBackupKeysActivity()
-            baseActivity.countingIdlingResource.decrementSafely()
-          }
-
-          else -> baseActivity.countingIdlingResource.decrementSafely()
-        }*/
-      }
-    })
-  }
-
-  companion object {
-    fun newIntent(context: Context?): Intent {
-      return Intent(context, ApplyNewPassphraseFirstStepFragment::class.java)
     }
+  }
+
+  private fun initPasswordStrengthViewModel() {
+    passwordStrengthViewModel.pwdStrengthResultLiveData.observe(viewLifecycleOwner) {
+      when (it.status) {
+        Result.Status.SUCCESS -> {
+          pwdStrengthResult = it.data
+          updateStrengthViews()
+        }
+
+        Result.Status.EXCEPTION -> {
+          toast(
+            it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: getString(R.string.unknown_error), Toast.LENGTH_LONG
+          )
+        }
+        else -> {
+        }
+      }
+    }
+  }
+
+  private fun updateStrengthViews() {
+    if (pwdStrengthResult == null) {
+      return
+    }
+
+    val word = pwdStrengthResult?.word
+
+    when (word?.word) {
+      Constants.PASSWORD_QUALITY_WEAK,
+      Constants.PASSWORD_QUALITY_POOR -> {
+        val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+          ContextCompat.getColor(requireContext(), R.color.silver), BlendModeCompat.MODULATE
+        )
+        binding?.btSetPassphrase?.background?.colorFilter = colorFilter
+      }
+
+      else -> {
+        val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+          ContextCompat.getColor(requireContext(), R.color.colorPrimary), BlendModeCompat.MODULATE
+        )
+        binding?.btSetPassphrase?.background?.colorFilter = colorFilter
+      }
+    }
+
+    val color = parseColor()
+
+    binding?.pBarPassphraseQuality?.progress = word?.bar?.toInt() ?: 0
+    val colorFilter =
+      BlendModeColorFilterCompat.createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_IN)
+    binding?.pBarPassphraseQuality?.progressDrawable?.colorFilter = colorFilter
+
+    val qualityValue = getLocalizedPasswordQualityValue(word)
+
+    val qualityValueSpannable = SpannableString(qualityValue)
+    qualityValueSpannable.setSpan(
+      ForegroundColorSpan(color), 0, qualityValueSpannable.length,
+      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
+    qualityValueSpannable.setSpan(
+      StyleSpan(Typeface.BOLD), 0,
+      qualityValueSpannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
+    binding?.tVPassphraseQuality?.text = qualityValueSpannable
+    binding?.tVPassphraseQuality?.append(" ")
+    binding?.tVPassphraseQuality?.append(getString(R.string.password_quality_subtext))
+
+    val timeSpannable = SpannableString(pwdStrengthResult?.time ?: "")
+    timeSpannable.setSpan(
+      ForegroundColorSpan(color), 0, timeSpannable.length,
+      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
+    binding?.tVPassphraseQuality?.append(" ")
+    binding?.tVPassphraseQuality?.append(timeSpannable)
+    binding?.tVPassphraseQuality?.append(")")
+  }
+
+  private fun parseColor(): Int {
+    return try {
+      Color.parseColor(pwdStrengthResult?.word?.color)
+    } catch (e: IllegalArgumentException) {
+      e.printStackTrace()
+
+      when (pwdStrengthResult?.word?.color) {
+        "orange" -> Color.parseColor("#FFA500")
+
+        "darkorange" -> Color.parseColor("#FF8C00")
+
+        "darkred" -> Color.parseColor("#8B0000")
+
+        else -> Color.DKGRAY
+      }
+    }
+  }
+
+  private fun getLocalizedPasswordQualityValue(word: PgpPwd.Word?): String? {
+    return when (word?.word) {
+      Constants.PASSWORD_QUALITY_PERFECT -> getString(R.string.password_quality_perfect)
+      Constants.PASSWORD_QUALITY_GREAT -> getString(R.string.password_quality_great)
+      Constants.PASSWORD_QUALITY_GOOD -> getString(R.string.password_quality_good)
+      Constants.PASSWORD_QUALITY_REASONABLE -> getString(R.string.password_quality_reasonable)
+      Constants.PASSWORD_QUALITY_POOR -> getString(R.string.password_quality_poor)
+      Constants.PASSWORD_QUALITY_WEAK -> getString(R.string.password_quality_weak)
+      else -> word?.word
+    }?.toUpperCase(Locale.getDefault())
   }
 }
