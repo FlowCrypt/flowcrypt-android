@@ -28,7 +28,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.databinding.FragmentApplyNewPassphraseFirstStepBinding
+import com.flowcrypt.email.databinding.FragmentCheckPassphraseStrengthBinding
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
@@ -50,11 +50,11 @@ import java.util.Locale
  */
 class CheckPassphraseStrengthFragment : BaseFragment() {
   private val args by navArgs<CheckPassphraseStrengthFragmentArgs>()
-  private var binding: FragmentApplyNewPassphraseFirstStepBinding? = null
+  private var binding: FragmentCheckPassphraseStrengthBinding? = null
   private val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
   private var pwdStrengthResult: PgpPwd.PwdStrengthResult? = null
 
-  override val contentResourceId: Int = R.layout.fragment_apply_new_passphrase_first_step
+  override val contentResourceId: Int = R.layout.fragment_check_passphrase_strength
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -65,7 +65,7 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
   ): View? {
-    binding = FragmentApplyNewPassphraseFirstStepBinding.inflate(inflater, container, false)
+    binding = FragmentCheckPassphraseStrengthBinding.inflate(inflater, container, false)
     return binding?.root
   }
 
