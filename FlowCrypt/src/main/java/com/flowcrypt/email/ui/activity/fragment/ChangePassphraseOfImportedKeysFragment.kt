@@ -115,11 +115,11 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
               //making backups is not allowed by OrgRules.
               isBackEnabled = true
               showContent()
+              baseActivity.countingIdlingResource.decrementSafely()
             } else {
+              baseActivity.countingIdlingResource.decrementSafely()
               loadPrivateKeysViewModel.fetchAvailableKeys(args.accountEntity)
             }
-
-            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -175,18 +175,20 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            if (it.progress == null) {
+              baseActivity.countingIdlingResource.incrementSafely()
+            }
             showProgress(getString(R.string.searching_backups))
           }
 
           Result.Status.SUCCESS -> {
             val keyDetailsList = it.data
+            baseActivity.countingIdlingResource.decrementSafely()
             if (keyDetailsList?.isEmpty() == true) {
               navigateToMakeBackupFragment()
             } else {
               privateKeysViewModel.saveBackupsToInbox()
             }
-            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {

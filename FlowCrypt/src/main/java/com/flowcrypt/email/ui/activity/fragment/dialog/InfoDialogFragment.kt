@@ -82,6 +82,7 @@ class InfoDialogFragment : BaseDialogFragment() {
     val dialog = builder.create()
     if (args.useWebViewToRender) {
       val webView = WebView(requireContext())
+      webView.id = R.id.webView
       dialogMsg?.let {
         webView.loadDataWithBaseURL(
           null,

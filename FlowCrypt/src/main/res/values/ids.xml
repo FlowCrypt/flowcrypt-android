@@ -14,6 +14,7 @@
     <item name="iVStatusImg" type="id" />
     <item name="tVEmpty" type="id" />
     <item name="iVEmptyImg" type="id" />
+    <item name="webView" type="id" />
 
     <item name="progress_id_start_of_loading_new_messages" type="id" />
     <item name="progress_id_adding_task_to_queue" type="id" />
