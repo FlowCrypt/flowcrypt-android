@@ -50,7 +50,7 @@
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
         <action
-            android:id="@+id/action_securitySettingsFragment_to_changePassphraseOfImportedKeysFragment"
+            android:id="@+id/action_securitySettingsFragment_to_checkPassphraseStrengthFragment"
             app:destination="@id/checkPassphraseStrengthFragment" />
     </fragment>
 

@@ -44,13 +44,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
     when (requestCode) {
       REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG -> when (resultCode) {
         FixNeedPassphraseIssueDialogFragment.RESULT_OK -> {
-          navController?.navigate(
-            SecuritySettingsFragmentDirections
-              .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment(
-                popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
-                title = getString(R.string.change_pass_phrase)
-              )
-          )
+          navigateToCheckPassphraseStrengthFragment()
         }
       }
 
@@ -78,13 +72,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
               logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
             )
           } else {
-            navController?.navigate(
-              SecuritySettingsFragmentDirections
-                .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment(
-                  popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
-                  title = getString(R.string.change_pass_phrase)
-                )
-            )
+            navigateToCheckPassphraseStrengthFragment()
           }
         }
         true
@@ -92,6 +80,16 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
 
       else -> false
     }
+  }
+
+  private fun navigateToCheckPassphraseStrengthFragment() {
+    navController?.navigate(
+      SecuritySettingsFragmentDirections
+        .actionSecuritySettingsFragmentToCheckPassphraseStrengthFragment(
+          popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
+          title = getString(R.string.change_pass_phrase)
+        )
+    )
   }
 
   companion object {
