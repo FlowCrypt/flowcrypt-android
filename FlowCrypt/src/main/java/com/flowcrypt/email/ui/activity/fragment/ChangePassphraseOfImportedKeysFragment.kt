@@ -89,7 +89,9 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
     binding?.tVTitle?.text = args.title
     binding?.tVSubTitle?.text = args.subTitle
     binding?.btContinue?.setOnClickListener {
-      navController?.popBackStack(R.id.securitySettingsFragment, true)
+      if (navController?.popBackStack(R.id.securitySettingsFragment, true) == false) {
+        navController?.popBackStack(R.id.mainSettingsFragment, true)
+      }
     }
   }
 

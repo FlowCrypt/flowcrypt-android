@@ -299,7 +299,12 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       btnName = btnName,
       duration = Snackbar.LENGTH_LONG
     ) {
-      //startActivityForResult(ChangePassphraseOfImportedKeysFragment.newIntent(requireContext()), 0)
+      navController?.navigate(
+        BackupKeysFragmentDirections
+          .actionBackupKeysFragmentToCheckPassphraseStrengthFragment(
+            title = getString(R.string.change_pass_phrase)
+          )
+      )
     }
   }
 

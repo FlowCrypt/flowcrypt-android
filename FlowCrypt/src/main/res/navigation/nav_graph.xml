@@ -260,6 +260,9 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/make_backup" />
+        <action
+            android:id="@+id/action_backupKeysFragment_to_checkPassphraseStrengthFragment"
+            app:destination="@id/checkPassphraseStrengthFragment" />
     </fragment>
 
     <fragment
