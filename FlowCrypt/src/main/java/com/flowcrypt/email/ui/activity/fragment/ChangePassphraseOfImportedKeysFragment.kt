@@ -138,7 +138,8 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          else -> baseActivity.countingIdlingResource.decrementSafely()
+          else -> {
+          }
         }
       }
     })
@@ -162,7 +163,8 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          else -> baseActivity.countingIdlingResource.decrementSafely()
+          else -> {
+          }
         }
       }
     })
@@ -192,7 +194,8 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          else -> baseActivity.countingIdlingResource.decrementSafely()
+          else -> {
+          }
         }
       }
     })
