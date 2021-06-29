@@ -83,6 +83,7 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
           navController?.navigate(
             RecheckProvidedPassphraseFragmentDirections
               .actionRecheckProvidedPassphraseFragmentToChangePassphraseOfImportedKeysFragment(
+                popBackStackIdIfSuccess = args.popBackStackIdIfSuccess,
                 title = getString(R.string.pass_phrase_changed),
                 subTitle = getString(R.string.passphrase_was_changed),
                 passphrase = args.passphrase,

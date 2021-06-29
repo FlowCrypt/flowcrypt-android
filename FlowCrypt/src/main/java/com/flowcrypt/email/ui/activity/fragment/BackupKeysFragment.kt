@@ -200,7 +200,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
                 )
               )
             }
-
+            privateKeysViewModel.saveBackupAsFileLiveData.value = Result.none()
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
@@ -235,6 +235,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
             showBackupingErrorHint()
           }
 
+          backupsViewModel.postBackupLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
 
@@ -302,6 +303,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       navController?.navigate(
         BackupKeysFragmentDirections
           .actionBackupKeysFragmentToCheckPassphraseStrengthFragment(
+            popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
             title = getString(R.string.change_pass_phrase)
           )
       )

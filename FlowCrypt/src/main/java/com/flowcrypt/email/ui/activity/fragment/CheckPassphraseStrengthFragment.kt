@@ -140,6 +140,7 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
             navController?.navigate(
               CheckPassphraseStrengthFragmentDirections
                 .actionCheckPassphraseStrengthFragmentToRecheckProvidedPassphraseFragment(
+                  popBackStackIdIfSuccess = args.popBackStackIdIfSuccess,
                   title = args.title,
                   passphrase = binding?.eTPassphrase?.text.toString()
                 )

@@ -56,11 +56,7 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
     super.onCreate(savedInstanceState)
     requireActivity().onBackPressedDispatcher.addCallback(this) {
       when {
-        isBackEnabled -> if (isPassphraseChanged) {
-          navController?.popBackStack(R.id.securitySettingsFragment, true)
-        } else {
-          navController?.navigateUp()
-        }
+        isBackEnabled -> navigateUp()
         else -> toast(R.string.processing_please_wait)
       }
     }
@@ -89,9 +85,17 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
     binding?.tVTitle?.text = args.title
     binding?.tVSubTitle?.text = args.subTitle
     binding?.btContinue?.setOnClickListener {
-      if (navController?.popBackStack(R.id.securitySettingsFragment, true) == false) {
+      navigateUp()
+    }
+  }
+
+  private fun navigateUp() {
+    if (isPassphraseChanged) {
+      if (navController?.popBackStack(args.popBackStackIdIfSuccess, false) == false) {
         navController?.popBackStack(R.id.mainSettingsFragment, true)
       }
+    } else {
+      navController?.navigateUp()
     }
   }
 

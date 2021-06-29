@@ -60,6 +60,9 @@
         android:label="CheckPassphraseStrengthFragment"
         tools:layout="@layout/fragment_check_passphrase_strength">
         <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
             android:name="title"
             app:argType="string" />
         <action
@@ -75,6 +78,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment"
         android:label="RecheckProvidedPassphraseFragment"
         tools:layout="@layout/fragment_recheck_provided_passphrase">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
         <argument
             android:name="title"
             app:argType="string" />
@@ -94,6 +100,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.ChangePassphraseOfImportedKeysFragment"
         android:label="ChangePassphraseOfImportedKeysFragment"
         tools:layout="@layout/fragment_change_passphrase_of_imported_keys">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
         <argument
             android:name="title"
             app:argType="string" />

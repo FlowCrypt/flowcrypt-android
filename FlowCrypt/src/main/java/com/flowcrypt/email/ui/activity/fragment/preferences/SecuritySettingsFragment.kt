@@ -47,6 +47,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
           navController?.navigate(
             SecuritySettingsFragmentDirections
               .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment(
+                popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
                 title = getString(R.string.change_pass_phrase)
               )
           )
@@ -80,6 +81,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
             navController?.navigate(
               SecuritySettingsFragmentDirections
                 .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment(
+                  popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
                   title = getString(R.string.change_pass_phrase)
                 )
             )
