@@ -79,7 +79,17 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
     } else {
       snackBar?.dismiss()
       if (binding?.eTRepeatedPassphrase?.text.toString() == args.passphrase) {
-        //onConfirmPassPhraseSuccess()
+        account?.let { accountEntity ->
+          navController?.navigate(
+            RecheckProvidedPassphraseFragmentDirections
+              .actionRecheckProvidedPassphraseFragmentToChangePassphraseOfImportedKeysFragment(
+                title = getString(R.string.pass_phrase_changed),
+                subTitle = getString(R.string.passphrase_was_changed),
+                passphrase = args.passphrase,
+                accountEntity = accountEntity
+              )
+          )
+        }
       } else {
         showInfoSnackbar(
           view = binding?.root,

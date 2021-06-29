@@ -93,9 +93,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           throw IllegalStateException("new Passphrase can't be empty")
         }
 
-        val account = roomDatabase.accountDao().getActiveAccountSuspend()
-        requireNotNull(account)
-
+        val account = requireNotNull(roomDatabase.accountDao().getActiveAccountSuspend())
         val rawKeys = keysStorage.getRawKeys()
 
         if (rawKeys.isEmpty()) {
