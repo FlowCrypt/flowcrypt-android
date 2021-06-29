@@ -109,6 +109,10 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security/change_passphrase" />
+        <action
+            android:id="@+id/action_changePassphraseOfImportedKeysFragment_to_backupKeysFragment"
+            app:destination="@id/backupKeysFragment"
+            app:popUpTo="@id/mainSettingsFragment" />
     </fragment>
 
     <fragment

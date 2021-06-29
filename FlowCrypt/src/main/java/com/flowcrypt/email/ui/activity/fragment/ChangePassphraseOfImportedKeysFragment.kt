@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentChangePassphraseOfImportedKeysBinding
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
@@ -24,6 +25,7 @@ import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.google.android.material.snackbar.Snackbar
 import org.pgpainless.util.Passphrase
 
 /**
@@ -46,6 +48,7 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
     get() = binding?.iStatus?.root
 
   private var isBackEnabled = false
+  private var isPassphraseChanged = false
 
   override val contentResourceId: Int = R.layout.fragment_change_passphrase_of_imported_keys
 
@@ -53,7 +56,11 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
     super.onCreate(savedInstanceState)
     requireActivity().onBackPressedDispatcher.addCallback(this) {
       when {
-        isBackEnabled -> navController?.navigateUp()
+        isBackEnabled -> if (isPassphraseChanged) {
+          navController?.popBackStack(R.id.securitySettingsFragment, true)
+        } else {
+          navController?.navigateUp()
+        }
         else -> toast(R.string.processing_please_wait)
       }
     }
@@ -82,7 +89,7 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
     binding?.tVTitle?.text = args.title
     binding?.tVSubTitle?.text = args.subTitle
     binding?.btContinue?.setOnClickListener {
-      navController?.navigate(R.id.securitySettingsFragment)
+      navController?.popBackStack(R.id.securitySettingsFragment, true)
     }
   }
 
@@ -97,14 +104,13 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
           }
 
           Result.Status.SUCCESS -> {
-            if (it.data == true) {
-              if (args.accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
-                //making backups is not allowed by OrgRules.
-                isBackEnabled = true
-                showContent()
-              } else {
-                loadPrivateKeysViewModel.fetchAvailableKeys(args.accountEntity)
-              }
+            isPassphraseChanged = true
+            if (args.accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
+              //making backups is not allowed by OrgRules.
+              isBackEnabled = true
+              showContent()
+            } else {
+              loadPrivateKeysViewModel.fetchAvailableKeys(args.accountEntity)
             }
 
             baseActivity.countingIdlingResource.decrementSafely()
@@ -112,7 +118,17 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             isBackEnabled = true
-            showStatus(it.exception?.message ?: getString(R.string.unknown_error))
+            showStatus(it.exceptionMsg)
+            showSnackbar(
+              view = binding?.root,
+              msgText = getString(R.string.could_not_change_pass_phrase),
+              btnName = getString(R.string.retry),
+              duration = Snackbar.LENGTH_INDEFINITE
+            ) {
+              privateKeysViewModel.changePassphrase(
+                Passphrase.fromPassword(args.passphrase)
+              )
+            }
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
@@ -136,7 +152,6 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            isBackEnabled = true
             navigateToMakeBackupFragment()
             baseActivity.countingIdlingResource.decrementSafely()
           }
@@ -178,6 +193,9 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
   }
 
   private fun navigateToMakeBackupFragment() {
-    TODO("Not yet implemented")
+    navController?.navigate(
+      ChangePassphraseOfImportedKeysFragmentDirections
+        .actionChangePassphraseOfImportedKeysFragmentToBackupKeysFragment()
+    )
   }
 }

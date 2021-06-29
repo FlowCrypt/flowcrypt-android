@@ -23,7 +23,7 @@ abstract class BaseSyncFragment : BaseFragment() {
 
   protected var progressView: View? = null
   protected var statusView: View? = null
-  protected var textViewStatusInfo: TextView? = null
+  protected var tVStatusMsg: TextView? = null
 
   protected val baseSyncActivity: BaseSyncActivity
     get() {
@@ -43,8 +43,8 @@ abstract class BaseSyncFragment : BaseFragment() {
     super.onViewCreated(view, savedInstanceState)
     progressView = view.findViewById(R.id.viewIdProgressView)
     statusView = view.findViewById(R.id.viewIdStatusView)
-    textViewStatusInfo = view.findViewById(R.id.viewIdTextViewStatusInfo)
-    if (progressView == null || statusView == null || textViewStatusInfo == null) {
+    tVStatusMsg = view.findViewById(R.id.tVStatusMsg)
+    if (progressView == null || statusView == null || tVStatusMsg == null) {
       throw IllegalArgumentException("The layout file of this fragment not contains " + "some needed views")
     }
   }

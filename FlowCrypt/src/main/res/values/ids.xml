@@ -8,7 +8,6 @@
 
     <item name="viewIdProgressView" type="id" />
     <item name="viewIdStatusView" type="id" />
-    <item name="viewIdTextViewStatusInfo" type="id" />
 
     <item name="tVProgressMsg" type="id" />
     <item name="tVStatusMsg" type="id" />

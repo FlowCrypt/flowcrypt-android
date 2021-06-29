@@ -86,9 +86,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   fun changePassphrase(newPassphrase: Passphrase) {
     viewModelScope.launch {
+      changePassphraseLiveData.value = Result.loading()
       try {
-        changePassphraseLiveData.value = Result.loading()
-
         if (newPassphrase.isEmpty) {
           throw IllegalStateException("new Passphrase can't be empty")
         }

@@ -522,4 +522,5 @@
     </plurals>
     <string name="passphrase_was_changed">Your pass phrase was changed. From now, the new backups will be protected with a provided pass phrase.</string>
     <string name="processing_please_wait">Processing, please wait&#8230;</string>
+    <string name="could_not_change_pass_phrase">Could not change the pass phrase</string>
 </resources>
