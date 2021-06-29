@@ -10,6 +10,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
@@ -41,8 +42,10 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
     val intent = if (account?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
       Intent(context, EmailManagerActivity::class.java)
     } else {
-      Intent(context, EmailManagerActivity::class.java)
-      //ChangePassphraseOfImportedKeysFragment.newIntent(context)
+      Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse("flowcrypt://email.flowcrypt.com/settings/security")
+      )
     }
 
     val pendingIntent =
