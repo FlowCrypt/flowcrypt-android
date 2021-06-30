@@ -14,7 +14,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.databinding.FragmentChangePassphraseOfImportedKeysBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
@@ -111,7 +111,7 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
 
           Result.Status.SUCCESS -> {
             isPassphraseChanged = true
-            if (args.accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
+            if (args.accountEntity.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)) {
               //making backups is not allowed by OrgRules.
               isBackEnabled = true
               showContent()
