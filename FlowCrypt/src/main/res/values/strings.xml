@@ -66,7 +66,6 @@
     <string name="help_feedback_or_question">Help, feedback, question</string>
     <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Thank you for trying FlowCrypt! We\'re here to help.</string>
     <string name="your_message">Your message</string>
-    <string name="back">Back</string>
     <string name="see_more_backup_options">See more backup options</string>
     <string name="there_are_no_backups_on_this_account"><b>There are no backups on this account</b>\n\n If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
     <string name="email">Email</string>
@@ -268,9 +267,7 @@
     <string name="receive_notifications_for">Receive notifications for:</string>
     <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
     <string name="no_key_available_for_your_emails">No key available for your email addresses %1$s and %2$s. Please write %3$s for help.</string>
-    <string name="done">Done!</string>
     <string name="pass_phrase_changed">Pass phrase successfully changed.</string>
-    <string name="back_up_updated_key">You should back up your updated key.</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>
     <string name="backup_options">Backup options</string>
     <string name="change_pass_phrase">Change pass phrase</string>
@@ -520,4 +517,7 @@
         <item quantity="one">Please provide a pass phrase for the following key</item>
         <item quantity="other">Please provide a pass phrase for the following keys</item>
     </plurals>
+    <string name="passphrase_was_changed">Your pass phrase was changed. From now, the new backups will be protected with a provided pass phrase.</string>
+    <string name="processing_please_wait">Processing, please wait&#8230;</string>
+    <string name="could_not_change_pass_phrase">Could not change the pass phrase</string>
 </resources>

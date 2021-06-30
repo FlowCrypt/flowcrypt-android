@@ -49,6 +49,79 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
+        <action
+            android:id="@+id/action_securitySettingsFragment_to_checkPassphraseStrengthFragment"
+            app:destination="@id/checkPassphraseStrengthFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/checkPassphraseStrengthFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment"
+        android:label="CheckPassphraseStrengthFragment"
+        tools:layout="@layout/fragment_check_passphrase_strength">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_checkPassphraseStrengthFragment_to_recheckProvidedPassphraseFragment"
+            app:destination="@id/recheckProvidedPassphraseFragment" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/check_passphrase" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recheckProvidedPassphraseFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment"
+        android:label="RecheckProvidedPassphraseFragment"
+        tools:layout="@layout/fragment_recheck_provided_passphrase">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/recheck_passphrase" />
+        <action
+            android:id="@+id/action_recheckProvidedPassphraseFragment_to_changePassphraseOfImportedKeysFragment"
+            app:destination="@id/changePassphraseOfImportedKeysFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/changePassphraseOfImportedKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ChangePassphraseOfImportedKeysFragment"
+        android:label="ChangePassphraseOfImportedKeysFragment"
+        tools:layout="@layout/fragment_change_passphrase_of_imported_keys">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="subTitle"
+            app:argType="string" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/change_passphrase" />
+        <action
+            android:id="@+id/action_changePassphraseOfImportedKeysFragment_to_backupKeysFragment"
+            app:destination="@id/backupKeysFragment"
+            app:popUpTo="@id/mainSettingsFragment" />
     </fragment>
 
     <fragment
@@ -196,6 +269,9 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/make_backup" />
+        <action
+            android:id="@+id/action_backupKeysFragment_to_checkPassphraseStrengthFragment"
+            app:destination="@id/checkPassphraseStrengthFragment" />
     </fragment>
 
     <fragment
@@ -287,6 +363,10 @@
             app:argType="boolean" />
         <argument
             android:name="hasHtml"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="useWebViewToRender"
             android:defaultValue="false"
             app:argType="boolean" />
         <argument

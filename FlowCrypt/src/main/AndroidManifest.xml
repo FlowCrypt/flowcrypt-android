@@ -176,10 +176,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.ChangePassPhraseActivity"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.CorruptedStorageActivity"
             android:launchMode="singleTop" />
 

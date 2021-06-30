@@ -86,16 +86,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   fun changePassphrase(newPassphrase: Passphrase) {
     viewModelScope.launch {
+      changePassphraseLiveData.value = Result.loading()
       try {
-        changePassphraseLiveData.value = Result.loading()
-
         if (newPassphrase.isEmpty) {
           throw IllegalStateException("new Passphrase can't be empty")
         }
 
-        val account = roomDatabase.accountDao().getActiveAccountSuspend()
-        requireNotNull(account)
-
+        val account = requireNotNull(roomDatabase.accountDao().getActiveAccountSuspend())
         val rawKeys = keysStorage.getRawKeys()
 
         if (rawKeys.isEmpty()) {
@@ -152,22 +149,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   fun saveBackupsToInbox() {
     viewModelScope.launch {
       saveBackupToInboxLiveData.value = Result.loading()
-      withContext(Dispatchers.IO) {
-        try {
-          val account =
-            getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getActiveAccountSuspend())
-          requireNotNull(account)
-
-          val sess = OpenStoreHelper.getAccountSess(getApplication(), account)
-          val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, account)
-          val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), account, sess)
-          transport.sendMessage(msg, msg.allRecipients)
-          saveBackupToInboxLiveData.postValue(Result.success(true))
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          saveBackupToInboxLiveData.postValue(Result.exception(e))
-        }
+      try {
+        saveBackupsToInboxInternal()
+        saveBackupToInboxLiveData.value = Result.success(true)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        saveBackupToInboxLiveData.value = Result.exception(e)
       }
     }
   }
@@ -175,21 +163,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   fun saveBackupsAsFile(destinationUri: Uri) {
     viewModelScope.launch {
       saveBackupAsFileLiveData.value = Result.loading()
-      withContext(Dispatchers.IO) {
-        try {
-          val account = roomDatabase.accountDao().getActiveAccountSuspend()
-          requireNotNull(account)
-
-          val backup = SecurityUtils.genPrivateKeysBackup(getApplication(), account)
-          val result =
-            GeneralUtil.writeFileFromStringToUri(getApplication(), destinationUri, backup) > 0
-
-          saveBackupAsFileLiveData.postValue(Result.success(result))
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          saveBackupAsFileLiveData.postValue(Result.exception(e))
-        }
+      try {
+        val result = saveBackupsAsFileInternal(destinationUri)
+        saveBackupAsFileLiveData.value = Result.success(result)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        saveBackupAsFileLiveData.value = Result.exception(e)
       }
     }
   }
@@ -626,6 +606,32 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         e.printStackTrace()
         false
       }
+    }
+
+  private suspend fun saveBackupsToInboxInternal() = withContext(Dispatchers.IO) {
+    val account = requireNotNull(
+      getAccountEntityWithDecryptedInfo(
+        roomDatabase.accountDao().getActiveAccountSuspend()
+      )
+    )
+
+    val sess = OpenStoreHelper.getAccountSess(getApplication(), account)
+    val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, account)
+    val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), account, sess)
+    transport.sendMessage(msg, msg.allRecipients)
+  }
+
+  private suspend fun saveBackupsAsFileInternal(destinationUri: Uri) =
+    withContext(Dispatchers.IO) {
+      val account = roomDatabase.accountDao().getActiveAccountSuspend()
+      requireNotNull(account)
+
+      val backup = SecurityUtils.genPrivateKeysBackup(getApplication(), account)
+      return@withContext GeneralUtil.writeFileFromStringToUri(
+        getApplication(),
+        destinationUri,
+        backup
+      ) > 0
     }
 
   companion object {
