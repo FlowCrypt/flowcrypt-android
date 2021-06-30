@@ -15,13 +15,8 @@ package com.flowcrypt.email.api.retrofit
  */
 //todo-denbond7 need to remove this class after refactoring
 enum class ApiName {
-  /*flowcrypt.com/attester*/
-  GET_PUB,
-
-  /*flowcrypt.com/api*/
+ /*flowcrypt.com/api*/
   POST_HELP_FEEDBACK,
-  POST_LINK_MESSAGE,
-  POST_MESSAGE_REPLY,
-  POST_LOGIN,
-  POST_GET_DOMAIN_RULES
+ POST_LINK_MESSAGE,
+ POST_MESSAGE_REPLY
 }

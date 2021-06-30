@@ -7,11 +7,10 @@ package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
-import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
-import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
@@ -32,19 +31,29 @@ import kotlinx.coroutines.withContext
  *         E-mail: DenBond7@gmail.com
  */
 class FlowcryptApiRepository : ApiRepository {
-  override suspend fun login(context: Context, request: LoginRequest): Result<LoginResponse> =
+  override suspend fun login(
+    context: Context,
+    loginModel: LoginModel,
+    tokenId: String
+  ): Result<LoginResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.postLogin(request.requestModel, "Bearer ${request.tokenId}") }
+      getResult(
+        context = context,
+        expectedResultClass = LoginResponse::class.java
+      ) { apiService.postLogin(loginModel, "Bearer $tokenId") }
     }
 
-  override suspend fun getDomainRules(
+  override suspend fun getDomainOrgRules(
     context: Context,
-    request: DomainRulesRequest
-  ): Result<DomainRulesResponse> =
+    loginModel: LoginModel
+  ): Result<DomainOrgRulesResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.getDomainRules(request.requestModel) }
+      getResult(
+        context = context,
+        expectedResultClass = DomainOrgRulesResponse::class.java
+      ) { apiService.getDomainOrgRules(loginModel) }
     }
 
   override suspend fun submitPubKey(

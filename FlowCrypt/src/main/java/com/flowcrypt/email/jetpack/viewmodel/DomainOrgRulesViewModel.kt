@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *  DenBond7
- *  Ivan Pizhenko
+ * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -15,34 +13,36 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
+import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.launch
 
 /**
- * This [ViewModel] can be used to login enterprise users.
+ * This [ViewModel] can be used to resolve domain rules for enterprise users.
  *
  * @author Denis Bondarenko
- *         Date: 10/23/19
- *         Time: 12:36 PM
+ *         Date: 6/30/21
+ *         Time: 6:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-class LoginViewModel(application: Application) : BaseAndroidViewModel(application) {
+class DomainOrgRulesViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository = FlowcryptApiRepository()
-  val loginLiveData: MutableLiveData<Result<LoginResponse>> = MutableLiveData(Result.none())
+  val domainOrgRulesLiveData: MutableLiveData<Result<DomainOrgRulesResponse>> =
+    MutableLiveData(Result.none())
 
-  fun login(account: String, uuid: String, tokenId: String) {
+  fun fetchOrgRules(account: String, uuid: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
-      loginLiveData.value = Result.loading(progressMsg = context.getString(R.string.loading))
+      domainOrgRulesLiveData.value =
+        Result.loading(progressMsg = context.getString(R.string.loading_domain_rules))
+
       try {
-        loginLiveData.value = repository.login(
+        domainOrgRulesLiveData.value = repository.getDomainOrgRules(
           context = context,
-          loginModel = LoginModel(account, uuid),
-          tokenId = tokenId
+          loginModel = LoginModel(account, uuid)
         )
       } catch (e: Exception) {
-        loginLiveData.value = Result.exception(e)
+        domainOrgRulesLiveData.value = Result.exception(e)
       }
     }
   }

@@ -17,7 +17,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -25,6 +25,9 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.viewmodel.DomainOrgRulesViewModel
+import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoginViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.SecurityUtils
@@ -69,6 +72,8 @@ class MainSignInFragment : BaseSingInFragment() {
   private var domainRules: List<OrgRules.DomainRule>? = null
 
   private val loginViewModel: LoginViewModel by viewModels()
+  private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
+  private val ekmViewModel: EkmViewModel by viewModels()
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -92,7 +97,7 @@ class MainSignInFragment : BaseSingInFragment() {
     subscribeToAuthorizeAndSearchBackups()
 
     initAddNewAccountLiveData()
-    setupEnterpriseViewModel()
+    initEnterpriseViewModels()
     initSavePrivateKeysLiveData()
   }
 
@@ -130,7 +135,7 @@ class MainSignInFragment : BaseSingInFragment() {
           TwoWayDialogFragment.RESULT_OK -> {
             val account = googleSignInAccount?.account?.name ?: return
             val idToken = googleSignInAccount?.idToken ?: return
-            loginViewModel.fetchPrvKeys(account, uuid, idToken)
+            loginViewModel.login(account, uuid, idToken)
           }
         }
       }
@@ -223,7 +228,7 @@ class MainSignInFragment : BaseSingInFragment() {
           domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
-          loginViewModel.fetchPrvKeys(account, uuid, idToken)
+          loginViewModel.login(account, uuid, idToken)
         }
       } else {
         val error = task.exception
@@ -394,65 +399,147 @@ class MainSignInFragment : BaseSingInFragment() {
     }
   }
 
-  private fun setupEnterpriseViewModel() {
-    loginViewModel.ekmLiveData.observe(viewLifecycleOwner, {
-      it?.let {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            if (it.progressMsg == null) {
-              baseActivity.countingIdlingResource.incrementSafely()
+  private fun initEnterpriseViewModels() {
+    initLoginViewModel()
+    initDomainOrgRulesViewModel()
+    initEkmViewModel()
+  }
+
+  private fun initLoginViewModel() {
+    loginViewModel.loginLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress(progressMsg = it.progressMsg)
+        }
+
+        Result.Status.SUCCESS -> {
+          if (it.data?.isVerified == true) {
+            val account = googleSignInAccount?.account?.name
+            if (account != null) {
+              domainOrgRulesViewModel.fetchOrgRules(account, uuid)
+            } else {
+              showContent()
+              askUserToReLogin()
             }
-            showProgress(progressMsg = it.progressMsg)
+          } else {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = getString(R.string.user_not_verified),
+              isCancelable = true
+            )
           }
 
-          Result.Status.SUCCESS -> {
-            val result = it.data as? DomainRulesResponse
-            domainRules = result?.orgRules?.flags ?: emptyList()
-            onSignSuccess(googleSignInAccount)
-            loginViewModel.ekmLiveData.value = Result.none()
-            baseActivity.countingIdlingResource.decrementSafely()
-          }
+          loginViewModel.loginLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
 
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-
-            when (it.exception) {
-              is EkmNotSupportedException -> {
-                domainRules = it.exception.orgRules.flags
-                onSignSuccess(googleSignInAccount)
-              }
-
-              is OrgRulesCombinationNotSupportedException -> {
-                showInfoDialog(
-                  dialogTitle = "",
-                  dialogMsg = getString(
-                    R.string.combination_of_org_rules_is_not_supported,
-                    it.exception.combination
-                  ),
-                  isCancelable = true
-                )
-              }
-
-              else -> {
-                val errorMsg = it.data?.apiError?.msg
-                  ?: it.exception?.message
-                  ?: getString(R.string.unknown_error)
-                showTwoWayDialog(
-                  requestCode = REQUEST_CODE_RETRY_EKM_LOGIN,
-                  dialogTitle = "",
-                  dialogMsg = errorMsg,
-                  positiveButtonTitle = getString(R.string.retry),
-                  negativeButtonTitle = getString(R.string.cancel),
-                  isCancelable = true
-                )
-              }
-            }
-            loginViewModel.ekmLiveData.value = Result.none()
-            baseActivity.countingIdlingResource.decrementSafely()
-          }
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          showDialogWithRetryButton(it)
+          loginViewModel.loginLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
         }
       }
     })
+  }
+
+  private fun initDomainOrgRulesViewModel() {
+    domainOrgRulesViewModel.domainOrgRulesLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress(progressMsg = it.progressMsg)
+        }
+
+        Result.Status.SUCCESS -> {
+          val idToken = googleSignInAccount?.idToken
+          if (it.data?.orgRules != null && idToken != null) {
+            ekmViewModel.fetchPrvKeys(it.data.orgRules, idToken)
+          } else {
+            showContent()
+            askUserToReLogin()
+          }
+          domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          showDialogWithRetryButton(it)
+          domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+      }
+    })
+  }
+
+  private fun initEkmViewModel() {
+    ekmViewModel.ekmLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress(progressMsg = it.progressMsg)
+        }
+
+        Result.Status.SUCCESS -> {
+          showContent()
+          toast("Debug: received = ${it.data?.privateKeys?.size} key(s)")
+          //encrypt the received keys with the pass phrase.
+          ekmViewModel.ekmLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          when (it.exception) {
+            is EkmNotSupportedException -> {
+              domainRules = it.exception.orgRules.flags
+              onSignSuccess(googleSignInAccount)
+            }
+
+            is OrgRulesCombinationNotSupportedException -> {
+              showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = getString(
+                  R.string.combination_of_org_rules_is_not_supported,
+                  it.exception.combination
+                ),
+                isCancelable = true
+              )
+            }
+
+            else -> {
+              showDialogWithRetryButton(it)
+            }
+          }
+          ekmViewModel.ekmLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+      }
+    })
+  }
+
+  private fun showDialogWithRetryButton(it: Result<ApiResponse>) {
+    val errorMsg = it.data?.apiError?.msg
+      ?: it.exception?.message
+      ?: getString(R.string.unknown_error)
+    showTwoWayDialog(
+      requestCode = REQUEST_CODE_RETRY_EKM_LOGIN,
+      dialogTitle = "",
+      dialogMsg = errorMsg,
+      positiveButtonTitle = getString(R.string.retry),
+      negativeButtonTitle = getString(R.string.cancel),
+      isCancelable = true
+    )
+  }
+
+  private fun askUserToReLogin() {
+    showInfoDialog(
+      dialogTitle = "",
+      dialogMsg = getString(R.string.please_login_again_to_continue),
+      isCancelable = true
+    )
   }
 
   private fun handleResultFromCheckKeysActivity(resultCode: Int, data: Intent?) {

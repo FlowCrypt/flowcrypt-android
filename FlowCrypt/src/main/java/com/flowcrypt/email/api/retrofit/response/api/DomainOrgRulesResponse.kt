@@ -21,13 +21,16 @@ import com.google.gson.annotations.SerializedName
  *         Time: 11:25 AM
  *         E-mail: DenBond7@gmail.com
  */
-data class DomainRulesResponse constructor(@SerializedName("error")
-                                           @Expose override val apiError: ApiError?,
-                                           @SerializedName("domain_org_rules")
-                                           @Expose val orgRules: OrgRules?) : ApiResponse {
+data class DomainOrgRulesResponse constructor(
+  @SerializedName("error")
+  @Expose override val apiError: ApiError?,
+  @SerializedName("domain_org_rules")
+  @Expose val orgRules: OrgRules?
+) : ApiResponse {
   constructor(parcel: Parcel) : this(
-      parcel.readParcelable(ApiError::class.java.classLoader),
-      parcel.readParcelable<OrgRules>(OrgRules::class.java.classLoader))
+    parcel.readParcelable(ApiError::class.java.classLoader),
+    parcel.readParcelable<OrgRules>(OrgRules::class.java.classLoader)
+  )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     with(parcel) {
@@ -40,12 +43,12 @@ data class DomainRulesResponse constructor(@SerializedName("error")
     return 0
   }
 
-  companion object CREATOR : Parcelable.Creator<DomainRulesResponse> {
-    override fun createFromParcel(parcel: Parcel): DomainRulesResponse {
-      return DomainRulesResponse(parcel)
+  companion object CREATOR : Parcelable.Creator<DomainOrgRulesResponse> {
+    override fun createFromParcel(parcel: Parcel): DomainOrgRulesResponse {
+      return DomainOrgRulesResponse(parcel)
     }
 
-    override fun newArray(size: Int): Array<DomainRulesResponse?> {
+    override fun newArray(size: Int): Array<DomainOrgRulesResponse?> {
       return arrayOfNulls(size)
     }
   }

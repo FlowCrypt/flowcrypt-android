@@ -19,7 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
-import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -83,7 +83,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   @Test
   fun testErrorGetDomainRules() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_RULES_ERROR))
-    isToastDisplayed(DOMAIN_RULES_ERROR_RESPONSE.apiError?.msg!!)
+    isToastDisplayed(DOMAIN_ORG_RULES_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
@@ -109,7 +109,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       ), null
     )
 
-    val DOMAIN_RULES_ERROR_RESPONSE = DomainRulesResponse(
+    val DOMAIN_ORG_RULES_ERROR_RESPONSE = DomainOrgRulesResponse(
       ApiError(
         401,
         "Not logged in or unknown account", "auth"
@@ -145,12 +145,12 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           if (request.path.equals("/account/get")) {
             when (model.account) {
               EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(DOMAIN_RULES_ERROR_RESPONSE))
+                .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
 
               EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
                 .setBody(
                   gson.toJson(
-                    DomainRulesResponse(
+                    DomainOrgRulesResponse(
                       apiError = null,
                       orgRules = OrgRules(
                         flags = listOf(

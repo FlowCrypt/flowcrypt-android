@@ -7,11 +7,10 @@ package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
-import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
-import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
-import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
@@ -33,18 +32,23 @@ import com.google.gson.JsonObject
 interface ApiRepository : BaseApiRepository {
   /**
    * @param context Interface to global information about an application environment.
-   * @param request An instance of [LoginRequest].
+   * @param loginModel An instance of [LoginModel].
+   * @param tokenId OIDC token.
    */
-  suspend fun login(context: Context, request: LoginRequest): Result<LoginResponse>
+  suspend fun login(
+    context: Context,
+    loginModel: LoginModel,
+    tokenId: String
+  ): Result<LoginResponse>
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param request An instance of [DomainRulesRequest].
+   * @param loginModel An instance of [LoginModel].
    */
-  suspend fun getDomainRules(
+  suspend fun getDomainOrgRules(
     context: Context,
-    request: DomainRulesRequest
-  ): Result<DomainRulesResponse>
+    loginModel: LoginModel
+  ): Result<DomainOrgRulesResponse>
 
   /**
    * @param context Interface to global information about an application environment.
