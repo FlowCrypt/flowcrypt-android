@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.google.gson.annotations.Expose
 
 /**
@@ -17,18 +18,21 @@ import com.google.gson.annotations.Expose
  *         Time: 9:50 AM
  *         E-mail: DenBond7@gmail.com
  */
-class EkmPrivateKeysResponse constructor(
+data class EkmPrivateKeysResponse constructor(
   @Expose val code: Int? = null,
-  @Expose val message: String? = null
+  @Expose val message: String? = null,
+  @Expose val privateKeys: List<Key>? = null
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
-    parcel.readParcelable(ApiError::class.java.classLoader)
+    parcel.readValue(Int::class.java.classLoader) as? Int,
+    parcel.readString(),
+    parcel.createTypedArrayList(Key)
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
-    with(parcel) {
-      writeParcelable(apiError, flags)
-    }
+    parcel.writeValue(code)
+    parcel.writeString(message)
+    parcel.writeTypedList(privateKeys)
   }
 
   override val apiError: ApiError?
