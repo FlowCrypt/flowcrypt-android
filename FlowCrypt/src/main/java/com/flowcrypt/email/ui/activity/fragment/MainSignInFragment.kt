@@ -65,7 +65,7 @@ import java.util.*
 class MainSignInFragment : BaseSingInFragment() {
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
-  private var uuid: String? = null
+  private var uuid: String = SecurityUtils.generateRandomUUID()
   private var domainRules: List<OrgRules.DomainRule>? = null
 
   private val ekmLoginViewModel: EkmLoginViewModel by viewModels()
@@ -128,10 +128,9 @@ class MainSignInFragment : BaseSingInFragment() {
       REQUEST_CODE_RETRY_EKM_LOGIN -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
-            val id = uuid ?: return
             val account = googleSignInAccount?.account?.name ?: return
             val idToken = googleSignInAccount?.idToken ?: return
-            ekmLoginViewModel.fetchPrvKeys(account, id, idToken)
+            ekmLoginViewModel.fetchPrvKeys(account, uuid, idToken)
           }
         }
       }
@@ -215,16 +214,16 @@ class MainSignInFragment : BaseSingInFragment() {
         val idToken = googleSignInAccount?.idToken ?: return
         uuid = SecurityUtils.generateRandomUUID()
 
-        val regularDomains = arrayOf(
+        val publicEmailDomains = arrayOf(
           JavaEmailConstants.EMAIL_PROVIDER_GMAIL,
           JavaEmailConstants.EMAIL_PROVIDER_GOOGLEMAIL
         )
 
-        if (EmailUtil.getDomain(account).toLowerCase(Locale.US) in regularDomains) {
+        if (EmailUtil.getDomain(account).toLowerCase(Locale.US) in publicEmailDomains) {
           domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
-          uuid?.let { ekmLoginViewModel.fetchPrvKeys(account, it, idToken) }
+          ekmLoginViewModel.fetchPrvKeys(account, uuid, idToken)
         }
       } else {
         val error = task.exception
