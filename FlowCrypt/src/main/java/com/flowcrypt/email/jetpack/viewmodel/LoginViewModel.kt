@@ -10,6 +10,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.ApiName
@@ -28,14 +29,14 @@ import com.flowcrypt.email.util.exception.OrgRulesCombinationNotSupportedExcepti
 import kotlinx.coroutines.launch
 
 /**
- * This [androidx.lifecycle.ViewModel] can be used to resolve domain rules for enterprise users.
+ * This [ViewModel] can be used to login enterprise users.
  *
  * @author Denis Bondarenko
  *         Date: 10/23/19
  *         Time: 12:36 PM
  *         E-mail: DenBond7@gmail.com
  */
-class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(application) {
+class LoginViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository: ApiRepository = FlowcryptApiRepository()
   val ekmLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 

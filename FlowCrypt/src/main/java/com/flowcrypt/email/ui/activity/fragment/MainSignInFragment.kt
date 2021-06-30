@@ -25,7 +25,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.jetpack.viewmodel.EkmLoginViewModel
+import com.flowcrypt.email.jetpack.viewmodel.LoginViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -68,7 +68,7 @@ class MainSignInFragment : BaseSingInFragment() {
   private var uuid: String = SecurityUtils.generateRandomUUID()
   private var domainRules: List<OrgRules.DomainRule>? = null
 
-  private val ekmLoginViewModel: EkmLoginViewModel by viewModels()
+  private val loginViewModel: LoginViewModel by viewModels()
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -130,7 +130,7 @@ class MainSignInFragment : BaseSingInFragment() {
           TwoWayDialogFragment.RESULT_OK -> {
             val account = googleSignInAccount?.account?.name ?: return
             val idToken = googleSignInAccount?.idToken ?: return
-            ekmLoginViewModel.fetchPrvKeys(account, uuid, idToken)
+            loginViewModel.fetchPrvKeys(account, uuid, idToken)
           }
         }
       }
@@ -223,7 +223,7 @@ class MainSignInFragment : BaseSingInFragment() {
           domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
-          ekmLoginViewModel.fetchPrvKeys(account, uuid, idToken)
+          loginViewModel.fetchPrvKeys(account, uuid, idToken)
         }
       } else {
         val error = task.exception
@@ -395,7 +395,7 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun setupEnterpriseViewModel() {
-    ekmLoginViewModel.ekmLiveData.observe(viewLifecycleOwner, {
+    loginViewModel.ekmLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -409,7 +409,7 @@ class MainSignInFragment : BaseSingInFragment() {
             val result = it.data as? DomainRulesResponse
             domainRules = result?.orgRules?.flags ?: emptyList()
             onSignSuccess(googleSignInAccount)
-            ekmLoginViewModel.ekmLiveData.value = Result.none()
+            loginViewModel.ekmLiveData.value = Result.none()
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
@@ -447,7 +447,7 @@ class MainSignInFragment : BaseSingInFragment() {
                 )
               }
             }
-            ekmLoginViewModel.ekmLiveData.value = Result.none()
+            loginViewModel.ekmLiveData.value = Result.none()
             baseActivity.countingIdlingResource.decrementSafely()
           }
         }
