@@ -106,7 +106,7 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
           Result.Status.LOADING -> {
             baseActivity.countingIdlingResource.incrementSafely()
             isBackEnabled = false
-            showProgress(getString(R.string.processing))
+            showProgress(getString(R.string.please_wait_while_pass_phrase_will_be_changed))
           }
 
           Result.Status.SUCCESS -> {
