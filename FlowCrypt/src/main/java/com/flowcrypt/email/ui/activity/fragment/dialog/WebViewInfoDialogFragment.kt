@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets
  * Time: 15:56
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 remove this after migrating #1193 will be completed
 class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
 
   protected var dialogTitle: String? = null

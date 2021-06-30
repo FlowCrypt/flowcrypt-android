@@ -27,7 +27,6 @@ import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -201,7 +200,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
                 )
               )
             }
-
+            privateKeysViewModel.saveBackupAsFileLiveData.value = Result.none()
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
@@ -236,6 +235,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
             showBackupingErrorHint()
           }
 
+          backupsViewModel.postBackupLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
 
@@ -300,7 +300,13 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       btnName = btnName,
       duration = Snackbar.LENGTH_LONG
     ) {
-      startActivityForResult(ChangePassPhraseActivity.newIntent(requireContext()), 0)
+      navController?.navigate(
+        BackupKeysFragmentDirections
+          .actionBackupKeysFragmentToCheckPassphraseStrengthFragment(
+            popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
+            title = getString(R.string.change_pass_phrase)
+          )
+      )
     }
   }
 

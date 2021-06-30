@@ -143,44 +143,14 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.settings.LegalSettingsActivity"
-            android:label="@string/legal"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar.NoElevation" />
-
-        <activity
-            android:name=".ui.activity.settings.ContactsSettingsActivity"
-            android:label="@string/contacts"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.settings.KeysSettingsActivity"
-            android:label="@string/keys"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.settings.AttesterSettingsActivity"
-            android:label="@string/attester"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
 
         <activity
-            android:name=".ui.activity.settings.ExperimentalSettingsActivity"
-            android:label="@string/experimental_settings"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.HtmlViewFromAssetsRawActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.DevSettingsActivity"
             android:screenOrientation="portrait" />
 
         <activity
@@ -203,25 +173,6 @@
         <activity
             android:name=".ui.activity.PreviewImportPgpContactActivity"
             android:label="@string/add_contact"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.settings.NotificationsSettingsActivity"
-            android:label="@string/notifications"
-            android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".ui.activity.ChangePassPhraseActivity"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.settings.SecurityAndPrivacySettingsActivity"
-            android:label="@string/security_and_privacy"
             android:screenOrientation="portrait" />
 
         <activity

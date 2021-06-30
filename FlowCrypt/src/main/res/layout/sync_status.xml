@@ -10,7 +10,7 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/imageViewWarning"
+        android:id="@+id/iVStatusImg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
@@ -21,7 +21,7 @@
         app:srcCompat="@mipmap/ic_warning" />
 
     <TextView
-        android:id="@id/viewIdTextViewStatusInfo"
+        android:id="@id/tVStatusMsg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/default_margin_content_small"
@@ -31,6 +31,6 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageViewWarning"
+        app:layout_constraintTop_toBottomOf="@+id/iVStatusImg"
         tools:text="No connection" />
 </androidx.constraintlayout.widget.ConstraintLayout>

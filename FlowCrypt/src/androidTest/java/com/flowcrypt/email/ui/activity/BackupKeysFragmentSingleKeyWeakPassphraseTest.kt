@@ -5,15 +5,9 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.ComponentName
-import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -22,13 +16,13 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -77,33 +71,7 @@ class BackupKeysFragmentSingleKeyWeakPassphraseTest : BaseBackupKeysFragmentTest
 
   @Test
   @DependsOnMailServer
-  fun testFixWeakPasswordForEmailOption() {
-    onView(withId(R.id.btBackup))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
-    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
-  }
-
-  @Test
-  fun testFixWeakPasswordForDownloadOption() {
-    onView(withId(R.id.rBDownloadOption))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    intendingFileChoose(File(""))
-    onView(withId(R.id.btBackup))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
-    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
-  }
-
-  @Test
-  @DependsOnMailServer
+  @NotReadyForCI
   fun testShowWeakPasswordHintForEmailOption() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))

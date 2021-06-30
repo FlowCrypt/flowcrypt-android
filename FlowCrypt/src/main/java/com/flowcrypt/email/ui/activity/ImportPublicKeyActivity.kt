@@ -81,6 +81,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
   private fun updateInformationAboutPgpContact(keyDetails: PgpKeyDetails) {
     val pgpContactFromKey = keyDetails.primaryPgpContact
     pgpContact?.pubkey = pgpContactFromKey.pubkey
+    pgpContact?.hasPgp = pgpContact?.pubkey?.isNotEmpty() == true
     pgpContact?.let { contactsViewModel.updateContactPgpInfo(it, pgpContactFromKey) }
   }
 

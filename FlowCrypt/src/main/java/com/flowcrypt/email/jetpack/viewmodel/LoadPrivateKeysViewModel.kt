@@ -49,12 +49,12 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
   fun fetchAvailableKeys(accountEntity: AccountEntity?) {
     viewModelScope.launch {
       val context: Context = getApplication()
-      privateKeysLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.searching_backups)))
+      privateKeysLiveData.value =
+        Result.loading(progressMsg = context.getString(R.string.searching_backups))
       if (accountEntity != null) {
-        val result = fetchKeys(accountEntity)
-        privateKeysLiveData.postValue(result)
+        privateKeysLiveData.value = fetchKeys(accountEntity)
       } else {
-        privateKeysLiveData.postValue(Result.exception(NullPointerException("AccountEntity is null!")))
+        privateKeysLiveData.value = Result.exception(NullPointerException("AccountEntity is null!"))
       }
     }
   }
@@ -109,7 +109,8 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
           privateKeysLiveData.postValue(
             Result.loading(
               progressMsg = context.resources
-                .getQuantityString(R.plurals.found_folder, folders.size, folders.size)
+                .getQuantityString(R.plurals.found_folder, folders.size, folders.size),
+              progress = 100.0
             )
           )
 
@@ -144,7 +145,8 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   R.string.searching_in_folders,
                   index,
                   folders.size
-                )
+                ),
+                progress = (index / folders.size).toDouble()
               )
             )
           }

@@ -16,6 +16,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers
 import java.io.File
 
@@ -28,7 +29,9 @@ import java.io.File
 abstract class BaseBackupKeysFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    Intent(Intent.ACTION_VIEW, Uri.parse("flowcrypt://make_backup"))
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/make_backup"
+    )
   )
 
   val addAccountToDatabaseRule = AddAccountToDatabaseRule()

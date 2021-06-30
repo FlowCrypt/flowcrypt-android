@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tVTitle"
+        style="@style/ScreenHeading"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@string/set_up_flow_crypt" />
+
+    <TextView
+        android:id="@+id/tVRepeatPassphraseHint"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/layout_height_sub_header"
+        android:layout_gravity="center_vertical"
+        android:layout_marginTop="@dimen/default_margin_content_big"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/repeat_passphrase_hint"
+        android:textColor="@android:color/black"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/tVTitle" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tILayoutRepeatPassphrase"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_password_layout"
+        android:hint="@string/repeat_pass_phrase"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/tVRepeatPassphraseHint"
+        app:passwordToggleContentDescription="description"
+        app:passwordToggleEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/eTRepeatedPassphrase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:ems="10"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword" />
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/default_margin_content_small"
+            android:progress="0" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btConfirmPassphrase"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/default_margin_content_big"
+        android:text="@string/confirm_pass_phrase"
+        android:theme="@style/AppWidget.Button.Green"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/tILayoutRepeatPassphrase" />
+
+    <Button
+        android:id="@+id/btUseAnotherPassphrase"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/margin_between_buttons"
+        android:text="@string/use_another_pass_phrase"
+        android:theme="@style/AppWidget.Button.SilverWithWhiteText"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/btConfirmPassphrase" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/default_margin_content_big" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/default_margin_content_big" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

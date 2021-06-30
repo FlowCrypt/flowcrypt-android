@@ -48,7 +48,6 @@ import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
-import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -88,36 +87,57 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   fun changePassphrase(newPassphrase: Passphrase) {
     viewModelScope.launch {
+      changePassphraseLiveData.value = Result.loading()
       try {
-        changePassphraseLiveData.value = Result.loading()
-        val account = roomDatabase.accountDao().getActiveAccountSuspend()
-        requireNotNull(account)
+        if (newPassphrase.isEmpty) {
+          throw IllegalStateException("new Passphrase can't be empty")
+        }
 
-        val list = keysStorage.getRawKeys()
+        val account = requireNotNull(roomDatabase.accountDao().getActiveAccountSuspend())
+        val rawKeys = keysStorage.getRawKeys()
 
-        if (list.isEmpty()) {
+        if (rawKeys.isEmpty()) {
           throw NoPrivateKeysAvailableException(getApplication(), account.email)
         }
 
-        roomDatabase.keysDao().updateSuspend(list.map { keyEntity ->
-          with(
-            getModifiedNodeKeyDetails(
-              keyEntity.passphrase,
-              newPassphrase,
-              keyEntity.privateKeyAsString
+        val updateCandidates = rawKeys.map { keyEntity ->
+          val fingerprint = keyEntity.fingerprint
+          val oldPassphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
+            ?: throw IllegalStateException(
+              "Passphrase for key with fingerprint $fingerprint not defined"
             )
-          ) {
-            if (isFullyDecrypted) {
-              throw IllegalArgumentException("Error. The key is decrypted!")
-            }
 
-            keyEntity.copy(
-              privateKey = KeyStoreCryptoManager.encryptSuspend(privateKey).toByteArray(),
-              publicKey = publicKey.toByteArray(),
-              storedPassphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.asString)
-            )
+          val modifiedPgpKeyDetails = getModifiedPgpKeyDetails(
+            oldPassphrase = oldPassphrase,
+            newPassphrase = newPassphrase,
+            originalPrivateKey = keyEntity.privateKeyAsString,
+            fingerprint = fingerprint
+          )
+
+          if (modifiedPgpKeyDetails.isFullyDecrypted) {
+            throw IllegalArgumentException("Error. The key is decrypted!")
           }
-        })
+
+          keyEntity.copy(
+            privateKey = KeyStoreCryptoManager.encryptSuspend(modifiedPgpKeyDetails.privateKey)
+              .toByteArray(),
+            publicKey = modifiedPgpKeyDetails.publicKey.toByteArray(),
+            storedPassphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.asString)
+          )
+        }
+
+        roomDatabase.keysDao().updateSuspend(updateCandidates)
+
+        //update passphrases in RAM
+        rawKeys.filter { it.passphraseType == KeyEntity.PassphraseType.RAM }.forEach { rawKey ->
+          keysStorage.putPassphraseToCache(
+            fingerprint = rawKey.fingerprint,
+            passphrase = newPassphrase,
+            validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
+            passphraseType = KeyEntity.PassphraseType.RAM
+          )
+        }
+
         changePassphraseLiveData.value = Result.success(true)
       } catch (e: Exception) {
         e.printStackTrace()
@@ -130,22 +150,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   fun saveBackupsToInbox() {
     viewModelScope.launch {
       saveBackupToInboxLiveData.value = Result.loading()
-      withContext(Dispatchers.IO) {
-        try {
-          val account =
-            getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getActiveAccountSuspend())
-          requireNotNull(account)
-
-          val sess = OpenStoreHelper.getAccountSess(getApplication(), account)
-          val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, account)
-          val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), account, sess)
-          transport.sendMessage(msg, msg.allRecipients)
-          saveBackupToInboxLiveData.postValue(Result.success(true))
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          saveBackupToInboxLiveData.postValue(Result.exception(e))
-        }
+      try {
+        saveBackupsToInboxInternal()
+        saveBackupToInboxLiveData.value = Result.success(true)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        saveBackupToInboxLiveData.value = Result.exception(e)
       }
     }
   }
@@ -153,21 +164,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   fun saveBackupsAsFile(destinationUri: Uri) {
     viewModelScope.launch {
       saveBackupAsFileLiveData.value = Result.loading()
-      withContext(Dispatchers.IO) {
-        try {
-          val account = roomDatabase.accountDao().getActiveAccountSuspend()
-          requireNotNull(account)
-
-          val backup = SecurityUtils.genPrivateKeysBackup(getApplication(), account)
-          val result =
-            GeneralUtil.writeFileFromStringToUri(getApplication(), destinationUri, backup) > 0
-
-          saveBackupAsFileLiveData.postValue(Result.success(result))
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          saveBackupAsFileLiveData.postValue(Result.exception(e))
-        }
+      try {
+        val result = saveBackupsAsFileInternal(destinationUri)
+        saveBackupAsFileLiveData.value = Result.success(result)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        saveBackupAsFileLiveData.value = Result.exception(e)
       }
     }
   }
@@ -456,47 +459,32 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  private suspend fun getModifiedNodeKeyDetails(
+  private suspend fun getModifiedPgpKeyDetails(
     oldPassphrase: Passphrase,
     newPassphrase: Passphrase,
-    originalPrivateKey: String?
-  ): PgpKeyDetails =
-    withContext(Dispatchers.IO) {
-      val keyDetailsList = PgpKey.parseKeys(originalPrivateKey!!.toByteArray())
-        .toPgpKeyDetailsList()
-      if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
-        throw IllegalStateException("Parse keys error")
-      }
-
-      val nodeKeyDetails = keyDetailsList[0]
-      val fingerprint = nodeKeyDetails.fingerprint
-
-      if (oldPassphrase.isEmpty) {
-        throw IllegalStateException("Passphrase for key with fingerprint $fingerprint not found")
-      }
-
-      val encryptedKey: String
-      try {
-        encryptedKey = PgpKey.changeKeyPassphrase(
-          nodeKeyDetails.privateKey!!,
-          oldPassphrase,
-          newPassphrase
-        )
-      } catch (e: Exception) {
-        throw IllegalStateException(
-          "Can't change passphrase for the key with fingerprint " + fingerprint,
-          e
-        )
-      }
-
-      val modifiedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray())
-        .toPgpKeyDetailsList()
-      if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
-        throw IllegalStateException("Parse keys error")
-      }
-
-      modifiedKeyDetailsList[0]
+    originalPrivateKey: String,
+    fingerprint: String
+  ): PgpKeyDetails = withContext(Dispatchers.IO) {
+    val keyEncryptedWithNewPassphrase = try {
+      PgpKey.changeKeyPassphrase(
+        armored = originalPrivateKey,
+        oldPassphrase = oldPassphrase,
+        newPassphrase = newPassphrase
+      )
+    } catch (e: Exception) {
+      throw IllegalStateException(
+        "Can't change passphrase for the key with fingerprint $fingerprint", e
+      )
     }
+
+    val modifiedPgpKeyDetailsList =
+      PgpKey.parseKeys(keyEncryptedWithNewPassphrase.toByteArray()).toPgpKeyDetailsList()
+    if (modifiedPgpKeyDetailsList.isEmpty() || modifiedPgpKeyDetailsList.size != 1) {
+      throw IllegalStateException("Parse keys error")
+    }
+
+    return@withContext modifiedPgpKeyDetailsList.first()
+  }
 
   /**
    * Check that the key size not bigger then [.MAX_SIZE_IN_BYTES].
@@ -619,6 +607,32 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         e.printStackTrace()
         false
       }
+    }
+
+  private suspend fun saveBackupsToInboxInternal() = withContext(Dispatchers.IO) {
+    val account = requireNotNull(
+      getAccountEntityWithDecryptedInfo(
+        roomDatabase.accountDao().getActiveAccountSuspend()
+      )
+    )
+
+    val sess = OpenStoreHelper.getAccountSess(getApplication(), account)
+    val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, account)
+    val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), account, sess)
+    transport.sendMessage(msg, msg.allRecipients)
+  }
+
+  private suspend fun saveBackupsAsFileInternal(destinationUri: Uri) =
+    withContext(Dispatchers.IO) {
+      val account = roomDatabase.accountDao().getActiveAccountSuspend()
+      requireNotNull(account)
+
+      val backup = SecurityUtils.genPrivateKeysBackup(getApplication(), account)
+      return@withContext GeneralUtil.writeFileFromStringToUri(
+        getApplication(),
+        destinationUri,
+        backup
+      ) > 0
     }
 
   companion object {

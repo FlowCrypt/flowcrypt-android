@@ -34,19 +34,77 @@ class MainSettingsFragment : BasePreferenceFragment() {
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     addPreferencesFromResource(R.xml.preferences_main_settings)
 
-    findPreference<Preference>(getString(R.string.pref_key_server_settings))?.setOnPreferenceClickListener {
-      navController?.navigate(
-        MainSettingsFragmentDirections.actionMainSettingsFragmentToServerSettingsFragment()
-      )
-      true
-    }
+    findPreference<Preference>(getString(R.string.pref_key_backups))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToSearchBackupsInEmailFragment()
+        )
+        true
+      }
 
-    findPreference<Preference>(getString(R.string.pref_key_backups))?.setOnPreferenceClickListener {
-      navController?.navigate(
-        MainSettingsFragmentDirections.actionMainSettingsFragmentToSearchBackupsInEmailFragment()
-      )
-      true
-    }
+    findPreference<Preference>(getString(R.string.pref_key_security))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToSecuritySettingsFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_contacts))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToContactsListFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_keys))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToPrivateKeysListFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_attester))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToAttesterSettingsFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_notification))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToNotificationsSettingsFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_server_settings))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToServerSettingsFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_legal))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToLegalSettingsFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_experimental))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToExperimentalSettingsFragment()
+        )
+        true
+      }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

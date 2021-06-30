@@ -19,6 +19,190 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_searchBackupsInEmailFragment"
             app:destination="@id/searchBackupsInEmailFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_attesterSettingsFragment"
+            app:destination="@id/attesterSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_legalSettingsFragment"
+            app:destination="@id/legalSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_notificationsSettingsFragment"
+            app:destination="@id/notificationsSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_securitySettingsFragment"
+            app:destination="@id/securitySettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_privateKeysListFragment"
+            app:destination="@id/privateKeysListFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_experimentalSettingsFragment"
+            app:destination="@id/experimentalSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_contactsListFragment"
+            app:destination="@id/contactsListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/securitySettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.SecuritySettingsFragment"
+        android:label="SecuritySettingsFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
+        <action
+            android:id="@+id/action_securitySettingsFragment_to_checkPassphraseStrengthFragment"
+            app:destination="@id/checkPassphraseStrengthFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/checkPassphraseStrengthFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment"
+        android:label="CheckPassphraseStrengthFragment"
+        tools:layout="@layout/fragment_check_passphrase_strength">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_checkPassphraseStrengthFragment_to_recheckProvidedPassphraseFragment"
+            app:destination="@id/recheckProvidedPassphraseFragment" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/check_passphrase" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recheckProvidedPassphraseFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment"
+        android:label="RecheckProvidedPassphraseFragment"
+        tools:layout="@layout/fragment_recheck_provided_passphrase">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/recheck_passphrase" />
+        <action
+            android:id="@+id/action_recheckProvidedPassphraseFragment_to_changePassphraseOfImportedKeysFragment"
+            app:destination="@id/changePassphraseOfImportedKeysFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/changePassphraseOfImportedKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ChangePassphraseOfImportedKeysFragment"
+        android:label="ChangePassphraseOfImportedKeysFragment"
+        tools:layout="@layout/fragment_change_passphrase_of_imported_keys">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="subTitle"
+            app:argType="string" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/security/change_passphrase" />
+        <action
+            android:id="@+id/action_changePassphraseOfImportedKeysFragment_to_backupKeysFragment"
+            app:destination="@id/backupKeysFragment"
+            app:popUpTo="@id/mainSettingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/contactsListFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ContactsListFragment"
+        android:label="ContactsListFragment"
+        tools:layout="@layout/fragment_contacts_list">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts" />
+        <action
+            android:id="@+id/action_contactsListFragment_to_publicKeyDetailsFragment"
+            app:destination="@id/publicKeyDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/publicKeyDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragment"
+        android:label="PublicKeyDetailsFragment"
+        tools:layout="@layout/fragment_public_key_details">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts/details" />
+        <argument
+            android:name="contactEntity"
+            app:argType="com.flowcrypt.email.database.entity.ContactEntity" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/privateKeysListFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment"
+        android:label="PrivateKeysListFragment"
+        tools:layout="@layout/fragment_private_keys">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/keys" />
+        <action
+            android:id="@+id/action_privateKeysListFragment_to_privateKeyDetailsFragment"
+            app:destination="@id/privateKeyDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/privateKeyDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment"
+        android:label="PrivateKeyDetailsFragment"
+        tools:layout="@layout/fragment_private_key_details">
+        <argument
+            android:name="fingerprint"
+            app:argType="string" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/keys/details" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/attesterSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment"
+        android:label="AttesterSettingsFragment"
+        tools:layout="@layout/fragment_attester_settings">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/attester" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/notificationsSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment"
+        android:label="NotificationsSettingsFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/notification" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/legalSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment"
+        android:label="LegalSettingsFragment"
+        tools:layout="@layout/fragment_legal">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/legal" />
     </fragment>
 
     <fragment
@@ -84,8 +268,25 @@
         tools:layout="@layout/fragment_backup_keys">
         <deepLink
             android:id="@+id/deepLink"
-            app:uri="flowcrypt://make_backup" />
+            app:uri="flowcrypt://email.flowcrypt.com/settings/make_backup" />
+        <action
+            android:id="@+id/action_backupKeysFragment_to_checkPassphraseStrengthFragment"
+            app:destination="@id/checkPassphraseStrengthFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/experimentalSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.ExperimentalSettingsFragment"
+        android:label="ExperimentalSettingsFragment">
+        <action
+            android:id="@+id/action_experimentalSettingsFragment_to_mainDevPreferencesFragment"
+            app:destination="@id/mainDevPreferencesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/mainDevPreferencesFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.MainDevPreferencesFragment"
+        android:label="MainDevPreferencesFragment" />
 
     <dialog
         android:id="@+id/twoWayDialogFragment"
@@ -162,6 +363,10 @@
             app:argType="boolean" />
         <argument
             android:name="hasHtml"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="useWebViewToRender"
             android:defaultValue="false"
             app:argType="boolean" />
         <argument

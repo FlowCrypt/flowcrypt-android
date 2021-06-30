@@ -115,6 +115,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testOpenAndSwipeNavigationView() {
     onView(withId(R.id.drawer_layout))
       .perform(open())
@@ -134,6 +135,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testGoToSettingsActivity() {
     onView(withId(R.id.drawer_layout))
       .perform(open())
@@ -147,6 +149,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testSwitchLabels() {
     val menuItem = "Sent"
     onView(withId(R.id.toolbar)).check(
