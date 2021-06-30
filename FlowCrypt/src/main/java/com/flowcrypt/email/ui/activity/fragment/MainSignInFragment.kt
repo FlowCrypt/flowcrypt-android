@@ -437,7 +437,7 @@ class MainSignInFragment : BaseSingInFragment() {
               else -> {
                 val errorMsg = it.data?.apiError?.msg
                   ?: it.exception?.message
-                  ?: getString(R.string.could_not_load_domain_rules)
+                  ?: getString(R.string.unknown_error)
                 showTwoWayDialog(
                   requestCode = REQUEST_CODE_RETRY_EKM_LOGIN,
                   dialogTitle = "",

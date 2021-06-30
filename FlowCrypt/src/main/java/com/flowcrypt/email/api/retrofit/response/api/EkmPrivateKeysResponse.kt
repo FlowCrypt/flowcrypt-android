@@ -10,7 +10,6 @@ import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
 
 /**
  * @author Denis Bondarenko
@@ -19,8 +18,8 @@ import com.google.gson.annotations.SerializedName
  *         E-mail: DenBond7@gmail.com
  */
 class EkmPrivateKeysResponse constructor(
-  @SerializedName("error")
-  @Expose override val apiError: ApiError?
+  @Expose val code: Int? = null,
+  @Expose val message: String? = null
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
     parcel.readParcelable(ApiError::class.java.classLoader)
@@ -31,6 +30,11 @@ class EkmPrivateKeysResponse constructor(
       writeParcelable(apiError, flags)
     }
   }
+
+  override val apiError: ApiError?
+    get() = if (code != null) {
+      ApiError(code = code, msg = message)
+    } else null
 
   override fun describeContents(): Int {
     return 0

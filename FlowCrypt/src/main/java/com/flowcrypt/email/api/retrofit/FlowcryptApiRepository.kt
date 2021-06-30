@@ -146,6 +146,9 @@ class FlowcryptApiRepository : ApiRepository {
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       val url = if (ekmUrl.endsWith("/")) ekmUrl else "$ekmUrl/"
-      getResult { apiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $tokenId") }
+      getResult(
+        context = context,
+        expectedResultClass = EkmPrivateKeysResponse::class.java
+      ) { apiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $tokenId") }
     }
 }
