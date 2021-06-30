@@ -104,6 +104,10 @@ class EkmLoginViewModel(application: Application) : BaseAndroidViewModel(applica
                   tokenId = tokenId
                 )
 
+                if (ekmPrivateResult.data?.privateKeys?.isEmpty() != true) {
+                  throw java.lang.IllegalStateException(context.getString(R.string.no_prv_keys_ask_admin))
+                }
+
                 ekmLiveData.value = ekmPrivateResult
               } else {
                 ekmLiveData.value = domainRulesResult
