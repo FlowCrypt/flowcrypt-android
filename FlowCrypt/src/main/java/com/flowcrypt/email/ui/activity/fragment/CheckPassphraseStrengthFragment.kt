@@ -36,6 +36,7 @@ import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
+import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.nio.charset.StandardCharsets
@@ -101,10 +102,11 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
       }
     }
 
-    binding?.eTPassphrase?.setOnEditorActionListener { _, actionId, _ ->
+    binding?.eTPassphrase?.setOnEditorActionListener { v, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
           checkAndMoveOn()
+          UIUtil.hideSoftInput(requireContext(), v)
           true
         }
         else -> false

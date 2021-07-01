@@ -19,6 +19,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -54,10 +55,11 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
 
   private fun initViews() {
     binding?.tVTitle?.text = args.title
-    binding?.eTRepeatedPassphrase?.setOnEditorActionListener { _, actionId, _ ->
+    binding?.eTRepeatedPassphrase?.setOnEditorActionListener { v, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
           checkAndReturnResult()
+          UIUtil.hideSoftInput(requireContext(), v)
           true
         }
         else -> false

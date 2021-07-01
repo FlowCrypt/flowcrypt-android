@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -96,6 +97,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
     subscribeToCheckAccountSettings()
     subscribeToAuthorizeAndSearchBackups()
+    observeOnResultLiveData()
 
     initAddNewAccountLiveData()
     initEnterpriseViewModels()
@@ -377,6 +379,15 @@ class MainSignInFragment : BaseSingInFragment() {
     }
   }
 
+  private fun observeOnResultLiveData() {
+    getNavigationResult<kotlin.Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
+      if (it.isSuccess) {
+        val passphrase = it.getOrNull() as? CharArray ?: return@getNavigationResult
+        toast(String(passphrase))
+      }
+    }
+  }
+
   private fun onFetchKeysCompleted(keyDetailsList: ArrayList<PgpKeyDetails>?) {
     if (keyDetailsList.isNullOrEmpty()) {
       getTempAccount()?.let {
@@ -495,8 +506,13 @@ class MainSignInFragment : BaseSingInFragment() {
 
         Result.Status.SUCCESS -> {
           showContent()
-          toast("Debug: received = ${it.data?.privateKeys?.size} key(s)")
-          //encrypt the received keys with the pass phrase.
+          navController?.navigate(
+            MainSignInFragmentDirections
+              .actionMainSignInFragmentToCheckPassphraseStrengthFragment(
+                popBackStackIdIfSuccess = R.id.mainSignInFragment,
+                title = getString(R.string.set_up_flow_crypt)
+              )
+          )
           ekmViewModel.ekmLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
