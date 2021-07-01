@@ -45,7 +45,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.OrgRulesCombinationNotSupportedException
+import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -514,16 +514,15 @@ class MainSignInFragment : BaseSingInFragment() {
           showContent()
           when (it.exception) {
             is EkmNotSupportedException -> {
-              orgRules = it.exception.orgRules
               onSignSuccess(googleSignInAccount)
             }
 
-            is OrgRulesCombinationNotSupportedException -> {
+            is UnsupportedOrgRulesException -> {
               showInfoDialog(
                 dialogTitle = "",
                 dialogMsg = getString(
                   R.string.combination_of_org_rules_is_not_supported,
-                  it.exception.combination
+                  it.exception.message
                 ),
                 isCancelable = true
               )

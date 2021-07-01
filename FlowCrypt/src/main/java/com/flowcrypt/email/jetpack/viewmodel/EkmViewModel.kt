@@ -16,7 +16,7 @@ import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
-import com.flowcrypt.email.util.exception.OrgRulesCombinationNotSupportedException
+import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
 import kotlinx.coroutines.launch
 
 /**
@@ -43,16 +43,9 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           return@launch
         }
 
-        val notSupportedCombination: Map<OrgRules.DomainRule, Boolean> =
-          checkNotSupportedOrgRulesCombination(orgRules)
-
-        if (notSupportedCombination.isNotEmpty()) {
-          ekmLiveData.value = Result.exception(
-            OrgRulesCombinationNotSupportedException(
-              orgRules = orgRules,
-              combination = notSupportedCombination
-            )
-          )
+        val unsupportedOrgRulesException = checkForUnsupportedOrgRulesCombination(orgRules)
+        if (unsupportedOrgRulesException != null) {
+          ekmLiveData.value = Result.exception(unsupportedOrgRulesException)
           return@launch
         }
 
@@ -74,31 +67,37 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
     }
   }
 
-  private fun checkNotSupportedOrgRulesCombination(orgRules: OrgRules):
-      Map<OrgRules.DomainRule, Boolean> {
-    val notSupportedCombination = mutableMapOf(
-      OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN to true
-    )
-
-    when {
-      orgRules.mustAutoGenPassPhraseQuietly() -> {
-        notSupportedCombination[OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN] = true
+  private fun checkForUnsupportedOrgRulesCombination(orgRules: OrgRules):
+      UnsupportedOrgRulesException? {
+    if (orgRules.hasRule(OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN)) {
+      if (orgRules.hasRule(OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN)) {
+        return UnsupportedOrgRulesException(
+          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " +
+              OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
+        )
       }
 
-      !orgRules.forbidStoringPassPhrase() -> {
-        notSupportedCombination[OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE] = false
+      if (!orgRules.hasRule(OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE)) {
+        return UnsupportedOrgRulesException(
+          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" +
+              OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
+        )
       }
 
-      orgRules.mustSubmitToAttester() -> {
-        notSupportedCombination[OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT] = true
+      if (orgRules.hasRule(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+        return UnsupportedOrgRulesException(
+          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " +
+              OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+        )
       }
 
-      !orgRules.forbidCreatingPrivateKey() -> {
-        notSupportedCombination[OrgRules.DomainRule.NO_PRV_CREATE] = false
+      if (!orgRules.hasRule(OrgRules.DomainRule.NO_PRV_CREATE)) {
+        return UnsupportedOrgRulesException(
+          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" +
+              OrgRules.DomainRule.NO_PRV_CREATE
+        )
       }
-
-      else -> notSupportedCombination.clear()
     }
-    return notSupportedCombination
+    return null
   }
 }
