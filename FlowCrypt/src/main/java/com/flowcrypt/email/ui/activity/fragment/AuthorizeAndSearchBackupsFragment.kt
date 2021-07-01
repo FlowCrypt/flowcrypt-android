@@ -10,7 +10,6 @@ import android.view.View
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -72,7 +71,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupCheckEmailSettingsViewModel() {
-    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner, Observer {
+    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -99,7 +98,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, Observer {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
