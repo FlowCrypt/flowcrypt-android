@@ -69,7 +69,7 @@ class MainSignInFragment : BaseSingInFragment() {
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var uuid: String = SecurityUtils.generateRandomUUID()
-  private var domainRules: List<OrgRules.DomainRule>? = null
+  private var orgRules: OrgRules? = null
 
   private val loginViewModel: LoginViewModel by viewModels()
   private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
@@ -130,12 +130,31 @@ class MainSignInFragment : BaseSingInFragment() {
         handleResultFromCheckKeysActivity(resultCode, data)
       }
 
-      REQUEST_CODE_RETRY_EKM_LOGIN -> {
+      REQUEST_CODE_RETRY_LOGIN -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
             val account = googleSignInAccount?.account?.name ?: return
             val idToken = googleSignInAccount?.idToken ?: return
+            orgRules = null
             loginViewModel.login(account, uuid, idToken)
+          }
+        }
+      }
+
+      REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            val account = googleSignInAccount?.account?.name ?: return
+            domainOrgRulesViewModel.fetchOrgRules(account, uuid)
+          }
+        }
+      }
+
+      REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            val idToken = googleSignInAccount?.idToken ?: return
+            orgRules?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
           }
         }
       }
@@ -145,7 +164,7 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   override fun getTempAccount(): AccountEntity? {
-    return googleSignInAccount?.let { AccountEntity(it, uuid, domainRules) }
+    return googleSignInAccount?.let { AccountEntity(it, uuid, orgRules?.flags ?: emptyList()) }
   }
 
   override fun returnResultOk() {
@@ -225,9 +244,9 @@ class MainSignInFragment : BaseSingInFragment() {
         )
 
         if (EmailUtil.getDomain(account).toLowerCase(Locale.US) in publicEmailDomains) {
-          domainRules = emptyList()
           onSignSuccess(googleSignInAccount)
         } else {
+          orgRules = null
           loginViewModel.login(account, uuid, idToken)
         }
       } else {
@@ -259,7 +278,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
     if (existedAccount == null) {
       getTempAccount()?.let {
-        if (domainRules?.firstOrNull { rule -> rule == OrgRules.DomainRule.NO_PRV_BACKUP } != null) {
+        if (orgRules?.flags?.firstOrNull { rule -> rule == OrgRules.DomainRule.NO_PRV_BACKUP } != null) {
           requireContext().startService(
             Intent(requireContext(), CheckClipboardToFindKeyService::class.java)
           )
@@ -436,7 +455,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
-          showDialogWithRetryButton(it)
+          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_LOGIN)
           loginViewModel.loginLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
@@ -455,6 +474,7 @@ class MainSignInFragment : BaseSingInFragment() {
         Result.Status.SUCCESS -> {
           val idToken = googleSignInAccount?.idToken
           if (it.data?.orgRules != null && idToken != null) {
+            orgRules = it.data.orgRules
             ekmViewModel.fetchPrvKeys(it.data.orgRules, idToken)
           } else {
             showContent()
@@ -466,7 +486,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
-          showDialogWithRetryButton(it)
+          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES)
           domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
@@ -494,7 +514,7 @@ class MainSignInFragment : BaseSingInFragment() {
           showContent()
           when (it.exception) {
             is EkmNotSupportedException -> {
-              domainRules = it.exception.orgRules.flags
+              orgRules = it.exception.orgRules
               onSignSuccess(googleSignInAccount)
             }
 
@@ -510,7 +530,7 @@ class MainSignInFragment : BaseSingInFragment() {
             }
 
             else -> {
-              showDialogWithRetryButton(it)
+              showDialogWithRetryButton(it, REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM)
             }
           }
           ekmViewModel.ekmLiveData.value = Result.none()
@@ -520,12 +540,12 @@ class MainSignInFragment : BaseSingInFragment() {
     })
   }
 
-  private fun showDialogWithRetryButton(it: Result<ApiResponse>) {
+  private fun showDialogWithRetryButton(it: Result<ApiResponse>, resultCode: Int) {
     val errorMsg = it.data?.apiError?.msg
       ?: it.exception?.message
       ?: getString(R.string.unknown_error)
     showTwoWayDialog(
-      requestCode = REQUEST_CODE_RETRY_EKM_LOGIN,
+      requestCode = resultCode,
       dialogTitle = "",
       dialogMsg = errorMsg,
       positiveButtonTitle = getString(R.string.retry),
@@ -592,6 +612,8 @@ class MainSignInFragment : BaseSingInFragment() {
     private const val REQUEST_CODE_RESOLVE_SIGN_IN_ERROR = 101
     private const val REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 103
-    private const val REQUEST_CODE_RETRY_EKM_LOGIN = 104
+    private const val REQUEST_CODE_RETRY_LOGIN = 104
+    private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
+    private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106
   }
 }
