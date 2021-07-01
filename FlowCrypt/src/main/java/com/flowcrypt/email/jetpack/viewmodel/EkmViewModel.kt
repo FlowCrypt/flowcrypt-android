@@ -16,6 +16,9 @@ import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules.DomainRule
+import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
 import kotlinx.coroutines.launch
@@ -61,7 +64,21 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           throw IllegalStateException(context.getString(R.string.no_prv_keys_ask_admin))
         }
 
-        ekmLiveData.value = ekmPrivateResult
+        val combinedSource = requireNotNull(
+          ekmPrivateResult.data?.privateKeys?.map { it.decryptedPrivateKey }
+            ?.joinToString(separator = "\n"))
+        val pgpKeyDetailsList = PgpKey.parseKeys(combinedSource, false).pgpKeyRingCollection
+          .pgpSecretKeyRingCollection.map {
+            it.toPgpKeyDetails().copy(passphraseType = KeyEntity.PassphraseType.RAM)
+          }
+
+        if (pgpKeyDetailsList.isEmpty()) {
+          throw IllegalStateException(context.getString(R.string.could_not_load_private_keys))
+        }
+
+        ekmLiveData.value = ekmPrivateResult.copy(
+          data = ekmPrivateResult.data?.copy(pgpKeyDetailsList = pgpKeyDetailsList)
+        )
       } catch (e: Exception) {
         ekmLiveData.value = Result.exception(e)
       }

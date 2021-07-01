@@ -175,6 +175,11 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
+  /**
+   * Encrypt sensitive info of [PgpKeyDetails] via AndroidKeyStore and save it in
+   * the local database. Please note if we found a fully decrypted key we will protect it
+   * with a provided pass phrase before saving.
+   */
   fun encryptAndSaveKeysToDatabase(
     accountEntity: AccountEntity?, keys: List<PgpKeyDetails>,
     sourceType: KeyImportDetails.SourceType, addAccountIfNotExist: Boolean = false
@@ -210,8 +215,17 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                 KeyStoreCryptoManager.encryptSuspend(passphrase)
               } else null
 
+            val protectedPrvKey = if (keyDetails.isFullyDecrypted) {
+              PgpKey.encryptKey(
+                requireNotNull(keyDetails.privateKey),
+                Passphrase(requireNotNull(keyDetails.tempPassphrase))
+              )
+            } else {
+              keyDetails.privateKey
+            }
+
             val encryptedPrvKey =
-              KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray()
+              KeyStoreCryptoManager.encryptSuspend(protectedPrvKey).toByteArray()
 
             val keyEntity = keyDetails.toKeyEntity(accountEntity).copy(
               source = sourceType.toPrivateKeySourceTypeString(),

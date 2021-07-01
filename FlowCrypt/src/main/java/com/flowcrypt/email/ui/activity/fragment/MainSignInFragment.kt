@@ -21,13 +21,13 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.DomainOrgRulesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoginViewModel
@@ -383,7 +383,13 @@ class MainSignInFragment : BaseSingInFragment() {
     getNavigationResult<kotlin.Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
       if (it.isSuccess) {
         val passphrase = it.getOrNull() as? CharArray ?: return@getNavigationResult
-        toast(String(passphrase))
+        importCandidates.forEach { pgpKeyDetails ->
+          pgpKeyDetails.passphraseType = KeyEntity.PassphraseType.RAM
+          pgpKeyDetails.tempPassphrase = passphrase
+        }
+        getTempAccount()?.let { account ->
+          accountViewModel.addNewAccount(account)
+        }
       }
     }
   }
@@ -506,6 +512,8 @@ class MainSignInFragment : BaseSingInFragment() {
 
         Result.Status.SUCCESS -> {
           showContent()
+          importCandidates.clear()
+          importCandidates.addAll(it?.data?.pgpKeyDetailsList ?: emptyList())
           navController?.navigate(
             MainSignInFragmentDirections
               .actionMainSignInFragmentToCheckPassphraseStrengthFragment(

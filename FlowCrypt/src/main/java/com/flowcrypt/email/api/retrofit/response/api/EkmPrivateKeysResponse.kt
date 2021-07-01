@@ -10,6 +10,7 @@ import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.model.Key
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.google.gson.annotations.Expose
 
 /**
@@ -21,18 +22,21 @@ import com.google.gson.annotations.Expose
 data class EkmPrivateKeysResponse constructor(
   @Expose val code: Int? = null,
   @Expose val message: String? = null,
-  @Expose val privateKeys: List<Key>? = null
+  @Expose val privateKeys: List<Key>? = null,
+  val pgpKeyDetailsList: List<PgpKeyDetails>? = null
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
     parcel.readValue(Int::class.java.classLoader) as? Int,
     parcel.readString(),
-    parcel.createTypedArrayList(Key)
+    parcel.createTypedArrayList(Key),
+    parcel.createTypedArrayList(PgpKeyDetails)
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeValue(code)
     parcel.writeString(message)
     parcel.writeTypedList(privateKeys)
+    parcel.writeTypedList(pgpKeyDetailsList)
   }
 
   override val apiError: ApiError?
