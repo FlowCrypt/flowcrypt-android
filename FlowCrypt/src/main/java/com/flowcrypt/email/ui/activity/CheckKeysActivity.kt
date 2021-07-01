@@ -27,6 +27,7 @@ import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -45,7 +46,7 @@ import java.nio.charset.StandardCharsets
  * Time: 9:59
  * E-mail: DenBond7@gmail.com
  */
-class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener,
+class CheckKeysActivity : BaseActivity(), View.OnClickListener,
   InfoDialogFragment.OnInfoDialogButtonClickListener {
   private var originalKeys: MutableList<PgpKeyDetails> = mutableListOf()
   private val unlockedKeys: ArrayList<PgpKeyDetails> = ArrayList()

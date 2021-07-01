@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -185,15 +186,9 @@ class MainSignInFragment : BaseSingInFragment() {
     }
 
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
-      val addOtherAccountFragment = AddOtherAccountFragment.newInstance()
-      activity?.supportFragmentManager?.beginTransaction()
-        ?.replace(
-          R.id.fragmentContainerView,
-          addOtherAccountFragment,
-          AddOtherAccountFragment::class.java.simpleName
-        )
-        ?.addToBackStack(null)
-        ?.commit()
+      navController?.navigate(
+        MainSignInFragmentDirections.actionMainSignInFragmentToAddOtherAccountFragment()
+      )
     }
 
     view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
@@ -285,15 +280,11 @@ class MainSignInFragment : BaseSingInFragment() {
           val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
           startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
         } else {
-          val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(it)
-          activity?.supportFragmentManager?.beginTransaction()
-            ?.replace(
-              R.id.fragmentContainerView,
-              nextFrag,
-              AuthorizeAndSearchBackupsFragment::class.java.simpleName
+          navController?.navigate(
+            MainSignInFragmentDirections.actionMainSignInFragmentToAuthorizeAndSearchBackupsFragment(
+              it
             )
-            ?.addToBackStack(null)
-            ?.commit()
+          )
         }
       }
     } else {

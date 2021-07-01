@@ -11,11 +11,14 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.navigation.findNavController
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
+import com.flowcrypt.email.SingInGraphDirections
+import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
-import com.flowcrypt.email.ui.activity.fragment.MainSignInFragment
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 
@@ -27,7 +30,7 @@ import com.flowcrypt.email.util.GeneralUtil
  * Time: 14:50
  * E-mail: DenBond7@gmail.com
  */
-class SignInActivity : BaseNodeActivity() {
+class SignInActivity : BaseActivity() {
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
 
@@ -51,20 +54,9 @@ class SignInActivity : BaseNodeActivity() {
     if (savedInstanceState == null) {
       when (intent.action) {
         ACTION_UPDATE_OAUTH_ACCOUNT -> {
-          supportFragmentManager.beginTransaction().add(
-            R.id.fragmentContainerView,
-            UserRecoverableAuthExceptionFragment().apply {
-              arguments = intent.extras
-            },
-            UserRecoverableAuthExceptionFragment::class.java.simpleName
-          ).commitNow()
+          findNavController(R.id.fragmentContainerView)
+            .navigate(SingInGraphDirections.actionGlobalUserRecoverableAuthExceptionFragment())
         }
-
-        else -> supportFragmentManager.beginTransaction().add(
-          R.id.fragmentContainerView,
-          MainSignInFragment(),
-          MainSignInFragment::class.java.simpleName
-        ).commitNow()
       }
     }
   }
@@ -89,19 +81,24 @@ class SignInActivity : BaseNodeActivity() {
 
   override fun onNewIntent(intent: Intent?) {
     super.onNewIntent(intent)
+    val fragments =
+      supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments
     val fragment = when (intent?.action) {
       ACTION_UPDATE_OAUTH_ACCOUNT -> {
-        supportFragmentManager
-          .findFragmentByTag(UserRecoverableAuthExceptionFragment::class.java.simpleName) as UserRecoverableAuthExceptionFragment?
+        fragments?.firstOrNull {
+          it is UserRecoverableAuthExceptionFragment
+        }
       }
 
       else -> {
-        supportFragmentManager
-          .findFragmentByTag(AddOtherAccountFragment::class.java.simpleName) as AddOtherAccountFragment?
+        fragments?.firstOrNull {
+          it is AddOtherAccountFragment
+        }
       }
     }
 
-    fragment?.handleOAuth2Intent(intent)
+    val oAuthFragment = fragment as? BaseOAuthFragment
+    oAuthFragment?.handleOAuth2Intent(intent)
   }
 
   companion object {

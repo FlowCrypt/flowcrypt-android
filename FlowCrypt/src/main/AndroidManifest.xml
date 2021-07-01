@@ -54,7 +54,9 @@
         <activity
             android:name=".ui.activity.SignInActivity"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait">
+            <nav-graph android:value="@navigation/sing_in_graph" />
+        </activity>
 
         <activity
             android:name="net.openid.appauth.RedirectUriReceiverActivity"
