@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules.DomainRule
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
 import kotlinx.coroutines.launch
@@ -52,12 +53,12 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
         val ekmPrivateResult = repository.getPrivateKeysViaEkm(
           context = context,
           ekmUrl = orgRules.keyManagerUrl
-            ?: throw java.lang.IllegalArgumentException("key_manager_url is empty"),
+            ?: throw IllegalArgumentException("key_manager_url is empty"),
           tokenId = tokenId
         )
 
         if (ekmPrivateResult.data?.privateKeys?.isEmpty() == true) {
-          throw java.lang.IllegalStateException(context.getString(R.string.no_prv_keys_ask_admin))
+          throw IllegalStateException(context.getString(R.string.no_prv_keys_ask_admin))
         }
 
         ekmLiveData.value = ekmPrivateResult
@@ -69,32 +70,29 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
 
   private fun checkForUnsupportedOrgRulesCombination(orgRules: OrgRules):
       UnsupportedOrgRulesException? {
-    if (orgRules.hasRule(OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN)) {
-      if (orgRules.hasRule(OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN)) {
+    if (orgRules.hasRule(DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN)) {
+      if (orgRules.hasRule(DomainRule.PASS_PHRASE_QUIET_AUTOGEN)) {
         return UnsupportedOrgRulesException(
-          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " +
-              OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
+          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " + DomainRule.PASS_PHRASE_QUIET_AUTOGEN
         )
       }
 
-      if (!orgRules.hasRule(OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE)) {
+      if (!orgRules.hasRule(DomainRule.FORBID_STORING_PASS_PHRASE)) {
         return UnsupportedOrgRulesException(
-          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" +
-              OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
+          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" +
+              DomainRule.FORBID_STORING_PASS_PHRASE
         )
       }
 
-      if (orgRules.hasRule(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+      if (orgRules.hasRule(DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
         return UnsupportedOrgRulesException(
-          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " +
-              OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " + DomainRule.ENFORCE_ATTESTER_SUBMIT
         )
       }
 
-      if (!orgRules.hasRule(OrgRules.DomainRule.NO_PRV_CREATE)) {
+      if (!orgRules.hasRule(DomainRule.NO_PRV_CREATE)) {
         return UnsupportedOrgRulesException(
-          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" +
-              OrgRules.DomainRule.NO_PRV_CREATE
+          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" + DomainRule.NO_PRV_CREATE
         )
       }
     }
