@@ -20,6 +20,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentBackupKeysBinding
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
@@ -89,6 +90,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     initViews()
     setupPrivateKeysViewModel()
     setupBackupsViewModel()
+    observeOnResultLiveData()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -303,7 +305,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       navController?.navigate(
         BackupKeysFragmentDirections
           .actionBackupKeysFragmentToCheckPassphraseStrengthFragment(
-            popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
+            popBackStackIdIfSuccess = R.id.backupKeysFragment,
             title = getString(R.string.change_pass_phrase)
           )
       )
@@ -335,6 +337,26 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       )
     } else {
       action.invoke()
+    }
+  }
+
+  private fun observeOnResultLiveData() {
+    getNavigationResult<kotlin.Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
+      if (it.isSuccess) {
+        val passphrase = it.getOrNull() as? CharArray ?: return@getNavigationResult
+        account?.let { accountEntity ->
+          navController?.navigate(
+            BackupKeysFragmentDirections
+              .actionBackupKeysFragmentToChangePassphraseOfImportedKeysFragment(
+                popBackStackIdIfSuccess = R.id.backupKeysFragment,
+                title = getString(R.string.pass_phrase_changed),
+                subTitle = getString(R.string.passphrase_was_changed),
+                passphrase = String(passphrase),
+                accountEntity = accountEntity
+              )
+          )
+        }
+      }
     }
   }
 

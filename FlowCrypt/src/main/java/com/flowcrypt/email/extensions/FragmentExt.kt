@@ -49,6 +49,13 @@ fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T
   previousOnResultSavedStateHandle?.set(key, value)
 }
 
+fun androidx.fragment.app.Fragment.getOnResultSavedStateHandle(destinationId: Int? = null) =
+  if (destinationId == null) {
+    null
+  } else {
+    navController?.getBackStackEntry(destinationId)?.savedStateHandle
+  }
+
 fun <T> androidx.fragment.app.Fragment.getNavigationResult(
   key: String,
   onResult: (result: T) -> Unit
