@@ -93,7 +93,7 @@ object PgpKey {
 
   suspend fun parsePrivateKeys(source: String): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
     parseKeys(source, false).pgpKeyRingCollection
-      .pgpSecretKeyRingCollection.map { it.toPgpKeyDetails().copy() }
+      .pgpSecretKeyRingCollection.map { it.toPgpKeyDetails() }
   }
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
