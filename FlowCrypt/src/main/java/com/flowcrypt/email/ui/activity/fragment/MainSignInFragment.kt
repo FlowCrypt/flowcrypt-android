@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -58,6 +59,7 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.util.MailConnectException
+import org.pgpainless.util.Passphrase
 import java.net.SocketTimeoutException
 import java.util.*
 
@@ -102,6 +104,7 @@ class MainSignInFragment : BaseSingInFragment() {
     initAddNewAccountLiveData()
     initEnterpriseViewModels()
     initSavePrivateKeysLiveData()
+    initProtectPrivateKeysLiveData()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -383,13 +386,7 @@ class MainSignInFragment : BaseSingInFragment() {
     getNavigationResult<kotlin.Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
       if (it.isSuccess) {
         val passphrase = it.getOrNull() as? CharArray ?: return@getNavigationResult
-        importCandidates.forEach { pgpKeyDetails ->
-          pgpKeyDetails.passphraseType = KeyEntity.PassphraseType.RAM
-          pgpKeyDetails.tempPassphrase = passphrase
-        }
-        getTempAccount()?.let { account ->
-          accountViewModel.addNewAccount(account)
-        }
+        privateKeysViewModel.protectPrivateKeys(importCandidates, Passphrase(passphrase))
       }
     }
   }
@@ -548,6 +545,39 @@ class MainSignInFragment : BaseSingInFragment() {
             }
           }
           ekmViewModel.ekmLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+      }
+    })
+  }
+
+  private fun initProtectPrivateKeysLiveData() {
+    privateKeysViewModel.protectPrivateKeysLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress(getString(R.string.processing))
+        }
+
+        Result.Status.SUCCESS -> {
+          importCandidates.clear()
+          importCandidates.addAll(it.data ?: emptyList())
+          importCandidates.forEach { pgpKeyDetails ->
+            pgpKeyDetails.passphraseType = KeyEntity.PassphraseType.RAM
+          }
+          getTempAccount()?.let { account ->
+            accountViewModel.addNewAccount(account)
+          }
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          showInfoDialog(
+            dialogTitle = "",
+            dialogMsg = it.exceptionMsg,
+            isCancelable = true
+          )
           baseActivity.countingIdlingResource.decrementSafely()
         }
       }

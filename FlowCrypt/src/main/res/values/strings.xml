@@ -524,5 +524,8 @@
     <string name="no_prv_keys_ask_admin">There are no private keys configured for you. Please ask your systems administrator or help desk</string>
     <string name="please_login_again_to_continue">Please login again to continue</string>
     <string name="fetching_keys">Fetching keys, please wait&#8230;</string>
+    <string name="found_not_fully_decrypted_key">Error. Key %1$s is not fully decrypted.</string>
     <string name="found_not_fully_decrypted_key_ask_admin">Error. Key %1$s is not fully decrypted. Please ask your systems administrator or help desk</string>
+    <string name="found_not_fully_encrypted_key">Error. Key %1$s is not fully encrypted</string>
+    <string name="could_not_parse_one_of_ekm_key">Couldn\'t parse one of the keys received from EKM</string>
 </resources>

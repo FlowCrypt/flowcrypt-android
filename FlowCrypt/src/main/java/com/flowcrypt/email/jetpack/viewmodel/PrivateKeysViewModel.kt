@@ -76,6 +76,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val parseKeysLiveData = MutableLiveData<Result<PgpKey.ParseKeyResult?>>()
   val createPrivateKeyLiveData = MutableLiveData<Result<PgpKeyDetails?>>()
   val deleteKeysLiveData = MutableLiveData<Result<Boolean>>()
+  val protectPrivateKeysLiveData = MutableLiveData<Result<List<PgpKeyDetails>>>(Result.none())
 
   val parseKeysResultLiveData: LiveData<Result<List<PgpKeyDetails>>> =
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
@@ -177,8 +178,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   /**
    * Encrypt sensitive info of [PgpKeyDetails] via AndroidKeyStore and save it in
-   * the local database. Please note if we found a fully decrypted key we will protect it
-   * with a provided pass phrase before saving.
+   * the local database.
    */
   fun encryptAndSaveKeysToDatabase(
     accountEntity: AccountEntity?, keys: List<PgpKeyDetails>,
@@ -187,10 +187,17 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     requireNotNull(accountEntity)
 
     viewModelScope.launch {
+      val context: Context = getApplication()
       savePrivateKeysLiveData.value = Result.loading()
       try {
         for (keyDetails in keys) {
           val fingerprint = keyDetails.fingerprint
+          if (!keyDetails.isFullyEncrypted) {
+            throw IllegalStateException(
+              context.getString(R.string.found_not_fully_encrypted_key, fingerprint)
+            )
+          }
+
           if (roomDatabase.keysDao().getKeyByAccountAndFingerprintSuspend(
               accountEntity.email.toLowerCase(Locale.US),
               fingerprint
@@ -206,26 +213,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
             val encryptedPassphrase =
               if (keyDetails.passphraseType == KeyEntity.PassphraseType.DATABASE) {
-                val passphrase = if (keyDetails.isFullyDecrypted) {
-                  ""
-                } else {
-                  keyDetails.tempPassphrase?.let { String(it) } ?: ""
-                }
-
-                KeyStoreCryptoManager.encryptSuspend(passphrase)
+                KeyStoreCryptoManager.encryptSuspend(
+                  String(requireNotNull(keyDetails.tempPassphrase))
+                )
               } else null
 
-            val protectedPrvKey = if (keyDetails.isFullyDecrypted) {
-              PgpKey.encryptKey(
-                requireNotNull(keyDetails.privateKey),
-                Passphrase(requireNotNull(keyDetails.tempPassphrase))
-              )
-            } else {
-              keyDetails.privateKey
-            }
-
             val encryptedPrvKey =
-              KeyStoreCryptoManager.encryptSuspend(protectedPrvKey).toByteArray()
+              KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray()
 
             val keyEntity = keyDetails.toKeyEntity(accountEntity).copy(
               source = sourceType.toPrivateKeySourceTypeString(),
@@ -385,6 +379,24 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         e.printStackTrace()
         deleteKeysLiveData.value = Result.exception(e)
         ExceptionUtil.handleError(e)
+      }
+    }
+  }
+
+  fun protectPrivateKeys(privateKeys: List<PgpKeyDetails>, passphrase: Passphrase) {
+    viewModelScope.launch {
+      protectPrivateKeysLiveData.value = Result.loading()
+      try {
+        val encryptedKeysSource = privateKeys.map { pgpKeyDetails ->
+          PgpKey.encryptKeySuspend(requireNotNull(pgpKeyDetails.privateKey), passphrase)
+        }.joinToString(separator = "\n")
+
+        protectPrivateKeysLiveData.value =
+          Result.success(PgpKey.parsePrivateKeys(encryptedKeysSource)
+            .map { it.copy(tempPassphrase = passphrase.chars) })
+      } catch (e: Exception) {
+        e.printStackTrace()
+        protectPrivateKeysLiveData.value = Result.exception(e)
       }
     }
   }
