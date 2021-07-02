@@ -76,6 +76,16 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           throw IllegalStateException(context.getString(R.string.could_not_load_private_keys))
         }
 
+        //check that all keys were fully decrypted when we fetched them.
+        // If any is encrypted at all, that's an unexpected error, we should throw an exception.
+        pgpKeyDetailsList.forEach {
+          if (!it.isFullyDecrypted) {
+            throw IllegalStateException(
+              context.getString(R.string.found_not_fully_decrypted_key_ask_admin, it.fingerprint)
+            )
+          }
+        }
+
         ekmLiveData.value = ekmPrivateResult.copy(
           data = ekmPrivateResult.data?.copy(pgpKeyDetailsList = pgpKeyDetailsList)
         )
