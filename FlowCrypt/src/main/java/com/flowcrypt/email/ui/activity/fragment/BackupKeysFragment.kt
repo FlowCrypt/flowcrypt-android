@@ -306,7 +306,8 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
         BackupKeysFragmentDirections
           .actionBackupKeysFragmentToCheckPassphraseStrengthFragment(
             popBackStackIdIfSuccess = R.id.backupKeysFragment,
-            title = getString(R.string.change_pass_phrase)
+            title = getString(R.string.change_pass_phrase),
+            lostPassphraseTitle = getString(R.string.loss_of_this_pass_phrase_cannot_be_recovered)
           )
       )
     }

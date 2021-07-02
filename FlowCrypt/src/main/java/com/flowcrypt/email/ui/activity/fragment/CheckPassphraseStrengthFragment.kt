@@ -80,6 +80,7 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
 
   private fun initViews() {
     binding?.tVTitle?.text = args.title
+    binding?.tVLostPassphraseWarning?.text = args.lostPassphraseTitle
     binding?.iBShowPasswordHint?.setOnClickListener {
       navController?.navigate(
         NavGraphDirections.actionGlobalInfoDialogFragment(

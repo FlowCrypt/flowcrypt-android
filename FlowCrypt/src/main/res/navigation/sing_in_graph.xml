@@ -59,6 +59,11 @@
         <argument
             android:name="title"
             app:argType="string" />
+        <argument
+            android:name="lostPassphraseTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
         <action
             android:id="@+id/action_checkPassphraseStrengthFragment_to_recheckProvidedPassphraseFragment"
             app:destination="@id/recheckProvidedPassphraseFragment" />

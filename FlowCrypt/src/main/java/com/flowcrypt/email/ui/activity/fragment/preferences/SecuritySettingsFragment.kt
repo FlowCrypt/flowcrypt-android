@@ -111,7 +111,8 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
       SecuritySettingsFragmentDirections
         .actionSecuritySettingsFragmentToCheckPassphraseStrengthFragment(
           popBackStackIdIfSuccess = R.id.securitySettingsFragment,
-          title = getString(R.string.change_pass_phrase)
+          title = getString(R.string.change_pass_phrase),
+          lostPassphraseTitle = getString(R.string.loss_of_this_pass_phrase_cannot_be_recovered)
         )
     )
   }
