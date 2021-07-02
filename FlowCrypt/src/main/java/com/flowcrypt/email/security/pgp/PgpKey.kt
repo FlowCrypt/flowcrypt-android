@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -94,9 +93,7 @@ object PgpKey {
 
   suspend fun parsePrivateKeys(source: String): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
     parseKeys(source, false).pgpKeyRingCollection
-      .pgpSecretKeyRingCollection.map {
-        it.toPgpKeyDetails().copy(passphraseType = KeyEntity.PassphraseType.RAM)
-      }
+      .pgpSecretKeyRingCollection.map { it.toPgpKeyDetails().copy() }
   }
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {

@@ -16,6 +16,7 @@ import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules.DomainRule
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
@@ -66,6 +67,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           ekmPrivateResult.data?.privateKeys?.map { it.decryptedPrivateKey }
             ?.joinToString(separator = "\n"))
         val pgpKeyDetailsList = PgpKey.parsePrivateKeys(combinedSource)
+          .map { it.copy(passphraseType = KeyEntity.PassphraseType.RAM) }
 
         if (pgpKeyDetailsList.isEmpty()) {
           throw IllegalStateException(context.getString(R.string.could_not_parse_one_of_ekm_key))
