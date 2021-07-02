@@ -74,7 +74,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           } else {
             //check that all keys were fully decrypted when we fetched them.
             // If any is encrypted at all, that's an unexpected error, we should throw an exception.
-            pgpKeyDetailsList.forEach {
+            parsedList.forEach {
               if (!it.isFullyDecrypted) {
                 throw IllegalStateException(
                   context.getString(
