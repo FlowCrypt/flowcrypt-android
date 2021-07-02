@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules.DomainRule
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
@@ -63,23 +64,27 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           throw IllegalStateException(context.getString(R.string.no_prv_keys_ask_admin))
         }
 
-        val combinedSource = requireNotNull(
-          ekmPrivateResult.data?.privateKeys?.map { it.decryptedPrivateKey }
-            ?.joinToString(separator = "\n"))
-        val pgpKeyDetailsList = PgpKey.parsePrivateKeys(combinedSource)
-          .map { it.copy(passphraseType = KeyEntity.PassphraseType.RAM) }
+        val pgpKeyDetailsList = mutableListOf<PgpKeyDetails>()
+        ekmPrivateResult.data?.privateKeys?.forEach { key ->
+          val parsedList = PgpKey.parsePrivateKeys(requireNotNull(key.decryptedPrivateKey))
+            .map { it.copy(passphraseType = KeyEntity.PassphraseType.RAM) }
 
-        if (pgpKeyDetailsList.isEmpty()) {
-          throw IllegalStateException(context.getString(R.string.could_not_parse_one_of_ekm_key))
-        }
-
-        //check that all keys were fully decrypted when we fetched them.
-        // If any is encrypted at all, that's an unexpected error, we should throw an exception.
-        pgpKeyDetailsList.forEach {
-          if (!it.isFullyDecrypted) {
-            throw IllegalStateException(
-              context.getString(R.string.found_not_fully_decrypted_key_ask_admin, it.fingerprint)
-            )
+          if (parsedList.isEmpty()) {
+            throw IllegalStateException(context.getString(R.string.could_not_parse_one_of_ekm_key))
+          } else {
+            //check that all keys were fully decrypted when we fetched them.
+            // If any is encrypted at all, that's an unexpected error, we should throw an exception.
+            pgpKeyDetailsList.forEach {
+              if (!it.isFullyDecrypted) {
+                throw IllegalStateException(
+                  context.getString(
+                    R.string.found_not_fully_decrypted_key_ask_admin,
+                    it.fingerprint
+                  )
+                )
+              }
+            }
+            pgpKeyDetailsList.addAll(parsedList)
           }
         }
 
