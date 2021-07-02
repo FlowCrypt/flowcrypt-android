@@ -46,6 +46,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.AuthCredentialsManager
 import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
@@ -53,7 +54,6 @@ import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.startsWith
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -62,11 +62,6 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * Note: This test works well on com.google.android.material:material:1.1.0-rc02 and lower.
- * it seems there is a bug on releases higher than 1.1.0-rc02. If we will upgrade
- * com.google.android.material:material to a newer version we will have to remove
- * app:passwordToggleEnabled="true" for layoutPassword to be able to run this test.
- *
  * @author Denis Bondarenko
  * Date: 01.02.2018
  * Time: 13:28
@@ -76,7 +71,11 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AddOtherAccountFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>()
+  override val activityScenarioRule = activityScenarioRule<SignInActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/sing-in/other"
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -86,12 +85,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
-
-  @Before
-  fun openAddOtherAccountFragment() {
-    onView(withId(R.id.buttonOtherEmailProvider))
-      .perform(click())
-  }
 
   @Test
   fun testShowSnackBarIfFieldEmpty() {
@@ -367,7 +360,10 @@ class AddOtherAccountFragmentTest : BaseTest() {
   fun testWhenNoAccountsAndHasBackup() {
     val prvKey = PrivateKeysManager
       .getPgpKeyDetailsFromAssets("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc")
-      .copy(passphraseType = KeyEntity.PassphraseType.DATABASE)
+      .copy(
+        passphraseType = KeyEntity.PassphraseType.DATABASE,
+        tempPassphrase = TestConstants.DEFAULT_PASSWORD.toCharArray()
+      )
 
     intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().apply {
