@@ -26,11 +26,11 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
-import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
+import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -54,7 +54,11 @@ import java.io.InputStreamReader
 @RunWith(AndroidJUnit4::class)
 class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>()
+  override val activityScenarioRule = activityScenarioRule<SignInActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/sing-in/gmail"
+    )
+  )
 
   @Before
   fun waitWhileToastWillBeDismissed() {
@@ -64,26 +68,26 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
-    .around(RetryRule.DEFAULT)
+    //.around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
   fun testErrorLogin() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_ERROR))
-    isToastDisplayed(LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
+    isDialogWithTextDisplayed(decorView, LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
   fun testSuccessLoginNotVerified() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_VERIFIED))
-    isToastDisplayed(getResString(R.string.user_not_verified))
+    isDialogWithTextDisplayed(decorView, getResString(R.string.user_not_verified))
   }
 
   @Test
   fun testErrorGetDomainRules() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_RULES_ERROR))
-    isToastDisplayed(DOMAIN_ORG_RULES_ERROR_RESPONSE.apiError?.msg!!)
+    isDialogWithTextDisplayed(decorView, DOMAIN_ORG_RULES_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
