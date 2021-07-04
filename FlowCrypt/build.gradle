@@ -456,6 +456,8 @@ dependencies {
     implementation 'net.openid:appauth:0.9.1'
     implementation 'org.bitbucket.b_c:jose4j:0.7.8'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
+    implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20200713.1'
+    implementation 'org.jsoup:jsoup:1.13.1'
 
     implementation ('org.pgpainless:pgpainless-core:0.2.3') {
         //exclude group: 'org.bouncycastle' because we will specify it manually

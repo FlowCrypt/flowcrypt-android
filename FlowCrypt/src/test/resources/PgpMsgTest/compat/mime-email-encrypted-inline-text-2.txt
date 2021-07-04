@@ -1,0 +1,45 @@
+Return-Path: <denbond7@denbond7.com>
+Delivered-To: default@denbond7.com
+Receivefrom mail.denbond7.com (localhost [127.0.0.1])
+	by mail.denbond7.com (Postfix) with ESMTP id 35CBC202F1
+	for <default@denbond7.com>; Fri, 15 Mar 2019 14:52:10 +0000 (UTC)
+X-Virus-ScanneDebian amavisd-new at mail.denbond7.com
+Receivefrom mail.denbond7.com ([127.0.0.1])
+	by mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id EstQPjUmZ4Hn for <default@denbond7.com>;
+	Fri, 15 Mar 2019 14:52:01 +0000 (UTC)
+Receivefrom localhost (MiA1 [192.168.3.6])
+	by mail.denbond7.com (Postfix) with ESMTP id E17EF202E9
+	for <default@denbond7.com>; Fri, 15 Mar 2019 14:52:00 +0000 (UTC)
+Content-Type: multipart/mixed;
+ boundary="----sinikael-?=_1-15526615192100.5959024994440685"
+In-Reply-To: <>
+References: <>
+To: default@denbond7.com
+From: denbond7@denbond7.com
+Subject: mime email encrytped inline text 2
+Date: Fri, 15 Mar 2019 14:51:59 +0000
+Message-I<1552661519275-40db11d3-834101fe-9096ab5d@denbond7.com>
+MIME-Version: 1.0
+
+------sinikael-?=_1-15526615192100.5959024994440685
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+-----BEGIN PGP MESSAGE-----
+Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
+Comment: Seamlessly send and receive encrypted email
+
+wcBMAwurnAGLJl0iAQf/Wyf18wbWMqSKCi0u5da9BW9KN5DKA7orKc0OS/nR
+je7PyoExQoiTVPEJvdRsuJWUMrPa48W5zz0hOaXdLC7jCMcm9gO/v4hoFolb
+MMk5Ow99DmDriz9O6S9S+SHtO/ZxkRaXNN+ZACVcTFDTYyr0nXDFyWOaQV2t
+1qVIZEmLJrj+Qhuhnvfmf3ptW4aD0CxdjpNkCB9l/oo54rBZ12d8Qt9UTOqq
+98BkSXxdWRLM0j7p/uGNBWL0ZLaGqtsJcjVLFIu4JsFrGk1w29/mjdm1eDla
+YwjvbC44v55qh1L6+52gFFuuAOep7RMiQ5yGO5tU3Rf0+RlN33u5gsrLpz7b
+ztJEAXLbCxK1VJ4Trskb4o1x9e/qiLE4+BJcO+elOuNxgG0n+Ja3jaJVC1AI
+RyxwMyOuKEtl13aDh+CcpiQCDr2N21Y+u5w=
+=/qhm
+-----END PGP MESSAGE-----
+
+
+------sinikael-?=_1-15526615192100.5959024994440685--

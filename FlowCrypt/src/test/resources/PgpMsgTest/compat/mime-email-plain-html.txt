@@ -1,0 +1,12 @@
+Delivered-To: flowcrypt.compatibility@gmail.com
+Message-ID: <1760895073.1552049750035.JavaMail.dets@ny-dets-001>
+Date: Fri, 8 Mar 2019 07:55:50 -0500 (EST)
+From: cryptup.tester@gmail.com
+To: flowcrypt.compatibility@gmail.com
+Subject: mime email plain html
+Mime-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><body><p>paragraph 1</p><p>paragraph 2 with <b>bold</b></p><p>par=
+agraph 3 with <em style=3D"color:red">red i</em></p></body></html>

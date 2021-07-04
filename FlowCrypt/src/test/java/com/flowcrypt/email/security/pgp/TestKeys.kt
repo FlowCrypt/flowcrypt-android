@@ -5,14 +5,29 @@
 
 package com.flowcrypt.email.security.pgp
 
+import org.pgpainless.util.Passphrase
+
 object TestKeys {
   data class TestKey(
     val publicKey: String,
     val privateKey: String,
-    val decrypted: String,
+    val decryptedPrivateKey: String,
     val passphrase: String,
     val longid: String
-  )
+  ) {
+    val listOfKeysWithPassPhrase: List<PgpMsg.KeyWithPassPhrase>
+      get() {
+        return listOf(keyWithPassPhrase)
+      }
+
+    private val keyWithPassPhrase: PgpMsg.KeyWithPassPhrase
+      get() {
+        return PgpMsg.KeyWithPassPhrase(
+          keyRing = PgpKey.extractSecretKeyRing(privateKey),
+          passphrase = Passphrase.fromPassword(passphrase)
+        )
+      }
+  }
 
   val KEYS = mapOf(
     "rsa1" to TestKey(
@@ -47,7 +62,8 @@ object TestKeys {
           "aVGVjo29lB6fS+UHT2gV/E/WQInjok5UrUMaFHwpO0VNP057DNyqhZwxaAs5\n" +
           "BsSgJlOC5hrT+PKlfr9ic75fqnJqmLircB+hVnfhGR9OzH3RCIky\n" +
           "=VKq5\n" +
-          "-----END PGP PUBLIC KEY BLOCK-----\n",
+          "-----END PGP PUBLIC KEY BLOCK-----\n" +
+          "\n",
       privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
           "Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
@@ -110,8 +126,8 @@ object TestKeys {
           "UZWOjb2UHp9L5QdPaBX8T9ZAieOiTlStQxoUfCk7RU0/TnsM3KqFnDFoCzkG\n" +
           "xKAmU4LmGtP48qV+v2Jzvl+qcmqYuKtwH6FWd+EZH07MfdEIiTI=\n" +
           "=15Xc\n" +
-          "-----END PGP PRIVATE KEY BLOCK-----",
-      decrypted = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+          "-----END PGP PRIVATE KEY BLOCK-----\n",
+      decryptedPrivateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
           "Version: FlowCrypt 0.0.1-dev Gmail Encryption\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
           "\n" +
@@ -170,7 +186,10 @@ object TestKeys {
           "yKa/ihZT1rS1GO3V7tdAB9BJagJqVRssF5g5GBUAX3sxQ2p62HoUxPlJOOr4\n" +
           "AaCc1na92xScBJL8dtBBRQ5pUZWOjb2UHp9L5QdPaBX8T9ZAieOiTlStQxoU\n" +
           "fCk7RU0/TnsM3KqFnDFoCzkGxKAmU4LmGtP48qV+v2Jzvl+qcmqYuKtwH6FW\n" +
-          "d+EZH07MfdEIiTI=\n=GVVZ\n-----END PGP PRIVATE KEY BLOCK-----\n",
+          "d+EZH07MfdEIiTI=\n" +
+          "=GVVZ\n" +
+          "-----END PGP PRIVATE KEY BLOCK-----\n" +
+          "\n",
       passphrase = "some long pp",
       longid = "3A30F4CC0A9A8F10"
     ),
@@ -229,7 +248,8 @@ object TestKeys {
           "KuueNumlpGvWsfXrqIegggJcdBFBGxmoSugnZ3budhYTFmaol2QKDZFqAFeJ\n" +
           "KQk670ezsXQMRX/AeM4Ttn2ZIjItmIpo7mUOfqE=\n" +
           "=eep/\n" +
-          "-----END PGP PUBLIC KEY BLOCK-----\n",
+          "-----END PGP PUBLIC KEY BLOCK-----\n" +
+          "\n",
       privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
           "Version: FlowCrypt  Email Encryption - flowcrypt.com\n" +
           "Comment: Seamlessly send, receive and search encrypted email\n" +
@@ -344,8 +364,8 @@ object TestKeys {
           "J2d27nYWExZmqJdkCg2RagBXiSkJOu9Hs7F0DEV/wHjOE7Z9mSIyLZiKaO5l\n" +
           "Dn6h\n" +
           "=5aR+\n" +
-          "-----END PGP PRIVATE KEY BLOCK-----",
-      decrypted = "", // todo in case needed
+          "-----END PGP PRIVATE KEY BLOCK-----\n",
+      decryptedPrivateKey = "\n",
       passphrase = "some long pp",
       longid = "7C307E6F2092962D"
     ),
@@ -363,7 +383,8 @@ object TestKeys {
           "s+M+sUwCGwwAAJQrAP4xAV2NYRnB8CcllBYvHeOkXE3K4qNQRHmFF+mEhcZ6\n" +
           "pQD/TCpMKlsFZCVzCaXyOohESrVD+UM7f/1A9QsqKh7Zmgw=\n" +
           "=WZgv\n" +
-          "-----END PGP PUBLIC KEY BLOCK-----\n",
+          "-----END PGP PUBLIC KEY BLOCK-----\n" +
+          "\n",
       privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
           "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
@@ -381,13 +402,12 @@ object TestKeys {
           "MQFdjWEZwfAnJZQWLx3jpFxNyuKjUER5hRfphIXGeqUA/0wqTCpbBWQlcwml\n" +
           "8jqIREq1Q/lDO3/9QPULKioe2ZoM\n" +
           "=8qZ6\n" +
-          "-----END PGP PRIVATE KEY BLOCK-----",
-      decrypted = "", // todo in case needed
+          "-----END PGP PRIVATE KEY BLOCK-----\n",
+      decryptedPrivateKey = "\n",
       passphrase = "some long pp",
-      longid = "063635B3E33EB14C",
+      longid = "063635B3E33EB14C"
     ),
     "gpg-dummy" to TestKey(
-      // first key is a dummy primary key, with an actual subkey. Achieved with gnupg --export-secret-subkeys
       publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
           "\n" +
           "mQGNBF1gO6wBDACy3MHo3fjP4Npnf0zfrr4b4utxjchrPoWX7Be08RpKyZgzH2o/\n" +
@@ -428,7 +448,7 @@ object TestKeys {
           "4EdrCsp8J7T9IUz9lW851wpDB7c4CKeDst+cgFcp9Fg/esHHzyyEukMdUkn777Uv\n" +
           "fga3xzGyrbBy00LYVylMDvs5GPYyCCi7Ch9cgvg=\n" +
           "=nkDv\n" +
-          "-----END PGP PUBLIC KEY BLOCK-----",
+          "-----END PGP PUBLIC KEY BLOCK-----\n",
       privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
           "\n" +
           "lQGVBF1gO6wBDACy3MHo3fjP4Npnf0zfrr4b4utxjchrPoWX7Be08RpKyZgzH2o/\n" +
@@ -490,10 +510,10 @@ object TestKeys {
           "v1i5Oa+BPMzXSqIHgeHBQXDgR2sKynwntP0hTP2VbznXCkMHtzgIp4Oy35yAVyn0\n" +
           "WD96wcfPLIS6Qx1SSfvvtS9+BrfHMbKtsHLTQthXKUwO+zkY9jIIKLsKH1yC+A==\n" +
           "=R73C\n" +
-          "-----END PGP PRIVATE KEY BLOCK-----",
-      decrypted = "", // todo in case needed
+          "-----END PGP PRIVATE KEY BLOCK-----\n",
+      decryptedPrivateKey = "\n",
       passphrase = "FlowCrypt",
-      longid = "96FB3C9661A5573C",
+      longid = "96FB3C9661A5573C"
     ),
     "expired" to TestKey(
       publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n" +
@@ -529,12 +549,12 @@ object TestKeys {
           "1np/Rmygq1C+DIW2cohJOc7tO4gbl11XolsfQ+FU+HewYXy8aAEbrTSRfsff\r\n" +
           "MvK6tgT9BZ3kzjOxT5ou2SdvTa0eUk8k+zv8OnJJfXA=\r\n" +
           "=LPeQ\r\n" +
-          "-----END PGP PUBLIC KEY BLOCK-----\r\n",
-      // todo all in case needed
-      privateKey = "",
-      decrypted = "",
+          "-----END PGP PUBLIC KEY BLOCK-----\r\n" +
+          "\n",
+      privateKey = "\n",
+      decryptedPrivateKey = "\n",
       passphrase = "",
       longid = ""
-    )
+    ),
   )
 }

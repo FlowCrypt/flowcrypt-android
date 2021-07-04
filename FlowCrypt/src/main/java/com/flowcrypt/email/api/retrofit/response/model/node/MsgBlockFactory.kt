@@ -6,9 +6,15 @@
 package com.flowcrypt.email.api.retrofit.response.model.node
 
 import android.os.Parcel
+import com.flowcrypt.email.extensions.java.io.toBase64EncodedString
+import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
+import java.io.InputStream
+import java.util.Base64
+import javax.mail.internet.MimePart
 
 object MsgBlockFactory {
-  @JvmStatic
   val supportedMsgBlockTypes = listOf(
     MsgBlock.Type.PUBLIC_KEY,
     MsgBlock.Type.DECRYPT_ERROR,
@@ -18,7 +24,6 @@ object MsgBlockFactory {
     MsgBlock.Type.SIGNED_TEXT
   )
 
-  @JvmStatic
   fun fromParcel(type: MsgBlock.Type, source: Parcel): MsgBlock {
     return when (type) {
       MsgBlock.Type.PUBLIC_KEY -> PublicKeyMsgBlock(source)
@@ -26,13 +31,12 @@ object MsgBlockFactory {
       MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(source)
       MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(source)
       MsgBlock.Type.SIGNED_TEXT, MsgBlock.Type.SIGNED_HTML, MsgBlock.Type.SIGNED_MSG -> {
-        SignedBlock(source)
+        SignedMsgBlock(source)
       }
       else -> GenericMsgBlock(type, source)
     }
   }
 
-  @JvmStatic
   fun fromContent(
     type: MsgBlock.Type,
     content: String?,
@@ -41,20 +45,38 @@ object MsgBlockFactory {
   ): MsgBlock {
     val complete = !missingEnd
     return when (type) {
-      MsgBlock.Type.PUBLIC_KEY -> PublicKeyMsgBlock(content, complete, null)
+      MsgBlock.Type.PUBLIC_KEY -> {
+        val keyDetails = if (content != null && complete) {
+          JcaPGPPublicKeyRingCollection(content.toInputStream()).keyRings.next().toPgpKeyDetails()
+        } else null
+        PublicKeyMsgBlock(content, complete, keyDetails)
+      }
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(content, complete, null)
       MsgBlock.Type.SIGNED_TEXT -> {
-        SignedBlock(SignedBlock.Type.SIGNED_TEXT, content, complete, signature)
+        SignedMsgBlock(SignedMsgBlock.Type.SIGNED_TEXT, content, complete, signature)
       }
       MsgBlock.Type.SIGNED_HTML -> {
-        SignedBlock(SignedBlock.Type.SIGNED_HTML, content, complete, signature)
+        SignedMsgBlock(SignedMsgBlock.Type.SIGNED_HTML, content, complete, signature)
       }
       else -> GenericMsgBlock(type, content, complete)
     }
   }
 
-  @JvmStatic
-  fun fromAttachment(type: MsgBlock.Type, content: String?, attMeta: AttMeta): MsgBlock {
+  fun fromAttachment(type: MsgBlock.Type, attachment: MimePart): MsgBlock {
+    val attContent = attachment.content
+    val data: String? = when (attContent) {
+      is String -> Base64.getEncoder().encodeToString(attachment.inputStream.readBytes())
+      is InputStream -> attContent.toBase64EncodedString()
+      else -> null
+    }
+    val attMeta = AttMeta(
+      name = attachment.fileName,
+      data = data,
+      length = attachment.size.toLong(),
+      type = attachment.contentType,
+      contentId = attachment.contentID
+    )
+    val content = if (attContent is String) attachment.content as String else null
     return when (type) {
       MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(content, true, attMeta, null)
       MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(content, attMeta)

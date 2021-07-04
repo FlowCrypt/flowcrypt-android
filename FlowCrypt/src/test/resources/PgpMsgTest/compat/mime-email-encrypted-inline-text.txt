@@ -1,0 +1,26 @@
+Delivered-To: flowcrypt.compatibility@gmail.com
+Return-Path: <cryptup.tester@gmail.com>
+Openpgp: id=6D24791A5B106262B06217C606CA553EC2455D70
+From: cryptup.tester@gmail.com
+MIME-Version: 1.0
+Date: Thu, 2 Nov 2017 17:54:14 -0700
+Message-ID: <CANzaQHU9A@mail.gmail.com>
+Subject: mime email encrypted inline text
+To: flowcrypt.compatibility@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+
+-----BEGIN PGP MESSAGE-----
+Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
+Comment: Seamlessly send and receive encrypted email
+
+wcBMAwurnAGLJl0iAQf/SSqySs436k8S6wRV84vaRMyb1NeYyqgvspbjznqG
+d7jn90cVgJeHDz+Bmsqxx8jI8xKebiEjqv5F8H7jX7QGUsRkdfPv0gn94gHI
+A1Z/N5TNc/dhP0zRd/NG6ZNwYjOv6m5Reyu3kcNcXEA97zA5O0QkDgOkLm/L
+ybfNvH5qtVpSq3pLGuthQLeQ+GGkNMrynNyFHULbK9O+MNJHK8GUxRdDjsyh
+GoxM6BxhLDnHqbcG3abdBx3xPt1kLLF/xQ1Sipic36pyFGKw2mgFu44/cLEz
+ZTZv3wuq0Zj+sKBB1iOJJRAjhJzmJFt/MChpsExdTHZAeNdGDOqDmr1qXxFa
+B9JEAS8glDxX7oXijWFm8wSjQymZwaVuLZar43Yy4k6CxvzxxOlxapE1dKUP
+hC84J/ie8GjYxysDp8Tqtv1HRzozaC/aZsg=
+=E57W
+-----END PGP MESSAGE-----
+

@@ -16,8 +16,7 @@ class PgpKeyTest {
 
   @Test
   fun testParseKeysWithNormalKey() {
-    val pubKey = TestKeys.KEYS["rsa1"]!!.publicKey
-    val result = PgpKey.parseKeys(pubKey.toByteArray())
+    val result = PgpKey.parseKeys(TestKeys.KEYS["rsa1"]!!.publicKey)
 
     val expected = PgpKeyDetails(
       isFullyDecrypted = true,
@@ -72,8 +71,7 @@ class PgpKeyTest {
 
   @Test
   fun testParseKeysWithExpiredKey() {
-    val pubKey = TestKeys.KEYS["expired"]!!.publicKey
-    val result = PgpKey.parseKeys(pubKey.toByteArray())
+    val result = PgpKey.parseKeys(TestKeys.KEYS["expired"]!!.publicKey)
 
     // TODO update from output
     val expected = PgpKeyDetails(

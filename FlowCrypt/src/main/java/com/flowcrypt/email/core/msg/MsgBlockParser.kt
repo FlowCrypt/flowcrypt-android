@@ -1,33 +1,42 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors:
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.core.msg
 
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlockFactory
+import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
+import com.flowcrypt.email.security.pgp.PgpMsg
+import java.util.Properties
+import javax.mail.Session
+import javax.mail.internet.MimeMessage
 
 @Suppress("unused")
 object MsgBlockParser {
 
   private const val ARMOR_HEADER_MAX_LENGTH = 50
 
-  @JvmStatic
-  fun detectBlocks(text: String): List<MsgBlock> {
+  data class NormalizedTextAndBlocks(
+    val normalized: String,
+    val blocks: List<MsgBlock>
+  )
+
+  fun detectBlocks(text: String): NormalizedTextAndBlocks {
     val normalized = text.normalize()
     val blocks = mutableListOf<MsgBlock>()
     var startAt = 0
     while (true) {
       val continueAt = detectNextBlock(normalized, startAt, blocks)
-      if (startAt >= continueAt) return blocks
+      if (startAt >= continueAt) return NormalizedTextAndBlocks(normalized, blocks)
       startAt = continueAt
     }
   }
 
-  @JvmStatic
   private fun detectNextBlock(text: String, startAt: Int, blocks: MutableList<MsgBlock>): Int {
     val initialBlockCount = blocks.size
     var continueAt = -1
@@ -35,10 +44,8 @@ object MsgBlockParser {
       PgpArmor.ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!.begin, startAt
     )
     if (beginIndex != -1) { // found
-      val potentialHeaderBegin = text.substring(
-        beginIndex,
-        (beginIndex + ARMOR_HEADER_MAX_LENGTH).coerceAtMost(text.length)
-      )
+      val endIndex = (beginIndex + ARMOR_HEADER_MAX_LENGTH).coerceAtMost(text.length)
+      val potentialHeaderBegin = text.substring(beginIndex, endIndex)
       for (blockHeaderKvp in PgpArmor.ARMOR_HEADER_DICT) {
         val blockHeaderDef = blockHeaderKvp.value
         if (!blockHeaderDef.replace || potentialHeaderBegin.indexOf(blockHeaderDef.begin) != 0) {
@@ -70,17 +77,12 @@ object MsgBlockParser {
         if (endHeaderIndex != -1) {
           // identified end of the same block
           continueAt = endHeaderIndex + endHeaderLength
-          blocks.add(
-            MsgBlockFactory.fromContent(
-              blockHeaderKvp.key,
-              text.substring(beginIndex, continueAt).trim()
-            )
-          )
+          val content = text.substring(beginIndex, continueAt).trim()
+          blocks.add(MsgBlockFactory.fromContent(blockHeaderKvp.key, content))
         } else {
           // corresponding end not found
-          blocks.add(
-            MsgBlockFactory.fromContent(blockHeaderKvp.key, text.substring(beginIndex), true)
-          )
+          val content = text.substring(beginIndex)
+          blocks.add(MsgBlockFactory.fromContent(blockHeaderKvp.key, content, true))
         }
         break
       }
@@ -95,5 +97,64 @@ object MsgBlockParser {
     }
 
     return continueAt
+  }
+
+  data class SanitizedBlocks(
+    val blocks: List<MsgBlock>,
+    val subject: String?,
+    val isRichText: Boolean
+  )
+
+  fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): SanitizedBlocks {
+    if (decryptedContent == null) return SanitizedBlocks(emptyList(), null, false)
+    val blocks = mutableListOf<MsgBlock>()
+    if (MimeUtils.resemblesMsg(decryptedContent)) {
+      val decoded = PgpMsg.decodeMimeMessage(
+        MimeMessage(Session.getInstance(Properties()), decryptedContent.inputStream())
+      )
+      var isRichText = false
+      when {
+        decoded.html != null -> {
+          // sanitized html
+          val sanitizedHtml = PgpMsg.sanitizeHtmlKeepBasicTags(decoded.html)
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, sanitizedHtml))
+          isRichText = true
+        }
+        decoded.text != null -> {
+          // escaped text as html
+          val html = decoded.text.toEscapedHtml()
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, html))
+        }
+        else -> {
+          // escaped mime text as html
+          val html = String(decryptedContent).toEscapedHtml()
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, html))
+        }
+      }
+
+      for (attachment in decoded.attachments) {
+        blocks.add(
+          if (PgpMsg.treatAs(attachment) == PgpMsg.TreatAs.PUBLIC_KEY) {
+            val content = String(attachment.inputStream.readBytes())
+            MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, content)
+          } else {
+            MsgBlockFactory.fromAttachment(MsgBlock.Type.DECRYPTED_ATT, attachment)
+          }
+        )
+      }
+
+      return SanitizedBlocks(blocks, decoded.subject, isRichText)
+    } else {
+      val armoredKeys = mutableListOf<String>()
+      val content = PgpMsg.stripPublicKeys(
+        PgpMsg.stripFcReplyToken(PgpMsg.extractFcAttachments(String(decryptedContent), blocks)),
+        armoredKeys
+      ).toEscapedHtml()
+      blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, content))
+      for (armoredKey in armoredKeys) {
+        blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, armoredKey))
+      }
+      return SanitizedBlocks(blocks, null, false)
+    }
   }
 }

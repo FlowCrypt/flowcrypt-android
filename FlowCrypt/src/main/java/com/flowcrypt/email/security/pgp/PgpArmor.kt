@@ -159,7 +159,7 @@ object PgpArmor {
   @Suppress("ArrayInDataClass")
   data class CleartextSignedMessage(
     val content: ByteArrayOutputStream,
-    val signature: Any?
+    val signature: String?
   )
 
   // Based on this example:

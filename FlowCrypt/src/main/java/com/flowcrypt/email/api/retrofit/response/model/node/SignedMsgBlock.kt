@@ -13,7 +13,7 @@ import com.google.gson.annotations.Expose
 /**
  * Message block which represents content with a signature.
  */
-data class SignedBlock(
+data class SignedMsgBlock(
   @Expose val signedType: Type,
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
