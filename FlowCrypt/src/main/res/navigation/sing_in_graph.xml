@@ -25,7 +25,7 @@
             app:destination="@id/checkPassphraseStrengthFragment" />
         <deepLink
             android:id="@+id/deepLink"
-            app:uri="flowcrypt://email.flowcrypt.com/sing-in/gmail" />
+            app:uri="flowcrypt://email.flowcrypt.com/sign-in/gmail" />
     </fragment>
     <fragment
         android:id="@+id/addOtherAccountFragment"
@@ -37,7 +37,7 @@
             app:destination="@id/authorizeAndSearchBackupsFragment" />
         <deepLink
             android:id="@+id/deepLink"
-            app:uri="flowcrypt://email.flowcrypt.com/sing-in/other" />
+            app:uri="flowcrypt://email.flowcrypt.com/sign-in/other" />
     </fragment>
     <fragment
         android:id="@+id/authorizeAndSearchBackupsFragment"

@@ -73,7 +73,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SignInActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/sing-in/other"
+      uri = "flowcrypt://email.flowcrypt.com/sign-in/other"
     )
   )
 
