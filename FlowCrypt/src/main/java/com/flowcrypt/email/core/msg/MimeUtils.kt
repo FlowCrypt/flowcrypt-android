@@ -21,12 +21,12 @@ object MimeUtils {
     val firstChars = msg.copyOfRange(0, msg.size.coerceAtMost(1000))
       .toString(StandardCharsets.US_ASCII)
       .toLowerCase(Locale.ROOT)
-    val contentType = contentTypeRegex.find(firstChars) ?: return false
-    return contentTransferEncodingRegex.containsMatchIn(firstChars)
-      || contentDispositionRegex.containsMatchIn(firstChars)
-      || firstChars.contains(kBoundary1)
-      || firstChars.contains(kCharset)
-      || (contentType.range.first == 0 && firstChars.contains(kBoundary2))
+    val contentType = CONTENT_TYPE_REGEX.find(firstChars) ?: return false
+    return CONTENT_TRANSFER_ENCODING_REGEX.containsMatchIn(firstChars)
+      || CONTENT_DISPOSITION_REGEX.containsMatchIn(firstChars)
+      || firstChars.contains(BOUNDARY_1)
+      || firstChars.contains(CHARSET)
+      || (contentType.range.first == 0 && firstChars.contains(BOUNDARY_2))
   }
 
   fun isPlainImgAtt(block: MsgBlock): Boolean {
@@ -42,10 +42,11 @@ object MimeUtils {
   private val imageContentTypes = setOf(
     "image/jpeg", "image/jpg", "image/bmp", "image/png", "image/svg+xml"
   )
-  private val contentTypeRegex = Regex("content-type: +[0-9a-z\\-/]+")
-  private val contentTransferEncodingRegex = Regex("content-transfer-encoding: +[0-9a-z\\-/]+")
-  private val contentDispositionRegex = Regex("content-disposition: +[0-9a-z\\-/]+")
-  private const val kBoundary1 = "; boundary="
-  private const val kBoundary2 = "boundary="
-  private const val kCharset = "; charset="
+
+  private val CONTENT_TYPE_REGEX = Regex("content-type: +[0-9a-z\\-/]+")
+  private val CONTENT_TRANSFER_ENCODING_REGEX = Regex("content-transfer-encoding: +[0-9a-z\\-/]+")
+  private val CONTENT_DISPOSITION_REGEX = Regex("content-disposition: +[0-9a-z\\-/]+")
+  private const val BOUNDARY_1 = "; boundary="
+  private const val BOUNDARY_2 = "boundary="
+  private const val CHARSET = "; charset="
 }
