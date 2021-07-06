@@ -39,7 +39,19 @@ class PgpMsgTest {
   }
 
   companion object {
-    private val privateKeys = listOf(
+    private const val NEXT_MSG_BLOCK_DELIMITER = "<!-- next MsgBlock -->\n"
+
+    private val BODY_SPLIT_REGEX = Regex("</?body>")
+
+    private val RENDERED_CONTENT_BLOCK_REGEX = Regex(
+      "<div class=\"MsgBlock ([a-z]+)\" style=\"[^\"]+\">(.*)</div>"
+    )
+
+    private const val TEXT_SPECIAL_CHARS = "> special <tag> & other\n> second line"
+
+    private val HTML_SPECIAL_CHARS = TEXT_SPECIAL_CHARS.toEscapedHtml()
+
+    private val PRIVATE_KEYS = listOf(
       PgpMsg.KeyWithPassPhrase(
         passphrase = Passphrase.fromPassword("flowcrypt compatibility tests"),
         keyRing = loadSecretKey("key0.txt"),
@@ -51,7 +63,7 @@ class PgpMsgTest {
       )
     )
 
-    private val messages = listOf(
+    private val MESSAGES = listOf(
       MessageInfo(
         key = "decrypt - without a subject",
         content = listOf("This is a compatibility test email")
@@ -126,7 +138,7 @@ class PgpMsgTest {
     }
 
     private fun findMessage(key: String): MessageInfo {
-      return messages.firstOrNull { it.key == key }
+      return MESSAGES.firstOrNull { it.key == key }
         ?: throw IllegalArgumentException("Message '$key' not found")
     }
   }
@@ -194,7 +206,7 @@ class PgpMsgTest {
   fun wrongPassphraseTest() {
     val messageInfo = findMessage("decrypt - without a subject")
     val wrongPassphrase = Passphrase.fromPassword("this is wrong passphrase for sure")
-    val privateKeysWithWrongPassPhrases = privateKeys.map {
+    val privateKeysWithWrongPassPhrases = PRIVATE_KEYS.map {
       PgpMsg.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = wrongPassphrase)
     }
     val r = PgpMsg.decrypt(
@@ -211,7 +223,7 @@ class PgpMsgTest {
   @Test
   fun missingPassphraseTest() {
     val messageInfo = findMessage("decrypt - without a subject")
-    val privateKeysWithMissingPassphrases = privateKeys.map {
+    val privateKeysWithMissingPassphrases = PRIVATE_KEYS.map {
       PgpMsg.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = null)
     }
     val r = PgpMsg.decrypt(
@@ -228,7 +240,7 @@ class PgpMsgTest {
   @Test
   fun wrongKeyTest() {
     val messageInfo = findMessage("decrypt - without a subject")
-    val wrongKey = listOf(privateKeys[1])
+    val wrongKey = listOf(PRIVATE_KEYS[1])
     val r = PgpMsg.decrypt(
       messageInfo.armored.toByteArray(), wrongKey, null
     )
@@ -258,7 +270,7 @@ class PgpMsgTest {
 
   private fun processMessage(messageKey: String): PgpMsg.DecryptionResult {
     val messageInfo = findMessage(messageKey)
-    val result = PgpMsg.decrypt(messageInfo.armored.toByteArray(), privateKeys, null)
+    val result = PgpMsg.decrypt(messageInfo.armored.toByteArray(), PRIVATE_KEYS, null)
     if (result.content != null) {
       val s = String(result.content!!.toByteArray(), Charset.forName(messageInfo.charset))
       println("=========\n$s\n=========")
@@ -342,7 +354,7 @@ class PgpMsgTest {
       assertEquals(expectedComplete, actualBlock.complete)
       assertEquals(expectedContent, actualContent)
 
-      if (actualBlock.type in MsgBlock.Type.signedBlocks) {
+      if (actualBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
         val expectedSignature = expectedBlock["signature"].asString.normalizeEol()
         val actualSignature = ((actualBlock as SignedMsgBlock).signature ?: "").normalizeEol()
         assertEquals(expectedSignature, actualSignature)
@@ -361,16 +373,16 @@ class PgpMsgTest {
         "From: Human at FlowCrypt <human@flowcrypt.com>\n" +
         "To: FlowCrypt Compatibility <flowcrypt.compatibility@gmail.com>\n" +
         "Content-Type: text/plain; charset=\"UTF-8\"\n" +
-        "\n" + textSpecialChars
+        "\n" + TEXT_SPECIAL_CHARS
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
-    assertEquals(textSpecialChars, result.text)
+    assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(false, result.isReplyEncrypted)
     assertEquals("plain text with special chars", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", textSpecialChars)))
+    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", TEXT_SPECIAL_CHARS)))
   }
 
   @Test
@@ -382,16 +394,16 @@ class PgpMsgTest {
         "From: Human at FlowCrypt <human@flowcrypt.com>\n" +
         "To: FlowCrypt Compatibility <flowcrypt.compatibility@gmail.com>\n" +
         "Content-Type: text/html; charset=\"UTF-8\"\n" +
-        "\n" + htmlSpecialChars
+        "\n" + HTML_SPECIAL_CHARS
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
-    assertEquals(textSpecialChars, result.text)
+    assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(false, result.isReplyEncrypted)
     assertEquals("plain text with special chars", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlSpecialChars)))
+    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS)))
   }
 
   @Test
@@ -399,13 +411,13 @@ class PgpMsgTest {
     val text = loadResourceAsString("compat/direct-encrypted-pgpmime-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(text, false, keys)
-    assertEquals(textSpecialChars, result.text)
+    assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(true, result.isReplyEncrypted)
     assertEquals("direct encrypted pgpmime special chars", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "GREEN", htmlSpecialChars)))
+    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "GREEN", HTML_SPECIAL_CHARS)))
   }
 
   @Test
@@ -413,13 +425,13 @@ class PgpMsgTest {
     val text = loadResourceAsString("compat/direct-encrypted-text-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(text, false, keys)
-    assertEquals(textSpecialChars, result.text)
+    assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(true, result.isReplyEncrypted)
     assertTrue(result.subject == null)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "GREEN", htmlSpecialChars)))
+    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "GREEN", HTML_SPECIAL_CHARS)))
   }
 
   @Test
@@ -495,7 +507,7 @@ class PgpMsgTest {
   }
 
   private fun checkRenderedBlock(block: MsgBlock, expectedRenderedBlocks: List<RenderedBlock>) {
-    val parts = block.content!!.split(bodySplitRegex, 3)
+    val parts = block.content!!.split(BODY_SPLIT_REGEX, 3)
     val head = parts[0]
     assertTrue(head.contains("<!DOCTYPE html><html>"))
     assertTrue(head.contains("<style>"))
@@ -503,13 +515,13 @@ class PgpMsgTest {
     val foot = parts[2]
     assertTrue(foot.contains("</html>"))
     val body = parts[1]
-    if (body.contains(nextMsgBlockDelimiter)) {
-      val renderedContentBlocks = body.split(nextMsgBlockDelimiter)
+    if (body.contains(NEXT_MSG_BLOCK_DELIMITER)) {
+      val renderedContentBlocks = body.split(NEXT_MSG_BLOCK_DELIMITER)
       val lastEmpty = renderedContentBlocks.last()
       assertEquals("", lastEmpty)
       val actualRenderedBlocks = renderedContentBlocks.subList(0, renderedContentBlocks.size - 1)
         .map {
-          val match = renderedContentBlockRegex.find(it)
+          val match = RENDERED_CONTENT_BLOCK_REGEX.find(it)
           if (match == null)
             RenderedBlock.error("TEST VALIDATION ERROR - MISMATCHING CONTENT BLOCK FORMAT", it)
           else
@@ -518,12 +530,4 @@ class PgpMsgTest {
       assertEquals(expectedRenderedBlocks, actualRenderedBlocks)
     }
   }
-
-  private val nextMsgBlockDelimiter = "<!-- next MsgBlock -->\n"
-  private val bodySplitRegex = Regex("</?body>")
-  private val renderedContentBlockRegex = Regex(
-    "<div class=\"MsgBlock ([a-z]+)\" style=\"[^\"]+\">(.*)</div>"
-  )
-  private val textSpecialChars = "> special <tag> & other\n> second line"
-  private val htmlSpecialChars = textSpecialChars.toEscapedHtml()
 }

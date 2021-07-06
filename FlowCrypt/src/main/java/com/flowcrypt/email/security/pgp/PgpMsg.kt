@@ -86,7 +86,7 @@ object PgpMsg {
           // But it's a good indication that it may be
           return Pair(
             false,
-            if (messageTypes.contains(tagNumber)) {
+            if (MESSAGE_TYPES.contains(tagNumber)) {
               MsgBlock.Type.ENCRYPTED_MSG
             } else {
               MsgBlock.Type.PUBLIC_KEY
@@ -101,7 +101,7 @@ object PgpMsg {
         String(source.copyOfRange(0, min(50, source.size)), StandardCharsets.US_ASCII).trim()
       ).blocks
       if (blocks.size == 1 && !blocks[0].complete
-        && MsgBlock.Type.wellKnownBlockTypes.contains(blocks[0].type)
+        && MsgBlock.Type.WELL_KNOWN_BLOCK_TYPES.contains(blocks[0].type)
       ) {
         return Pair(true, blocks[0].type)
       }
@@ -110,7 +110,7 @@ object PgpMsg {
     return Pair(false, null)
   }
 
-  private val messageTypes = intArrayOf(
+  private val MESSAGE_TYPES = intArrayOf(
     PacketTags.SYM_ENC_INTEGRITY_PRO,
     PacketTags.MOD_DETECTION_CODE,
     20, // SymEncryptedAEADProtected - no BouncyCastle constant for this one
@@ -506,7 +506,7 @@ object PgpMsg {
     if (decoded.text != null) {
       val blocksFromTextPart = MsgBlockParser.detectBlocks(decoded.text).blocks
       val suitableBlock = blocksFromTextPart.firstOrNull {
-        it.type in MsgBlock.Type.wellKnownBlockTypes
+        it.type in MsgBlock.Type.WELL_KNOWN_BLOCK_TYPES
       }
       when {
         suitableBlock != null -> {
@@ -570,7 +570,7 @@ object PgpMsg {
     val name = att.fileName ?: ""
     val type = att.contentType
     val length = att.size
-    if (hiddenFileNames.contains(name)) {
+    if (HIDDEN_FILE_NAMES.contains(name)) {
       // PGPexch.htm.pgp is html alternative of textual body content produced
       // by the PGP Desktop and GPG4o
       return TreatAs.HIDDEN
@@ -582,21 +582,21 @@ object PgpMsg {
       // mail.ch does this - although it looks like encrypted msg,
       // it will just contain PGP version eg "Version: 1"
       return TreatAs.SIGNATURE
-    } else if (encryptedMsgNames.contains(name)) {
+    } else if (ENCRYPTED_MSG_NAMES.contains(name)) {
       return TreatAs.ENCRYPTED_MSG
-    } else if (encryptedFileRegex.containsMatchIn(name)) {
+    } else if (ENCRYPTED_FILE_REGEX.containsMatchIn(name)) {
       // ends with one of .gpg, .pgp, .???.asc, .????.asc
       return TreatAs.ENCRYPTED_FILE
-    } else if (privateKeyRegex.containsMatchIn(name)) {
+    } else if (PRIVATE_KEY_REGEX.containsMatchIn(name)) {
       return TreatAs.PRIVATE_KEY
     } else if (type == "application/pgp-keys") {
       return TreatAs.PUBLIC_KEY
-    } else if (publicKeyRegex1.containsMatchIn(name)) {
+    } else if (PUBLIC_KEY_REGEX_1.containsMatchIn(name)) {
       // name starts with a key id
       return TreatAs.PUBLIC_KEY
     } else if (
       name.toLowerCase(Locale.ROOT).contains("public") &&
-      publicKeyRegex2.containsMatchIn(name)
+      PUBLIC_KEY_REGEX_2.containsMatchIn(name)
     ) {
       // name contains the word "public", any key id and ends with .asc
       return TreatAs.PUBLIC_KEY
@@ -618,23 +618,23 @@ object PgpMsg {
     return s.contains("-----BEGIN PGP PUBLIC KEY BLOCK-----")
   }
 
-  private val hiddenFileNames = setOf(
+  private val HIDDEN_FILE_NAMES = setOf(
     "PGPexch.htm.pgp",
     "PGPMIME version identification",
     "Version.txt",
     "PGPMIME Versions Identification"
   )
 
-  private val encryptedMsgNames = setOf(
+  private val ENCRYPTED_MSG_NAMES = setOf(
     "message", "msg.asc", "message.asc", "encrypted.asc", "encrypted.eml.pgp",
     "Message.pgp", "openpgp-encrypted-message.asc"
   )
 
-  private val encryptedFileRegex = Regex("(\\.pgp\$)|(\\.gpg\$)|(\\.[a-zA-Z0-9]{3,4}\\.asc\$)")
-  private val privateKeyRegex = Regex("(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(key|asc)\$")
-  private val publicKeyRegex1 = Regex("^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.asc\$")
-  private val publicKeyRegex2 = Regex("[A-F0-9]{8}.*\\.asc\$")
-  private val publicKeyRegex3 = Regex("^(0x)?[A-Fa-f0-9]{16,40}\\.asc\\.pgp$")
+  private val ENCRYPTED_FILE_REGEX = Regex("(\\.pgp\$)|(\\.gpg\$)|(\\.[a-zA-Z0-9]{3,4}\\.asc\$)")
+  private val PRIVATE_KEY_REGEX = Regex("(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(key|asc)\$")
+  private val PUBLIC_KEY_REGEX_1 = Regex("^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.asc\$")
+  private val PUBLIC_KEY_REGEX_2 = Regex("[A-F0-9]{8}.*\\.asc\$")
+  private val PUBLIC_KEY_REGEX_3 = Regex("^(0x)?[A-Fa-f0-9]{16,40}\\.asc\\.pgp$")
 
   data class ParseDecryptResult(
     val subject: String?,
@@ -741,7 +741,7 @@ object PgpMsg {
       } else if (
         rawBlock.type == MsgBlock.Type.ENCRYPTED_ATT
         && (rawBlock as EncryptedAttMsgBlock).attMeta.name != null
-        && publicKeyRegex3.matches(rawBlock.attMeta.name!!)
+        && PUBLIC_KEY_REGEX_3.matches(rawBlock.attMeta.name!!)
       ) {
         // encrypted public key attached
         val decryptionResult = decrypt(
@@ -832,7 +832,7 @@ object PgpMsg {
     for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
       var contentId = (plainImageBlock as AttMsgBlock).attMeta.contentId ?: ""
       if (contentId.isNotEmpty()) {
-        contentId = contentId.replace(cidCorrectionRegex1, "").replace(cidCorrectionRegex2, "")
+        contentId = contentId.replace(CID_CORRECTION_REGEX_1, "").replace(CID_CORRECTION_REGEX_2, "")
         inlineImagesByCid[contentId] = plainImageBlock
       } else {
         imagesAtTheBottom.add(plainImageBlock)
@@ -919,8 +919,8 @@ object PgpMsg {
     )
   }
 
-  private val cidCorrectionRegex1 = Regex(">$")
-  private val cidCorrectionRegex2 = Regex("^<")
+  private val CID_CORRECTION_REGEX_1 = Regex(">$")
+  private val CID_CORRECTION_REGEX_2 = Regex("^<")
 
   /**
    * replace content of images: <img src="cid:16c7a8c3c6a8d4ab1e01">
@@ -933,7 +933,7 @@ object PgpMsg {
     val result = StringBuilder()
     var startPos = 0
     while (true) {
-      val match = imgSrcWithCidRegex.find(htmlContent, startPos)
+      val match = IMG_SRC_WITH_CID_REGEX.find(htmlContent, startPos)
       if (match == null) {
         result.append(htmlContent.substring(startPos, htmlContent.length))
         break
@@ -967,8 +967,7 @@ object PgpMsg {
     return result.toString()
   }
 
-  private val imgSrcWithCidRegex = Regex("src=\"cid:([^\"]+)\"")
-
+  private val IMG_SRC_WITH_CID_REGEX = Regex("src=\"cid:([^\"]+)\"")
 
   private enum class FrameColor {
     GREEN,
@@ -977,11 +976,11 @@ object PgpMsg {
     PLAIN
   }
 
-  private const val generalCss =
+  private const val GENERAL_CSS =
     "background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;" +
         "padding-bottom: 4px;width: 100%;"
 
-  private const val seamlessLockBg = "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw" +
+  private const val SEAMLESS_LOCK_BG = "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw" +
       "8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD" +
       "w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8P" +
       "Dw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4A" +
@@ -994,9 +993,9 @@ object PgpMsg {
       "CVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQ" +
       "WoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC"
 
-  private val frameCssMap = mapOf(
+  private val FRAME_CSS_MAP = mapOf(
     FrameColor.GREEN to "border: 1px solid #f0f0f0;border-left: 8px solid #31A217;" +
-        "border-right: none;background-image: url(data:image/png;base64,${seamlessLockBg});",
+        "border-right: none;background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG});",
     FrameColor.GRAY to "border: 1px solid #f0f0f0;border-left: 8px solid #989898;" +
         "border-right: none;",
     FrameColor.RED to "border: 1px solid #f0f0f0;border-left: 8px solid #d14836;" +
@@ -1007,7 +1006,7 @@ object PgpMsg {
   private fun fmtMsgContentBlockAsHtml(dirtyContent: String?, frameColor: FrameColor): String {
     return if (dirtyContent == null) ""
     else "<div class=\"MsgBlock ${frameColor}\" style=" +
-        "\"${generalCss}${frameCssMap[frameColor]!!}\">" +
+        "\"${GENERAL_CSS}${FRAME_CSS_MAP[frameColor]!!}\">" +
         "${sanitizeHtmlKeepBasicTags(dirtyContent)}</div><!-- next MsgBlock -->\n"
   }
 
@@ -1078,7 +1077,7 @@ object PgpMsg {
                 attrs.add(srcAttr)
                 attrs.add("target")
                 attrs.add("_blank")
-                attrs.add(innerTextTypeAttr)
+                attrs.add(INNER_TEXT_TYPE_ATTR)
                 attrs.add("1")
               }
 
@@ -1094,11 +1093,11 @@ object PgpMsg {
                   attrs.add("title")
                   attrs.add(titleAttr)
                 }
-                attrs.add(innerTextTypeAttr)
+                attrs.add(INNER_TEXT_TYPE_ATTR)
                 attrs.add("2")
               }
             }
-            attrs.add(fromImageAttr)
+            attrs.add(FROM_IMAGE_ATTR)
             attrs.add(true.toString())
           }
 
@@ -1114,9 +1113,9 @@ object PgpMsg {
     val doc = Jsoup.parse(cleanHtml)
     doc.outputSettings().prettyPrint(false)
     for (element in doc.select("a")) {
-      if (element.hasAttr(innerTextTypeAttr)) {
-        val innerTextType = element.attr(innerTextTypeAttr)
-        element.attributes().remove(innerTextTypeAttr)
+      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
+        val innerTextType = element.attr(INNER_TEXT_TYPE_ATTR)
+        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
         var innerText: String? = null
         when (innerTextType) {
           "1" -> innerText = imgContentReplaceable
@@ -1140,8 +1139,8 @@ object PgpMsg {
     )
   }
 
-  private const val innerTextTypeAttr = "data-fc-inner-text-type"
-  private const val fromImageAttr = "data-fc-is-from-image"
+  private const val INNER_TEXT_TYPE_ATTR = "data-fc-inner-text-type"
+  private const val FROM_IMAGE_ATTR = "data-fc-is-from-image"
 
   fun sanitizeHtmlStripAllTags(dirtyHtml: String?, outputNl: String = "\n"): String? {
     val html = sanitizeHtmlKeepBasicTags(dirtyHtml) ?: return null
@@ -1150,10 +1149,10 @@ object PgpMsg {
     val blockStart = "CU_BS_$randomSuffix"
     val blockEnd = "CU_BE_$randomSuffix"
 
-    var text = html.replace(brRegex, br)
+    var text = html.replace(HTML_BR_REGEX, br)
       .replace("\n", "")
-      .replace(blockEndRegex, blockEnd)
-      .replace(blockStartRegex, blockStart)
+      .replace(BLOCK_END_REGEX, blockEnd)
+      .replace(BLOCK_START_REGEX, blockStart)
       .replace(Regex("($blockStart)+"), blockStart)
       .replace(Regex("($blockEnd)+"), blockEnd)
 
@@ -1172,12 +1171,12 @@ object PgpMsg {
                 if (title != null) innerText = title
               }
               attrs.clear()
-              attrs.add(innerTextTypeAttr)
+              attrs.add(INNER_TEXT_TYPE_ATTR)
               attrs.add(innerText)
               return@allowElements "span"
             }
             "a" -> {
-              val fromImage = getAttribute(attrs, fromImageAttr)
+              val fromImage = getAttribute(attrs, FROM_IMAGE_ATTR)
               if (fromImage == true.toString()) {
                 var innerText = "[image]"
                 val alt = getAttribute(attrs, "alt")
@@ -1185,7 +1184,7 @@ object PgpMsg {
                   innerText = "[image: $alt]"
                 }
                 attrs.clear()
-                attrs.add(innerTextTypeAttr)
+                attrs.add(INNER_TEXT_TYPE_ATTR)
                 attrs.add(innerText)
                 return@allowElements "span"
               } else {
@@ -1200,17 +1199,17 @@ object PgpMsg {
         "a"
       )
       .allowAttributes("src", "alt", "title").onElements("img")
-      .allowAttributes(innerTextTypeAttr).onElements("span")
-      .allowAttributes("src", "alt", "title", fromImageAttr).onElements("a")
+      .allowAttributes(INNER_TEXT_TYPE_ATTR).onElements("span")
+      .allowAttributes("src", "alt", "title", FROM_IMAGE_ATTR).onElements("a")
       .toFactory()
 
     text = policyFactory.sanitize(text)
     val doc = Jsoup.parse(text)
     doc.outputSettings().prettyPrint(false)
     for (element in doc.select("span")) {
-      if (element.hasAttr(innerTextTypeAttr)) {
-        val innerText = element.attr(innerTextTypeAttr)
-        element.attributes().remove(innerTextTypeAttr)
+      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
+        val innerText = element.attr(INNER_TEXT_TYPE_ATTR)
+        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
         element.html(innerText)
       }
     }
@@ -1230,20 +1229,20 @@ object PgpMsg {
       .split(blockEnd)
       .filter { it != "" }
       .joinToString("\n")
-      .replace(multiNewLineRegex, "\n\n")
+      .replace(MULTI_NEW_LINE_REGEX, "\n\n")
 
     if (outputNl != "\n") text = text.replace("\n", outputNl)
     return text
   }
 
-  private val brRegex = Regex("<br[^>]*>")
-  private val blockEndRegex = Regex(
-    "</(p|h1|h2|h3|h4|h5|h6|ol|ul|pre|address|blockquote|dl|div|fieldset|form|hr|table)[^>]*>"
-  )
-  private val blockStartRegex = Regex(
+  private val BLOCK_START_REGEX = Regex(
     "<(p|h1|h2|h3|h4|h5|h6|ol|ul|pre|address|blockquote|dl|div|fieldset|form|hr|table)[^>]*>"
   )
-  private val multiNewLineRegex = Regex("\\n{2,}")
+  private val BLOCK_END_REGEX = Regex(
+    "</(p|h1|h2|h3|h4|h5|h6|ol|ul|pre|address|blockquote|dl|div|fieldset|form|hr|table)[^>]*>"
+  )
+  private val MULTI_NEW_LINE_REGEX = Regex("\\n{2,}")
+  private val HTML_BR_REGEX = Regex("<br[^>]*>")
 
   private fun getAttribute(
     attrs: List<String>,
@@ -1328,7 +1327,7 @@ object PgpMsg {
     if (!decryptedContent.contains("class=\"cryptup_file\"")) return decryptedContent
     var i = 0
     val result = java.lang.StringBuilder()
-    for (match in fcAttachmentRegex.findAll(decryptedContent)) {
+    for (match in FC_ATT_REGEX.findAll(decryptedContent)) {
       if (match.range.first > i) {
         result.append(decryptedContent.substring(i, match.range.first))
         i = match.range.last + 1
@@ -1348,16 +1347,16 @@ object PgpMsg {
     return obj != null && obj.has("name") && obj.has("size") && obj.has("type")
   }
 
-  private val fcAttachmentRegex = Regex(
+  private val FC_ATT_REGEX = Regex(
     "<a\\s+href=\"([^\"]+)\"\\s+class=\"cryptup_file\"\\s+cryptup-data=" +
         "\"([^\"]+)\"\\s*>[^<]+</a>\\n?"
   )
 
   fun stripFcReplyToken(decryptedContent: String): String {
-    return decryptedContent.replace(fcReplyTokenRegex, "")
+    return decryptedContent.replace(FC_REPLY_TOKEN_REGEX, "")
   }
 
-  private val fcReplyTokenRegex = Regex("<div[^>]+class=\"cryptup_reply\"[^>]+></div>")
+  private val FC_REPLY_TOKEN_REGEX = Regex("<div[^>]+class=\"cryptup_reply\"[^>]+></div>")
 
   fun stripPublicKeys(decryptedContent: String, foundPublicKeys: MutableList<String>): String {
     val normalizedTextAndBlocks = MsgBlockParser.detectBlocks(decryptedContent)
