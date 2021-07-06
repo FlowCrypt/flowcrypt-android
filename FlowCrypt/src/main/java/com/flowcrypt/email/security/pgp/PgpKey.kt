@@ -9,22 +9,16 @@ import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
-import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPKeyRing
-import org.bouncycastle.openpgp.PGPObjectFactory
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
-import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
-import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection
-import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator
 import org.pgpainless.PGPainless
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.util.Passphrase
 import java.io.InputStream
-import java.nio.charset.StandardCharsets
 
 @Suppress("unused")
 object PgpKey {
@@ -128,37 +122,7 @@ object PgpKey {
   // Restored here some previous code. Not sure if PGPainless can help with this.
   fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {
     val normalizedArmored = PgpArmor.normalize(armored, MsgBlock.Type.UNKNOWN)
-    val keys = mutableListOf<PGPKeyRing>()
-    if (PgpArmor.ARMOR_HEADER_DICT_REGEX[MsgBlock.Type.PUBLIC_KEY]!!
-        .beginRegexp.containsMatchIn(normalizedArmored)
-    ) {
-      // In BC 1.69 the order of keys is finally correct, so no need to use reflection
-      val keyRingCollection = JcaPGPPublicKeyRingCollection(
-        ArmoredInputStream(normalizedArmored.toByteArray(StandardCharsets.UTF_8).inputStream())
-      )
-      keys.addAll(keyRingCollection)
-    } else if (PgpArmor.ARMOR_HEADER_DICT_REGEX[MsgBlock.Type.PRIVATE_KEY]!!
-        .beginRegexp.containsMatchIn(normalizedArmored)
-    ) {
-      // In BC 1.69 the order of keys is finally correct, so no need to use reflection
-      val keyRingCollection = JcaPGPSecretKeyRingCollection(
-        ArmoredInputStream(normalizedArmored.toByteArray(StandardCharsets.UTF_8).inputStream())
-      )
-      keys.addAll(keyRingCollection)
-    } else if (PgpArmor.ARMOR_HEADER_DICT_REGEX[MsgBlock.Type.ENCRYPTED_MSG]!!
-        .beginRegexp.containsMatchIn(normalizedArmored)
-    ) {
-      val objectFactory = PGPObjectFactory(
-        ArmoredInputStream(normalizedArmored.toByteArray(StandardCharsets.UTF_8).inputStream()),
-        JcaKeyFingerprintCalculator()
-      )
-      while (true) {
-        val obj = objectFactory.nextObject() ?: break
-        if (obj is PGPKeyRing) {
-          keys.add(obj)
-        }
-      }
-    }
+    val keys = parseKeys(normalizedArmored, false).getAllKeys().toMutableList()
 
     // Prevent key bloat by removing all non-self certifications
     for ((keyRingIndex, keyRing) in keys.withIndex()) {

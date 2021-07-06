@@ -16,16 +16,16 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 fun String.normalizeDashes(): String {
-  return this.replace(dashesRegex, "-----")
+  return this.replace(DASHES_REGEX, "-----")
 }
 
-private val dashesRegex = Regex("^—–|—–$")
+private val DASHES_REGEX = Regex("^—–|—–$")
 
 fun String.normalizeSpaces(): String {
-  return this.replace(char160, ' ')
+  return this.replace(CHAR_160, ' ')
 }
 
-private const val char160 = 160.toChar()
+private const val CHAR_160 = 160.toChar()
 
 fun String.normalize(): String {
   return this.normalizeSpaces().normalizeDashes()
@@ -93,15 +93,15 @@ fun String.escapeHtmlAttr(): String {
 
 fun String.stripHtmlRootTags(): String {
   // Typescript comment: todo - this is very rudimentary, use a proper parser
-  return replace(htmlTagRegex, "") // remove opening and closing html tags
-    .replace(headSectionRegex, "") // remove the whole head section
-    .replace(bodyTagRegex, "") // remove opening and closing body tags
+  return replace(HTML_TAG_REGEX, "") // remove opening and closing html tags
+    .replace(HTML_HEAD_SECTION_REGEX, "") // remove the whole head section
+    .replace(HTML_BODY_TAG_REGEX, "") // remove opening and closing body tags
     .trim()
 }
 
-private val htmlTagRegex = Regex("</?html[^>]*>")
-private val headSectionRegex = Regex("<head[^>]*>.*</head>")
-private val bodyTagRegex = Regex("</?body[^>]*>")
+private val HTML_TAG_REGEX = Regex("</?html[^>]*>")
+private val HTML_HEAD_SECTION_REGEX = Regex("<head[^>]*>.*</head>")
+private val HTML_BODY_TAG_REGEX = Regex("</?body[^>]*>")
 
 fun String.decodeFcHtmlAttr(): JSONObject? {
   return try {
