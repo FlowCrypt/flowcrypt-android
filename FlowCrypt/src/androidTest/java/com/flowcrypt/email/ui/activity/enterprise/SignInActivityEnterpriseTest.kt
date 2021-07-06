@@ -308,113 +308,123 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
             gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
 
           if (request.path.equals("/account/login")) {
-            when (model.account) {
-              EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
-
-              EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
-
-              EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-
-              EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-
-              else -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-            }
+            return handleLoginAPI(model, gson)
           }
 
           if (request.path.equals("/account/get")) {
-            when (model.account) {
-              EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
-
-              EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = listOf(
-                    OrgRules.DomainRule.NO_PRV_CREATE,
-                    OrgRules.DomainRule.NO_PRV_BACKUP
-                  )
-                )
-              )
-
-              EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED
-              -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = listOf(
-                    OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-                    OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
-                  ),
-                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-                )
-              )
-
-              EMAIL_FORBID_STORING_PASS_PHRASE_MISSING -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = listOf(
-                    OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN
-                  ),
-                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-                )
-              )
-
-              EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = listOf(
-                    OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-                    OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
-                    OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
-                  ),
-                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-                )
-              )
-
-              EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = listOf(
-                    OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-                    OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
-                  ),
-                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-                )
-              )
-
-              EMAIL_GET_KEYS_VIA_EKM_ERROR -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = ACCEPTED_ORG_RULES,
-                  keyManagerUrl = EMAIL_EKM_URL_ERROR,
-                )
-              )
-
-              EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = ACCEPTED_ORG_RULES,
-                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS_EMPTY_LIST,
-                )
-              )
-
-              EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED -> return successMockResponseForOrgRules(
-                gson = gson,
-                orgRules = OrgRules(
-                  flags = ACCEPTED_ORG_RULES,
-                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY,
-                )
-              )
-            }
+            return handleGetDomainRulesAPI(model, gson)
           }
 
           return MockResponse().setResponseCode(404)
         }
       })
+
+    private fun handleGetDomainRulesAPI(model: LoginModel, gson: Gson): MockResponse {
+      when (model.account) {
+        EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
+
+        EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = listOf(
+              OrgRules.DomainRule.NO_PRV_CREATE,
+              OrgRules.DomainRule.NO_PRV_BACKUP
+            )
+          )
+        )
+
+        EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED
+        -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = listOf(
+              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
+              OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
+            ),
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+          )
+        )
+
+        EMAIL_FORBID_STORING_PASS_PHRASE_MISSING -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = listOf(
+              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN
+            ),
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+          )
+        )
+
+        EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = listOf(
+              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
+              OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
+              OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+            ),
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+          )
+        )
+
+        EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = listOf(
+              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
+              OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
+            ),
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+          )
+        )
+
+        EMAIL_GET_KEYS_VIA_EKM_ERROR -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = ACCEPTED_ORG_RULES,
+            keyManagerUrl = EMAIL_EKM_URL_ERROR,
+          )
+        )
+
+        EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = ACCEPTED_ORG_RULES,
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS_EMPTY_LIST,
+          )
+        )
+
+        EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = ACCEPTED_ORG_RULES,
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY,
+          )
+        )
+
+        else -> return MockResponse().setResponseCode(404)
+      }
+    }
+
+    private fun handleLoginAPI(model: LoginModel, gson: Gson): MockResponse {
+      when (model.account) {
+        EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
+
+        EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
+
+        EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+
+        EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+
+        else -> return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+      }
+    }
 
     private fun successMockResponseForOrgRules(gson: Gson, orgRules: OrgRules) =
       MockResponse().setResponseCode(200)
