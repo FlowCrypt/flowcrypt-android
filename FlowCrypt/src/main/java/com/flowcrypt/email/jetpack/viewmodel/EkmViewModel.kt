@@ -108,7 +108,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
 
       if (!orgRules.hasRule(DomainRule.FORBID_STORING_PASS_PHRASE)) {
         return UnsupportedOrgRulesException(
-          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" +
+          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " +
               DomainRule.FORBID_STORING_PASS_PHRASE
         )
       }
@@ -121,7 +121,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
 
       if (!orgRules.hasRule(DomainRule.NO_PRV_CREATE)) {
         return UnsupportedOrgRulesException(
-          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing" + DomainRule.NO_PRV_CREATE
+          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " + DomainRule.NO_PRV_CREATE
         )
       }
     }

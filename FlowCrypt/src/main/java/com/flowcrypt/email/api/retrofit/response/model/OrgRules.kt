@@ -18,17 +18,17 @@ import com.google.gson.annotations.SerializedName
  *         E-mail: DenBond7@gmail.com
  */
 data class OrgRules constructor(
-  @Expose val flags: List<DomainRule>?,
+  @Expose val flags: List<DomainRule>? = null,
   @SerializedName("custom_keyserver_url")
-  @Expose val customKeyserverUrl: String?,
+  @Expose val customKeyserverUrl: String? = null,
   @SerializedName("key_manager_url")
-  @Expose val keyManagerUrl: String?,
+  @Expose val keyManagerUrl: String? = null,
   @SerializedName("disallow_attester_search_for_domains")
-  @Expose val disallowAttesterSearchForDomains: List<String>?,
+  @Expose val disallowAttesterSearchForDomains: List<String>? = null,
   @SerializedName("enforce_keygen_algo")
-  @Expose val enforceKeygenAlgo: KeyAlgo?,
+  @Expose val enforceKeygenAlgo: KeyAlgo? = null,
   @SerializedName("enforce_keygen_expire_months")
-  @Expose val enforceKeygenExpireMonths: Int?
+  @Expose val enforceKeygenExpireMonths: Int? = null
 ) : Parcelable {
 
   constructor(parcel: Parcel) : this(

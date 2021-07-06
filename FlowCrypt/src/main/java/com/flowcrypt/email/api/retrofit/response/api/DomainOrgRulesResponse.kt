@@ -23,7 +23,7 @@ import com.google.gson.annotations.SerializedName
  */
 data class DomainOrgRulesResponse constructor(
   @SerializedName("error")
-  @Expose override val apiError: ApiError?,
+  @Expose override val apiError: ApiError? = null,
   @SerializedName("domain_org_rules")
   @Expose val orgRules: OrgRules?
 ) : ApiResponse {
