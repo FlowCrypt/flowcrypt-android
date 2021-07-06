@@ -60,6 +60,11 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           tokenId = tokenId
         )
 
+        if (ekmPrivateResult.status != Result.Status.SUCCESS) {
+          ekmLiveData.value = ekmPrivateResult
+          return@launch
+        }
+
         if (ekmPrivateResult.data?.privateKeys?.isEmpty() == true) {
           throw IllegalStateException(context.getString(R.string.no_prv_keys_ask_admin))
         }
