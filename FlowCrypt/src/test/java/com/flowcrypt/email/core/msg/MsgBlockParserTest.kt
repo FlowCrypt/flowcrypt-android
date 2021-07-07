@@ -9,6 +9,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.extensions.kotlin.normalize
+import com.flowcrypt.email.security.pgp.PgpKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -245,7 +246,7 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
     val input = "Hello, these should get replaced:\n$prv\n\nAnd this one too:\n\n$pub"
     assertEquals(input, input.normalize())
 
-    val blocks = MsgBlockParser.detectBlocks(input)
+    val blocks = MsgBlockParser.detectBlocks(input).blocks
 
     assertEquals(4, blocks.size)
 
@@ -267,16 +268,17 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
       blocks[2] as GenericMsgBlock
     )
 
+    val pgpKeyDetails = PgpKey.parseKeys(pub).toPgpKeyDetailsList().firstOrNull()
     assertTrue(blocks[3] is PublicKeyMsgBlock)
     assertEquals(
-      PublicKeyMsgBlock(pub, true, null),
+      PublicKeyMsgBlock(pub, true, pgpKeyDetails),
       blocks[3] as PublicKeyMsgBlock
     )
   }
 
   private fun checkForSinglePlaintextBlock(input: String) {
     assertEquals(input, input.normalize())
-    val blocks = MsgBlockParser.detectBlocks(input)
+    val blocks = MsgBlockParser.detectBlocks(input).blocks
     assertEquals(1, blocks.size)
     assertTrue(blocks[0] is GenericMsgBlock)
     val expectedBlock = GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, input.trimEnd(), true)

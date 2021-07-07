@@ -76,7 +76,10 @@ interface MsgBlock : Parcelable {
     SIGNED_TEXT,
 
     @SerializedName("signedHtml")
-    SIGNED_HTML;
+    SIGNED_HTML,
+
+    @SerializedName("verifiedMsg")
+    VERIFIED_MSG;
 
     override fun describeContents(): Int {
       return 0
@@ -86,6 +89,8 @@ interface MsgBlock : Parcelable {
       dest.writeInt(ordinal)
     }
 
+    fun isContentBlockType() : Boolean = CONTENT_BLOCK_TYPES.contains(this)
+
     companion object {
       @JvmField
       val CREATOR: Parcelable.Creator<Type> = object : Parcelable.Creator<Type> {
@@ -93,17 +98,21 @@ interface MsgBlock : Parcelable {
         override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
       }
 
-      val keyBlockTypes = setOf(PUBLIC_KEY, PRIVATE_KEY)
+      val KEY_BLOCK_TYPES = setOf(PUBLIC_KEY, PRIVATE_KEY)
 
-      val replaceableBlockTypes = setOf(
+      val REPLACEABLE_BLOCK_TYPES = setOf(
         PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
       )
 
-      val wellKnownBlockTypes = setOf(
+      val WELL_KNOWN_BLOCK_TYPES = setOf(
         PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
       )
 
-      val signedBlocks = setOf(SIGNED_TEXT, SIGNED_HTML, SIGNED_MSG)
+      val SIGNED_BLOCK_TYPES = setOf(SIGNED_TEXT, SIGNED_HTML, SIGNED_MSG)
+
+      val CONTENT_BLOCK_TYPES = setOf(
+        PLAIN_TEXT, PLAIN_HTML, DECRYPTED_TEXT, DECRYPTED_HTML, SIGNED_MSG, VERIFIED_MSG
+      )
 
       fun ofSerializedName(serializedName: String): Type {
         for (v in values()) {

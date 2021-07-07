@@ -20,9 +20,9 @@ import com.google.gson.annotations.SerializedName
 data class DecryptedAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
-  @Expose val attMeta: AttMeta,
+  @Expose override val attMeta: AttMeta,
   @SerializedName("decryptErr") @Expose val error: DecryptError?
-) : MsgBlock {
+) : AttMsgBlock {
 
   var fileUri: Uri? = null
 

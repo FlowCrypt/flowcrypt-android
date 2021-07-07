@@ -11,8 +11,10 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.Expose
 
-data class EncryptedAttMsgBlock(@Expose override val content: String?,
-                                @Expose val attMeta: AttMeta) : MsgBlock {
+data class EncryptedAttMsgBlock(
+  @Expose override val content: String?,
+  @Expose override val attMeta: AttMeta
+) : AttMsgBlock {
 
   var fileUri: Uri? = null
 

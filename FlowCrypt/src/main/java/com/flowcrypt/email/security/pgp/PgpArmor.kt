@@ -98,7 +98,7 @@ object PgpArmor {
   @JvmStatic
   fun normalize(armored: String, blockType: MsgBlock.Type): String {
     if (blockType != MsgBlock.Type.UNKNOWN
-      && !MsgBlock.Type.replaceableBlockTypes.contains(blockType)
+      && !MsgBlock.Type.REPLACEABLE_BLOCK_TYPES.contains(blockType)
     ) {
       throw IllegalArgumentException("Can't normalize block of type '$blockType'")
     }
@@ -159,7 +159,7 @@ object PgpArmor {
   @Suppress("ArrayInDataClass")
   data class CleartextSignedMessage(
     val content: ByteArrayOutputStream,
-    val signature: Any?
+    val signature: String?
   )
 
   // Based on this example:

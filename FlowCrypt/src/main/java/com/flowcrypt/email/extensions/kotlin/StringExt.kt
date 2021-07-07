@@ -1,25 +1,31 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors:
+ *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.extensions.kotlin
 
-object StringExtensionsHelper {
-  @JvmStatic
-  val char160 = 160.toChar()
-
-  @JvmStatic
-  val dashesRegex = Regex("^—–|—–$")
-}
+import org.json.JSONObject
+import java.io.InputStream
+import java.io.UnsupportedEncodingException
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 
 fun String.normalizeDashes(): String {
-  return this.replace(StringExtensionsHelper.dashesRegex, "-----")
+  return this.replace(DASHES_REGEX, "-----")
 }
 
+private val DASHES_REGEX = Regex("^—–|—–$")
+
 fun String.normalizeSpaces(): String {
-  return this.replace(StringExtensionsHelper.char160, ' ')
+  return this.replace(CHAR_160, ' ')
 }
+
+private const val CHAR_160 = 160.toChar()
 
 fun String.normalize(): String {
   return this.normalizeSpaces().normalizeDashes()
@@ -51,4 +57,96 @@ fun String.normalizeEol(): String {
 
 fun String.removeUtf8Bom(): String {
   return if (this.startsWith("\uFEFF")) this.substring(1) else this
+}
+
+fun String.toEscapedHtml(): String {
+  return this.replace("&", "&amp;")
+    .replace("\"", "&quot;")
+    .replace("'", "&#39;")
+    .replace("<", "&lt;")
+    .replace(">", "&gt;")
+    .replace("/", "&#x2F;")
+    .replace("\n", "<br/>")
+}
+
+fun String.unescapeHtml(): String {
+  // Comment from Typescript:
+  // the &nbsp; at the end is replaced with an actual NBSP character, not a space character.
+  // IDE won't show you the difference. Do not change.
+  return replace("&#x2F;", "/")
+    .replace("&quot;", "\"")
+    .replace("&#39;", "'")
+    .replace("&lt;", "<")
+    .replace("&gt;", ">")
+    .replace("&amp;", "&")
+    .replace("&nbsp;", " ")
+}
+
+fun String.escapeHtmlAttr(): String {
+  return replace("&", "&amp;")
+    .replace("\"", "&quot;")
+    .replace("'", "&#39;")
+    .replace("<", "&lt;")
+    .replace("<", "&gt;")
+    .replace("/", "&#x2F;")
+}
+
+fun String.stripHtmlRootTags(): String {
+  // Typescript comment: todo - this is very rudimentary, use a proper parser
+  return replace(HTML_TAG_REGEX, "") // remove opening and closing html tags
+    .replace(HTML_HEAD_SECTION_REGEX, "") // remove the whole head section
+    .replace(HTML_BODY_TAG_REGEX, "") // remove opening and closing body tags
+    .trim()
+}
+
+private val HTML_TAG_REGEX = Regex("</?html[^>]*>")
+private val HTML_HEAD_SECTION_REGEX = Regex("<head[^>]*>.*</head>")
+private val HTML_BODY_TAG_REGEX = Regex("</?body[^>]*>")
+
+fun String.decodeFcHtmlAttr(): JSONObject? {
+  return try {
+    JSONObject(decodeBase64Url())
+  } catch (e: Exception) {
+    e.printStackTrace()
+    null
+  }
+}
+
+fun String.decodeBase64Url(): String {
+  return this.replace('+', '-').replace('_', '/').decodeBase64()
+    .joinToString { it.toUrlHex() }.decodeUriComponent()
+}
+
+fun String.decodeBase64(): ByteArray {
+  return Base64.getDecoder().decode(this)
+}
+
+// see https://stackoverflow.com/a/611117/1540501
+fun String.decodeUriComponent(): String {
+  return try {
+    URLDecoder.decode(this, "UTF-8")
+  } catch (e: UnsupportedEncodingException) {
+    // should never happen
+    throw IllegalStateException(e)
+  }
+}
+
+// see https://stackoverflow.com/a/611117/1540501
+fun String.encodeUriComponent(): String {
+  return try {
+    URLEncoder.encode(this, "UTF-8")
+      .replace("+", "%20")
+      .replace("%21", "!")
+      .replace("%27", "'")
+      .replace("%28", "(")
+      .replace("%29", ")")
+      .replace("%7E", "~")
+  } catch (e: UnsupportedEncodingException) {
+    // should never happen
+    throw IllegalStateException(e)
+  }
+}
+
+fun String.toInputStream(charset: Charset = StandardCharsets.UTF_8): InputStream {
+  return toByteArray(charset).inputStream()
 }

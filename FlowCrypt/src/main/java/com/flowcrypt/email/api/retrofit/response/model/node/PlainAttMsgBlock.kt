@@ -13,8 +13,8 @@ import com.google.gson.annotations.Expose
 
 data class PlainAttMsgBlock(
   @Expose override val content: String?,
-  @Expose val attMeta: AttMeta
-) : MsgBlock {
+  @Expose override val attMeta: AttMeta
+) : AttMsgBlock {
 
   var fileUri: Uri? = null
 
