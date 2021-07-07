@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.security.pgp
 
+import android.os.Parcel
+import android.os.Parcelable
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -76,13 +78,26 @@ object PgpDecrypt {
     }
   }
 
-  enum class DecryptionErrorType {
+  enum class DecryptionErrorType : Parcelable {
     KEY_MISMATCH,
     WRONG_PASSPHRASE,
     NO_MDC,
     BAD_MDC,
     NEED_PASSPHRASE,
     FORMAT,
-    OTHER
+    OTHER;
+
+    override fun describeContents(): Int {
+      return 0
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+      dest.writeInt(ordinal)
+    }
+
+    companion object CREATOR : Parcelable.Creator<DecryptionErrorType> {
+      override fun createFromParcel(parcel: Parcel) = values()[parcel.readInt()]
+      override fun newArray(size: Int): Array<DecryptionErrorType?> = arrayOfNulls(size)
+    }
   }
 }

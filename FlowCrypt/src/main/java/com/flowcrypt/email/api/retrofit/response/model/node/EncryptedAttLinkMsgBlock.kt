@@ -10,13 +10,16 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.Expose
 
-class EncryptedAttLinkMsgBlock(
+data class EncryptedAttLinkMsgBlock(
   @Expose override val attMeta: AttMeta,
 ) : AttMsgBlock {
 
-  @Expose override val content: String = ""
-  @Expose override val type: MsgBlock.Type = MsgBlock.Type.ENCRYPTED_ATT_LINK
-  @Expose override val complete: Boolean = true
+  @Expose
+  override val content: String = ""
+  @Expose
+  override val type: MsgBlock.Type = MsgBlock.Type.ENCRYPTED_ATT_LINK
+  @Expose
+  override val complete: Boolean = true
 
   constructor(source: Parcel) : this(
     source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!

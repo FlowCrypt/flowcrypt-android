@@ -23,9 +23,9 @@ import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.javax.mail.internet.hasFileName
 import com.flowcrypt.email.extensions.javax.mail.isInline
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
-import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.escapeHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
+import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
@@ -48,11 +48,8 @@ import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.protection.UnprotectedKeysProtector
 import org.pgpainless.util.Passphrase
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import javax.mail.Address
@@ -122,60 +119,27 @@ object PgpMsg {
 
   data class DecryptionError(
     val type: PgpDecrypt.DecryptionErrorType,
-    val message: String,
-    val cause: Throwable? = null
+    val message: String? = null
   ) : Parcelable {
     constructor(parcel: Parcel) : this(
-      PgpDecrypt.DecryptionErrorType.valueOf(parcel.readString() ?: ""),
-      parcel.readString() ?: "",
-      readCause(parcel)
+      parcel.readParcelable<PgpDecrypt.DecryptionErrorType>(
+        PgpDecrypt.DecryptionErrorType::class.java.classLoader
+      )!!,
+      parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-      parcel.writeString(type.toString())
+      parcel.writeParcelable(type, flags)
       parcel.writeString(message)
-      if (cause == null) {
-        parcel.writeInt(0)
-      } else {
-        val baStream = ByteArrayOutputStream()
-        ObjectOutputStream(baStream).use { it.writeObject(cause) }
-        val ba = baStream.toByteArray()
-        parcel.writeInt(ba.size)
-        parcel.writeByteArray(ba)
-      }
     }
 
     override fun describeContents(): Int {
       return 0
     }
 
-    companion object {
-      @JvmField
-      val CREATOR = object : Parcelable.Creator<DecryptionError> {
-        override fun createFromParcel(parcel: Parcel): DecryptionError {
-          return DecryptionError(parcel)
-        }
-
-        override fun newArray(size: Int): Array<DecryptionError?> {
-          return arrayOfNulls(size)
-        }
-      }
-
-      private fun readCause(parcel: Parcel): Throwable? {
-        val size = parcel.readInt()
-        if (size == 0) return null
-
-        val ba = ByteArray(size)
-        parcel.readByteArray(ba)
-
-        val obj: Any?
-        ByteArrayInputStream(ba).use {
-          ObjectInputStream(it).use { it2 ->
-            obj = it2.readObject()
-          }
-        }
-        return obj as Throwable
-      }
+    companion object CREATOR : Parcelable.Creator<DecryptionError> {
+      override fun createFromParcel(parcel: Parcel) = DecryptionError(parcel)
+      override fun newArray(size: Int): Array<DecryptionError?> = arrayOfNulls(size)
     }
   }
 
@@ -201,10 +165,9 @@ object PgpMsg {
     companion object {
       fun withError(
         type: PgpDecrypt.DecryptionErrorType,
-        message: String,
-        cause: Throwable? = null
+        message: String
       ): DecryptionResult {
-        return DecryptionResult(error = DecryptionError(type, message, cause))
+        return DecryptionResult(error = DecryptionError(type, message))
       }
 
       fun withCleartext(cleartext: ByteArrayOutputStream, signature: String?): DecryptionResult {
@@ -247,14 +210,12 @@ object PgpMsg {
         ) {
           DecryptionResult.withError(
             type = PgpDecrypt.DecryptionErrorType.FORMAT,
-            message = ex.message!!,
-            cause = ex.cause
+            message = ex.message!!
           )
         } else {
           DecryptionResult.withError(
             type = PgpDecrypt.DecryptionErrorType.OTHER,
-            message = "Decode cleartext error",
-            cause = ex
+            message = "Decode cleartext error"
           )
         }
       }
@@ -282,8 +243,7 @@ object PgpMsg {
       }
       return DecryptionResult.withError(
         type = PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE,
-        message = "Wrong passphrase",
-        cause = ex
+        message = "Wrong passphrase"
       )
     }
 
@@ -308,20 +268,17 @@ object PgpMsg {
       return DecryptionResult.withError(
         type = PgpDecrypt.DecryptionErrorType.NO_MDC,
         message = "Security threat! Message is missing integrity checks (MDC)." +
-            " The sender should update their outdated software.",
-        cause = ex
+            " The sender should update their outdated software."
       )
     } catch (ex: ModificationDetectionException) {
       return DecryptionResult.withError(
         type = PgpDecrypt.DecryptionErrorType.BAD_MDC,
-        message = "Security threat! Integrity check failed.",
-        cause = ex
+        message = "Security threat! Integrity check failed."
       )
     } catch (ex: PGPDataValidationException) {
       return DecryptionResult.withError(
         type = PgpDecrypt.DecryptionErrorType.KEY_MISMATCH,
-        message = "There is no matching key",
-        cause = ex
+        message = "There is no matching key"
       )
     } catch (ex: PGPException) {
       if (
@@ -332,19 +289,13 @@ object PgpMsg {
       ) {
         return DecryptionResult.withError(
           type = PgpDecrypt.DecryptionErrorType.KEY_MISMATCH,
-          message = "There is no suitable decryption key",
-          cause = ex
+          message = "There is no suitable decryption key"
         )
-      } else {
-        exception = ex
       }
-    } catch (ex: Exception) {
-      exception = ex
     }
     return DecryptionResult.withError(
       type = PgpDecrypt.DecryptionErrorType.OTHER,
-      message = "Decryption failed",
-      cause = exception
+      message = "Decryption failed"
     )
   }
 
@@ -832,7 +783,8 @@ object PgpMsg {
     for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
       var contentId = (plainImageBlock as AttMsgBlock).attMeta.contentId ?: ""
       if (contentId.isNotEmpty()) {
-        contentId = contentId.replace(CID_CORRECTION_REGEX_1, "").replace(CID_CORRECTION_REGEX_2, "")
+        contentId =
+          contentId.replace(CID_CORRECTION_REGEX_1, "").replace(CID_CORRECTION_REGEX_2, "")
         inlineImagesByCid[contentId] = plainImageBlock
       } else {
         imagesAtTheBottom.add(plainImageBlock)
@@ -861,7 +813,8 @@ object PgpMsg {
           }
 
           MsgBlock.Type.PLAIN_TEXT -> {
-            val html = fmtMsgContentBlockAsHtml(block.content.toString().toEscapedHtml(), FrameColor.PLAIN)
+            val html =
+              fmtMsgContentBlockAsHtml(block.content.toString().toEscapedHtml(), FrameColor.PLAIN)
             msgContentAsHtml.append(html)
             msgContentAsText.append(block.content).append('\n')
           }

@@ -7,9 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model.node
 
 import android.os.Parcel
 import com.flowcrypt.email.extensions.java.io.toBase64EncodedString
-import com.flowcrypt.email.extensions.kotlin.toInputStream
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
-import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
+import com.flowcrypt.email.security.pgp.PgpKey
 import java.io.InputStream
 import java.util.Base64
 import javax.mail.internet.MimePart
@@ -47,7 +45,7 @@ object MsgBlockFactory {
     return when (type) {
       MsgBlock.Type.PUBLIC_KEY -> {
         val keyDetails = if (content != null && complete) {
-          JcaPGPPublicKeyRingCollection(content.toInputStream()).keyRings.next().toPgpKeyDetails()
+          PgpKey.parseKeys(content).toPgpKeyDetailsList().firstOrNull()
         } else null
         PublicKeyMsgBlock(content, complete, keyDetails)
       }

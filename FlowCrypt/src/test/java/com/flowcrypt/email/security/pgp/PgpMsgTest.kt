@@ -9,9 +9,9 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.SignedMsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
-import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
+import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.google.gson.JsonParser
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertArrayEquals
@@ -22,7 +22,8 @@ import org.pgpainless.PGPainless
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Base64
+import java.util.Properties
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
@@ -274,10 +275,6 @@ class PgpMsgTest {
     if (result.content != null) {
       val s = String(result.content!!.toByteArray(), Charset.forName(messageInfo.charset))
       println("=========\n$s\n=========")
-    }
-    if (result.error != null && result.error!!.cause != null) {
-      println("CAUSE:")
-      result.error!!.cause!!.printStackTrace(System.out)
     }
     return result
   }
