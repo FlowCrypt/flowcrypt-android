@@ -12,9 +12,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.util.UIUtil
@@ -32,6 +34,8 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
     super.onViewCreated(view, savedInstanceState)
     (activity as AppCompatActivity?)?.supportActionBar?.title =
       getString(R.string.security_and_privacy)
+
+    observeOnResultLiveData()
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -82,12 +86,33 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
     }
   }
 
+  private fun observeOnResultLiveData() {
+    getNavigationResult<Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
+      if (it.isSuccess) {
+        val passphrase = it.getOrNull() as? CharArray ?: return@getNavigationResult
+        account?.let { accountEntity ->
+          navController?.navigate(
+            SecuritySettingsFragmentDirections
+              .actionSecuritySettingsFragmentToChangePassphraseOfImportedKeysFragment(
+                popBackStackIdIfSuccess = R.id.securitySettingsFragment,
+                title = getString(R.string.pass_phrase_changed),
+                subTitle = getString(R.string.passphrase_was_changed),
+                passphrase = String(passphrase),
+                accountEntity = accountEntity
+              )
+          )
+        }
+      }
+    }
+  }
+
   private fun navigateToCheckPassphraseStrengthFragment() {
     navController?.navigate(
       SecuritySettingsFragmentDirections
         .actionSecuritySettingsFragmentToCheckPassphraseStrengthFragment(
-          popBackStackIdIfSuccess = navController?.currentDestination?.id ?: 0,
-          title = getString(R.string.change_pass_phrase)
+          popBackStackIdIfSuccess = R.id.securitySettingsFragment,
+          title = getString(R.string.change_pass_phrase),
+          lostPassphraseTitle = getString(R.string.loss_of_this_pass_phrase_cannot_be_recovered)
         )
     )
   }

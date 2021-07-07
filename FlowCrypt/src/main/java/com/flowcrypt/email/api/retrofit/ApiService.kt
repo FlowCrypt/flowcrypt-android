@@ -11,7 +11,8 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
-import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
@@ -106,7 +107,7 @@ interface ApiService {
    * @param body POJO model for requests
    */
   @POST(BuildConfig.API_URL + "account/get")
-  suspend fun getDomainRules(@Body body: LoginModel): Response<DomainRulesResponse>
+  suspend fun getDomainOrgRules(@Body body: LoginModel): Response<DomainOrgRulesResponse>
 
   /**
    * This method calls API "https://flowcrypt.com/attester/initial/legacy_submit" via coroutines
@@ -139,4 +140,13 @@ interface ApiService {
 
   @GET
   suspend fun getOpenIdConfiguration(@Url url: String): Response<JsonObject>
+
+  /**
+   * Get private keys via "<ekm>/v1/keys/private"
+   */
+  @GET
+  suspend fun getPrivateKeysViaEkm(
+    @Url ekmUrl: String,
+    @Header("Authorization") tokenId: String
+  ): Response<EkmPrivateKeysResponse>
 }

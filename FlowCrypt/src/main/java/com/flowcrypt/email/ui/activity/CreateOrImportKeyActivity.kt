@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity
@@ -119,7 +120,7 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
   private fun initViews() {
     findViewById<View>(R.id.buttonImportMyKey)?.setOnClickListener(this)
 
-    if (tempAccount.isRuleExist(AccountEntity.DomainRule.NO_PRV_CREATE)) {
+    if (tempAccount.isRuleExist(OrgRules.DomainRule.NO_PRV_CREATE)) {
       findViewById<View>(R.id.buttonCreateNewKey)?.visibility = View.GONE
     } else {
       findViewById<View>(R.id.buttonCreateNewKey)?.setOnClickListener(this)

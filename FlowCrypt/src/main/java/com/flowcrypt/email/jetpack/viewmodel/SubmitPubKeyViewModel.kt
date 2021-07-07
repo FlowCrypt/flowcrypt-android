@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -47,7 +48,7 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
 
         when (result.status) {
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            if (account.isRuleExist(AccountEntity.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+            if (account.isRuleExist(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
               submitPubKeyLiveData.value = result
             } else {
               val registerAction =
@@ -67,3 +68,4 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
     }
   }
 }
+

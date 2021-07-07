@@ -19,6 +19,7 @@ import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -57,7 +58,7 @@ class ChangePassphraseOfImportedKeysFragmentTest : BaseTest() {
     .outerRule(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
-    //.around(RetryRule.DEFAULT)
+    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 

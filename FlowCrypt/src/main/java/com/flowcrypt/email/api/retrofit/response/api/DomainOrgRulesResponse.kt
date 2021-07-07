@@ -9,7 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.api.retrofit.response.model.DomainRules
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -21,21 +21,21 @@ import com.google.gson.annotations.SerializedName
  *         Time: 11:25 AM
  *         E-mail: DenBond7@gmail.com
  */
-data class DomainRulesResponse constructor(
+data class DomainOrgRulesResponse constructor(
   @SerializedName("error")
-  @Expose override val apiError: ApiError?,
+  @Expose override val apiError: ApiError? = null,
   @SerializedName("domain_org_rules")
-  @Expose val domainRules: DomainRules?
+  @Expose val orgRules: OrgRules?
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
     parcel.readParcelable(ApiError::class.java.classLoader),
-    parcel.readParcelable<DomainRules>(DomainRules::class.java.classLoader)
+    parcel.readParcelable<OrgRules>(OrgRules::class.java.classLoader)
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     with(parcel) {
       writeParcelable(apiError, flags)
-      writeParcelable(domainRules, flags)
+      writeParcelable(orgRules, flags)
     }
   }
 
@@ -43,12 +43,12 @@ data class DomainRulesResponse constructor(
     return 0
   }
 
-  companion object CREATOR : Parcelable.Creator<DomainRulesResponse> {
-    override fun createFromParcel(parcel: Parcel): DomainRulesResponse {
-      return DomainRulesResponse(parcel)
+  companion object CREATOR : Parcelable.Creator<DomainOrgRulesResponse> {
+    override fun createFromParcel(parcel: Parcel): DomainOrgRulesResponse {
+      return DomainOrgRulesResponse(parcel)
     }
 
-    override fun newArray(size: Int): Array<DomainRulesResponse?> {
+    override fun newArray(size: Int): Array<DomainOrgRulesResponse?> {
       return arrayOfNulls(size)
     }
   }

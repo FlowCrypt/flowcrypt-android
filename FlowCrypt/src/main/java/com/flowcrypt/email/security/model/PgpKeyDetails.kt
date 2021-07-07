@@ -220,11 +220,8 @@ data class PgpKeyDetails constructor(
     return result
   }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<PgpKeyDetails> = object : Parcelable.Creator<PgpKeyDetails> {
-      override fun createFromParcel(source: Parcel): PgpKeyDetails = PgpKeyDetails(source)
-      override fun newArray(size: Int): Array<PgpKeyDetails?> = arrayOfNulls(size)
-    }
+  companion object CREATOR : Parcelable.Creator<PgpKeyDetails> {
+    override fun createFromParcel(parcel: Parcel): PgpKeyDetails = PgpKeyDetails(parcel)
+    override fun newArray(size: Int): Array<PgpKeyDetails?> = arrayOfNulls(size)
   }
 }

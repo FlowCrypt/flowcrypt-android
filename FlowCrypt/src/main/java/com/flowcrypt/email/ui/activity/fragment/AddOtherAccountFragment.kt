@@ -37,6 +37,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.model.KeyImportDetails
@@ -132,7 +133,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         Activity.RESULT_OK -> if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
 
         CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
-          parentFragmentManager.popBackStack()
+          navController?.navigateUp()
         }
 
         CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> handleResultFromCheckKeysActivity(
@@ -500,24 +501,17 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
                 smtpPassword = authCredentials.peekSmtpPassword()
               )
 
-              val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
-              activity?.supportFragmentManager?.beginTransaction()
-                ?.replace(
-                  R.id.fragmentContainerView,
-                  nextFrag,
-                  AuthorizeAndSearchBackupsFragment::class.java.simpleName
-                )
-                ?.addToBackStack(null)
-                ?.commit()
+              navController?.navigate(
+                AddOtherAccountFragmentDirections
+                  .actionAddOtherAccountFragmentToAuthorizeAndSearchBackupsFragment(account)
+              )
 
               return@let
             } else {
               showContent()
               showInfoSnackbar(
-                msgText = getString(
-                  R.string.template_email_already_added,
-                  existedAccount.email
-                ), duration = Snackbar.LENGTH_LONG
+                msgText = getString(R.string.template_email_already_added, existedAccount.email),
+                duration = Snackbar.LENGTH_LONG
               )
             }
           }
@@ -651,7 +645,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       view, getString(R.string.less_secure_login_is_not_allowed),
       getString(android.R.string.ok), Snackbar.LENGTH_LONG
     ) {
-      parentFragmentManager.popBackStack()
+      navController?.navigateUp()
     }
   }
 
@@ -790,15 +784,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       authCreds = generateAuthCreds()
       authCreds?.let { authCredentials ->
         val account = AccountEntity(authCredentials)
-        val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
-        activity?.supportFragmentManager?.beginTransaction()
-          ?.replace(
-            R.id.fragmentContainerView,
-            nextFrag,
-            AuthorizeAndSearchBackupsFragment::class.java.simpleName
-          )
-          ?.addToBackStack(null)
-          ?.commit()
+        navController?.navigate(
+          AddOtherAccountFragmentDirections
+            .actionAddOtherAccountFragmentToAuthorizeAndSearchBackupsFragment(account)
+        )
       }
     }
   }
@@ -832,7 +821,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       Activity.RESULT_CANCELED -> showContent()
 
       CheckKeysActivity.RESULT_NEGATIVE -> {
-        parentFragmentManager.popBackStack()
+        navController?.navigateUp()
       }
     }
   }

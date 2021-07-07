@@ -52,6 +52,9 @@
         <action
             android:id="@+id/action_securitySettingsFragment_to_checkPassphraseStrengthFragment"
             app:destination="@id/checkPassphraseStrengthFragment" />
+        <action
+            android:id="@+id/action_securitySettingsFragment_to_changePassphraseOfImportedKeysFragment"
+            app:destination="@id/changePassphraseOfImportedKeysFragment" />
     </fragment>
 
     <fragment
@@ -65,6 +68,11 @@
         <argument
             android:name="title"
             app:argType="string" />
+        <argument
+            android:name="lostPassphraseTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
         <action
             android:id="@+id/action_checkPassphraseStrengthFragment_to_recheckProvidedPassphraseFragment"
             app:destination="@id/recheckProvidedPassphraseFragment" />
@@ -90,9 +98,6 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security/recheck_passphrase" />
-        <action
-            android:id="@+id/action_recheckProvidedPassphraseFragment_to_changePassphraseOfImportedKeysFragment"
-            app:destination="@id/changePassphraseOfImportedKeysFragment" />
     </fragment>
 
     <fragment
@@ -272,6 +277,9 @@
         <action
             android:id="@+id/action_backupKeysFragment_to_checkPassphraseStrengthFragment"
             app:destination="@id/checkPassphraseStrengthFragment" />
+        <action
+            android:id="@+id/action_backupKeysFragment_to_changePassphraseOfImportedKeysFragment"
+            app:destination="@id/changePassphraseOfImportedKeysFragment" />
     </fragment>
 
     <fragment

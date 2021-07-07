@@ -7,6 +7,9 @@ package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyDetails
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
@@ -16,6 +19,16 @@ import java.io.InputStream
 
 @Suppress("unused")
 object PgpKey {
+  /**
+   * Encrypt the given key.
+   *
+   * @param armored Should be a single private key.
+   */
+  suspend fun encryptKeySuspend(armored: String, passphrase: Passphrase): String =
+    withContext(Dispatchers.IO) {
+      return@withContext encryptKey(extractSecretKeyRing(armored), passphrase).armor()
+    }
+
   /**
    * Encrypt the given key.
    *
@@ -76,6 +89,11 @@ object PgpKey {
       .withSecureDefaultSettings()
       .toNoPassphrase()
       .done()
+  }
+
+  suspend fun parsePrivateKeys(source: String): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
+    parseKeys(source, false).pgpKeyRingCollection
+      .pgpSecretKeyRingCollection.map { it.toPgpKeyDetails() }
   }
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {

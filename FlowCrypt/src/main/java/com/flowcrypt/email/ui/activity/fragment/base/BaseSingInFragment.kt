@@ -7,13 +7,13 @@ package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.app.Activity
 import android.content.Intent
-import android.os.Bundle
-import android.view.View
 import androidx.fragment.app.viewModels
 import androidx.work.WorkManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -41,26 +41,18 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
 
   abstract fun getTempAccount(): AccountEntity?
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    initAllAccountsLiveData()
-  }
-
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-    initAddNewAccountLiveData()
-  }
-
   protected fun initSavePrivateKeysLiveData() {
     privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
             showProgress(getString(R.string.processing))
           }
 
           Result.Status.SUCCESS -> {
             if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -87,6 +79,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                 ?: getString(R.string.unknown_error)
               )
             }
+            baseActivity.countingIdlingResource.decrementSafely()
           }
         }
       }

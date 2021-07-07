@@ -18,6 +18,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import java.util.Locale
@@ -102,10 +103,8 @@ data class AccountEntity constructor(
   val useOAuth2: Boolean
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
 
-  constructor(
-    googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
-    domainRules: List<String>? = null
-  ) :
+  constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
+              domainRules: List<OrgRules.DomainRule>? = null) :
       this(
         email = googleSignInAccount.email!!.toLowerCase(Locale.US),
         accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.US),
@@ -138,11 +137,7 @@ data class AccountEntity constructor(
         useAPI = FlavorSettings.isGMailAPIEnabled()
       )
 
-  constructor(
-    authCredentials: AuthCredentials,
-    uuid: String? = null,
-    domainRules: List<String>? = null
-  ) :
+  constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<OrgRules.DomainRule>? = null) :
       this(
         email = authCredentials.email.toLowerCase(Locale.US),
         accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1)
@@ -278,15 +273,9 @@ data class AccountEntity constructor(
     }
   }
 
-  fun isRuleExist(domainRule: DomainRule): Boolean {
+  fun isRuleExist(domainRule: OrgRules.DomainRule): Boolean {
     val rules = domainRulesList()
     return domainRule.name in rules
-  }
-
-  enum class DomainRule {
-    NO_PRV_CREATE,
-    NO_PRV_BACKUP,
-    ENFORCE_ATTESTER_SUBMIT
   }
 
   override fun describeContents() = 0

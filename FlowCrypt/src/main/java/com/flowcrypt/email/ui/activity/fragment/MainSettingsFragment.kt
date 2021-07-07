@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
@@ -109,7 +110,7 @@ class MainSettingsFragment : BasePreferenceFragment() {
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     findPreference<Preference>(Constants.PREF_KEY_BACKUPS)?.isVisible =
-      !(accountEntity?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) ?: false)
+        !(accountEntity?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) ?: false)
 
     if (accountEntity?.useAPI == false) {
       findPreference<Preference>(Constants.PREF_KEY_SERVER_SETTINGS)?.isVisible = true

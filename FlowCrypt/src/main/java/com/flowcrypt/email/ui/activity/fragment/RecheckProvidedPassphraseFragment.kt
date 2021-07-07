@@ -14,9 +14,12 @@ import android.view.inputmethod.EditorInfo
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentRecheckProvidedPassphraseBinding
+import com.flowcrypt.email.extensions.getOnResultSavedStateHandle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -52,24 +55,25 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
 
   private fun initViews() {
     binding?.tVTitle?.text = args.title
-    binding?.eTRepeatedPassphrase?.setOnEditorActionListener { _, actionId, _ ->
+    binding?.eTRepeatedPassphrase?.setOnEditorActionListener { v, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
-          checkAndMoveOn()
+          checkAndReturnResult()
+          UIUtil.hideSoftInput(requireContext(), v)
           true
         }
         else -> false
       }
     }
     binding?.btConfirmPassphrase?.setOnClickListener {
-      checkAndMoveOn()
+      checkAndReturnResult()
     }
     binding?.btUseAnotherPassphrase?.setOnClickListener {
       navController?.navigateUp()
     }
   }
 
-  private fun checkAndMoveOn() {
+  private fun checkAndReturnResult() {
     if (binding?.eTRepeatedPassphrase?.text?.isEmpty() == true) {
       showInfoSnackbar(
         view = binding?.root,
@@ -79,18 +83,12 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
     } else {
       snackBar?.dismiss()
       if (binding?.eTRepeatedPassphrase?.text.toString() == args.passphrase) {
-        account?.let { accountEntity ->
-          navController?.navigate(
-            RecheckProvidedPassphraseFragmentDirections
-              .actionRecheckProvidedPassphraseFragmentToChangePassphraseOfImportedKeysFragment(
-                popBackStackIdIfSuccess = args.popBackStackIdIfSuccess,
-                title = getString(R.string.pass_phrase_changed),
-                subTitle = getString(R.string.passphrase_was_changed),
-                passphrase = args.passphrase,
-                accountEntity = accountEntity
-              )
-          )
-        }
+        getOnResultSavedStateHandle(args.popBackStackIdIfSuccess)?.set(
+          KEY_ACCEPTED_PASSPHRASE_RESULT,
+          Result.success(binding?.eTRepeatedPassphrase?.text?.toString()?.toCharArray())
+        )
+
+        navController?.popBackStack(args.popBackStackIdIfSuccess, false)
       } else {
         showInfoSnackbar(
           view = binding?.root,
@@ -99,6 +97,13 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
         )
       }
     }
+  }
+
+  companion object {
+    val KEY_ACCEPTED_PASSPHRASE_RESULT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_ACCEPTED_PASSPHRASE_RESULT",
+      RecheckProvidedPassphraseFragment::class.java
+    )
   }
 }
 
