@@ -19,17 +19,10 @@ import androidx.lifecycle.MutableLiveData
  *         E-mail: DenBond7@gmail.com
  */
 class LauncherViewModel(application: Application) : BaseAndroidViewModel(application) {
-  val isNodeInfoReceivedLiveData: MutableLiveData<Boolean> = MutableLiveData()
   val isAccountInfoReceivedLiveData: MutableLiveData<Boolean> = MutableLiveData()
-
   val mediatorLiveData = MediatorLiveData<Boolean>()
 
   init {
-    mediatorLiveData.addSource(isNodeInfoReceivedLiveData) { value ->
-      mediatorLiveData.setValue(
-        value
-      )
-    }
     mediatorLiveData.addSource(isAccountInfoReceivedLiveData) { value ->
       mediatorLiveData.setValue(
         value

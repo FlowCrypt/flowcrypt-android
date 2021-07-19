@@ -59,9 +59,7 @@ class LauncherActivity : BaseActivity() {
 
   private fun setupLauncherViewModel() {
     launcherViewModel.mediatorLiveData.observe(this, {
-      if (launcherViewModel.isAccountInfoReceivedLiveData.value == true
-        && launcherViewModel.isNodeInfoReceivedLiveData.value == true
-      ) {
+      if (launcherViewModel.isAccountInfoReceivedLiveData.value == true) {
         if (isAccountInfoReceived) {
           if (activeAccount != null) {
             showEmailManagerActivity()
