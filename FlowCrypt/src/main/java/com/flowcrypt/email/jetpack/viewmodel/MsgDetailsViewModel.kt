@@ -8,8 +8,6 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.os.Parcel
-import android.os.Parcelable
 import android.text.TextUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -31,10 +29,9 @@ import com.flowcrypt.email.api.email.javamail.CustomMimeMultipart
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
-import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
@@ -47,13 +44,11 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
-import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
-import com.flowcrypt.email.util.exception.ApiException
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPMessage
@@ -61,18 +56,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.bouncycastle.bcpg.ArmoredInputStream
 import java.io.BufferedInputStream
-import java.io.File
-import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
 import javax.mail.Folder
-import javax.mail.MessagingException
 import javax.mail.Multipart
-import javax.mail.Part
+import javax.mail.Session
 import javax.mail.Store
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
@@ -147,11 +138,11 @@ class MsgDetailsViewModel(
 
   private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
-  private val processingMsgLiveData: MediatorLiveData<Result<ParseDecryptedMsgResult?>> =
+  private val processingMsgLiveData: MediatorLiveData<Result<PgpMsg.ParseDecryptResult?>> =
     MediatorLiveData()
-  private val processingProgressLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> =
+  private val processingProgressLiveData: MutableLiveData<Result<PgpMsg.ParseDecryptResult?>> =
     MutableLiveData()
-  private val processingOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> =
+  private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ParseDecryptResult?>> =
     Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg() == true) {
@@ -165,7 +156,7 @@ class MsgDetailsViewModel(
       }
     }
 
-  private val processingNonOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> =
+  private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ParseDecryptResult?>> =
     Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg() == false) {
@@ -219,8 +210,12 @@ class MsgDetailsViewModel(
                   msgEntity = messageEntity,
                   text = parseDecryptedMsgResult.text,
                   subject = parseDecryptedMsgResult.subject,
-                  msgBlocks = parseDecryptedMsgResult.msgBlocks ?: emptyList(),
-                  encryptionType = parseDecryptedMsgResult.getMsgEncryptionType()
+                  msgBlocks = parseDecryptedMsgResult.blocks,
+                  encryptionType = if (parseDecryptedMsgResult.isReplyEncrypted) {
+                    MessageEncryptionType.ENCRYPTED
+                  } else {
+                    MessageEncryptionType.STANDARD
+                  }
                 )
                 Result.success(requestCode = it.requestCode, data = msgInfo)
               } catch (e: Exception) {
@@ -237,7 +232,7 @@ class MsgDetailsViewModel(
           Result.Status.ERROR -> {
             Result.exception(
               requestCode = it.requestCode,
-              throwable = ApiException(it.data?.apiError)
+              throwable = RuntimeException()
             )
           }
 
@@ -265,6 +260,13 @@ class MsgDetailsViewModel(
   )
 
   init {
+    afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
+      afterKeysStorageUpdatedMsgLiveData.value = it
+    }
+    afterKeysStorageUpdatedMsgLiveData.addSource(afterPassphrasesUpdatedMsgLiveData) {
+      afterKeysStorageUpdatedMsgLiveData.value = it
+    }
+
     mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
@@ -361,26 +363,13 @@ class MsgDetailsViewModel(
     }
   }
 
-  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> =
+  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<PgpMsg.ParseDecryptResult?> =
     withContext(Dispatchers.IO) {
       val uri = msgSnapshot.getUri(0)
       if (uri != null) {
         val list = keysStorage.getPgpKeyDetailsList()
-        val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
         passphraseNeededLiveData.postValue(emptyList())
-        val result = if (largerThan1Mb) {
-          parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
-        } else {
-          Result.success(
-            ParseDecryptedMsgResult(
-              text = "",
-              replyType = "",
-              subject = null,
-              apiError = null,
-              msgBlocks = null
-            )
-          )
-        }
+        val result = parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
         modifyMsgBlocksIfNeeded(result)
         return@withContext result
       } else {
@@ -389,149 +378,70 @@ class MsgDetailsViewModel(
       }
     }
 
-  private suspend fun processingByteArray(rawMimeBytes: ByteArray?): Result<ParseDecryptedMsgResult?> =
+  private suspend fun processingByteArray(rawMimeBytes: ByteArray?): Result<PgpMsg.ParseDecryptResult?> =
     withContext(Dispatchers.IO) {
       return@withContext if (rawMimeBytes == null) {
         Result.exception(throwable = IllegalArgumentException("empty byte array"))
       } else {
-        val result = /*apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(
-              data = rawMimeBytes,
-              keyEntities = keysStorage.getLatestAllPgpPrivateKeys(),
-              isEmail = true
-          ))*/
-
-          Result.success(
-            ParseDecryptedMsgResult(
-              text = "",
-              replyType = "",
-              subject = null,
-              apiError = null,
-              msgBlocks = null
-            )
-          )
+        val result = Result.success(
+          PgpMsg.parseDecryptMsg(
+            String(rawMimeBytes),
+            true,
+            keysStorage.getPgpKeyDetailsList().mapNotNull {
+              val keyRing = keysStorage.getPGPSecretKeyRingByFingerprint(it.fingerprint)
+                ?: return@mapNotNull null
+              val passphrase =
+                keysStorage.getPassphraseByFingerprint(it.fingerprint) ?: return@mapNotNull null
+              return@mapNotNull PgpMsg.KeyWithPassPhrase(keyRing, passphrase)
+            })
+        )
         modifyMsgBlocksIfNeeded(result)
         result
       }
     }
 
-  private suspend fun modifyMsgBlocksIfNeeded(result: Result<ParseDecryptedMsgResult?>) {
+  private suspend fun modifyMsgBlocksIfNeeded(result: Result<PgpMsg.ParseDecryptResult?>) {
     result.data?.let { parseDecryptMsgResult ->
-      for (block in parseDecryptMsgResult.msgBlocks ?: mutableListOf()) {
+      for (block in parseDecryptMsgResult.blocks) {
         if (block is PublicKeyMsgBlock) {
           val keyDetails = block.keyDetails ?: continue
           val pgpContact = keyDetails.primaryPgpContact
           val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
           block.existingPgpContact = contactEntity?.toPgpContact()
         }
+
+        if (block is DecryptErrorMsgBlock) {
+          if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+            val fingerprints = block.error.longIds?.needPassphrase ?: emptyList()
+            if (fingerprints.isEmpty()) {
+              ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
+            } else {
+              passphraseNeededLiveData.postValue(fingerprints)
+            }
+          }
+        }
       }
     }
   }
 
   private suspend fun parseMimeAndDecrypt(context: Context, uri: Uri, list: List<PgpKeyDetails>):
-      Result<ParseDecryptedMsgResult?> {
-    val uriOfEncryptedPart = getUriOfEncryptedPart(context, uri)
-    return if (uriOfEncryptedPart != null) {
-      Result.success(
-        ParseDecryptedMsgResult(
-          text = "",
-          replyType = "",
-          subject = null,
-          apiError = null,
-          msgBlocks = null
-        )
-      )
-      /*apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, keyEntities = list, isEmail = false))*/
-    } else {
-      Result.success(
-        ParseDecryptedMsgResult(
-          text = "",
-          replyType = "",
-          subject = null,
-          apiError = null,
-          msgBlocks = null
-        )
-      )
-      /*apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true, hasEncryptedDataInUri = true))*/
-    }
-  }
-
-  private suspend fun getMimeMessageFromInputStream(context: Context, uri: Uri) =
-    withContext(Dispatchers.IO) {
-      val inputStream = context.contentResolver.openInputStream(uri)
-      if (inputStream != null) {
-        MimeMessage(null, KeyStoreCryptoManager.getCipherInputStream(inputStream))
-      } else throw NullPointerException("Stream is empty")
-    }
-
-  private suspend fun getUriOfEncryptedPart(context: Context, uri: Uri): Uri? {
-    val mimeMessage: MimeMessage = getMimeMessageFromInputStream(context, uri)
-    return findEncryptedPart(mimeMessage)
-  }
-
-  private suspend fun findEncryptedPart(part: Part): Uri? = withContext(Dispatchers.Default) {
-    try {
-      if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        val multiPart = part.content as Multipart
-        val partsNumber = multiPart.count
-        for (partCount in 0 until partsNumber) {
-          val bodyPart = multiPart.getBodyPart(partCount)
-          if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            val encryptedPart = findEncryptedPart(bodyPart)
-            if (encryptedPart != null) {
-              return@withContext encryptedPart
-            }
-          } else if (bodyPart?.disposition?.toLowerCase(Locale.getDefault()) in listOf(
-              Part.ATTACHMENT,
-              Part.INLINE
-            )
-          ) {
-            val fileName = bodyPart.fileName?.toLowerCase(Locale.getDefault()) ?: ""
-            if (fileName in listOf(
-                "message",
-                "msg.asc",
-                "message.asc",
-                "encrypted.asc",
-                "encrypted.eml.pgp",
-                "Message.pgp",
-                ""
-              )
-            ) {
-              val file = prepareTempFile(bodyPart)
-              return@withContext Uri.fromFile(file)
-            }
-
-            val contentType = bodyPart.contentType?.toLowerCase(Locale.getDefault()) ?: ""
-            if (contentType in listOf("application/octet-stream", "application/pgp-encrypted")) {
-              val file = prepareTempFile(bodyPart)
-              return@withContext Uri.fromFile(file)
-            }
-          }
-        }
-        return@withContext null
-      } else {
-        return@withContext null
-      }
-    } catch (e: MessagingException) {
-      e.printStackTrace()
-      return@withContext null
-    } catch (e: IOException) {
-      e.printStackTrace()
-      return@withContext null
-    }
-  }
-
-  private suspend fun prepareTempFile(bodyPart: BodyPart): File = withContext(Dispatchers.IO) {
-    val tempDir = CacheManager.getCurrentMsgTempDir()
-    return@withContext File(tempDir, FILE_NAME_ENCRYPTED_MESSAGE).apply {
-      outputStream().use { outputStream ->
-        ArmoredInputStream(bodyPart.inputStream).use {
-          it.copyTo(outputStream)
-        }
-      }
-    }
+      Result<PgpMsg.ParseDecryptResult?> = withContext(Dispatchers.IO) {
+    val inputStream =
+      context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
+    return@withContext Result.success(
+      PgpMsg.parseDecryptMsg(
+        msg = MimeMessage(
+          Session.getInstance(Properties()),
+          KeyStoreCryptoManager.getCipherInputStream(inputStream)
+        ),
+        keys = list.mapNotNull {
+          val keyRing = keysStorage.getPGPSecretKeyRingByFingerprint(it.fingerprint)
+            ?: return@mapNotNull null
+          val passphrase =
+            keysStorage.getPassphraseByFingerprint(it.fingerprint) ?: return@mapNotNull null
+          return@mapNotNull PgpMsg.KeyWithPassPhrase(keyRing, passphrase)
+        })
+    )
   }
 
   private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot =
@@ -831,49 +741,6 @@ class MsgDetailsViewModel(
   }
 
   companion object {
-    private const val FILE_NAME_ENCRYPTED_MESSAGE = "temp_encrypted_msg.asc"
-
     private const val MIN_UPDATE_PROGRESS_INTERVAL = 500
-  }
-}
-
-data class ParseDecryptedMsgResult constructor(
-  @Expose val text: String?,
-  @Expose val replyType: String,
-  @Expose val subject: String?,
-  @SerializedName("error")
-  @Expose val apiError: ApiError?,
-  var msgBlocks: MutableList<MsgBlock>?
-) : Parcelable {
-
-  fun getMsgEncryptionType(): MessageEncryptionType {
-    return if (replyType == "encrypted") MessageEncryptionType.ENCRYPTED else MessageEncryptionType.STANDARD
-  }
-
-  constructor(source: Parcel) : this(
-    source.readString(),
-    source.readString()!!,
-    source.readString(),
-    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-    mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) }
-  )
-
-  override fun describeContents() = 0
-
-  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeString(text)
-    writeString(replyType)
-    writeString(subject)
-    writeParcelable(apiError, flags)
-    writeTypedList(msgBlocks)
-  }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<ParseDecryptedMsgResult> =
-      object : Parcelable.Creator<ParseDecryptedMsgResult> {
-        override fun createFromParcel(source: Parcel) = ParseDecryptedMsgResult(source)
-        override fun newArray(size: Int): Array<ParseDecryptedMsgResult?> = arrayOfNulls(size)
-      }
   }
 }
