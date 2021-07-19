@@ -30,13 +30,11 @@ import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
-import com.flowcrypt.email.util.idling.NodeIdlingResource
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -61,8 +59,6 @@ abstract class BaseActivity : AppCompatActivity() {
     GeneralUtil.genIdlingResourcesName(this::class.java),
     GeneralUtil.isDebugBuild()
   )
-
-  val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
   var snackBar: Snackbar? = null
     private set
@@ -91,19 +87,11 @@ abstract class BaseActivity : AppCompatActivity() {
    */
   abstract val rootView: View
 
-  val isNodeReady: Boolean
-    get() = if (Node.getInstance(application).liveData.value == null) {
-      false
-    } else {
-      Node.getInstance(application).liveData.value?.isReady ?: false
-    }
-
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     connectionLifecycleObserver = ConnectionLifecycleObserver(this)
     lifecycle.addObserver(connectionLifecycleObserver)
 
-    registerNodeIdlingResources()
     LogsUtil.d(tag, "onCreate")
     if (contentViewResourceId != 0) {
       setContentView(contentViewResourceId)
@@ -212,10 +200,6 @@ abstract class BaseActivity : AppCompatActivity() {
     snackBar?.dismiss()
   }
 
-  protected open fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
-
-  }
-
   protected open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
 
   }
@@ -272,13 +256,6 @@ abstract class BaseActivity : AppCompatActivity() {
       activeAccount = it
       isAccountInfoReceived = true
       onAccountInfoRefreshed(activeAccount)
-    })
-  }
-
-  private fun registerNodeIdlingResources() {
-    Node.getInstance(application).liveData.observe(this, { nodeInitResult ->
-      onNodeStateChanged(nodeInitResult)
-      nodeIdlingResource.setIdleState(nodeInitResult.isReady)
     })
   }
 

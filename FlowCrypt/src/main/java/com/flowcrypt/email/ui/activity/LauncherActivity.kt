@@ -17,7 +17,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
@@ -51,11 +50,6 @@ class LauncherActivity : BaseActivity() {
     ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
     MessagesSenderWorker.enqueue(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
-  }
-
-  override fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
-    super.onNodeStateChanged(nodeInitResult)
-    launcherViewModel.isNodeInfoReceivedLiveData.value = true
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

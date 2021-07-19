@@ -12,9 +12,6 @@
     <string name="preferences_key_is_mail_debug_enabled">preferences_key_is_mail_debug_enabled</string>
     <string name="pref_key_is_http_log_enabled">pref_key_is_http_log_enabled</string>
     <string name="pref_key_http_log_level">pref_key_http_log_level</string>
-    <string name="pref_key_is_node_http_debug_enabled">pref_key_is_node_http_debug_enabled</string>
-    <string name="pref_key_node_http_log_level">pref_key_node_http_log_level</string>
-    <string name="pref_key_is_native_node_debug_enabled">pref_key_is_native_node_debug_enabled</string>
     <string name="pref_key_is_acra_enabled">pref_key_is_acra_enabled</string>
 
     <!-- Strings related to Settings -->
@@ -28,12 +25,8 @@
     <string name="action_dev_settings">Dev Settings</string>
     <string name="pref_title_http_logs">Http logs</string>
     <string name="pref_title_http_log_level">A level of HTTP logs</string>
-    <string name="pref_title_node_http_log_level">A level of Node HTTP logs</string>
     <string name="pref_title_java_mail">JavaMail</string>
-    <string name="pref_title_node">Node.js</string>
     <string name="pref_summary_enabled">Enabled</string>
     <string name="pref_summary_disabled">Disabled</string>
-    <string name="pref_title_node_http">Node HTTP</string>
-    <string name="pref_title_native_node_logs">Native Node logs</string>
     <string name="pref_title_acra">Application Crash Reports</string>
 </resources>

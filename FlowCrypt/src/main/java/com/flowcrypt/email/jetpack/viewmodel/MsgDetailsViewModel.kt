@@ -8,6 +8,8 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.os.Parcel
+import android.os.Parcelable
 import android.text.TextUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -29,14 +31,11 @@ import com.flowcrypt.email.api.email.javamail.CustomMimeMultipart
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
-import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
-import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -44,6 +43,7 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -51,8 +51,9 @@ import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ApiException
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPMessage
@@ -88,7 +89,6 @@ class MsgDetailsViewModel(
   application: Application
 ) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(application)
-  private val apiRepository: PgpApiRepository = NodeRepository()
 
   private var msgSize: Int = 0
   private var downloadedMsgSize: Int = 0
@@ -265,28 +265,19 @@ class MsgDetailsViewModel(
   )
 
   init {
-    afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
-      afterKeysStorageUpdatedMsgLiveData.value = it
-    }
-    afterKeysStorageUpdatedMsgLiveData.addSource(afterPassphrasesUpdatedMsgLiveData) {
-      afterKeysStorageUpdatedMsgLiveData.value = it
-    }
-
     mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
-    mediatorMsgLiveData.addSource(
-      afterKeysStorageUpdatedMsgLiveData,
-      object : Observer<MessageEntity?> {
-        var isFirstCall = true
-        override fun onChanged(messageEntity: MessageEntity?) {
-          if (isFirstCall) {
-            isFirstCall = false
-          } else {
-            mediatorMsgLiveData.value = messageEntity
-          }
+    mediatorMsgLiveData.addSource(afterKeysUpdatedMsgLiveData, object : Observer<MessageEntity?> {
+      var isFirstCall = true
+      override fun onChanged(messageEntity: MessageEntity?) {
+        if (isFirstCall) {
+          isFirstCall = false
+        } else {
+          mediatorMsgLiveData.value = messageEntity
         }
-      })
+      }
+    })
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) {
@@ -380,13 +371,13 @@ class MsgDetailsViewModel(
         val result = if (largerThan1Mb) {
           parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
         } else {
-          apiRepository.parseDecryptMsg(
-            request = ParseDecryptMsgRequest(
-              context = getApplication(),
-              uri = uri,
-              pgpKeyDetailsList = list,
-              isEmail = true,
-              hasEncryptedDataInUri = true
+          Result.success(
+            ParseDecryptedMsgResult(
+              text = "",
+              replyType = "",
+              subject = null,
+              apiError = null,
+              msgBlocks = null
             )
           )
         }
@@ -403,13 +394,22 @@ class MsgDetailsViewModel(
       return@withContext if (rawMimeBytes == null) {
         Result.exception(throwable = IllegalArgumentException("empty byte array"))
       } else {
-        val result = apiRepository.parseDecryptMsg(
+        val result = /*apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(
-            data = rawMimeBytes,
-            pgpKeyDetailsList = keysStorage.getPgpKeyDetailsList(),
-            isEmail = true
+              data = rawMimeBytes,
+              keyEntities = keysStorage.getLatestAllPgpPrivateKeys(),
+              isEmail = true
+          ))*/
+
+          Result.success(
+            ParseDecryptedMsgResult(
+              text = "",
+              replyType = "",
+              subject = null,
+              apiError = null,
+              msgBlocks = null
+            )
           )
-        )
         modifyMsgBlocksIfNeeded(result)
         result
       }
@@ -424,17 +424,6 @@ class MsgDetailsViewModel(
           val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
           block.existingPgpContact = contactEntity?.toPgpContact()
         }
-
-        if (block is DecryptErrorMsgBlock) {
-          if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
-            val fingerprints = block.error.longIds?.needPassphrase ?: emptyList()
-            if (fingerprints.isEmpty()) {
-              ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
-            } else {
-              passphraseNeededLiveData.postValue(fingerprints)
-            }
-          }
-        }
       }
     }
   }
@@ -443,24 +432,29 @@ class MsgDetailsViewModel(
       Result<ParseDecryptedMsgResult?> {
     val uriOfEncryptedPart = getUriOfEncryptedPart(context, uri)
     return if (uriOfEncryptedPart != null) {
-      apiRepository.parseDecryptMsg(
-        request = ParseDecryptMsgRequest(
-          context = context,
-          uri = uriOfEncryptedPart,
-          pgpKeyDetailsList = list,
-          isEmail = false
+      Result.success(
+        ParseDecryptedMsgResult(
+          text = "",
+          replyType = "",
+          subject = null,
+          apiError = null,
+          msgBlocks = null
         )
       )
+      /*apiRepository.parseDecryptMsg(
+          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, keyEntities = list, isEmail = false))*/
     } else {
-      apiRepository.parseDecryptMsg(
-        request = ParseDecryptMsgRequest(
-          context = context,
-          uri = uri,
-          pgpKeyDetailsList = list,
-          isEmail = true,
-          hasEncryptedDataInUri = true
+      Result.success(
+        ParseDecryptedMsgResult(
+          text = "",
+          replyType = "",
+          subject = null,
+          apiError = null,
+          msgBlocks = null
         )
       )
+      /*apiRepository.parseDecryptMsg(
+          request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true, hasEncryptedDataInUri = true))*/
     }
   }
 
@@ -840,5 +834,46 @@ class MsgDetailsViewModel(
     private const val FILE_NAME_ENCRYPTED_MESSAGE = "temp_encrypted_msg.asc"
 
     private const val MIN_UPDATE_PROGRESS_INTERVAL = 500
+  }
+}
+
+data class ParseDecryptedMsgResult constructor(
+  @Expose val text: String?,
+  @Expose val replyType: String,
+  @Expose val subject: String?,
+  @SerializedName("error")
+  @Expose val apiError: ApiError?,
+  var msgBlocks: MutableList<MsgBlock>?
+) : Parcelable {
+
+  fun getMsgEncryptionType(): MessageEncryptionType {
+    return if (replyType == "encrypted") MessageEncryptionType.ENCRYPTED else MessageEncryptionType.STANDARD
+  }
+
+  constructor(source: Parcel) : this(
+    source.readString(),
+    source.readString()!!,
+    source.readString(),
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+    mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) }
+  )
+
+  override fun describeContents() = 0
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeString(text)
+    writeString(replyType)
+    writeString(subject)
+    writeParcelable(apiError, flags)
+    writeTypedList(msgBlocks)
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<ParseDecryptedMsgResult> =
+      object : Parcelable.Creator<ParseDecryptedMsgResult> {
+        override fun createFromParcel(source: Parcel) = ParseDecryptedMsgResult(source)
+        override fun newArray(size: Int): Array<ParseDecryptedMsgResult?> = arrayOfNulls(size)
+      }
   }
 }

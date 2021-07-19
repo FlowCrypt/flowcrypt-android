@@ -25,7 +25,7 @@ import java.util.*
  * Time: 11:11 AM
  * E-mail: DenBond7@gmail.com
  */
-class PasswordStrengthViewModel(application: Application) : BaseNodeApiViewModel(application) {
+class PasswordStrengthViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val zxcvbn: Zxcvbn = Zxcvbn()
   private val controlledRunnerForZxcvbn = ControlledRunner<Result<PgpPwd.PwdStrengthResult?>>()
 

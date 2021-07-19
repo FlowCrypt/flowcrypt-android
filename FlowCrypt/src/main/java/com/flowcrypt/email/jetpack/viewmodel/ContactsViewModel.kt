@@ -13,7 +13,6 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -38,7 +37,6 @@ import java.util.*
  */
 class ContactsViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
-  private val pgpApiRepository = NodeRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 
   val allContactsLiveData: LiveData<List<ContactEntity>> =

@@ -43,17 +43,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
 
-        externalNativeBuild {
-            cmake {
-                cppFlags ""
-                arguments "-DANDROID_STL=c++_shared"
-            }
-        }
-
-        ndk {
-            abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
-        }
-
         // used by Room, to test migrations
         javaCompileOptions {
             annotationProcessorOptions {
@@ -110,16 +99,12 @@ android {
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
-            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'false'
-            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"NONE\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_http_log_level', 'NONE'
-            resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
-            resValue 'string', 'gradle_node_http_log_level', 'NONE'
             signingConfig signingConfigs.release
         }
 
@@ -127,13 +112,6 @@ android {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
             applicationIdSuffix '.debug'
             signingConfig signingConfigs.debug
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            version "3.10.2.4988404"
-            path "CMakeLists.txt"
         }
     }
 
@@ -151,16 +129,12 @@ android {
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
-            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BODY\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
-            resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
-            resValue 'string', 'gradle_node_http_log_level', 'BODY'
             versionNameSuffix "_dev"
             dimension "standard"
             minSdkVersion rootProject.ext.minSdkVersion
@@ -173,18 +147,13 @@ android {
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
-            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
-            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BASIC\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
-            resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BASIC'
-            resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
-            resValue 'string', 'gradle_node_http_log_level', 'BASIC'
             dimension "standard"
         }
 
@@ -196,16 +165,12 @@ android {
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
-            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BODY\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://localhost:1212/\""
             buildConfigField 'String', 'API_URL', "\"https://localhost:1212/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
-            resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
-            resValue 'string', 'gradle_node_http_log_level', 'NONE'
         }
 
         //This is an enterprise flavor
@@ -215,18 +180,13 @@ android {
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
-            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
-            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BASIC\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
-            resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BASIC'
-            resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
-            resValue 'string', 'gradle_node_http_log_level', 'BASIC'
             dimension "standard"
         }
 
@@ -336,8 +296,6 @@ android {
             renameReleaseBuilds.finalizedBy copyReleaseApks
         }
     }
-
-    ndkVersion "22.0.7026061"
 }
 
 configurations {

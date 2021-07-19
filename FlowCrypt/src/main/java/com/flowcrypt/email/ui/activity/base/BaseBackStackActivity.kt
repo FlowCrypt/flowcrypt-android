@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.base
 
 import android.app.Activity
 import android.view.MenuItem
-import com.flowcrypt.email.ui.activity.BaseNodeActivity
 
 /**
  * The base back stack activity. In this activity we add the back stack functionality. The
@@ -22,7 +21,7 @@ import com.flowcrypt.email.ui.activity.BaseNodeActivity
  * Time: 10:03
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseBackStackActivity : BaseNodeActivity() {
+abstract class BaseBackStackActivity : BaseActivity() {
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true

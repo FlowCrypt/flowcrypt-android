@@ -25,7 +25,7 @@ import java.time.Instant
  *         E-mail: DenBond7@gmail.com
  */
 class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application) :
-  BaseNodeApiViewModel(application) {
+  AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
 
   private val pgpKeyDetailsLiveDataDirect: LiveData<Result<PgpKeyDetails?>> =
