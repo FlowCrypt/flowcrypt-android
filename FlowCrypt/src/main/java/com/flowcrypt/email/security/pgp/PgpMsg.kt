@@ -63,6 +63,145 @@ import kotlin.math.min
 import kotlin.random.Random
 
 object PgpMsg {
+  private const val MAX_TAG_NUMBER = 20
+  private const val GENERAL_CSS =
+    "background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;" +
+        "padding-bottom: 4px;width: 100%;"
+  private const val SEAMLESS_LOCK_BG = "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw" +
+      "8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD" +
+      "w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8P" +
+      "Dw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4A" +
+      "AAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d" +
+      "84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+" +
+      "Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJ" +
+      "dU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9" +
+      "Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3S" +
+      "lrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctD" +
+      "CVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQ" +
+      "WoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC"
+  private const val INNER_TEXT_TYPE_ATTR = "data-fc-inner-text-type"
+  private const val FROM_IMAGE_ATTR = "data-fc-is-from-image"
+
+  private val MESSAGE_TYPES = intArrayOf(
+    PacketTags.SYM_ENC_INTEGRITY_PRO,
+    PacketTags.MOD_DETECTION_CODE,
+    20, // SymEncryptedAEADProtected - no BouncyCastle constant for this one
+    PacketTags.SYMMETRIC_KEY_ENC,
+    PacketTags.COMPRESSED_DATA
+  )
+
+  private val HIDDEN_FILE_NAMES = setOf(
+    "PGPexch.htm.pgp",
+    "PGPMIME version identification",
+    "Version.txt",
+    "PGPMIME Versions Identification"
+  )
+
+  private val ENCRYPTED_MSG_NAMES = setOf(
+    "message",
+    "msg.asc",
+    "message.asc",
+    "encrypted.asc",
+    "encrypted.eml.pgp",
+    "Message.pgp",
+    "openpgp-encrypted-message.asc"
+  )
+
+  private val ENCRYPTED_FILE_REGEX = Regex("(\\.pgp\$)|(\\.gpg\$)|(\\.[a-zA-Z0-9]{3,4}\\.asc\$)")
+  private val PRIVATE_KEY_REGEX = Regex("(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(key|asc)\$")
+  private val PUBLIC_KEY_REGEX_1 = Regex("^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.asc\$")
+  private val PUBLIC_KEY_REGEX_2 = Regex("[A-F0-9]{8}.*\\.asc\$")
+  private val PUBLIC_KEY_REGEX_3 = Regex("^(0x)?[A-Fa-f0-9]{16,40}\\.asc\\.pgp$")
+  private val CID_CORRECTION_REGEX_1 = Regex(">$")
+  private val CID_CORRECTION_REGEX_2 = Regex("^<")
+  private val IMG_SRC_WITH_CID_REGEX = Regex("src=\"cid:([^\"]+)\"")
+  private val BLOCK_START_REGEX = Regex(
+    "<(p|h1|h2|h3|h4|h5|h6|ol|ul|pre|address|blockquote|dl|div|fieldset|form|hr|table)[^>]*>"
+  )
+  private val BLOCK_END_REGEX = Regex(
+    "</(p|h1|h2|h3|h4|h5|h6|ol|ul|pre|address|blockquote|dl|div|fieldset|form|hr|table)[^>]*>"
+  )
+  private val MULTI_NEW_LINE_REGEX = Regex("\\n{2,}")
+  private val HTML_BR_REGEX = Regex("<br[^>]*>")
+  private val FC_REPLY_TOKEN_REGEX = Regex("<div[^>]+class=\"cryptup_reply\"[^>]+></div>")
+  private val FC_ATT_REGEX = Regex(
+    "<a\\s+href=\"([^\"]+)\"\\s+class=\"cryptup_file\"\\s+cryptup-data=" +
+        "\"([^\"]+)\"\\s*>[^<]+</a>\\n?"
+  )
+
+  private val FRAME_CSS_MAP = mapOf(
+    FrameColor.GREEN to "border: 1px solid #f0f0f0;border-left: 8px solid #31A217;" +
+        "border-right: none;background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG});",
+    FrameColor.GRAY to "border: 1px solid #f0f0f0;border-left: 8px solid #989898;" +
+        "border-right: none;",
+    FrameColor.RED to "border: 1px solid #f0f0f0;border-left: 8px solid #d14836;" +
+        "border-right: none;",
+    FrameColor.PLAIN to "border: none;"
+  )
+
+  private val ALLOWED_ELEMENTS = arrayOf(
+    "p",
+    "div",
+    "br",
+    "u",
+    "i",
+    "em",
+    "b",
+    "ol",
+    "ul",
+    "pre",
+    "li",
+    "table",
+    "thead",
+    "tbody",
+    "tfoot",
+    "tr",
+    "td",
+    "th",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "hr",
+    "address",
+    "blockquote",
+    "dl",
+    "fieldset",
+    "a",
+    "font",
+    "strong",
+    "strike",
+    "code",
+    "img"
+  )
+
+  private val ALLOWED_ATTRS = mapOf(
+    "a" to arrayOf("href", "name", "target", "data-x-fc-inner-text-type"),
+    "img" to arrayOf("src", "width", "height", "alt"),
+    "font" to arrayOf("size", "color", "face"),
+    "span" to arrayOf("color"),
+    "div" to arrayOf("color"),
+    "p" to arrayOf("color"),
+    "em" to arrayOf("style"), // Typescript: tests rely on this, could potentially remove
+    "td" to arrayOf("width", "height"),
+    "hr" to arrayOf("color", "height")
+  )
+
+  private val ALLOWED_PROTOCOLS = arrayOf(
+    "data",
+    "http",
+    "https",
+    "mailto"
+  )
+
+  private val HTML_POLICY_WITH_BASIC_TAGS_ONLY_FACTORY = HtmlPolicyBuilder()
+    .allowElements(*ALLOWED_ELEMENTS)
+    .allowUrlProtocols(*ALLOWED_PROTOCOLS)
+    .allowAttributesOnElementsExt(ALLOWED_ATTRS)
+    .toFactory()
+
   /**
    * @return Pair.first  indicates armored (true) or binary (false) format
    *         Pair.second block type or null if the source is empty
@@ -106,84 +245,6 @@ object PgpMsg {
     }
     return Pair(false, null)
   }
-
-  private val MESSAGE_TYPES = intArrayOf(
-    PacketTags.SYM_ENC_INTEGRITY_PRO,
-    PacketTags.MOD_DETECTION_CODE,
-    20, // SymEncryptedAEADProtected - no BouncyCastle constant for this one
-    PacketTags.SYMMETRIC_KEY_ENC,
-    PacketTags.COMPRESSED_DATA
-  )
-
-  private const val MAX_TAG_NUMBER = 20
-
-  data class DecryptionError(
-    val type: PgpDecrypt.DecryptionErrorType,
-    val message: String? = null
-  ) : Parcelable {
-    constructor(parcel: Parcel) : this(
-      parcel.readParcelable<PgpDecrypt.DecryptionErrorType>(
-        PgpDecrypt.DecryptionErrorType::class.java.classLoader
-      )!!,
-      parcel.readString()
-    )
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-      parcel.writeParcelable(type, flags)
-      parcel.writeString(message)
-    }
-
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<DecryptionError> {
-      override fun createFromParcel(parcel: Parcel) = DecryptionError(parcel)
-      override fun newArray(size: Int): Array<DecryptionError?> = arrayOfNulls(size)
-    }
-  }
-
-  data class DecryptionResult(
-    // provided if decryption was successful
-    val content: ByteArrayOutputStream? = null,
-
-    // true if message was encrypted.
-    // Alternatively false (because it could have also been plaintext signed,
-    // or wrapped in PGP armor as plaintext packet without encrypting)
-    // also false when error happens.
-    val isEncrypted: Boolean = false,
-
-    // pgp messages may include original filename in them
-    val filename: String? = null,
-
-    // todo later - signature verification not supported on Android yet
-    val signature: String? = null,
-
-    // provided if error happens
-    val error: DecryptionError? = null
-  ) {
-    companion object {
-      fun withError(
-        type: PgpDecrypt.DecryptionErrorType,
-        message: String
-      ): DecryptionResult {
-        return DecryptionResult(error = DecryptionError(type, message))
-      }
-
-      fun withCleartext(cleartext: ByteArrayOutputStream, signature: String?): DecryptionResult {
-        return DecryptionResult(content = cleartext, signature = signature)
-      }
-
-      fun withDecrypted(content: ByteArrayOutputStream, filename: String?): DecryptionResult {
-        return DecryptionResult(content = content, isEncrypted = true, filename = filename)
-      }
-    }
-  }
-
-  data class KeyWithPassPhrase(
-    val keyRing: PGPSecretKeyRing,
-    val passphrase: Passphrase?
-  )
 
   fun decrypt(
     data: ByteArray?,
@@ -298,27 +359,6 @@ object PgpMsg {
       message = "Decryption failed"
     )
   }
-
-  @Suppress("ArrayInDataClass")
-  data class MimeContent(
-    val attachments: List<MimePart>,
-    var signature: String?,
-    val subject: String,
-    val html: String?,
-    val text: String?,
-    val from: Array<Address>?,
-    val to: Array<Address>?,
-    val cc: Array<Address>?,
-    val bcc: Array<Address>?
-  )
-
-  @Suppress("ArrayInDataClass")
-  data class MimeProcessedMsg(
-    val blocks: List<MsgBlock>,
-    val from: Array<Address>? = null,
-    val to: Array<Address>? = null,
-    val subject: String? = null
-  )
 
   // Typescript: public static decode = async (mimeMsg: Uint8Array): Promise<MimeContent>
   // invoke in the test as:
@@ -452,6 +492,332 @@ object PgpMsg {
     return MimeProcessedMsg(blocks, decoded.from, decoded.to, decoded.subject)
   }
 
+  fun treatAs(att: MimePart): TreatAs {
+    val name = att.fileName ?: ""
+    val type = att.contentType
+    val length = att.size
+    if (HIDDEN_FILE_NAMES.contains(name)) {
+      // PGPexch.htm.pgp is html alternative of textual body content produced
+      // by the PGP Desktop and GPG4o
+      return TreatAs.HIDDEN
+    } else if (name == "signature.asc" || type == "application/pgp-signature") {
+      return TreatAs.SIGNATURE
+    } else if (name == "" && !type.startsWith("image/")) {
+      return if (length < 100) TreatAs.SIGNATURE else TreatAs.ENCRYPTED_MSG
+    } else if (name == "msg.asc" && length < 100 && type == "application/pgp-encrypted") {
+      // mail.ch does this - although it looks like encrypted msg,
+      // it will just contain PGP version eg "Version: 1"
+      return TreatAs.SIGNATURE
+    } else if (ENCRYPTED_MSG_NAMES.contains(name)) {
+      return TreatAs.ENCRYPTED_MSG
+    } else if (ENCRYPTED_FILE_REGEX.containsMatchIn(name)) {
+      // ends with one of .gpg, .pgp, .???.asc, .????.asc
+      return TreatAs.ENCRYPTED_FILE
+    } else if (PRIVATE_KEY_REGEX.containsMatchIn(name)) {
+      return TreatAs.PRIVATE_KEY
+    } else if (type == "application/pgp-keys") {
+      return TreatAs.PUBLIC_KEY
+    } else if (PUBLIC_KEY_REGEX_1.containsMatchIn(name)) {
+      // name starts with a key id
+      return TreatAs.PUBLIC_KEY
+    } else if (
+      name.toLowerCase(Locale.ROOT).contains("public") &&
+      PUBLIC_KEY_REGEX_2.containsMatchIn(name)
+    ) {
+      // name contains the word "public", any key id and ends with .asc
+      return TreatAs.PUBLIC_KEY
+    } else if (name.endsWith(".asc") && length > 0 && checkForPublicKeyBlock(att.inputStream)) {
+      return TreatAs.PUBLIC_KEY
+    } else if (name.endsWith(".asc") && length < 100000 && !att.isInline()) {
+      return TreatAs.ENCRYPTED_MSG
+    } else {
+      return TreatAs.PLAIN_FILE
+    }
+  }
+
+  fun parseDecryptMsg(
+    content: String, isEmail: Boolean, keys: List<KeyWithPassPhrase>
+  ): ParseDecryptResult {
+    return if (isEmail) {
+      parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(content), keys)
+    } else {
+      val blocks = listOf(MsgBlockFactory.fromContent(MsgBlock.Type.ENCRYPTED_MSG, content))
+      parseDecryptProcessedMsg(MimeProcessedMsg(blocks), keys)
+    }
+  }
+
+  fun parseDecryptMsg(msg: MimeMessage, keys: List<KeyWithPassPhrase>): ParseDecryptResult {
+    val decoded = decodeMimeMessage(msg)
+    val processed = processDecodedMimeMessage(decoded)
+    return parseDecryptProcessedMsg(processed, keys)
+  }
+
+  /**
+   * Used whenever untrusted remote content (eg html email) is rendered, but we still want to
+   * preserve HTML. "imgToLink" is ignored. Remote links are replaced with <a>, and local images
+   * are preserved.
+   */
+  fun sanitizeHtmlKeepBasicTags(dirtyHtml: String?): String? {
+    if (dirtyHtml == null) return null
+    val imgContentReplaceable = "IMG_ICON_${generateRandomSuffix()}"
+    var remoteContentReplacedWithLink = false
+    val policyFactory = HtmlPolicyBuilder()
+      .allowElements(
+        { elementName, attrs ->
+          // Remove tiny elements (often contain hidden content, tracking pixels, etc)
+          for (i in 0 until attrs.size / 2) {
+            val j = i * 2
+            if (
+              (attrs[j] == "width" && attrs[j + 1] == "1")
+              || (attrs[j] == "height" && attrs[j + 1] == "1" && elementName != "hr")
+            ) {
+              return@allowElements null
+            }
+          }
+
+          // let the browser/web view decide how big should elements be, based on their content
+          var i = 0
+          while (i < attrs.size) {
+            if (
+              (attrs[i] == "width" && attrs[i + 1] != "1" && elementName != "img")
+              || (attrs[i] == "height" && attrs[i + 1] != "1" && elementName != "img")
+            ) {
+              attrs.removeAt(i)
+              attrs.removeAt(i)
+            } else {
+              i += 2
+            }
+          }
+
+          var newElementName = elementName
+          if (elementName == "img") {
+            val srcAttr = getAttribute(attrs, "src", "")!!
+            val altAttr = getAttribute(attrs, "alt")
+            when {
+              srcAttr.startsWith("data:") -> {
+                attrs.clear()
+                attrs.add("src")
+                attrs.add(srcAttr)
+                if (altAttr != null) {
+                  attrs.add("alt")
+                  attrs.add(altAttr)
+                }
+              }
+
+              (srcAttr.startsWith("http://") || srcAttr.startsWith("https://")) -> {
+                // Orignal typecript:
+                // return { tagName: 'a', attribs: { href: String(attribs.src), target: "_blank" },
+                //   text: imgContentReplaceable };
+                // Github: https://github.com/OWASP/java-html-sanitizer/issues/230
+                // SO: https://stackoverflow.com/questions/67976114
+                // There is no way to achieve this with OWASP sanitizer, so we do it with Jsoup
+                // as post-processing step
+                remoteContentReplacedWithLink = true
+                newElementName = "a"
+                attrs.clear()
+                attrs.add("href")
+                attrs.add(srcAttr)
+                attrs.add("target")
+                attrs.add("_blank")
+                attrs.add(INNER_TEXT_TYPE_ATTR)
+                attrs.add("1")
+              }
+
+              else -> {
+                newElementName = "a"
+                val titleAttr = getAttribute(attrs, "title")
+                attrs.clear()
+                if (altAttr != null) {
+                  attrs.add("alt")
+                  attrs.add(altAttr)
+                }
+                if (titleAttr != null) {
+                  attrs.add("title")
+                  attrs.add(titleAttr)
+                }
+                attrs.add(INNER_TEXT_TYPE_ATTR)
+                attrs.add("2")
+              }
+            }
+            attrs.add(FROM_IMAGE_ATTR)
+            attrs.add(true.toString())
+          }
+
+          return@allowElements newElementName
+        },
+        *ALLOWED_ELEMENTS
+      )
+      .allowUrlProtocols(*ALLOWED_PROTOCOLS)
+      .allowAttributesOnElementsExt(ALLOWED_ATTRS)
+      .toFactory()
+
+    val cleanHtml = policyFactory.sanitize(dirtyHtml)
+    val doc = Jsoup.parse(cleanHtml)
+    doc.outputSettings().prettyPrint(false)
+    for (element in doc.select("a")) {
+      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
+        val innerTextType = element.attr(INNER_TEXT_TYPE_ATTR)
+        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
+        var innerText: String? = null
+        when (innerTextType) {
+          "1" -> innerText = imgContentReplaceable
+          "2" -> innerText = "[image]"
+        }
+        if (innerText != null) element.html(innerText)
+      }
+    }
+    var cleanHtml2 = doc.outerHtml()
+
+    if (remoteContentReplacedWithLink) {
+      cleanHtml2 = HTML_POLICY_WITH_BASIC_TAGS_ONLY_FACTORY.sanitize(
+        "<font size=\"-1\" color=\"#31a217\" face=\"monospace\">[remote content blocked " +
+            "for your privacy]</font><br /><br />$cleanHtml2"
+      )
+    }
+
+    return cleanHtml2.replace(
+      imgContentReplaceable,
+      "<font color=\"#D14836\" face=\"monospace\">[img]</font>"
+    )
+  }
+
+  fun sanitizeHtmlStripAllTags(dirtyHtml: String?, outputNl: String = "\n"): String? {
+    val html = sanitizeHtmlKeepBasicTags(dirtyHtml) ?: return null
+    val randomSuffix = generateRandomSuffix()
+    val br = "CU_BR_$randomSuffix"
+    val blockStart = "CU_BS_$randomSuffix"
+    val blockEnd = "CU_BE_$randomSuffix"
+
+    var text = html.replace(HTML_BR_REGEX, br)
+      .replace("\n", "")
+      .replace(BLOCK_END_REGEX, blockEnd)
+      .replace(BLOCK_START_REGEX, blockStart)
+      .replace(Regex("($blockStart)+"), blockStart)
+      .replace(Regex("($blockEnd)+"), blockEnd)
+
+    val policyFactory = HtmlPolicyBuilder()
+      .allowUrlProtocols(*ALLOWED_PROTOCOLS)
+      .allowElements(
+        { elementName, attrs ->
+          when (elementName) {
+            "img" -> {
+              var innerText = "no name"
+              val alt = getAttribute(attrs, "alt")
+              if (alt != null) {
+                innerText = alt
+              } else {
+                val title = getAttribute(attrs, "title")
+                if (title != null) innerText = title
+              }
+              attrs.clear()
+              attrs.add(INNER_TEXT_TYPE_ATTR)
+              attrs.add(innerText)
+              return@allowElements "span"
+            }
+            "a" -> {
+              val fromImage = getAttribute(attrs, FROM_IMAGE_ATTR)
+              if (fromImage == true.toString()) {
+                var innerText = "[image]"
+                val alt = getAttribute(attrs, "alt")
+                if (alt != null) {
+                  innerText = "[image: $alt]"
+                }
+                attrs.clear()
+                attrs.add(INNER_TEXT_TYPE_ATTR)
+                attrs.add(innerText)
+                return@allowElements "span"
+              } else {
+                return@allowElements elementName
+              }
+            }
+            else -> return@allowElements elementName
+          }
+        },
+        "img",
+        "span",
+        "a"
+      )
+      .allowAttributes("src", "alt", "title").onElements("img")
+      .allowAttributes(INNER_TEXT_TYPE_ATTR).onElements("span")
+      .allowAttributes("src", "alt", "title", FROM_IMAGE_ATTR).onElements("a")
+      .toFactory()
+
+    text = policyFactory.sanitize(text)
+    val doc = Jsoup.parse(text)
+    doc.outputSettings().prettyPrint(false)
+    for (element in doc.select("span")) {
+      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
+        val innerText = element.attr(INNER_TEXT_TYPE_ATTR)
+        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
+        element.html(innerText)
+      }
+    }
+
+    text = HtmlPolicyBuilder().toFactory().sanitize(doc.outerHtml())
+    text = text.split(br + blockEnd + blockStart)
+      .joinToString(br)
+      .split(blockEnd + blockStart)
+      .joinToString(br)
+      .split(br + blockEnd)
+      .joinToString(br)
+      .split(br)
+      .joinToString("\n")
+      .split(blockStart)
+      .filter { it != "" }
+      .joinToString("\n")
+      .split(blockEnd)
+      .filter { it != "" }
+      .joinToString("\n")
+      .replace(MULTI_NEW_LINE_REGEX, "\n\n")
+
+    if (outputNl != "\n") text = text.replace("\n", outputNl)
+    return text
+  }
+
+  fun extractFcAttachments(decryptedContent: String, blocks: MutableList<MsgBlock>): String {
+    // these tags were created by FlowCrypt exclusively, so the structure is fairly rigid
+    // `<a href="${att.url}" class="cryptup_file" cryptup-data="${fcData}">${linkText}</a>\n`
+    // thus we can use Regex
+    if (!decryptedContent.contains("class=\"cryptup_file\"")) return decryptedContent
+    var i = 0
+    val result = java.lang.StringBuilder()
+    for (match in FC_ATT_REGEX.findAll(decryptedContent)) {
+      if (match.range.first > i) {
+        result.append(decryptedContent.substring(i, match.range.first))
+        i = match.range.last + 1
+      }
+      val url = match.groups[1]!!.value
+      val attr = match.groups[2]!!.value.decodeFcHtmlAttr()
+      if (isFcAttachmentLinkData(attr)) {
+        attr!!.put("url", url)
+        blocks.add(EncryptedAttLinkMsgBlock(AttMeta(attr)))
+      }
+    }
+    if (i < decryptedContent.length) result.append(decryptedContent.substring(i))
+    return result.toString()
+  }
+
+  fun isFcAttachmentLinkData(obj: JSONObject?): Boolean {
+    return obj != null && obj.has("name") && obj.has("size") && obj.has("type")
+  }
+
+  fun stripFcReplyToken(decryptedContent: String): String {
+    return decryptedContent.replace(FC_REPLY_TOKEN_REGEX, "")
+  }
+
+  fun stripPublicKeys(decryptedContent: String, foundPublicKeys: MutableList<String>): String {
+    val normalizedTextAndBlocks = MsgBlockParser.detectBlocks(decryptedContent)
+    var result = normalizedTextAndBlocks.normalized
+    for (block in normalizedTextAndBlocks.blocks) {
+      if (block.type == MsgBlock.Type.PUBLIC_KEY && block.content != null) {
+        val content = block.content!!
+        foundPublicKeys.add(content)
+        result = result.replace(content, "")
+      }
+    }
+    return result
+  }
+
   private fun analyzeDecodedTextAndHtml(decoded: MimeContent): MutableList<MsgBlock> {
     val blocks = mutableListOf<MsgBlock>()
     if (decoded.text != null) {
@@ -507,110 +873,12 @@ object PgpMsg {
     }
   }
 
-  enum class TreatAs {
-    HIDDEN,
-    ENCRYPTED_MSG,
-    SIGNATURE,
-    PUBLIC_KEY,
-    PRIVATE_KEY,
-    ENCRYPTED_FILE,
-    PLAIN_FILE
-  }
-
-  fun treatAs(att: MimePart): TreatAs {
-    val name = att.fileName ?: ""
-    val type = att.contentType
-    val length = att.size
-    if (HIDDEN_FILE_NAMES.contains(name)) {
-      // PGPexch.htm.pgp is html alternative of textual body content produced
-      // by the PGP Desktop and GPG4o
-      return TreatAs.HIDDEN
-    } else if (name == "signature.asc" || type == "application/pgp-signature") {
-      return TreatAs.SIGNATURE
-    } else if (name == "" && !type.startsWith("image/")) {
-      return if (length < 100) TreatAs.SIGNATURE else TreatAs.ENCRYPTED_MSG
-    } else if (name == "msg.asc" && length < 100 && type == "application/pgp-encrypted") {
-      // mail.ch does this - although it looks like encrypted msg,
-      // it will just contain PGP version eg "Version: 1"
-      return TreatAs.SIGNATURE
-    } else if (ENCRYPTED_MSG_NAMES.contains(name)) {
-      return TreatAs.ENCRYPTED_MSG
-    } else if (ENCRYPTED_FILE_REGEX.containsMatchIn(name)) {
-      // ends with one of .gpg, .pgp, .???.asc, .????.asc
-      return TreatAs.ENCRYPTED_FILE
-    } else if (PRIVATE_KEY_REGEX.containsMatchIn(name)) {
-      return TreatAs.PRIVATE_KEY
-    } else if (type == "application/pgp-keys") {
-      return TreatAs.PUBLIC_KEY
-    } else if (PUBLIC_KEY_REGEX_1.containsMatchIn(name)) {
-      // name starts with a key id
-      return TreatAs.PUBLIC_KEY
-    } else if (
-      name.toLowerCase(Locale.ROOT).contains("public") &&
-      PUBLIC_KEY_REGEX_2.containsMatchIn(name)
-    ) {
-      // name contains the word "public", any key id and ends with .asc
-      return TreatAs.PUBLIC_KEY
-    } else if (name.endsWith(".asc") && length > 0 && checkForPublicKeyBlock(att.inputStream)) {
-      return TreatAs.PUBLIC_KEY
-    } else if (name.endsWith(".asc") && length < 100000 && !att.isInline()) {
-      return TreatAs.ENCRYPTED_MSG
-    } else {
-      return TreatAs.PLAIN_FILE
-    }
-  }
-
-  @JvmStatic
   private fun checkForPublicKeyBlock(stream: InputStream): Boolean {
     val a = ByteArray(100)
     val r = stream.read(a)
     if (r < 1) return false
     val s = String(if (r == a.size) a else a.copyOf(r), StandardCharsets.US_ASCII)
     return s.contains("-----BEGIN PGP PUBLIC KEY BLOCK-----")
-  }
-
-  private val HIDDEN_FILE_NAMES = setOf(
-    "PGPexch.htm.pgp",
-    "PGPMIME version identification",
-    "Version.txt",
-    "PGPMIME Versions Identification"
-  )
-
-  private val ENCRYPTED_MSG_NAMES = setOf(
-    "message", "msg.asc", "message.asc", "encrypted.asc", "encrypted.eml.pgp",
-    "Message.pgp", "openpgp-encrypted-message.asc"
-  )
-
-  private val ENCRYPTED_FILE_REGEX = Regex("(\\.pgp\$)|(\\.gpg\$)|(\\.[a-zA-Z0-9]{3,4}\\.asc\$)")
-  private val PRIVATE_KEY_REGEX = Regex("(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(key|asc)\$")
-  private val PUBLIC_KEY_REGEX_1 = Regex("^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.asc\$")
-  private val PUBLIC_KEY_REGEX_2 = Regex("[A-F0-9]{8}.*\\.asc\$")
-  private val PUBLIC_KEY_REGEX_3 = Regex("^(0x)?[A-Fa-f0-9]{16,40}\\.asc\\.pgp$")
-
-  data class ParseDecryptResult(
-    val subject: String?,
-    val isReplyEncrypted: Boolean,
-    val text: String,
-    val blocks: List<MsgBlock>
-  )
-
-  fun parseDecryptMsg(
-    content: String,
-    isEmail: Boolean,
-    keys: List<KeyWithPassPhrase>
-  ): ParseDecryptResult {
-    return if (isEmail) {
-      parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(content), keys)
-    } else {
-      val blocks = listOf(MsgBlockFactory.fromContent(MsgBlock.Type.ENCRYPTED_MSG, content))
-      parseDecryptProcessedMsg(MimeProcessedMsg(blocks), keys)
-    }
-  }
-
-  fun parseDecryptMsg(msg: MimeMessage, keys: List<KeyWithPassPhrase>): ParseDecryptResult {
-    val decoded = decodeMimeMessage(msg)
-    val processed = processDecodedMimeMessage(decoded)
-    return parseDecryptProcessedMsg(processed, keys)
   }
 
   private fun parseDecryptProcessedMsg(
@@ -772,11 +1040,6 @@ object PgpMsg {
     )
   }
 
-  private data class FormatContentBlockResult(
-    val text: String,
-    val contentBlock: MsgBlock
-  )
-
   private fun fmtContentBlock(allContentBlocks: List<MsgBlock>): FormatContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
@@ -856,24 +1119,24 @@ object PgpMsg {
       text = msgContentAsText.toString().trim(),
       contentBlock = MsgBlockFactory.fromContent(
         type = MsgBlock.Type.PLAIN_HTML,
-        """<!DOCTYPE html><html>
-  <head>
-    <meta name="viewport" content="width=device-width" />
-    <style>
-      body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
-      body img { display: inline !important; height: auto !important; max-width: 95% !important; }
-      body pre { white-space: pre-wrap !important; }
-      body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
-    </style>
-  </head>
-  <body>$msgContentAsHtml</body>
-</html>"""
+        """
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta name="viewport" content="width=device-width"/>
+              <style>
+                body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
+                body img { display: inline !important; height: auto !important; max-width: 95% !important; }
+                body pre { white-space: pre-wrap !important; }
+                body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
+              </style>
+          </head>
+          <body>$msgContentAsHtml</body>
+          </html>
+        """.trimIndent()
       )
     )
   }
-
-  private val CID_CORRECTION_REGEX_1 = Regex(">$")
-  private val CID_CORRECTION_REGEX_2 = Regex("^<")
 
   /**
    * replace content of images: <img src="cid:16c7a8c3c6a8d4ab1e01">
@@ -920,282 +1183,12 @@ object PgpMsg {
     return result.toString()
   }
 
-  private val IMG_SRC_WITH_CID_REGEX = Regex("src=\"cid:([^\"]+)\"")
-
-  private enum class FrameColor {
-    GREEN,
-    GRAY,
-    RED,
-    PLAIN
-  }
-
-  private const val GENERAL_CSS =
-    "background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;" +
-        "padding-bottom: 4px;width: 100%;"
-
-  private const val SEAMLESS_LOCK_BG = "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw" +
-      "8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD" +
-      "w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8P" +
-      "Dw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4A" +
-      "AAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d" +
-      "84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+" +
-      "Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJ" +
-      "dU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9" +
-      "Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3S" +
-      "lrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctD" +
-      "CVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQ" +
-      "WoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC"
-
-  private val FRAME_CSS_MAP = mapOf(
-    FrameColor.GREEN to "border: 1px solid #f0f0f0;border-left: 8px solid #31A217;" +
-        "border-right: none;background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG});",
-    FrameColor.GRAY to "border: 1px solid #f0f0f0;border-left: 8px solid #989898;" +
-        "border-right: none;",
-    FrameColor.RED to "border: 1px solid #f0f0f0;border-left: 8px solid #d14836;" +
-        "border-right: none;",
-    FrameColor.PLAIN to "border: none;"
-  )
-
   private fun fmtMsgContentBlockAsHtml(dirtyContent: String?, frameColor: FrameColor): String {
     return if (dirtyContent == null) ""
     else "<div class=\"MsgBlock ${frameColor}\" style=" +
         "\"${GENERAL_CSS}${FRAME_CSS_MAP[frameColor]!!}\">" +
         "${sanitizeHtmlKeepBasicTags(dirtyContent)}</div><!-- next MsgBlock -->\n"
   }
-
-  /**
-   * Used whenever untrusted remote content (eg html email) is rendered, but we still want to
-   * preserve HTML. "imgToLink" is ignored. Remote links are replaced with <a>, and local images
-   * are preserved.
-   */
-  fun sanitizeHtmlKeepBasicTags(dirtyHtml: String?): String? {
-    if (dirtyHtml == null) return null
-    val imgContentReplaceable = "IMG_ICON_${generateRandomSuffix()}"
-    var remoteContentReplacedWithLink = false
-    val policyFactory = HtmlPolicyBuilder()
-      .allowElements(
-        { elementName, attrs ->
-          // Remove tiny elements (often contain hidden content, tracking pixels, etc)
-          for (i in 0 until attrs.size / 2) {
-            val j = i * 2
-            if (
-              (attrs[j] == "width" && attrs[j + 1] == "1")
-              || (attrs[j] == "height" && attrs[j + 1] == "1" && elementName != "hr")
-            ) {
-              return@allowElements null
-            }
-          }
-
-          // let the browser/web view decide how big should elements be, based on their content
-          var i = 0
-          while (i < attrs.size) {
-            if (
-              (attrs[i] == "width" && attrs[i + 1] != "1" && elementName != "img")
-              || (attrs[i] == "height" && attrs[i + 1] != "1" && elementName != "img")
-            ) {
-              attrs.removeAt(i)
-              attrs.removeAt(i)
-            } else {
-              i += 2
-            }
-          }
-
-          var newElementName = elementName
-          if (elementName == "img") {
-            val srcAttr = getAttribute(attrs, "src", "")!!
-            val altAttr = getAttribute(attrs, "alt")
-            when {
-              srcAttr.startsWith("data:") -> {
-                attrs.clear()
-                attrs.add("src")
-                attrs.add(srcAttr)
-                if (altAttr != null) {
-                  attrs.add("alt")
-                  attrs.add(altAttr)
-                }
-              }
-
-              (srcAttr.startsWith("http://") || srcAttr.startsWith("https://")) -> {
-                // Orignal typecript:
-                // return { tagName: 'a', attribs: { href: String(attribs.src), target: "_blank" },
-                //   text: imgContentReplaceable };
-                // Github: https://github.com/OWASP/java-html-sanitizer/issues/230
-                // SO: https://stackoverflow.com/questions/67976114
-                // There is no way to achieve this with OWASP sanitizer, so we do it with Jsoup
-                // as post-processing step
-                remoteContentReplacedWithLink = true
-                newElementName = "a"
-                attrs.clear()
-                attrs.add("href")
-                attrs.add(srcAttr)
-                attrs.add("target")
-                attrs.add("_blank")
-                attrs.add(INNER_TEXT_TYPE_ATTR)
-                attrs.add("1")
-              }
-
-              else -> {
-                newElementName = "a"
-                val titleAttr = getAttribute(attrs, "title")
-                attrs.clear()
-                if (altAttr != null) {
-                  attrs.add("alt")
-                  attrs.add(altAttr)
-                }
-                if (titleAttr != null) {
-                  attrs.add("title")
-                  attrs.add(titleAttr)
-                }
-                attrs.add(INNER_TEXT_TYPE_ATTR)
-                attrs.add("2")
-              }
-            }
-            attrs.add(FROM_IMAGE_ATTR)
-            attrs.add(true.toString())
-          }
-
-          return@allowElements newElementName
-        },
-        *ALLOWED_ELEMENTS
-      )
-      .allowUrlProtocols(*ALLOWED_PROTOCOLS)
-      .allowAttributesOnElementsExt(ALLOWED_ATTRS)
-      .toFactory()
-
-    val cleanHtml = policyFactory.sanitize(dirtyHtml)
-    val doc = Jsoup.parse(cleanHtml)
-    doc.outputSettings().prettyPrint(false)
-    for (element in doc.select("a")) {
-      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
-        val innerTextType = element.attr(INNER_TEXT_TYPE_ATTR)
-        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
-        var innerText: String? = null
-        when (innerTextType) {
-          "1" -> innerText = imgContentReplaceable
-          "2" -> innerText = "[image]"
-        }
-        if (innerText != null) element.html(innerText)
-      }
-    }
-    var cleanHtml2 = doc.outerHtml()
-
-    if (remoteContentReplacedWithLink) {
-      cleanHtml2 = htmlPolicyWithBasicTagsOnlyFactory.sanitize(
-        "<font size=\"-1\" color=\"#31a217\" face=\"monospace\">[remote content blocked " +
-            "for your privacy]</font><br /><br />$cleanHtml2"
-      )
-    }
-
-    return cleanHtml2.replace(
-      imgContentReplaceable,
-      "<font color=\"#D14836\" face=\"monospace\">[img]</font>"
-    )
-  }
-
-  private const val INNER_TEXT_TYPE_ATTR = "data-fc-inner-text-type"
-  private const val FROM_IMAGE_ATTR = "data-fc-is-from-image"
-
-  fun sanitizeHtmlStripAllTags(dirtyHtml: String?, outputNl: String = "\n"): String? {
-    val html = sanitizeHtmlKeepBasicTags(dirtyHtml) ?: return null
-    val randomSuffix = generateRandomSuffix()
-    val br = "CU_BR_$randomSuffix"
-    val blockStart = "CU_BS_$randomSuffix"
-    val blockEnd = "CU_BE_$randomSuffix"
-
-    var text = html.replace(HTML_BR_REGEX, br)
-      .replace("\n", "")
-      .replace(BLOCK_END_REGEX, blockEnd)
-      .replace(BLOCK_START_REGEX, blockStart)
-      .replace(Regex("($blockStart)+"), blockStart)
-      .replace(Regex("($blockEnd)+"), blockEnd)
-
-    val policyFactory = HtmlPolicyBuilder()
-      .allowUrlProtocols(*ALLOWED_PROTOCOLS)
-      .allowElements(
-        { elementName, attrs ->
-          when (elementName) {
-            "img" -> {
-              var innerText = "no name"
-              val alt = getAttribute(attrs, "alt")
-              if (alt != null) {
-                innerText = alt
-              } else {
-                val title = getAttribute(attrs, "title")
-                if (title != null) innerText = title
-              }
-              attrs.clear()
-              attrs.add(INNER_TEXT_TYPE_ATTR)
-              attrs.add(innerText)
-              return@allowElements "span"
-            }
-            "a" -> {
-              val fromImage = getAttribute(attrs, FROM_IMAGE_ATTR)
-              if (fromImage == true.toString()) {
-                var innerText = "[image]"
-                val alt = getAttribute(attrs, "alt")
-                if (alt != null) {
-                  innerText = "[image: $alt]"
-                }
-                attrs.clear()
-                attrs.add(INNER_TEXT_TYPE_ATTR)
-                attrs.add(innerText)
-                return@allowElements "span"
-              } else {
-                return@allowElements elementName
-              }
-            }
-            else -> return@allowElements elementName
-          }
-        },
-        "img",
-        "span",
-        "a"
-      )
-      .allowAttributes("src", "alt", "title").onElements("img")
-      .allowAttributes(INNER_TEXT_TYPE_ATTR).onElements("span")
-      .allowAttributes("src", "alt", "title", FROM_IMAGE_ATTR).onElements("a")
-      .toFactory()
-
-    text = policyFactory.sanitize(text)
-    val doc = Jsoup.parse(text)
-    doc.outputSettings().prettyPrint(false)
-    for (element in doc.select("span")) {
-      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
-        val innerText = element.attr(INNER_TEXT_TYPE_ATTR)
-        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
-        element.html(innerText)
-      }
-    }
-
-    text = HtmlPolicyBuilder().toFactory().sanitize(doc.outerHtml())
-    text = text.split(br + blockEnd + blockStart)
-      .joinToString(br)
-      .split(blockEnd + blockStart)
-      .joinToString(br)
-      .split(br + blockEnd)
-      .joinToString(br)
-      .split(br)
-      .joinToString("\n")
-      .split(blockStart)
-      .filter { it != "" }
-      .joinToString("\n")
-      .split(blockEnd)
-      .filter { it != "" }
-      .joinToString("\n")
-      .replace(MULTI_NEW_LINE_REGEX, "\n\n")
-
-    if (outputNl != "\n") text = text.replace("\n", outputNl)
-    return text
-  }
-
-  private val BLOCK_START_REGEX = Regex(
-    "<(p|h1|h2|h3|h4|h5|h6|ol|ul|pre|address|blockquote|dl|div|fieldset|form|hr|table)[^>]*>"
-  )
-  private val BLOCK_END_REGEX = Regex(
-    "</(p|h1|h2|h3|h4|h5|h6|ol|ul|pre|address|blockquote|dl|div|fieldset|form|hr|table)[^>]*>"
-  )
-  private val MULTI_NEW_LINE_REGEX = Regex("\\n{2,}")
-  private val HTML_BR_REGEX = Regex("<br[^>]*>")
 
   private fun getAttribute(
     attrs: List<String>,
@@ -1215,112 +1208,121 @@ object PgpMsg {
     return s.substring(0, length)
   }
 
-  private val ALLOWED_ELEMENTS = arrayOf(
-    "p",
-    "div",
-    "br",
-    "u",
-    "i",
-    "em",
-    "b",
-    "ol",
-    "ul",
-    "pre",
-    "li",
-    "table",
-    "thead",
-    "tbody",
-    "tfoot",
-    "tr",
-    "td",
-    "th",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "hr",
-    "address",
-    "blockquote",
-    "dl",
-    "fieldset",
-    "a",
-    "font",
-    "strong",
-    "strike",
-    "code",
-    "img"
-  )
+  data class DecryptionError(
+    val type: PgpDecrypt.DecryptionErrorType,
+    val message: String? = null
+  ) : Parcelable {
+    constructor(parcel: Parcel) : this(
+      parcel.readParcelable<PgpDecrypt.DecryptionErrorType>(
+        PgpDecrypt.DecryptionErrorType::class.java.classLoader
+      )!!,
+      parcel.readString()
+    )
 
-  private val ALLOWED_ATTRS = mapOf(
-    "a" to arrayOf("href", "name", "target", "data-x-fc-inner-text-type"),
-    "img" to arrayOf("src", "width", "height", "alt"),
-    "font" to arrayOf("size", "color", "face"),
-    "span" to arrayOf("color"),
-    "div" to arrayOf("color"),
-    "p" to arrayOf("color"),
-    "em" to arrayOf("style"), // Typescript: tests rely on this, could potentially remove
-    "td" to arrayOf("width", "height"),
-    "hr" to arrayOf("color", "height")
-  )
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+      parcel.writeParcelable(type, flags)
+      parcel.writeString(message)
+    }
 
-  private val ALLOWED_PROTOCOLS = arrayOf("data", "http", "https", "mailto")
+    override fun describeContents(): Int {
+      return 0
+    }
 
-  private val htmlPolicyWithBasicTagsOnlyFactory = HtmlPolicyBuilder()
-    .allowElements(*ALLOWED_ELEMENTS)
-    .allowUrlProtocols(*ALLOWED_PROTOCOLS)
-    .allowAttributesOnElementsExt(ALLOWED_ATTRS)
-    .toFactory()
+    companion object CREATOR : Parcelable.Creator<DecryptionError> {
+      override fun createFromParcel(parcel: Parcel) = DecryptionError(parcel)
+      override fun newArray(size: Int): Array<DecryptionError?> = arrayOfNulls(size)
+    }
+  }
 
-  fun extractFcAttachments(decryptedContent: String, blocks: MutableList<MsgBlock>): String {
-    // these tags were created by FlowCrypt exclusively, so the structure is fairly rigid
-    // `<a href="${att.url}" class="cryptup_file" cryptup-data="${fcData}">${linkText}</a>\n`
-    // thus we can use Regex
-    if (!decryptedContent.contains("class=\"cryptup_file\"")) return decryptedContent
-    var i = 0
-    val result = java.lang.StringBuilder()
-    for (match in FC_ATT_REGEX.findAll(decryptedContent)) {
-      if (match.range.first > i) {
-        result.append(decryptedContent.substring(i, match.range.first))
-        i = match.range.last + 1
+  data class DecryptionResult(
+    // provided if decryption was successful
+    val content: ByteArrayOutputStream? = null,
+
+    // true if message was encrypted.
+    // Alternatively false (because it could have also been plaintext signed,
+    // or wrapped in PGP armor as plaintext packet without encrypting)
+    // also false when error happens.
+    val isEncrypted: Boolean = false,
+
+    // pgp messages may include original filename in them
+    val filename: String? = null,
+
+    // todo later - signature verification not supported on Android yet
+    val signature: String? = null,
+
+    // provided if error happens
+    val error: DecryptionError? = null
+  ) {
+    companion object {
+      fun withError(
+        type: PgpDecrypt.DecryptionErrorType,
+        message: String
+      ): DecryptionResult {
+        return DecryptionResult(error = DecryptionError(type, message))
       }
-      val url = match.groups[1]!!.value
-      val attr = match.groups[2]!!.value.decodeFcHtmlAttr()
-      if (isFcAttachmentLinkData(attr)) {
-        attr!!.put("url", url)
-        blocks.add(EncryptedAttLinkMsgBlock(AttMeta(attr)))
+
+      fun withCleartext(cleartext: ByteArrayOutputStream, signature: String?): DecryptionResult {
+        return DecryptionResult(content = cleartext, signature = signature)
+      }
+
+      fun withDecrypted(content: ByteArrayOutputStream, filename: String?): DecryptionResult {
+        return DecryptionResult(content = content, isEncrypted = true, filename = filename)
       }
     }
-    if (i < decryptedContent.length) result.append(decryptedContent.substring(i))
-    return result.toString()
   }
 
-  fun isFcAttachmentLinkData(obj: JSONObject?): Boolean {
-    return obj != null && obj.has("name") && obj.has("size") && obj.has("type")
-  }
-
-  private val FC_ATT_REGEX = Regex(
-    "<a\\s+href=\"([^\"]+)\"\\s+class=\"cryptup_file\"\\s+cryptup-data=" +
-        "\"([^\"]+)\"\\s*>[^<]+</a>\\n?"
+  data class KeyWithPassPhrase(
+    val keyRing: PGPSecretKeyRing,
+    val passphrase: Passphrase?
   )
 
-  fun stripFcReplyToken(decryptedContent: String): String {
-    return decryptedContent.replace(FC_REPLY_TOKEN_REGEX, "")
+  @Suppress("ArrayInDataClass")
+  data class MimeContent(
+    val attachments: List<MimePart>,
+    var signature: String?,
+    val subject: String,
+    val html: String?,
+    val text: String?,
+    val from: Array<Address>?,
+    val to: Array<Address>?,
+    val cc: Array<Address>?,
+    val bcc: Array<Address>?
+  )
+
+  @Suppress("ArrayInDataClass")
+  data class MimeProcessedMsg(
+    val blocks: List<MsgBlock>,
+    val from: Array<Address>? = null,
+    val to: Array<Address>? = null,
+    val subject: String? = null
+  )
+
+  enum class TreatAs {
+    HIDDEN,
+    ENCRYPTED_MSG,
+    SIGNATURE,
+    PUBLIC_KEY,
+    PRIVATE_KEY,
+    ENCRYPTED_FILE,
+    PLAIN_FILE
   }
 
-  private val FC_REPLY_TOKEN_REGEX = Regex("<div[^>]+class=\"cryptup_reply\"[^>]+></div>")
+  data class ParseDecryptResult(
+    val subject: String?,
+    val isReplyEncrypted: Boolean,
+    val text: String,
+    val blocks: List<MsgBlock>
+  )
 
-  fun stripPublicKeys(decryptedContent: String, foundPublicKeys: MutableList<String>): String {
-    val normalizedTextAndBlocks = MsgBlockParser.detectBlocks(decryptedContent)
-    var result = normalizedTextAndBlocks.normalized
-    for (block in normalizedTextAndBlocks.blocks) {
-      if (block.type == MsgBlock.Type.PUBLIC_KEY && block.content != null) {
-        val content = block.content!!
-        foundPublicKeys.add(content)
-        result = result.replace(content, "")
-      }
-    }
-    return result
+  private data class FormatContentBlockResult(
+    val text: String,
+    val contentBlock: MsgBlock
+  )
+
+  private enum class FrameColor {
+    GREEN,
+    GRAY,
+    RED,
+    PLAIN
   }
 }

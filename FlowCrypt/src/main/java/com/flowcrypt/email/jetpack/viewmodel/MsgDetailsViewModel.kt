@@ -13,7 +13,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -143,7 +142,7 @@ class MsgDetailsViewModel(
   private val processingProgressLiveData: MutableLiveData<Result<PgpMsg.ParseDecryptResult?>> =
     MutableLiveData()
   private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ParseDecryptResult?>> =
-    Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
+    mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg() == true) {
           emit(Result.loading())
@@ -157,7 +156,7 @@ class MsgDetailsViewModel(
     }
 
   private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ParseDecryptResult?>> =
-    Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
+    mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg() == false) {
           emit(Result.loading())
@@ -189,7 +188,7 @@ class MsgDetailsViewModel(
     }
 
   val incomingMessageInfoLiveData: LiveData<Result<IncomingMessageInfo>> =
-    Transformations.switchMap(processingMsgLiveData) {
+    processingMsgLiveData.switchMap {
       liveData {
         val context: Context = getApplication()
         val result = when (it.status) {
