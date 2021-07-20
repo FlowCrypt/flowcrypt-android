@@ -7,7 +7,6 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
-import android.net.Uri
 import android.text.TextUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -31,6 +30,7 @@ import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
@@ -42,7 +42,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -62,7 +61,6 @@ import javax.mail.BodyPart
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Multipart
-import javax.mail.Session
 import javax.mail.Store
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
@@ -137,11 +135,11 @@ class MsgDetailsViewModel(
 
   private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
-  private val processingMsgLiveData: MediatorLiveData<Result<PgpMsg.ParseDecryptResult?>> =
-    MediatorLiveData()
-  private val processingProgressLiveData: MutableLiveData<Result<PgpMsg.ParseDecryptResult?>> =
-    MutableLiveData()
-  private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ParseDecryptResult?>> =
+  private val processingMsgLiveData =
+    MediatorLiveData<Result<PgpMsg.ProcessedMimeMessageResult?>>()
+  private val processingProgressLiveData =
+    MutableLiveData<Result<PgpMsg.ProcessedMimeMessageResult?>>()
+  private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
     mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg() == true) {
@@ -155,7 +153,7 @@ class MsgDetailsViewModel(
       }
     }
 
-  private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ParseDecryptResult?>> =
+  private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
     mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg() == false) {
@@ -208,7 +206,7 @@ class MsgDetailsViewModel(
                 val msgInfo = IncomingMessageInfo(
                   msgEntity = messageEntity,
                   text = parseDecryptedMsgResult.text,
-                  subject = parseDecryptedMsgResult.subject,
+                  //subject = parseDecryptedMsgResult.subject,
                   msgBlocks = parseDecryptedMsgResult.blocks,
                   encryptionType = if (parseDecryptedMsgResult.isReplyEncrypted) {
                     MessageEncryptionType.ENCRYPTED
@@ -362,85 +360,67 @@ class MsgDetailsViewModel(
     }
   }
 
-  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<PgpMsg.ParseDecryptResult?> =
-    withContext(Dispatchers.IO) {
-      val uri = msgSnapshot.getUri(0)
-      if (uri != null) {
-        val list = keysStorage.getPgpKeyDetailsList()
-        passphraseNeededLiveData.postValue(emptyList())
-        val result = parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
-        modifyMsgBlocksIfNeeded(result)
-        return@withContext result
-      } else {
-        val byteArray = msgSnapshot.getByteArray(0)
-        return@withContext processingByteArray(byteArray)
-      }
-    }
+  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot):
+      Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
+    val uri = msgSnapshot.getUri(0)
+    passphraseNeededLiveData.postValue(emptyList())
+    if (uri != null) {
+      val context: Context = getApplication()
+      try {
+        val inputStream =
+          context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
-  private suspend fun processingByteArray(rawMimeBytes: ByteArray?): Result<PgpMsg.ParseDecryptResult?> =
-    withContext(Dispatchers.IO) {
-      return@withContext if (rawMimeBytes == null) {
-        Result.exception(throwable = IllegalArgumentException("empty byte array"))
-      } else {
-        val result = Result.success(
-          PgpMsg.parseDecryptMsg(
-            String(rawMimeBytes),
-            true,
-            keysStorage.getPgpKeyDetailsList().mapNotNull {
-              val keyRing = keysStorage.getPGPSecretKeyRingByFingerprint(it.fingerprint)
-                ?: return@mapNotNull null
-              val passphrase =
-                keysStorage.getPassphraseByFingerprint(it.fingerprint) ?: return@mapNotNull null
-              return@mapNotNull PgpMsg.KeyWithPassPhrase(keyRing, passphrase)
-            })
+        val processMimeMessageResult = PgpMsg.processMimeMessage(
+          context = getApplication(),
+          inputStream = KeyStoreCryptoManager.getCipherInputStream(inputStream)
         )
-        modifyMsgBlocksIfNeeded(result)
-        result
+        postProcessMsgBlocks(processMimeMessageResult.blocks)
+        return@withContext Result.success(processMimeMessageResult)
+      } catch (e: Exception) {
+        return@withContext Result.exception(e)
       }
+    } else {
+      val byteArray = msgSnapshot.getByteArray(0)
+      return@withContext processingByteArray(byteArray)
     }
+  }
 
-  private suspend fun modifyMsgBlocksIfNeeded(result: Result<PgpMsg.ParseDecryptResult?>) {
-    result.data?.let { parseDecryptMsgResult ->
-      for (block in parseDecryptMsgResult.blocks) {
-        if (block is PublicKeyMsgBlock) {
-          val keyDetails = block.keyDetails ?: continue
-          val pgpContact = keyDetails.primaryPgpContact
-          val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
-          block.existingPgpContact = contactEntity?.toPgpContact()
-        }
-
-        if (block is DecryptErrorMsgBlock) {
-          if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
-            val fingerprints = block.error.longIds?.needPassphrase ?: emptyList()
-            if (fingerprints.isEmpty()) {
-              ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
-            } else {
-              passphraseNeededLiveData.postValue(fingerprints)
-            }
-          }
-        }
+  private suspend fun processingByteArray(rawMimeBytes: ByteArray?):
+      Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
+    return@withContext if (rawMimeBytes == null) {
+      Result.exception(throwable = IllegalArgumentException("empty byte array"))
+    } else {
+      try {
+        val processMimeMessageResult =
+          PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
+        postProcessMsgBlocks(processMimeMessageResult.blocks)
+        return@withContext Result.success(processMimeMessageResult)
+      } catch (e: Exception) {
+        return@withContext Result.exception(throwable = e)
       }
     }
   }
 
-  private suspend fun parseMimeAndDecrypt(context: Context, uri: Uri, list: List<PgpKeyDetails>):
-      Result<PgpMsg.ParseDecryptResult?> = withContext(Dispatchers.IO) {
-    val inputStream =
-      context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
-    return@withContext Result.success(
-      PgpMsg.parseDecryptMsg(
-        msg = MimeMessage(
-          Session.getInstance(Properties()),
-          KeyStoreCryptoManager.getCipherInputStream(inputStream)
-        ),
-        keys = list.mapNotNull {
-          val keyRing = keysStorage.getPGPSecretKeyRingByFingerprint(it.fingerprint)
-            ?: return@mapNotNull null
-          val passphrase =
-            keysStorage.getPassphraseByFingerprint(it.fingerprint) ?: return@mapNotNull null
-          return@mapNotNull PgpMsg.KeyWithPassPhrase(keyRing, passphrase)
-        })
-    )
+  private suspend fun postProcessMsgBlocks(blocks: List<MsgBlock>) {
+    for (block in blocks) {
+      if (block is PublicKeyMsgBlock) {
+        val keyDetails = block.keyDetails ?: continue
+        val pgpContact = keyDetails.primaryPgpContact
+        val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
+        block.existingPgpContact = contactEntity?.toPgpContact()
+      }
+
+      if (block is DecryptErrorMsgBlock) {
+        if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+          val fingerprints = block.error.longIds?.needPassphrase ?: emptyList()
+          if (fingerprints.isEmpty()) {
+            ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
+          } else {
+            passphraseNeededLiveData.postValue(fingerprints)
+          }
+        }
+      }
+    }
   }
 
   private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot =

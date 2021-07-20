@@ -329,8 +329,8 @@ class PgpMsgTest {
     val to = out["to"].asJsonArray.map { InternetAddress(it.asString) }.toTypedArray()
     val session = Session.getInstance(Properties())
     val mimeMessage = MimeMessage(session, inputMsg.inputStream())
-    val mimeContent = PgpMsg.decodeMimeMessage(mimeMessage)
-    val processed = PgpMsg.processDecodedMimeMessage(mimeContent)
+    val mimeContent = PgpMsg.extractMimeContent(mimeMessage)
+    val processed = PgpMsg.processExtractedMimeContent(mimeContent)
 
     assertEquals(1, processed.from?.size ?: 0)
     assertEquals(from, processed.from!![0])
@@ -372,7 +372,7 @@ class PgpMsgTest {
         "Content-Type: text/plain; charset=\"UTF-8\"\n" +
         "\n" + TEXT_SPECIAL_CHARS
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
+    val result = PgpMsg.processMimeMessage(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(false, result.isReplyEncrypted)
     assertEquals("plain text with special chars", result.subject)
@@ -393,7 +393,7 @@ class PgpMsgTest {
         "Content-Type: text/html; charset=\"UTF-8\"\n" +
         "\n" + HTML_SPECIAL_CHARS
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
+    val result = PgpMsg.processMimeMessage(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(false, result.isReplyEncrypted)
     assertEquals("plain text with special chars", result.subject)
@@ -407,7 +407,7 @@ class PgpMsgTest {
   fun testParseDecryptMsgUnescapedSpecialCharactersInEncryptedPgpMime() {
     val text = loadResourceAsString("compat/direct-encrypted-pgpmime-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, false, keys)
+    val result = PgpMsg.processMimeMessage(text, false, keys)
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(true, result.isReplyEncrypted)
     assertEquals("direct encrypted pgpmime special chars", result.subject)
@@ -421,7 +421,7 @@ class PgpMsgTest {
   fun testParseDecryptMsgUnescapedSpecialCharactersInEncryptedText() {
     val text = loadResourceAsString("compat/direct-encrypted-text-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, false, keys)
+    val result = PgpMsg.processMimeMessage(text, false, keys)
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(true, result.isReplyEncrypted)
     assertTrue(result.subject == null)
@@ -435,7 +435,7 @@ class PgpMsgTest {
   fun testParseDecryptMsgPlainInlineImage() {
     val text = loadResourceAsString("other/plain-inline-image.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, true, keys)
+    val result = PgpMsg.processMimeMessage(text, true, keys)
     assertEquals("Below\n[image: image.png]\nAbove", result.text)
     assertEquals(false, result.isReplyEncrypted)
     assertEquals("tiny inline img plain", result.subject)
@@ -450,7 +450,7 @@ class PgpMsgTest {
   fun testParseDecryptMsgSignedMessagePreserveNewlines() {
     val text = loadResourceAsString("other/signed-message-preserve-newlines.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, false, keys)
+    val result = PgpMsg.processMimeMessage(text, false, keys)
     assertEquals(
       "Standard message\n\nsigned inline\n\nshould easily verify\nThis is email footer",
       result.text

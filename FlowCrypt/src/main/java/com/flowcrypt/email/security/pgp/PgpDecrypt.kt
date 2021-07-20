@@ -17,6 +17,7 @@ import org.pgpainless.exception.MissingDecryptionMethodException
 import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -54,7 +55,36 @@ object PgpDecrypt {
     }
   }
 
-  private fun processDecryptionException(e: Exception): Exception {
+  fun decryptWithResult(
+    srcInputStream: InputStream,
+    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector
+  ): DecryptionResult {
+    srcInputStream.use { srcStream ->
+      val destOutputStream = ByteArrayOutputStream()
+      destOutputStream.use { outStream ->
+        try {
+          val decryptionStream = PGPainless.decryptAndOrVerify()
+            .onInputStream(srcStream)
+            .decryptWith(protector, pgpSecretKeyRingCollection)
+            .doNotVerify()
+            .build()
+
+          decryptionStream.use { it.copyTo(outStream) }
+          return DecryptionResult.withDecrypted(
+            content = destOutputStream,
+            filename = decryptionStream.result.fileInfo?.fileName
+          )
+        } catch (e: Exception) {
+          return DecryptionResult.withError(
+            processDecryptionException(e)
+          )
+        }
+      }
+    }
+  }
+
+  private fun processDecryptionException(e: Exception): DecryptionException {
     return when (e) {
       is WrongPassphraseException -> {
         DecryptionException(DecryptionErrorType.WRONG_PASSPHRASE, e)
@@ -75,6 +105,36 @@ object PgpDecrypt {
       is DecryptionException -> e
 
       else -> DecryptionException(DecryptionErrorType.OTHER, e)
+    }
+  }
+
+  data class DecryptionResult(
+    // provided if decryption was successful
+    val content: ByteArrayOutputStream? = null,
+
+    // true if message was encrypted.
+    // Alternatively false (because it could have also been plaintext signed,
+    // or wrapped in PGP armor as plaintext packet without encrypting)
+    // also false when error happens.
+    val isEncrypted: Boolean = false,
+
+    // pgp messages may include original filename in them
+    val filename: String? = null,
+
+    // todo later - signature verification not supported on Android yet
+    val signature: String? = null,
+
+    // provided if error happens
+    val exception: DecryptionException? = null
+  ) {
+    companion object {
+      fun withError(exception: DecryptionException): DecryptionResult {
+        return DecryptionResult(exception = exception)
+      }
+
+      fun withDecrypted(content: ByteArrayOutputStream, filename: String?): DecryptionResult {
+        return DecryptionResult(content = content, isEncrypted = true, filename = filename)
+      }
     }
   }
 
