@@ -11,6 +11,7 @@ import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
+import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
 import org.pgpainless.exception.MissingDecryptionMethodException
@@ -42,10 +43,10 @@ object PgpDecrypt {
         try {
           val decryptionStream = PGPainless.decryptAndOrVerify()
             .onInputStream(srcStream)
-            .decryptWith(protector, pgpSecretKeyRingCollection)
-            .doNotVerify()
-            .build()
-
+            .withOptions(
+              ConsumerOptions()
+                .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
+            )
           decryptionStream.use { it.copyTo(outStream) }
           return decryptionStream.result
         } catch (e: Exception) {
@@ -66,9 +67,10 @@ object PgpDecrypt {
         try {
           val decryptionStream = PGPainless.decryptAndOrVerify()
             .onInputStream(srcStream)
-            .decryptWith(protector, pgpSecretKeyRingCollection)
-            .doNotVerify()
-            .build()
+            .withOptions(
+              ConsumerOptions()
+                .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
+            )
 
           decryptionStream.use { it.copyTo(outStream) }
           return DecryptionResult.withDecrypted(

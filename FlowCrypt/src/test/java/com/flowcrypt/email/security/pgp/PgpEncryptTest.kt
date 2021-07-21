@@ -12,6 +12,7 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.BeforeClass
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
@@ -97,10 +98,11 @@ class PgpEncryptTest {
 
     val decryptionStream = PGPainless.decryptAndOrVerify()
       .onInputStream(inputStream)
-      .decryptWith(protector, PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)))
-      .verifyWith(pgpPublicKeyRingCollection)
-      .ignoreMissingPublicKeys()
-      .build()
+      .withOptions(
+        ConsumerOptions()
+          .addDecryptionKeys(PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)), protector)
+          .addVerificationCerts(pgpPublicKeyRingCollection)
+      )
 
     val outputStreamWithDecryptedData = ByteArrayOutputStream()
     decryptionStream.use { it.copyTo(outputStreamWithDecryptedData) }
