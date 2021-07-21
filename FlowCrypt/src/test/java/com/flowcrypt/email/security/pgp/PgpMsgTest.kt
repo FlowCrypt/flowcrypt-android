@@ -13,15 +13,12 @@ import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.google.gson.JsonParser
-import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.pgpainless.PGPainless
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.Properties
 import javax.mail.Session
@@ -29,14 +26,13 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
 class PgpMsgTest {
-
   private data class MessageInfo(
     val key: String,
     val content: List<String>,
     val quoted: Boolean? = null,
     val charset: String = "UTF-8"
   ) {
-    val armored: String = loadResourceAsString("messages/$key.txt")
+    val armored: String = Utils.loadResourceAsString("messages/$key.txt")
   }
 
   companion object {
@@ -55,12 +51,12 @@ class PgpMsgTest {
     private val PRIVATE_KEYS = listOf(
       PgpMsg.KeyWithPassPhrase(
         passphrase = Passphrase.fromPassword("flowcrypt compatibility tests"),
-        keyRing = loadSecretKey("key0.txt"),
+        keyRing = Utils.loadSecretKey("key0.txt"),
       ),
 
       PgpMsg.KeyWithPassPhrase(
         passphrase = Passphrase.fromPassword("flowcrypt compatibility tests 2"),
-        keyRing = loadSecretKey("key1.txt")
+        keyRing = Utils.loadSecretKey("key1.txt")
       )
     )
 
@@ -112,31 +108,11 @@ class PgpMsgTest {
         key = "decrypt - [enigmail] encrypted iso-2022-jp, plain text",
         content = listOf(
           // complete string "ゾし逸現飲"
-          decodeString("=E3=82=BE=E3=81=97=E9=80=B8=E7=8F=BE=E9=A3=B2", "UTF-8")
+          Utils.decodeString("=E3=82=BE=E3=81=97=E9=80=B8=E7=8F=BE=E9=A3=B2", "UTF-8")
         ),
         charset = "ISO-2022-JP",
       )
     )
-
-    @Suppress("SameParameterValue")
-    private fun decodeString(s: String, charsetName: String): String {
-      val bytes = s.substring(1).split('=').map { Integer.parseInt(it, 16).toByte() }.toByteArray()
-      return String(bytes, Charset.forName(charsetName))
-    }
-
-    private fun loadResource(path: String): ByteArray {
-      return PgpMsgTest::class.java.classLoader!!
-        .getResourceAsStream("${PgpMsgTest::class.simpleName}/$path")
-        .readBytes()
-    }
-
-    private fun loadResourceAsString(path: String): String {
-      return String(loadResource(path), StandardCharsets.UTF_8)
-    }
-
-    private fun loadSecretKey(file: String): PGPSecretKeyRing {
-      return PGPainless.readKeyRing().secretKeyRing(loadResourceAsString("keys/$file"))
-    }
 
     private fun findMessage(key: String): MessageInfo {
       return MESSAGES.firstOrNull { it.key == key }
@@ -320,7 +296,7 @@ class PgpMsgTest {
 
   private fun checkComplexMessage(fileName: String) {
     println("\n*** Processing '$fileName'")
-    val json = loadResourceAsString("complex_messages/$fileName")
+    val json = Utils.loadResourceAsString("complex_messages/$fileName")
     val rootObject = JsonParser.parseString(json).asJsonObject
     val inputMsg = Base64.getDecoder().decode(rootObject["in"].asJsonObject["mimeMsg"].asString)
     val out = rootObject["out"].asJsonObject
@@ -405,7 +381,7 @@ class PgpMsgTest {
 
   @Test
   fun testParseDecryptMsgUnescapedSpecialCharactersInEncryptedPgpMime() {
-    val text = loadResourceAsString("compat/direct-encrypted-pgpmime-special-chars.txt")
+    val text = Utils.loadResourceAsString("compat/direct-encrypted-pgpmime-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(text, false, keys)
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
@@ -419,7 +395,7 @@ class PgpMsgTest {
 
   @Test
   fun testParseDecryptMsgUnescapedSpecialCharactersInEncryptedText() {
-    val text = loadResourceAsString("compat/direct-encrypted-text-special-chars.txt")
+    val text = Utils.loadResourceAsString("compat/direct-encrypted-text-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(text, false, keys)
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
@@ -433,7 +409,7 @@ class PgpMsgTest {
 
   @Test
   fun testParseDecryptMsgPlainInlineImage() {
-    val text = loadResourceAsString("other/plain-inline-image.txt")
+    val text = Utils.loadResourceAsString("other/plain-inline-image.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(text, true, keys)
     assertEquals("Below\n[image: image.png]\nAbove", result.text)
@@ -442,13 +418,13 @@ class PgpMsgTest {
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    val htmlContent = loadResourceAsString("other/plain-inline-image-html-content.txt")
+    val htmlContent = Utils.loadResourceAsString("other/plain-inline-image-html-content.txt")
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
 
   @Test
   fun testParseDecryptMsgSignedMessagePreserveNewlines() {
-    val text = loadResourceAsString("other/signed-message-preserve-newlines.txt")
+    val text = Utils.loadResourceAsString("other/signed-message-preserve-newlines.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(text, false, keys)
     assertEquals(

@@ -6,11 +6,14 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.extensions.kotlin.toHexString
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
+import org.pgpainless.util.Passphrase
 
 class PgpKeyTest {
 
@@ -125,5 +128,17 @@ class PgpKeyTest {
     )
     assertEquals(1, result.getAllKeys().size)
     assertEquals(expected, result.toPgpKeyDetailsList().first())
+  }
+
+  @Test
+  fun testParseAndDecryptKey_Issue1296() {
+    val publicKeyRing = Utils.loadPublicKey("issue-1296-0xA96B4C55A800DB83.public.gpg-key")
+    val fingerprint = publicKeyRing.publicKey.fingerprint.toHexString()
+    val secretKeyRing = Utils.loadSecretKey("issue-1296-0xA96B4C55A800DB83.secret-subkeys.gpg-key")
+    assertEquals(fingerprint, secretKeyRing.publicKey.fingerprint.toHexString())
+    val passphrase = Passphrase.fromPassword("password12345678")
+    val decryptedSecretKeyRing = PgpKey.decryptKey(secretKeyRing, passphrase)
+    val decryptedKeyFingerprint = decryptedSecretKeyRing.publicKey.fingerprint.toHexString()
+    assertEquals(fingerprint, decryptedKeyFingerprint)
   }
 }
