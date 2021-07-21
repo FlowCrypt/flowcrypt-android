@@ -43,6 +43,7 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.PGPainless
+import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
 import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.key.info.KeyRingInfo
@@ -249,15 +250,13 @@ object PgpMsg {
 
     val exception: Exception?
     try {
-      val d = PGPainless.decryptAndOrVerify()
-        .onInputStream(input)
-        .decryptWith(UnprotectedKeysProtector(), PGPSecretKeyRingCollection(keyList))
+      val consumerOptions = ConsumerOptions()
+        .addDecryptionKeys(PGPSecretKeyRingCollection(keyList), UnprotectedKeysProtector())
+      pgpPublicKeyRingCollection?.let { consumerOptions.addVerificationCerts(it) }
 
-      val decryptionStream = if (pgpPublicKeyRingCollection != null) {
-        d.verifyWith(pgpPublicKeyRingCollection).ignoreMissingPublicKeys().build()
-      } else {
-        d.doNotVerify().build()
-      }
+      val decryptionStream = PGPainless.decryptAndOrVerify()
+        .onInputStream(input)
+        .withOptions(consumerOptions)
 
       val output = ByteArrayOutputStream()
       decryptionStream.use { it.copyTo(output) }
