@@ -744,7 +744,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
               ) -> {
                 return MockResponse()
                   .setResponseCode(404)
-                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+                  .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
               }
 
               TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
@@ -752,7 +752,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
               ) -> {
                 return MockResponse()
                   .setResponseCode(200)
-                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+                  .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
 
               "95FC072E853C9C333C68EDD34B9CA2FBCA5B5FE7".equals(lastSegment, true) -> {

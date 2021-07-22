@@ -103,7 +103,7 @@ class CreateMessageActivityTestPassInRamTest : BaseCreateMessageActivityTest() {
               ) -> {
                 return MockResponse()
                   .setResponseCode(200)
-                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+                  .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
             }
           }

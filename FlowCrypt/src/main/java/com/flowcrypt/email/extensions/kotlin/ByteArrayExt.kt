@@ -6,17 +6,8 @@
 
 package com.flowcrypt.email.extensions.kotlin
 
-private const val upperCaseHex = "0123456789ABCDEF"
-private const val lowerCaseHex = "0123456789abcdef"
+import org.apache.commons.codec.binary.Hex
 
-fun ByteArray.toHexString(upperCase: Boolean = true): String {
-  val chars = CharArray(size * 2)
-  val alphabet = if (upperCase) upperCaseHex else lowerCaseHex
-  var i = 0
-  for (b in this) {
-    val v = b.toInt()
-    chars[i++] = alphabet[((v shr 4) and 15)]
-    chars[i++] = alphabet[v and 15]
-  }
-  return String(chars)
+fun ByteArray.toHexString(toLowerCase: Boolean = false): String {
+  return String(Hex.encodeHex(this, toLowerCase))
 }
