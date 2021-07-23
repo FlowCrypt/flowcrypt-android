@@ -9,10 +9,39 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.util.TestUtil
+import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.pgpainless.PGPainless
+import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.util.Passphrase
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 class PgpKeyTest {
+  companion object {
+    private fun loadResourceAsString(
+      path: String,
+      charset: Charset = StandardCharsets.UTF_8
+    ): String {
+      return TestUtil.readResourceAsString(
+        path = "${PgpKeyTest::class.java.simpleName}/$path",
+        charset = charset
+      )
+    }
+
+    @Suppress("SameParameterValue")
+    private fun loadSecretKey(keyFile: String): PGPSecretKeyRing {
+      return PGPainless.readKeyRing().secretKeyRing(loadResourceAsString("keys/$keyFile"))
+    }
+
+    @Suppress("SameParameterValue")
+    private fun loadPublicKey(keyFile: String): PGPPublicKeyRing {
+      return PGPainless.readKeyRing().publicKeyRing(loadResourceAsString("keys/$keyFile"))
+    }
+  }
 
   @Test
   fun testParseKeysWithNormalKey() {
@@ -125,5 +154,16 @@ class PgpKeyTest {
     )
     assertEquals(1, result.getAllKeys().size)
     assertEquals(expected, result.toPgpKeyDetailsList().first())
+  }
+
+  @Test
+  fun testParseAndDecryptKey_Issue1296() {
+    val publicKeyRing = loadPublicKey("issue-1296-0xA96B4C55A800DB83.public.gpg-key")
+    val expectedFingerprint = OpenPgpV4Fingerprint(publicKeyRing)
+    val secretKeyRing = loadSecretKey("issue-1296-0xA96B4C55A800DB83.secret-subkeys.gpg-key")
+    assertEquals(expectedFingerprint, OpenPgpV4Fingerprint(secretKeyRing.publicKey))
+    val passphrase = Passphrase.fromPassword("password12345678")
+    val decryptedSecretKeyRing = PgpKey.decryptKey(secretKeyRing, passphrase)
+    assertEquals(expectedFingerprint, OpenPgpV4Fingerprint(decryptedSecretKeyRing.publicKey))
   }
 }

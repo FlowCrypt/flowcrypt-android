@@ -179,7 +179,7 @@ class ImportPgpContactActivityTest : BaseTest() {
               ) -> {
                 return MockResponse()
                   .setStatus("HTTP/1.1 404 Not Found")
-                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+                  .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
               }
 
               TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
@@ -187,7 +187,7 @@ class ImportPgpContactActivityTest : BaseTest() {
               ) -> {
                 return MockResponse()
                   .setResponseCode(200)
-                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+                  .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
             }
           }

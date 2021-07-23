@@ -52,7 +52,7 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
   private fun getSSLSocketFactory(): SSLSocketFactory {
     val serverCertificate: HeldCertificate = HeldCertificate.decode(
       TestGeneralUtil
-        .readResourcesAsString("ssl/server_combined.pem")
+        .readResourceAsString("ssl/server_combined.pem")
     )
 
     val serverHandshakeCertificates: HandshakeCertificates = HandshakeCertificates.Builder()

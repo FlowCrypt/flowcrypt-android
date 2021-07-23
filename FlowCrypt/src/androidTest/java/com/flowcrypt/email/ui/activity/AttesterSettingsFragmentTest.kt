@@ -79,7 +79,7 @@ class AttesterSettingsFragmentTest : BaseTest() {
             val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
             if (AccountDaoManager.getDefaultAccountDao().email.equals(lastSegment, true)) {
               return MockResponse().setResponseCode(200)
-                .setBody(TestGeneralUtil.readResourcesAsString("1.txt"))
+                .setBody(TestGeneralUtil.readResourceAsString("1.txt"))
             }
           }
 

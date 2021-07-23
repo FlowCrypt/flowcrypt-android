@@ -452,12 +452,12 @@ class ShareIntentsTest : BaseTest() {
             when {
               TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
                 return MockResponse().setResponseCode(404)
-                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+                  .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
               }
 
               TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
                 return MockResponse().setResponseCode(200)
-                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+                  .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
             }
           }

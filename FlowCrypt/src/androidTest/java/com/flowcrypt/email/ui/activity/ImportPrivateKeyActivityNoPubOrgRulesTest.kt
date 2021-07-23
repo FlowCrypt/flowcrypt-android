@@ -138,7 +138,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
                 val model = gson.fromJson(
                   InputStreamReader(
                     ByteArrayInputStream(
-                      TestGeneralUtil.readObjectFromResourcesAsByteArray(
+                      TestGeneralUtil.readResourceAsByteArray(
                         "4.json"
                       )
                     )

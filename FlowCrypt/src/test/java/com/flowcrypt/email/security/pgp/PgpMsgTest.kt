@@ -12,6 +12,7 @@ import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
+import com.flowcrypt.email.util.TestUtil
 import com.google.gson.JsonParser
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertArrayEquals
@@ -29,7 +30,6 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
 class PgpMsgTest {
-
   private data class MessageInfo(
     val key: String,
     val content: List<String>,
@@ -112,35 +112,29 @@ class PgpMsgTest {
         key = "decrypt - [enigmail] encrypted iso-2022-jp, plain text",
         content = listOf(
           // complete string "ゾし逸現飲"
-          decodeString("=E3=82=BE=E3=81=97=E9=80=B8=E7=8F=BE=E9=A3=B2", "UTF-8")
+          TestUtil.decodeString("=E3=82=BE=E3=81=97=E9=80=B8=E7=8F=BE=E9=A3=B2", "UTF-8")
         ),
         charset = "ISO-2022-JP",
       )
     )
 
-    @Suppress("SameParameterValue")
-    private fun decodeString(s: String, charsetName: String): String {
-      val bytes = s.substring(1).split('=').map { Integer.parseInt(it, 16).toByte() }.toByteArray()
-      return String(bytes, Charset.forName(charsetName))
-    }
-
-    private fun loadResource(path: String): ByteArray {
-      return PgpMsgTest::class.java.classLoader!!
-        .getResourceAsStream("${PgpMsgTest::class.simpleName}/$path")
-        .readBytes()
-    }
-
-    private fun loadResourceAsString(path: String): String {
-      return String(loadResource(path), StandardCharsets.UTF_8)
-    }
-
-    private fun loadSecretKey(file: String): PGPSecretKeyRing {
-      return PGPainless.readKeyRing().secretKeyRing(loadResourceAsString("keys/$file"))
-    }
-
     private fun findMessage(key: String): MessageInfo {
       return MESSAGES.firstOrNull { it.key == key }
         ?: throw IllegalArgumentException("Message '$key' not found")
+    }
+
+    private fun loadResourceAsString(
+      path: String,
+      charset: Charset = StandardCharsets.UTF_8
+    ): String {
+      return TestUtil.readResourceAsString(
+        path = "${PgpMsgTest::class.java.simpleName}/$path",
+        charset = charset
+      )
+    }
+
+    private fun loadSecretKey(keyFile: String): PGPSecretKeyRing {
+      return PGPainless.readKeyRing().secretKeyRing(loadResourceAsString("keys/$keyFile"))
     }
   }
 
