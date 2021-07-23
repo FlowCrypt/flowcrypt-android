@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
+import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
@@ -21,6 +22,10 @@ import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResp
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 /**
  * Implementation of Flowcrypt API
@@ -46,6 +51,7 @@ class FlowcryptApiRepository : ApiRepository {
 
   override suspend fun getDomainOrgRules(
     context: Context,
+    fesUrl: String,
     loginModel: LoginModel
   ): Result<DomainOrgRulesResponse> =
     withContext(Dispatchers.IO) {
@@ -53,7 +59,7 @@ class FlowcryptApiRepository : ApiRepository {
       getResult(
         context = context,
         expectedResultClass = DomainOrgRulesResponse::class.java
-      ) { apiService.getDomainOrgRules(loginModel) }
+      ) { apiService.getDomainOrgRules(fesUrl = fesUrl, body = loginModel) }
     }
 
   override suspend fun submitPubKey(
@@ -159,5 +165,28 @@ class FlowcryptApiRepository : ApiRepository {
         context = context,
         expectedResultClass = EkmPrivateKeysResponse::class.java
       ) { apiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $tokenId") }
+    }
+
+  override suspend fun checkFes(context: Context, domain: String): Result<FesServerResponse> =
+    withContext(Dispatchers.IO) {
+      val connectionTimeoutInSeconds = 3L
+      val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(connectionTimeoutInSeconds, TimeUnit.SECONDS)
+        .writeTimeout(connectionTimeoutInSeconds, TimeUnit.SECONDS)
+        .readTimeout(connectionTimeoutInSeconds, TimeUnit.SECONDS)
+        .apply {
+          ApiHelper.configureOkHttpClientForDebuggingIfAllowed(context, this)
+        }.build()
+
+      val retrofit = Retrofit.Builder()
+        .baseUrl("https://fes.$domain/api/")
+        .addConverterFactory(GsonConverterFactory.create(ApiHelper.getInstance(context).gson))
+        .client(okHttpClient)
+        .build()
+      val apiService = retrofit.create(ApiService::class.java)
+      return@withContext getResult(
+        context = context,
+        expectedResultClass = FesServerResponse::class.java
+      ) { apiService.checkFes(domain) }
     }
 }
