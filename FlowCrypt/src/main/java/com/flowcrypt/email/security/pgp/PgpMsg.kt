@@ -1100,6 +1100,8 @@ object PgpMsg {
   }
 
   private fun moveElementsOutOfAnchorTag(document: Document) {
+    // IMPORTANT: Do not change belo while into for loop,
+    // because document.childrenSize() may change
     var i = 0
     while (i < document.childrenSize()) {
       moveElementsOutOfAnchorTag(document.child(i++), document)
@@ -1121,6 +1123,8 @@ object PgpMsg {
         }
       }
     } else {
+      // IMPORTANT: Do not change belo while into for loop,
+      // because element.childrenSize() may change
       var i = 0
       while (i < element.childrenSize()) {
         moveElementsOutOfAnchorTag(element.child(i++), element)
