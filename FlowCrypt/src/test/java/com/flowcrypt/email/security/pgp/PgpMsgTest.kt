@@ -15,6 +15,7 @@ import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.util.TestUtil
 import com.google.gson.JsonParser
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.jsoup.Jsoup
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -43,10 +44,6 @@ class PgpMsgTest {
     private const val NEXT_MSG_BLOCK_DELIMITER = "<!-- next MsgBlock -->\n"
 
     private val BODY_SPLIT_REGEX = Regex("</?body>")
-
-    private val RENDERED_CONTENT_BLOCK_REGEX = Regex(
-      "<div class=\"MsgBlock ([a-z]+)\" style=\"[^\"]+\">(.*)</div>"
-    )
 
     private const val TEXT_SPECIAL_CHARS = "> special <tag> & other\n> second line"
 
@@ -430,7 +427,7 @@ class PgpMsgTest {
     val text = loadResourceAsString("other/plain-inline-image.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.parseDecryptMsg(text, true, keys)
-    assertEquals("Below\n[image: image.png]\nAbove", result.text)
+    assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
     assertEquals(false, result.isReplyEncrypted)
     assertEquals("tiny inline img plain", result.subject)
     assertEquals(1, result.blocks.size)
@@ -465,6 +462,26 @@ class PgpMsgTest {
         )
       )
     )
+  }
+
+  @Test
+  fun testParseDecryptPlainGoogleSecurityAlertMessage() {
+    val text = loadResourceAsString("other/plain-google-security-alert-20210416-084836-UTC.txt")
+    val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
+    val result = PgpMsg.parseDecryptMsg(text, true, keys)
+    val textContent = loadResourceAsString(
+      "other/plain-google-security-alert-20210416-084836-UTC-text-content.txt"
+    )
+    assertEquals(textContent, result.text)
+    assertEquals(false, result.isReplyEncrypted)
+    assertEquals("Security alert", result.subject)
+    assertEquals(1, result.blocks.size)
+    val block = result.blocks[0]
+    assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
+    val htmlContent = loadResourceAsString(
+      "other/plain-google-security-alert-20210416-084836-UTC-html-content.txt"
+    )
+    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
 
   private data class RenderedBlock(
@@ -512,11 +529,22 @@ class PgpMsgTest {
       assertEquals("", lastEmpty)
       val actualRenderedBlocks = renderedContentBlocks.subList(0, renderedContentBlocks.size - 1)
         .map {
-          val match = RENDERED_CONTENT_BLOCK_REGEX.find(it)
-          if (match == null)
+          // Regex didn't work well for all test cases, so I have switched to jsoup
+          val document = Jsoup.parse(it)
+          document.outputSettings().prettyPrint(false)
+          val htmlBody= document.body()
+          if (
+            htmlBody.childrenSize() == 1 && htmlBody.child(0).normalName() == "div"
+            && htmlBody.child(0).attributes().size() == 2 && htmlBody.child(0).hasAttr("class")
+            && htmlBody.child(0).hasAttr("style")
+          ) {
+            val blockDiv = htmlBody.child(0)
+            val frameColor = blockDiv.attr("class").split(" ").last()
+            val content = blockDiv.html()
+            RenderedBlock.normal(true, frameColor, content)
+          } else {
             RenderedBlock.error("TEST VALIDATION ERROR - MISMATCHING CONTENT BLOCK FORMAT", it)
-          else
-            RenderedBlock.normal(true, match.groups[1]?.value, match.groups[2]?.value)
+          }
         }.toList()
       assertEquals(expectedRenderedBlocks, actualRenderedBlocks)
     }
