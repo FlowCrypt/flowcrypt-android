@@ -51,15 +51,21 @@ class FlowcryptApiRepository : ApiRepository {
 
   override suspend fun getDomainOrgRules(
     context: Context,
-    fesUrl: String,
-    loginModel: LoginModel
+    loginModel: LoginModel,
+    fesUrl: String?
   ): Result<DomainOrgRulesResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       getResult(
         context = context,
         expectedResultClass = DomainOrgRulesResponse::class.java
-      ) { apiService.getDomainOrgRules(fesUrl = fesUrl, body = loginModel) }
+      ) {
+        if (fesUrl != null) {
+          apiService.getDomainOrgRules(fesUrl = fesUrl)
+        } else {
+          apiService.getDomainOrgRulesInternal(body = loginModel)
+        }
+      }
     }
 
   override suspend fun submitPubKey(

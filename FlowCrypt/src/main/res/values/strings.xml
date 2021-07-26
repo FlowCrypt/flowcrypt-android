@@ -527,4 +527,5 @@
     <string name="found_not_fully_encrypted_key">Error. Key %1$s is not fully encrypted</string>
     <string name="could_not_parse_one_of_ekm_key">Couldn\'t parse one of the keys received from EKM</string>
     <string name="no_connection_or_server_is_not_reachable">No connection or the server is not reachable</string>
+    <string name="fes_has_wrong_configuration">Your FES server has wrong configuration. Please ask your systems administrator or help desk</string>
 </resources>

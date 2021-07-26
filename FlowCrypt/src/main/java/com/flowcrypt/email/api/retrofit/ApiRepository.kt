@@ -49,8 +49,8 @@ interface ApiRepository : BaseApiRepository {
    */
   suspend fun getDomainOrgRules(
     context: Context,
-    fesUrl: String,
-    loginModel: LoginModel
+    loginModel: LoginModel,
+    fesUrl: String? = null
   ): Result<DomainOrgRulesResponse>
 
   /**

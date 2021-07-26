@@ -450,7 +450,23 @@ class MainSignInFragment : BaseSingInFragment() {
         }
 
         Result.Status.SUCCESS -> {
-          continueWithRegularFlow()
+          if ("enterprise-server" == it.data?.service) {
+            googleSignInAccount?.account?.name?.let { account ->
+              val domain = EmailUtil.getDomain(account)
+              domainOrgRulesViewModel.fetchOrgRules(
+                account = account,
+                uuid = uuid,
+                fesUrl = "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+              )
+            }
+          } else {
+            continueBasedOnFlavorSettings(
+              it.copy(
+                exception = IllegalStateException(getString(R.string.fes_has_wrong_configuration))
+              )
+            )
+          }
+
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
@@ -530,8 +546,6 @@ class MainSignInFragment : BaseSingInFragment() {
           if (it.data?.isVerified == true) {
             val account = googleSignInAccount?.account?.name
             if (account != null) {
-              /*val fesUrl =
-    if (isFesAvailable) "https://fes.$domain/api/v1/client-configuration?domain=$domain" else null*/
               domainOrgRulesViewModel.fetchOrgRules(account, uuid)
             } else {
               showContent()
