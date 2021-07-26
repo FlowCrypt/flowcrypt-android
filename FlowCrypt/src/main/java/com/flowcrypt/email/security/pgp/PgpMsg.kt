@@ -41,6 +41,10 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.json.JSONObject
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.jsoup.nodes.Node
+import org.jsoup.nodes.TextNode
 import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
@@ -248,7 +252,6 @@ object PgpMsg {
       )
     }
 
-    val exception: Exception?
     try {
       val consumerOptions = ConsumerOptions()
         .addDecryptionKeys(PGPSecretKeyRingCollection(keyList), UnprotectedKeysProtector())
@@ -262,7 +265,7 @@ object PgpMsg {
       decryptionStream.use { it.copyTo(output) }
 
       val streamResult = decryptionStream.result
-      return DecryptionResult.withDecrypted(output, streamResult.fileInfo?.fileName)
+      return DecryptionResult.withDecrypted(output, streamResult.fileName)
     } catch (ex: MessageNotIntegrityProtectedException) {
       return DecryptionResult.withError(
         type = PgpDecrypt.DecryptionErrorType.NO_MDC,
@@ -794,16 +797,17 @@ object PgpMsg {
     val msgContentAsText = StringBuilder()
     for (block in allContentBlocks.filterNot { MimeUtils.isPlainImgAtt(it) }) {
       if (block.content != null) {
+        val content = block.content!!
         when (block.type) {
           MsgBlock.Type.DECRYPTED_TEXT -> {
-            val html = fmtMsgContentBlockAsHtml(block.content?.toEscapedHtml(), FrameColor.GREEN)
+            val html = fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.GREEN)
             msgContentAsHtml.append(html)
             msgContentAsText.append(block.content ?: "").append('\n')
           }
 
           MsgBlock.Type.DECRYPTED_HTML -> {
             // Typescript comment: todo: add support for inline imgs? when included using cid
-            var html = block.content!!.stripHtmlRootTags()
+            var html = content.stripHtmlRootTags()
             html = fmtMsgContentBlockAsHtml(html, FrameColor.GREEN)
             msgContentAsHtml.append(html)
             msgContentAsText
@@ -813,27 +817,28 @@ object PgpMsg {
 
           MsgBlock.Type.PLAIN_TEXT -> {
             val html =
-              fmtMsgContentBlockAsHtml(block.content.toString().toEscapedHtml(), FrameColor.PLAIN)
+              fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.PLAIN)
             msgContentAsHtml.append(html)
-            msgContentAsText.append(block.content).append('\n')
+            msgContentAsText.append(content).append('\n')
           }
 
           MsgBlock.Type.PLAIN_HTML -> {
-            val stripped = block.content!!.stripHtmlRootTags()
+            val stripped = content.stripHtmlRootTags()
             val dirtyHtmlWithImgs = fillInlineHtmlImages(stripped, inlineImagesByCid)
-            msgContentAsHtml.append(fmtMsgContentBlockAsHtml(dirtyHtmlWithImgs, FrameColor.PLAIN))
+            val formattedHtml = fmtMsgContentBlockAsHtml(dirtyHtmlWithImgs, FrameColor.PLAIN)
+            msgContentAsHtml.append(formattedHtml)
             val text = sanitizeHtmlStripAllTags(dirtyHtmlWithImgs)?.unescapeHtml()
             msgContentAsText.append(text).append('\n')
           }
 
           MsgBlock.Type.VERIFIED_MSG -> {
-            msgContentAsHtml.append(fmtMsgContentBlockAsHtml(block.content, FrameColor.GRAY))
-            msgContentAsText.append(sanitizeHtmlStripAllTags(block.content)).append('\n')
+            msgContentAsHtml.append(fmtMsgContentBlockAsHtml(content, FrameColor.GRAY))
+            msgContentAsText.append(sanitizeHtmlStripAllTags(content)).append('\n')
           }
 
           else -> {
-            msgContentAsHtml.append(fmtMsgContentBlockAsHtml(block.content, FrameColor.PLAIN))
-            msgContentAsText.append(block.content).append('\n')
+            msgContentAsHtml.append(fmtMsgContentBlockAsHtml(content, FrameColor.PLAIN))
+            msgContentAsText.append(content).append('\n')
           }
         }
       }
@@ -956,10 +961,10 @@ object PgpMsg {
   )
 
   private fun fmtMsgContentBlockAsHtml(dirtyContent: String?, frameColor: FrameColor): String {
-    return if (dirtyContent == null) ""
-    else "<div class=\"MsgBlock ${frameColor}\" style=" +
-        "\"${GENERAL_CSS}${FRAME_CSS_MAP[frameColor]!!}\">" +
-        "${sanitizeHtmlKeepBasicTags(dirtyContent)}</div><!-- next MsgBlock -->\n"
+    if (dirtyContent == null) return ""
+    val sanitizedHtml = sanitizeHtmlKeepBasicTags(dirtyContent)
+    return "<div class=\"MsgBlock ${frameColor}\" style=\"$GENERAL_CSS" +
+        "${FRAME_CSS_MAP[frameColor]!!}\">${sanitizedHtml}</div><!-- next MsgBlock -->\n"
   }
 
   /**
@@ -1001,7 +1006,7 @@ object PgpMsg {
 
           var newElementName = elementName
           if (elementName == "img") {
-            val srcAttr = getAttribute(attrs, "src", "")!!
+            val srcAttr = getAttribute(attrs, "src", "")
             val altAttr = getAttribute(attrs, "alt")
             when {
               srcAttr.startsWith("data:") -> {
@@ -1020,7 +1025,7 @@ object PgpMsg {
                 //   text: imgContentReplaceable };
                 // Github: https://github.com/OWASP/java-html-sanitizer/issues/230
                 // SO: https://stackoverflow.com/questions/67976114
-                // There is no way to achieve this with OWASP sanitizer, so we do it with Jsoup
+                // There is no way to achieve this with OWASP sanitizer, so we do it with jsoup
                 // as post-processing step
                 remoteContentReplacedWithLink = true
                 newElementName = "a"
@@ -1029,7 +1034,7 @@ object PgpMsg {
                 attrs.add(srcAttr)
                 attrs.add("target")
                 attrs.add("_blank")
-                attrs.add(INNER_TEXT_TYPE_ATTR)
+                attrs.add(FC_INNER_TEXT_TYPE_ATTR)
                 attrs.add("1")
               }
 
@@ -1045,11 +1050,11 @@ object PgpMsg {
                   attrs.add("title")
                   attrs.add(titleAttr)
                 }
-                attrs.add(INNER_TEXT_TYPE_ATTR)
+                attrs.add(FC_INNER_TEXT_TYPE_ATTR)
                 attrs.add("2")
               }
             }
-            attrs.add(FROM_IMAGE_ATTR)
+            attrs.add(FC_FROM_IMAGE_ATTR)
             attrs.add(true.toString())
           }
 
@@ -1061,13 +1066,16 @@ object PgpMsg {
       .allowAttributesOnElementsExt(ALLOWED_ATTRS)
       .toFactory()
 
-    val cleanHtml = policyFactory.sanitize(dirtyHtml)
-    val doc = Jsoup.parse(cleanHtml)
-    doc.outputSettings().prettyPrint(false)
-    for (element in doc.select("a")) {
-      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
-        val innerTextType = element.attr(INNER_TEXT_TYPE_ATTR)
-        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
+    val cleanHtml1 = policyFactory.sanitize(dirtyHtml)
+    val document = Jsoup.parse(cleanHtml1)
+    document.outputSettings().prettyPrint(false)
+
+    moveElementsOutOfAnchorTag(document)
+
+    for (element in document.select("a")) {
+      if (element.hasAttr(FC_INNER_TEXT_TYPE_ATTR)) {
+        val innerTextType = element.attr(FC_INNER_TEXT_TYPE_ATTR)
+        element.attributes().remove(FC_INNER_TEXT_TYPE_ATTR)
         var innerText: String? = null
         when (innerTextType) {
           "1" -> innerText = imgContentReplaceable
@@ -1076,7 +1084,7 @@ object PgpMsg {
         if (innerText != null) element.html(innerText)
       }
     }
-    var cleanHtml2 = doc.outerHtml()
+    var cleanHtml2 = document.outerHtml()
 
     if (remoteContentReplacedWithLink) {
       cleanHtml2 = htmlPolicyWithBasicTagsOnlyFactory.sanitize(
@@ -1091,8 +1099,41 @@ object PgpMsg {
     )
   }
 
-  private const val INNER_TEXT_TYPE_ATTR = "data-fc-inner-text-type"
-  private const val FROM_IMAGE_ATTR = "data-fc-is-from-image"
+  private fun moveElementsOutOfAnchorTag(document: Document) {
+    // IMPORTANT: Do not change belo while into for loop,
+    // because document.childrenSize() may change
+    var i = 0
+    while (i < document.childrenSize()) {
+      moveElementsOutOfAnchorTag(document.child(i++), document)
+    }
+  }
+
+  private fun moveElementsOutOfAnchorTag(element: Element, parent: Element) {
+    if (element.tag().normalName() == "a" && element.hasAttr(FC_INNER_TEXT_TYPE_ATTR)) {
+      val children = element.children().map { it as Node }.toTypedArray()
+      val n = element.childrenSize()
+      var index = 0
+      while (index < n && parent.child(index) !== element) ++index
+      parent.insertChildren(index, *children)
+      if (element.childNodeSize() > 0) {
+        for (childNode in element.childNodes()) {
+          if (childNode is TextNode) {
+            parent.insertChildren(index++, childNode)
+          }
+        }
+      }
+    } else {
+      // IMPORTANT: Do not change belo while into for loop,
+      // because element.childrenSize() may change
+      var i = 0
+      while (i < element.childrenSize()) {
+        moveElementsOutOfAnchorTag(element.child(i++), element)
+      }
+    }
+  }
+
+  private const val FC_INNER_TEXT_TYPE_ATTR = "data-fc-inner-text-type"
+  private const val FC_FROM_IMAGE_ATTR = "data-fc-is-from-image"
 
   fun sanitizeHtmlStripAllTags(dirtyHtml: String?, outputNl: String = "\n"): String? {
     val html = sanitizeHtmlKeepBasicTags(dirtyHtml) ?: return null
@@ -1123,12 +1164,12 @@ object PgpMsg {
                 if (title != null) innerText = title
               }
               attrs.clear()
-              attrs.add(INNER_TEXT_TYPE_ATTR)
+              attrs.add(FC_INNER_TEXT_TYPE_ATTR)
               attrs.add(innerText)
               return@allowElements "span"
             }
             "a" -> {
-              val fromImage = getAttribute(attrs, FROM_IMAGE_ATTR)
+              val fromImage = getAttribute(attrs, FC_FROM_IMAGE_ATTR)
               if (fromImage == true.toString()) {
                 var innerText = "[image]"
                 val alt = getAttribute(attrs, "alt")
@@ -1136,7 +1177,7 @@ object PgpMsg {
                   innerText = "[image: $alt]"
                 }
                 attrs.clear()
-                attrs.add(INNER_TEXT_TYPE_ATTR)
+                attrs.add(FC_INNER_TEXT_TYPE_ATTR)
                 attrs.add(innerText)
                 return@allowElements "span"
               } else {
@@ -1151,17 +1192,17 @@ object PgpMsg {
         "a"
       )
       .allowAttributes("src", "alt", "title").onElements("img")
-      .allowAttributes(INNER_TEXT_TYPE_ATTR).onElements("span")
-      .allowAttributes("src", "alt", "title", FROM_IMAGE_ATTR).onElements("a")
+      .allowAttributes(FC_INNER_TEXT_TYPE_ATTR).onElements("span")
+      .allowAttributes("src", "alt", "title", FC_FROM_IMAGE_ATTR).onElements("a")
       .toFactory()
 
     text = policyFactory.sanitize(text)
     val doc = Jsoup.parse(text)
     doc.outputSettings().prettyPrint(false)
     for (element in doc.select("span")) {
-      if (element.hasAttr(INNER_TEXT_TYPE_ATTR)) {
-        val innerText = element.attr(INNER_TEXT_TYPE_ATTR)
-        element.attributes().remove(INNER_TEXT_TYPE_ATTR)
+      if (element.hasAttr(FC_INNER_TEXT_TYPE_ATTR)) {
+        val innerText = element.attr(FC_INNER_TEXT_TYPE_ATTR)
+        element.attributes().remove(FC_INNER_TEXT_TYPE_ATTR)
         element.html(innerText)
       }
     }
@@ -1198,13 +1239,17 @@ object PgpMsg {
 
   private fun getAttribute(
     attrs: List<String>,
-    attrName: String,
-    defaultValue: String? = null
+    attrName: String
   ): String? {
     val srcAttrIndex = attrs.withIndex().indexOfFirst {
       it.index % 2 == 0 && it.value == attrName
     }
-    return if (srcAttrIndex != -1) attrs[srcAttrIndex + 1] else defaultValue
+    return if (srcAttrIndex != -1) attrs[srcAttrIndex + 1] else null
+  }
+
+  @Suppress("SameParameterValue")
+  private fun getAttribute(attrs: List<String>, attrName: String, defaultValue: String): String {
+    return getAttribute(attrs, attrName) ?: defaultValue
   }
 
   private fun generateRandomSuffix(length: Int = 5): String {
