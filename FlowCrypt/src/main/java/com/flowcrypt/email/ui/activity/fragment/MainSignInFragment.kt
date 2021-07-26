@@ -79,6 +79,7 @@ class MainSignInFragment : BaseSingInFragment() {
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var uuid: String = SecurityUtils.generateRandomUUID()
   private var orgRules: OrgRules? = null
+  private var fesUrl: String? = null
 
   private val checkFesServerViewModel: CheckFesServerViewModel by viewModels()
   private val loginViewModel: LoginViewModel by viewModels()
@@ -157,7 +158,11 @@ class MainSignInFragment : BaseSingInFragment() {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
             val account = googleSignInAccount?.account?.name ?: return
-            domainOrgRulesViewModel.fetchOrgRules(account, uuid)
+            domainOrgRulesViewModel.fetchOrgRules(
+              account = account,
+              uuid = uuid,
+              fesUrl = fesUrl
+            )
           }
         }
       }
@@ -176,6 +181,7 @@ class MainSignInFragment : BaseSingInFragment() {
           TwoWayDialogFragment.RESULT_OK -> {
             val account = googleSignInAccount?.account?.name ?: return
             orgRules = null
+            fesUrl = null
             checkFesServerViewModel.checkFesServerAvailability(account)
           }
         }
@@ -258,6 +264,7 @@ class MainSignInFragment : BaseSingInFragment() {
           onSignSuccess(googleSignInAccount)
         } else {
           orgRules = null
+          fesUrl = null
           checkFesServerViewModel.checkFesServerAvailability(account)
         }
       } else {
@@ -453,10 +460,11 @@ class MainSignInFragment : BaseSingInFragment() {
           if ("enterprise-server" == it.data?.service) {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
+              fesUrl = "https://fes.$domain/api/v1/client-configuration?domain=$domain"
               domainOrgRulesViewModel.fetchOrgRules(
                 account = account,
                 uuid = uuid,
-                fesUrl = "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+                fesUrl = fesUrl
               )
             }
           } else {
