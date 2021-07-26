@@ -146,9 +146,9 @@ class MainSignInFragment : BaseSingInFragment() {
       REQUEST_CODE_RETRY_LOGIN -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
+            orgRules = null
             val account = googleSignInAccount?.account?.name ?: return
             val idToken = googleSignInAccount?.idToken ?: return
-            orgRules = null
             loginViewModel.login(account, uuid, idToken)
           }
         }
@@ -179,9 +179,9 @@ class MainSignInFragment : BaseSingInFragment() {
       REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
-            val account = googleSignInAccount?.account?.name ?: return
             orgRules = null
             fesUrl = null
+            val account = googleSignInAccount?.account?.name ?: return
             checkFesServerViewModel.checkFesServerAvailability(account)
           }
         }
@@ -526,6 +526,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
   private fun continueBasedOnFlavorSettings(it: Result<FesServerResponse>) {
     if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+      showContent()
       showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
     } else {
       continueWithRegularFlow()
