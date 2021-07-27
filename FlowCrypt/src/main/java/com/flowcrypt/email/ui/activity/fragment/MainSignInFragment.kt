@@ -482,12 +482,12 @@ class MainSignInFragment : BaseSingInFragment() {
         }
 
         Result.Status.EXCEPTION -> {
-          showContent()
           when (it.exception) {
             is CommonConnectionException -> {
               if (it.exception.hasInternetAccess == true) {
                 continueBasedOnFlavorSettings()
               } else {
+                showContent()
                 showDialogWithRetryButton(
                   getString(R.string.no_connection_or_server_is_not_reachable),
                   REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
@@ -508,6 +508,7 @@ class MainSignInFragment : BaseSingInFragment() {
             }
 
             else -> {
+              showContent()
               showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
             }
           }
