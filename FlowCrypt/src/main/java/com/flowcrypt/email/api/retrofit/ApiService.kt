@@ -109,7 +109,7 @@ interface ApiService {
    * @param body POJO model for requests
    */
   @POST(BuildConfig.API_URL + "account/get")
-  suspend fun getDomainOrgRulesInternal(@Body body: LoginModel): Response<DomainOrgRulesResponse>
+  suspend fun getOrgRulesFromFlowCryptComBackend(@Body body: LoginModel): Response<DomainOrgRulesResponse>
 
   /**
    * This method calls "https://fes.$domain/api/v1/client-configuration?domain=$domain"
@@ -117,7 +117,7 @@ interface ApiService {
    * @param fesUrl URL of FES
    */
   @GET
-  suspend fun getDomainOrgRules(@Url fesUrl: String): Response<DomainOrgRulesResponse>
+  suspend fun getOrgRulesFromFes(@Url fesUrl: String): Response<DomainOrgRulesResponse>
 
   /**
    * This method calls API "https://flowcrypt.com/attester/initial/legacy_submit" via coroutines

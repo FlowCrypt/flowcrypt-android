@@ -61,9 +61,9 @@ class FlowcryptApiRepository : ApiRepository {
         expectedResultClass = DomainOrgRulesResponse::class.java
       ) {
         if (fesUrl != null) {
-          apiService.getDomainOrgRules(fesUrl = fesUrl)
+          apiService.getOrgRulesFromFes(fesUrl = fesUrl)
         } else {
-          apiService.getDomainOrgRulesInternal(body = loginModel)
+          apiService.getOrgRulesFromFlowCryptComBackend(body = loginModel)
         }
       }
     }
