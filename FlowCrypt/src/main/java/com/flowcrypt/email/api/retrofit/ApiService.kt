@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
@@ -117,7 +118,7 @@ interface ApiService {
    * @param fesUrl URL of FES
    */
   @GET
-  suspend fun getOrgRulesFromFes(@Url fesUrl: String): Response<DomainOrgRulesResponse>
+  suspend fun getOrgRulesFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
 
   /**
    * This method calls API "https://flowcrypt.com/attester/initial/legacy_submit" via coroutines

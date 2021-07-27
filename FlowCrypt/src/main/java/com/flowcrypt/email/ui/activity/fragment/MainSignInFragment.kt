@@ -18,6 +18,8 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
+import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -592,9 +594,11 @@ class MainSignInFragment : BaseSingInFragment() {
 
         Result.Status.SUCCESS -> {
           val idToken = googleSignInAccount?.idToken
-          if (it.data?.orgRules != null && idToken != null) {
-            orgRules = it.data.orgRules
-            ekmViewModel.fetchPrvKeys(it.data.orgRules, idToken)
+          orgRules = (it.data as? DomainOrgRulesResponse)?.orgRules
+            ?: (it.data as? ClientConfigurationResponse)?.orgRules
+
+          if (idToken != null) {
+            orgRules?.let { fetchedOrgRules -> ekmViewModel.fetchPrvKeys(fetchedOrgRules, idToken) }
           } else {
             showContent()
             askUserToReLogin()

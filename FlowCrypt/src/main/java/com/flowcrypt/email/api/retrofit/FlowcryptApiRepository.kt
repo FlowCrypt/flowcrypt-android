@@ -10,13 +10,13 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
@@ -53,13 +53,10 @@ class FlowcryptApiRepository : ApiRepository {
     context: Context,
     loginModel: LoginModel,
     fesUrl: String?
-  ): Result<DomainOrgRulesResponse> =
+  ): Result<ApiResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult(
-        context = context,
-        expectedResultClass = DomainOrgRulesResponse::class.java
-      ) {
+      getResult(context = context) {
         if (fesUrl != null) {
           apiService.getOrgRulesFromFes(fesUrl = fesUrl)
         } else {

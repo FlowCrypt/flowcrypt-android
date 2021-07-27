@@ -14,17 +14,15 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
 /**
- * This class describes a response from the https://flowcrypt.com/api/account/get API.
- *
  * @author Denis Bondarenko
- *         Date: 10/29/19
- *         Time: 11:25 AM
+ *         Date: 7/27/21
+ *         Time: 4:16 PM
  *         E-mail: DenBond7@gmail.com
  */
-data class DomainOrgRulesResponse constructor(
+data class ClientConfigurationResponse constructor(
   @SerializedName("error")
   @Expose override val apiError: ApiError? = null,
-  @SerializedName("domain_org_rules")
+  @SerializedName("clientConfiguration")
   @Expose val orgRules: OrgRules?
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
@@ -43,8 +41,8 @@ data class DomainOrgRulesResponse constructor(
     return 0
   }
 
-  companion object CREATOR : Parcelable.Creator<DomainOrgRulesResponse> {
-    override fun createFromParcel(parcel: Parcel) = DomainOrgRulesResponse(parcel)
-    override fun newArray(size: Int): Array<DomainOrgRulesResponse?> = arrayOfNulls(size)
+  companion object CREATOR : Parcelable.Creator<ClientConfigurationResponse> {
+    override fun createFromParcel(parcel: Parcel) = ClientConfigurationResponse(parcel)
+    override fun newArray(size: Int): Array<ClientConfigurationResponse?> = arrayOfNulls(size)
   }
 }
