@@ -18,7 +18,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -49,6 +48,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
@@ -65,7 +65,6 @@ import com.sun.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 import java.util.*
 
 /**
@@ -468,11 +467,7 @@ class MainSignInFragment : BaseSingInFragment() {
               )
             }
           } else {
-            continueBasedOnFlavorSettings(
-              it.copy(
-                exception = IllegalStateException(getString(R.string.fes_has_wrong_configuration))
-              )
-            )
+            continueBasedOnFlavorSettings()
           }
 
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
@@ -482,22 +477,22 @@ class MainSignInFragment : BaseSingInFragment() {
         Result.Status.ERROR -> {
           showContent()
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
           baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           showContent()
           when (it.exception) {
-            is UnknownHostException -> {
-              showInfoDialog(
-                dialogTitle = "",
-                dialogMsg = getString(R.string.no_connection_or_server_is_not_reachable),
-                isCancelable = true
-              )
-            }
-
-            is SocketTimeoutException -> {
-              continueBasedOnFlavorSettings(it)
+            is CommonConnectionException -> {
+              if (it.exception.hasInternetAccess == true) {
+                continueBasedOnFlavorSettings()
+              } else {
+                showDialogWithRetryButton(
+                  getString(R.string.no_connection_or_server_is_not_reachable),
+                  REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
+                )
+              }
             }
 
             is com.flowcrypt.email.util.exception.ApiException -> {
@@ -506,8 +501,8 @@ class MainSignInFragment : BaseSingInFragment() {
                   continueWithRegularFlow()
                 }
 
-                in 400..500 -> {
-                  continueBasedOnFlavorSettings(it)
+                else -> {
+                  continueBasedOnFlavorSettings()
                 }
               }
             }
@@ -524,10 +519,14 @@ class MainSignInFragment : BaseSingInFragment() {
     })
   }
 
-  private fun continueBasedOnFlavorSettings(it: Result<FesServerResponse>) {
+  private fun continueBasedOnFlavorSettings() {
     if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-      showContent()
-      showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
+      /*
+       here we actually need to decide if we should show error or proceed with
+       regular setup flow based on exact customers that will skip to regular setup flow,
+       and the rest will be shown error.
+      */
+      continueWithRegularFlow()
     } else {
       continueWithRegularFlow()
     }
@@ -702,6 +701,10 @@ class MainSignInFragment : BaseSingInFragment() {
     val errorMsg = it.data?.apiError?.msg
       ?: it.exception?.message
       ?: getString(R.string.unknown_error)
+    showDialogWithRetryButton(errorMsg, resultCode)
+  }
+
+  private fun showDialogWithRetryButton(errorMsg: String, resultCode: Int) {
     showTwoWayDialog(
       requestCode = resultCode,
       dialogTitle = "",

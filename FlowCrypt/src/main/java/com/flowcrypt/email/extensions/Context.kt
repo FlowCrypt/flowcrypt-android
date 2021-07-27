@@ -7,6 +7,9 @@ package com.flowcrypt.email.extensions
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkInfo
+import android.os.Build
 import android.widget.Toast
 
 /**
@@ -28,7 +31,12 @@ fun Context.toast(resId: Int, duration: Int = Toast.LENGTH_SHORT) {
 fun Context?.hasActiveConnection(): Boolean {
   return this?.let {
     val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-    val activeNetwork: android.net.NetworkInfo? = cm?.activeNetworkInfo
-    activeNetwork?.isConnectedOrConnecting == true
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      val cap = cm?.getNetworkCapabilities(cm.activeNetwork) ?: return false
+      return cap.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    } else {
+      val activeNetwork: NetworkInfo? = cm?.activeNetworkInfo
+      activeNetwork?.isConnectedOrConnecting == true
+    }
   } ?: false
 }

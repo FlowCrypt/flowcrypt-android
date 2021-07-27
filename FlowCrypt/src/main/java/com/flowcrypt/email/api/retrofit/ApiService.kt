@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitRes
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -164,4 +165,10 @@ interface ApiService {
    */
   @GET("https://fes.{domain}/api/")
   suspend fun checkFes(@Path("domain") domain: String): Response<FesServerResponse>
+
+  /**
+   * This method check if "url" is available for interactions
+   */
+  @GET()
+  suspend fun isAvailable(@Url url: String): Response<ResponseBody>
 }

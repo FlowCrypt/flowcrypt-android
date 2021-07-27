@@ -28,7 +28,6 @@ class ConnectionLifecycleObserver(context: Context?) : LifecycleObserver {
     context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
   private val networkRequest: NetworkRequest = NetworkRequest.Builder()
     .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-    .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
     .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
     .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
     .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
