@@ -214,6 +214,20 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       .check(matches(not(isDisplayed())))
   }
 
+  @Test
+  fun testFesAvailabilityRequestTimeOut() {
+    try {
+      changeConnectionState(false)
+      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
+      isDialogWithTextDisplayed(
+        decorView = decorView,
+        message = getResString(R.string.no_connection_or_server_is_not_reachable)
+      )
+    } finally {
+      changeConnectionState(true)
+    }
+  }
+
   companion object {
     private const val EMAIL_EKM_URL_SUCCESS = "https://localhost:1212/ekm/"
     private const val EMAIL_EKM_URL_SUCCESS_EMPTY_LIST = "https://localhost:1212/ekm/empty/"
@@ -236,6 +250,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     private const val EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST = "keys_via_ekm_empty_list@flowcrypt.test"
     private const val EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED =
       "user_with_not_fully_decrypted_prv_key@flowcrypt.test"
+    private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@flowcrypt.test"
 
     private val ACCEPTED_ORG_RULES = listOf(
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
