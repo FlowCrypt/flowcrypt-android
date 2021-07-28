@@ -265,6 +265,18 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     }
   }
 
+  @Test
+  fun testFesServerUpNotEnterpriseServer() {
+    try {
+      fesNotEnterpriseServer = true
+      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_NOT_ENTERPRISE_SERVER))
+      onView(withText(R.string.set_pass_phrase))
+        .check(matches(isDisplayed()))
+    } finally {
+      fesNotEnterpriseServer = false
+    }
+  }
+
   companion object {
     private const val EMAIL_EKM_URL_SUCCESS = "https://localhost:1212/ekm/"
     private const val EMAIL_EKM_URL_SUCCESS_EMPTY_LIST = "https://localhost:1212/ekm/empty/"
@@ -291,6 +303,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@localhost:1212"
     private const val EMAIL_FES_HTTP_404 = "fes_404@localhost:1212"
     private const val EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS = "fes_not404_not_success@localhost:1212"
+    private const val EMAIL_FES_NOT_ENTERPRISE_SERVER = "fes_not_enterprise_server@localhost:1212"
 
     private val ACCEPTED_ORG_RULES = listOf(
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
@@ -339,6 +352,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     internal var fesTimeOutEnabled = false
     internal var fesExpect404 = false
     internal var fesExpectNot404AndNotSuccess = false
+    internal var fesNotEnterpriseServer = false
 
     @get:ClassRule
     @JvmStatic
@@ -389,6 +403,11 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
           fesExpectNot404AndNotSuccess -> {
             MockResponse().setResponseCode(500)
+          }
+
+          fesNotEnterpriseServer -> {
+            MockResponse().setResponseCode(200)
+              .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
           }
 
           else -> {
@@ -519,7 +538,8 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
         EMAIL_FES_REQUEST_TIME_OUT,
         EMAIL_FES_HTTP_404,
-        EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS -> return successMockResponseForOrgRules(
+        EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS,
+        EMAIL_FES_NOT_ENTERPRISE_SERVER -> return successMockResponseForOrgRules(
           gson = gson,
           orgRules = OrgRules(
             flags = ACCEPTED_ORG_RULES,
