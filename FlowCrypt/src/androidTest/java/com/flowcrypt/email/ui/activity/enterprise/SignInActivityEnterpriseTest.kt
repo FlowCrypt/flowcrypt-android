@@ -20,6 +20,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
@@ -30,7 +31,6 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
-import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
@@ -75,7 +75,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
-    .around(RetryRule.DEFAULT)
+    //.around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
@@ -277,6 +277,20 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     }
   }
 
+  @Test
+  fun testFesServerUpGetClientConfigurationSuccess() {
+    try {
+      setupAndClickSignInButton(
+        genMockGoogleSignInAccountJson(
+          EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS
+        )
+      )
+      onView(withText(R.string.set_pass_phrase))
+        .check(matches(isDisplayed()))
+    } finally {
+    }
+  }
+
   companion object {
     private const val EMAIL_EKM_URL_SUCCESS = "https://localhost:1212/ekm/"
     private const val EMAIL_EKM_URL_SUCCESS_EMPTY_LIST = "https://localhost:1212/ekm/empty/"
@@ -304,6 +318,8 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     private const val EMAIL_FES_HTTP_404 = "fes_404@localhost:1212"
     private const val EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS = "fes_not404_not_success@localhost:1212"
     private const val EMAIL_FES_NOT_ENTERPRISE_SERVER = "fes_not_enterprise_server@localhost:1212"
+    private const val EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS =
+      "fes_client_configuration_success@localhost:1212"
 
     private val ACCEPTED_ORG_RULES = listOf(
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
@@ -362,8 +378,15 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           val gson =
             ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
 
-          if (request.path.equals("/api/")) {
-            return handleFesAvailabilityAPI(gson)
+          if (request.path?.startsWith("/api") == true) {
+            if (request.path.equals("/api/")) {
+              //https://fes.localhost:1212/api/v1/client-configuration?domain=localhost:1212
+              return handleFesAvailabilityAPI(gson)
+            }
+
+            if (request.path.equals("/api/v1/client-configuration?domain=localhost:1212")) {
+              return handleClientConfigurationAPI(gson)
+            }
           }
 
           if (request.path?.startsWith("/ekm") == true) {
@@ -416,6 +439,20 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           }
         }
       }
+    }
+
+    private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
+      return MockResponse().setResponseCode(200)
+        .setBody(
+          gson.toJson(
+            ClientConfigurationResponse(
+              orgRules = OrgRules(
+                flags = ACCEPTED_ORG_RULES,
+                keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+              )
+            )
+          )
+        )
     }
 
     private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
