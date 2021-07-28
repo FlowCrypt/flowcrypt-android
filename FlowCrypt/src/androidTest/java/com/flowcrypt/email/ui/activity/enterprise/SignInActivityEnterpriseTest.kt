@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
+import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.Key
@@ -215,16 +216,28 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
-  fun testFesAvailabilityRequestTimeOut() {
+  fun testFesAvailabilityNoConnection() {
     try {
       changeConnectionState(false)
-      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
+      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_NO_CONNECTION))
       isDialogWithTextDisplayed(
         decorView = decorView,
         message = getResString(R.string.no_connection_or_server_is_not_reachable)
       )
     } finally {
       changeConnectionState(true)
+    }
+  }
+
+  @Test
+  fun testFesAvailabilityRequestTimeOut() {
+    try {
+      fesTimeOutEnabled = true
+      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
+      onView(withText(R.string.set_pass_phrase))
+        .check(matches(isDisplayed()))
+    } finally {
+      fesTimeOutEnabled = false
     }
   }
 
@@ -250,7 +263,8 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     private const val EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST = "keys_via_ekm_empty_list@flowcrypt.test"
     private const val EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED =
       "user_with_not_fully_decrypted_prv_key@flowcrypt.test"
-    private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@flowcrypt.test"
+    private const val EMAIL_FES_NO_CONNECTION = "fes_request_timeout@flowcrypt.test"
+    private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@localhost:1212"
 
     private val ACCEPTED_ORG_RULES = listOf(
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
@@ -278,6 +292,26 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       message = EKM_ERROR
     )
 
+    private val EKM_FES_RESPONSE = EkmPrivateKeysResponse(
+      privateKeys = listOf(
+        Key(
+          TestGeneralUtil.readFileFromAssetsAsString("pgp/fes@flowcrypt.test_prv_decrypted.asc")
+        )
+      )
+    )
+
+    private val FES_SUCCESS_RESPONSE = FesServerResponse(
+      apiError = null,
+      vendor = "FlowCrypt",
+      service = "enterprise-server",
+      orgId = "localhost",
+      version = "2021",
+      endUserApiVersion = "v1",
+      adminApiVersion = "v1"
+    )
+
+    internal var fesTimeOutEnabled = false
+
     @get:ClassRule
     @JvmStatic
     val mockWebServerRule =
@@ -286,37 +320,12 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           val gson =
             ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
 
-          if (request.path.equals("/ekm/error/v1/keys/private")) {
-            return MockResponse().setResponseCode(200)
-              .setBody(gson.toJson(EKM_ERROR_RESPONSE))
+          if (request.path.equals("/api/")) {
+            return handleFesAvailabilityAPI(gson)
           }
 
-          if (request.path.equals("/ekm/empty/v1/keys/private")) {
-            return MockResponse().setResponseCode(200)
-              .setBody(
-                gson.toJson(
-                  EkmPrivateKeysResponse(
-                    privateKeys = emptyList()
-                  )
-                )
-              )
-          }
-
-          if (request.path.equals("/ekm/not_fully_decrypted_key/v1/keys/private")) {
-            return MockResponse().setResponseCode(200)
-              .setBody(
-                gson.toJson(
-                  EkmPrivateKeysResponse(
-                    privateKeys = listOf(
-                      Key(
-                        TestGeneralUtil.readFileFromAssetsAsString(
-                          "pgp/keys/user_with_not_fully_decrypted_prv_key@flowcrypt.test_prv_default.asc"
-                        )
-                      )
-                    )
-                  )
-                )
-              )
+          if (request.path?.startsWith("/ekm") == true) {
+            handleEkmAPI(request, gson)?.let { return it }
           }
 
           val model =
@@ -334,6 +343,55 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
         }
       })
 
+    private fun handleFesAvailabilityAPI(gson: Gson) = if (fesTimeOutEnabled) {
+      val delayInMilliseconds = 6000
+      val initialTimeMillis = System.currentTimeMillis()
+      while (System.currentTimeMillis() - initialTimeMillis <= delayInMilliseconds
+        && fesTimeOutEnabled
+      ) {
+        Thread.sleep(100)
+      }
+      MockResponse().setResponseCode(404)
+    } else {
+      MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
+    }
+
+    private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
+      if (request.path.equals("/ekm/error/v1/keys/private")) {
+        return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(EKM_ERROR_RESPONSE))
+      }
+
+      if (request.path.equals("/ekm/empty/v1/keys/private")) {
+        return MockResponse().setResponseCode(200)
+          .setBody(gson.toJson(EkmPrivateKeysResponse(privateKeys = emptyList())))
+      }
+
+      if (request.path.equals("/ekm/v1/keys/private")) {
+        return MockResponse().setResponseCode(200).setBody(gson.toJson(EKM_FES_RESPONSE))
+      }
+
+      if (request.path.equals("/ekm/not_fully_decrypted_key/v1/keys/private")) {
+        return MockResponse().setResponseCode(200)
+          .setBody(
+            gson.toJson(
+              EkmPrivateKeysResponse(
+                privateKeys = listOf(
+                  Key(
+                    TestGeneralUtil.readFileFromAssetsAsString(
+                      "pgp/keys/user_with_not_fully_decrypted_prv_key@flowcrypt.test_prv_default.asc"
+                    )
+                  )
+                )
+              )
+            )
+          )
+      }
+
+      return null
+    }
+
     private fun handleGetDomainRulesAPI(model: LoginModel, gson: Gson): MockResponse {
       when (model.account) {
         EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
@@ -349,8 +407,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           )
         )
 
-        EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED
-        -> return successMockResponseForOrgRules(
+        EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED -> return successMockResponseForOrgRules(
           gson = gson,
           orgRules = OrgRules(
             flags = listOf(
@@ -415,6 +472,14 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           orgRules = OrgRules(
             flags = ACCEPTED_ORG_RULES,
             keyManagerUrl = EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY,
+          )
+        )
+
+        EMAIL_FES_REQUEST_TIME_OUT -> return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = ACCEPTED_ORG_RULES,
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
           )
         )
 
