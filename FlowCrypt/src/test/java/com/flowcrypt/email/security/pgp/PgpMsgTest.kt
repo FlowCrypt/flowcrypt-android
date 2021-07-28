@@ -37,7 +37,7 @@ class PgpMsgTest {
     val quoted: Boolean? = null,
     val charset: String = "UTF-8"
   ) {
-    val armored: String = loadResourceAsString("messages/$key.txt")
+    val armored: String by lazy { loadResourceAsString("messages/$key.txt") }
   }
 
   companion object {
@@ -112,7 +112,12 @@ class PgpMsgTest {
           TestUtil.decodeString("=E3=82=BE=E3=81=97=E9=80=B8=E7=8F=BE=E9=A3=B2", "UTF-8")
         ),
         charset = "ISO-2022-JP",
-      )
+      ),
+
+      MessageInfo(
+        key = "decrypt - issue 1347 - wrong checksum",
+        content = listOf("")
+      ),
     )
 
     private fun findMessage(key: String): MessageInfo {
@@ -172,8 +177,6 @@ class PgpMsgTest {
     assertTrue("Bad MDC not detected", r.error!!.type == PgpDecrypt.DecryptionErrorType.BAD_MDC)
   }
 
-  // TODO: Should there be any error?
-  // https://github.com/FlowCrypt/flowcrypt-android/issues/1214
   @Test
   fun decryptionTest3() {
     val r = processMessage(
@@ -181,6 +184,8 @@ class PgpMsgTest {
     )
     assertTrue("Message not returned", r.content != null)
     assertTrue("Error returned", r.error == null)
+    // TODO: Should there be any error?
+    // https://github.com/FlowCrypt/flowcrypt-android/issues/1214
   }
 
   @Test
@@ -192,6 +197,14 @@ class PgpMsgTest {
     val r = processMessage("decrypt - encrypted missing checksum")
     assertTrue("Message not returned", r.content != null)
     assertTrue("Error returned", r.error == null)
+  }
+
+  @Test
+  // @Ignore("BC ArmoredInputStream issue")
+  fun wrongArmorChecksumTest() {
+    val r = processMessage("decrypt - issue 1347 - wrong checksum")
+    assertTrue("Error not returned", r.error != null)
+    assertEquals(PgpDecrypt.DecryptionErrorType.FORMAT, r.error!!.type)
   }
 
   @Test
