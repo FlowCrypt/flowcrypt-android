@@ -216,7 +216,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
-  fun testFesAvailabilityNoConnection() {
+  fun testFesAvailabilityServerDownNoConnection() {
     try {
       changeConnectionState(false)
       setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_NO_CONNECTION))
@@ -230,7 +230,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
-  fun testFesAvailabilityRequestTimeOut() {
+  fun testFesAvailabilityServerUpRequestTimeOut() {
     try {
       fesTimeOutEnabled = true
       setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
@@ -238,6 +238,18 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
         .check(matches(isDisplayed()))
     } finally {
       fesTimeOutEnabled = false
+    }
+  }
+
+  @Test
+  fun testFesServerUpHasConnectionHttpCode404() {
+    try {
+      fesExpect404 = true
+      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_404))
+      onView(withText(R.string.set_pass_phrase))
+        .check(matches(isDisplayed()))
+    } finally {
+      fesExpect404 = false
     }
   }
 
@@ -265,6 +277,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       "user_with_not_fully_decrypted_prv_key@flowcrypt.test"
     private const val EMAIL_FES_NO_CONNECTION = "fes_request_timeout@flowcrypt.test"
     private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@localhost:1212"
+    private const val EMAIL_FES_HTTP_404 = "fes_404@localhost:1212"
 
     private val ACCEPTED_ORG_RULES = listOf(
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
@@ -311,6 +324,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     )
 
     internal var fesTimeOutEnabled = false
+    internal var fesExpect404 = false
 
     @get:ClassRule
     @JvmStatic
@@ -343,18 +357,24 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
         }
       })
 
-    private fun handleFesAvailabilityAPI(gson: Gson) = if (fesTimeOutEnabled) {
-      val delayInMilliseconds = 6000
-      val initialTimeMillis = System.currentTimeMillis()
-      while (System.currentTimeMillis() - initialTimeMillis <= delayInMilliseconds
-        && fesTimeOutEnabled
-      ) {
-        Thread.sleep(100)
+    private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
+      return if (fesTimeOutEnabled) {
+        val delayInMilliseconds = 6000
+        val initialTimeMillis = System.currentTimeMillis()
+        while (System.currentTimeMillis() - initialTimeMillis <= delayInMilliseconds
+          && fesTimeOutEnabled
+        ) {
+          Thread.sleep(100)
+        }
+        MockResponse().setResponseCode(404)
+      } else {
+        if (fesExpect404) {
+          MockResponse().setResponseCode(404)
+        } else {
+          MockResponse().setResponseCode(200)
+            .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
+        }
       }
-      MockResponse().setResponseCode(404)
-    } else {
-      MockResponse().setResponseCode(200)
-        .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
     }
 
     private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
@@ -475,7 +495,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           )
         )
 
-        EMAIL_FES_REQUEST_TIME_OUT -> return successMockResponseForOrgRules(
+        EMAIL_FES_REQUEST_TIME_OUT, EMAIL_FES_HTTP_404 -> return successMockResponseForOrgRules(
           gson = gson,
           orgRules = OrgRules(
             flags = ACCEPTED_ORG_RULES,
