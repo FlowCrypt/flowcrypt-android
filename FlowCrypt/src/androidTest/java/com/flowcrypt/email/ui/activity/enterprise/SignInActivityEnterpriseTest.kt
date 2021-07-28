@@ -31,12 +31,14 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.util.exception.ApiException
 import com.google.gson.Gson
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -75,7 +77,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
-    //.around(RetryRule.DEFAULT)
+    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
@@ -279,15 +281,24 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
   @Test
   fun testFesServerUpGetClientConfigurationSuccess() {
+    expectClientConfigurationFailed = false
+    setupAndClickSignInButton(
+      genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
+    )
+    onView(withText(R.string.set_pass_phrase))
+      .check(matches(isDisplayed()))
+  }
+
+  @Test
+  fun testFesServerUpGetClientConfigurationFailed() {
     try {
+      expectClientConfigurationFailed = true
       setupAndClickSignInButton(
-        genMockGoogleSignInAccountJson(
-          EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS
-        )
+        genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
       )
-      onView(withText(R.string.set_pass_phrase))
-        .check(matches(isDisplayed()))
+      isDialogWithTextDisplayed(decorView, ApiException(ApiError(code = 403, msg = "")).message!!)
     } finally {
+      expectClientConfigurationFailed = false
     }
   }
 
@@ -320,6 +331,8 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     private const val EMAIL_FES_NOT_ENTERPRISE_SERVER = "fes_not_enterprise_server@localhost:1212"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS =
       "fes_client_configuration_success@localhost:1212"
+    private const val EMAIL_FES_CLIENT_CONFIGURATION_FAILED =
+      "fes_client_configuration_failed@localhost:1212"
 
     private val ACCEPTED_ORG_RULES = listOf(
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
@@ -369,6 +382,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     internal var fesExpect404 = false
     internal var fesExpectNot404AndNotSuccess = false
     internal var fesNotEnterpriseServer = false
+    internal var expectClientConfigurationFailed = false
 
     @get:ClassRule
     @JvmStatic
@@ -442,7 +456,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     }
 
     private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
-      return MockResponse().setResponseCode(200)
+      return MockResponse().setResponseCode(if (expectClientConfigurationFailed) 403 else 200)
         .setBody(
           gson.toJson(
             ClientConfigurationResponse(
