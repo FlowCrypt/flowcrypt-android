@@ -57,6 +57,8 @@ blocks:
       jobs:
         - name: 'Build Project'
           commands:
+            # Android Gradle plugin requires Java 11
+            - sem-version java 11
             # print debug info
             - cat /proc/cpuinfo
             # print Java version
