@@ -87,11 +87,11 @@ class GeneralUtil {
 
     suspend fun hasInternetAccess(): Boolean = withContext(Dispatchers.IO) {
       val url = "https://www.google.com"
-      val connectionTimeoutInSeconds = 2000L
+      val connectionTimeoutInMilliseconds = 2000L
       val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
-        .writeTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
-        .readTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
+        .connectTimeout(connectionTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
+        .writeTimeout(connectionTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
+        .readTimeout(connectionTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
         .build()
 
       val retrofit = Retrofit.Builder()
@@ -292,7 +292,7 @@ class GeneralUtil {
       } else {
         val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
         MimeTypeMap.getSingleton()
-          .getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
+          .getMimeTypeFromExtension(fileExtension.lowercase(Locale.getDefault()))
           ?: Constants.MIME_TYPE_BINARY_DATA
       }
     }
@@ -395,7 +395,7 @@ class GeneralUtil {
       context ?: return "en"
       return if (context.resources.configuration.locales.isEmpty) {
         "en"
-      } else context.resources.configuration.locales.get(0).language.toLowerCase(Locale.getDefault())
+      } else context.resources.configuration.locales.get(0).language.lowercase(Locale.getDefault())
     }
   }
 }
