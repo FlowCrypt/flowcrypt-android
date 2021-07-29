@@ -292,7 +292,7 @@ class GeneralUtil {
       } else {
         val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
         MimeTypeMap.getSingleton()
-          .getMimeTypeFromExtension(fileExtension.lowercase(Locale.getDefault()))
+          .getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
           ?: Constants.MIME_TYPE_BINARY_DATA
       }
     }
@@ -395,7 +395,7 @@ class GeneralUtil {
       context ?: return "en"
       return if (context.resources.configuration.locales.isEmpty) {
         "en"
-      } else context.resources.configuration.locales.get(0).language.lowercase(Locale.getDefault())
+      } else context.resources.configuration.locales.get(0).language.toLowerCase(Locale.getDefault())
     }
   }
 }
