@@ -137,5 +137,10 @@ class Constants {
       "set pass phrase",
       "set passphrase"
     )
+
+    /**
+     * Product Flavors.
+     */
+    const val FLAVOR_NAME_ENTERPRISE = "enterprise"
   }
 }

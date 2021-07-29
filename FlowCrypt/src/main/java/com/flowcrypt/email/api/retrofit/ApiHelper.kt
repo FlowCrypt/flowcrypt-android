@@ -45,47 +45,7 @@ class ApiHelper private constructor(context: Context) {
       .writeTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
 
     okHttpClientBuilder.addInterceptor(ApiVersionInterceptor())
-
-    if (GeneralUtil.isDebugBuild()) {
-      val isHttpLogEnabled =
-        SharedPreferencesHelper.getBoolean(
-          PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_IS_HTTP_LOG_ENABLED, BuildConfig.IS_HTTP_LOG_ENABLED
-        )
-
-      if (isHttpLogEnabled) {
-        val levelString = SharedPreferencesHelper.getString(
-          PreferenceManager
-            .getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_HTTP_LOG_LEVEL,
-          BuildConfig.HTTP_LOG_LEVEL
-        )
-
-        val isWriteLogsEnabled =
-          SharedPreferencesHelper.getBoolean(
-            PreferenceManager.getDefaultSharedPreferences(context),
-            Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false
-          )
-
-        if (isWriteLogsEnabled) {
-          val loggingInFileInterceptor = LoggingInFileInterceptor(context, "API")
-          loggingInFileInterceptor.setLevel(
-            LoggingInFileInterceptor.Level.valueOf(
-              levelString
-                ?: LoggingInFileInterceptor.Level.NONE.name
-            )
-          )
-          okHttpClientBuilder.addInterceptor(loggingInFileInterceptor)
-        }
-
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(
-          levelString
-            ?: HttpLoggingInterceptor.Level.NONE.name
-        )
-        okHttpClientBuilder.addInterceptor(loggingInterceptor)
-      }
-    }
+    configureOkHttpClientForDebuggingIfAllowed(context, okHttpClientBuilder)
 
     okHttpClient = okHttpClientBuilder.build()
     gson = GsonBuilder()
@@ -108,6 +68,51 @@ class ApiHelper private constructor(context: Context) {
     @JvmStatic
     fun getInstance(context: Context): ApiHelper {
       return ApiHelper(context)
+    }
+
+    fun configureOkHttpClientForDebuggingIfAllowed(
+      context: Context, okHttpClientBuilder: OkHttpClient.Builder
+    ) {
+      if (GeneralUtil.isDebugBuild()) {
+        val isHttpLogEnabled =
+          SharedPreferencesHelper.getBoolean(
+            PreferenceManager.getDefaultSharedPreferences(context),
+            Constants.PREF_KEY_IS_HTTP_LOG_ENABLED, BuildConfig.IS_HTTP_LOG_ENABLED
+          )
+
+        if (isHttpLogEnabled) {
+          val levelString = SharedPreferencesHelper.getString(
+            PreferenceManager
+              .getDefaultSharedPreferences(context),
+            Constants.PREF_KEY_HTTP_LOG_LEVEL,
+            BuildConfig.HTTP_LOG_LEVEL
+          )
+
+          val isWriteLogsEnabled =
+            SharedPreferencesHelper.getBoolean(
+              PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false
+            )
+
+          if (isWriteLogsEnabled) {
+            val loggingInFileInterceptor = LoggingInFileInterceptor(context, "API")
+            loggingInFileInterceptor.setLevel(
+              LoggingInFileInterceptor.Level.valueOf(
+                levelString
+                  ?: LoggingInFileInterceptor.Level.NONE.name
+              )
+            )
+            okHttpClientBuilder.addInterceptor(loggingInFileInterceptor)
+          }
+
+          val loggingInterceptor = HttpLoggingInterceptor()
+          loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(
+            levelString
+              ?: HttpLoggingInterceptor.Level.NONE.name
+          )
+          okHttpClientBuilder.addInterceptor(loggingInterceptor)
+        }
+      }
     }
 
     inline fun <reified T> parseAsError(context: Context, response: Response<T>): T? {

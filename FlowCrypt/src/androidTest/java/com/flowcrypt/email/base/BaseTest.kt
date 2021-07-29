@@ -237,6 +237,14 @@ abstract class BaseTest : BaseActivityTestImplementation {
     return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
   }
 
+  protected fun changeConnectionState(isConnected: Boolean) {
+    val state = if (isConnected) "enable" else "disable"
+    InstrumentationRegistry.getInstrumentation().uiAutomation
+      .executeShellCommand("svc wifi $state")
+    InstrumentationRegistry.getInstrumentation().uiAutomation
+      .executeShellCommand("svc data $state")
+  }
+
   fun getTargetContext(): Context {
     return InstrumentationRegistry.getInstrumentation().targetContext
   }
