@@ -45,10 +45,10 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.Before
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
+import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.InputStreamReader
@@ -69,17 +69,56 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     )
   )
 
-  @Before
-  fun waitWhileToastWillBeDismissed() {
-    Thread.sleep(1000)
-  }
+  @get:Rule
+  val testNameRule = TestName()
+
+  val mockWebServerRule =
+    FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        val gson =
+          ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+
+        if (request.path?.startsWith("/api") == true) {
+          if (request.path.equals("/api/")) {
+            return handleFesAvailabilityAPI(gson)
+          }
+
+          if (request.path.equals("/api/v1/client-configuration?domain=localhost:1212")) {
+            return handleClientConfigurationAPI(gson)
+          }
+        }
+
+        if (request.path?.startsWith("/ekm") == true) {
+          handleEkmAPI(request, gson)?.let { return it }
+        }
+
+        val model =
+          gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
+
+        if (request.path.equals("/account/login")) {
+          return handleLoginAPI(model, gson)
+        }
+
+        if (request.path.equals("/account/get")) {
+          return handleGetDomainRulesAPI(model, gson)
+        }
+
+        return MockResponse().setResponseCode(404)
+      }
+    })
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
+    .around(mockWebServerRule)
     .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun waitWhileToastWillBeDismissed() {
+    Thread.sleep(1000)
+  }
 
   @Test
   fun testErrorLogin() {
@@ -233,55 +272,34 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
   @Test
   fun testFesAvailabilityServerUpRequestTimeOut() {
-    try {
-      fesTimeOutEnabled = true
-      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
-      onView(withText(R.string.set_pass_phrase))
-        .check(matches(isDisplayed()))
-    } finally {
-      fesTimeOutEnabled = false
-    }
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
+    onView(withText(R.string.set_pass_phrase))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testFesServerUpHasConnectionHttpCode404() {
-    try {
-      fesExpect404 = true
-      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_404))
-      onView(withText(R.string.set_pass_phrase))
-        .check(matches(isDisplayed()))
-    } finally {
-      fesExpect404 = false
-    }
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_404))
+    onView(withText(R.string.set_pass_phrase))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testFesServerUpHasConnectionHttpCodeNotSuccess() {
-    try {
-      fesExpectNot404AndNotSuccess = true
-      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS))
-      onView(withText(R.string.set_pass_phrase))
-        .check(matches(isDisplayed()))
-    } finally {
-      fesExpectNot404AndNotSuccess = false
-    }
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS))
+    onView(withText(R.string.set_pass_phrase))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testFesServerUpNotEnterpriseServer() {
-    try {
-      fesNotEnterpriseServer = true
-      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_NOT_ENTERPRISE_SERVER))
-      onView(withText(R.string.set_pass_phrase))
-        .check(matches(isDisplayed()))
-    } finally {
-      fesNotEnterpriseServer = false
-    }
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_NOT_ENTERPRISE_SERVER))
+    onView(withText(R.string.set_pass_phrase))
+      .check(matches(isDisplayed()))
   }
 
   @Test
   fun testFesServerUpGetClientConfigurationSuccess() {
-    expectClientConfigurationFailed = false
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
     )
@@ -291,16 +309,219 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
   @Test
   fun testFesServerUpGetClientConfigurationFailed() {
-    try {
-      expectClientConfigurationFailed = true
-      setupAndClickSignInButton(
-        genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
-      )
-      isDialogWithTextDisplayed(decorView, ApiException(ApiError(code = 403, msg = "")).message!!)
-    } finally {
-      expectClientConfigurationFailed = false
+    setupAndClickSignInButton(
+      genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
+    )
+    isDialogWithTextDisplayed(decorView, ApiException(ApiError(code = 403, msg = "")).message!!)
+  }
+
+  private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
+    return if (testNameRule.methodName == "testFesAvailabilityServerUpRequestTimeOut") {
+      val delayInMilliseconds = 6000
+      val initialTimeMillis = System.currentTimeMillis()
+      while (System.currentTimeMillis() - initialTimeMillis <= delayInMilliseconds) {
+        Thread.sleep(100)
+      }
+      MockResponse().setResponseCode(404)
+    } else {
+      when {
+        testNameRule.methodName == "testFesServerUpHasConnectionHttpCode404" -> {
+          MockResponse().setResponseCode(404)
+        }
+
+        testNameRule.methodName == "testFesServerUpHasConnectionHttpCodeNotSuccess" -> {
+          MockResponse().setResponseCode(500)
+        }
+
+        testNameRule.methodName == "testFesServerUpNotEnterpriseServer" -> {
+          MockResponse().setResponseCode(200)
+            .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
+        }
+
+        else -> {
+          MockResponse().setResponseCode(200)
+            .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
+        }
+      }
     }
   }
+
+  private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
+    return MockResponse().setResponseCode(
+      if (testNameRule.methodName == "testFesServerUpGetClientConfigurationFailed") 403 else 200
+    ).setBody(
+      gson.toJson(
+        ClientConfigurationResponse(
+          orgRules = OrgRules(
+            flags = ACCEPTED_ORG_RULES,
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+          )
+        )
+      )
+    )
+  }
+
+  private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
+    if (request.path.equals("/ekm/error/v1/keys/private")) {
+      return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(EKM_ERROR_RESPONSE))
+    }
+
+    if (request.path.equals("/ekm/empty/v1/keys/private")) {
+      return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(EkmPrivateKeysResponse(privateKeys = emptyList())))
+    }
+
+    if (request.path.equals("/ekm/v1/keys/private")) {
+      return MockResponse().setResponseCode(200).setBody(gson.toJson(EKM_FES_RESPONSE))
+    }
+
+    if (request.path.equals("/ekm/not_fully_decrypted_key/v1/keys/private")) {
+      return MockResponse().setResponseCode(200)
+        .setBody(
+          gson.toJson(
+            EkmPrivateKeysResponse(
+              privateKeys = listOf(
+                Key(
+                  TestGeneralUtil.readFileFromAssetsAsString(
+                    "pgp/keys/user_with_not_fully_decrypted_prv_key@flowcrypt.test_prv_default.asc"
+                  )
+                )
+              )
+            )
+          )
+        )
+    }
+
+    return null
+  }
+
+  private fun handleGetDomainRulesAPI(model: LoginModel, gson: Gson): MockResponse {
+    when (model.account) {
+      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
+
+      EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = listOf(
+            OrgRules.DomainRule.NO_PRV_CREATE,
+            OrgRules.DomainRule.NO_PRV_BACKUP
+          )
+        )
+      )
+
+      EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = listOf(
+            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
+            OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
+          ),
+          keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+        )
+      )
+
+      EMAIL_FORBID_STORING_PASS_PHRASE_MISSING -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = listOf(
+            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN
+          ),
+          keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+        )
+      )
+
+      EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = listOf(
+            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
+            OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
+            OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+          ),
+          keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+        )
+      )
+
+      EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = listOf(
+            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
+            OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
+          ),
+          keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+        )
+      )
+
+      EMAIL_GET_KEYS_VIA_EKM_ERROR -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = ACCEPTED_ORG_RULES,
+          keyManagerUrl = EMAIL_EKM_URL_ERROR,
+        )
+      )
+
+      EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = ACCEPTED_ORG_RULES,
+          keyManagerUrl = EMAIL_EKM_URL_SUCCESS_EMPTY_LIST,
+        )
+      )
+
+      EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = ACCEPTED_ORG_RULES,
+          keyManagerUrl = EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY,
+        )
+      )
+
+      EMAIL_FES_REQUEST_TIME_OUT,
+      EMAIL_FES_HTTP_404,
+      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS,
+      EMAIL_FES_NOT_ENTERPRISE_SERVER -> return successMockResponseForOrgRules(
+        gson = gson,
+        orgRules = OrgRules(
+          flags = ACCEPTED_ORG_RULES,
+          keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+        )
+      )
+
+      else -> return MockResponse().setResponseCode(404)
+    }
+  }
+
+  private fun handleLoginAPI(model: LoginModel, gson: Gson): MockResponse {
+    when (model.account) {
+      EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
+
+      EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
+
+      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+
+      EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+
+      else -> return MockResponse().setResponseCode(200)
+        .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+    }
+  }
+
+  private fun successMockResponseForOrgRules(gson: Gson, orgRules: OrgRules) =
+    MockResponse().setResponseCode(200)
+      .setBody(
+        gson.toJson(
+          DomainOrgRulesResponse(
+            orgRules = orgRules
+          )
+        )
+      )
 
   companion object {
     private const val EMAIL_EKM_URL_SUCCESS = "https://localhost:1212/ekm/"
@@ -377,258 +598,5 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       endUserApiVersion = "v1",
       adminApiVersion = "v1"
     )
-
-    internal var fesTimeOutEnabled = false
-    internal var fesExpect404 = false
-    internal var fesExpectNot404AndNotSuccess = false
-    internal var fesNotEnterpriseServer = false
-    internal var expectClientConfigurationFailed = false
-
-    @get:ClassRule
-    @JvmStatic
-    val mockWebServerRule =
-      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-          val gson =
-            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-
-          if (request.path?.startsWith("/api") == true) {
-            if (request.path.equals("/api/")) {
-              //https://fes.localhost:1212/api/v1/client-configuration?domain=localhost:1212
-              return handleFesAvailabilityAPI(gson)
-            }
-
-            if (request.path.equals("/api/v1/client-configuration?domain=localhost:1212")) {
-              return handleClientConfigurationAPI(gson)
-            }
-          }
-
-          if (request.path?.startsWith("/ekm") == true) {
-            handleEkmAPI(request, gson)?.let { return it }
-          }
-
-          val model =
-            gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
-
-          if (request.path.equals("/account/login")) {
-            return handleLoginAPI(model, gson)
-          }
-
-          if (request.path.equals("/account/get")) {
-            return handleGetDomainRulesAPI(model, gson)
-          }
-
-          return MockResponse().setResponseCode(404)
-        }
-      })
-
-    private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
-      return if (fesTimeOutEnabled) {
-        val delayInMilliseconds = 6000
-        val initialTimeMillis = System.currentTimeMillis()
-        while (System.currentTimeMillis() - initialTimeMillis <= delayInMilliseconds
-          && fesTimeOutEnabled
-        ) {
-          Thread.sleep(100)
-        }
-        MockResponse().setResponseCode(404)
-      } else {
-        when {
-          fesExpect404 -> {
-            MockResponse().setResponseCode(404)
-          }
-
-          fesExpectNot404AndNotSuccess -> {
-            MockResponse().setResponseCode(500)
-          }
-
-          fesNotEnterpriseServer -> {
-            MockResponse().setResponseCode(200)
-              .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
-          }
-
-          else -> {
-            MockResponse().setResponseCode(200)
-              .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
-          }
-        }
-      }
-    }
-
-    private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
-      return MockResponse().setResponseCode(if (expectClientConfigurationFailed) 403 else 200)
-        .setBody(
-          gson.toJson(
-            ClientConfigurationResponse(
-              orgRules = OrgRules(
-                flags = ACCEPTED_ORG_RULES,
-                keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-              )
-            )
-          )
-        )
-    }
-
-    private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
-      if (request.path.equals("/ekm/error/v1/keys/private")) {
-        return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(EKM_ERROR_RESPONSE))
-      }
-
-      if (request.path.equals("/ekm/empty/v1/keys/private")) {
-        return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(EkmPrivateKeysResponse(privateKeys = emptyList())))
-      }
-
-      if (request.path.equals("/ekm/v1/keys/private")) {
-        return MockResponse().setResponseCode(200).setBody(gson.toJson(EKM_FES_RESPONSE))
-      }
-
-      if (request.path.equals("/ekm/not_fully_decrypted_key/v1/keys/private")) {
-        return MockResponse().setResponseCode(200)
-          .setBody(
-            gson.toJson(
-              EkmPrivateKeysResponse(
-                privateKeys = listOf(
-                  Key(
-                    TestGeneralUtil.readFileFromAssetsAsString(
-                      "pgp/keys/user_with_not_fully_decrypted_prv_key@flowcrypt.test_prv_default.asc"
-                    )
-                  )
-                )
-              )
-            )
-          )
-      }
-
-      return null
-    }
-
-    private fun handleGetDomainRulesAPI(model: LoginModel, gson: Gson): MockResponse {
-      when (model.account) {
-        EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
-
-        EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = listOf(
-              OrgRules.DomainRule.NO_PRV_CREATE,
-              OrgRules.DomainRule.NO_PRV_BACKUP
-            )
-          )
-        )
-
-        EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = listOf(
-              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-              OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
-            ),
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-          )
-        )
-
-        EMAIL_FORBID_STORING_PASS_PHRASE_MISSING -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = listOf(
-              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN
-            ),
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-          )
-        )
-
-        EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = listOf(
-              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-              OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
-              OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
-            ),
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-          )
-        )
-
-        EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = listOf(
-              OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-              OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
-            ),
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-          )
-        )
-
-        EMAIL_GET_KEYS_VIA_EKM_ERROR -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = ACCEPTED_ORG_RULES,
-            keyManagerUrl = EMAIL_EKM_URL_ERROR,
-          )
-        )
-
-        EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = ACCEPTED_ORG_RULES,
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS_EMPTY_LIST,
-          )
-        )
-
-        EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = ACCEPTED_ORG_RULES,
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY,
-          )
-        )
-
-        EMAIL_FES_REQUEST_TIME_OUT,
-        EMAIL_FES_HTTP_404,
-        EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS,
-        EMAIL_FES_NOT_ENTERPRISE_SERVER -> return successMockResponseForOrgRules(
-          gson = gson,
-          orgRules = OrgRules(
-            flags = ACCEPTED_ORG_RULES,
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-          )
-        )
-
-        else -> return MockResponse().setResponseCode(404)
-      }
-    }
-
-    private fun handleLoginAPI(model: LoginModel, gson: Gson): MockResponse {
-      when (model.account) {
-        EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
-
-        EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
-
-        EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-
-        EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-
-        else -> return MockResponse().setResponseCode(200)
-          .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-      }
-    }
-
-    private fun successMockResponseForOrgRules(gson: Gson, orgRules: OrgRules) =
-      MockResponse().setResponseCode(200)
-        .setBody(
-          gson.toJson(
-            DomainOrgRulesResponse(
-              orgRules = orgRules
-            )
-          )
-        )
   }
 }
