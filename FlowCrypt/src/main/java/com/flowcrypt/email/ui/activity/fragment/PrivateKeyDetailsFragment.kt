@@ -27,6 +27,7 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentPrivateKeyDetailsBinding
 import com.flowcrypt.email.extensions.decrementSafely
@@ -88,6 +89,13 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
     super.onCreateOptionsMenu(menu, inflater)
     inflater.inflate(R.menu.fragment_key_details, menu)
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu) {
+    super.onPrepareOptionsMenu(menu)
+    if (account?.clientConfiguration?.usesKeyManager() == true) {
+      menu.findItem(R.id.menuActionDeleteKey).isEnabled = false
+    }
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -152,6 +160,15 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    activity?.invalidateOptionsMenu()
+
+    if (account?.clientConfiguration?.usesKeyManager() == true) {
+      binding?.btnShowPrKey?.gone()
     }
   }
 

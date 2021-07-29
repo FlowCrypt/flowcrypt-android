@@ -162,6 +162,7 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
     super.onAccountInfoRefreshed(accountEntity)
     if (accountEntity?.clientConfiguration?.usesKeyManager() == true) {
       binding?.floatActionButtonAddKey?.gone()
+      recyclerViewAdapter.tracker = null
     }
   }
 
