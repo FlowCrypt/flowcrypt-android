@@ -460,7 +460,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.14.1'
 
     implementation ('org.pgpainless:pgpainless-core:0.2.6') {
-        //exclude group: 'org.bouncycastle' because we will specify it manually
+        // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }
 
