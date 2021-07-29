@@ -27,7 +27,7 @@
             android:animateLayoutChanges="true">
 
             <TextView
-                android:id="@+id/textViewHeader"
+                android:id="@+id/tVHeader"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
@@ -48,7 +48,7 @@
                 android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewHeader" />
+                app:layout_constraintTop_toBottomOf="@+id/tVHeader" />
 
             <Button
                 android:id="@+id/btnCopyToClipboard"
@@ -75,7 +75,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
 
             <TextView
-                android:id="@+id/textViewFingerprint"
+                android:id="@+id/tVFingerprint"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:textIsSelectable="true"
@@ -85,25 +85,25 @@
                 tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
             <TextView
-                android:id="@+id/textViewDate"
+                android:id="@+id/tVDate"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
+                app:layout_constraintTop_toBottomOf="@+id/tVFingerprint"
                 tools:text="Date: Nov 3, 2017" />
 
             <TextView
-                android:id="@+id/textViewUsers"
+                android:id="@+id/tVUsers"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewDate"
+                app:layout_constraintTop_toBottomOf="@+id/tVDate"
                 tools:text="Users: email@domain.com, email2@domain.com" />
 
             <TextView
@@ -116,7 +116,7 @@
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewUsers" />
+                app:layout_constraintTop_toBottomOf="@+id/tVUsers" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tILKeyPassword"
