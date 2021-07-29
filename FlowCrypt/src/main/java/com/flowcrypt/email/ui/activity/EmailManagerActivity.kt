@@ -182,7 +182,7 @@ class EmailManagerActivity : BaseEmailListActivity(),
     super.onAccountInfoRefreshed(accountEntity)
     if (accountEntity != null) {
       actionsViewModel.checkAndAddActionsToQueue(accountEntity)
-      switchView?.isChecked = activeAccount?.isShowOnlyEncrypted ?: false
+      switchView?.isChecked = activeAccount?.showOnlyEncrypted ?: false
       invalidateOptionsMenu()
       navigationView?.getHeaderView(0)?.let { initUserProfileView(it) }
     } else {
@@ -204,7 +204,7 @@ class EmailManagerActivity : BaseEmailListActivity(),
 
     val item = menu.findItem(R.id.menuSwitch)
     switchView = item.actionView.findViewById(R.id.switchShowOnlyEncryptedMessages)
-    switchView?.isChecked = activeAccount?.isShowOnlyEncrypted ?: false
+    switchView?.isChecked = activeAccount?.showOnlyEncrypted ?: false
     switchView?.setOnCheckedChangeListener { buttonView, isChecked ->
       lifecycleScope.launch {
         activeAccount?.let {
@@ -213,7 +213,7 @@ class EmailManagerActivity : BaseEmailListActivity(),
           }
 
           FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity.applicationContext)
-            .accountDao().updateAccountSuspend(it.copy(isShowOnlyEncrypted = isChecked))
+            .accountDao().updateAccountSuspend(it.copy(showOnlyEncrypted = isChecked))
 
           onShowOnlyEncryptedMsgs(isChecked)
 

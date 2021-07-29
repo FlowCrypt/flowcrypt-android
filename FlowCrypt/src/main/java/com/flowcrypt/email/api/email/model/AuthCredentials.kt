@@ -99,17 +99,17 @@ data class AuthCredentials constructor(
       with(accountEntity) {
         var imapOpt: SecurityType.Option = SecurityType.Option.NONE
 
-        if (imapIsUseSslTls == true) {
+        if (imapUseSslTls == true) {
           imapOpt = SecurityType.Option.SSL_TLS
-        } else if (imapIsUseStarttls == true) {
+        } else if (imapUseStarttls == true) {
           imapOpt = SecurityType.Option.STARTLS
         }
 
         var smtpOpt: SecurityType.Option = SecurityType.Option.NONE
 
-        if (smtpIsUseSslTls == true) {
+        if (smtpUseSslTls == true) {
           smtpOpt = SecurityType.Option.SSL_TLS
-        } else if (smtpIsUseStarttls == true) {
+        } else if (smtpUseStarttls == true) {
           smtpOpt = SecurityType.Option.STARTLS
         }
 

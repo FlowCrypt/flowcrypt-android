@@ -58,7 +58,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   private val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule(
-    AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true)
+    AccountDaoManager.getDefaultAccountDao().copy(contactsLoaded = true)
   )
   private val attachmentInfo = AttachmentInfo(
     name = "test.txt",
