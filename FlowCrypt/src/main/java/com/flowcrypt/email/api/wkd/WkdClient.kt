@@ -15,6 +15,7 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
 import java.net.URLEncoder
+import java.net.UnknownHostException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -66,7 +67,11 @@ object WkdClient {
     } catch (ex: Exception) {
       // ignore
     }
-    return urlLookup(directUrl, userPart, timeout).keys
+    return try {
+      urlLookup(directUrl, userPart, timeout).keys
+    } catch (ex: UnknownHostException) {
+      null
+    }
   }
 
   private data class UrlLookupResult(

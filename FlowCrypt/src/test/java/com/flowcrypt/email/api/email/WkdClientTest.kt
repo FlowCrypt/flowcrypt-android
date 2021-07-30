@@ -19,8 +19,20 @@ class WkdClientTest {
   }
 
   @Test
-  fun nonExistingEmailTest() {
+  fun nonExistingEmailTest1() {
     val keys = WkdClient.lookupEmail("no.such.email.for.sure@flowcrypt.com")
+    assertTrue("Key found for non-existing email", keys == null)
+  }
+
+  @Test
+  fun nonExistingEmailTest2() {
+    val keys = WkdClient.lookupEmail("doesnotexist@google.com")
+    assertTrue("Key found for non-existing email", keys == null)
+  }
+
+  @Test
+  fun nonExistingDomainTest() {
+    val keys = WkdClient.lookupEmail("doesnotexist@thisdomaindoesnotexist.test")
     assertTrue("Key found for non-existing email", keys == null)
   }
 }
