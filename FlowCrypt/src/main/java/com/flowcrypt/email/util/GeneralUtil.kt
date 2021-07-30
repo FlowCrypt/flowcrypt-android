@@ -30,11 +30,17 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.ApiService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import org.apache.commons.io.IOUtils
+import retrofit2.Retrofit
 import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * General util methods.
@@ -77,6 +83,28 @@ class GeneralUtil {
       val cm = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
       val activeNetwork = cm?.activeNetworkInfo
       return activeNetwork?.isConnected ?: false
+    }
+
+    suspend fun hasInternetAccess(): Boolean = withContext(Dispatchers.IO) {
+      val url = "https://www.google.com"
+      val connectionTimeoutInSeconds = 2000L
+      val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
+        .writeTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
+        .readTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
+        .build()
+
+      val retrofit = Retrofit.Builder()
+        .baseUrl(url)
+        .client(okHttpClient)
+        .build()
+      val apiService = retrofit.create(ApiService::class.java)
+      try {
+        apiService.isAvailable(url)
+        return@withContext true
+      } catch (e: Exception) {
+        return@withContext false
+      }
     }
 
     /**

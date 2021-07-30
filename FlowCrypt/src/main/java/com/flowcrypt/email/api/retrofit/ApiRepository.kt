@@ -10,12 +10,13 @@ import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
+import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
@@ -43,12 +44,14 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
+   * @param fesUrl Url that will be used to fetch [OrgRules].
    * @param loginModel An instance of [LoginModel].
    */
   suspend fun getDomainOrgRules(
     context: Context,
-    loginModel: LoginModel
-  ): Result<DomainOrgRulesResponse>
+    loginModel: LoginModel,
+    fesUrl: String? = null
+  ): Result<ApiResponse>
 
   /**
    * @param context Interface to global information about an application environment.
@@ -120,4 +123,12 @@ interface ApiRepository : BaseApiRepository {
   suspend fun getPrivateKeysViaEkm(
     context: Context, ekmUrl: String, tokenId: String
   ): Result<EkmPrivateKeysResponse>
+
+  /**
+   * Check if "https://fes.$domain/api/" is available for interactions
+   *
+   * @param context Interface to global information about an application environment.
+   * @param domain A company domain.
+   */
+  suspend fun checkFes(context: Context, domain: String): Result<FesServerResponse>
 }

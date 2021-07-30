@@ -23,7 +23,11 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 ###############################################
 # Edit this line to set subjectAltName contents
 ###############################################
-subjectAltName          = DNS:localhost
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = localhost
+DNS.2 = *.localhost
 
 [ CA_default ]
 default_days      = 3650

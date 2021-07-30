@@ -11,14 +11,17 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
+import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -107,7 +110,15 @@ interface ApiService {
    * @param body POJO model for requests
    */
   @POST(BuildConfig.API_URL + "account/get")
-  suspend fun getDomainOrgRules(@Body body: LoginModel): Response<DomainOrgRulesResponse>
+  suspend fun getOrgRulesFromFlowCryptComBackend(@Body body: LoginModel): Response<DomainOrgRulesResponse>
+
+  /**
+   * This method calls "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+   *
+   * @param fesUrl URL of FES
+   */
+  @GET
+  suspend fun getOrgRulesFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
 
   /**
    * This method calls API "https://flowcrypt.com/attester/initial/legacy_submit" via coroutines
@@ -149,4 +160,16 @@ interface ApiService {
     @Url ekmUrl: String,
     @Header("Authorization") tokenId: String
   ): Response<EkmPrivateKeysResponse>
+
+  /**
+   * This method check if "https://fes.$domain/api/" is available for interactions
+   */
+  @GET("https://fes.{domain}/api/")
+  suspend fun checkFes(@Path("domain") domain: String): Response<FesServerResponse>
+
+  /**
+   * This method check if "url" is available for interactions
+   */
+  @GET()
+  suspend fun isAvailable(@Url url: String): Response<ResponseBody>
 }

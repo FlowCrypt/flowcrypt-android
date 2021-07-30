@@ -15,4 +15,5 @@ import java.io.IOException
  *         Time: 5:01 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CommonConnectionException(cause: Throwable?) : IOException(cause)
+class CommonConnectionException(cause: Throwable?, val hasInternetAccess: Boolean? = null) :
+  IOException(cause)
