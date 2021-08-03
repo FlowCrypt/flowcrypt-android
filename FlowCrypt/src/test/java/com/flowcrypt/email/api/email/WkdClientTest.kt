@@ -13,10 +13,6 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.net.ServerSocket
-import java.net.Socket
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.concurrent.thread
 
 class WkdClientTest {
   @Test
