@@ -7,6 +7,10 @@
 package com.flowcrypt.email.api.email
 
 import com.flowcrypt.email.api.wkd.WkdClient
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -35,4 +39,23 @@ class WkdClientTest {
     val keys = WkdClient.lookupEmail("doesnotexist@thisdomaindoesnotexist.test")
     assertTrue("Key found for non-existing email", keys == null)
   }
+
+  @Test
+  fun requestTimeoutTest() {
+    val mockWebServer = MockWebServer()
+    mockWebServer.dispatcher = object: Dispatcher() {
+      private val sleepTimeout = (WkdClient.DEFAULT_REQUEST_TIMEOUT + 2) * 1000
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        Thread.sleep(sleepTimeout)
+        return MockResponse().setResponseCode(200)
+      }
+    }
+    mockWebServer.start()
+    val port = mockWebServer.port
+    mockWebServer.use {
+      val keys = WkdClient.lookupEmail(email = "user@localhost", wkdPort = port, useHttps = false)
+      assertTrue("Key found for non-existing email", keys == null)
+    }
+  }
 }
+
