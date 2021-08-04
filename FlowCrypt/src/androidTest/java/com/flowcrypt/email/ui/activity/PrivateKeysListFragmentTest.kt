@@ -207,7 +207,7 @@ class PrivateKeysListFragmentTest : BaseTest() {
       emails.add(pgpContact.email)
     }
 
-    onView(withId(R.id.textViewUsers))
+    onView(withId(R.id.tVUsers))
       .check(matches(withText(getResString(R.string.template_users, TextUtils.join(", ", emails)))))
   }
 

@@ -36,15 +36,16 @@ abstract class BaseMessageDetailsActivityTest : BaseTest() {
     lazyActivityScenarioRule<MessageDetailsActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
-  protected val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  protected open val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
-  protected val localFolder: LocalFolder = LocalFolder(
-    addAccountToDatabaseRule.account.email,
-    fullName = "INBOX",
-    folderAlias = "INBOX",
-    msgCount = 1,
-    attributes = listOf("\\HasNoChildren")
-  )
+  private val localFolder: LocalFolder
+    get() = LocalFolder(
+      addAccountToDatabaseRule.account.email,
+      fullName = "INBOX",
+      folderAlias = "INBOX",
+      msgCount = 1,
+      attributes = listOf("\\HasNoChildren")
+    )
 
   private var idlingForWebView: IdlingResource? = null
 
