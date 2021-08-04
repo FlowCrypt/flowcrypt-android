@@ -14,11 +14,14 @@ import android.text.TextUtils
 import android.text.format.DateFormat
 import androidx.core.content.FileProvider
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
@@ -36,9 +39,9 @@ import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers
-import org.hamcrest.Matchers
-import org.hamcrest.core.AllOf
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasItem
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -137,8 +140,8 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
   fun testKeyDetailsShowPubKey() {
     val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnShowPubKey))
-      .check(matches(ViewMatchers.isDisplayed()))
-      .perform(ViewActions.click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withText(keyDetails.publicKey))
   }
 
@@ -146,8 +149,8 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
   fun testKeyDetailsCopyToClipBoard() {
     val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnCopyToClipboard))
-      .check(matches(ViewMatchers.isDisplayed()))
-      .perform(ViewActions.click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     isToastDisplayed(getResString(R.string.copied))
     UiThreadStatement.runOnUiThread { checkClipboardText(details.publicKey) }
   }
@@ -156,8 +159,8 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
   @NotReadyForCI
   fun testKeyDetailsShowPrivateKey() {
     onView(withId(R.id.btnShowPrKey))
-      .perform(ViewActions.scrollTo())
-      .perform(ViewActions.click())
+      .perform(scrollTo())
+      .perform(click())
     isToastDisplayed(getResString(R.string.see_backups_to_save_your_private_keys))
   }
 
@@ -165,11 +168,10 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
 
-    val file =
-      File(
-        getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
-        "0x" + details.fingerprint + ".asc"
-      )
+    val file = File(
+      getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+      "0x" + details.fingerprint + ".asc"
+    )
 
     if (file.exists()) {
       file.delete()
@@ -179,20 +181,17 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
     resultData.data =
       FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
 
-    Intents.intending(
-      AllOf.allOf(
-        IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        IntentMatchers.hasCategories(
-          CoreMatchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))
-        ),
-        IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_CREATE_DOCUMENT),
+        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasType(Constants.MIME_TYPE_PGP_KEY)
       )
-    )
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
 
     onView(withId(R.id.btnSaveToFile))
-      .check(matches(ViewMatchers.isDisplayed()))
-      .perform(ViewActions.click())
+      .check(matches(isDisplayed()))
+      .perform(click())
     isToastDisplayed(getResString(R.string.saved))
   }
 }
