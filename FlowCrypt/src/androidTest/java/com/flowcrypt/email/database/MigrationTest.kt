@@ -11,7 +11,6 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,7 +25,7 @@ import java.io.IOException
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("it doesn't allow to run all tests")
+//@Ignore("it doesn't allow to run all tests")
 class MigrationTest {
   // Array of all migrations which we are going to test
   private val arrayOfMigrations = arrayOf(
@@ -35,7 +34,8 @@ class MigrationTest {
     FlowCryptRoomDatabase.MIGRATION_21_22,
     FlowCryptRoomDatabase.MIGRATION_22_23,
     FlowCryptRoomDatabase.MIGRATION_23_24,
-    FlowCryptRoomDatabase.MIGRATION_24_25
+    FlowCryptRoomDatabase.MIGRATION_24_25,
+    FlowCryptRoomDatabase.MIGRATION_25_26
   )
 
   @get:Rule
