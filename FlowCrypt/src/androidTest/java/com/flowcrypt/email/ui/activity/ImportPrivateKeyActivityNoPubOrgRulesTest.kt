@@ -9,12 +9,8 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -77,14 +73,9 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  fun testErrorWhenImportingKeyFromFile() {
+  fun testErrorWhenImportingKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()
     addTextToClipboard("private key", privateKey)
-
-    Espresso.onView(ViewMatchers.withId(R.id.buttonLoadFromClipboard))
-      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-      .perform(ViewActions.click())
-
     isDialogWithTextDisplayed(decorView, ERROR_MESSAGE_FROM_ATTESTER)
   }
 
@@ -94,14 +85,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     list.add(keyDetails)
     intent.putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
 
-    Intents.intending(
-      IntentMatchers.hasComponent(
-        ComponentName(
-          getTargetContext(),
-          CheckKeysActivity::class.java
-        )
-      )
-    )
+    intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
   }
 

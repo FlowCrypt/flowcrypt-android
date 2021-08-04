@@ -105,4 +105,3 @@ class PrivateKeyDetailsFragmentEkmTest : BaseTest() {
     private const val KEY_PATH = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc"
   }
 }
-
