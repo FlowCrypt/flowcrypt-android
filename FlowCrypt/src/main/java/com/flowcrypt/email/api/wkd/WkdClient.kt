@@ -7,6 +7,7 @@
 package com.flowcrypt.email.api.wkd
 
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
+import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
 import com.flowcrypt.email.util.BetterInternetAddress
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -14,20 +15,22 @@ import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
+import java.io.InterruptedIOException
 import java.net.URLEncoder
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 object WkdClient {
-  private const val DEFAULT_REQUEST_TIMEOUT = 4
+  const val DEFAULT_REQUEST_TIMEOUT = 4L
 
   fun lookupEmail(
     email: String,
-    timeout: Int = DEFAULT_REQUEST_TIMEOUT,
-    wkdPort: Int? = null
+    wkdPort: Int? = null,
+    useHttps: Boolean = true,
+    timeout: Long = DEFAULT_REQUEST_TIMEOUT
   ): PGPPublicKeyRingCollection? {
-    val keys = rawLookupEmail(email, timeout, wkdPort) ?: return null
+    val keys = rawLookupEmail(email, wkdPort, useHttps, timeout) ?: return null
     val lowerCaseEmail = email.toLowerCase(Locale.ROOT)
     val matchingKeys = keys.keyRings.asSequence().filter {
       for (userId in it.publicKey.userIDs) {
@@ -46,10 +49,13 @@ object WkdClient {
   @Suppress("private")
   fun rawLookupEmail(
     email: String,
-    timeout: Int = DEFAULT_REQUEST_TIMEOUT,
-    wkdPort: Int? = null
+    wkdPort: Int? = null,
+    useHttps: Boolean = true,
+    timeout: Long = DEFAULT_REQUEST_TIMEOUT
   ): PGPPublicKeyRingCollection? {
-    if (!email.isValidEmail()) throw IllegalArgumentException("Invalid email address")
+    if (!email.isValidEmail() && !email.isValidLocalhostEmail()) {
+      throw IllegalArgumentException("Invalid email address")
+    }
     val parts = email.split('@')
     val user = parts[0].toLowerCase(Locale.ROOT)
     val hu = ZBase32().encodeAsString(DigestUtils.sha1(user.toByteArray()))
@@ -57,8 +63,9 @@ object WkdClient {
     val advancedDomainPrefix = if (directDomain == "localhost") "" else "openpgpkey."
     val directHost = if (wkdPort == null) directDomain else "${directDomain}:${wkdPort}"
     val advancedHost = "$advancedDomainPrefix$directHost"
-    val advancedUrl = "https://${advancedHost}/.well-known/openpgpkey/${directDomain}"
-    val directUrl = "https://${directHost}/.well-known/openpgpkey"
+    val protocol = if (useHttps) "https" else "http"
+    val advancedUrl = "$protocol://${advancedHost}/.well-known/openpgpkey/${directDomain}"
+    val directUrl = "$protocol://${directHost}/.well-known/openpgpkey"
     val userPart = "hu/$hu?l=${URLEncoder.encode(user, "UTF-8")}"
     try {
       val result = urlLookup(advancedUrl, userPart, timeout)
@@ -71,6 +78,8 @@ object WkdClient {
       urlLookup(directUrl, userPart, timeout).keys
     } catch (ex: UnknownHostException) {
       null
+    } catch (ex: InterruptedIOException) {
+      if (ex.message == "timeout") null else throw ex
     }
   }
 
@@ -79,8 +88,8 @@ object WkdClient {
     val keys: PGPPublicKeyRingCollection? = null
   )
 
-  private fun urlLookup(methodUrlBase: String, userPart: String, timeout: Int): UrlLookupResult {
-    val httpClient = OkHttpClient.Builder().callTimeout(timeout.toLong(), TimeUnit.SECONDS).build()
+  private fun urlLookup(methodUrlBase: String, userPart: String, timeout: Long): UrlLookupResult {
+    val httpClient = OkHttpClient.Builder().callTimeout(timeout, TimeUnit.SECONDS).build()
     val policyRequest = Request.Builder().url("$methodUrlBase/policy").build()
     httpClient.newCall(policyRequest).execute().use { policyResponse ->
       if (policyResponse.code != 200) return UrlLookupResult()

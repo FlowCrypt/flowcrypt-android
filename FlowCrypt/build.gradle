@@ -236,8 +236,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility rootProject.ext.javaSourceCompatibility
-        targetCompatibility rootProject.ext.javaSourceCompatibility
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     buildFeatures {
@@ -245,7 +245,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
         //need for ACRA, maybe will be deleted in the upcoming updates
         freeCompilerArgs = ['-Xjvm-default=enable']
     }
@@ -386,10 +386,11 @@ dependencies {
     androidTestImplementation "com.squareup.okhttp3:okhttp-tls:${rootProject.ext.okhttpVersion}"
     androidTestUtil 'androidx.test:orchestrator:1.4.0'
 
+    testImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.okhttpVersion}"
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
     testImplementation 'org.robolectric:robolectric:4.6.1'
-    testImplementation 'io.github.classgraph:classgraph:4.8.110'
+    testImplementation 'io.github.classgraph:classgraph:4.8.111'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
@@ -404,7 +405,7 @@ dependencies {
     implementation 'androidx.browser:browser:1.3.0'
     implementation "androidx.recyclerview:recyclerview:${rootProject.ext.recyclerViewVersion}"
     implementation "androidx.recyclerview:recyclerview-selection:${rootProject.ext.recyclerViewVersion}"
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
     implementation "androidx.test.espresso:espresso-idling-resource:${rootProject.ext.espressoVersion}"
     implementation "androidx.lifecycle:lifecycle-extensions:${rootProject.ext.lifecycleVersion}"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${rootProject.ext.lifecycleVersion}"
@@ -414,7 +415,7 @@ dependencies {
     implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
     implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'androidx.core:core-ktx:1.6.0'
-    implementation 'androidx.activity:activity-ktx:1.3.0'
+    implementation 'androidx.activity:activity-ktx:1.3.1'
     implementation 'androidx.fragment:fragment-ktx:1.3.6'
     implementation 'androidx.work:work-runtime-ktx:2.5.0'
     implementation "androidx.navigation:navigation-fragment-ktx:${rootProject.ext.navVersion}"
@@ -460,7 +461,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.14.1'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.6') {
+    implementation ('org.pgpainless:pgpainless-core:0.2.7') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }

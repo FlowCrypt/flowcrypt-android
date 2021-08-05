@@ -29,9 +29,14 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
     private val containsSpecialCharacterRegex = ".*[()<>\\[\\]:;@\\\\,.\"].*".toRegex()
     // double quotes at ends only
     private val doubleQuotedTextRegex = "\"[^\"]*\"".toRegex()
+    private val validLocalhostEmailRegex = Regex("([a-zA-z])([a-zA-z0-9])+@localhost")
 
     fun isValidEmail(email: String): Boolean {
       return validEmailRegex.matchEntire(email) != null
+    }
+
+    fun isValidLocalhostEmail(email: String): Boolean {
+      return validLocalhostEmailRegex.matchEntire(email) != null
     }
 
     fun areValidEmails(emails: Iterable<String>): Boolean {
