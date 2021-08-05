@@ -25,7 +25,7 @@ ext {
     /*https://developer.android.com/jetpack/androidx/releases/navigation*/
     navVersion = '2.3.5'
     /* https://mvnrepository.com/artifact/androidx.test.espresso*/
-    espressoVersion = '3.3.0'
+    espressoVersion = '3.4.0'
     /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
     retrofitVersion = '2.9.0'
     /*https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor*/
