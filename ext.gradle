@@ -15,7 +15,7 @@ ext {
     /*https://developer.android.com/jetpack/androidx/androidx-rn*/
     androidxBaseVersion = '1.0.0'
     /* https://developer.android.com/jetpack/androidx/releases/recyclerview*/
-    recyclerViewVersion = '1.1.0'
+    recyclerViewVersion = '1.2.1'
     /* https://developer.android.com/jetpack/androidx/releases/lifecycle*/
     lifecycleVersion = '2.2.0'
     /* https://developer.android.com/jetpack/androidx/releases/room#declaring_dependencies*/
