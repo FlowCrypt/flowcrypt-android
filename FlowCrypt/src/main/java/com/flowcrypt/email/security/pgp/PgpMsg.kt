@@ -257,7 +257,16 @@ object PgpMsg {
         .onInputStream(input)
         .withOptions(consumerOptions)
       val output = ByteArrayOutputStream()
-      decryptionStream.use { it.copyTo(output) }
+      try {
+        decryptionStream.use { it.copyTo(output) }
+      } catch (ex: IOException) {
+        val message  = ex.message
+        if (message != null && message.contains("crc check not found")) {
+          decryptionStream.close()
+        } else {
+          throw ex
+        }
+      }
       return DecryptionResult.withDecrypted(output, decryptionStream.result.fileName)
     } catch (ex: MessageNotIntegrityProtectedException) {
       return DecryptionResult.withError(
