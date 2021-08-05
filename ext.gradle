@@ -19,7 +19,7 @@ ext {
     /* https://developer.android.com/jetpack/androidx/releases/lifecycle*/
     lifecycleVersion = '2.2.0'
     /* https://developer.android.com/jetpack/androidx/releases/room#declaring_dependencies*/
-    roomVersion = '2.2.6'
+    roomVersion = '2.3.0'
     /* https://developer.android.com/jetpack/androidx/releases/paging#declaring_dependencies*/
     pagingVersion = '2.1.2'
     /*https://developer.android.com/jetpack/androidx/releases/navigation*/
