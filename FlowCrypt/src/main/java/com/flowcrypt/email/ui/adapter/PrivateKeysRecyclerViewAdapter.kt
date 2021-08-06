@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.content.Context
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
@@ -30,11 +29,10 @@ import java.util.Date
  * E-mail: DenBond7@gmail.com
  */
 class PrivateKeysRecyclerViewAdapter(
-  context: Context,
   private val listener: OnKeySelectedListener?,
   val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()
 ) : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
-  private val dateFormat: java.text.DateFormat = DateFormat.getMediumDateFormat(context)
+  private var dateFormat: java.text.DateFormat? = null
   var tracker: SelectionTracker<PgpKeyDetails>? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -43,6 +41,10 @@ class PrivateKeysRecyclerViewAdapter(
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+    if (dateFormat == null) {
+      dateFormat = DateFormat.getMediumDateFormat(viewHolder.itemView.context)
+    }
+
     val nodeKeyDetails = pgpKeyDetailsList[position]
     tracker?.isSelected(nodeKeyDetails)?.let { viewHolder.setActivated(it) }
     val email = nodeKeyDetails.primaryPgpContact.email
@@ -54,7 +56,7 @@ class PrivateKeysRecyclerViewAdapter(
 
     val timestamp = nodeKeyDetails.created
     if (timestamp != -1L) {
-      viewHolder.textViewCreationDate.text = dateFormat.format(Date(timestamp))
+      viewHolder.textViewCreationDate.text = dateFormat?.format(Date(timestamp))
     } else {
       viewHolder.textViewCreationDate.text = null
     }

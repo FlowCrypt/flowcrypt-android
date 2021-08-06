@@ -55,7 +55,7 @@ import org.junit.runner.RunWith
 class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   private val accountRule = AddAccountToDatabaseRule(
-    AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true)
+    AccountDaoManager.getDefaultAccountDao().copy(contactsLoaded = true)
   )
 
   override val activityScenarioRule = activityScenarioRule<SearchMessagesActivity>(

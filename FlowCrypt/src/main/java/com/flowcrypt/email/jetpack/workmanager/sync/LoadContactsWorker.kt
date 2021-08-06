@@ -141,13 +141,13 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
     account: AccountEntity,
     action: suspend () -> Array<Message>
   ) = withContext(Dispatchers.IO) {
-    if (account.areContactsLoaded == true) return@withContext
+    if (account.contactsLoaded == true) return@withContext
     val msgs = action.invoke()
 
     if (msgs.isNotEmpty()) {
       updateContacts(msgs)
       FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao()
-        .updateAccountSuspend(account.copy(areContactsLoaded = true))
+        .updateAccountSuspend(account.copy(contactsLoaded = true))
     }
   }
 

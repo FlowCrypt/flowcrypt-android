@@ -65,7 +65,7 @@ class SmtpProtocolUtil {
           val userName: String?
           var password: String?
 
-          if (accountEntity.useCustomSignForSmtp == true) {
+          if (accountEntity.smtpUseCustomSign == true) {
             userName = accountEntity.smtpUsername
             password = accountEntity.smtpPassword
           } else {

@@ -44,53 +44,36 @@ data class AccountEntity constructor(
   @ColumnInfo(name = "given_name", defaultValue = "NULL") val givenName: String? = null,
   @ColumnInfo(name = "family_name", defaultValue = "NULL") val familyName: String? = null,
   @ColumnInfo(name = "photo_url", defaultValue = "NULL") val photoUrl: String? = null,
-  @ColumnInfo(name = "is_enable", defaultValue = "1") val isEnabled: Boolean? = true,
+  @ColumnInfo(name = "is_enabled", defaultValue = "1") val isEnabled: Boolean? = true,
   @ColumnInfo(name = "is_active", defaultValue = "0") val isActive: Boolean? = false,
   val username: String,
   val password: String,
   @ColumnInfo(name = "imap_server") val imapServer: String,
   @ColumnInfo(name = "imap_port", defaultValue = "143") val imapPort: Int? = 143,
-  @ColumnInfo(
-    name = "imap_is_use_ssl_tls",
-    defaultValue = "0"
-  ) val imapIsUseSslTls: Boolean? = false,
-  @ColumnInfo(
-    name = "imap_is_use_starttls",
-    defaultValue = "0"
-  ) val imapIsUseStarttls: Boolean? = false,
+  @ColumnInfo(name = "imap_use_ssl_tls", defaultValue = "0") val imapUseSslTls: Boolean? = false,
+  @ColumnInfo(name = "imap_use_starttls", defaultValue = "0") val imapUseStarttls: Boolean? = false,
   @ColumnInfo(name = "imap_auth_mechanisms") val imapAuthMechanisms: String? = null,
   @ColumnInfo(name = "smtp_server") val smtpServer: String,
   @ColumnInfo(name = "smtp_port", defaultValue = "25") val smtpPort: Int? = 25,
-  @ColumnInfo(
-    name = "smtp_is_use_ssl_tls",
-    defaultValue = "0"
-  ) val smtpIsUseSslTls: Boolean? = false,
-  @ColumnInfo(
-    name = "smtp_is_use_starttls",
-    defaultValue = "0"
-  ) val smtpIsUseStarttls: Boolean? = false,
+  @ColumnInfo(name = "smtp_use_ssl_tls", defaultValue = "0") val smtpUseSslTls: Boolean? = false,
+  @ColumnInfo(name = "smtp_use_starttls", defaultValue = "0") val smtpUseStarttls: Boolean? = false,
   @ColumnInfo(name = "smtp_auth_mechanisms") val smtpAuthMechanisms: String? = null,
   @ColumnInfo(
-    name = "smtp_is_use_custom_sign",
+    name = "smtp_use_custom_sign",
     defaultValue = "0"
-  ) val useCustomSignForSmtp: Boolean? = false,
+  ) val smtpUseCustomSign: Boolean? = false,
   @ColumnInfo(name = "smtp_username", defaultValue = "NULL") val smtpUsername: String? = null,
   @ColumnInfo(name = "smtp_password", defaultValue = "NULL") val smtpPassword: String? = null,
+  @ColumnInfo(name = "contacts_loaded", defaultValue = "0") val contactsLoaded: Boolean? = false,
   @ColumnInfo(
-    name = "ic_contacts_loaded",
+    name = "show_only_encrypted",
     defaultValue = "0"
-  ) val areContactsLoaded: Boolean? = false,
-  @ColumnInfo(
-    name = "is_show_only_encrypted",
-    defaultValue = "0"
-  ) val isShowOnlyEncrypted: Boolean? = false,
+  ) val showOnlyEncrypted: Boolean? = false,
   @ColumnInfo(defaultValue = "NULL") val uuid: String? = null,
-  @ColumnInfo(name = "domain_rules", defaultValue = "NULL") val domainRules: String? = null,
-  @Deprecated("Don't use this field. Should be removed in the next database upgrading")
   @ColumnInfo(
-    name = "is_restore_access_required",
-    defaultValue = "0"
-  ) val isRestoreAccessRequired: Boolean? = false,
+    name = "client_configuration",
+    defaultValue = "NULL"
+  ) val clientConfiguration: OrgRules? = null,
   @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false
 ) : Parcelable {
 
@@ -103,8 +86,9 @@ data class AccountEntity constructor(
   val useOAuth2: Boolean
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
 
-  constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
-              domainRules: List<OrgRules.DomainRule>? = null) :
+  constructor(
+    googleSignInAccount: GoogleSignInAccount, uuid: String? = null, orgRules: OrgRules? = null
+  ) :
       this(
         email = googleSignInAccount.email!!.toLowerCase(Locale.US),
         accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.US),
@@ -118,26 +102,25 @@ data class AccountEntity constructor(
         password = "",
         imapServer = GmailConstants.GMAIL_IMAP_SERVER,
         imapPort = GmailConstants.GMAIL_IMAP_PORT,
-        imapIsUseSslTls = true,
-        imapIsUseStarttls = false,
+        imapUseSslTls = true,
+        imapUseStarttls = false,
         imapAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
         smtpServer = GmailConstants.GMAIL_SMTP_SERVER,
         smtpPort = GmailConstants.GMAIL_SMTP_PORT,
-        smtpIsUseSslTls = true,
-        smtpIsUseStarttls = false,
+        smtpUseSslTls = true,
+        smtpUseStarttls = false,
         smtpAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
-        useCustomSignForSmtp = false,
+        smtpUseCustomSign = false,
         smtpUsername = null,
         smtpPassword = null,
-        areContactsLoaded = false,
-        isShowOnlyEncrypted = false,
+        contactsLoaded = false,
+        showOnlyEncrypted = false,
         uuid = uuid,
-        domainRules = domainRules?.joinToString(),
-        isRestoreAccessRequired = false,
+        clientConfiguration = orgRules,
         useAPI = FlavorSettings.isGMailAPIEnabled()
       )
 
-  constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<OrgRules.DomainRule>? = null) :
+  constructor(authCredentials: AuthCredentials, uuid: String? = null, orgRules: OrgRules? = null) :
       this(
         email = authCredentials.email.toLowerCase(Locale.US),
         accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1)
@@ -152,22 +135,21 @@ data class AccountEntity constructor(
         password = authCredentials.password,
         imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
         imapPort = authCredentials.imapPort,
-        imapIsUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
-        imapIsUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
+        imapUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
+        imapUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
         imapAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
         smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
         smtpPort = authCredentials.smtpPort,
-        smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
-        smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
+        smtpUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
+        smtpUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
         smtpAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
-        useCustomSignForSmtp = authCredentials.hasCustomSignInForSmtp,
+        smtpUseCustomSign = authCredentials.hasCustomSignInForSmtp,
         smtpUsername = authCredentials.smtpSigInUsername,
         smtpPassword = authCredentials.smtpSignInPassword,
-        areContactsLoaded = false,
-        isShowOnlyEncrypted = false,
+        contactsLoaded = false,
+        showOnlyEncrypted = false,
         uuid = uuid,
-        domainRules = domainRules?.joinToString(),
-        isRestoreAccessRequired = false,
+        clientConfiguration = orgRules,
         useAPI = false
       )
 
@@ -185,22 +167,21 @@ data class AccountEntity constructor(
         password = "",
         imapServer = "",
         imapPort = 0,
-        imapIsUseSslTls = true,
-        imapIsUseStarttls = false,
+        imapUseSslTls = true,
+        imapUseStarttls = false,
         imapAuthMechanisms = null,
         smtpServer = "",
         smtpPort = 0,
-        smtpIsUseSslTls = true,
-        smtpIsUseStarttls = false,
+        smtpUseSslTls = true,
+        smtpUseStarttls = false,
         smtpAuthMechanisms = "",
-        useCustomSignForSmtp = false,
+        smtpUseCustomSign = false,
         smtpUsername = null,
         smtpPassword = null,
-        areContactsLoaded = false,
-        isShowOnlyEncrypted = false,
+        contactsLoaded = false,
+        showOnlyEncrypted = false,
         uuid = null,
-        domainRules = null,
-        isRestoreAccessRequired = false,
+        clientConfiguration = null,
         useAPI = false
       )
 
@@ -232,26 +213,17 @@ data class AccountEntity constructor(
     source.readValue(Boolean::class.java.classLoader) as Boolean?,
     source.readValue(Boolean::class.java.classLoader) as Boolean?,
     source.readString(),
-    source.readString(),
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
+    source.readParcelable(OrgRules::class.java.classLoader),
     source.readValue(Boolean::class.java.classLoader) as Boolean
   )
 
-  fun domainRulesList(): List<String> {
-    return if (domainRules.isNullOrEmpty()) {
-      emptyList()
-    } else {
-      domainRules.split(",").map { it.trim() }
-    }
-  }
-
   fun imapOpt(): SecurityType.Option {
     return when {
-      imapIsUseSslTls == true -> {
+      imapUseSslTls == true -> {
         SecurityType.Option.SSL_TLS
       }
 
-      imapIsUseStarttls == true -> {
+      imapUseStarttls == true -> {
         SecurityType.Option.STARTLS
       }
 
@@ -261,11 +233,11 @@ data class AccountEntity constructor(
 
   fun smtpOpt(): SecurityType.Option {
     return when {
-      smtpIsUseSslTls == true -> {
+      smtpUseSslTls == true -> {
         SecurityType.Option.SSL_TLS
       }
 
-      smtpIsUseStarttls == true -> {
+      smtpUseStarttls == true -> {
         SecurityType.Option.STARTLS
       }
 
@@ -274,8 +246,7 @@ data class AccountEntity constructor(
   }
 
   fun isRuleExist(domainRule: OrgRules.DomainRule): Boolean {
-    val rules = domainRulesList()
-    return domainRule.name in rules
+    return clientConfiguration?.hasRule(domainRule) ?: false
   }
 
   override fun describeContents() = 0
@@ -294,22 +265,21 @@ data class AccountEntity constructor(
     writeString(password)
     writeString(imapServer)
     writeValue(imapPort)
-    writeValue(imapIsUseSslTls)
-    writeValue(imapIsUseStarttls)
+    writeValue(imapUseSslTls)
+    writeValue(imapUseStarttls)
     writeString(imapAuthMechanisms)
     writeString(smtpServer)
     writeValue(smtpPort)
-    writeValue(smtpIsUseSslTls)
-    writeValue(smtpIsUseStarttls)
+    writeValue(smtpUseSslTls)
+    writeValue(smtpUseStarttls)
     writeString(smtpAuthMechanisms)
-    writeValue(useCustomSignForSmtp)
+    writeValue(smtpUseCustomSign)
     writeString(smtpUsername)
     writeString(smtpPassword)
-    writeValue(areContactsLoaded)
-    writeValue(isShowOnlyEncrypted)
+    writeValue(contactsLoaded)
+    writeValue(showOnlyEncrypted)
     writeString(uuid)
-    writeString(domainRules)
-    writeValue(isRestoreAccessRequired)
+    writeParcelable(clientConfiguration, flags)
     writeValue(useAPI)
   }
 
