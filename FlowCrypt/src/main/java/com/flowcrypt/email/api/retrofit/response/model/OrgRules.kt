@@ -184,9 +184,25 @@ data class OrgRules constructor(
    * public keys for these domains, such as from their own internal keyserver
    */
   fun canLookupThisRecipientOnAttester(emailAddr: String): Boolean {
-    val domain = EmailUtil.getDomain(emailAddr)
-    val domains = disallowAttesterSearchForDomains ?: emptyList()
-    return !domains.contains(if (domain.isEmpty()) "NONE" else domain)
+    if (disallowLookupOnAttester()) {
+      return false
+    }
+
+    val disallowedDomains = disallowAttesterSearchForDomains ?: emptyList()
+    val userDomain = EmailUtil.getDomain(emailAddr)
+    if (userDomain.isEmpty()) {
+      throw IllegalStateException("Not a valid email $emailAddr")
+    }
+
+    return !disallowedDomains.contains(userDomain)
+  }
+
+  /**
+   *
+   * Some orgs might want to disallow lookup on attester completely
+   */
+  fun disallowLookupOnAttester(): Boolean {
+    return (disallowAttesterSearchForDomains ?: emptyList()).contains("*")
   }
 
   /**

@@ -18,6 +18,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
@@ -97,12 +98,27 @@ class FlowcryptApiRepository : ApiRepository {
   override suspend fun getPub(
     requestCode: Long,
     context: Context,
-    identData: String
+    identData: String,
+    orgRules: OrgRules?
   ): Result<PubResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      if (identData.contains('@')) {
+        if (orgRules?.canLookupThisRecipientOnAttester(identData) == false) {
+          return@withContext Result.success(
+            requestCode = requestCode,
+            data = PubResponse(null, null)
+          )
+        }
+      } else if (orgRules?.disallowLookupOnAttester() == true) {
+        return@withContext Result.success(
+          requestCode = requestCode,
+          data = PubResponse(null, null)
+        )
+      }
+
       val result = getResult(requestCode = requestCode) { apiService.getPub(identData) }
-      when (result.status) {
+      return@withContext when (result.status) {
         Result.Status.SUCCESS -> Result.success(
           requestCode = requestCode,
           data = PubResponse(null, result.data)
