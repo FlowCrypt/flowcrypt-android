@@ -87,7 +87,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
     if (newMsgs.isNotEmpty()) {
       EmailUtil.fetchMsgs(remoteFolder, newMsgs)
       val msgsEncryptionStates =
-        EmailUtil.getMsgsEncryptionInfo(accountEntity.isShowOnlyEncrypted, remoteFolder, newMsgs)
+        EmailUtil.getMsgsEncryptionInfo(accountEntity.showOnlyEncrypted, remoteFolder, newMsgs)
       val msgEntities = MessageEntity.genMessageEntities(
         context = applicationContext,
         email = accountEntity.email,

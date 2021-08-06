@@ -235,7 +235,7 @@ class GmailApiHelper {
         request.labelIds = listOf(localFolder.fullName)
       }
 
-      if (accountEntity.isShowOnlyEncrypted == true) {
+      if (accountEntity.showOnlyEncrypted == true) {
         request.q =
           (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
       }

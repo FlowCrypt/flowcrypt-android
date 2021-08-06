@@ -63,7 +63,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(accountEntity.email, folderFullName)
         val cachedUIDSet = mapOfUIDAndMsgFlags.keys.toSet()
 
-        if (accountEntity.isShowOnlyEncrypted == true) {
+        if (accountEntity.showOnlyEncrypted == true) {
           val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
           val fetchProfile = FetchProfile().apply {
             add(UIDFolder.FetchProfileItem.UID)
@@ -157,7 +157,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           newCandidates, localFolder
         )
 
-        val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
+        val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
         val isNew = !GeneralUtil.isAppForegrounded()
 
         val msgEntities = MessageEntity.genMessageEntities(

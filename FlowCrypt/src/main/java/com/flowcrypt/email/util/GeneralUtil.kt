@@ -87,11 +87,11 @@ class GeneralUtil {
 
     suspend fun hasInternetAccess(): Boolean = withContext(Dispatchers.IO) {
       val url = "https://www.google.com"
-      val connectionTimeoutInSeconds = 2000L
+      val connectionTimeoutInMilliseconds = 2000L
       val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
-        .writeTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
-        .readTimeout(connectionTimeoutInSeconds, TimeUnit.MILLISECONDS)
+        .connectTimeout(connectionTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
+        .writeTimeout(connectionTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
+        .readTimeout(connectionTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
         .build()
 
       val retrofit = Retrofit.Builder()

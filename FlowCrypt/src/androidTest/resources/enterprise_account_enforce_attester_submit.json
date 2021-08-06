@@ -8,11 +8,15 @@
   "imapPort": 993,
   "imapOpt": "NONE",
   "imapServer": "10.0.2.2",
-  "useCustomSignForSmtp": false,
+  "smtpUseCustomSign": false,
   "password": "qwerty1234",
   "smtpPort": 587,
   "smtpOpt": "NONE",
   "smtpServer": "10.0.2.2",
   "username": "default@flowcrypt.test",
-  "domainRules": "ENFORCE_ATTESTER_SUBMIT"
+  "clientConfiguration": {
+    "flags": [
+      "ENFORCE_ATTESTER_SUBMIT"
+    ]
+  }
 }

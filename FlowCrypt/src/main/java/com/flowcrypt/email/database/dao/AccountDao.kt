@@ -186,13 +186,13 @@ abstract class AccountDao : BaseDao<AccountEntity> {
         smtpPassword = encryptedSmtpPassword,
         imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
         imapPort = authCredentials.imapPort,
-        imapIsUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
-        imapIsUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
+        imapUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
+        imapUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
         smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
         smtpPort = authCredentials.smtpPort,
-        smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
-        smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
-        useCustomSignForSmtp = authCredentials.hasCustomSignInForSmtp,
+        smtpUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
+        smtpUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
+        smtpUseCustomSign = authCredentials.hasCustomSignInForSmtp,
         smtpUsername = authCredentials.smtpSigInUsername
       )
     )
