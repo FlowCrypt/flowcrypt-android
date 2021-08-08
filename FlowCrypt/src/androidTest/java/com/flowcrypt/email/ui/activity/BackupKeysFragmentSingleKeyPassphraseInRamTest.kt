@@ -21,6 +21,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -58,6 +59,7 @@ class BackupKeysFragmentSingleKeyPassphraseInRamTest : BaseBackupKeysFragmentTes
 
   @Test
   @DependsOnMailServer
+  @NotReadyForCI
   fun testNeedPassphraseEmailOptionSingleFingerprint() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
