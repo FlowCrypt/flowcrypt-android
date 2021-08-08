@@ -31,7 +31,6 @@ import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.pgp.PgpArmor.ARMOR_HEADER_DICT
-import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.bcpg.PacketTags
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException
@@ -54,6 +53,7 @@ import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.protection.UnprotectedKeysProtector
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.Locale
@@ -202,9 +202,8 @@ object PgpMsg {
       )
     }
 
+    val input = data.inputStream()
     val chunk = data.copyOfRange(0, data.size.coerceAtMost(50)).toString(StandardCharsets.US_ASCII)
-    var input = data.inputStream() as InputStream
-
     if (chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.SIGNED_MSG]!!.begin)) {
       val msg: PgpArmor.CleartextSignedMessage
       try {
@@ -226,9 +225,6 @@ object PgpMsg {
       }
       return DecryptionResult.withCleartext(msg.content, msg.signature)
     }
-
-    val isArmored = chunk.contains(ARMOR_HEADER_DICT[MsgBlock.Type.ENCRYPTED_MSG]!!.begin)
-    if (isArmored) input = ArmoredInputStream(input)
 
     val keyList: List<PGPSecretKeyRing>
     try {
@@ -252,20 +248,26 @@ object PgpMsg {
       )
     }
 
+    val exception: Exception?
     try {
       val consumerOptions = ConsumerOptions()
         .addDecryptionKeys(PGPSecretKeyRingCollection(keyList), UnprotectedKeysProtector())
       pgpPublicKeyRingCollection?.let { consumerOptions.addVerificationCerts(it) }
-
       val decryptionStream = PGPainless.decryptAndOrVerify()
         .onInputStream(input)
         .withOptions(consumerOptions)
-
       val output = ByteArrayOutputStream()
-      decryptionStream.use { it.copyTo(output) }
-
-      val streamResult = decryptionStream.result
-      return DecryptionResult.withDecrypted(output, streamResult.fileName)
+      try {
+        decryptionStream.use { it.copyTo(output) }
+      } catch (ex: IOException) {
+        val message  = ex.message
+        if (message != null && message.contains("crc check not found")) {
+          decryptionStream.close()
+        } else {
+          throw ex
+        }
+      }
+      return DecryptionResult.withDecrypted(output, decryptionStream.result.fileName)
     } catch (ex: MessageNotIntegrityProtectedException) {
       return DecryptionResult.withError(
         type = PgpDecrypt.DecryptionErrorType.NO_MDC,
@@ -294,10 +296,28 @@ object PgpMsg {
           message = "There is no suitable decryption key"
         )
       }
+      // other PGP error, fallback to default error return in the bottom
+      exception = ex
+    } catch (ex: Exception) {
+      if (
+        ex is IOException &&
+        ex.message?.contains("crc check failed in armored message") == true
+      ) {
+        return DecryptionResult.withError(
+          type = PgpDecrypt.DecryptionErrorType.FORMAT,
+          message = "Armor CRC check failed"
+        )
+      } else {
+        exception = ex
+      }
+    }
+    var message = "Decryption failed"
+    if (exception != null) {
+      message = "$message: ${exception.javaClass.canonicalName}: ${exception.message}"
     }
     return DecryptionResult.withError(
       type = PgpDecrypt.DecryptionErrorType.OTHER,
-      message = "Decryption failed"
+      message = message
     )
   }
 
