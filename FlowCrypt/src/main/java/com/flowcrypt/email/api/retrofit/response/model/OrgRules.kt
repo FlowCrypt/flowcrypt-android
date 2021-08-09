@@ -188,13 +188,13 @@ data class OrgRules constructor(
       return false
     }
 
-    val disallowedDomains = disallowAttesterSearchForDomains ?: emptyList()
     val userDomain = EmailUtil.getDomain(emailAddr)
     if (userDomain.isEmpty()) {
       throw IllegalStateException("Not a valid email $emailAddr")
     }
 
-    return !disallowedDomains.contains(userDomain)
+    val disallowedDomains = disallowAttesterSearchForDomains ?: emptyList()
+    return !disallowedDomains.any { it.equals(userDomain, true) }
   }
 
   /**
