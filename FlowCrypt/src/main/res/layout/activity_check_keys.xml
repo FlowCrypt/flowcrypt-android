@@ -134,14 +134,14 @@
                 android:id="@+id/rBStoreLocally"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/store_pass_phrase_locally" />
+                android:text="@string/save_pass_phrase" />
 
             <RadioButton
                 android:id="@+id/rBStoreInRAM"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:enabled="false"
-                android:text="@string/keep_pass_phrase_in_memory" />
+                android:text="@string/remember_pass_phrase_temporarily" />
         </RadioGroup>
 
         <Button
