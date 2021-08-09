@@ -33,7 +33,7 @@ abstract class BaseCreateMessageActivityTest : BaseTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
-  protected val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  protected open val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   protected val intent: Intent = CreateMessageActivity.generateIntent(
     getTargetContext(), null,

@@ -13,7 +13,6 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -38,7 +37,6 @@ import java.util.*
  */
 class ContactsViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
-  private val pgpApiRepository = NodeRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 
   val allContactsLiveData: LiveData<List<ContactEntity>> =
@@ -278,10 +276,12 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
     viewModelScope.launch {
       pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
+      val activeAccount = getActiveAccountSuspend()
       pubKeysFromAttesterLiveData.value = apiRepository.getPub(
         requestCode = requestCode,
         context = getApplication(),
-        identData = keyIdOrEmail
+        identData = keyIdOrEmail,
+        orgRules = activeAccount?.clientConfiguration
       )
     }
   }
@@ -315,45 +315,45 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   private suspend fun getPgpContactInfoFromServer(
     email: String? = null,
     fingerprint: String? = null
-  ):
-      PgpContact? =
-    withContext(Dispatchers.IO) {
-      try {
-        val response = apiRepository.getPub(
-          context = getApplication(),
-          identData = email ?: fingerprint ?: ""
-        )
+  ): PgpContact? = withContext(Dispatchers.IO) {
+    try {
+      val activeAccount = getActiveAccountSuspend()
+      val response = apiRepository.getPub(
+        context = getApplication(),
+        identData = email ?: fingerprint ?: "",
+        orgRules = activeAccount?.clientConfiguration
+      )
 
-        when (response.status) {
-          Result.Status.SUCCESS -> {
-            val pubKeyString = response.data?.pubkey
-            val client = ContactEntity.CLIENT_PGP
+      when (response.status) {
+        Result.Status.SUCCESS -> {
+          val pubKeyString = response.data?.pubkey
+          val client = ContactEntity.CLIENT_PGP
 
-            if (pubKeyString?.isNotEmpty() == true) {
-              PgpKey.parseKeys(pubKeyString).toPgpKeyDetailsList().firstOrNull()?.let {
-                val pgpContact = it.primaryPgpContact
-                pgpContact.client = client
-                pgpContact.pgpKeyDetails = it
-                return@withContext pgpContact
-              }
+          if (pubKeyString?.isNotEmpty() == true) {
+            PgpKey.parseKeys(pubKeyString).toPgpKeyDetailsList().firstOrNull()?.let {
+              val pgpContact = it.primaryPgpContact
+              pgpContact.client = client
+              pgpContact.pgpKeyDetails = it
+              return@withContext pgpContact
             }
           }
-
-          Result.Status.ERROR -> {
-            throw ApiException(
-              response.data?.apiError
-                ?: ApiError(code = -1, msg = "Unknown API error")
-            )
-          }
-
-          else -> {
-            throw response.exception ?: java.lang.Exception()
-          }
         }
-      } catch (e: IOException) {
-        e.printStackTrace()
-      }
 
-      null
+        Result.Status.ERROR -> {
+          throw ApiException(
+            response.data?.apiError
+              ?: ApiError(code = -1, msg = "Unknown API error")
+          )
+        }
+
+        else -> {
+          throw response.exception ?: java.lang.Exception()
+        }
+      }
+    } catch (e: IOException) {
+      e.printStackTrace()
     }
+
+    null
+  }
 }
