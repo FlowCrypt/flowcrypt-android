@@ -20,7 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
-import com.flowcrypt.email.api.wkd.WkdClient
+import com.flowcrypt.email.api.util.PubLookup
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
 import com.google.gson.JsonObject
@@ -96,8 +96,6 @@ class FlowcryptApiRepository : ApiRepository {
       getResult { apiService.postTestWelcomeSuspend(model) }
     }
 
-  //todo-denbond7 need to ask Tom to improve https://flowcrypt.com/attester/pub to use the common
-  // API  response ([ApiResponse])
   override suspend fun getPub(
     requestCode: Long,
     context: Context,
@@ -118,8 +116,8 @@ class FlowcryptApiRepository : ApiRepository {
           )
 
           Result.Status.EXCEPTION -> Result.exception(
-            requestCode = requestCode, throwable = result.exception
-              ?: Exception()
+            requestCode = requestCode,
+            throwable = result.exception ?: Exception(context.getString(R.string.unknown_error))
           )
 
           Result.Status.LOADING -> Result.loading(requestCode = requestCode)
@@ -130,10 +128,10 @@ class FlowcryptApiRepository : ApiRepository {
 
       if (identData.isValidEmail() || identData.isValidLocalhostEmail()) {
         val wkdResult = getResult(requestCode = requestCode) {
-          WkdClient.lookupEmail(context = context, email = identData)
+          PubLookup.lookupEmail(context = context, email = identData)
         }
 
-        if (wkdResult.status == Result.Status.SUCCESS) {
+        if (wkdResult.status == Result.Status.SUCCESS && wkdResult.data?.isNotEmpty() == true) {
           return@withContext resultWrapperFun(wkdResult)
         }
 

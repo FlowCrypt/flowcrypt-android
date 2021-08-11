@@ -11,13 +11,11 @@ import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.util.BetterInternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
@@ -25,19 +23,18 @@ import org.pgpainless.PGPainless
 import retrofit2.Response
 import retrofit2.Retrofit
 import java.io.InterruptedIOException
-import java.net.HttpURLConnection
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 object WkdClient {
-  const val DEFAULT_REQUEST_TIMEOUT = 4000L
+  private const val DEFAULT_REQUEST_TIMEOUT = 4000L
 
-  suspend fun lookupEmail(context: Context, email: String): Response<String> =
+  suspend fun lookupEmail(context: Context, email: String): PGPPublicKeyRingCollection? =
     withContext(Dispatchers.IO) {
       val pgpPublicKeyRingCollection = rawLookupEmail(context, email)
       val lowerCaseEmail = email.toLowerCase(Locale.ROOT)
-      val firstMatchedKey = pgpPublicKeyRingCollection?.keyRings?.asSequence()?.filter {
+      val matchingKeys = pgpPublicKeyRingCollection?.keyRings?.asSequence()?.filter {
         for (userId in it.publicKey.userIDs) {
           try {
             val parsed = BetterInternetAddress(userId)
@@ -46,12 +43,11 @@ object WkdClient {
             ex.printStackTrace()
           }
         }
-        false
-      }?.firstOrNull()
-
-      return@withContext firstMatchedKey?.toPgpKeyDetails()?.publicKey?.let { armoredPubKey ->
-        Response.success(armoredPubKey)
-      } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
+        return@filter false
+      }?.toList()
+      return@withContext if (matchingKeys?.isNotEmpty() == true) {
+        PGPPublicKeyRingCollection(matchingKeys)
+      } else null
     }
 
   private suspend fun rawLookupEmail(

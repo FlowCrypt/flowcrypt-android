@@ -98,7 +98,7 @@ interface ApiService {
   suspend fun getPub(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
 
   /**
-   * Get pub key using an advanced WKD url
+   * Get RAW pub key(s) using an advanced WKD url
    */
   @Streaming
   @GET("https://{advancedHost}/.well-known/openpgpkey/{directDomain}/hu/{hu}")
@@ -120,7 +120,7 @@ interface ApiService {
   ): Response<ResponseBody>
 
   /**
-   * Get pub key using a direct WKD url
+   * Get RAW pub key(s) using a direct WKD url
    */
   @Streaming
   @GET("https://{directHost}/.well-known/openpgpkey/hu/{hu}")
