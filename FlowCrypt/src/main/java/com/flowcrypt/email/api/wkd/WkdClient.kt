@@ -6,76 +6,94 @@
 
 package com.flowcrypt.email.api.wkd
 
+import android.content.Context
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.util.BetterInternetAddress
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
-import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
+import org.pgpainless.PGPainless
+import retrofit2.Response
+import retrofit2.Retrofit
 import java.io.InterruptedIOException
-import java.net.URLEncoder
+import java.net.HttpURLConnection
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 object WkdClient {
-  const val DEFAULT_REQUEST_TIMEOUT = 4L
+  const val DEFAULT_REQUEST_TIMEOUT = 4000L
 
-  fun lookupEmail(
-    email: String,
-    wkdPort: Int? = null,
-    useHttps: Boolean = true,
-    timeout: Long = DEFAULT_REQUEST_TIMEOUT
-  ): PGPPublicKeyRingCollection? {
-    val keys = rawLookupEmail(email, wkdPort, useHttps, timeout) ?: return null
-    val lowerCaseEmail = email.toLowerCase(Locale.ROOT)
-    val matchingKeys = keys.keyRings.asSequence().filter {
-      for (userId in it.publicKey.userIDs) {
-        try {
-          val parsed = BetterInternetAddress(userId)
-          if (parsed.emailAddress.toLowerCase(Locale.ROOT) == lowerCaseEmail) return@filter true
-        } catch (ex: Exception) {
-          // ignore
+  suspend fun lookupEmail(context: Context, email: String): Response<String> =
+    withContext(Dispatchers.IO) {
+      val pgpPublicKeyRingCollection = rawLookupEmail(context, email)
+      val lowerCaseEmail = email.toLowerCase(Locale.ROOT)
+      val firstMatchedKey = pgpPublicKeyRingCollection?.keyRings?.asSequence()?.filter {
+        for (userId in it.publicKey.userIDs) {
+          try {
+            val parsed = BetterInternetAddress(userId)
+            if (parsed.emailAddress.toLowerCase(Locale.ROOT) == lowerCaseEmail) return@filter true
+          } catch (ex: Exception) {
+            ex.printStackTrace()
+          }
         }
-      }
-      false
-    }.toList()
-    return if (matchingKeys.isNotEmpty()) PGPPublicKeyRingCollection(matchingKeys) else null
-  }
+        false
+      }?.firstOrNull()
 
-  @Suppress("private")
-  fun rawLookupEmail(
+      return@withContext firstMatchedKey?.toPgpKeyDetails()?.publicKey?.let { armoredPubKey ->
+        Response.success(armoredPubKey)
+      } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
+    }
+
+  private suspend fun rawLookupEmail(
+    context: Context,
     email: String,
-    wkdPort: Int? = null,
-    useHttps: Boolean = true,
-    timeout: Long = DEFAULT_REQUEST_TIMEOUT
-  ): PGPPublicKeyRingCollection? {
+    wkdPort: Int? = null
+  ): PGPPublicKeyRingCollection? = withContext(Dispatchers.IO) {
     if (!email.isValidEmail() && !email.isValidLocalhostEmail()) {
       throw IllegalArgumentException("Invalid email address")
     }
+
     val parts = email.split('@')
     val user = parts[0].toLowerCase(Locale.ROOT)
-    val hu = ZBase32().encodeAsString(DigestUtils.sha1(user.toByteArray()))
     val directDomain = parts[1].toLowerCase(Locale.ROOT)
+
     val advancedDomainPrefix = if (directDomain == "localhost") "" else "openpgpkey."
+    val hu = ZBase32().encodeAsString(DigestUtils.sha1(user.toByteArray()))
     val directHost = if (wkdPort == null) directDomain else "${directDomain}:${wkdPort}"
     val advancedHost = "$advancedDomainPrefix$directHost"
-    val protocol = if (useHttps) "https" else "http"
-    val advancedUrl = "$protocol://${advancedHost}/.well-known/openpgpkey/${directDomain}"
-    val directUrl = "$protocol://${directHost}/.well-known/openpgpkey"
-    val userPart = "hu/$hu?l=${URLEncoder.encode(user, "UTF-8")}"
+
     try {
-      val result = urlLookup(advancedUrl, userPart, timeout)
+      val result = urlLookup(
+        context = context,
+        advancedHost = advancedHost,
+        directDomain = directDomain,
+        hu = hu,
+        user = user
+      )
       // Do not retry "direct" if "advanced" had a policy file
-      if (result.hasPolicy) return result.keys
+      if (result.hasPolicy) return@withContext result.keys
     } catch (ex: Exception) {
-      // ignore
+      ex.printStackTrace()
     }
-    return try {
-      urlLookup(directUrl, userPart, timeout).keys
+
+    return@withContext try {
+      val result = urlLookup(
+        context = context,
+        directDomain = directDomain,
+        hu = hu,
+        user = user
+      )
+      result.keys
     } catch (ex: UnknownHostException) {
       null
     } catch (ex: InterruptedIOException) {
@@ -83,22 +101,53 @@ object WkdClient {
     }
   }
 
+  private suspend fun urlLookup(
+    context: Context,
+    advancedHost: String? = null,
+    directDomain: String,
+    hu: String,
+    user: String
+  ): UrlLookupResult = withContext(Dispatchers.IO) {
+    val apiService = prepareApiService(context, directDomain)
+    val wkdResponse: Response<ResponseBody> = if (advancedHost != null) {
+      val checkPolicyResponse = apiService.checkPolicyForWkdAdvanced(advancedHost, directDomain)
+      if (!checkPolicyResponse.isSuccessful) return@withContext UrlLookupResult()
+      apiService.getPubFromWkdAdvanced(advancedHost, directDomain, hu, user)
+    } else {
+      val checkPolicyResponse = apiService.checkPolicyForWkdDirect(directDomain)
+      if (!checkPolicyResponse.isSuccessful) return@withContext UrlLookupResult()
+      apiService.getPubFromWkdDirect(directDomain, hu, user)
+    }
+
+    val incomingBytes = wkdResponse.body()?.byteStream()
+
+    if (!wkdResponse.isSuccessful || incomingBytes == null) {
+      return@withContext UrlLookupResult(true)
+    } else {
+      val keys = PGPainless.readKeyRing().publicKeyRingCollection(incomingBytes)
+      return@withContext UrlLookupResult(true, keys)
+    }
+  }
+
+  private fun prepareApiService(context: Context, directDomain: String): ApiService {
+    val okHttpClient = OkHttpClient.Builder()
+      .connectTimeout(DEFAULT_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS)
+      .writeTimeout(DEFAULT_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS)
+      .readTimeout(DEFAULT_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS)
+      .apply {
+        ApiHelper.configureOkHttpClientForDebuggingIfAllowed(context, this)
+      }.build()
+
+    val retrofit = Retrofit.Builder()
+      .baseUrl("https://$directDomain")
+      .client(okHttpClient)
+      .build()
+
+    return retrofit.create(ApiService::class.java)
+  }
+
   private data class UrlLookupResult(
     val hasPolicy: Boolean = false,
     val keys: PGPPublicKeyRingCollection? = null
   )
-
-  private fun urlLookup(methodUrlBase: String, userPart: String, timeout: Long): UrlLookupResult {
-    val httpClient = OkHttpClient.Builder().callTimeout(timeout, TimeUnit.SECONDS).build()
-    val policyRequest = Request.Builder().url("$methodUrlBase/policy").build()
-    httpClient.newCall(policyRequest).execute().use { policyResponse ->
-      if (policyResponse.code != 200) return UrlLookupResult()
-    }
-    val userRequest = Request.Builder().url("$methodUrlBase/$userPart").build()
-    httpClient.newCall(userRequest).execute().use { userResponse ->
-      if (userResponse.code != 200 || userResponse.body == null) return UrlLookupResult(true)
-      val keys = JcaPGPPublicKeyRingCollection(userResponse.body!!.byteStream())
-      return UrlLookupResult(true, keys)
-    }
-  }
 }
