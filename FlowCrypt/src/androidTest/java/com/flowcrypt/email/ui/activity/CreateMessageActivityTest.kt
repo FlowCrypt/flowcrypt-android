@@ -94,7 +94,7 @@ import java.time.Instant
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
+class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val temporaryFolderRule = TemporaryFolder()
 
