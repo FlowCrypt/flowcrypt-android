@@ -37,12 +37,13 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
 
-/*adb root
-adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
-adb shell "iptables -t nat -A PREROUTING -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"
-adb shell "iptables -t nat -A OUTPUT -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"*/
-
 /**
+ * To be able to test WKD need to execute the following:
+ * adb root
+ * adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
+ * adb shell "iptables -t nat -A PREROUTING -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"
+ * adb shell "iptables -t nat -A OUTPUT -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"
+ *
  * @author Denis Bondarenko
  *         Date: 8/12/21
  *         Time: 10:58 AM
@@ -150,9 +151,19 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
     )
   }
 
+  @Test
+  fun testWkdPrv() {
+    check(
+      recipient = "wkd_prv@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+    )
+  }
+
   private fun handleAdvancedPolicyRequest(): MockResponse {
     return when (testNameRule.methodName) {
-      "testWkdAdvancedNoResult", "testWkdAdvancedPub" -> {
+      "testWkdAdvancedNoResult",
+      "testWkdAdvancedPub",
+      "testWkdPrv" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       }
 
@@ -173,15 +184,11 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
       }
 
       "testWkdAdvancedPub" -> {
-        MockResponse()
-          .setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(
-            Buffer().write(
-              TestGeneralUtil.readFileFromAssetsAsByteArray(
-                "pgp/keys/wkd_advanced_pub@localhost_pub.asc"
-              )
-            )
-          )
+        genSuccessMockResponseWithKey("pgp/keys/wkd_advanced_pub@localhost_pub.asc")
+      }
+
+      "testWkdPrv" -> {
+        genSuccessMockResponseWithKey("pgp/keys/wkd_prv@localhost_sec.asc")
       }
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -213,20 +220,16 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
 
       "testWkdAdvancedSkippedWkdDirectPub",
       "testWkdAdvancedTimeOutWkdDirectAvailable" -> {
-        MockResponse()
-          .setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(
-            Buffer().write(
-              TestGeneralUtil.readFileFromAssetsAsByteArray(
-                "pgp/keys/wkd_direct_pub@localhost_pub.asc"
-              )
-            )
-          )
+        genSuccessMockResponseWithKey("pgp/keys/wkd_direct_pub@localhost_pub.asc")
       }
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
+
+  private fun genSuccessMockResponseWithKey(keyPath: String) = MockResponse()
+    .setResponseCode(HttpURLConnection.HTTP_OK)
+    .setBody(Buffer().write(TestGeneralUtil.readFileFromAssetsAsByteArray(keyPath)))
 
   private fun check(recipient: String, colorResourcesId: Int) {
     fillInAllFields(recipient)
