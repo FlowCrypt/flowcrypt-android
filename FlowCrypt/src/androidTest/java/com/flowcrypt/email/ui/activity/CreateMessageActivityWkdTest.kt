@@ -23,10 +23,12 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
+import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import okio.Buffer
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -74,7 +76,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
           return handleDirectPolicyRequest()
         }
 
-        if ("/.well-known/openpgpkey/.*/hu/.*\\?l=.*".toRegex().matches(request.path ?: "")) {
+        if ("/.well-known/openpgpkey/hu/.*\\?l=.*".toRegex().matches(request.path ?: "")) {
           return handleDirectWkdRequest()
         }
 
@@ -93,8 +95,116 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  fun testWkdNoResult() {
-    val recipient = "wkd_no_result@localhost"
+  fun testWkdAdvancedNoResult() {
+    val recipient = "wkd_advanced_no_result@localhost"
+    fillInAllFields(recipient)
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = recipient,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+            )
+          )
+        )
+      )
+  }
+
+  @Test
+  fun testWkdAdvancedPub() {
+    val recipient = "wkd_advanced_pub@localhost"
+    fillInAllFields(recipient)
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = recipient,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+            )
+          )
+        )
+      )
+  }
+
+  @Test
+  fun testWkdAdvancedSkippedWkdDirectNoPolicyPub() {
+    val recipient = "wkd_direct_no_policy@localhost"
+    fillInAllFields(recipient)
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = recipient,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+            )
+          )
+        )
+      )
+  }
+
+  @Test
+  fun testWkdAdvancedSkippedWkdDirectNoResult() {
+    val recipient = "wkd_direct_no_result@localhost"
+    fillInAllFields(recipient)
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = recipient,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+            )
+          )
+        )
+      )
+  }
+
+  @Test
+  fun testWkdAdvancedSkippedWkdDirectPub() {
+    val recipient = "wkd_direct_pub@localhost"
+    fillInAllFields(recipient)
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = recipient,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+            )
+          )
+        )
+      )
+  }
+
+  @Test
+  fun testWkdAdvancedTimeOutWkdDirectAvailable() {
+    val recipient = "wkd_direct_pub@localhost"
+    fillInAllFields(recipient)
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = recipient,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+            )
+          )
+        )
+      )
+  }
+
+  @Test
+  fun testWkdAdvancedTimeOutWkdDirectTimeOut() {
+    val recipient = "wkd_advanced_direct_timeout@localhost"
     fillInAllFields(recipient)
     onView(withId(R.id.editTextRecipientTo))
       .check(
@@ -111,12 +221,14 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   }
 
   private fun handleAdvancedPolicyRequest(): MockResponse {
-    return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-  }
-
-  private fun handleAdvancedWkdRequest(): MockResponse {
     return when (testNameRule.methodName) {
-      "testWkdNoResult" -> {
+      "testWkdAdvancedNoResult", "testWkdAdvancedPub" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      }
+
+      "testWkdAdvancedTimeOutWkdDirectAvailable",
+      "testWkdAdvancedTimeOutWkdDirectTimeOut" -> {
+        Thread.sleep(5000)
         MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
 
@@ -124,11 +236,65 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
     }
   }
 
+  private fun handleAdvancedWkdRequest(): MockResponse {
+    return when (testNameRule.methodName) {
+      "testWkdAdvancedNoResult" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+
+      "testWkdAdvancedPub" -> {
+        MockResponse()
+          .setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(
+            Buffer().write(
+              TestGeneralUtil.readFileFromAssetsAsByteArray(
+                "pgp/keys/wkd_advanced_pub@localhost_pub.asc"
+              )
+            )
+          )
+      }
+
+      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+  }
+
   private fun handleDirectPolicyRequest(): MockResponse {
-    return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+    return when (testNameRule.methodName) {
+      "testWkdAdvancedSkippedWkdDirectNoResult",
+      "testWkdAdvancedSkippedWkdDirectPub",
+      "testWkdAdvancedTimeOutWkdDirectAvailable" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      }
+
+      "testWkdAdvancedTimeOutWkdDirectTimeOut" -> {
+        Thread.sleep(5000)
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+
+      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
   }
 
   private fun handleDirectWkdRequest(): MockResponse {
-    return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_ACCEPTABLE)
+    return when (testNameRule.methodName) {
+      "testWkdAdvancedSkippedWkdDirectNoResult" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+
+      "testWkdAdvancedSkippedWkdDirectPub",
+      "testWkdAdvancedTimeOutWkdDirectAvailable" -> {
+        MockResponse()
+          .setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(
+            Buffer().write(
+              TestGeneralUtil.readFileFromAssetsAsByteArray(
+                "pgp/keys/wkd_direct_pub@localhost_pub.asc"
+              )
+            )
+          )
+      }
+
+      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
   }
 }
