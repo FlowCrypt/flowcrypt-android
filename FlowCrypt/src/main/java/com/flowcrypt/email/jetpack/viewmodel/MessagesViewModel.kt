@@ -50,6 +50,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.math.BigInteger
+import java.net.HttpURLConnection
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -806,7 +807,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       when (e) {
         is GoogleJsonResponseException -> {
           if (localFolder.getFolderType() == FoldersManager.FolderType.INBOX
-            && e.statusCode == 404
+            && e.statusCode == HttpURLConnection.HTTP_NOT_FOUND
             && e.details.errors.any { it.reason.equals("notFound", true) }
           ) {
             //client must perform a full sync

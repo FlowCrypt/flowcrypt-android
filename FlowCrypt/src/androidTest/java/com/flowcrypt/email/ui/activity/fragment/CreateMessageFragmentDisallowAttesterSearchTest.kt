@@ -75,7 +75,7 @@ class CreateMessageFragmentDisallowAttesterSearchTest : BaseCreateMessageActivit
 
   @Test
   fun testDisallowLookupOnAttester() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     val recipient = getResString(R.string.support_email)

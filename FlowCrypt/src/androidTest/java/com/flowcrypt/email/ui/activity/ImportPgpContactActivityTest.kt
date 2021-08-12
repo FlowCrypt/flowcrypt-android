@@ -53,6 +53,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -186,13 +187,13 @@ class ImportPgpContactActivityTest : BaseTest() {
                 lastSegment, true
               ) -> {
                 return MockResponse()
-                  .setResponseCode(200)
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
 
