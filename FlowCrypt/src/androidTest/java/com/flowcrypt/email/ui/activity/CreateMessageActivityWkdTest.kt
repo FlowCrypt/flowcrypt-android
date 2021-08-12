@@ -96,128 +96,58 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testWkdAdvancedNoResult() {
-    val recipient = "wkd_advanced_no_result@localhost"
-    fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
-            )
-          )
-        )
-      )
+    check(
+      recipient = "wkd_advanced_no_result@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+    )
   }
 
   @Test
   fun testWkdAdvancedPub() {
-    val recipient = "wkd_advanced_pub@localhost"
-    fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
-            )
-          )
-        )
-      )
+    check(
+      recipient = "wkd_advanced_pub@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+    )
   }
 
   @Test
   fun testWkdAdvancedSkippedWkdDirectNoPolicyPub() {
-    val recipient = "wkd_direct_no_policy@localhost"
-    fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
-            )
-          )
-        )
-      )
+    check(
+      recipient = "wkd_direct_no_policy@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+    )
   }
 
   @Test
   fun testWkdAdvancedSkippedWkdDirectNoResult() {
-    val recipient = "wkd_direct_no_result@localhost"
-    fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
-            )
-          )
-        )
-      )
+    check(
+      recipient = "wkd_direct_no_result@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+    )
   }
 
   @Test
   fun testWkdAdvancedSkippedWkdDirectPub() {
-    val recipient = "wkd_direct_pub@localhost"
-    fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
-            )
-          )
-        )
-      )
+    check(
+      recipient = "wkd_direct_pub@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+    )
   }
 
   @Test
   fun testWkdAdvancedTimeOutWkdDirectAvailable() {
-    val recipient = "wkd_direct_pub@localhost"
-    fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
-            )
-          )
-        )
-      )
+    check(
+      recipient = "wkd_direct_pub@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+    )
   }
 
   @Test
   fun testWkdAdvancedTimeOutWkdDirectTimeOut() {
-    val recipient = "wkd_advanced_direct_timeout@localhost"
-    fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
-            )
-          )
-        )
-      )
+    check(
+      recipient = "wkd_advanced_direct_timeout@localhost",
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+    )
   }
 
   private fun handleAdvancedPolicyRequest(): MockResponse {
@@ -296,5 +226,21 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
+  }
+
+  private fun check(recipient: String, colorResourcesId: Int) {
+    fillInAllFields(recipient)
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = recipient,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = colorResourcesId
+            )
+          )
+        )
+      )
   }
 }
