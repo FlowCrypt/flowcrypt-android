@@ -25,6 +25,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.AccountDaoManager
+import org.hamcrest.CoreMatchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -84,6 +85,10 @@ class ImportPgpContactActivityDisallowAttesterSearchTest : BaseTest() {
     onView(withId(R.id.iBSearchKey))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    onView(withId(R.id.layoutProgress))
+      .check(matches(CoreMatchers.not((isDisplayed()))))
+
     isToastDisplayed(getResString(R.string.supported_public_key_not_found))
   }
 

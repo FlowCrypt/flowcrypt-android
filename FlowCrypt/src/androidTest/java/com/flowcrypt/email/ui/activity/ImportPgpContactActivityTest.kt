@@ -44,6 +44,7 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItem
+import org.hamcrest.CoreMatchers.not
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -125,6 +126,9 @@ class ImportPgpContactActivityTest : BaseTest() {
     onView(withId(R.id.iBSearchKey))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    onView(withId(R.id.layoutProgress))
+      .check(matches(not((isDisplayed()))))
     //due to realization of MockWebServer I can't produce the same response.
     isToastDisplayed("API error: code = 404, message = ")
   }

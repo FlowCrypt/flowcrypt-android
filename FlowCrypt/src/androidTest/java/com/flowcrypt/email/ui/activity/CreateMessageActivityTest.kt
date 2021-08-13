@@ -491,6 +491,18 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     onView(withText(R.string.copy_from_other_contact))
       .check(matches(isDisplayed()))
       .perform(click())
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+            )
+          )
+        )
+      )
     isToastDisplayed(getResString(R.string.key_successfully_copied))
   }
 
