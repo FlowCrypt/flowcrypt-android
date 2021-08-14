@@ -30,6 +30,10 @@ import java.io.IOException
 import java.util.*
 
 /**
+ * This is used in the message compose/reply view when recipient public keys need to be retrieved,
+ *   either from local storage or from remote servers eg Attester or WKD, based on client
+ *   configuration.
+ *
  * @author Denis Bondarenko
  *         Date: 4/7/20
  *         Time: 11:19 AM
