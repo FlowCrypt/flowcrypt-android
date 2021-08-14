@@ -12,9 +12,10 @@ import com.flowcrypt.email.extensions.kotlin.isValidEmail
 class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true) {
 
   companion object {
-    const val alphanum = "\\p{L}\\u0900-\\u097F0-9"
-    const val validEmail = "(?:[${alphanum}!#\$%&'*+/=?^_`{|}~-]+(?:\\.[${alphanum}!#\$%&'*+/=?^" +
-        "_`{|}~-]+)*|\"(?:[\\x01-\\x08" +
+    private const val alphanum = "\\p{L}\\u0900-\\u097F0-9"
+    // This regex is based on the one provided here: https://emailregex.com
+    private const val validEmail = "(?:[${alphanum}!#\$%&'*+/=?^_`{|}~-]+(?:\\.[${alphanum}!#" +
+        "\$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08" +
         "\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f" +
         "])*\")@(?:(?:[${alphanum}](?:[${alphanum}-]*[${alphanum}])?\\.)+[${alphanum}](?:[" +
         "${alphanum}-]*[${alphanum}])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:" +
@@ -29,16 +30,20 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
     private val containsSpecialCharacterRegex = ".*[()<>\\[\\]:;@\\\\,.\"].*".toRegex()
     // double quotes at ends only
     private val doubleQuotedTextRegex = "\"[^\"]*\"".toRegex()
-    private val validLocalhostEmailRegex = Regex("([a-zA-z])([a-zA-z0-9])+@localhost")
+    private val validLocalhostEmailRegex = Regex("([a-zA-z])([a-zA-z0-9])*@localhost")
+    private const val maxLocalPartLength = 64
 
     fun isValidEmail(email: String): Boolean {
-      return validEmailRegex.matchEntire(email) != null
+      if (validEmailRegex.matchEntire(email) == null) return false
+      return email.indexOf('@') < maxLocalPartLength
     }
 
     fun isValidLocalhostEmail(email: String): Boolean {
-      return validLocalhostEmailRegex.matchEntire(email) != null
+      if (validLocalhostEmailRegex.matchEntire(email) == null) return false
+      return email.indexOf('@') < maxLocalPartLength
     }
 
+    @Suppress("unused")
     fun areValidEmails(emails: Iterable<String>): Boolean {
       return emails.all { it.isValidEmail() }
     }
