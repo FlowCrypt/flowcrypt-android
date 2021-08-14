@@ -63,7 +63,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
 
-  val pubKeysFromAttesterLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
+  val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
 
   fun updateContactPgpInfo(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
@@ -275,9 +275,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
     viewModelScope.launch {
-      pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
+      pubKeysFromServerLiveData.value = Result.loading(requestCode = requestCode)
       val activeAccount = getActiveAccountSuspend()
-      pubKeysFromAttesterLiveData.value = apiRepository.getPub(
+      pubKeysFromServerLiveData.value = apiRepository.getPub(
         requestCode = requestCode,
         context = getApplication(),
         identData = keyIdOrEmail,

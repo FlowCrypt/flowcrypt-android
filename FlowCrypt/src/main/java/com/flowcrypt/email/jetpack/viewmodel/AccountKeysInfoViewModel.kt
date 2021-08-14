@@ -30,7 +30,7 @@ import java.util.*
 
 /**
  * This [ViewModel] does job of receiving information about an array of public
- * keys from "https://flowcrypt.com/attester/lookup/email".
+ * keys from FlowCrypt Attester or WKD.
  *
  * @author Denis Bondarenko
  * Date: 13.11.2017
