@@ -53,6 +53,7 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
   val emailAddress: String
 
   init {
+    if (!isValidEmail(str)) throw IllegalArgumentException("Invalid email address")
     val personalNameWithEmailMatch = validPersonalNameWithEmailRegex.find(str)
     val emailMatch = str.matches(validEmailRegex)
     when {

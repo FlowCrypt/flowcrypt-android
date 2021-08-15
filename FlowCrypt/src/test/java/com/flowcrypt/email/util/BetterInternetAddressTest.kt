@@ -6,14 +6,16 @@
 
 package com.flowcrypt.email.util
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BetterInternetAddressTest {
 
   @Test
-  fun emailTest() {
+  fun genericEmailTest() {
     val validEmails = arrayOf(
       "simple@example.com",
       "very.common@example.com",
@@ -51,6 +53,8 @@ class BetterInternetAddressTest {
         "valid email '$email' detected as invalid",
         BetterInternetAddress.isValidEmail(email)
       )
+      val parsedEmail = BetterInternetAddress(email)
+      assertEquals(email, parsedEmail.emailAddress)
     }
 
     val invalidEmails = arrayOf(
@@ -88,6 +92,7 @@ class BetterInternetAddressTest {
         "invalid email '$email' detected as valid",
         BetterInternetAddress.isValidEmail(email)
       )
+      assertThrows(IllegalArgumentException::class.java) { BetterInternetAddress(email) }
     }
   }
 
@@ -103,6 +108,8 @@ class BetterInternetAddressTest {
         "valid localhost email '$email' detected as invalid",
         BetterInternetAddress.isValidLocalhostEmail(email)
       )
+      // doesn't work
+      // val parsedEmail = BetterInternetAddress(email)
     }
 
     val invalidEmails = arrayOf(
