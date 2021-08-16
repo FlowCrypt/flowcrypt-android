@@ -58,8 +58,6 @@ blocks:
       jobs:
         - name: 'Build Project'
           commands:
-            # Android Gradle plugin requires Java 11
-            # - sem-version java 11
             # print debug info
             - cat /proc/cpuinfo
             # print Java version
@@ -101,8 +99,6 @@ blocks:
           execution_time_limit:
             minutes: 15
           commands:
-            # switched to use java 11 to be able to run parametrized Robolectric tests
-            # - sem-version java 11
             # run JUnit tests
             - ./script/ci-junit-tests.sh
 

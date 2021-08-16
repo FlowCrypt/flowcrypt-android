@@ -30,6 +30,10 @@ import java.io.IOException
 import java.util.*
 
 /**
+ * This is used in the message compose/reply view when recipient public keys need to be retrieved,
+ * either from local storage or from remote servers eg Attester or WKD, based on client
+ * configuration.
+ *
  * @author Denis Bondarenko
  *         Date: 4/7/20
  *         Time: 11:19 AM
@@ -63,7 +67,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
 
-  val pubKeysFromAttesterLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
+  val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
 
   fun updateContactPgpInfo(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
@@ -275,9 +279,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
     viewModelScope.launch {
-      pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
+      pubKeysFromServerLiveData.value = Result.loading(requestCode = requestCode)
       val activeAccount = getActiveAccountSuspend()
-      pubKeysFromAttesterLiveData.value = apiRepository.getPub(
+      pubKeysFromServerLiveData.value = apiRepository.pubLookup(
         requestCode = requestCode,
         context = getApplication(),
         identData = keyIdOrEmail,
@@ -318,7 +322,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   ): PgpContact? = withContext(Dispatchers.IO) {
     try {
       val activeAccount = getActiveAccountSuspend()
-      val response = apiRepository.getPub(
+      val response = apiRepository.pubLookup(
         context = getApplication(),
         identData = email ?: fingerprint ?: "",
         orgRules = activeAccount?.clientConfiguration

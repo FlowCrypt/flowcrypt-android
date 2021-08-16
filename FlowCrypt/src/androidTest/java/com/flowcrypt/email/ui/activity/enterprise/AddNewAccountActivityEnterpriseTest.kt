@@ -42,6 +42,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -88,15 +89,18 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
 
           if (request.path.equals("/account/login")) {
             when (model.account) {
-              EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+              EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(
+                HttpURLConnection.HTTP_OK
+              )
                 .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
             }
           }
 
         if (request.path.equals("/account/get")) {
           when (model.account) {
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(
+            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(
+                gson.toJson(
                   DomainOrgRulesResponse(
                     apiError = null,
                     orgRules = OrgRules(
@@ -114,7 +118,7 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
           }
         }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
   }

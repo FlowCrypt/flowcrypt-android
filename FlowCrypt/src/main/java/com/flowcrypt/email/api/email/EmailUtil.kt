@@ -145,10 +145,10 @@ class EmailUtil {
      *
      * @return The domain of some email.
      */
-    fun getDomain(email: String): String {
+    fun getDomain(email: String?): String {
       return when {
         TextUtils.isEmpty(email) -> ""
-        email.contains("@") -> email.substring(email.indexOf('@') + 1)
+        email?.contains("@") == true -> email.substring(email.indexOf('@') + 1)
         else -> ""
       }
     }

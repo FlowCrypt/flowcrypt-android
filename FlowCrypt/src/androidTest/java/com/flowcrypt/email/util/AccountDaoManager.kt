@@ -46,7 +46,7 @@ class AccountDaoManager {
         .copy(clientConfiguration = orgRules)
     }
 
-    private fun getUserFromBaseSettings(user: String): AccountEntity {
+    fun getUserFromBaseSettings(user: String): AccountEntity {
       return getDefaultAccountDao().copy(
         email = user,
         smtpUsername = user,
