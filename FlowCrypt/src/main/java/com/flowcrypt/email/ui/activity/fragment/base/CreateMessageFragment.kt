@@ -873,7 +873,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     type: ContactEntity.Type, hasFocus: Boolean
   ): List<PgpContact>? {
     if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
-      progressBar?.visibility = if (hasFocus) View.INVISIBLE else View.VISIBLE
       if (hasFocus) {
         pgpContacts?.clear()
       } else {
@@ -1242,6 +1241,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       else -> {
       }
     }
+
+    updateRecipients()
   }
 
   private fun updateViewsIfFwdMode() {
