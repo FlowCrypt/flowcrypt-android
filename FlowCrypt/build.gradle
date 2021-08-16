@@ -454,7 +454,7 @@ dependencies {
     implementation 'com.nulab-inc:zxcvbn:1.5.2'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'ja.burhanrashid52:photoeditor:1.1.1'
-    implementation 'net.openid:appauth:0.9.1'
+    implementation 'net.openid:appauth:0.10.0'
     implementation 'org.bitbucket.b_c:jose4j:0.7.8'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20200713.1'
