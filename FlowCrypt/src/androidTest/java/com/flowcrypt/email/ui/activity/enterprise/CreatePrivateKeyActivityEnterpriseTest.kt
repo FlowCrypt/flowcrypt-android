@@ -42,6 +42,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -114,12 +115,14 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
 
           if (request.path.equals("/initial/legacy_submit")) {
             when (model.email) {
-              EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(200)
+              EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(
+                HttpURLConnection.HTTP_OK
+              )
                 .setBody(gson.toJson(SUBMIT_API_ERROR_RESPONSE))
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
   }

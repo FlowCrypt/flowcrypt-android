@@ -5,9 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -19,8 +21,10 @@ import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.AccountDaoManager
@@ -40,6 +44,10 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class CreateMessageFragmentDisallowAttesterSearchTest : BaseCreateMessageActivityTest() {
+  override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? = null
+  override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(intent = intent)
+  override val activityScenario: ActivityScenario<*>?
+    get() = activityScenarioRule.scenario
 
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
@@ -70,15 +78,12 @@ class CreateMessageFragmentDisallowAttesterSearchTest : BaseCreateMessageActivit
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
     .around(RetryRule.DEFAULT)
-    .around(activeActivityRule)
+    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
   fun testDisallowLookupOnAttester() {
-    activeActivityRule.launch(intent)
-    registerAllIdlingResources()
-
-    val recipient = getResString(R.string.support_email)
+    val recipient = "recipient@example.test"
 
     fillInAllFields(recipient)
 

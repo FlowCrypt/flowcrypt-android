@@ -31,6 +31,8 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
+import retrofit2.http.Streaming
 import retrofit2.http.Url
 
 /**
@@ -93,7 +95,47 @@ interface ApiService {
    * @return [<]
    */
   @GET("pub/{keyIdOrEmailOrFingerprint}")
-  suspend fun getPub(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
+  suspend fun getPubFromAttester(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
+
+  /**
+   * Get RAW pub key(s) using an advanced WKD url
+   */
+  @Streaming
+  @GET("https://{advancedHost}/.well-known/openpgpkey/{directDomain}/hu/{hu}")
+  suspend fun getPubFromWkdAdvanced(
+    @Path("advancedHost") advancedHost: String,
+    @Path("directDomain") directDomain: String,
+    @Path("hu") hu: String,
+    @Query("l") user: String
+  ): Response<ResponseBody>
+
+  /**
+   * Check that 'policy' file is available for the advanced method
+   */
+  @Streaming
+  @GET("https://{advancedHost}/.well-known/openpgpkey/{directDomain}/policy")
+  suspend fun checkPolicyForWkdAdvanced(
+    @Path("advancedHost") advancedHost: String,
+    @Path("directDomain") directDomain: String
+  ): Response<ResponseBody>
+
+  /**
+   * Get RAW pub key(s) using a direct WKD url
+   */
+  @Streaming
+  @GET("https://{directHost}/.well-known/openpgpkey/hu/{hu}")
+  suspend fun getPubFromWkdDirect(
+    @Path("directHost") directHost: String,
+    @Path("hu") hu: String,
+    @Query("l") user: String
+  ): Response<ResponseBody>
+
+  /**
+   * Check that 'policy' file is available for the direct method
+   */
+  @Streaming
+  @GET("https://{directHost}/.well-known/openpgpkey/policy")
+  suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
 
   /**
    * This method calls the API "https://flowcrypt.com/api/account/login"

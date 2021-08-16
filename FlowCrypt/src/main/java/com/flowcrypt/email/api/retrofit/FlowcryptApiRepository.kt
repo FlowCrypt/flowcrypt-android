@@ -20,12 +20,21 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
+import com.flowcrypt.email.api.wkd.WkdClient
+import com.flowcrypt.email.extensions.kotlin.isValidEmail
+import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody.Companion.toResponseBody
+import org.pgpainless.algorithm.EncryptionPurpose
+import org.pgpainless.key.info.KeyRingInfo
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 
 /**
@@ -93,17 +102,56 @@ class FlowcryptApiRepository : ApiRepository {
       getResult { apiService.postTestWelcomeSuspend(model) }
     }
 
-  //todo-denbond7 need to ask Tom to improve https://flowcrypt.com/attester/pub to use the common
-  // API  response ([ApiResponse])
-  override suspend fun getPub(
+  override suspend fun pubLookup(
     requestCode: Long,
     context: Context,
     identData: String,
     orgRules: OrgRules?
   ): Result<PubResponse> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      if (identData.contains('@')) {
+      val resultWrapperFun = fun(result: Result<String>): Result<PubResponse> {
+        return when (result.status) {
+          Result.Status.SUCCESS -> Result.success(
+            requestCode = requestCode,
+            data = PubResponse(null, result.data)
+          )
+
+          Result.Status.ERROR -> Result.error(
+            requestCode = requestCode,
+            data = PubResponse(null, null)
+          )
+
+          Result.Status.EXCEPTION -> Result.exception(
+            requestCode = requestCode,
+            throwable = result.exception ?: Exception(context.getString(R.string.unknown_error))
+          )
+
+          Result.Status.LOADING -> Result.loading(requestCode = requestCode)
+
+          Result.Status.NONE -> Result.none()
+        }
+      }
+
+      if (identData.isValidEmail() || identData.isValidLocalhostEmail()) {
+        val wkdResult = getResult(requestCode = requestCode) {
+          val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, identData)
+
+          //For now, we just peak at the first matching key. It should be improved inthe future.
+          // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
+          val firstMatchingKey = pgpPublicKeyRingCollection?.firstOrNull {
+            KeyRingInfo(it)
+              .getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS)
+              .isNotEmpty()
+          }
+          firstMatchingKey?.toPgpKeyDetails()?.publicKey?.let { armoredPubKey ->
+            Response.success(armoredPubKey)
+          } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
+        }
+
+        if (wkdResult.status == Result.Status.SUCCESS && wkdResult.data?.isNotEmpty() == true) {
+          return@withContext resultWrapperFun(wkdResult)
+        }
+
         if (orgRules?.canLookupThisRecipientOnAttester(identData) == false) {
           return@withContext Result.success(
             requestCode = requestCode,
@@ -117,27 +165,9 @@ class FlowcryptApiRepository : ApiRepository {
         )
       }
 
-      val result = getResult(requestCode = requestCode) { apiService.getPub(identData) }
-      return@withContext when (result.status) {
-        Result.Status.SUCCESS -> Result.success(
-          requestCode = requestCode,
-          data = PubResponse(null, result.data)
-        )
-
-        Result.Status.ERROR -> Result.error(
-          requestCode = requestCode,
-          data = PubResponse(null, null)
-        )
-
-        Result.Status.EXCEPTION -> Result.exception(
-          requestCode = requestCode, throwable = result.exception
-            ?: Exception()
-        )
-
-        Result.Status.LOADING -> Result.loading(requestCode = requestCode)
-
-        Result.Status.NONE -> Result.none()
-      }
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val result = getResult(requestCode = requestCode) { apiService.getPubFromAttester(identData) }
+      return@withContext resultWrapperFun(result)
     }
 
   override suspend fun getMicrosoftOAuth2Token(
