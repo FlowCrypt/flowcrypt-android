@@ -166,7 +166,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
   }
 
   private fun setupContactsViewModel() {
-    contactsViewModel.pubKeysFromAttesterLiveData.observe(this, Observer {
+    contactsViewModel.pubKeysFromServerLiveData.observe(this, Observer {
       if (it.requestCode != fetchPubKeysRequestCode) return@Observer
 
       when (it.status) {

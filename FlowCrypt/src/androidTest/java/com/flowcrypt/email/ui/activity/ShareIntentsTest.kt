@@ -46,6 +46,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
 import java.io.UnsupportedEncodingException
+import java.net.HttpURLConnection
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.util.ArrayList
@@ -451,18 +452,18 @@ class ShareIntentsTest : BaseTest() {
 
             when {
               TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-                return MockResponse().setResponseCode(404)
+                return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
                   .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
               }
 
               TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-                return MockResponse().setResponseCode(200)
+                return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
 

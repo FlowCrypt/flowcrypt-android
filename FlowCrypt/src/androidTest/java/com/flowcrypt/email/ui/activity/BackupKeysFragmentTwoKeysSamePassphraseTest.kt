@@ -22,6 +22,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
 import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.CoreMatchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -62,6 +63,10 @@ class BackupKeysFragmentTwoKeysSamePassphraseTest : BaseBackupKeysFragmentTest()
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    onView(withId(R.id.btBackup))
+      .check(matches(not(isDisplayed())))
+
     isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 
@@ -79,6 +84,10 @@ class BackupKeysFragmentTwoKeysSamePassphraseTest : BaseBackupKeysFragmentTest()
       .perform(click())
 
     TestGeneralUtil.deleteFiles(listOf(file))
+
+    onView(withId(R.id.btBackup))
+      .check(matches(not(isDisplayed())))
+
     isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 }
