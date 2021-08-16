@@ -1283,57 +1283,61 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun updateViewsIfReplyAllMode() {
-    if (folderType === FoldersManager.FolderType.SENT || folderType === FoldersManager.FolderType.OUTBOX) {
-      recipientsTo?.setText(prepareRecipients(msgInfo?.getTo()))
+    when (folderType) {
+      FoldersManager.FolderType.SENT, FoldersManager.FolderType.OUTBOX -> {
+        recipientsTo?.setText(prepareRecipients(msgInfo?.getTo()))
 
-      if (msgInfo?.getCc()?.isNotEmpty() == true) {
-        layoutCc?.visibility = View.VISIBLE
-        recipientsCc?.append(prepareRecipients(msgInfo?.getCc()))
+        if (msgInfo?.getCc()?.isNotEmpty() == true) {
+          layoutCc?.visibility = View.VISIBLE
+          recipientsCc?.append(prepareRecipients(msgInfo?.getCc()))
+        }
       }
-    } else {
-      recipientsTo?.setText(
-        prepareRecipients(
-          if (msgInfo?.getReplyTo().isNullOrEmpty()) {
-            msgInfo?.getFrom()
-          } else {
-            msgInfo?.getReplyTo()
-          }
-        )
-      )
 
-      val ccSet = HashSet<InternetAddress>()
-
-      if (msgInfo?.getTo()?.isNotEmpty() == true) {
-        for (address in msgInfo!!.getTo()) {
-          if (!account?.email.equals(address.address, ignoreCase = true)) {
-            ccSet.add(address)
-          }
+      else -> {
+        val toRecipients = if (msgInfo?.getReplyToWithoutOwnerAddress().isNullOrEmpty()) {
+          msgInfo?.getTo() ?: emptyList()
+        } else {
+          msgInfo?.getReplyToWithoutOwnerAddress() ?: emptyList()
         }
 
-        accountAliasesViewModel.accountAliasesLiveData.value?.let {
-          for (alias in it) {
-            val iterator = ccSet.iterator()
+        recipientsTo?.setText(prepareRecipients(toRecipients))
 
-            while (iterator.hasNext()) {
-              if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
-                iterator.remove()
+        val ccSet = HashSet<InternetAddress>()
+
+        if (msgInfo?.getTo()?.isNotEmpty() == true) {
+          for (address in msgInfo?.getTo() ?: emptyList()) {
+            if (!account?.email.equals(address.address, ignoreCase = true)) {
+              ccSet.add(address)
+            }
+          }
+
+          accountAliasesViewModel.accountAliasesLiveData.value?.let {
+            for (alias in it) {
+              val iterator = ccSet.iterator()
+
+              while (iterator.hasNext()) {
+                if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
+                  iterator.remove()
+                }
               }
             }
           }
         }
-      }
 
-      if (msgInfo?.getCc()?.isNotEmpty() == true) {
-        for (address in msgInfo!!.getCc()) {
-          if (!account?.email.equals(address.address, ignoreCase = true)) {
-            ccSet.add(address)
+        ccSet.removeAll(toRecipients.toSet())
+
+        if (msgInfo?.getCc()?.isNotEmpty() == true) {
+          for (address in msgInfo?.getCc() ?: emptyList()) {
+            if (!account?.email.equals(address.address, ignoreCase = true)) {
+              ccSet.add(address)
+            }
           }
         }
-      }
 
-      if (ccSet.isNotEmpty()) {
-        layoutCc?.visibility = View.VISIBLE
-        recipientsCc?.append(prepareRecipients(ccSet))
+        if (ccSet.isNotEmpty()) {
+          layoutCc?.visibility = View.VISIBLE
+          recipientsCc?.append(prepareRecipients(ccSet))
+        }
       }
     }
 
@@ -1344,23 +1348,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun updateViewsIfReplyMode() {
-    if (folderType != null) {
-      when (folderType) {
-        FoldersManager.FolderType.SENT,
-        FoldersManager.FolderType.OUTBOX -> recipientsTo?.setText(prepareRecipients(msgInfo?.getTo()))
+    when (folderType) {
+      FoldersManager.FolderType.SENT,
+      FoldersManager.FolderType.OUTBOX -> recipientsTo?.setText(prepareRecipients(msgInfo?.getTo()))
 
-        else -> recipientsTo?.setText(
-          prepareRecipients(
-            if (msgInfo?.getReplyTo().isNullOrEmpty()) {
-              msgInfo?.getFrom()
-            } else {
-              msgInfo?.getReplyTo()
-            }
-          )
+      else -> recipientsTo?.setText(
+        prepareRecipients(
+          if (msgInfo?.getReplyToWithoutOwnerAddress().isNullOrEmpty()) {
+            msgInfo?.getTo()
+          } else {
+            msgInfo?.getReplyToWithoutOwnerAddress()
+          }
         )
-      }
-    } else {
-      recipientsTo?.setText(prepareRecipients(msgInfo?.getFrom()))
+      )
     }
 
     if (recipientsTo?.text?.isNotEmpty() == true) {
