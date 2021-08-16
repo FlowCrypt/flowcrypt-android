@@ -701,7 +701,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             && spinnerFrom?.adapter?.count ?: 0 > selectedItemPosition
           ) {
             val isItemEnabled = fromAddrs?.isEnabled(selectedItemPosition) ?: true
-            editTextFrom!!.setTextColor(if (isItemEnabled) originalColor else colorGray)
+            editTextFrom?.setTextColor(if (isItemEnabled) originalColor else colorGray)
           }
         }
 
@@ -1335,9 +1335,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           }
         }
 
-        if (ccSet.isNotEmpty()) {
+        //here we remove the owner address
+        val fromAddress = msgInfo?.msgEntity?.email
+        val finalCcSet = ccSet.filter { fromAddress?.equals(it.address, true) != true }
+
+        if (finalCcSet.isNotEmpty()) {
           layoutCc?.visibility = View.VISIBLE
-          recipientsCc?.append(prepareRecipients(ccSet))
+          val ccRecipients = prepareRecipients(finalCcSet)
+          recipientsCc?.append(ccRecipients)
         }
       }
     }
