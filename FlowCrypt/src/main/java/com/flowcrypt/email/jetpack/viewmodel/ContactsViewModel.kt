@@ -31,8 +31,8 @@ import java.util.*
 
 /**
  * This is used in the message compose/reply view when recipient public keys need to be retrieved,
- *   either from local storage or from remote servers eg Attester or WKD, based on client
- *   configuration.
+ * either from local storage or from remote servers eg Attester or WKD, based on client
+ * configuration.
  *
  * @author Denis Bondarenko
  *         Date: 4/7/20
@@ -281,7 +281,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     viewModelScope.launch {
       pubKeysFromServerLiveData.value = Result.loading(requestCode = requestCode)
       val activeAccount = getActiveAccountSuspend()
-      pubKeysFromServerLiveData.value = apiRepository.getPub(
+      pubKeysFromServerLiveData.value = apiRepository.pubLookup(
         requestCode = requestCode,
         context = getApplication(),
         identData = keyIdOrEmail,
@@ -322,7 +322,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   ): PgpContact? = withContext(Dispatchers.IO) {
     try {
       val activeAccount = getActiveAccountSuspend()
-      val response = apiRepository.getPub(
+      val response = apiRepository.pubLookup(
         context = getApplication(),
         identData = email ?: fingerprint ?: "",
         orgRules = activeAccount?.clientConfiguration

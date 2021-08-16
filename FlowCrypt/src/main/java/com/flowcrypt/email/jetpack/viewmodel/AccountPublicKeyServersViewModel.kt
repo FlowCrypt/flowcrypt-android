@@ -37,8 +37,7 @@ import java.util.*
  * Time: 15:13
  * E-mail: DenBond7@gmail.com
  */
-
-class AccountKeysInfoViewModel(application: Application) : AccountViewModel(application) {
+class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   val accountKeysInfoLiveData = MediatorLiveData<Result<List<PgpKeyDetails>>>()
   private val initLiveData = Transformations
@@ -104,7 +103,7 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       }
 
       for (email in emails) {
-        val pubResponseResult = apiRepository.getPub(
+        val pubResponseResult = apiRepository.pubLookup(
           context = getApplication(),
           identData = email,
           orgRules = accountEntity.clientConfiguration

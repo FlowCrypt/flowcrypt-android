@@ -95,7 +95,7 @@ interface ApiService {
    * @return [<]
    */
   @GET("pub/{keyIdOrEmailOrFingerprint}")
-  suspend fun getPub(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
+  suspend fun getPubFromAttester(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
 
   /**
    * Get RAW pub key(s) using an advanced WKD url

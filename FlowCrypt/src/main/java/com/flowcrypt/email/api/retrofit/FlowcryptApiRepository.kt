@@ -20,15 +20,21 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
-import com.flowcrypt.email.api.util.PubLookup
+import com.flowcrypt.email.api.wkd.WkdClient
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody.Companion.toResponseBody
+import org.pgpainless.algorithm.EncryptionPurpose
+import org.pgpainless.key.info.KeyRingInfo
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 
 /**
@@ -96,7 +102,7 @@ class FlowcryptApiRepository : ApiRepository {
       getResult { apiService.postTestWelcomeSuspend(model) }
     }
 
-  override suspend fun getPub(
+  override suspend fun pubLookup(
     requestCode: Long,
     context: Context,
     identData: String,
@@ -128,7 +134,18 @@ class FlowcryptApiRepository : ApiRepository {
 
       if (identData.isValidEmail() || identData.isValidLocalhostEmail()) {
         val wkdResult = getResult(requestCode = requestCode) {
-          PubLookup.lookupEmail(context = context, email = identData)
+          val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, identData)
+
+          //For now, we just peak at the first matching key. It should be improved inthe future.
+          // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
+          val firstMatchingKey = pgpPublicKeyRingCollection?.firstOrNull {
+            KeyRingInfo(it)
+              .getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS)
+              .isNotEmpty()
+          }
+          firstMatchingKey?.toPgpKeyDetails()?.publicKey?.let { armoredPubKey ->
+            Response.success(armoredPubKey)
+          } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
         }
 
         if (wkdResult.status == Result.Status.SUCCESS && wkdResult.data?.isNotEmpty() == true) {
@@ -149,7 +166,7 @@ class FlowcryptApiRepository : ApiRepository {
       }
 
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      val result = getResult(requestCode = requestCode) { apiService.getPub(identData) }
+      val result = getResult(requestCode = requestCode) { apiService.getPubFromAttester(identData) }
       return@withContext resultWrapperFun(result)
     }
 
