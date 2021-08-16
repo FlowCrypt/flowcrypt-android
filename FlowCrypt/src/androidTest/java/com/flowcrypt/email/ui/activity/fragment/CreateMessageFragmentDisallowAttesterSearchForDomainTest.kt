@@ -75,7 +75,7 @@ class CreateMessageFragmentDisallowAttesterSearchForDomainTest : BaseCreateMessa
 
   @Test
   fun testCanLookupThisRecipientOnAttester() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     val recipient = "user@$DISALLOWED_DOMAIN"

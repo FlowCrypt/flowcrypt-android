@@ -35,6 +35,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -78,12 +79,12 @@ class AttesterSettingsFragmentTest : BaseTest() {
           if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
             val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
             if (AccountDaoManager.getDefaultAccountDao().email.equals(lastSegment, true)) {
-              return MockResponse().setResponseCode(200)
+              return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(TestGeneralUtil.readResourceAsString("1.txt"))
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
   }
