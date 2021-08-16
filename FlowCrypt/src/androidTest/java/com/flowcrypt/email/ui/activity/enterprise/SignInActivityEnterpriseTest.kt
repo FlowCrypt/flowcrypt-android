@@ -52,6 +52,7 @@ import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -103,7 +104,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           return handleGetDomainRulesAPI(model, gson)
         }
 
-        return MockResponse().setResponseCode(404)
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
     })
 
@@ -322,11 +323,11 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       while (System.currentTimeMillis() - initialTimeMillis <= delayInMilliseconds) {
         Thread.sleep(100)
       }
-      MockResponse().setResponseCode(404)
+      MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     } else {
       when {
         testNameRule.methodName == "testFesServerUpHasConnectionHttpCode404" -> {
-          MockResponse().setResponseCode(404)
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
 
         testNameRule.methodName == "testFesServerUpHasConnectionHttpCodeNotSuccess" -> {
@@ -334,12 +335,12 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
         }
 
         testNameRule.methodName == "testFesServerUpNotEnterpriseServer" -> {
-          MockResponse().setResponseCode(200)
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
             .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
         }
 
         else -> {
-          MockResponse().setResponseCode(200)
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
             .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
         }
       }
@@ -348,7 +349,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
   private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
     return MockResponse().setResponseCode(
-      if (testNameRule.methodName == "testFesServerUpGetClientConfigurationFailed") 403 else 200
+      if (testNameRule.methodName == "testFesServerUpGetClientConfigurationFailed") 403 else HttpURLConnection.HTTP_OK
     ).setBody(
       gson.toJson(
         ClientConfigurationResponse(
@@ -363,21 +364,22 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
   private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
     if (request.path.equals("/ekm/error/v1/keys/private")) {
-      return MockResponse().setResponseCode(200)
+      return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(EKM_ERROR_RESPONSE))
     }
 
     if (request.path.equals("/ekm/empty/v1/keys/private")) {
-      return MockResponse().setResponseCode(200)
+      return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(EkmPrivateKeysResponse(privateKeys = emptyList())))
     }
 
     if (request.path.equals("/ekm/v1/keys/private")) {
-      return MockResponse().setResponseCode(200).setBody(gson.toJson(EKM_FES_RESPONSE))
+      return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+        .setBody(gson.toJson(EKM_FES_RESPONSE))
     }
 
     if (request.path.equals("/ekm/not_fully_decrypted_key/v1/keys/private")) {
-      return MockResponse().setResponseCode(200)
+      return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(
           gson.toJson(
             EkmPrivateKeysResponse(
@@ -398,7 +400,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
   private fun handleGetDomainRulesAPI(model: LoginModel, gson: Gson): MockResponse {
     when (model.account) {
-      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
+      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
 
       EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForOrgRules(
@@ -490,31 +492,31 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
         )
       )
 
-      else -> return MockResponse().setResponseCode(404)
+      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
 
   private fun handleLoginAPI(model: LoginModel, gson: Gson): MockResponse {
     when (model.account) {
-      EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
+      EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
 
-      EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(200)
+      EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
 
-      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(200)
+      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
 
-      EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
+      EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
 
-      else -> return MockResponse().setResponseCode(200)
+      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
     }
   }
 
   private fun successMockResponseForOrgRules(gson: Gson, orgRules: OrgRules) =
-    MockResponse().setResponseCode(200)
+    MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       .setBody(
         gson.toJson(
           DomainOrgRulesResponse(

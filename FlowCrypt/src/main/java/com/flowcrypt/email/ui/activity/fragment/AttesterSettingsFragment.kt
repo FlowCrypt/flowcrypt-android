@@ -17,7 +17,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.jetpack.viewmodel.AccountKeysInfoViewModel
+import com.flowcrypt.email.jetpack.viewmodel.AccountPublicKeyServersViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter
@@ -45,7 +45,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
   override val contentResourceId: Int = R.layout.fragment_attester_settings
 
   private var sRL: SwipeRefreshLayout? = null
-  private val accountKeysInfoViewModel: AccountKeysInfoViewModel by viewModels()
+  private val accountPublicKeyServersViewModel: AccountPublicKeyServersViewModel by viewModels()
   private val attesterKeyAdapter: AttesterKeyAdapter = AttesterKeyAdapter()
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -60,7 +60,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
     sRL?.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
     sRL?.setOnRefreshListener {
       dismissCurrentSnackBar()
-      accountKeysInfoViewModel.refreshData()
+      accountPublicKeyServersViewModel.refreshData()
     }
 
     val rVAttester: RecyclerView? = view.findViewById(R.id.rVAttester)
@@ -76,7 +76,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
   }
 
   private fun setupAccountKeysInfoViewModel() {
-    accountKeysInfoViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, {
+    accountPublicKeyServersViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -118,7 +118,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
               btnName = getString(R.string.retry),
               duration = Snackbar.LENGTH_LONG
             ) {
-              accountKeysInfoViewModel.refreshData()
+              accountPublicKeyServersViewModel.refreshData()
             }
 
             baseActivity.countingIdlingResource.decrementSafely()
