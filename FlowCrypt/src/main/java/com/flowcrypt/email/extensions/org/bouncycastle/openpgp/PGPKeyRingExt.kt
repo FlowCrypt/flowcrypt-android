@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.primaryKeyExpirationDateSafe
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -70,7 +71,7 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
     ids = keyIdList,
     created = keyRingInfo.creationDate.time,
     lastModified = keyRingInfo.lastModified?.time,
-    expiration = keyRingInfo.primaryKeyExpirationDate?.time,
+    expiration = keyRingInfo.primaryKeyExpirationDateSafe?.time,
     algo = algo
   )
 }
