@@ -42,6 +42,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -131,12 +132,13 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
                   ),
                   InitialLegacySubmitResponse::class.java
                 )
-                return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+                return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+                  .setBody(gson.toJson(model))
               }
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
   }

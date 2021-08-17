@@ -34,6 +34,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -58,7 +59,7 @@ class CreateMessageActivityTestPassInRamTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testShowingNeedPassphraseDialog() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     fillInAllFields(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER)
@@ -102,13 +103,13 @@ class CreateMessageActivityTestPassInRamTest : BaseCreateMessageActivityTest() {
                 lastSegment, true
               ) -> {
                 return MockResponse()
-                  .setResponseCode(200)
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
   }

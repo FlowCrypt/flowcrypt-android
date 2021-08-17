@@ -30,13 +30,13 @@ else
 
     # Install Android SDK
     (echo "yes" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null | grep -v = || true)
-    ( sleep 5; echo "y" ) | (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;30.0.3" "platforms;android-29" > /dev/null | grep -v = || true)
+    ( sleep 5; echo "y" ) | (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;30.0.3" "platforms;android-30" > /dev/null | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "extras;google;m2repository" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platform-tools" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "emulator" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "ndk;22.0.7026061" | grep -v = || true)
     (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.10.2.4988404" | grep -v = || true)
-    (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true)
+    (${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "system-images;android-30;google_apis;x86_64" | grep -v = || true)
 fi
 
 #Uncomment this for debug

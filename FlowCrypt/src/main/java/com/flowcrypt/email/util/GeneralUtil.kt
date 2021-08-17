@@ -30,6 +30,7 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.ApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -274,8 +275,8 @@ class GeneralUtil {
      * @return true if the email has valid format, otherwise false.
      */
     fun isEmailValid(email: CharSequence?): Boolean {
-      return email?.isNotEmpty() == true && android.util.Patterns.EMAIL_ADDRESS.matcher(email)
-        .matches()
+      return email?.isNotEmpty() == true && (android.util.Patterns.EMAIL_ADDRESS.matcher(email)
+        .matches() || EmailUtil.getDomain(email.toString()).toLowerCase(Locale.ROOT) == "localhost")
     }
 
     /**

@@ -86,7 +86,7 @@ interface ApiRepository : BaseApiRepository {
    * @param identData A key id or the user email or a fingerprint.
    * @param orgRules Contains client configurations.
    */
-  suspend fun getPub(
+  suspend fun pubLookup(
     requestCode: Long = 0L,
     context: Context,
     identData: String,
