@@ -64,15 +64,19 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
     // double quotes at ends only
     private val doubleQuotedTextRegex = "\"[^\"]*\"".toRegex()
     private val validLocalhostEmailRegex = Regex("([a-zA-z])([a-zA-z0-9])+@localhost")
+    private const val maxLocalPartLength = 64
 
     fun isValidEmail(email: String): Boolean {
-      return validEmailRegex.matchEntire(email) != null
+      if (validEmailRegex.matchEntire(email) == null) return false
+      return email.indexOf('@') < maxLocalPartLength
     }
 
     fun isValidLocalhostEmail(email: String): Boolean {
-      return validLocalhostEmailRegex.matchEntire(email) != null
+      if (validLocalhostEmailRegex.matchEntire(email) == null) return false
+      return email.indexOf('@') < maxLocalPartLength
     }
 
+    @Suppress("unused")
     fun areValidEmails(emails: Iterable<String>): Boolean {
       return emails.all { it.isValidEmail() }
     }
