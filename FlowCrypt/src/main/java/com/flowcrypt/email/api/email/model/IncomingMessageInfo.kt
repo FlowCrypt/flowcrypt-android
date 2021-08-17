@@ -38,6 +38,10 @@ data class IncomingMessageInfo constructor(
 
   fun getReplyTo(): List<InternetAddress> = msgEntity.replyToAddress
 
+  fun getReplyToWithoutOwnerAddress(): List<InternetAddress> = getReplyTo().filter {
+    !it.address.equals(msgEntity.email, true)
+  }
+
   fun getReceiveDate(): Date = Date(msgEntity.receivedDate ?: 0)
 
   fun getTo(): List<InternetAddress> = msgEntity.to
