@@ -14,7 +14,6 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
   val emailAddress: String
 
   init {
-    if (!isValidEmail(str)) throw IllegalArgumentException("Invalid email address")
     val personalNameWithEmailMatch = validPersonalNameWithEmailRegex.find(str)
     val emailMatch = str.matches(validEmailRegex) || str.matches(validLocalhostEmailRegex)
     when {
@@ -40,6 +39,7 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
 
       else -> throw IllegalArgumentException("Invalid email $str")
     }
+    if (!isValidEmail(emailAddress)) throw IllegalArgumentException("Invalid email address")
   }
 
   companion object {
