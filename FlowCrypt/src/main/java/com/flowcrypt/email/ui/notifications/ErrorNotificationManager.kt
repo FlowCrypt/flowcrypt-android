@@ -11,13 +11,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
 
 /**
  * It's a manager which helps to show errors notifications with a high priority.
@@ -141,9 +141,14 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     ): Intent {
       return when (account?.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
-          Intent(context, SignInActivity::class.java).apply {
-            action = SignInActivity.ACTION_UPDATE_OAUTH_ACCOUNT
-            recoverableIntent?.let { putExtra("recoverableIntent", recoverableIntent) }
+          val uri = Uri.parse("flowcrypt://email.flowcrypt.com/sign-in/recover_auth")
+          Intent(null, uri).apply {
+            recoverableIntent?.let {
+              val extras = Bundle().apply {
+                putParcelable("recoverableIntent", recoverableIntent)
+              }
+              putExtra("android-support-nav:controller:deepLinkExtras", extras)
+            }
           }
         }
 
