@@ -11,10 +11,8 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import androidx.navigation.findNavController
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
-import com.flowcrypt.email.SingInGraphDirections
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
@@ -50,15 +48,6 @@ class SignInActivity : BaseActivity() {
     accountAuthenticatorResponse =
       intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
     accountAuthenticatorResponse?.onRequestContinued()
-
-    if (savedInstanceState == null) {
-      when (intent.action) {
-        ACTION_UPDATE_OAUTH_ACCOUNT -> {
-          findNavController(R.id.fragmentContainerView)
-            .navigate(SingInGraphDirections.actionGlobalUserRecoverableAuthExceptionFragment())
-        }
-      }
-    }
   }
 
   override fun onDestroy() {
@@ -83,20 +72,11 @@ class SignInActivity : BaseActivity() {
     super.onNewIntent(intent)
     val fragments =
       supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments
-    val fragment = when (intent?.action) {
-      ACTION_UPDATE_OAUTH_ACCOUNT -> {
-        fragments?.firstOrNull {
-          it is UserRecoverableAuthExceptionFragment
-        }
-      }
-
-      else -> {
-        fragments?.firstOrNull {
-          it is AddOtherAccountFragment
-        }
-      }
+    val fragment = fragments?.firstOrNull {
+      it is UserRecoverableAuthExceptionFragment
+    } ?: fragments?.firstOrNull {
+      it is AddOtherAccountFragment
     }
-
     val oAuthFragment = fragment as? BaseOAuthFragment
     oAuthFragment?.handleOAuth2Intent(intent)
   }
@@ -106,8 +86,6 @@ class SignInActivity : BaseActivity() {
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
-    const val ACTION_UPDATE_OAUTH_ACCOUNT =
-      BuildConfig.APPLICATION_ID + ".ACTION_UPDATE_OAUTH_ACCOUNT"
 
     val KEY_EXTRA_NEW_ACCOUNT =
       GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)

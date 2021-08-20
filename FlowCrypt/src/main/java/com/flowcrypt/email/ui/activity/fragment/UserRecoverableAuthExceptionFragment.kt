@@ -194,7 +194,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
                     requireContext(), 0, Intent(
                       requireContext(),
                       SignInActivity::class.java
-                    ).apply { action = SignInActivity.ACTION_UPDATE_OAUTH_ACCOUNT }, 0
+                    ), 0
                   )
                 )
             }
