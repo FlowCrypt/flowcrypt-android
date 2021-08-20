@@ -13,10 +13,13 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
+import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -29,6 +32,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.jetpack.viewmodel.CheckFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DomainOrgRulesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoginViewModel
@@ -46,6 +50,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
@@ -60,6 +65,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
+import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.util.*
 
@@ -74,7 +80,9 @@ class MainSignInFragment : BaseSingInFragment() {
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var uuid: String = SecurityUtils.generateRandomUUID()
   private var orgRules: OrgRules? = null
+  private var fesUrl: String? = null
 
+  private val checkFesServerViewModel: CheckFesServerViewModel by viewModels()
   private val loginViewModel: LoginViewModel by viewModels()
   private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
@@ -139,9 +147,9 @@ class MainSignInFragment : BaseSingInFragment() {
       REQUEST_CODE_RETRY_LOGIN -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
+            orgRules = null
             val account = googleSignInAccount?.account?.name ?: return
             val idToken = googleSignInAccount?.idToken ?: return
-            orgRules = null
             loginViewModel.login(account, uuid, idToken)
           }
         }
@@ -151,7 +159,11 @@ class MainSignInFragment : BaseSingInFragment() {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
             val account = googleSignInAccount?.account?.name ?: return
-            domainOrgRulesViewModel.fetchOrgRules(account, uuid)
+            domainOrgRulesViewModel.fetchOrgRules(
+              account = account,
+              uuid = uuid,
+              fesUrl = fesUrl
+            )
           }
         }
       }
@@ -165,12 +177,23 @@ class MainSignInFragment : BaseSingInFragment() {
         }
       }
 
+      REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            orgRules = null
+            fesUrl = null
+            val account = googleSignInAccount?.account?.name ?: return
+            checkFesServerViewModel.checkFesServerAvailability(account)
+          }
+        }
+      }
+
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
   override fun getTempAccount(): AccountEntity? {
-    return googleSignInAccount?.let { AccountEntity(it, uuid, orgRules?.flags ?: emptyList()) }
+    return googleSignInAccount?.let { AccountEntity(it, uuid, orgRules) }
   }
 
   override fun returnResultOk() {
@@ -221,12 +244,8 @@ class MainSignInFragment : BaseSingInFragment() {
   private fun signInWithGmail() {
     googleSignInAccount = null
 
-    if (GeneralUtil.isConnected(activity)) {
-      client.signOut()
-      startActivityForResult(client.signInIntent, REQUEST_CODE_SIGN_IN)
-    } else {
-      showInfoSnackbar(msgText = activity?.getString(R.string.internet_connection_is_not_available))
-    }
+    client.signOut()
+    startActivityForResult(client.signInIntent, REQUEST_CODE_SIGN_IN)
   }
 
   private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {
@@ -235,7 +254,6 @@ class MainSignInFragment : BaseSingInFragment() {
         googleSignInAccount = task.getResult(ApiException::class.java)
 
         val account = googleSignInAccount?.account?.name ?: return
-        val idToken = googleSignInAccount?.idToken ?: return
         uuid = SecurityUtils.generateRandomUUID()
 
         val publicEmailDomains = arrayOf(
@@ -247,7 +265,8 @@ class MainSignInFragment : BaseSingInFragment() {
           onSignSuccess(googleSignInAccount)
         } else {
           orgRules = null
-          loginViewModel.login(account, uuid, idToken)
+          fesUrl = null
+          checkFesServerViewModel.checkFesServerAvailability(account)
         }
       } else {
         val error = task.exception
@@ -424,9 +443,106 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun initEnterpriseViewModels() {
+    initCheckFesServerViewModel()
     initLoginViewModel()
     initDomainOrgRulesViewModel()
     initEkmViewModel()
+  }
+
+  private fun initCheckFesServerViewModel() {
+    checkFesServerViewModel.checkFesServerLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+          showProgress(progressMsg = it.progressMsg)
+        }
+
+        Result.Status.SUCCESS -> {
+          if ("enterprise-server" == it.data?.service) {
+            googleSignInAccount?.account?.name?.let { account ->
+              val domain = EmailUtil.getDomain(account)
+              fesUrl = "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+              domainOrgRulesViewModel.fetchOrgRules(
+                account = account,
+                uuid = uuid,
+                fesUrl = fesUrl
+              )
+            }
+          } else {
+            continueBasedOnFlavorSettings()
+          }
+
+          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR -> {
+          showContent()
+          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.EXCEPTION -> {
+          when (it.exception) {
+            is CommonConnectionException -> {
+              if (it.exception.hasInternetAccess == true) {
+                continueBasedOnFlavorSettings()
+              } else {
+                showContent()
+                showDialogWithRetryButton(
+                  getString(R.string.no_connection_or_server_is_not_reachable),
+                  REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
+                )
+              }
+            }
+
+            is com.flowcrypt.email.util.exception.ApiException -> {
+              when (it.exception.apiError?.code) {
+                HttpURLConnection.HTTP_NOT_FOUND -> {
+                  continueWithRegularFlow()
+                }
+
+                else -> {
+                  continueBasedOnFlavorSettings()
+                }
+              }
+            }
+
+            else -> {
+              showContent()
+              showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
+            }
+          }
+
+          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+      }
+    })
+  }
+
+  private fun continueBasedOnFlavorSettings() {
+    if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+      /*
+       here we actually need to decide if we should show error or proceed with
+       regular setup flow based on exact customers that will skip to regular setup flow,
+       and the rest will be shown error.
+      */
+      continueWithRegularFlow()
+    } else {
+      continueWithRegularFlow()
+    }
+  }
+
+  private fun continueWithRegularFlow() {
+    val account = googleSignInAccount?.account?.name
+    val idToken = googleSignInAccount?.idToken
+    if (account != null && idToken != null) {
+      loginViewModel.login(account, uuid, idToken)
+    } else {
+      showContent()
+    }
   }
 
   private fun initLoginViewModel() {
@@ -478,9 +594,11 @@ class MainSignInFragment : BaseSingInFragment() {
 
         Result.Status.SUCCESS -> {
           val idToken = googleSignInAccount?.idToken
-          if (it.data?.orgRules != null && idToken != null) {
-            orgRules = it.data.orgRules
-            ekmViewModel.fetchPrvKeys(it.data.orgRules, idToken)
+          orgRules = (it.data as? DomainOrgRulesResponse)?.orgRules
+            ?: (it.data as? ClientConfigurationResponse)?.orgRules
+
+          if (idToken != null) {
+            orgRules?.let { fetchedOrgRules -> ekmViewModel.fetchPrvKeys(fetchedOrgRules, idToken) }
           } else {
             showContent()
             askUserToReLogin()
@@ -588,6 +706,10 @@ class MainSignInFragment : BaseSingInFragment() {
     val errorMsg = it.data?.apiError?.msg
       ?: it.exception?.message
       ?: getString(R.string.unknown_error)
+    showDialogWithRetryButton(errorMsg, resultCode)
+  }
+
+  private fun showDialogWithRetryButton(errorMsg: String, resultCode: Int) {
     showTwoWayDialog(
       requestCode = resultCode,
       dialogTitle = "",
@@ -659,5 +781,6 @@ class MainSignInFragment : BaseSingInFragment() {
     private const val REQUEST_CODE_RETRY_LOGIN = 104
     private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106
+    private const val REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY = 107
   }
 }

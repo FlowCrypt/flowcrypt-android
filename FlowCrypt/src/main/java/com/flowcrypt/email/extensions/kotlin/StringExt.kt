@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.extensions.kotlin
 
+import com.flowcrypt.email.util.BetterInternetAddress
 import org.json.JSONObject
 import java.io.InputStream
 import java.io.UnsupportedEncodingException
@@ -149,4 +150,19 @@ fun String.encodeUriComponent(): String {
 
 fun String.toInputStream(charset: Charset = StandardCharsets.UTF_8): InputStream {
   return toByteArray(charset).inputStream()
+}
+
+fun String.stripTrailing(ch: Char): String {
+  if (isEmpty()) return this
+  var pos = length - 1
+  while (pos >= 0 && this[pos] == ch) --pos
+  return if (pos != -1) substring(0, pos + 1) else ""
+}
+
+fun String.isValidEmail(): Boolean {
+  return BetterInternetAddress.isValidEmail(this)
+}
+
+fun String.isValidLocalhostEmail(): Boolean {
+  return BetterInternetAddress.isValidLocalhostEmail(this)
 }

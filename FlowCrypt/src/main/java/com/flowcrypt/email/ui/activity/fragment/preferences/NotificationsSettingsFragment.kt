@@ -73,7 +73,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     if (accountEntity != null) {
-      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+      val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted
 
       if (isEncryptedModeEnabled == true) {
         levels = arrayOf(

@@ -30,15 +30,14 @@ import java.util.*
 
 /**
  * This [ViewModel] does job of receiving information about an array of public
- * keys from "https://flowcrypt.com/attester/lookup/email".
+ * keys from FlowCrypt Attester or WKD.
  *
  * @author Denis Bondarenko
  * Date: 13.11.2017
  * Time: 15:13
  * E-mail: DenBond7@gmail.com
  */
-
-class AccountKeysInfoViewModel(application: Application) : AccountViewModel(application) {
+class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   val accountKeysInfoLiveData = MediatorLiveData<Result<List<PgpKeyDetails>>>()
   private val initLiveData = Transformations
@@ -104,7 +103,11 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       }
 
       for (email in emails) {
-        val pubResponseResult = apiRepository.getPub(context = getApplication(), identData = email)
+        val pubResponseResult = apiRepository.pubLookup(
+          context = getApplication(),
+          identData = email,
+          orgRules = accountEntity.clientConfiguration
+        )
         pubResponseResult.data?.pubkey?.let { key ->
           results.addAll(PgpKey.parseKeys(key).toPgpKeyDetailsList())
         }

@@ -20,6 +20,7 @@ import org.hamcrest.TypeSafeMatcher
  * See details here
  * https://stackoverflow.com/questions/28390574/checking-toast-message-in-android-espresso
  */
+//todo-denbond7 https://github.com/android/android-test/issues/803
 class ToastMatcher @RemoteMsgConstructor constructor() : TypeSafeMatcher<Root?>() {
   override fun describeTo(description: Description) {
     description.appendText("is toast")

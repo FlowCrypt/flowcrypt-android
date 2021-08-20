@@ -58,6 +58,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
@@ -1199,11 +1200,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val viewGroup = inflater.inflate(
       R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false
     ) as ViewGroup
-    val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
-    textViewErrorMsg.text = getString(R.string.decrypt_error_current_key_cannot_open_message)
-
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
-    buttonImportPrivateKey.setOnClickListener {
+    buttonImportPrivateKey?.setOnClickListener {
       startActivityForResult(
         ImportPrivateKeyActivity.getIntent(
           context = context,
@@ -1219,7 +1217,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
 
     val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
-    buttonSendOwnPublicKey.setOnClickListener { showSendersPublicKeyDialog() }
+    buttonSendOwnPublicKey?.setOnClickListener { showSendersPublicKeyDialog() }
+
+    val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
+    if (account?.clientConfiguration?.usesKeyManager() == true) {
+      textViewErrorMsg?.text = getString(R.string.your_keys_cannot_open_this_message)
+      buttonImportPrivateKey?.gone()
+      buttonSendOwnPublicKey?.text = getString(R.string.inform_sender)
+    } else {
+      textViewErrorMsg?.text = getString(R.string.decrypt_error_current_key_cannot_open_message)
+    }
 
     viewGroup.addView(genShowOrigMsgLayout(pgpMsg, inflater, viewGroup))
     return viewGroup

@@ -9,12 +9,8 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -25,6 +21,7 @@ import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
@@ -45,6 +42,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -77,14 +75,10 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  fun testErrorWhenImportingKeyFromFile() {
+  @NotReadyForCI
+  fun testErrorWhenImportingKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()
     addTextToClipboard("private key", privateKey)
-
-    Espresso.onView(ViewMatchers.withId(R.id.buttonLoadFromClipboard))
-      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-      .perform(ViewActions.click())
-
     isDialogWithTextDisplayed(decorView, ERROR_MESSAGE_FROM_ATTESTER)
   }
 
@@ -94,14 +88,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
     list.add(keyDetails)
     intent.putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
 
-    Intents.intending(
-      IntentMatchers.hasComponent(
-        ComponentName(
-          getTargetContext(),
-          CheckKeysActivity::class.java
-        )
-      )
-    )
+    intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
   }
 
@@ -138,19 +125,20 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
                 val model = gson.fromJson(
                   InputStreamReader(
                     ByteArrayInputStream(
-                      TestGeneralUtil.readObjectFromResourcesAsByteArray(
+                      TestGeneralUtil.readResourceAsByteArray(
                         "4.json"
                       )
                     )
                   ),
                   InitialLegacySubmitResponse::class.java
                 )
-                return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+                return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+                  .setBody(gson.toJson(model))
               }
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
   }

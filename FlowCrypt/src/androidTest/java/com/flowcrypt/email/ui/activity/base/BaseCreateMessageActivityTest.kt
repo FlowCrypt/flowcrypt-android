@@ -17,6 +17,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 
@@ -28,12 +29,12 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
  */
 abstract class BaseCreateMessageActivityTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activeActivityRule =
-    lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+  override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? =
+    lazyActivityScenarioRule(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
-    get() = activeActivityRule.scenario
+    get() = activeActivityRule?.scenario
 
-  protected val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  protected open val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   protected val intent: Intent = CreateMessageActivity.generateIntent(
     getTargetContext(), null,

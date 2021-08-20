@@ -81,6 +81,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
+import java.net.HttpURLConnection
 import java.time.Instant
 
 /**
@@ -94,7 +95,7 @@ import java.time.Instant
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
+class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val temporaryFolderRule = TemporaryFolder()
 
@@ -120,7 +121,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testEmptyRecipient() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
     onView(withId(R.id.editTextRecipientTo))
       .check(matches(withText(isEmptyString())))
@@ -137,7 +138,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testEmptyEmailSubject() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
@@ -163,7 +164,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testEmptyEmailMsg() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
@@ -185,7 +186,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testUsingStandardMsgEncryptionType() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.STANDARD) {
@@ -200,7 +201,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testUsingSecureMsgEncryptionType() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.ENCRYPTED) {
@@ -214,7 +215,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testSwitchBetweenEncryptionTypes() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     val messageEncryptionType = defaultMsgEncryptionType
@@ -238,12 +239,12 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testShowHelpScreen() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
   }
 
   @Test
   fun testIsScreenOfComposeNewMsg() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     onView(withText(R.string.compose))
@@ -262,7 +263,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testWrongFormatOfRecipientEmailAddress() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     val invalidEmailAddresses = arrayOf("test", "test@", "test@@flowcrypt.test", "@flowcrypt.test")
@@ -285,7 +286,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testAddingAtts() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
@@ -300,7 +301,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testMaxTotalAttachmentSize() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
@@ -329,7 +330,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testDeletingAtts() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
@@ -354,7 +355,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testSelectImportPublicKeyFromPopUp() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
     intending(hasComponent(ComponentName(getTargetContext(), ImportPublicKeyActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -413,7 +414,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testSelectedStandardEncryptionTypeFromPopUp() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
@@ -428,7 +429,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testSelectedRemoveRecipientFromPopUp() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     onView(withId(R.id.layoutTo))
@@ -476,7 +477,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
   @Test
   fun testSelectedCopyFromOtherContactFromPopUp() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
@@ -490,12 +491,24 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
     onView(withText(R.string.copy_from_other_contact))
       .check(matches(isDisplayed()))
       .perform(click())
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            chipText = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
+            backgroundColor = UIUtil.getColor(
+              context = getTargetContext(),
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+            )
+          )
+        )
+      )
     isToastDisplayed(getResString(R.string.key_successfully_copied))
   }
 
   @Test
   fun testSharePubKeySingle() {
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -519,7 +532,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
     )
     val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
 
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -553,7 +566,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
       TestConstants.DEFAULT_PASSWORD, KeyImportDetails.SourceType.EMAIL
     )
 
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -575,7 +588,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
       .contactsDao().insert(contact.toContactEntity())
 
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     fillInAllFields(contact.email)
@@ -616,7 +629,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
 
     Assert.assertTrue(existedKeyExpiration.isBefore(Instant.now()))
 
-    activeActivityRule.launch(intent)
+    activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
     fillInAllFields(contact.email)
@@ -743,21 +756,21 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
                 lastSegment, true
               ) -> {
                 return MockResponse()
-                  .setResponseCode(404)
-                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+                  .setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+                  .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
               }
 
               TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
                 lastSegment, true
               ) -> {
                 return MockResponse()
-                  .setResponseCode(200)
-                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
+                  .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
 
               "95FC072E853C9C333C68EDD34B9CA2FBCA5B5FE7".equals(lastSegment, true) -> {
                 return MockResponse()
-                  .setResponseCode(200)
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(
                     TestGeneralUtil.readFileFromAssetsAsString(
                       "pgp/expired_fixed@flowcrypt.test_not_expired_pub.asc"
@@ -767,7 +780,7 @@ class CreateMessageActivityTestTest : BaseCreateMessageActivityTest() {
             }
           }
 
-          return MockResponse().setResponseCode(404)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
       })
 

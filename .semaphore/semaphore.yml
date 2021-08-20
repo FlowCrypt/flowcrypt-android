@@ -25,6 +25,7 @@ global_job_config:
       value: /home/semaphore/Android/Sdk
   prologue:
     commands:
+      - sem-version java 11
       - export PATH=${ANDROID_SDK_ROOT}/emulator:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
@@ -98,8 +99,6 @@ blocks:
           execution_time_limit:
             minutes: 15
           commands:
-            # switched to use java 11 to be able to run parametrized Robolectric tests
-            - sem-version java 11
             # run JUnit tests
             - ./script/ci-junit-tests.sh
 

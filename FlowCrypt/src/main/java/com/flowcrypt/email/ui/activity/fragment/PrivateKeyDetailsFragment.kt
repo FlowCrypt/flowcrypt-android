@@ -14,13 +14,12 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.TextUtils
 import android.text.format.DateFormat
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -28,7 +27,9 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.databinding.FragmentPrivateKeyDetailsBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -63,14 +64,8 @@ import java.util.*
  */
 class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
+  private var binding: FragmentPrivateKeyDetailsBinding? = null
 
-  private var tVFingerprint: TextView? = null
-  private var tVDate: TextView? = null
-  private var tVUsers: TextView? = null
-  private var tVPassPhraseVerification: TextView? = null
-  private var eTKeyPassword: EditText? = null
-  private var btnForgetPassphrase: Button? = null
-  private var gCheckPassphrase: View? = null
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
   private val pgpKeyDetailsViewModel: PgpKeyDetailsViewModel by viewModels {
@@ -78,11 +73,11 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.content)
+    get() = binding?.content
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
   override val contentResourceId: Int = R.layout.fragment_private_key_details
 
@@ -94,6 +89,13 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
     super.onCreateOptionsMenu(menu, inflater)
     inflater.inflate(R.menu.fragment_key_details, menu)
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu) {
+    super.onPrepareOptionsMenu(menu)
+    if (account?.clientConfiguration?.usesKeyManager() == true) {
+      menu.findItem(R.id.menuActionDeleteKey).isEnabled = false
+    }
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -115,10 +117,19 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentPrivateKeyDetailsBinding.inflate(inflater, container, false)
+    return binding?.root
+  }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.setTitle(R.string.key_details)
-    initViews(view)
+    initViews()
     updateViews()
     setupPgpKeyDetailsViewModel()
     setupPrivateKeysViewModel()
@@ -152,6 +163,15 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    activity?.invalidateOptionsMenu()
+
+    if (account?.clientConfiguration?.usesKeyManager() == true) {
+      binding?.btnShowPrKey?.gone()
+    }
+  }
+
   private fun saveKey(data: Intent) {
     try {
       GeneralUtil.writeFileFromStringToUri(
@@ -159,7 +179,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
         uri = data.data!!,
         data = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
       )
-      Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
+      toast(R.string.saved, Toast.LENGTH_SHORT)
     } catch (e: Exception) {
       e.printStackTrace()
       var error = if (e.message.isNullOrEmpty()) e.javaClass.simpleName else e.message
@@ -192,72 +212,21 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
-  private fun initViews(view: View) {
-    tVFingerprint = view.findViewById(R.id.textViewFingerprint)
-    tVDate = view.findViewById(R.id.textViewDate)
-    tVUsers = view.findViewById(R.id.textViewUsers)
-    tVPassPhraseVerification = view.findViewById(R.id.tVPassPhraseVerification)
-    eTKeyPassword = view.findViewById(R.id.eTKeyPassword)
-    gCheckPassphrase = view.findViewById(R.id.gCheckPassphrase)
-
-    initButtons(view)
-  }
-
-  private fun updateViews() {
-    pgpKeyDetailsViewModel.getPgpKeyDetails()?.let { value ->
-      UIUtil.setHtmlTextToTextView(
-        getString(
-          R.string.template_fingerprint,
-          GeneralUtil.doSectionsInText(" ", value.fingerprint, 4)
-        ), tVFingerprint
-      )
-
-      tVDate?.text = getString(
-        R.string.template_date,
-        DateFormat.getMediumDateFormat(context).format(Date(value.created))
-      )
-
-      tVUsers?.text = getString(
-        R.string.template_users,
-        TextUtils.join(", ", value.pgpContacts.map { it.email })
-      )
-
-      val passPhrase = pgpKeyDetailsViewModel.getPassphrase()
-      val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType()
-      if (passPhrase == null || passPhrase.isEmpty) {
-        handlePassphraseNotProvided()
-        return
-      }
-
-      if (passPhraseType == KeyEntity.PassphraseType.RAM) {
-        btnForgetPassphrase?.visible()
-      }
-    }
-  }
-
-  private fun handlePassphraseNotProvided() {
-    tVPassPhraseVerification?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
-    tVPassPhraseVerification?.text = getString(R.string.pass_phrase_not_provided)
-    btnForgetPassphrase?.gone()
-    gCheckPassphrase?.visible()
-  }
-
-  private fun initButtons(view: View) {
-    btnForgetPassphrase = view.findViewById(R.id.btnForgetPassphrase)
-    btnForgetPassphrase?.setOnClickListener {
+  private fun initViews() {
+    binding?.btnForgetPassphrase?.setOnClickListener {
       pgpKeyDetailsViewModel.forgetPassphrase()
       toast(getString(R.string.passphrase_purged_from_memory))
-      eTKeyPassword?.text = null
+      binding?.eTKeyPassword?.text = null
     }
 
-    view.findViewById<View>(R.id.btnUpdatePassphrase)?.setOnClickListener {
-      UIUtil.hideSoftInput(requireContext(), eTKeyPassword)
-      val typedText = eTKeyPassword?.text?.toString()
+    binding?.btnUpdatePassphrase?.setOnClickListener {
+      UIUtil.hideSoftInput(requireContext(), binding?.eTKeyPassword)
+      val typedText = binding?.eTKeyPassword?.text?.toString()
       if (typedText.isNullOrEmpty()) {
-        showInfoSnackbar(eTKeyPassword, getString(R.string.passphrase_must_be_non_empty))
+        showInfoSnackbar(binding?.eTKeyPassword, getString(R.string.passphrase_must_be_non_empty))
       } else {
         snackBar?.dismiss()
-        eTKeyPassword?.let {
+        binding?.eTKeyPassword?.let {
           val passPhrase = Passphrase.fromPassword(typedText)
           val pgpKeyDetails = pgpKeyDetailsViewModel.getPgpKeyDetails() ?: return@let
           checkPrivateKeysViewModel.checkKeys(
@@ -270,7 +239,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       }
     }
 
-    view.findViewById<View>(R.id.btnShowPubKey)?.setOnClickListener {
+    binding?.btnShowPubKey?.setOnClickListener {
       val dialogFragment = InfoDialogFragment.newInstance(
         dialogTitle = "",
         dialogMsg = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
@@ -278,23 +247,58 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
     }
 
-    view.findViewById<View>(R.id.btnCopyToClipboard)?.setOnClickListener {
-      val clipboard =
-        requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-      clipboard.setPrimaryClip(
-        ClipData.newPlainText(
-          "pubKey",
-          pgpKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
-        )
+    binding?.btnCopyToClipboard?.setOnClickListener {
+      val clipboard = context?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+      clipboard?.setPrimaryClip(
+        ClipData.newPlainText("pubKey", pgpKeyDetailsViewModel.getPgpKeyDetails()?.publicKey)
       )
-      Toast.makeText(context, getString(R.string.copied), Toast.LENGTH_SHORT).show()
+      toast(R.string.copied, Toast.LENGTH_SHORT)
     }
-    view.findViewById<View>(R.id.btnSaveToFile)?.setOnClickListener {
+    binding?.btnSaveToFile?.setOnClickListener {
       chooseDest()
     }
-    view.findViewById<View>(R.id.btnShowPrKey)?.setOnClickListener {
+    binding?.btnShowPrKey?.setOnClickListener {
       toast(getString(R.string.see_backups_to_save_your_private_keys), Toast.LENGTH_SHORT)
     }
+  }
+
+  private fun updateViews() {
+    pgpKeyDetailsViewModel.getPgpKeyDetails()?.let { value ->
+      UIUtil.setHtmlTextToTextView(
+        getString(
+          R.string.template_fingerprint,
+          GeneralUtil.doSectionsInText(" ", value.fingerprint, 4)
+        ), binding?.tVFingerprint
+      )
+
+      binding?.tVDate?.text = getString(
+        R.string.template_date,
+        DateFormat.getMediumDateFormat(context).format(Date(value.created))
+      )
+
+      binding?.tVUsers?.text = getString(
+        R.string.template_users,
+        TextUtils.join(", ", value.pgpContacts.map { it.email })
+      )
+
+      val passPhrase = pgpKeyDetailsViewModel.getPassphrase()
+      val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType()
+      if (passPhrase == null || passPhrase.isEmpty) {
+        handlePassphraseNotProvided()
+        return
+      }
+
+      if (passPhraseType == KeyEntity.PassphraseType.RAM) {
+        binding?.btnForgetPassphrase?.visible()
+      }
+    }
+  }
+
+  private fun handlePassphraseNotProvided() {
+    binding?.tVPassPhraseVerification?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
+    binding?.tVPassPhraseVerification?.text = getString(R.string.pass_phrase_not_provided)
+    binding?.btnForgetPassphrase?.gone()
+    binding?.gCheckPassphrase?.visible()
   }
 
   private fun chooseDest() {
@@ -382,11 +386,11 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
 
         Result.Status.SUCCESS -> {
           val checkResult = it.data?.firstOrNull()
-          var verificationMsg: String?
+          val verificationMsg: String?
           if (checkResult != null) {
             if (checkResult.pgpKeyDetails.isPrivate) {
               if (checkResult.e == null) {
-                tVPassPhraseVerification?.setTextColor(
+                binding?.tVPassPhraseVerification?.setTextColor(
                   UIUtil.getColor(requireContext(), R.color.colorPrimaryLight)
                 )
                 verificationMsg = getString(R.string.stored_pass_phrase_matched)
@@ -397,17 +401,17 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
                       Passphrase.fromPassword(checkResult.passphrase)
                     )
                   }
-                  btnForgetPassphrase?.visible()
-                  gCheckPassphrase?.gone()
+                  binding?.btnForgetPassphrase?.visible()
+                  binding?.gCheckPassphrase?.gone()
                 }
               } else {
                 if (pgpKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
-                  eTKeyPassword?.requestFocus()
+                  binding?.eTKeyPassword?.requestFocus()
                   toast(R.string.password_is_incorrect)
                   verificationMsg = getString(R.string.pass_phrase_not_provided)
                 } else {
                   verificationMsg = getString(R.string.stored_pass_phrase_mismatch)
-                  tVPassPhraseVerification?.setTextColor(
+                  binding?.tVPassPhraseVerification?.setTextColor(
                     UIUtil.getColor(requireContext(), R.color.red)
                   )
                 }
@@ -415,10 +419,12 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
             } else verificationMsg = getString(R.string.not_private_key)
           } else {
             verificationMsg = getString(R.string.could_not_check_pass_phrase)
-            tVPassPhraseVerification?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
+            binding?.tVPassPhraseVerification?.setTextColor(
+              UIUtil.getColor(requireContext(), R.color.red)
+            )
           }
 
-          tVPassPhraseVerification?.text = verificationMsg
+          binding?.tVPassPhraseVerification?.text = verificationMsg
           baseActivity.countingIdlingResource.decrementSafely()
         }
 

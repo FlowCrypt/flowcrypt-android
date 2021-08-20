@@ -44,15 +44,16 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItem
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
+import org.hamcrest.CoreMatchers.not
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -73,13 +74,62 @@ class ImportPgpContactActivityTest : BaseTest() {
     )
   )
 
+  private lateinit var fileWithPublicKey: File
+  private lateinit var publicKey: String
+
+  private val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+    object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+
+          when {
+            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
+              lastSegment, true
+            ) -> {
+              return MockResponse()
+                .setStatus("HTTP/1.1 404 Not Found")
+                .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
+            }
+
+            TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
+              lastSegment, true
+            ) -> {
+              return MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
+            }
+          }
+        }
+
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+    })
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
+    .around(mockWebServerRule)
     .around(addAccountToDatabaseRule)
     .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun createResources() {
+    publicKey = TestGeneralUtil.readFileFromAssetsAsString(
+      "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc"
+    )
+    fileWithPublicKey = TestGeneralUtil.createFileAndFillWithContent(
+      fileName = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
+      fileText = publicKey
+    )
+  }
+
+  @After
+  fun cleanResources() {
+    TestGeneralUtil.deleteFiles(listOf(fileWithPublicKey))
+  }
 
   @Test
   fun testFetchKeyFromAttesterForExistedUser() {
@@ -124,6 +174,9 @@ class ImportPgpContactActivityTest : BaseTest() {
     onView(withId(R.id.iBSearchKey))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    onView(withId(R.id.layoutProgress))
+      .check(matches(not((isDisplayed()))))
     //due to realization of MockWebServer I can't produce the same response.
     isToastDisplayed("API error: code = 404, message = ")
   }
@@ -159,59 +212,5 @@ class ImportPgpContactActivityTest : BaseTest() {
       .perform(click())
     onView(withText(containsString(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))
       .check(matches(isDisplayed()))
-  }
-
-  companion object {
-    private lateinit var fileWithPublicKey: File
-    private lateinit var publicKey: String
-
-    @get:ClassRule
-    @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
-      object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
-            val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
-
-            when {
-              TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
-                lastSegment, true
-              ) -> {
-                return MockResponse()
-                  .setStatus("HTTP/1.1 404 Not Found")
-                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
-              }
-
-              TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
-                lastSegment, true
-              ) -> {
-                return MockResponse()
-                  .setResponseCode(200)
-                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
-              }
-            }
-          }
-
-          return MockResponse().setResponseCode(404)
-        }
-      })
-
-    @BeforeClass
-    @JvmStatic
-    fun createResources() {
-      publicKey = TestGeneralUtil.readFileFromAssetsAsString(
-        "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc"
-      )
-      fileWithPublicKey = TestGeneralUtil.createFileAndFillWithContent(
-        fileName = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
-        fileText = publicKey
-      )
-    }
-
-    @AfterClass
-    @JvmStatic
-    fun cleanResources() {
-      TestGeneralUtil.deleteFiles(listOf(fileWithPublicKey))
-    }
   }
 }

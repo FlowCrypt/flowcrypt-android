@@ -36,9 +36,8 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -46,6 +45,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
 import java.io.UnsupportedEncodingException
+import java.net.HttpURLConnection
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.util.ArrayList
@@ -66,9 +66,33 @@ class ShareIntentsTest : BaseTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
+  private val mockWebServerRule =
+    FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+
+          when {
+            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
+              return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+                .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
+            }
+
+            TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
+              return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
+            }
+          }
+        }
+
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+    })
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
+    .around(mockWebServerRule)
     .around(AddAccountToDatabaseRule())
     .around(RetryRule.DEFAULT)
     .around(activeActivityRule)
@@ -76,6 +100,27 @@ class ShareIntentsTest : BaseTest() {
 
   private val randomActionForRFC6068: String
     get() = if (Random().nextBoolean()) Intent.ACTION_SENDTO else Intent.ACTION_VIEW
+
+  private lateinit var atts: MutableList<File>
+
+  @Before
+  fun setUp() {
+    atts = mutableListOf()
+
+    for (i in 0 until ATTACHMENTS_COUNT) {
+      atts.add(
+        TestGeneralUtil.createFileAndFillWithContent(
+          "$i.txt",
+          UUID.randomUUID().toString()
+        )
+      )
+    }
+  }
+
+  @After
+  fun cleanResources() {
+    TestGeneralUtil.deleteFiles(atts)
+  }
 
   @Test
   fun testEmptyUri() {
@@ -423,60 +468,9 @@ class ShareIntentsTest : BaseTest() {
     private const val ENCODED_SUBJECT = "some%20subject"
     private const val ENCODED_BODY = "some%20body"
 
-    private lateinit var atts: MutableList<File>
     private val recipients: Array<String> = arrayOf(
       TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
       TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
     )
-
-    @BeforeClass
-    @JvmStatic
-    fun setUp() {
-      createFilesForAtts()
-    }
-
-    @AfterClass
-    @JvmStatic
-    fun cleanResources() {
-      TestGeneralUtil.deleteFiles(atts)
-    }
-
-    @get:ClassRule
-    @JvmStatic
-    val mockWebServerRule =
-      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
-            val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
-
-            when {
-              TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-                return MockResponse().setResponseCode(404)
-                  .setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
-              }
-
-              TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-                return MockResponse().setResponseCode(200)
-                  .setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
-              }
-            }
-          }
-
-          return MockResponse().setResponseCode(404)
-        }
-      })
-
-    private fun createFilesForAtts() {
-      atts = mutableListOf()
-
-      for (i in 0 until ATTACHMENTS_COUNT) {
-        atts.add(
-          TestGeneralUtil.createFileAndFillWithContent(
-            "$i.txt",
-            UUID.randomUUID().toString()
-          )
-        )
-      }
-    }
   }
 }

@@ -59,7 +59,10 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.Properties
+import java.util.UUID
 import javax.activation.DataHandler
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
@@ -84,8 +87,6 @@ import javax.mail.search.SearchTerm
 import javax.mail.search.StringTerm
 import javax.mail.search.SubjectTerm
 import javax.mail.util.ByteArrayDataSource
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 
 /**
  * @author Denis Bondarenko
@@ -144,10 +145,10 @@ class EmailUtil {
      *
      * @return The domain of some email.
      */
-    fun getDomain(email: String): String {
+    fun getDomain(email: String?): String {
       return when {
         TextUtils.isEmpty(email) -> ""
-        email.contains("@") -> email.substring(email.indexOf('@') + 1)
+        email?.contains("@") == true -> email.substring(email.indexOf('@') + 1)
         else -> ""
       }
     }
@@ -940,7 +941,7 @@ class EmailUtil {
      * @return A generated [SearchTerm].
      */
     fun generateSearchTerm(account: AccountEntity, localFolder: LocalFolder): SearchTerm {
-      val isEncryptedModeEnabled = account.isShowOnlyEncrypted
+      val isEncryptedModeEnabled = account.showOnlyEncrypted
 
       if (isEncryptedModeEnabled == true) {
         val searchTerm = genEncryptedMsgsSearchTerm(account)

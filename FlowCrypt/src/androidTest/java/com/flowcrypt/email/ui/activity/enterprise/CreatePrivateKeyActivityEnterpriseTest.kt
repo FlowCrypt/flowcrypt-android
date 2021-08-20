@@ -35,13 +35,13 @@ import com.flowcrypt.email.util.AccountDaoManager
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
 
 /**
  * @author Denis Bondarenko
@@ -61,9 +61,33 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
       )
     })
 
+  private val mockWebServerRule =
+    FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        val gson =
+          ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+        val model = gson.fromJson(
+          InputStreamReader(request.body.inputStream()),
+          InitialLegacySubmitModel::class.java
+        )
+
+        if (request.path.equals("/initial/legacy_submit")) {
+          when (model.email) {
+            EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(
+              HttpURLConnection.HTTP_OK
+            )
+              .setBody(gson.toJson(SUBMIT_API_ERROR_RESPONSE))
+          }
+        }
+
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+    })
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
+    .around(mockWebServerRule)
     .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
@@ -99,28 +123,5 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
             "address", "internal_error"
       ), false
     )
-
-    @get:ClassRule
-    @JvmStatic
-    val mockWebServerRule =
-      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-          val gson =
-            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-          val model = gson.fromJson<InitialLegacySubmitModel>(
-            InputStreamReader(request.body.inputStream()),
-            InitialLegacySubmitModel::class.java
-          )
-
-          if (request.path.equals("/initial/legacy_submit")) {
-            when (model.email) {
-              EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(200)
-                .setBody(gson.toJson(SUBMIT_API_ERROR_RESPONSE))
-            }
-          }
-
-          return MockResponse().setResponseCode(404)
-        }
-      })
   }
 }

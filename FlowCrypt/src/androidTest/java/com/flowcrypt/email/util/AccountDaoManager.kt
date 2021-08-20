@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util
 
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 
 /**
@@ -40,7 +41,12 @@ class AccountDaoManager {
       return getUserFromBaseSettings("no_backups@flowcrypt.test")
     }
 
-    private fun getUserFromBaseSettings(user: String): AccountEntity {
+    fun getUserWithOrgRules(orgRules: OrgRules): AccountEntity {
+      return getUserFromBaseSettings("user_with_org_rules@flowcrypt.test")
+        .copy(clientConfiguration = orgRules)
+    }
+
+    fun getUserFromBaseSettings(user: String): AccountEntity {
       return getDefaultAccountDao().copy(
         email = user,
         smtpUsername = user,

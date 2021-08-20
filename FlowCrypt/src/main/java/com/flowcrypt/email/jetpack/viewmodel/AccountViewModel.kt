@@ -79,7 +79,7 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
             accountEntity.copy(
               id = existedAccount.id,
               uuid = existedAccount.uuid,
-              domainRules = existedAccount.domainRules
+              clientConfiguration = existedAccount.clientConfiguration
             )
           )
         }

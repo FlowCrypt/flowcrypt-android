@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: ivan
  */
 
 package com.flowcrypt.email.util
@@ -26,6 +26,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.RandomAccessFile
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
@@ -35,170 +36,153 @@ import java.util.UUID
  * Time: 13:02
  * E-mail: DenBond7@gmail.com
  */
-class TestGeneralUtil {
-  companion object {
-    @JvmStatic
-    fun <T> readObjectFromResources(path: String, aClass: Class<T>): T {
-      val json =
-        IOUtils.toString(aClass.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
-      return Gson().fromJson(json, aClass)
-    }
+object TestGeneralUtil {
+  fun <T> readObjectFromResources(path: String, aClass: Class<T>): T {
+    val json =
+      IOUtils.toString(aClass.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
+    return Gson().fromJson(json, aClass)
+  }
 
-    @JvmStatic
-    fun readObjectFromResourcesAsByteArray(path: String): ByteArray {
-      return IOUtils.toByteArray(TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path))
-    }
+  fun readResourceAsByteArray(path: String): ByteArray {
+    return IOUtils.toByteArray(TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path))
+  }
 
-    @JvmStatic
-    fun readResourcesAsString(path: String): String {
-      return IOUtils.toString(
-        TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path),
-        StandardCharsets.UTF_8
-      )
-    }
+  fun readResourceAsString(path: String, charset: Charset = StandardCharsets.UTF_8): String {
+    return IOUtils.toString(
+      TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path),
+      charset
+    )
+  }
 
-    @JvmStatic
-    fun readResourcesAsStream(path: String): InputStream {
-      return TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path)
-    }
+  @Suppress("unused")
+  fun readResourceAsStream(path: String): InputStream {
+    return TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path)
+  }
 
-    @JvmStatic
-    fun readFileFromAssetsAsString(
-      filePath: String,
-      context: Context = InstrumentationRegistry.getInstrumentation().context
-    ): String {
-      return IOUtils.toString(context.assets.open(filePath), "UTF-8")
-    }
+  fun readFileFromAssetsAsString(
+    filePath: String,
+    context: Context = InstrumentationRegistry.getInstrumentation().context
+  ): String {
+    return IOUtils.toString(context.assets.open(filePath), "UTF-8")
+  }
 
-    @JvmStatic
-    fun readFileFromAssetsAsByteArray(
-      filePath: String,
-      context: Context = InstrumentationRegistry.getInstrumentation().context
-    ): ByteArray {
-      return context.assets.open(filePath).readBytes()
-    }
+  @Suppress("unused")
+  fun readFileFromAssetsAsByteArray(
+    filePath: String,
+    context: Context = InstrumentationRegistry.getInstrumentation().context
+  ): ByteArray {
+    return context.assets.open(filePath).readBytes()
+  }
 
-    @JvmStatic
-    fun readFileFromAssetsAsStream(
-      filePath: String,
-      context: Context = InstrumentationRegistry.getInstrumentation().context
-    ): InputStream {
-      return context.assets.open(filePath)
-    }
+  fun readFileFromAssetsAsStream(
+    filePath: String,
+    context: Context = InstrumentationRegistry.getInstrumentation().context
+  ): InputStream {
+    return context.assets.open(filePath)
+  }
 
-    @JvmStatic
-    fun deleteFiles(files: List<File>) {
-      files.forEach { file ->
-        if (!file.delete()) {
-          println("Can't delete a file $file")
-        }
+  fun deleteFiles(files: List<File>) {
+    files.forEach { file ->
+      if (!file.delete()) {
+        println("Can't delete a file $file")
       }
     }
+  }
 
-    @JvmStatic
-    fun createFileAndFillWithContent(fileName: String, fileText: String): File {
-      val file = File(
-        InstrumentationRegistry.getInstrumentation().targetContext
-          .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName
-      )
-      try {
-        FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
-      } catch (e: Exception) {
-        e.printStackTrace()
-      }
-
-      return file
+  fun createFileAndFillWithContent(fileName: String, fileText: String): File {
+    val file = File(
+      InstrumentationRegistry.getInstrumentation().targetContext
+        .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName
+    )
+    try {
+      FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
+    } catch (e: Exception) {
+      e.printStackTrace()
     }
+    return file
+  }
 
-    @JvmStatic
-    fun createFileAndFillWithContent(
-      temporaryFolder: TemporaryFolder,
-      fileName: String, fileText: String
-    ): File {
-      val file = temporaryFolder.newFile(fileName)
-      try {
-        FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
-      } catch (e: Exception) {
-        e.printStackTrace()
-      }
-
-      return file
+  fun createFileAndFillWithContent(
+    temporaryFolder: TemporaryFolder,
+    fileName: String, fileText: String
+  ): File {
+    val file = temporaryFolder.newFile(fileName)
+    try {
+      FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
+    } catch (e: Exception) {
+      e.printStackTrace()
     }
+    return file
+  }
 
-    @JvmStatic
-    fun createFileWithGivenSize(
-      fileSizeInBytes: Long, temporaryFolder: TemporaryFolder,
-      fileName: String = UUID.randomUUID().toString()
-    ): File {
-      return temporaryFolder.newFile(fileName).apply {
-        RandomAccessFile(this, "rw").apply {
-          setLength(fileSizeInBytes)
-        }
+  fun createFileWithGivenSize(
+    fileSizeInBytes: Long, temporaryFolder: TemporaryFolder,
+    fileName: String = UUID.randomUUID().toString()
+  ): File {
+    return temporaryFolder.newFile(fileName).apply {
+      RandomAccessFile(this, "rw").apply {
+        setLength(fileSizeInBytes)
       }
     }
+  }
 
-    @JvmStatic
-    fun <T> getObjectFromJson(jsonPathInAssets: String?, classOfT: Class<T>): T? {
-      try {
-        if (jsonPathInAssets != null) {
-          val gson = GsonHelper.gson
-          val json = readFileFromAssetsAsString(jsonPathInAssets)
-          return gson.fromJson(json, classOfT)
-        }
-      } catch (e: IOException) {
-        e.printStackTrace()
+  fun <T> getObjectFromJson(jsonPathInAssets: String?, classOfT: Class<T>): T? {
+    try {
+      if (jsonPathInAssets != null) {
+        val gson = GsonHelper.gson
+        val json = readFileFromAssetsAsString(jsonPathInAssets)
+        return gson.fromJson(json, classOfT)
       }
-
-      return null
+    } catch (e: IOException) {
+      e.printStackTrace()
     }
 
-    @JvmStatic
-    fun replaceVersionInKey(key: String?): String {
-      val regex = "Version: FlowCrypt \\d*.\\d*.\\d* Gmail".toRegex()
-      val version = BuildConfig.VERSION_NAME.split("_").first()
-      val replacement = "Version: FlowCrypt $version Gmail"
+    return null
+  }
 
-      key?.let {
-        return key.replaceFirst(regex, replacement)
-      }
-
-      return ""
+  fun replaceVersionInKey(key: String?): String {
+    val regex = "Version: FlowCrypt \\d*.\\d*.\\d* Gmail".toRegex()
+    val version = BuildConfig.VERSION_NAME.split("_").first()
+    val replacement = "Version: FlowCrypt $version Gmail"
+    key?.let {
+      return key.replaceFirst(regex, replacement)
     }
+    return ""
+  }
 
-    /**
-     * Generate an [Intent] with [Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION]
-     * and [Intent.FLAG_GRANT_READ_URI_PERMISSION]
-     */
-    fun genIntentWithPersistedReadPermissionForFile(file: File): Intent {
-      return Intent().apply {
-        val context: Context = ApplicationProvider.getApplicationContext()
-        val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, file)
-        context.grantUriPermission(
-          BuildConfig.APPLICATION_ID, uri,
-          Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-              Intent.FLAG_GRANT_READ_URI_PERMISSION
-        )
-        data = uri
-        flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+  /**
+   * Generate an [Intent] with [Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION]
+   * and [Intent.FLAG_GRANT_READ_URI_PERMISSION]
+   */
+  fun genIntentWithPersistedReadPermissionForFile(file: File): Intent {
+    return Intent().apply {
+      val context: Context = ApplicationProvider.getApplicationContext()
+      val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, file)
+      context.grantUriPermission(
+        BuildConfig.APPLICATION_ID, uri,
+        Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
             Intent.FLAG_GRANT_READ_URI_PERMISSION
-      }
+      )
+      data = uri
+      flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+          Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
+  }
 
-    fun genIntentForNavigationComponent(uri: String, extras: Bundle? = null): Intent {
-      return Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse(uri)
-      ).apply {
-        extras?.let { putExtra("android-support-nav:controller:deepLinkExtras", it) }
-      }
+  fun genIntentForNavigationComponent(uri: String, extras: Bundle? = null): Intent {
+    return Intent(
+      Intent.ACTION_VIEW,
+      Uri.parse(uri)
+    ).apply {
+      extras?.let { putExtra("android-support-nav:controller:deepLinkExtras", it) }
     }
+  }
 
-    fun clearApp(context: Context) {
-      SharedPreferencesHelper.clear(context)
-      FileAndDirectoryUtils.cleanDir(context.cacheDir)
-      FileAndDirectoryUtils.cleanDir(File(context.filesDir, MsgsCacheManager.CACHE_DIR_NAME))
-      FlowCryptRoomDatabase.getDatabase(context).forceDatabaseCreationIfNeeded()
-      FlowCryptRoomDatabase.getDatabase(context).clearAllTables()
-    }
+  fun clearApp(context: Context) {
+    SharedPreferencesHelper.clear(context)
+    FileAndDirectoryUtils.cleanDir(context.cacheDir)
+    FileAndDirectoryUtils.cleanDir(File(context.filesDir, MsgsCacheManager.CACHE_DIR_NAME))
+    FlowCryptRoomDatabase.getDatabase(context).forceDatabaseCreationIfNeeded()
+    FlowCryptRoomDatabase.getDatabase(context).clearAllTables()
   }
 }

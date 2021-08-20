@@ -177,6 +177,7 @@
     <string name="decrypt_error_could_not_open_message">Could not open this message with %1$s.</string>
     <string name="decrypt_error_message_badly_formatted">Message is either badly formatted or not compatible with %1$s.</string>
     <string name="decrypt_error_please_write_me">Please write us at %1$s so that we can fix it for you.</string>
+    <string name="your_keys_cannot_open_this_message">Your keys cannot open this message</string>
     <string name="decrypt_error_current_key_cannot_open_message">Your current key cannot open this message. If you
         have any other keys available, you should import them now.</string>
     <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
@@ -495,8 +496,8 @@
     <string name="date">Date</string>
     <string name="to_receiver">To %1$s</string>
     <string name="and_others">and others&#8230;</string>
-    <string name="store_pass_phrase_locally">Store pass phrase locally</string>
-    <string name="keep_pass_phrase_in_memory">Keep pass phrase in memory</string>
+    <string name="save_pass_phrase">Save pass phrase</string>
+    <string name="remember_pass_phrase_temporarily">Remember pass phrase temporarily</string>
     <string name="pass_phrase_not_provided">Pass phrase is not provided</string>
     <string name="forget_passphrase">Forget pass phrase</string>
     <string name="check_passphrase">Check pass phrase</string>
@@ -526,4 +527,6 @@
     <string name="found_not_fully_decrypted_key_ask_admin">Error. Key %1$s is not fully decrypted. Please ask your systems administrator or help desk</string>
     <string name="found_not_fully_encrypted_key">Error. Key %1$s is not fully encrypted</string>
     <string name="could_not_parse_one_of_ekm_key">Couldn\'t parse one of the keys received from EKM</string>
+    <string name="no_connection_or_server_is_not_reachable">No connection or the server is not reachable</string>
+    <string name="inform_sender">Inform the sender</string>
 </resources>

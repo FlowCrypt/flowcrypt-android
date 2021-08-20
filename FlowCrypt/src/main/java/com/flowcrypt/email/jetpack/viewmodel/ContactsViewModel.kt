@@ -30,6 +30,10 @@ import java.io.IOException
 import java.util.*
 
 /**
+ * This is used in the message compose/reply view when recipient public keys need to be retrieved,
+ * either from local storage or from remote servers eg Attester or WKD, based on client
+ * configuration.
+ *
  * @author Denis Bondarenko
  *         Date: 4/7/20
  *         Time: 11:19 AM
@@ -63,7 +67,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
 
-  val pubKeysFromAttesterLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
+  val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
 
   fun updateContactPgpInfo(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
@@ -275,11 +279,13 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
     viewModelScope.launch {
-      pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
-      pubKeysFromAttesterLiveData.value = apiRepository.getPub(
+      pubKeysFromServerLiveData.value = Result.loading(requestCode = requestCode)
+      val activeAccount = getActiveAccountSuspend()
+      pubKeysFromServerLiveData.value = apiRepository.pubLookup(
         requestCode = requestCode,
         context = getApplication(),
-        identData = keyIdOrEmail
+        identData = keyIdOrEmail,
+        orgRules = activeAccount?.clientConfiguration
       )
     }
   }
@@ -313,45 +319,45 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   private suspend fun getPgpContactInfoFromServer(
     email: String? = null,
     fingerprint: String? = null
-  ):
-      PgpContact? =
-    withContext(Dispatchers.IO) {
-      try {
-        val response = apiRepository.getPub(
-          context = getApplication(),
-          identData = email ?: fingerprint ?: ""
-        )
+  ): PgpContact? = withContext(Dispatchers.IO) {
+    try {
+      val activeAccount = getActiveAccountSuspend()
+      val response = apiRepository.pubLookup(
+        context = getApplication(),
+        identData = email ?: fingerprint ?: "",
+        orgRules = activeAccount?.clientConfiguration
+      )
 
-        when (response.status) {
-          Result.Status.SUCCESS -> {
-            val pubKeyString = response.data?.pubkey
-            val client = ContactEntity.CLIENT_PGP
+      when (response.status) {
+        Result.Status.SUCCESS -> {
+          val pubKeyString = response.data?.pubkey
+          val client = ContactEntity.CLIENT_PGP
 
-            if (pubKeyString?.isNotEmpty() == true) {
-              PgpKey.parseKeys(pubKeyString).toPgpKeyDetailsList().firstOrNull()?.let {
-                val pgpContact = it.primaryPgpContact
-                pgpContact.client = client
-                pgpContact.pgpKeyDetails = it
-                return@withContext pgpContact
-              }
+          if (pubKeyString?.isNotEmpty() == true) {
+            PgpKey.parseKeys(pubKeyString).toPgpKeyDetailsList().firstOrNull()?.let {
+              val pgpContact = it.primaryPgpContact
+              pgpContact.client = client
+              pgpContact.pgpKeyDetails = it
+              return@withContext pgpContact
             }
           }
-
-          Result.Status.ERROR -> {
-            throw ApiException(
-              response.data?.apiError
-                ?: ApiError(code = -1, msg = "Unknown API error")
-            )
-          }
-
-          else -> {
-            throw response.exception ?: java.lang.Exception()
-          }
         }
-      } catch (e: IOException) {
-        e.printStackTrace()
-      }
 
-      null
+        Result.Status.ERROR -> {
+          throw ApiException(
+            response.data?.apiError
+              ?: ApiError(code = -1, msg = "Unknown API error")
+          )
+        }
+
+        else -> {
+          throw response.exception ?: java.lang.Exception()
+        }
+      }
+    } catch (e: IOException) {
+      e.printStackTrace()
     }
+
+    null
+  }
 }

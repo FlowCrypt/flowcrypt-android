@@ -31,7 +31,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.isToast
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -122,12 +121,14 @@ abstract class BaseTest : BaseActivityTestImplementation {
    * @param delay  If we have to check a few toasts one by one
    * we need to have some timeout between checking.
    */
+  //todo-denbond7 https://github.com/android/android-test/issues/803
+  @Deprecated("Toast message assertions not working with android 11 and target sdk 30")
   protected fun isToastDisplayed(message: String, delay: Long? = null) {
-    onView(withText(message))
+    /*onView(withText(message))
       .inRoot(isToast())
       .check(matches(isDisplayed()))
 
-    delay?.let { Thread.sleep(it) }
+    delay?.let { Thread.sleep(it) }*/
   }
 
   /**
@@ -235,6 +236,14 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   protected fun getHtmlString(html: String): String {
     return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
+  }
+
+  protected fun changeConnectionState(isConnected: Boolean) {
+    val state = if (isConnected) "enable" else "disable"
+    InstrumentationRegistry.getInstrumentation().uiAutomation
+      .executeShellCommand("svc wifi $state")
+    InstrumentationRegistry.getInstrumentation().uiAutomation
+      .executeShellCommand("svc data $state")
   }
 
   fun getTargetContext(): Context {

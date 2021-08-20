@@ -54,7 +54,7 @@ class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) :
           .getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderFullName) ?: 0
         val cachedUIDSet =
           roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderFullName).toSet()
-        val newMsgs = if (accountEntity.isShowOnlyEncrypted == true) {
+        val newMsgs = if (accountEntity.showOnlyEncrypted == true) {
           val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
 
           val fetchProfile = FetchProfile().apply {

@@ -7,10 +7,14 @@
   "photoUrl": "photoUrl",
   "imapPort": 993,
   "imapServer": "10.0.2.2",
-  "useCustomSignForSmtp": false,
+  "smtpUseCustomSign": false,
   "password": "qwerty1234",
   "smtpPort": 587,
   "smtpServer": "10.0.2.2",
   "username": "default@flowcrypt.test",
-  "domainRules": "NO_PRV_BACKUP"
+  "clientConfiguration": {
+    "flags": [
+      "NO_PRV_BACKUP"
+    ]
+  }
 }

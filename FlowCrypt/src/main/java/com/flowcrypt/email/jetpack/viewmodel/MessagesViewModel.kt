@@ -50,6 +50,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.math.BigInteger
+import java.net.HttpURLConnection
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -375,7 +376,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         else -> countOfAlreadyLoadedMsgs
       }
 
-      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+      val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted
       var foundMsgs: Array<Message> = emptyArray()
       var msgsCount = 0
 
@@ -493,7 +494,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val email = account.email
     val folder = localFolder.fullName
 
-    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
       email = email,
@@ -519,7 +520,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val email = account.email
     val folder = localFolder.fullName
 
-    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
       email = email,
@@ -734,7 +735,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     remoteFolder: IMAPFolder, msgs: Array<Message>
   ) = withContext(Dispatchers.IO) {
     val email = account.email
-    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
     val searchLabel = SearchMessagesActivity.SEARCH_FOLDER_NAME
 
     val msgEntities = MessageEntity.genMessageEntities(
@@ -763,7 +764,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val email = account.email
     val label = localFolder.fullName
 
-    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
       email = email,
@@ -806,7 +807,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       when (e) {
         is GoogleJsonResponseException -> {
           if (localFolder.getFolderType() == FoldersManager.FolderType.INBOX
-            && e.statusCode == 404
+            && e.statusCode == HttpURLConnection.HTTP_NOT_FOUND
             && e.details.errors.any { it.reason.equals("notFound", true) }
           ) {
             //client must perform a full sync
@@ -844,7 +845,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         newestCachedUID.toLong()
       )
 
-      val newMsgsAfterLastInLocalCache = if (accountEntity.isShowOnlyEncrypted == true) {
+      val newMsgsAfterLastInLocalCache = if (accountEntity.showOnlyEncrypted == true) {
         val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
 
         val fetchProfile = FetchProfile()
@@ -907,7 +908,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
     val newCandidates = EmailUtil.genNewCandidates(msgsUIDs, remoteFolder, newMsgs)
 
-    val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
+    val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
     val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
     val msgEntities = MessageEntity.genMessageEntities(
@@ -960,7 +961,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           newCandidates.toList(), localFolder
         )
 
-        val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
+        val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
         val isNew =
           !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 

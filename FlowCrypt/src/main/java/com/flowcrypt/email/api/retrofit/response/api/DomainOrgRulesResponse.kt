@@ -44,12 +44,7 @@ data class DomainOrgRulesResponse constructor(
   }
 
   companion object CREATOR : Parcelable.Creator<DomainOrgRulesResponse> {
-    override fun createFromParcel(parcel: Parcel): DomainOrgRulesResponse {
-      return DomainOrgRulesResponse(parcel)
-    }
-
-    override fun newArray(size: Int): Array<DomainOrgRulesResponse?> {
-      return arrayOfNulls(size)
-    }
+    override fun createFromParcel(parcel: Parcel) = DomainOrgRulesResponse(parcel)
+    override fun newArray(size: Int): Array<DomainOrgRulesResponse?> = arrayOfNulls(size)
   }
 }
