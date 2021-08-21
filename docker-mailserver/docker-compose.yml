@@ -1,7 +1,7 @@
 version: '2'
 services:
   mail:
-    image: flowcrypt/flowcrypt-email-server:0.0.4
+    image: flowcrypt/flowcrypt-email-server:0.0.5
     hostname: ${HOSTNAME}
     domainname: ${DOMAINNAME}
     container_name: ${CONTAINER_NAME}
