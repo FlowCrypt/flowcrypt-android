@@ -6,3 +6,4 @@ user_with_more_than_21_letters@flowcrypt.test|{SHA512-CRYPT}$6$L2k5lesNInE0wri5$
 user_without_letters@flowcrypt.test|{SHA512-CRYPT}$6$j99fwRGw0hCIw2Vm$GjKW6ErUV40NwVY64/nYvDcLjhpGqkpoX/o1UhZVoaNtxyPmdXO4j/KVbTnHThqgVa4X/EipLKrD1L5vmrvnU/
 single_backup@flowcrypt.test|{SHA512-CRYPT}$6$ZG/we/7ue.Bn3c3d$FAXzClXcd1cU77xmwjBvJQFtldmzLfLyNe2uLSuExo8MpHKIdcg8fxSEQuFG3/8hsexGSUQCwTy/tFPkJtoGM/
 no_backups@flowcrypt.test|{SHA512-CRYPT}$6$xlZI4EzbrOz8Kg/Z$FbmV.72iNX.hM1jfYEfr7tHhGK6aalXdzJzwjODnf42Tq71OkMWDldVkPGXNaUDnpiDIU6aQU2tjXHgH.lOPT/
+has_msgs_no_backups@flowcrypt.test|{SHA512-CRYPT}$6$i72HHZU2/S08yUgA$1.jK0Newz32HVZueRFGq7mkidWqNb8nN3Bv7havb8tiSLfrzGZPzGbbG16m4zisLXHpoUB2LkWSOD6ll6GXwp.

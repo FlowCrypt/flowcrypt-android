@@ -1,0 +1,47 @@
+2 M1e C608be10d
+N          00000000000005FC
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id iv/3Iw3hi2A/PwEAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Fri, 30 Apr 2021 10:50:53 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 8FA1B21FB6
+	for <default@flowcrypt.test>; Fri, 30 Apr 2021 10:50:53 +0000 (UTC)
+Date: Fri, 30 Apr 2021 13:50:50 +0300 (GMT+03:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <1517795.1.1619779850947@flowcrypt.test>
+Subject: encrypted message with missing key error
+Mime-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_0_107866758.1619779850931"
+
+------=_Part_0_107866758.1619779850931
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+hF4DzOvPyaVBcXgSAQdAYoAFLIOTZJr+a7SpD86EDdTGNFzK+2q48nRGVl8HsBEw
+fFzAfmTTf4fMdPlqyJ80Wtt792A85U5Np7EJphvNOU4aBamKMeL3o7ugNVazubyH
+hF4D16Pe22XLHvsSAQdA6FJvUMeB1b9rqXSp1T7C+knOSutq5AVw8OdixYYyEFww
+0IH0FWp8H9nubO4fG0SwcP/3bJVU89M4c6iW1rDHs5oedjk1gj7Co4XD8dqnjmuy
+0sACAcJ/SETTk3KfqLJvwCEWj5KgO8BcHg53MzOfu5NkOJ4ogvOppPSUrXp84+Kt
+LJzzL3fakExfFOMB9YaGczL3iIIbghBjWu2rLuTdfYrz+yJ1FZQUnkVgHz9LAOPY
+6jFhAqvoF0PzbtZ0cife7xRUz8gz1KAkIKQAIVBQeyoFM78aK1KYDHvxf7uXgm8P
+v8EiFMzJMejfFplfnQVXWwh5JqJ9x43ljkhGm3ndO5EjV8DT4qsB+iDZ8n9dePDT
+DbsKJUQ=
+=fzgP
+-----END PGP MESSAGE-----
+
+------=_Part_0_107866758.1619779850931--
+
+
+R608be10d
+V623
+G814b0b240de18b603f3f010073f46975
+
