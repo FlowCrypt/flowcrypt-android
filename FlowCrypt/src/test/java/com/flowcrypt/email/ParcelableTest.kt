@@ -10,9 +10,9 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
-import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.jfixture.MsgBlockGenerationCustomization
 import com.flowcrypt.email.jfixture.SelectConstructorCustomisation
 import com.flowcrypt.email.model.MessageEncryptionType

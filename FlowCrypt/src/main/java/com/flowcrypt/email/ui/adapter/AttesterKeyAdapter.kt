@@ -42,8 +42,8 @@ class AttesterKeyAdapter(
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
     val context = viewHolder.itemView.context
-    val nodeKeyDetails = pgpKeyDetailsList[position]
-    updateView(nodeKeyDetails, context, viewHolder)
+    val pgpKeyDetails = pgpKeyDetailsList[position]
+    updateView(pgpKeyDetails, context, viewHolder)
   }
 
   fun setData(newList: List<PgpKeyDetails>) {

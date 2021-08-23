@@ -49,11 +49,11 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity

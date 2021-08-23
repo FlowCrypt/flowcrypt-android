@@ -387,7 +387,6 @@
     <string name="network_error">Network error</string>
     <string name="error_no_keys">Error: no keys</string>
     <string name="could_not_load_private_keys">Couldn\'t load private keys</string>
-    <string name="internal_node_init_error">Internal Node initializing error</string>
     <string name="error_loader_result_is_empty">Error. The loader result is empty</string>
     <string name="could_not_import_data">Could\'t import data</string>
     <string name="partially_encrypted_private_key_error_msg">One of the provided Private Keys is a partially encrypted private key (some packets are encrypted, some not). Such keys are not supported. Please only import fully encrypted keys, with the same pass phrase for all secret packets.</string>

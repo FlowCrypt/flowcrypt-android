@@ -8,15 +8,15 @@ package com.flowcrypt.email.security.pgp
 
 import android.content.Context
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.retrofit.response.model.node.AttMeta
-import com.flowcrypt.email.api.retrofit.response.model.node.AttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.EncryptedAttLinkMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.EncryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlockFactory
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.SignedMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.AttMeta
+import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttLinkMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
+import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.MsgBlockParser
 import com.flowcrypt.email.extensions.java.io.readText

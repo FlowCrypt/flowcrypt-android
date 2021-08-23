@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails

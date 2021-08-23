@@ -35,8 +35,8 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
@@ -336,9 +336,9 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
-    val nodeKeyDetails =
+    val pgpKeyDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
-    val pgpContact = nodeKeyDetails.primaryPgpContact
+    val pgpContact = pgpKeyDetails.primaryPgpContact
 
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(
       matches(
@@ -354,7 +354,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
           getHtmlString(
             getResString(
               R.string.template_message_part_public_key_fingerprint,
-              GeneralUtil.doSectionsInText(" ", nodeKeyDetails.fingerprint, 4)!!
+              GeneralUtil.doSectionsInText(" ", pgpKeyDetails.fingerprint, 4)!!
             )
           )
         )

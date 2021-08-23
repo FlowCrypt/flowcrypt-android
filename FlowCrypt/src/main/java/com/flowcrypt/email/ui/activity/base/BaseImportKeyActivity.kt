@@ -34,7 +34,6 @@ import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.material.snackbar.Snackbar
 import java.io.FileNotFoundException
 
@@ -298,23 +297,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             if (it.exception is FileNotFoundException) {
               msg = getString(R.string.file_not_found)
             }
-
-            if (it.exception is NodeException) {
-              val nodeException = it.exception as NodeException?
-
-              if (WRONG_STRUCTURE_ERROR == nodeException?.nodeError?.msg) {
-                val mode =
-                  if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
-                msg = when (keyImportModel?.sourceType) {
-                  KeyImportDetails.SourceType.FILE ->
-                    getString(R.string.file_has_wrong_pgp_structure, mode)
-
-                  else ->
-                    getString(R.string.clipboard_has_wrong_structure, mode)
-                }
-              }
-            }
-
             showInfoDialogFragment(dialogMsg = msg)
 
             countingIdlingResource.decrementSafely()

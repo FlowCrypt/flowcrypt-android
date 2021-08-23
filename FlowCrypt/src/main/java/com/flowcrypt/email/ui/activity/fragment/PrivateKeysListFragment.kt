@@ -41,7 +41,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.PrivateKeysRecyclerViewAdapter
-import com.flowcrypt.email.ui.adapter.selection.NodeKeyDetailsKeyProvider
+import com.flowcrypt.email.ui.adapter.selection.PgpKeyDetailsKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.PrivateKeyItemDetailsLookup
 
 /**
@@ -234,7 +234,7 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
     tracker = SelectionTracker.Builder(
       javaClass.simpleName,
       recyclerView,
-      NodeKeyDetailsKeyProvider(recyclerViewAdapter.pgpKeyDetailsList),
+      PgpKeyDetailsKeyProvider(recyclerViewAdapter.pgpKeyDetailsList),
       PrivateKeyItemDetailsLookup(recyclerView),
       StorageStrategy.createParcelableStorage(PgpKeyDetails::class.java)
     ).build()

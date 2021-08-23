@@ -21,8 +21,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.model.KeyImportDetails

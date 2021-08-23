@@ -6,8 +6,8 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.SignedMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom

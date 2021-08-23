@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node
+package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable

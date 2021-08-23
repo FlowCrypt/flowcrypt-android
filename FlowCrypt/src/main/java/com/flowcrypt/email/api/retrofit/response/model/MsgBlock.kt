@@ -3,12 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node
+package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
-import java.lang.IllegalArgumentException
 
 interface MsgBlock : Parcelable {
   val type: Type

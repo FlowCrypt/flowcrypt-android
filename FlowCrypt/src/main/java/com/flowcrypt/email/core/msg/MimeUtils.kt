@@ -6,8 +6,8 @@
 
 package com.flowcrypt.email.core.msg
 
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.PlainAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.PlainAttMsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import java.nio.charset.StandardCharsets
 import java.util.Locale

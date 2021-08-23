@@ -21,7 +21,7 @@ class PrivateKeyItemDetailsLookup(private val recyclerView: RecyclerView) :
   ItemDetailsLookup<PgpKeyDetails>() {
   override fun getItemDetails(e: MotionEvent): ItemDetails<PgpKeyDetails>? {
     return recyclerView.findChildViewUnder(e.x, e.y)?.let {
-      (recyclerView.getChildViewHolder(it) as? PrivateKeysRecyclerViewAdapter.ViewHolder)?.getNodeKeyDetails()
+      (recyclerView.getChildViewHolder(it) as? PrivateKeysRecyclerViewAdapter.ViewHolder)?.getPgpKeyDetails()
     }
   }
 }

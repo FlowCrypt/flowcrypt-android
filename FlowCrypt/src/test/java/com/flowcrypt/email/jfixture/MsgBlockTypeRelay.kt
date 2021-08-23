@@ -8,12 +8,12 @@ package com.flowcrypt.email.jfixture
 import com.flextrade.jfixture.NoSpecimen
 import com.flextrade.jfixture.SpecimenBuilder
 import com.flextrade.jfixture.SpecimenContext
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.GenericMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlockFactory
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
+import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 
 /**
  * @author Denis Bondarenko

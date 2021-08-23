@@ -14,7 +14,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
  *         Time: 4:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-class NodeKeyDetailsKeyProvider(private val items: List<PgpKeyDetails>) :
+class PgpKeyDetailsKeyProvider(private val items: List<PgpKeyDetails>) :
   ItemKeyProvider<PgpKeyDetails>(SCOPE_CACHED) {
   override fun getKey(position: Int) = items.getOrNull(position)
   override fun getPosition(key: PgpKeyDetails) = items.indexOf(key)

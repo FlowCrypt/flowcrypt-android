@@ -118,25 +118,25 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         }
 
         Result.Status.SUCCESS -> {
-          val nodeKeyDetailsList = it.data ?: emptyList()
-          if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
+          val pgpKeyDetailsList = it.data ?: emptyList()
+          if (CollectionUtils.isEmpty(pgpKeyDetailsList)) {
             textViewMsg?.text = getString(R.string.no_pub_keys)
           } else {
             buttonOk?.visibility = View.VISIBLE
             UIUtil.exchangeViewVisibility(false, progressBar!!, listViewKeys!!)
 
-            val matchedKeys = getMatchedKeys(nodeKeyDetailsList)
+            val matchedKeys = getMatchedKeys(pgpKeyDetailsList)
             if (CollectionUtils.isEmpty(matchedKeys)) {
-              for (nodeKeyDetails in nodeKeyDetailsList) {
-                val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
+              for (pgpKeyDetails in pgpKeyDetailsList) {
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails)
                 if (att != null) {
                   atts.add(att)
                 }
               }
             } else {
               atts.clear()
-              for (nodeKeyDetails in matchedKeys) {
-                val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
+              for (pgpKeyDetails in matchedKeys) {
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails)
                 if (att != null) {
                   atts.add(att)
                 }
@@ -215,10 +215,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   private fun getMatchedKeys(pgpKeyDetailsList: List<PgpKeyDetails>): List<PgpKeyDetails> {
     val keyDetails = ArrayList<PgpKeyDetails>()
 
-    for (nodeKeyDetails in pgpKeyDetailsList) {
-      val (email) = nodeKeyDetails.primaryPgpContact
+    for (pgpKeyDetails in pgpKeyDetailsList) {
+      val (email) = pgpKeyDetails.primaryPgpContact
       if (email.equals(this.email, ignoreCase = true)) {
-        keyDetails.add(nodeKeyDetails)
+        keyDetails.add(pgpKeyDetails)
       }
     }
 

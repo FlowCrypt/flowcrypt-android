@@ -172,7 +172,7 @@ data class PgpKeyDetails constructor(
       source = PrivateKeySourceType.BACKUP.toString(),
       publicKey = publicKey.toByteArray(),
       privateKey = privateKey?.toByteArray()
-        ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
+        ?: throw NullPointerException("pgpKeyDetails.privateKey == null"),
       storedPassphrase = tempPassphrase?.let { String(it) },
       passphraseType = passphraseType
         ?: throw IllegalArgumentException("passphraseType is not defined")

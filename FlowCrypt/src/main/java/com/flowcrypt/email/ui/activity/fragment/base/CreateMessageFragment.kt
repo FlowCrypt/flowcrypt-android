@@ -1639,7 +1639,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun updateFromAddressAdapter(list: List<PgpKeyDetails>) {
-    val setOfUsers = list.map { nodeKeyDetails -> nodeKeyDetails.pgpContacts }
+    val setOfUsers = list.map { pgpKeyDetails -> pgpKeyDetails.pgpContacts }
       .flatten()
       .map { contact -> contact.email }
 

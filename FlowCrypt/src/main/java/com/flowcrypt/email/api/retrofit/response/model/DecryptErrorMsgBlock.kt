@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node
+package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -20,7 +20,7 @@ data class DecryptErrorMsgBlock(
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
   @SerializedName("decryptErr") @Expose val error: DecryptError?,
-  /*// TODO: remove above and change name of below when finally dropping Node
+  /*// TODO: remove above and change name of below when finally dropping JS
   @SerializedName("kotlinDecryptErr") @Expose val kotlinError: PgpMsg.DecryptionError? = null*/
 ) : MsgBlock {
 
