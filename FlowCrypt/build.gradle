@@ -26,7 +26,6 @@ if (propertiesFile.exists()) {
 
 android {
     if (projects.hasProperty('devBuild')) {
-        splits.abi.enable = false
         splits.density.enable = false
         aaptOptions.cruncherEnable = false
     }
@@ -125,6 +124,9 @@ android {
         //This flavor must be used only for a development.
         // It has settings for a fast building (some features are disabled or not included).
         dev {
+            versionNameSuffix "_dev"
+            minSdkVersion rootProject.ext.minSdkVersion
+            resConfigs "en", "xxhdpi"
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
@@ -135,10 +137,7 @@ android {
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
-            versionNameSuffix "_dev"
             dimension "standard"
-            minSdkVersion rootProject.ext.minSdkVersion
-            resConfigs "en", "xxhdpi"
         }
 
         //This is a consumer flavor
@@ -160,7 +159,6 @@ android {
         //This flavor must be used only for a testing
         devTest {
             versionNameSuffix "_devTest"
-            dimension "standard"
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
@@ -171,6 +169,7 @@ android {
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
+            dimension "standard"
         }
 
         //This is an enterprise flavor
@@ -419,7 +418,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.14.2'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.8') {
+    implementation('org.pgpainless:pgpainless-core:0.2.8') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }
