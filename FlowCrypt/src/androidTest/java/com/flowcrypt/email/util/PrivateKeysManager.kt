@@ -86,9 +86,9 @@ class PrivateKeysManager {
           )
         )
 
-        return onlyPrivateKeysCollection.toPgpKeyDetailsList()
+        return onlyPrivateKeysCollection.pgpKeyDetailsList
       } else {
-        return parsedCollections.toPgpKeyDetailsList()
+        return parsedCollections.pgpKeyDetailsList
       }
     }
 

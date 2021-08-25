@@ -9,7 +9,10 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import java.util.ArrayList
 import java.util.Locale
+import javax.mail.internet.AddressException
+import javax.mail.internet.InternetAddress
 
 data class PgpContact constructor(
   var email: String,
@@ -71,6 +74,26 @@ data class PgpContact constructor(
     val CREATOR: Parcelable.Creator<PgpContact> = object : Parcelable.Creator<PgpContact> {
       override fun createFromParcel(source: Parcel): PgpContact = PgpContact(source)
       override fun newArray(size: Int): Array<PgpContact?> = arrayOfNulls(size)
+    }
+
+    fun determinePgpContacts(users: List<String>): ArrayList<PgpContact> {
+      val pgpContacts = ArrayList<PgpContact>()
+      for (user in users) {
+        try {
+          val internetAddresses = InternetAddress.parse(user)
+
+          for (internetAddress in internetAddresses) {
+            val email = internetAddress.address.toLowerCase(Locale.US)
+            val name = internetAddress.personal
+
+            pgpContacts.add(PgpContact(email, name))
+          }
+        } catch (e: AddressException) {
+          e.printStackTrace()
+        }
+      }
+
+      return pgpContacts
     }
   }
 }

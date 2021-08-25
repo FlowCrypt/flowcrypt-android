@@ -147,7 +147,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
                 roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
             } else {
               cachedContactEntity.publicKey?.let {
-                val result = PgpKey.parseKeys(it).toPgpKeyDetailsList()
+                val result = PgpKey.parseKeys(it).pgpKeyDetailsList
                 cachedContactEntity?.pgpKeyDetails = result.firstOrNull()
               }
             }
@@ -218,7 +218,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     val lastVersion = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
     lastVersion?.publicKey?.let {
-      val result = PgpKey.parseKeys(it).toPgpKeyDetailsList()
+      val result = PgpKey.parseKeys(it).pgpKeyDetailsList
       lastVersion.pgpKeyDetails = result.firstOrNull()
     }
 
@@ -334,7 +334,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
           val client = ContactEntity.CLIENT_PGP
 
           if (pubKeyString?.isNotEmpty() == true) {
-            PgpKey.parseKeys(pubKeyString).toPgpKeyDetailsList().firstOrNull()?.let {
+            PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList.firstOrNull()?.let {
               val pgpContact = it.primaryPgpContact
               pgpContact.client = client
               pgpContact.pgpKeyDetails = it

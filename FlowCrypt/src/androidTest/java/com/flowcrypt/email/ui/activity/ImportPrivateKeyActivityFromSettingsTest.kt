@@ -121,6 +121,27 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
 
   @Test
   @DependsOnMailServer
+  fun testShowErrorWhenImportingKeyFromFileSHA1() {
+    val prvKeyAsString = TestGeneralUtil.readFileFromAssetsAsString(
+      "pgp/sha1@flowcrypt.test_prv_default.asc"
+    )
+    val file = TestGeneralUtil.createFileAndFillWithContent(
+      fileName = "sha1@flowcrypt.test_prv_default.asc",
+      fileText = prvKeyAsString
+    )
+    useIntentionToRunActivityToSelectFile(file)
+
+    onView(withId(R.id.buttonLoadFromFile))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    isDialogWithTextDisplayed(
+      decorView,
+      getResString(R.string.key_sha1_warning_msg)
+    )
+  }
+
+  @Test
+  @DependsOnMailServer
   fun testImportKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()
 
