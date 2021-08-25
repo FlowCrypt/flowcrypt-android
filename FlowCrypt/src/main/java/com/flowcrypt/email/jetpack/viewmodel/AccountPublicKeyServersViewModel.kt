@@ -94,26 +94,30 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
 
   private suspend fun getResult(accountEntity: AccountEntity?): Result<List<PgpKeyDetails>> {
     return if (accountEntity != null) {
-      val results = mutableListOf<PgpKeyDetails>()
-      val emails = ArrayList<String>()
-      emails.add(accountEntity.email)
+      try {
+        val results = mutableListOf<PgpKeyDetails>()
+        val emails = ArrayList<String>()
+        emails.add(accountEntity.email)
 
-      if (accountEntity.account.type == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-        emails.addAll(getAvailableGmailAliases(accountEntity.account))
-      }
-
-      for (email in emails) {
-        val pubResponseResult = apiRepository.pubLookup(
-          context = getApplication(),
-          identData = email,
-          orgRules = accountEntity.clientConfiguration
-        )
-        pubResponseResult.data?.pubkey?.let { key ->
-          results.addAll(PgpKey.parseKeys(key).toPgpKeyDetailsList())
+        if (accountEntity.account.type == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+          emails.addAll(getAvailableGmailAliases(accountEntity.account))
         }
-      }
 
-      Result.success(results)
+        for (email in emails) {
+          val pubResponseResult = apiRepository.pubLookup(
+            context = getApplication(),
+            identData = email,
+            orgRules = accountEntity.clientConfiguration
+          )
+          pubResponseResult.data?.pubkey?.let { key ->
+            results.addAll(PgpKey.parseKeys(key).pgpKeyDetailsList)
+          }
+        }
+
+        Result.success(results)
+      } catch (e: Exception) {
+        Result.exception(e)
+      }
     } else {
       Result.exception(NullPointerException("AccountEntity is null!"))
     }

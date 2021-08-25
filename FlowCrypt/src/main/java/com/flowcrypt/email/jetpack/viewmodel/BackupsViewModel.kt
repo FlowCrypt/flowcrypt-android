@@ -177,7 +177,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
               continue
             }
 
-            keyDetailsList.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
+            keyDetailsList.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
           }
         } catch (e: Exception) {
           e.printStackTrace()

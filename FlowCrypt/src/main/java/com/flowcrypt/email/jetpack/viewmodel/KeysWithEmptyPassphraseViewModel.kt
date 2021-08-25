@@ -31,12 +31,17 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
       liveData {
         emit(Result.loading())
-        emit(Result.success(list
-          .map { it.toPgpKeyDetails() }
-          .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true }
-          .map {
-            it.copy(passphraseType = keysStorage.getPassphraseTypeByFingerprint(it.fingerprint))
-          })
+        emit(
+          try {
+            Result.success(list
+              .map { it.toPgpKeyDetails() }
+              .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true }
+              .map {
+                it.copy(passphraseType = keysStorage.getPassphraseTypeByFingerprint(it.fingerprint))
+              })
+          } catch (e: Exception) {
+            Result.exception(e)
+          }
         )
       }
     }

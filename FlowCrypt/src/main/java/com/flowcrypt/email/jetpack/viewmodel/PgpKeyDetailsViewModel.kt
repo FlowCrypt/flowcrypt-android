@@ -15,6 +15,7 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
 import java.time.Instant
 
@@ -32,22 +33,32 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
       liveData {
         emit(Result.loading())
-        emit(Result.success(list.firstOrNull {
-          it.toPgpKeyDetails().fingerprint.equals(
-            fingerprint,
-            true
-          )
-        }?.toPgpKeyDetails()))
+        emit(
+          try {
+            Result.success(
+              list.firstOrNull {
+                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(it)
+                openPgpV4Fingerprint.toString().equals(fingerprint, true)
+              }?.toPgpKeyDetails()
+            )
+          } catch (e: Exception) {
+            Result.exception(e)
+          }
+        )
       }
     }
 
   private val pgpKeyDetailsLiveDataAfterPassphraseUpdates: LiveData<Result<PgpKeyDetails?>> =
-    keysStorage.passphrasesUpdatesLiveData.switchMap { list ->
+    keysStorage.passphrasesUpdatesLiveData.switchMap {
       liveData {
         emit(Result.loading())
-        val pgpKeyDetailsResult = pgpKeyDetailsLiveDataDirect.value ?: Result.success(
-          keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyDetails()
-        )
+        val pgpKeyDetailsResult = pgpKeyDetailsLiveDataDirect.value ?: try {
+          Result.success(
+            keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyDetails()
+          )
+        } catch (e: Exception) {
+          Result.exception(e)
+        }
         emit(pgpKeyDetailsResult)
       }
     }

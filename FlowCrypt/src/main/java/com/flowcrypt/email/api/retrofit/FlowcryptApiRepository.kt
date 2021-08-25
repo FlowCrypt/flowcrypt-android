@@ -23,7 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResp
 import com.flowcrypt.email.api.wkd.WkdClient
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -143,7 +143,7 @@ class FlowcryptApiRepository : ApiRepository {
               .getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS)
               .isNotEmpty()
           }
-          firstMatchingKey?.toPgpKeyDetails()?.publicKey?.let { armoredPubKey ->
+          firstMatchingKey?.armor()?.let { armoredPubKey ->
             Response.success(armoredPubKey)
           } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
         }

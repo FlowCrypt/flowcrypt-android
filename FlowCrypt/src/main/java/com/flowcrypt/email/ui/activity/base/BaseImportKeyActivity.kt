@@ -281,7 +281,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               keyImportModel?.sourceType?.let { type ->
                 onKeyFound(
                   type,
-                  parseKeyResult.toPgpKeyDetailsList()
+                  parseKeyResult.pgpKeyDetailsList
                 )
               }
             }
