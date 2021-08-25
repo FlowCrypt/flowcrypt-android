@@ -46,11 +46,15 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
       liveData {
         emit(Result.loading())
         emit(
-          Result.success(keysStorage.getPgpKeyDetailsList()
-            .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true }
-            .map {
-              it.copy(passphraseType = keysStorage.getPassphraseTypeByFingerprint(it.fingerprint))
-            })
+          try {
+            Result.success(keysStorage.getPgpKeyDetailsList()
+              .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true }
+              .map {
+                it.copy(passphraseType = keysStorage.getPassphraseTypeByFingerprint(it.fingerprint))
+              })
+          } catch (e: Exception) {
+            Result.exception(e)
+          }
         )
       }
     }

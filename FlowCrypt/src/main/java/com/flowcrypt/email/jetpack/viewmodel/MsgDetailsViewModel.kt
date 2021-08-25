@@ -372,29 +372,33 @@ class MsgDetailsViewModel(
 
   private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> =
     withContext(Dispatchers.IO) {
-      val uri = msgSnapshot.getUri(0)
-      if (uri != null) {
-        val list = keysStorage.getPgpKeyDetailsList()
-        val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
-        passphraseNeededLiveData.postValue(emptyList())
-        val result = if (largerThan1Mb) {
-          parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
-        } else {
-          apiRepository.parseDecryptMsg(
-            request = ParseDecryptMsgRequest(
-              context = getApplication(),
-              uri = uri,
-              pgpKeyDetailsList = list,
-              isEmail = true,
-              hasEncryptedDataInUri = true
+      try {
+        val uri = msgSnapshot.getUri(0)
+        if (uri != null) {
+          val list = keysStorage.getPgpKeyDetailsList()
+          val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
+          passphraseNeededLiveData.postValue(emptyList())
+          val result = if (largerThan1Mb) {
+            parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
+          } else {
+            apiRepository.parseDecryptMsg(
+              request = ParseDecryptMsgRequest(
+                context = getApplication(),
+                uri = uri,
+                pgpKeyDetailsList = list,
+                isEmail = true,
+                hasEncryptedDataInUri = true
+              )
             )
-          )
+          }
+          modifyMsgBlocksIfNeeded(result)
+          return@withContext result
+        } else {
+          val byteArray = msgSnapshot.getByteArray(0)
+          return@withContext processingByteArray(byteArray)
         }
-        modifyMsgBlocksIfNeeded(result)
-        return@withContext result
-      } else {
-        val byteArray = msgSnapshot.getByteArray(0)
-        return@withContext processingByteArray(byteArray)
+      } catch (e: Exception) {
+        Result.exception(e)
       }
     }
 
@@ -403,15 +407,19 @@ class MsgDetailsViewModel(
       return@withContext if (rawMimeBytes == null) {
         Result.exception(throwable = IllegalArgumentException("empty byte array"))
       } else {
-        val result = apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(
-            data = rawMimeBytes,
-            pgpKeyDetailsList = keysStorage.getPgpKeyDetailsList(),
-            isEmail = true
+        try {
+          val result = apiRepository.parseDecryptMsg(
+            request = ParseDecryptMsgRequest(
+              data = rawMimeBytes,
+              pgpKeyDetailsList = keysStorage.getPgpKeyDetailsList(),
+              isEmail = true
+            )
           )
-        )
-        modifyMsgBlocksIfNeeded(result)
-        result
+          modifyMsgBlocksIfNeeded(result)
+          result
+        } catch (e: Exception) {
+          Result.exception(e)
+        }
       }
     }
 
