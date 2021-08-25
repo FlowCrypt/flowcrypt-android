@@ -62,7 +62,7 @@ class PgpKeyTest {
     )
     val actual = PgpKey.parseKeys(TestKeys.KEYS["rsa1"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
-    assertEquals(expected, actual.toPgpKeyDetailsList().first())
+    assertEquals(expected, actual.pgpKeyDetailsList.first())
   }
 
   @Test
@@ -90,7 +90,7 @@ class PgpKeyTest {
     )
     val actual = PgpKey.parseKeys(TestKeys.KEYS["expired"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
-    assertEquals(expected, actual.toPgpKeyDetailsList().first())
+    assertEquals(expected, actual.pgpKeyDetailsList.first())
   }
 
   @Test
