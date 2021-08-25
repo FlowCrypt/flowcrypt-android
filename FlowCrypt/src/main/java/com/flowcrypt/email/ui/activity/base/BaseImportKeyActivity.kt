@@ -299,6 +299,13 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               msg = getString(R.string.file_not_found)
             }
 
+            if (it.exception is NoSuchElementException) {
+              val matchingString = "No suitable signatures found on the key."
+              if (matchingString.equals(other = it.exception.message, ignoreCase = true)) {
+                msg = getString(R.string.key_sha1_warning_msg)
+              }
+            }
+
             if (it.exception is NodeException) {
               val nodeException = it.exception as NodeException?
 
