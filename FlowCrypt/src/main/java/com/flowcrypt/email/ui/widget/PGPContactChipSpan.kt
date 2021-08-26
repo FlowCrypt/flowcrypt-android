@@ -22,6 +22,7 @@ import com.hootsuite.nachos.chip.ChipSpan
 class PGPContactChipSpan : ChipSpan {
   var hasPgp: Boolean? = false
   var isExpired: Boolean? = false
+  var hasNotUsablePubKey: Boolean? = false
 
   /**
    * The last modified value that saved after [setBackgroundColor]. Can be null
@@ -41,6 +42,7 @@ class PGPContactChipSpan : ChipSpan {
   ) {
     this.hasPgp = pgpContactChipSpan.hasPgp
     this.isExpired = pgpContactChipSpan.isExpired
+    this.hasNotUsablePubKey = pgpContactChipSpan.hasNotUsablePubKey
   }
 
   override fun setBackgroundColor(backgroundColor: ColorStateList?) {

@@ -530,4 +530,6 @@
     <string name="no_connection_or_server_is_not_reachable">No connection or the server is not reachable</string>
     <string name="inform_sender">Inform the sender</string>
     <string name="key_sha1_warning_msg">This OpenPGP key is not supported with message: "No suitable signatures found on the key". It could be because it\'s missing internal signatures, or the signatures are wrongly made, or it may be using archaic algorithms that are no longer secure and no longer supported (such as SHA-1).</string>
+    <string name="warning_one_of_pub_keys_is_not_usable">The public key of one of your recipients is wrong or not usable due to security reason.\n\nPlease ask the recipient(s) to send you a new Public Key.</string>
+    <string name="could_not_extract_key_details">Could not extract the key details</string>
 </resources>

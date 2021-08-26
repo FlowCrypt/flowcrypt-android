@@ -251,6 +251,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         if (hasRecipientWithExpiredPubKey(pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
           return false
         }
+
+        if (hasRecipientWithNotUsablePubKey(pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
+          return false
+        }
       }
       if (editTextEmailSubject?.text?.isEmpty() == true) {
         showInfoSnackbar(
@@ -1017,6 +1021,26 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   /**
+   * Check that all recipients have usable pub keys.
+   *
+   * @return true if all recipients have usable pub keys, other wise false.
+   */
+  private fun hasRecipientWithNotUsablePubKey(vararg pgpContactsList: List<PgpContact>?): Boolean {
+    for (sublist in pgpContactsList) {
+      sublist?.let {
+        for (pgpContact in it) {
+          if (pgpContact.hasNotUsablePubKey) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_not_usable))
+            return true
+          }
+        }
+      }
+    }
+
+    return false
+  }
+
+  /**
    * This method does update chips in the recipients field.
    *
    * @param view        A view which contains input [PgpContact](s).
@@ -1034,6 +1058,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           if (pgpContact.email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
             pgpContactChipSpan.hasPgp = pgpContact.hasPgp
             pgpContactChipSpan.isExpired = pgpContact.pgpKeyDetails?.isExpired
+            pgpContactChipSpan.hasNotUsablePubKey = pgpContact.hasNotUsablePubKey
             break
           }
         }
@@ -1663,8 +1688,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           isUpdateToCompleted = true
           progressBarTo?.visibility = View.INVISIBLE
 
-          pgpContactsTo =
-            it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+          pgpContactsTo = it.data?.toMutableList()
           if (pgpContactsTo?.isNotEmpty() == true) {
             updateChips(recipientsTo, pgpContactsTo)
           }
@@ -1694,8 +1718,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         Result.Status.SUCCESS -> {
           isUpdateCcCompleted = true
           progressBarCc?.visibility = View.INVISIBLE
-          pgpContactsCc =
-            it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+          pgpContactsCc = it.data?.toMutableList()
 
           if (pgpContactsCc?.isNotEmpty() == true) {
             updateChips(recipientsCc, pgpContactsCc)
@@ -1726,8 +1749,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         Result.Status.SUCCESS -> {
           isUpdateBccCompleted = true
           progressBarBcc?.visibility = View.INVISIBLE
-          pgpContactsBcc =
-            it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+          pgpContactsBcc = it.data?.toMutableList()
 
           if (pgpContactsBcc?.isNotEmpty() == true) {
             updateChips(recipientsBcc, pgpContactsBcc)
