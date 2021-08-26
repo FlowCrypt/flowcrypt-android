@@ -22,7 +22,8 @@ data class PgpContact constructor(
   var client: String? = null,
   var fingerprint: String? = null,
   var lastUse: Long = 0,
-  var pgpKeyDetails: PgpKeyDetails? = null
+  var pgpKeyDetails: PgpKeyDetails? = null,
+  var hasNotUsablePubKey: Boolean = false
 ) : Parcelable {
 
   constructor(source: Parcel) : this(
@@ -33,7 +34,8 @@ data class PgpContact constructor(
     source.readString(),
     source.readString(),
     source.readLong(),
-    source.readParcelable(PgpKeyDetails::class.java.classLoader)
+    source.readParcelable(PgpKeyDetails::class.java.classLoader),
+    source.readInt() == 1
   )
 
   constructor(email: String, name: String?) : this(email) {
@@ -54,6 +56,7 @@ data class PgpContact constructor(
       writeString(fingerprint)
       writeLong(lastUse)
       writeParcelable(pgpKeyDetails, flags)
+      writeInt((if (hasNotUsablePubKey) 1 else 0))
     }
 
   fun toContactEntity(): ContactEntity {

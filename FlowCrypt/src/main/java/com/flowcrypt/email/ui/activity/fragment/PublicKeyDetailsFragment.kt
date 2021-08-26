@@ -24,6 +24,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -34,8 +35,8 @@ import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -50,7 +51,7 @@ import java.util.Date
  *         Time: 8:54 AM
  *         E-mail: DenBond7@gmail.com
  */
-class PublicKeyDetailsFragment : BaseFragment() {
+class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val args by navArgs<PublicKeyDetailsFragmentArgs>()
 
   private val contactsViewModel: ContactsViewModel by viewModels()
@@ -58,14 +59,19 @@ class PublicKeyDetailsFragment : BaseFragment() {
 
   private var contactEntity: ContactEntity? = null
   private var details: PgpKeyDetails? = null
-  private var progressBar: View? = null
-  private var content: View? = null
   private var layoutUsers: ViewGroup? = null
   private var layoutFingerprints: ViewGroup? = null
   private var textViewAlgorithm: TextView? = null
   private var textViewCreated: TextView? = null
 
   override val contentResourceId: Int = R.layout.fragment_public_key_details
+
+  override val progressView: View?
+    get() = view?.findViewById(R.id.progress)
+  override val contentView: View?
+    get() = view?.findViewById(R.id.layoutContent)
+  override val statusView: View?
+    get() = view?.findViewById(R.id.status)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -86,7 +92,7 @@ class PublicKeyDetailsFragment : BaseFragment() {
     parseKeysViewModel.parseKeysLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          UIUtil.exchangeViewVisibility(true, progressBar, content)
+          showProgress()
         }
 
         Result.Status.SUCCESS -> {
@@ -97,15 +103,30 @@ class PublicKeyDetailsFragment : BaseFragment() {
           } else {
             details = pgpKeyDetailsList.first()
             updateViews()
-            UIUtil.exchangeViewVisibility(false, progressBar, content)
+            showContent()
           }
         }
 
         Result.Status.EXCEPTION -> {
-          val msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+          showStatus(getString(R.string.could_not_extract_key_details))
+
+          var msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
           ?: getString(R.string.unknown_error)
 
-          Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+          if (it.exception is NoSuchElementException) {
+            val matchingString = "No suitable signatures found on the key."
+            if (matchingString.equals(other = it.exception.message, ignoreCase = true)) {
+              msg = getString(R.string.key_sha1_warning_msg)
+            }
+          }
+
+          navController?.navigate(
+            NavGraphDirections.actionGlobalInfoDialogFragment(
+              requestCode = 0,
+              dialogTitle = "",
+              dialogMsg = msg
+            )
+          )
         }
       }
     })
@@ -210,8 +231,6 @@ class PublicKeyDetailsFragment : BaseFragment() {
   }
 
   private fun initViews(view: View) {
-    progressBar = view.findViewById(R.id.progressBar)
-    content = view.findViewById(R.id.layoutContent)
     layoutUsers = view.findViewById(R.id.layoutUsers)
     layoutFingerprints = view.findViewById(R.id.layoutFingerprints)
     textViewAlgorithm = view.findViewById(R.id.textViewAlgorithm)

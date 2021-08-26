@@ -598,7 +598,10 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
         matches(
           withChipsBackgroundColor(
             contact.email,
-            UIUtil.getColor(getTargetContext(), R.color.orange)
+            UIUtil.getColor(
+              getTargetContext(),
+              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED
+            )
           )
         )
       )
@@ -607,6 +610,45 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(R.string.warning_one_of_pub_keys_is_expired))
+      .check(matches(isDisplayed()))
+      .perform(click())
+  }
+
+  @Test
+  fun testShowWarningIfFoundNotUsableKeySHA1() {
+    val keyWithSHA1Algo =
+      TestGeneralUtil.readFileFromAssetsAsString("pgp/sha1@flowcrypt.test_pub.asc")
+    val contact = PgpContact(
+      email = "sha1@flowcrypt.test",
+      hasPgp = true,
+      fingerprint = "5DE92AB364B3100D89FBF460241512660BDDC426",
+      pubkey = keyWithSHA1Algo
+    )
+    FlowCryptRoomDatabase.getDatabase(getTargetContext())
+      .contactsDao().insert(contact.toContactEntity())
+
+    activeActivityRule?.launch(intent)
+    registerAllIdlingResources()
+
+    fillInAllFields(contact.email)
+
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            contact.email,
+            UIUtil.getColor(
+              getTargetContext(),
+              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_USABLE
+            )
+          )
+        )
+      )
+
+    onView(withId(R.id.menuActionSend))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withText(R.string.warning_one_of_pub_keys_is_not_usable))
       .check(matches(isDisplayed()))
       .perform(click())
   }
