@@ -75,7 +75,7 @@ object PgpDecrypt {
           decryptionStream.use { it.copyTo(outStream) }
           return DecryptionResult.withDecrypted(
             content = destOutputStream,
-            filename = decryptionStream.result.fileInfo?.fileName
+            filename = decryptionStream.result.fileName
           )
         } catch (e: Exception) {
           return DecryptionResult.withError(

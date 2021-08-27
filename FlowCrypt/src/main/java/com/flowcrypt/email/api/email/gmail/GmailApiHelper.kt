@@ -718,7 +718,7 @@ class GmailApiHelper {
             continue
           }
 
-          list.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
+          list.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
         }
 
         return@withContext list

@@ -127,7 +127,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   continue
                 }
 
-                details.addAll(PgpKey.parseKeys(backup).toPgpKeyDetailsList())
+                details.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
               }
 
               folder.close(false)
