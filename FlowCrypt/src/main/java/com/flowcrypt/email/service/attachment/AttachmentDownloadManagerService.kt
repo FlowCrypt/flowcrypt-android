@@ -673,11 +673,7 @@ class AttachmentDownloadManagerService : Service() {
           )
 
           att.name = FilenameUtils.getBaseName(att.name)
-          result.fileInfo?.fileName?.let { fileName ->
-            if (att.name == null) {
-              att.name = fileName
-            }
-          }
+          if (att.name == null && result.fileName != null) att.name = result.fileName
 
           return decryptedFile
         } catch (e: Exception) {
