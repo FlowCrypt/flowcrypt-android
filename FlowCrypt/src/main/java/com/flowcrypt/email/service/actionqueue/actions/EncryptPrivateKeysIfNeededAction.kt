@@ -54,8 +54,8 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
     for (keyEntity in keyEntities) {
       val passphrase = keyEntity.passphrase
 
-      val keyDetailsList = PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray(), false)
-        .toPgpKeyDetailsList()
+      val keyDetailsList =
+        PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray(), false).pgpKeyDetailsList
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
           IllegalArgumentException(
@@ -76,8 +76,8 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
         PgpPwd.checkForWeakPassphrase(passphrase)
         val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
 
-        val encryptedKeyDetailsList = PgpKey.parseKeys(encryptedKey.toByteArray(), false)
-          .toPgpKeyDetailsList()
+        val encryptedKeyDetailsList =
+          PgpKey.parseKeys(encryptedKey.toByteArray(), false).pgpKeyDetailsList
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue

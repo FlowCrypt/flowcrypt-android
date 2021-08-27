@@ -46,7 +46,7 @@ data class PgpKeyDetails constructor(
   val primaryPgpContact: PgpContact
     get() = determinePrimaryPgpContact()
   val pgpContacts: ArrayList<PgpContact>
-    get() = determinePgpContacts()
+    get() = PgpContact.determinePgpContacts(users)
   val fingerprint: String
     get() = ids.first().fingerprint
   val isPrivate: Boolean
@@ -128,26 +128,6 @@ data class PgpKeyDetails constructor(
       client = null,
       fingerprint = fingerprintFromKeyId
     )
-  }
-
-  private fun determinePgpContacts(): ArrayList<PgpContact> {
-    val pgpContacts = ArrayList<PgpContact>()
-    for (user in users) {
-      try {
-        val internetAddresses = InternetAddress.parse(user)
-
-        for (internetAddress in internetAddresses) {
-          val email = internetAddress.address.toLowerCase(Locale.US)
-          val name = internetAddress.personal
-
-          pgpContacts.add(PgpContact(email, name))
-        }
-      } catch (e: AddressException) {
-        e.printStackTrace()
-      }
-    }
-
-    return pgpContacts
   }
 
   private fun parseMimeAddresses(): List<InternetAddress> {

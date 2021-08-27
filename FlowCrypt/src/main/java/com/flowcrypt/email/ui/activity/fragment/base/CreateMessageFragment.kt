@@ -55,7 +55,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.pgpContacts
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -65,7 +65,6 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectContactsActivity
@@ -91,6 +90,7 @@ import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator
 import org.apache.commons.io.FileUtils
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import java.io.File
 import java.io.IOException
@@ -249,6 +249,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           return false
         }
         if (hasRecipientWithExpiredPubKey(pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
+          return false
+        }
+
+        if (hasRecipientWithNotUsablePubKey(pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
           return false
         }
       }
@@ -1017,6 +1021,26 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   /**
+   * Check that all recipients have usable pub keys.
+   *
+   * @return true if all recipients have usable pub keys, other wise false.
+   */
+  private fun hasRecipientWithNotUsablePubKey(vararg pgpContactsList: List<PgpContact>?): Boolean {
+    for (sublist in pgpContactsList) {
+      sublist?.let {
+        for (pgpContact in it) {
+          if (pgpContact.hasNotUsablePubKey) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_not_usable))
+            return true
+          }
+        }
+      }
+    }
+
+    return false
+  }
+
+  /**
    * This method does update chips in the recipients field.
    *
    * @param view        A view which contains input [PgpContact](s).
@@ -1034,6 +1058,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           if (pgpContact.email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
             pgpContactChipSpan.hasPgp = pgpContact.hasPgp
             pgpContactChipSpan.isExpired = pgpContact.pgpKeyDetails?.isExpired
+            pgpContactChipSpan.hasNotUsablePubKey = pgpContact.hasNotUsablePubKey
             break
           }
         }
@@ -1596,11 +1621,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       fromAddrs?.clear()
       fromAddrs?.addAll(aliases)
 
-      updateFromAddressAdapter(
-        KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings().map { key ->
-          key.toPgpKeyDetails()
-        })
-
       if (msgInfo != null) {
         prepareAliasForReplyIfNeeded(aliases)
       } else if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
@@ -1633,13 +1653,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun setupPrivateKeysViewModel() {
     KeysStorageImpl.getInstance(requireContext()).secretKeyRingsLiveData
-      .observe(viewLifecycleOwner, { keys ->
-        updateFromAddressAdapter(keys.map { key -> key.toPgpKeyDetails() })
-      })
+      .observe(viewLifecycleOwner, { updateFromAddressAdapter(it) })
   }
 
-  private fun updateFromAddressAdapter(list: List<PgpKeyDetails>) {
-    val setOfUsers = list.map { pgpKeyDetails -> pgpKeyDetails.pgpContacts }
+  private fun updateFromAddressAdapter(list: List<PGPSecretKeyRing>) {
+    val setOfUsers = list.map { keyRing -> keyRing.pgpContacts() }
       .flatten()
       .map { contact -> contact.email }
 
@@ -1670,8 +1688,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           isUpdateToCompleted = true
           progressBarTo?.visibility = View.INVISIBLE
 
-          pgpContactsTo =
-            it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+          pgpContactsTo = it.data?.toMutableList()
           if (pgpContactsTo?.isNotEmpty() == true) {
             updateChips(recipientsTo, pgpContactsTo)
           }
@@ -1701,8 +1718,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         Result.Status.SUCCESS -> {
           isUpdateCcCompleted = true
           progressBarCc?.visibility = View.INVISIBLE
-          pgpContactsCc =
-            it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+          pgpContactsCc = it.data?.toMutableList()
 
           if (pgpContactsCc?.isNotEmpty() == true) {
             updateChips(recipientsCc, pgpContactsCc)
@@ -1733,8 +1749,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         Result.Status.SUCCESS -> {
           isUpdateBccCompleted = true
           progressBarBcc?.visibility = View.INVISIBLE
-          pgpContactsBcc =
-            it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+          pgpContactsBcc = it.data?.toMutableList()
 
           if (pgpContactsBcc?.isNotEmpty() == true) {
             updateChips(recipientsBcc, pgpContactsBcc)

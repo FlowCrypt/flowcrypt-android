@@ -32,6 +32,8 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
     UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED)
   private val backgroundColorPgpNotExist =
     UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_NOT_EXISTS)
+  private val backgroundColorPgpNotUsable =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_NOT_USABLE)
   private val textColorPgpExists = UIUtil.getColor(context, android.R.color.white)
   private val textColorNoPgpNoExists = UIUtil.getColor(context, R.color.dark)
 
@@ -105,10 +107,18 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
    */
   private fun updateChipSpanBackground(span: PGPContactChipSpan) {
     if (span.hasPgp == true) {
-      if (span.isExpired == true) {
-        span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExistsButKeyExpired))
-      } else {
-        span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists))
+      when {
+        span.isExpired == true -> {
+          span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExistsButKeyExpired))
+        }
+
+        span.hasNotUsablePubKey == true -> {
+          span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotUsable))
+        }
+
+        else -> {
+          span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists))
+        }
       }
       span.setTextColor(textColorPgpExists)
     } else {
@@ -121,5 +131,6 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
     const val CHIP_COLOR_RES_ID_PGP_EXISTS = R.color.colorPrimary
     const val CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED = R.color.orange
     const val CHIP_COLOR_RES_ID_PGP_NOT_EXISTS = R.color.aluminum
+    const val CHIP_COLOR_RES_ID_PGP_NOT_USABLE = R.color.red
   }
 }

@@ -46,7 +46,7 @@ object MsgBlockFactory {
     return when (type) {
       MsgBlock.Type.PUBLIC_KEY -> {
         val keyDetails = if (content != null && complete) {
-          PgpKey.parseKeys(content).toPgpKeyDetailsList().firstOrNull()
+          PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
         } else null
         PublicKeyMsgBlock(content, complete, keyDetails)
       }

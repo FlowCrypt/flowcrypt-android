@@ -6,6 +6,7 @@
 package com.flowcrypt.email.security
 
 import android.content.Context
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
@@ -88,6 +89,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return secretKeyRingsLiveData.value ?: emptyList()
   }
 
+  @WorkerThread
   @Synchronized
   override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
     val list = mutableListOf<PgpKeyDetails>()

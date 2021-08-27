@@ -82,7 +82,13 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
       liveData {
         emit(Result.loading())
-        emit(Result.success(list.map { it.toPgpKeyDetails() }))
+        emit(
+          try {
+            Result.success(list.map { it.toPgpKeyDetails() })
+          } catch (e: Exception) {
+            Result.exception(e)
+          }
+        )
       }
     }
 
@@ -504,7 +510,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
 
     val modifiedPgpKeyDetailsList =
-      PgpKey.parseKeys(keyEncryptedWithNewPassphrase.toByteArray()).toPgpKeyDetailsList()
+      PgpKey.parseKeys(keyEncryptedWithNewPassphrase.toByteArray()).pgpKeyDetailsList
     if (modifiedPgpKeyDetailsList.isEmpty() || modifiedPgpKeyDetailsList.size != 1) {
       throw IllegalStateException("Parse keys error")
     }

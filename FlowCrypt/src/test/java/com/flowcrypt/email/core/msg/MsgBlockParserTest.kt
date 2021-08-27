@@ -268,7 +268,7 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
       blocks[2] as GenericMsgBlock
     )
 
-    val pgpKeyDetails = PgpKey.parseKeys(pub).toPgpKeyDetailsList().firstOrNull()
+    val pgpKeyDetails = PgpKey.parseKeys(pub).pgpKeyDetailsList.firstOrNull()
     assertTrue(blocks[3] is PublicKeyMsgBlock)
     assertEquals(
       PublicKeyMsgBlock(pub, true, pgpKeyDetails),

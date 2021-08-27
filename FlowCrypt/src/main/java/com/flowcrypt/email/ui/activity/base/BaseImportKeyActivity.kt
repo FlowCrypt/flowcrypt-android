@@ -280,7 +280,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
               keyImportModel?.sourceType?.let { type ->
                 onKeyFound(
                   type,
-                  parseKeyResult.toPgpKeyDetailsList()
+                  parseKeyResult.pgpKeyDetailsList
                 )
               }
             }
@@ -297,6 +297,14 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             if (it.exception is FileNotFoundException) {
               msg = getString(R.string.file_not_found)
             }
+
+            if (it.exception is NoSuchElementException) {
+              val matchingString = "No suitable signatures found on the key."
+              if (matchingString.equals(other = it.exception.message, ignoreCase = true)) {
+                msg = getString(R.string.key_sha1_warning_msg)
+              }
+            }
+
             showInfoDialogFragment(dialogMsg = msg)
 
             countingIdlingResource.decrementSafely()

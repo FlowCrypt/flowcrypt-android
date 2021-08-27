@@ -5,7 +5,8 @@
 
 package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
-import com.flowcrypt.email.extensions.org.pgpainless.key.info.primaryKeyExpirationDateSafe
+import androidx.annotation.WorkerThread
+import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -29,6 +30,14 @@ import java.time.Instant
  *         Time: 10:08 AM
  *         E-mail: DenBond7@gmail.com
  */
+
+/**
+ * This method should be called out of the UI thread.
+ *
+ * @exception IOException
+ */
+@Throws(IOException::class)
+@WorkerThread
 fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
   val keyRingInfo = KeyRingInfo(this)
 
@@ -71,9 +80,14 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
     ids = keyIdList,
     created = keyRingInfo.creationDate.time,
     lastModified = keyRingInfo.lastModified?.time,
-    expiration = keyRingInfo.primaryKeyExpirationDateSafe?.time,
+    expiration = keyRingInfo.primaryKeyExpirationDate?.time,
     algo = algo
   )
+}
+
+fun PGPKeyRing.pgpContacts(): List<PgpContact> {
+  val list = publicKey.userIDs.iterator().asSequence().toList()
+  return PgpContact.determinePgpContacts(list)
 }
 
 @Throws(IOException::class)

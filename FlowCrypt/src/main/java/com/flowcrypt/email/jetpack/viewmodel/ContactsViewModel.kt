@@ -63,9 +63,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         emit(Result.success(foundContacts))
       }
     }
-  val contactsToLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
-  val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
-  val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
+  val contactsToLiveData: MutableLiveData<Result<List<PgpContact>>> = MutableLiveData()
+  val contactsCcLiveData: MutableLiveData<Result<List<PgpContact>>> = MutableLiveData()
+  val contactsBccLiveData: MutableLiveData<Result<List<PgpContact>>> = MutableLiveData()
 
   val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
 
@@ -132,7 +132,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
       setResultForRemoteContactsLiveData(type, Result.loading())
 
-      val pgpContacts = ArrayList<ContactEntity>()
+      val pgpContacts = ArrayList<PgpContact>()
       try {
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
@@ -146,9 +146,15 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
               cachedContactEntity =
                 roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
             } else {
-              cachedContactEntity.publicKey?.let {
-                val result = PgpKey.parseKeys(it).toPgpKeyDetailsList()
-                cachedContactEntity?.pgpKeyDetails = result.firstOrNull()
+              try {
+                cachedContactEntity.publicKey?.let {
+                  val result = PgpKey.parseKeys(it).pgpKeyDetailsList
+                  cachedContactEntity?.pgpKeyDetails = result.firstOrNull()
+                }
+              } catch (e: Exception) {
+                e.printStackTrace()
+                pgpContacts.add(cachedContactEntity.toPgpContact().copy(hasNotUsablePubKey = true))
+                continue
               }
             }
 
@@ -177,7 +183,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
                 }
               }
 
-              cachedContactEntity?.let { pgpContacts.add(it) }
+              cachedContactEntity?.let { pgpContacts.add(it.toPgpContact()) }
             } catch (e: Exception) {
               e.printStackTrace()
               ExceptionUtil.handleError(e)
@@ -218,7 +224,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     val lastVersion = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
     lastVersion?.publicKey?.let {
-      val result = PgpKey.parseKeys(it).toPgpKeyDetailsList()
+      val result = PgpKey.parseKeys(it).pgpKeyDetailsList
       lastVersion.pgpKeyDetails = result.firstOrNull()
     }
 
@@ -292,7 +298,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   private fun setResultForRemoteContactsLiveData(
     type: ContactEntity.Type,
-    result: Result<List<ContactEntity>>
+    result: Result<List<PgpContact>>
   ) {
     when (type) {
       ContactEntity.Type.TO -> {
@@ -334,7 +340,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
           val client = ContactEntity.CLIENT_PGP
 
           if (pubKeyString?.isNotEmpty() == true) {
-            PgpKey.parseKeys(pubKeyString).toPgpKeyDetailsList().firstOrNull()?.let {
+            PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList.firstOrNull()?.let {
               val pgpContact = it.primaryPgpContact
               pgpContact.client = client
               pgpContact.pgpKeyDetails = it

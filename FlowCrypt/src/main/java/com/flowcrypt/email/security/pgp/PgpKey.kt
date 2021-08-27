@@ -134,7 +134,7 @@ object PgpKey {
       pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
           pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
 
-    fun toPgpKeyDetailsList() = getAllKeys().map { it.toPgpKeyDetails() }
+    val pgpKeyDetailsList = getAllKeys().map { it.toPgpKeyDetails() }
   }
 
   // Restored here some previous code. Not sure if PGPainless can help with this.

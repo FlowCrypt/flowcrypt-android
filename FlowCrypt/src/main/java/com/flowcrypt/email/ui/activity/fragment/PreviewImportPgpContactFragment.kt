@@ -230,7 +230,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
     private fun parseKeys(inputStream: InputStream): LoaderResult {
       try {
-        val details = PgpKey.parseKeys(inputStream).toPgpKeyDetailsList()
+        val details = PgpKey.parseKeys(inputStream).pgpKeyDetailsList
 
         return if (!CollectionUtils.isEmpty(details)) {
           LoaderResult(parsePublicKeysInfo(details), null)
