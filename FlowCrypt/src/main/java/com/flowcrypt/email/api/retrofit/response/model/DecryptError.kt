@@ -18,15 +18,13 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 data class DecryptError constructor(
-  @Expose val isSuccess: Boolean,
   @SerializedName("error") @Expose val details: DecryptErrorDetails?,
-  @SerializedName("longids") @Expose val longIds: LongIds?,
+  @Expose val fingerprints: List<String>?,
   @Expose val isEncrypted: Boolean
 ) : Parcelable {
   constructor(source: Parcel) : this(
-    1 == source.readInt(),
     source.readParcelable<DecryptErrorDetails>(DecryptErrorDetails::class.java.classLoader),
-    source.readParcelable<LongIds>(LongIds::class.java.classLoader),
+    source.createStringArrayList(),
     1 == source.readInt()
   )
 
@@ -36,9 +34,8 @@ data class DecryptError constructor(
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
     with(dest) {
-      writeInt((if (isSuccess) 1 else 0))
       writeParcelable(details, flags)
-      writeParcelable(longIds, flags)
+      writeStringList(fingerprints)
       writeInt((if (isEncrypted) 1 else 0))
     }
 

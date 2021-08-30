@@ -32,6 +32,7 @@ import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.json.JSONObject
@@ -801,10 +802,9 @@ object PgpMsg {
         } else {
           sequentialProcessedBlocks.add(
             DecryptErrorMsgBlock(
-              content = null,
+              content = msgBlock.content,
               complete = true,
-              error = null,
-              //kotlinError = decryptionResult.error
+              error = (decryptionResult.exception as? DecryptionException)?.to()
             )
           )
         }

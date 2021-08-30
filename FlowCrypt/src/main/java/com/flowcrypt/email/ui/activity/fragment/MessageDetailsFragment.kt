@@ -49,7 +49,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
@@ -75,6 +74,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
@@ -137,8 +137,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
               val decryptErrorDetails = decryptErrorMsgBlock.error?.details ?: continue
-              if (decryptErrorDetails.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
-                val fingerprints = decryptErrorMsgBlock.error.longIds?.needPassphrase ?: continue
+              if (decryptErrorDetails.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+                val fingerprints = decryptErrorMsgBlock.error.fingerprints ?: continue
                 showNeedPassphraseDialog(
                   fingerprints,
                   REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
@@ -1114,13 +1114,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val decryptError = block.error ?: return View(context)
 
     when (decryptError.details?.type) {
-      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
+      PgpDecrypt.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
         clipLargeText(
           block.content
         ), layoutInflater
       )
 
-      DecryptErrorDetails.Type.FORMAT -> {
+      PgpDecrypt.DecryptionErrorType.FORMAT -> {
         val formatErrorMsg = (getString(
           R.string.decrypt_error_message_badly_formatted,
           getString(R.string.app_name)
@@ -1129,7 +1129,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
       }
 
-      DecryptErrorDetails.Type.OTHER -> {
+      PgpDecrypt.DecryptionErrorType.OTHER -> {
         val otherErrorMsg =
           getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
               "\n\n" + getString(
@@ -1143,10 +1143,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       else -> {
         var btText: String? = null
         var onClickListener: View.OnClickListener? = null
-        if (decryptError.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+        if (decryptError.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
-            val fingerprints = decryptError.longIds?.needPassphrase ?: return@OnClickListener
+            val fingerprints = decryptError.fingerprints ?: return@OnClickListener
             showNeedPassphraseDialog(fingerprints, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
           }
         }

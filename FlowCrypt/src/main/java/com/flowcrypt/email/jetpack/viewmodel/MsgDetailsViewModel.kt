@@ -28,7 +28,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
@@ -42,6 +41,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -411,8 +411,8 @@ class MsgDetailsViewModel(
       }
 
       if (block is DecryptErrorMsgBlock) {
-        if (block.error?.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
-          val fingerprints = block.error.longIds?.needPassphrase ?: emptyList()
+        if (block.error?.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+          val fingerprints = block.error.fingerprints ?: emptyList()
           if (fingerprints.isEmpty()) {
             ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
           } else {

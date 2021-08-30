@@ -19,9 +19,7 @@ import com.google.gson.annotations.SerializedName
 data class DecryptErrorMsgBlock(
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
-  @SerializedName("decryptErr") @Expose val error: DecryptError?,
-  /*// TODO: remove above and change name of below when finally dropping JS
-  @SerializedName("kotlinDecryptErr") @Expose val kotlinError: PgpMsg.DecryptionError? = null*/
+  @SerializedName("decryptErr") @Expose val error: DecryptError?
 ) : MsgBlock {
 
   @Expose
@@ -30,8 +28,7 @@ data class DecryptErrorMsgBlock(
   constructor(source: Parcel) : this(
     source.readString(),
     1 == source.readInt(),
-    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)/*,
-    source.readParcelable<PgpMsg.DecryptionError>(PgpMsg.DecryptionError::class.java.classLoader)*/
+    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)
   )
 
   override fun describeContents(): Int {
@@ -43,8 +40,7 @@ data class DecryptErrorMsgBlock(
       writeParcelable(type, flags)
       writeString(content)
       writeInt(if (complete) 1 else 0)
-      writeParcelable(error, flags)/*
-      writeParcelable(kotlinError, flags)*/
+      writeParcelable(error, flags)
     }
 
   companion object {
