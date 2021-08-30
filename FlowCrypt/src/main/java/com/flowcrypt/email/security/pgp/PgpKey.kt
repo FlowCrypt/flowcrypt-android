@@ -85,8 +85,22 @@ object PgpKey {
     throwExceptionIfUnknownSource: Boolean = true
   ): ParseKeyResult {
     return ParseKeyResult(
-      PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource)
+      parseKeysRaw(source, throwExceptionIfUnknownSource)
     )
+  }
+
+  fun parseKeysRaw(
+    source: String,
+    throwExceptionIfUnknownSource: Boolean = true
+  ): PGPKeyRingCollection {
+    return parseKeysRaw(source.toInputStream(), throwExceptionIfUnknownSource)
+  }
+
+  fun parseKeysRaw(
+    source: InputStream,
+    throwExceptionIfUnknownSource: Boolean = true
+  ): PGPKeyRingCollection {
+    return PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource)
   }
 
   fun decryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {

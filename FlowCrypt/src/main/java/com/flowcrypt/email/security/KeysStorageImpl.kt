@@ -66,9 +66,8 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     liveData {
       val combinedSource =
         it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
-      val parseKeyResult = PgpKey.parseKeys(combinedSource)
-      val keys = parseKeyResult.pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings
-        .asSequence().toList()
+      val pgpKeyRingCollection = PgpKey.parseKeysRaw(combinedSource)
+      val keys = pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList()
       emit(keys)
     }
   }
