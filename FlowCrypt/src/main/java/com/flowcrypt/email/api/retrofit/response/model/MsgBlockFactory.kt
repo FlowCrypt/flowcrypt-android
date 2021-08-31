@@ -56,6 +56,9 @@ object MsgBlockFactory {
         PublicKeyMsgBlock(content, complete, keyDetails)
       }
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(content, complete, null)
+      MsgBlock.Type.SIGNED_MSG -> {
+        SignedMsgBlock(SignedMsgBlock.Type.SIGNED_MSG, content, complete, signature)
+      }
       MsgBlock.Type.SIGNED_TEXT -> {
         SignedMsgBlock(SignedMsgBlock.Type.SIGNED_TEXT, content, complete, signature)
       }

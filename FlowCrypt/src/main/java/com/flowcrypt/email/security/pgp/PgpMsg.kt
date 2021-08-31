@@ -765,9 +765,12 @@ object PgpMsg {
           else -> {
           } // make IntelliJ happy
         }
-      } else if (
-        msgBlock.type == MsgBlock.Type.SIGNED_MSG || msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG
-      ) {
+      } else if (msgBlock.type == MsgBlock.Type.SIGNED_MSG) {
+        val cleartext = PgpSignature.extractClearText(msgBlock.content)
+        if (msgBlock is SignedMsgBlock) {
+          sequentialProcessedBlocks.add(msgBlock.copy(content = cleartext))
+        }
+      } else if (msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG) {
         val decryptionResult = PgpDecrypt.decryptWithResult(
           msgBlock.content?.toInputStream()!!,
           ringCollection,
@@ -931,8 +934,7 @@ object PgpMsg {
           }
 
           MsgBlock.Type.PLAIN_TEXT -> {
-            val html =
-              fmtMsgContentBlockAsHtml(content.toString().toEscapedHtml(), FrameColor.PLAIN)
+            val html = fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.PLAIN)
             msgContentAsHtml.append(html)
             msgContentAsText.append(content).append('\n')
           }
@@ -945,7 +947,7 @@ object PgpMsg {
             msgContentAsText.append(text).append('\n')
           }
 
-          MsgBlock.Type.VERIFIED_MSG -> {
+          MsgBlock.Type.VERIFIED_MSG, MsgBlock.Type.SIGNED_MSG -> {
             msgContentAsHtml.append(fmtMsgContentBlockAsHtml(content, FrameColor.GRAY))
             msgContentAsText.append(sanitizeHtmlStripAllTags(content)).append('\n')
           }
