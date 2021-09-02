@@ -62,7 +62,8 @@ data class DecryptedAttMsgBlock(
       type = attMeta.type ?: Constants.MIME_TYPE_BINARY_DATA,
       name = FileAndDirectoryUtils.normalizeFileName(attMeta.name),
       encodedSize = attMeta.length,
-      id = EmailUtil.generateContentId()
+      id = EmailUtil.generateContentId(),
+      isDecrypted = true
     )
   }
 
