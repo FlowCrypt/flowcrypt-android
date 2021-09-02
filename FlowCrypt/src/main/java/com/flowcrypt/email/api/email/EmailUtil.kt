@@ -210,7 +210,7 @@ class EmailUtil {
 
           attachmentInfo.name = fileName
           attachmentInfo.encodedSize = pgpKeyDetails.publicKey.length.toLong()
-          attachmentInfo.rawData = pgpKeyDetails.publicKey
+          attachmentInfo.rawData = pgpKeyDetails.publicKey.toByteArray()
           attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
           attachmentInfo.email = pgpKeyDetails.primaryPgpContact.email
           attachmentInfo.id = generateContentId()

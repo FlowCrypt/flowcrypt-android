@@ -42,7 +42,9 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.util.*
+import java.util.ArrayList
+import java.util.Locale
+import java.util.UUID
 import javax.mail.Message
 
 /**
@@ -290,8 +292,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           var originalFileInputStream: InputStream? = null
           if (origFileUri != null) {
             originalFileInputStream = contentResolver.openInputStream(origFileUri)
-          } else if (!TextUtils.isEmpty(att.rawData)) {
-            originalFileInputStream = ByteArrayInputStream(att.rawData!!.toByteArray())
+          } else if (att.rawData?.isNotEmpty() == true) {
+            originalFileInputStream = ByteArrayInputStream(att.rawData)
           }
 
           if (originalFileInputStream == null) {

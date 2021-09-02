@@ -32,14 +32,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -98,7 +96,6 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.mail.AuthenticationFailedException
@@ -155,9 +152,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             Manifest.permission.WRITE_EXTERNAL_STORAGE
           ) == PackageManager.PERMISSION_GRANTED
         ) {
-          lastClickedAtt?.let {
-            context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
-          }
+          downloadAttachment()
         } else {
           requestPermissions(
             arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
@@ -410,9 +405,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-          lastClickedAtt?.let {
-            context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
-          }
+          downloadAttachment()
         } else {
           Toast.makeText(
             activity,
@@ -847,19 +840,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
-          val att = EmailUtil.getAttInfoFromUri(activity, decryptAtt.fileUri)
-          if (att != null) {
-            att.isDecrypted = true
-            att.uri?.path?.let {
-              att.uri = FileProvider.getUriForFile(
-                requireContext(),
-                Constants.FILE_PROVIDER_AUTHORITY,
-                File(it)
-              )
-            }
-
-            inlineEncryptedAtts.add(att)
-          }
+          inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo())
         }
 
         else -> layoutMsgParts?.addView(
@@ -1415,6 +1396,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         showNeedPassphraseDialog(fingerprintList, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
       }
     })
+  }
+
+  private fun downloadAttachment() {
+    lastClickedAtt?.let {
+      if (lastClickedAtt?.rawData?.isEmpty() == true) {
+        context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
+      } else {
+        //todo-denbond7 fix me
+      }
+    }
   }
 
   private fun messageNotAvailableInFolder(showToast: Boolean = true) {

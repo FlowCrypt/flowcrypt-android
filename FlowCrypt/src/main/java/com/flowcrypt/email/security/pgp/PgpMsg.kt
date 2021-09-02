@@ -241,40 +241,45 @@ object PgpMsg {
         }
       } else {
         val singlePart = part as MimePart
-        when (singlePart.contentType.split(';').firstOrNull()?.toLowerCase(Locale.US)?.trim()) {
-          "application/pgp-signature" -> {
-            signature = String(singlePart.inputStream.readBytes(), StandardCharsets.US_ASCII)
-          }
-
-          // this one was not in the Typescript, but I had to add it to pass some tests
-          "message/rfc822" -> {
-            arrayDeque.addFirst(singlePart.content as Part)
-          }
-
-          "text/html" -> {
-            if (!singlePart.hasFileName()) {
-              if (html == null) html = StringBuilder()
-              html.append(singlePart.content)
+        if (Part.ATTACHMENT.equals(singlePart.disposition, ignoreCase = true)) {
+          attachments.add(singlePart)
+        } else {
+          when (singlePart.contentType.split(';').firstOrNull()?.toLowerCase(Locale.US)
+            ?.trim()) {
+            "application/pgp-signature" -> {
+              signature = String(singlePart.inputStream.readBytes(), StandardCharsets.US_ASCII)
             }
-          }
 
-          "text/plain" -> {
-            if (!singlePart.hasFileName() || singlePart.isInline()) {
-              if (text == null) {
-                text = StringBuilder()
-              } else {
-                text.append("\n\n")
+            // this one was not in the Typescript, but I had to add it to pass some tests
+            "message/rfc822" -> {
+              arrayDeque.addFirst(singlePart.content as Part)
+            }
+
+            "text/html" -> {
+              if (!singlePart.hasFileName()) {
+                if (html == null) html = StringBuilder()
+                html.append(singlePart.content)
               }
-              text.append(singlePart.content)
             }
-          }
 
-          "text/rfc822-headers" -> {
-            // skip
-          }
+            "text/plain" -> {
+              if (!singlePart.hasFileName() || singlePart.isInline()) {
+                if (text == null) {
+                  text = StringBuilder()
+                } else {
+                  text.append("\n\n")
+                }
+                text.append(singlePart.content)
+              }
+            }
 
-          else -> {
-            attachments.add(singlePart)
+            "text/rfc822-headers" -> {
+              // skip
+            }
+
+            else -> {
+              attachments.add(singlePart)
+            }
           }
         }
       }
@@ -856,7 +861,9 @@ object PgpMsg {
         isReplyEncrypted = true
       }
 
-      if (block.type == MsgBlock.Type.PUBLIC_KEY) {
+      if (block.type == MsgBlock.Type.DECRYPTED_ATT) {
+        resultBlocks.add(block)
+      } else if (block.type == MsgBlock.Type.PUBLIC_KEY) {
         var keyRings: List<PGPKeyRing>? = null
         try {
           keyRings = PgpKey.parseAndNormalizeKeyRings(block.content!!)

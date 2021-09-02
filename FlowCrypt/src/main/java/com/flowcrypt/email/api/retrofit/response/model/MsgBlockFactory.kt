@@ -7,10 +7,7 @@
 package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
-import com.flowcrypt.email.extensions.java.io.toBase64EncodedString
 import com.flowcrypt.email.security.pgp.PgpKey
-import java.io.InputStream
-import java.util.Base64
 import javax.mail.internet.MimePart
 
 object MsgBlockFactory {
@@ -71,21 +68,25 @@ object MsgBlockFactory {
 
   fun fromAttachment(type: MsgBlock.Type, attachment: MimePart): MsgBlock {
     val attContent = attachment.content
-    val data: String? = when (attContent) {
-      is String -> Base64.getEncoder().encodeToString(attachment.inputStream.readBytes())
+    //todo-denbond7 need to test it
+
+    /*val data: String? = when (attContent) {
+      is String -> Base64.getEncoder().encode(attachment.inputStream.readBytes())
       is InputStream -> attContent.toBase64EncodedString()
       else -> null
-    }
+    }*/
+    val data = attachment.inputStream.readBytes()
+
     val attMeta = AttMeta(
       name = attachment.fileName,
-      data = data,
-      length = attachment.size.toLong(),
+      data = attachment.inputStream.readBytes(),
+      length = data.size.toLong(),
       type = attachment.contentType,
       contentId = attachment.contentID
     )
     val content = if (attContent is String) attachment.content as String else null
     return when (type) {
-      MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(content, true, attMeta, null)
+      MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(null, true, attMeta, null)
       MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(content, attMeta)
       MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(content, attMeta)
       else ->

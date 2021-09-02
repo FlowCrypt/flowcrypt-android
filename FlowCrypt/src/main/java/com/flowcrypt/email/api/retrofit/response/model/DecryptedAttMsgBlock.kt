@@ -8,6 +8,10 @@ package com.flowcrypt.email.api.retrofit.response.model
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -35,7 +39,7 @@ data class DecryptedAttMsgBlock(
     source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
     source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)
   ) {
-    fileUri = source.readParcelable<Uri>(Uri::class.java.classLoader)
+    fileUri = source.readParcelable(Uri::class.java.classLoader)
   }
 
   override fun describeContents(): Int {
@@ -51,6 +55,16 @@ data class DecryptedAttMsgBlock(
       writeParcelable(error, flags)
       writeParcelable(fileUri, flags)
     }
+
+  fun toAttachmentInfo(): AttachmentInfo {
+    return AttachmentInfo(
+      rawData = attMeta.data,
+      type = attMeta.type ?: Constants.MIME_TYPE_BINARY_DATA,
+      name = FileAndDirectoryUtils.normalizeFileName(attMeta.name),
+      encodedSize = attMeta.length,
+      id = EmailUtil.generateContentId()
+    )
+  }
 
   companion object {
     @JvmField
