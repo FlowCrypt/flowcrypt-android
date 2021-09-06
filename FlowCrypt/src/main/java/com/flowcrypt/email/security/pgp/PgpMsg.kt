@@ -90,11 +90,26 @@ object PgpMsg {
     "openpgp-encrypted-message.asc"
   )
 
-  private val ENCRYPTED_FILE_REGEX = Regex("(\\.pgp\$)|(\\.gpg\$)|(\\.[a-zA-Z0-9]{3,4}\\.asc\$)")
-  private val PRIVATE_KEY_REGEX = Regex("(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(key|asc)\$")
-  private val PUBLIC_KEY_REGEX_1 = Regex("^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.asc\$")
-  private val PUBLIC_KEY_REGEX_2 = Regex("[A-F0-9]{8}.*\\.asc\$")
-  private val PUBLIC_KEY_REGEX_3 = Regex("^(0x)?[A-Fa-f0-9]{16,40}\\.asc\\.pgp$")
+  private val ENCRYPTED_FILE_REGEX = Regex(
+    pattern = "(\\.pgp\$)|(\\.gpg\$)|(\\.[a-zA-Z0-9]{3,4}\\.asc\$)",
+    option = RegexOption.IGNORE_CASE
+  )
+  private val PRIVATE_KEY_REGEX = Regex(
+    pattern = "(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(key|asc)\$",
+    option = RegexOption.IGNORE_CASE
+  )
+  private val PUBLIC_KEY_REGEX_1 = Regex(
+    pattern = "^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.asc\$",
+    option = RegexOption.IGNORE_CASE
+  )
+  private val PUBLIC_KEY_REGEX_2 = Regex(
+    pattern = "[A-F0-9]{8}.*\\.asc\$",
+    option = RegexOption.IGNORE_CASE
+  )
+  private val PUBLIC_KEY_REGEX_3 = Regex(
+    pattern = "^(0x)?[A-Fa-f0-9]{16,40}\\.asc\\.pgp$",
+    option = RegexOption.IGNORE_CASE
+  )
   private val CID_CORRECTION_REGEX_1 = Regex(">$")
   private val CID_CORRECTION_REGEX_2 = Regex("^<")
   private val IMG_SRC_WITH_CID_REGEX = Regex("src=\"cid:([^\"]+)\"")

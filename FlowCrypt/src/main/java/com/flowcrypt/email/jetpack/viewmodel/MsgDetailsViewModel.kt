@@ -200,15 +200,15 @@ class MsgDetailsViewModel(
           }
 
           Result.Status.SUCCESS -> {
-            val parseDecryptedMsgResult = it.data
-            if (parseDecryptedMsgResult != null) {
+            val processedMimeMessageResult = it.data
+            if (processedMimeMessageResult != null) {
               try {
                 val msgInfo = IncomingMessageInfo(
                   msgEntity = messageEntity,
-                  text = parseDecryptedMsgResult.text,
+                  text = processedMimeMessageResult.text,
                   //subject = parseDecryptedMsgResult.subject,
-                  msgBlocks = parseDecryptedMsgResult.blocks,
-                  encryptionType = if (parseDecryptedMsgResult.isReplyEncrypted) {
+                  msgBlocks = processedMimeMessageResult.blocks,
+                  encryptionType = if (processedMimeMessageResult.isReplyEncrypted) {
                     MessageEncryptionType.ENCRYPTED
                   } else {
                     MessageEncryptionType.STANDARD
@@ -374,7 +374,7 @@ class MsgDetailsViewModel(
           context = getApplication(),
           inputStream = KeyStoreCryptoManager.getCipherInputStream(inputStream)
         )
-        postProcessMsgBlocks(processMimeMessageResult.blocks)
+        preResultsProcessing(processMimeMessageResult.blocks)
         return@withContext Result.success(processMimeMessageResult)
       } catch (e: Exception) {
         return@withContext Result.exception(e)
@@ -393,7 +393,7 @@ class MsgDetailsViewModel(
       try {
         val processMimeMessageResult =
           PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
-        postProcessMsgBlocks(processMimeMessageResult.blocks)
+        preResultsProcessing(processMimeMessageResult.blocks)
         return@withContext Result.success(processMimeMessageResult)
       } catch (e: Exception) {
         return@withContext Result.exception(throwable = e)
@@ -401,7 +401,7 @@ class MsgDetailsViewModel(
     }
   }
 
-  private suspend fun postProcessMsgBlocks(blocks: List<MsgBlock>) {
+  private suspend fun preResultsProcessing(blocks: List<MsgBlock>) {
     for (block in blocks) {
       if (block is PublicKeyMsgBlock) {
         val keyDetails = block.keyDetails ?: continue

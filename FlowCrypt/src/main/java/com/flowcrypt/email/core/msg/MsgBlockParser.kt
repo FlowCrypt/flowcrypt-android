@@ -58,14 +58,17 @@ object MsgBlockParser {
       }
 
       for (attachment in decoded.attachments) {
-        blocks.add(
-          if (PgpMsg.treatAs(attachment) == PgpMsg.TreatAs.PUBLIC_KEY) {
+        try {
+          val attMsgBlock = if (PgpMsg.treatAs(attachment) == PgpMsg.TreatAs.PUBLIC_KEY) {
             val content = String(attachment.inputStream.readBytes())
             MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, content)
           } else {
             MsgBlockFactory.fromAttachment(MsgBlock.Type.DECRYPTED_ATT, attachment)
           }
-        )
+          blocks.add(attMsgBlock)
+        } catch (e: Exception) {
+          e.printStackTrace()
+        }
       }
 
       return SanitizedBlocks(blocks, isRichText)
