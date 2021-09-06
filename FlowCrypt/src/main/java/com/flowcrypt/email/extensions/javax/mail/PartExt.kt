@@ -6,9 +6,9 @@
 
 package com.flowcrypt.email.extensions.javax.mail
 
-import java.util.Locale
+import com.flowcrypt.email.extensions.java.lang.lowercase
 import javax.mail.Part
 
 fun Part.isInline(): Boolean {
-  return (this.disposition?.toLowerCase(Locale.getDefault()) ?: "") == Part.INLINE
+  return (this.disposition?.lowercase() ?: "") == Part.INLINE
 }

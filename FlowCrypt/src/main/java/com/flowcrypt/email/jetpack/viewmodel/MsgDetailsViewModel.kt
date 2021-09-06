@@ -370,12 +370,12 @@ class MsgDetailsViewModel(
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
-        val processMimeMessageResult = PgpMsg.processMimeMessage(
+        val processedMimeMessageResult = PgpMsg.processMimeMessage(
           context = getApplication(),
           inputStream = KeyStoreCryptoManager.getCipherInputStream(inputStream)
         )
-        preResultsProcessing(processMimeMessageResult.blocks)
-        return@withContext Result.success(processMimeMessageResult)
+        preResultsProcessing(processedMimeMessageResult.blocks)
+        return@withContext Result.success(processedMimeMessageResult)
       } catch (e: Exception) {
         return@withContext Result.exception(e)
       }
@@ -391,10 +391,10 @@ class MsgDetailsViewModel(
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       try {
-        val processMimeMessageResult =
+        val processedMimeMessageResult =
           PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
-        preResultsProcessing(processMimeMessageResult.blocks)
-        return@withContext Result.success(processMimeMessageResult)
+        preResultsProcessing(processedMimeMessageResult.blocks)
+        return@withContext Result.success(processedMimeMessageResult)
       } catch (e: Exception) {
         return@withContext Result.exception(throwable = e)
       }

@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.MsgBlockParser
 import com.flowcrypt.email.extensions.java.io.readText
+import com.flowcrypt.email.extensions.java.lang.lowercase
 import com.flowcrypt.email.extensions.javax.mail.internet.hasFileName
 import com.flowcrypt.email.extensions.javax.mail.isInline
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
@@ -45,11 +46,11 @@ import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
-import java.util.Locale
 import java.util.Properties
 import javax.mail.Multipart
 import javax.mail.Part
 import javax.mail.Session
+import javax.mail.internet.ContentType
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimePart
 import kotlin.random.Random
@@ -204,39 +205,16 @@ object PgpMsg {
     val keysStorage = KeysStorageImpl.getInstance(context)
     val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
     val protector = keysStorage.getSecretKeyRingProtector()
-    return processMimeMessage(
-      msg = MimeMessage(Session.getInstance(Properties()), inputStream),
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
-      protector = protector
-    )
-  }
-
-  fun processMimeMessage(
-    inputStream: InputStream,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
-    protector: SecretKeyRingProtector
-  ): ProcessedMimeMessageResult {
-    return processMimeMessage(
-      msg = MimeMessage(Session.getInstance(Properties()), inputStream),
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
-      protector = protector
-    )
-  }
-
-  fun processMimeMessage(
-    msg: MimeMessage,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
-    protector: SecretKeyRingProtector
-  ): ProcessedMimeMessageResult {
-    val extractedMimeContent = extractMimeContent(msg)
+    val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
+    val extractedMimeContent = extractMimeContent(mimeMessage)
     val extractedMsgBlocks = extractMsgBlocks(extractedMimeContent)
     return processExtractedMsgBlocks(extractedMsgBlocks, pgpSecretKeyRingCollection, protector)
   }
 
   fun extractMimeContent(msg: MimeMessage): ExtractedMimeContent {
-    var signature: String? = null
+    var signature: ByteArray? = null
     var html: StringBuilder? = null
-    var text: StringBuilder? = null
+    var plainText: StringBuilder? = null
     val attachments = mutableListOf<MimePart>()
 
     val arrayDeque = ArrayDeque<Part>()
@@ -245,24 +223,25 @@ object PgpMsg {
     while (arrayDeque.isNotEmpty()) {
       val part = arrayDeque.removeFirst()
       if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        val multipart = part.content as Multipart
-        val list = mutableListOf<Part>()
-        val n = multipart.count
-        for (i in 0 until n) {
-          list.add(multipart.getBodyPart(i))
-        }
-        for (i in 0 until n) {
-          arrayDeque.addFirst(list[n - i - 1])
+        val multipart = (part.content as? Multipart) ?: continue
+        val partsCount = multipart.count
+        for (i in 0 until partsCount) {
+          arrayDeque.addFirst(multipart.getBodyPart(partsCount - i - 1))
         }
       } else {
-        val singlePart = part as MimePart
+        val singlePart = (part as? MimePart) ?: continue
         if (Part.ATTACHMENT.equals(singlePart.disposition, ignoreCase = true)) {
           attachments.add(singlePart)
         } else {
-          when (singlePart.contentType.split(';').firstOrNull()?.toLowerCase(Locale.US)
-            ?.trim()) {
+          val contentType = try {
+            ContentType(singlePart.contentType).baseType?.lowercase()
+          } catch (e: Exception) {
+            null
+          }
+
+          when (contentType) {
             "application/pgp-signature" -> {
-              signature = String(singlePart.inputStream.readBytes(), StandardCharsets.US_ASCII)
+              signature = singlePart.inputStream.readBytes()
             }
 
             // this one was not in the Typescript, but I had to add it to pass some tests
@@ -272,19 +251,21 @@ object PgpMsg {
 
             "text/html" -> {
               if (!singlePart.hasFileName()) {
-                if (html == null) html = StringBuilder()
+                if (html == null) {
+                  html = StringBuilder()
+                }
                 html.append(singlePart.content)
               }
             }
 
             "text/plain" -> {
               if (!singlePart.hasFileName() || singlePart.isInline()) {
-                if (text == null) {
-                  text = StringBuilder()
+                if (plainText == null) {
+                  plainText = StringBuilder()
                 } else {
-                  text.append("\n\n")
+                  plainText.append("\n\n")
                 }
-                text.append(singlePart.content)
+                plainText.append(singlePart.content)
               }
             }
 
@@ -300,12 +281,16 @@ object PgpMsg {
       }
     }
 
-    return ExtractedMimeContent(attachments, signature, html?.toString(), text?.toString())
+    return ExtractedMimeContent(attachments, signature, html?.toString(), plainText?.toString())
   }
 
   fun treatAs(att: MimePart): TreatAs {
-    val name = att.fileName?.toLowerCase(Locale.US) ?: ""
-    val type = att.contentType.toLowerCase(Locale.US)
+    val name = att.fileName?.lowercase() ?: ""
+    val type = try {
+      ContentType(att.contentType).baseType?.lowercase()
+    } catch (e: Exception) {
+      null
+    }
     val length = att.size
     when {
       name in HIDDEN_FILE_NAMES -> {
@@ -314,12 +299,12 @@ object PgpMsg {
         return TreatAs.HIDDEN
       }
 
-      "signature.asc" == name || "application/pgp-signature" == type -> {
-        return TreatAs.SIGNATURE
+      "" == name && type?.startsWith("image/") != true -> {
+        return if (length < 100) TreatAs.SIGNATURE else TreatAs.ENCRYPTED_MSG
       }
 
-      "" == name && !type.startsWith("image/") -> {
-        return if (length < 100) TreatAs.SIGNATURE else TreatAs.ENCRYPTED_MSG
+      "signature.asc" == name || "application/pgp-signature" == type -> {
+        return TreatAs.SIGNATURE
       }
 
       "msg.asc" == name && length < 100 && "application/pgp-encrypted" == type -> {
@@ -641,34 +626,9 @@ object PgpMsg {
 
   private fun extractMsgBlocks(mimeContent: ExtractedMimeContent): MutableList<MsgBlock> {
     val blocks = mutableListOf<MsgBlock>()
-    if (mimeContent.text != null) {
-      val blocksFromTextPart = MsgBlockParser.detectBlocks(mimeContent.text).blocks
-      val suitableBlock = blocksFromTextPart.firstOrNull {
-        it.type in MsgBlock.Type.WELL_KNOWN_BLOCK_TYPES
-      }
-      when {
-        suitableBlock != null -> {
-          // if there are some encryption-related blocks found in the text section,
-          // which we can use, and not look at the html section, because the html most likely
-          // contains the same thing, just harder to parse pgp sections cause it's html
-          blocks.addAll(blocksFromTextPart)
-        }
+    blocks.addAll(extractMsgBlocksFromText(mimeContent))
 
-        mimeContent.html != null -> {
-          // if no pgp blocks found in text part and there is html part, prefer html
-          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, mimeContent.html))
-        }
-
-        else -> {
-          // else if no html and just a plain text message, use that
-          blocks.addAll(blocksFromTextPart)
-        }
-      }
-    } else if (mimeContent.html != null) {
-      blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, mimeContent.html))
-    }
-
-    var signature: String? = mimeContent.signature
+    var signature: String? = mimeContent.signature?.let { String(it) }
     for (att in mimeContent.attachments) {
       var content = att.content
       when (treatAs(att)) {
@@ -715,6 +675,39 @@ object PgpMsg {
     return blocks
   }
 
+  private fun extractMsgBlocksFromText(mimeContent: ExtractedMimeContent): MutableList<MsgBlock> {
+    val blocks = mutableListOf<MsgBlock>()
+    if (mimeContent.text != null) {
+      val blocksFromText = MsgBlockParser.detectBlocks(mimeContent.text).blocks
+      val suitableBlock = blocksFromText.firstOrNull {
+        it.type in MsgBlock.Type.WELL_KNOWN_BLOCK_TYPES
+      }
+
+      when {
+        suitableBlock != null -> {
+          // if there are some encryption-related blocks found in the text section,
+          // which we can use, and not look at the html section, because the html most likely
+          // contains the same thing, just harder to parse pgp sections cause it's html
+          blocks.addAll(blocksFromText)
+        }
+
+        mimeContent.html != null -> {
+          // if no pgp blocks found in text part and there is html part, prefer html
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, mimeContent.html))
+        }
+
+        else -> {
+          // else if no html and just a plain text message, use that
+          blocks.addAll(blocksFromText)
+        }
+      }
+    } else if (mimeContent.html != null) {
+      blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PLAIN_HTML, mimeContent.html))
+    }
+
+    return blocks
+  }
+
   private fun fixSignedBlocks(blocks: MutableList<MsgBlock>, signature: String) {
     for (i in 0 until blocks.size) {
       val block = blocks[i]
@@ -754,107 +747,7 @@ object PgpMsg {
     ringCollection: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): ProcessedMimeMessageResult {
-    val sequentialProcessedBlocks = mutableListOf<MsgBlock>()
-    for (msgBlock in msgBlocks) {
-      val isSignedContent = msgBlock.type == MsgBlock.Type.SIGNED_MSG ||
-          msgBlock.type == MsgBlock.Type.SIGNED_HTML
-      if (isSignedContent && (msgBlock as SignedMsgBlock).signature != null) {
-        when (msgBlock.type) {
-          MsgBlock.Type.SIGNED_MSG -> {
-            // skip verification for now
-            sequentialProcessedBlocks.add(
-              MsgBlockFactory.fromContent(
-                type = MsgBlock.Type.VERIFIED_MSG,
-                content = msgBlock.content?.toEscapedHtml(),
-                signature = msgBlock.signature
-              )
-            )
-          }
-
-          MsgBlock.Type.SIGNED_HTML -> {
-            // skip verification for now
-            sequentialProcessedBlocks.add(
-              MsgBlockFactory.fromContent(
-                type = MsgBlock.Type.VERIFIED_MSG,
-                content = sanitizeHtmlKeepBasicTags(msgBlock.content),
-                signature = msgBlock.signature
-              )
-            )
-          }
-
-          else -> {
-          } // make IntelliJ happy
-        }
-      } else if (msgBlock.type == MsgBlock.Type.SIGNED_MSG) {
-        val cleartext = PgpSignature.extractClearText(msgBlock.content)
-        if (msgBlock is SignedMsgBlock) {
-          sequentialProcessedBlocks.add(msgBlock.copy(content = cleartext))
-        }
-      } else if (msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG) {
-        val decryptionResult = PgpDecrypt.decryptWithResult(
-          msgBlock.content?.toInputStream()!!,
-          ringCollection,
-          protector
-        )
-
-        if (decryptionResult.exception == null) {
-          if (decryptionResult.isEncrypted) {
-            val decrypted = decryptionResult.content?.toByteArray()
-            val formatted = MsgBlockParser.fmtDecryptedAsSanitizedHtmlBlocks(decrypted)
-            //todo-denbond7 fix it //if (subject == null) subject = formatted.subject
-            sequentialProcessedBlocks.addAll(formatted.blocks)
-          } else {
-            // ------------------------------------------------------------------------------------
-            // Comment from TS code:
-            // ------------------------------------------------------------------------------------
-            // treating as text, converting to html - what about plain signed html?
-            // This could produce html tags although hopefully, that would, typically, result in
-            // the `(msgBlock.type === 'signedMsg' || msgBlock.type === 'signedHtml')` block above
-            // the only time I can imagine it screwing up down here is if it was a signed-only
-            // message that was actually fully armored (text not visible) with a mime msg inside
-            // ... -> in which case the user would I think see full mime content?
-            // ------------------------------------------------------------------------------------
-            sequentialProcessedBlocks.add(
-              MsgBlockFactory.fromContent(
-                type = MsgBlock.Type.VERIFIED_MSG,
-                content = decryptionResult.content?.toString("UTF-8")?.toEscapedHtml(),
-                signature = decryptionResult.signature
-              )
-            )
-          }
-        } else {
-          sequentialProcessedBlocks.add(
-            DecryptErrorMsgBlock(
-              content = msgBlock.content,
-              complete = true,
-              error = (decryptionResult.exception as? DecryptionException)?.to()
-            )
-          )
-        }
-      } else if (
-        msgBlock.type == MsgBlock.Type.ENCRYPTED_ATT
-        && (msgBlock as EncryptedAttMsgBlock).attMeta.name != null
-        && PUBLIC_KEY_REGEX_3.matches(msgBlock.attMeta.name ?: "")
-      ) {
-        // encrypted public key attached
-        val decryptionResult = PgpDecrypt.decryptWithResult(
-          msgBlock.content?.toInputStream()!!,
-          ringCollection,
-          protector
-        )
-        if (decryptionResult.content != null) {
-          val content = decryptionResult.content.toString("UTF-8")
-          sequentialProcessedBlocks.add(
-            MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, content)
-          )
-        } else {
-          // will show as encrypted attachment
-          sequentialProcessedBlocks.add(msgBlock)
-        }
-      } else {
-        sequentialProcessedBlocks.add(msgBlock)
-      }
-    }
+    val sequentialProcessedBlocks = handleExtractedMsgBlocks(msgBlocks, ringCollection, protector)
 
     var isReplyEncrypted = false
     val contentBlocks = mutableListOf<MsgBlock>()
@@ -868,48 +761,42 @@ object PgpMsg {
       // block.content = isContentBlock(block.type)
       //     ? block.content.toUtfStr() : block.content.toRawBytesStr();
 
-      if (
-        block.type == MsgBlock.Type.DECRYPTED_HTML
-        || block.type == MsgBlock.Type.DECRYPTED_TEXT
-        || block.type == MsgBlock.Type.DECRYPTED_ATT
-      ) {
+      if (block.type in MsgBlock.Type.DECRYPTED_CONTENT_BLOCK_TYPES) {
         isReplyEncrypted = true
       }
 
-      if (block.type == MsgBlock.Type.DECRYPTED_ATT) {
-        resultBlocks.add(block)
-      } else if (block.type == MsgBlock.Type.PUBLIC_KEY) {
-        var keyRings: List<PGPKeyRing>? = null
-        try {
-          keyRings = PgpKey.parseAndNormalizeKeyRings(block.content!!)
-        } catch (ex: Exception) {
-          ex.printStackTrace()
+      when {
+        block.type == MsgBlock.Type.DECRYPTED_ATT -> {
+          resultBlocks.add(block)
         }
-        if (keyRings != null && keyRings.isNotEmpty()) {
-          resultBlocks.addAll(
-            keyRings.map { PublicKeyMsgBlock(it.armor(null), true, it.toPgpKeyDetails()) }
-          )
-        } else {
-          resultBlocks.add(
-            DecryptErrorMsgBlock(
-              block.content,
-              true,
-              null,
-              /*PgpDecrypt.DecryptionError(
-                PgpDecrypt.DecryptionErrorType.FORMAT,
-                "Badly formatted public key"
-              )*/
+
+        block.type == MsgBlock.Type.PUBLIC_KEY -> {
+          var keyRings: List<PGPKeyRing>? = null
+          try {
+            keyRings = PgpKey.parseAndNormalizeKeyRings(block.content!!)
+          } catch (ex: Exception) {
+            ex.printStackTrace()
+          }
+          if (keyRings != null && keyRings.isNotEmpty()) {
+            resultBlocks.addAll(
+              keyRings.map { PublicKeyMsgBlock(it.armor(null), true, it.toPgpKeyDetails()) }
             )
-          )
+          } else {
+            resultBlocks.add(DecryptErrorMsgBlock(block.content, true, null))
+          }
         }
-      } else if (block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block)) {
-        contentBlocks.add(block)
-      } else if (block.type != MsgBlock.Type.PLAIN_ATT) {
-        resultBlocks.add(block)
+
+        block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block) -> {
+          contentBlocks.add(block)
+        }
+
+        block.type != MsgBlock.Type.PLAIN_ATT -> {
+          resultBlocks.add(block)
+        }
       }
     }
 
-    val fmtRes = fmtContentBlock(contentBlocks)
+    val fmtRes = prepareFormattedContentBlock(contentBlocks)
     resultBlocks.add(0, fmtRes.contentBlock)
 
     return ProcessedMimeMessageResult(
@@ -919,7 +806,152 @@ object PgpMsg {
     )
   }
 
-  private fun fmtContentBlock(allContentBlocks: List<MsgBlock>): FormatContentBlockResult {
+  private fun handleExtractedMsgBlocks(
+    msgBlocks: List<MsgBlock>,
+    ringCollection: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector
+  ): MutableList<MsgBlock> {
+    val sequentialProcessedBlocks = mutableListOf<MsgBlock>()
+    for (msgBlock in msgBlocks) {
+      when {
+        msgBlock is SignedMsgBlock -> {
+          processSignedMsgBlock(msgBlock)?.let { sequentialProcessedBlocks.add(it) }
+        }
+
+        msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG -> {
+          val handledBlocks = processEncryptedMsgBlock(msgBlock, ringCollection, protector)
+          sequentialProcessedBlocks.addAll(handledBlocks)
+        }
+
+        msgBlock.type == MsgBlock.Type.ENCRYPTED_ATT
+            && (msgBlock as EncryptedAttMsgBlock).attMeta.name != null
+            && PUBLIC_KEY_REGEX_3.matches(msgBlock.attMeta.name ?: "") -> {
+          sequentialProcessedBlocks.add(
+            processPublicKeyMsgBlock(
+              msgBlock,
+              ringCollection,
+              protector
+            )
+          )
+        }
+
+        else -> {
+          sequentialProcessedBlocks.add(msgBlock)
+        }
+      }
+    }
+    return sequentialProcessedBlocks
+  }
+
+  private fun processPublicKeyMsgBlock(
+    msgBlock: MsgBlock,
+    ringCollection: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector
+  ): MsgBlock {
+    // encrypted public key attached
+    val decryptionResult = PgpDecrypt.decryptWithResult(
+      msgBlock.content?.toInputStream()!!,
+      ringCollection,
+      protector
+    )
+    return if (decryptionResult.content != null) {
+      val content = decryptionResult.content.toString(StandardCharsets.UTF_8.displayName())
+      MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, content)
+    } else {
+      // will show as encrypted attachment
+      msgBlock
+    }
+  }
+
+  private fun processEncryptedMsgBlock(
+    msgBlock: MsgBlock,
+    ringCollection: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector
+  ): List<MsgBlock> {
+    val decryptionResult = PgpDecrypt.decryptWithResult(
+      msgBlock.content?.toInputStream()!!,
+      ringCollection,
+      protector
+    )
+
+    val results = mutableListOf<MsgBlock>()
+
+    if (decryptionResult.exception == null) {
+      if (decryptionResult.isEncrypted) {
+        val decrypted = decryptionResult.content?.toByteArray()
+        val formatted = MsgBlockParser.fmtDecryptedAsSanitizedHtmlBlocks(decrypted)
+        //todo-denbond7 fix it //if (subject == null) subject = formatted.subject
+        results.addAll(formatted.blocks)
+      } else {
+        // ------------------------------------------------------------------------------------
+        // Comment from TS code:
+        // ------------------------------------------------------------------------------------
+        // treating as text, converting to html - what about plain signed html?
+        // This could produce html tags although hopefully, that would, typically, result in
+        // the `(msgBlock.type === 'signedMsg' || msgBlock.type === 'signedHtml')` block above
+        // the only time I can imagine it screwing up down here is if it was a signed-only
+        // message that was actually fully armored (text not visible) with a mime msg inside
+        // ... -> in which case the user would I think see full mime content?
+        // ------------------------------------------------------------------------------------
+        results.add(
+          MsgBlockFactory.fromContent(
+            type = MsgBlock.Type.VERIFIED_MSG,
+            content = decryptionResult.content?.toString(
+              StandardCharsets.UTF_8.displayName()
+            )?.toEscapedHtml(),
+            signature = decryptionResult.signature
+          )
+        )
+      }
+    } else {
+      results.add(
+        DecryptErrorMsgBlock(
+          content = msgBlock.content,
+          complete = true,
+          error = (decryptionResult.exception as? DecryptionException)?.to()
+        )
+      )
+    }
+
+    return results
+  }
+
+  private fun processSignedMsgBlock(msgBlock: SignedMsgBlock): MsgBlock? {
+    return when {
+      msgBlock.signature != null -> {
+        when (msgBlock.type) {
+          MsgBlock.Type.SIGNED_MSG -> {
+            // skip verification for now
+            MsgBlockFactory.fromContent(
+              type = MsgBlock.Type.VERIFIED_MSG,
+              content = msgBlock.content?.toEscapedHtml(),
+              signature = msgBlock.signature
+            )
+          }
+
+          MsgBlock.Type.SIGNED_HTML -> {
+            // skip verification for now
+            return MsgBlockFactory.fromContent(
+              type = MsgBlock.Type.VERIFIED_MSG,
+              content = sanitizeHtmlKeepBasicTags(msgBlock.content),
+              signature = msgBlock.signature
+            )
+          }
+          else -> null
+        }
+      }
+
+      msgBlock.type == MsgBlock.Type.SIGNED_MSG -> {
+        val cleartext = PgpSignature.extractClearText(msgBlock.content)
+        return msgBlock.copy(content = cleartext)
+      }
+
+      else -> null
+    }
+  }
+
+  private fun prepareFormattedContentBlock(allContentBlocks: List<MsgBlock>):
+      FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
     for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
@@ -994,7 +1026,7 @@ object PgpMsg {
       msgContentAsText.append("[image: ${alt}]\n")
     }
 
-    return FormatContentBlockResult(
+    return FormattedContentBlockResult(
       text = msgContentAsText.toString().trim(),
       contentBlock = MsgBlockFactory.fromContent(
         type = MsgBlock.Type.PLAIN_HTML,
@@ -1126,10 +1158,35 @@ object PgpMsg {
 
   data class ExtractedMimeContent(
     val attachments: List<MimePart>,
-    var signature: String?,
-    val html: String?,
-    val text: String?
-  )
+    var signature: ByteArray? = null,
+    val html: String? = null,
+    val text: String? = null
+  ) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as ExtractedMimeContent
+
+      if (attachments != other.attachments) return false
+      if (signature != null) {
+        if (other.signature == null) return false
+        if (!signature.contentEquals(other.signature)) return false
+      } else if (other.signature != null) return false
+      if (html != other.html) return false
+      if (text != other.text) return false
+
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = attachments.hashCode()
+      result = 31 * result + (signature?.contentHashCode() ?: 0)
+      result = 31 * result + (html?.hashCode() ?: 0)
+      result = 31 * result + (text?.hashCode() ?: 0)
+      return result
+    }
+  }
 
   data class ProcessedMimeMessageResult(
     val isReplyEncrypted: Boolean,
@@ -1147,7 +1204,7 @@ object PgpMsg {
     PLAIN_FILE
   }
 
-  private data class FormatContentBlockResult(
+  private data class FormattedContentBlockResult(
     val text: String,
     val contentBlock: MsgBlock
   )

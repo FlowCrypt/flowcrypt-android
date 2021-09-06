@@ -113,6 +113,10 @@ interface MsgBlock : Parcelable {
         PLAIN_TEXT, PLAIN_HTML, DECRYPTED_TEXT, DECRYPTED_HTML, SIGNED_MSG, VERIFIED_MSG
       )
 
+      val DECRYPTED_CONTENT_BLOCK_TYPES = setOf(
+        DECRYPTED_HTML, DECRYPTED_TEXT, DECRYPTED_ATT
+      )
+
       fun ofSerializedName(serializedName: String): Type {
         for (v in values()) {
           val field = Type::class.java.getField(v.name)
