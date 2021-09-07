@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.util.Passphrase
 
 object TestKeys {
@@ -15,19 +16,21 @@ object TestKeys {
     val passphrase: String,
     val longid: String
   ) {
-    val listOfKeysWithPassPhrase: List<PgpMsg.KeyWithPassPhrase>
+    val listOfKeysWithPassPhrase: List<KeyWithPassPhrase>
       get() {
         return listOf(keyWithPassPhrase)
       }
 
-    private val keyWithPassPhrase: PgpMsg.KeyWithPassPhrase
+    private val keyWithPassPhrase: KeyWithPassPhrase
       get() {
-        return PgpMsg.KeyWithPassPhrase(
+        return KeyWithPassPhrase(
           keyRing = PgpKey.extractSecretKeyRing(privateKey),
           passphrase = Passphrase.fromPassword(passphrase)
         )
       }
   }
+
+  data class KeyWithPassPhrase(val keyRing: PGPSecretKeyRing, val passphrase: Passphrase)
 
   val KEYS = mapOf(
     "rsa1" to TestKey(

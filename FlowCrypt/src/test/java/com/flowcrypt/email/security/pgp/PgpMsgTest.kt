@@ -12,15 +12,17 @@ import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.util.TestUtil
 import com.google.gson.JsonParser
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.jsoup.Jsoup
-import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -50,12 +52,12 @@ class PgpMsgTest {
     private val HTML_SPECIAL_CHARS = TEXT_SPECIAL_CHARS.toEscapedHtml()
 
     private val PRIVATE_KEYS = listOf(
-      PgpMsg.KeyWithPassPhrase(
+      TestKeys.KeyWithPassPhrase(
         passphrase = Passphrase.fromPassword("flowcrypt compatibility tests"),
         keyRing = loadSecretKey("key0.txt"),
       ),
 
-      PgpMsg.KeyWithPassPhrase(
+      TestKeys.KeyWithPassPhrase(
         passphrase = Passphrase.fromPassword("flowcrypt compatibility tests 2"),
         keyRing = loadSecretKey("key1.txt")
       )
@@ -165,16 +167,22 @@ class PgpMsgTest {
   fun missingMdcTest() {
     val r = processMessage("decrypt - [security] mdc - missing - error")
     assertTrue("Message is returned when should not", r.content == null)
-    assertTrue("Error not returned", r.error != null)
-    assertTrue("Missing MDC not detected", r.error!!.type == PgpDecrypt.DecryptionErrorType.NO_MDC)
+    assertTrue("Error not returned", r.exception != null)
+    assertTrue(
+      "Missing MDC not detected",
+      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.NO_MDC
+    )
   }
 
   @Test
   fun badMdcTest() {
     val r = processMessage("decrypt - [security] mdc - modification detected - error")
     assertTrue("Message is returned when should not", r.content == null)
-    assertTrue("Error not returned", r.error != null)
-    assertTrue("Bad MDC not detected", r.error!!.type == PgpDecrypt.DecryptionErrorType.BAD_MDC)
+    assertTrue("Error not returned", r.exception != null)
+    assertTrue(
+      "Bad MDC not detected",
+      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.BAD_MDC
+    )
   }
 
   @Test
@@ -183,7 +191,7 @@ class PgpMsgTest {
       "decrypt - [everdesk] message encrypted for sub but claims encryptedFor-primary,sub"
     )
     assertTrue("Message not returned", r.content != null)
-    assertTrue("Error returned", r.error == null)
+    assertTrue("Error returned", r.exception == null)
     // TODO: Should there be any error?
     // https://github.com/FlowCrypt/flowcrypt-android/issues/1214
   }
@@ -196,15 +204,15 @@ class PgpMsgTest {
     // and should decrypt correctly - so it's good as is.
     val r = processMessage("decrypt - encrypted missing checksum")
     assertTrue("Message not returned", r.content != null)
-    assertTrue("Error returned", r.error == null)
+    assertTrue("Error returned", r.exception == null)
   }
 
   @Test
   // @Ignore("BC ArmoredInputStream issue")
   fun wrongArmorChecksumTest() {
     val r = processMessage("decrypt - issue 1347 - wrong checksum")
-    assertTrue("Error not returned", r.error != null)
-    assertEquals(PgpDecrypt.DecryptionErrorType.FORMAT, r.error!!.type)
+    assertTrue("Error not returned", r.exception != null)
+    assertEquals(PgpDecrypt.DecryptionErrorType.FORMAT, r.exception?.decryptionErrorType)
   }
 
   @Test
@@ -212,16 +220,18 @@ class PgpMsgTest {
     val messageInfo = findMessage("decrypt - without a subject")
     val wrongPassphrase = Passphrase.fromPassword("this is wrong passphrase for sure")
     val privateKeysWithWrongPassPhrases = PRIVATE_KEYS.map {
-      PgpMsg.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = wrongPassphrase)
+      TestKeys.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = wrongPassphrase)
     }
-    val r = PgpMsg.decrypt(
-      messageInfo.armored.toByteArray(), privateKeysWithWrongPassPhrases, null
+    val r = PgpDecrypt.decryptWithResult(
+      messageInfo.armored.byteInputStream(),
+      PGPSecretKeyRingCollection(privateKeysWithWrongPassPhrases.map { it.keyRing }),
+      SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
-    assertTrue("Error not returned", r.error != null)
+    assertTrue("Error not returned", r.exception != null)
     assertTrue(
       "Wrong passphrase not detected",
-      r.error!!.type == PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE
+      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE
     )
   }
 
@@ -229,16 +239,18 @@ class PgpMsgTest {
   fun missingPassphraseTest() {
     val messageInfo = findMessage("decrypt - without a subject")
     val privateKeysWithMissingPassphrases = PRIVATE_KEYS.map {
-      PgpMsg.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = null)
+      TestKeys.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = Passphrase.emptyPassphrase())
     }
-    val r = PgpMsg.decrypt(
-      messageInfo.armored.toByteArray(), privateKeysWithMissingPassphrases, null
+    val r = PgpDecrypt.decryptWithResult(
+      messageInfo.armored.byteInputStream(),
+      PGPSecretKeyRingCollection(privateKeysWithMissingPassphrases.map { it.keyRing }),
+      SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
-    assertTrue("Error not returned", r.error != null)
+    assertTrue("Error not returned", r.exception != null)
     assertTrue(
       "Missing passphrase not detected",
-      r.error!!.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE
+      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE
     )
   }
 
@@ -246,14 +258,16 @@ class PgpMsgTest {
   fun wrongKeyTest() {
     val messageInfo = findMessage("decrypt - without a subject")
     val wrongKey = listOf(PRIVATE_KEYS[1])
-    val r = PgpMsg.decrypt(
-      messageInfo.armored.toByteArray(), wrongKey, null
+    val r = PgpDecrypt.decryptWithResult(
+      messageInfo.armored.byteInputStream(),
+      PGPSecretKeyRingCollection(wrongKey.map { it.keyRing }),
+      SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
-    assertTrue("Error not returned", r.error != null)
+    assertTrue("Error not returned", r.exception != null)
     assertTrue(
       "Key mismatch not detected",
-      r.error!!.type == PgpDecrypt.DecryptionErrorType.KEY_MISMATCH
+      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.KEY_MISMATCH
     )
   }
 
@@ -273,9 +287,13 @@ class PgpMsgTest {
     )
   }
 
-  private fun processMessage(messageKey: String): PgpMsg.DecryptionResult {
+  private fun processMessage(messageKey: String): PgpDecrypt.DecryptionResult {
     val messageInfo = findMessage(messageKey)
-    val result = PgpMsg.decrypt(messageInfo.armored.toByteArray(), PRIVATE_KEYS, null)
+    val result = PgpDecrypt.decryptWithResult(
+      messageInfo.armored.byteInputStream(),
+      PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
+      SecretKeyRingProtector.unprotectedKeys()
+    )
     if (result.content != null) {
       val s = String(result.content!!.toByteArray(), Charset.forName(messageInfo.charset))
       println("=========\n$s\n=========")
@@ -333,22 +351,19 @@ class PgpMsgTest {
     val to = out["to"].asJsonArray.map { InternetAddress(it.asString) }.toTypedArray()
     val session = Session.getInstance(Properties())
     val mimeMessage = MimeMessage(session, inputMsg.inputStream())
-    val mimeContent = PgpMsg.decodeMimeMessage(mimeMessage)
-    val processed = PgpMsg.processDecodedMimeMessage(mimeContent)
+    val mimeContent = PgpMsg.extractMimeContent(mimeMessage)
+    val processed = PgpMsg.extractMsgBlocks(mimeContent)
 
-    assertEquals(1, processed.from?.size ?: 0)
-    assertEquals(from, processed.from!![0])
-    assertArrayEquals(to, processed.to)
-    assertEquals(expectedBlocks.size(), processed.blocks.size)
+    assertEquals(expectedBlocks.size(), processed.size)
 
-    for (i in processed.blocks.indices) {
+    for (i in processed.indices) {
       println("Checking block #$i of the '$fileName'")
 
       val expectedBlock = expectedBlocks[i].asJsonObject
       val expectedBlockType = MsgBlock.Type.ofSerializedName(expectedBlock["type"].asString)
       val expectedContent = expectedBlock["content"].asString.normalizeEol()
       val expectedComplete = expectedBlock["complete"].asBoolean
-      val actualBlock = processed.blocks[i]
+      val actualBlock = processed[i]
       val actualContent = (actualBlock.content ?: "").normalizeEol().removeUtf8Bom()
 
       assertEquals(expectedBlockType, actualBlock.type)
@@ -376,10 +391,13 @@ class PgpMsgTest {
         "Content-Type: text/plain; charset=\"UTF-8\"\n" +
         "\n" + TEXT_SPECIAL_CHARS
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
+    val result = PgpMsg.processMimeMessage(
+      msg = MimeUtils.mimeTextToMimeMessage(mimeText),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(false, result.isReplyEncrypted)
-    assertEquals("plain text with special chars", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -397,10 +415,13 @@ class PgpMsgTest {
         "Content-Type: text/html; charset=\"UTF-8\"\n" +
         "\n" + HTML_SPECIAL_CHARS
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(MimeUtils.mimeTextToMimeMessage(mimeText), keys)
+    val result = PgpMsg.processMimeMessage(
+      msg = MimeUtils.mimeTextToMimeMessage(mimeText),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(false, result.isReplyEncrypted)
-    assertEquals("plain text with special chars", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -411,10 +432,13 @@ class PgpMsgTest {
   fun testParseDecryptMsgUnescapedSpecialCharactersInEncryptedPgpMime() {
     val text = loadResourceAsString("compat/direct-encrypted-pgpmime-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, false, keys)
+    val result = PgpMsg.processMimeMessage(
+      text.toInputStream(),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(true, result.isReplyEncrypted)
-    assertEquals("direct encrypted pgpmime special chars", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -425,10 +449,13 @@ class PgpMsgTest {
   fun testParseDecryptMsgUnescapedSpecialCharactersInEncryptedText() {
     val text = loadResourceAsString("compat/direct-encrypted-text-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, false, keys)
+    val result = PgpMsg.processMimeMessage(
+      text.toInputStream(),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
     assertEquals(true, result.isReplyEncrypted)
-    assertTrue(result.subject == null)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -439,10 +466,13 @@ class PgpMsgTest {
   fun testParseDecryptMsgPlainInlineImage() {
     val text = loadResourceAsString("other/plain-inline-image.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, true, keys)
+    val result = PgpMsg.processMimeMessage(
+      text.toInputStream(),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
     assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
     assertEquals(false, result.isReplyEncrypted)
-    assertEquals("tiny inline img plain", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -454,13 +484,16 @@ class PgpMsgTest {
   fun testParseDecryptMsgSignedMessagePreserveNewlines() {
     val text = loadResourceAsString("other/signed-message-preserve-newlines.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, false, keys)
+    val result = PgpMsg.processMimeMessage(
+      text.toInputStream(),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
     assertEquals(
       "Standard message\n\nsigned inline\n\nshould easily verify\nThis is email footer",
       result.text
     )
     assertEquals(false, result.isReplyEncrypted)
-    assertTrue(result.subject == null)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -481,13 +514,16 @@ class PgpMsgTest {
   fun testParseDecryptPlainGoogleSecurityAlertMessage() {
     val text = loadResourceAsString("other/plain-google-security-alert-20210416-084836-UTC.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val result = PgpMsg.parseDecryptMsg(text, true, keys)
+    val result = PgpMsg.processMimeMessage(
+      text.toInputStream(),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
     val textContent = loadResourceAsString(
       "other/plain-google-security-alert-20210416-084836-UTC-text-content.txt"
     )
     assertEquals(textContent, result.text)
     assertEquals(false, result.isReplyEncrypted)
-    assertEquals("Security alert", result.subject)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -504,7 +540,7 @@ class PgpMsgTest {
     val content: String?,
     val error: String?
   ) {
-    companion object{
+    companion object {
       fun normal(rendered: Boolean, frameColor: String?, htmlContent: String?): RenderedBlock {
         return RenderedBlock(
           rendered = rendered,
@@ -545,7 +581,7 @@ class PgpMsgTest {
           // Regex didn't work well for all test cases, so I have switched to jsoup
           val document = Jsoup.parse(it)
           document.outputSettings().prettyPrint(false)
-          val htmlBody= document.body()
+          val htmlBody = document.body()
           if (
             htmlBody.childrenSize() == 1 && htmlBody.child(0).normalName() == "div"
             && htmlBody.child(0).attributes().size() == 2 && htmlBody.child(0).hasAttr("class")

@@ -205,8 +205,31 @@ object PgpMsg {
     val keysStorage = KeysStorageImpl.getInstance(context)
     val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
     val protector = keysStorage.getSecretKeyRingProtector()
-    val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
-    val extractedMimeContent = extractMimeContent(mimeMessage)
+    return processMimeMessage(
+      msg = MimeMessage(Session.getInstance(Properties()), inputStream),
+      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      protector = protector
+    )
+  }
+
+  fun processMimeMessage(
+    inputStream: InputStream,
+    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector
+  ): ProcessedMimeMessageResult {
+    return processMimeMessage(
+      msg = MimeMessage(Session.getInstance(Properties()), inputStream),
+      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      protector = protector
+    )
+  }
+
+  fun processMimeMessage(
+    msg: MimeMessage,
+    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector
+  ): ProcessedMimeMessageResult {
+    val extractedMimeContent = extractMimeContent(msg)
     val extractedMsgBlocks = extractMsgBlocks(extractedMimeContent)
     return processExtractedMsgBlocks(extractedMsgBlocks, pgpSecretKeyRingCollection, protector)
   }
@@ -624,7 +647,7 @@ object PgpMsg {
     return result
   }
 
-  private fun extractMsgBlocks(mimeContent: ExtractedMimeContent): MutableList<MsgBlock> {
+  fun extractMsgBlocks(mimeContent: ExtractedMimeContent): MutableList<MsgBlock> {
     val blocks = mutableListOf<MsgBlock>()
     blocks.addAll(extractMsgBlocksFromText(mimeContent))
 
