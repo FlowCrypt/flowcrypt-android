@@ -129,7 +129,11 @@ object PgpKey {
     oldPassphrase: Passphrase,
     newPassphrase: Passphrase
   ): PGPSecretKeyRing {
-    return encryptKey(decryptKey(key, oldPassphrase), newPassphrase)
+    return PGPainless.modifyKeyRing(key)
+      .changePassphraseFromOldPassphrase(oldPassphrase)
+      .withSecureDefaultSettings()
+      .toNewPassphrase(newPassphrase)
+      .done()
   }
 
   fun extractSecretKeyRing(armored: String): PGPSecretKeyRing {
