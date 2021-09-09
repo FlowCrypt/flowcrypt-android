@@ -19,6 +19,7 @@ import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -106,7 +107,13 @@ object PgpDecrypt {
 
       is DecryptionException -> e
 
-      else -> DecryptionException(DecryptionErrorType.OTHER, e)
+      else -> when {
+        e is IOException && e.message.equals("crc check failed in armored message.", true) -> {
+          DecryptionException(DecryptionErrorType.FORMAT, e)
+        }
+
+        else -> DecryptionException(DecryptionErrorType.OTHER, e)
+      }
     }
   }
 

@@ -20,6 +20,11 @@ class DecryptionException(
   val e: Exception,
   val fingerprints: List<String> = emptyList()
 ) : FlowCryptException(e) {
+
+  override fun toString(): String {
+    return super.toString() + ", DecryptionErrorType = " + decryptionErrorType
+  }
+
   fun to(): DecryptError {
     return DecryptError(DecryptErrorDetails(decryptionErrorType, e.message), fingerprints, true)
   }

@@ -6,9 +6,33 @@
 package com.flowcrypt.email.security.pgp
 
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.protection.KeyRingProtectionSettings
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
 object TestKeys {
+  fun genRingProtector(keys: List<KeyWithPassPhrase>): PasswordBasedSecretKeyRingProtector {
+    return PasswordBasedSecretKeyRingProtector(
+      KeyRingProtectionSettings.secureDefaultSettings()
+    ) { keyId ->
+      for (pgpSecretKeyRing in keys.map { it.keyRing }) {
+        val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
+        if (keyIDs.contains(keyId)) {
+          for (secretKey in pgpSecretKeyRing.secretKeys) {
+            val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
+            val passphrase = keys.firstOrNull {
+              OpenPgpV4Fingerprint(it.keyRing) == openPgpV4Fingerprint
+            }?.passphrase
+            return@PasswordBasedSecretKeyRingProtector passphrase
+          }
+        }
+      }
+
+      return@PasswordBasedSecretKeyRingProtector null
+    }
+  }
+
   data class TestKey(
     val publicKey: String,
     val privateKey: String,
