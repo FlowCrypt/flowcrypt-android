@@ -370,12 +370,12 @@ class MsgDetailsViewModel(
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
-        val processedMimeMessageResult = PgpMsg.processMimeMessage(
+        val processedMimeMessage = PgpMsg.processMimeMessage(
           context = getApplication(),
           inputStream = KeyStoreCryptoManager.getCipherInputStream(inputStream)
         )
-        preResultsProcessing(processedMimeMessageResult.blocks)
-        return@withContext Result.success(processedMimeMessageResult)
+        preResultsProcessing(processedMimeMessage.blocks)
+        return@withContext Result.success(processedMimeMessage)
       } catch (e: Exception) {
         return@withContext Result.exception(e)
       }

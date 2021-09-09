@@ -20,11 +20,11 @@ import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.MsgBlockParser
 import com.flowcrypt.email.extensions.java.io.readText
-import com.flowcrypt.email.extensions.java.lang.lowercase
 import com.flowcrypt.email.extensions.javax.mail.internet.hasFileName
 import com.flowcrypt.email.extensions.javax.mail.isInline
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.escapeHtmlAttr
+import com.flowcrypt.email.extensions.kotlin.lowercase
 import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.toInputStream
@@ -831,7 +831,7 @@ object PgpMsg {
 
   private fun handleExtractedMsgBlocks(
     msgBlocks: List<MsgBlock>,
-    ringCollection: PGPSecretKeyRingCollection,
+    keyRings: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): MutableList<MsgBlock> {
     val sequentialProcessedBlocks = mutableListOf<MsgBlock>()
@@ -842,7 +842,7 @@ object PgpMsg {
         }
 
         msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG -> {
-          val handledBlocks = processEncryptedMsgBlock(msgBlock, ringCollection, protector)
+          val handledBlocks = processEncryptedMsgBlock(msgBlock, keyRings, protector)
           sequentialProcessedBlocks.addAll(handledBlocks)
         }
 
@@ -852,7 +852,7 @@ object PgpMsg {
           sequentialProcessedBlocks.add(
             processPublicKeyMsgBlock(
               msgBlock,
-              ringCollection,
+              keyRings,
               protector
             )
           )
@@ -868,13 +868,13 @@ object PgpMsg {
 
   private fun processPublicKeyMsgBlock(
     msgBlock: MsgBlock,
-    ringCollection: PGPSecretKeyRingCollection,
+    keyRings: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): MsgBlock {
     // encrypted public key attached
     val decryptionResult = PgpDecrypt.decryptWithResult(
       msgBlock.content?.toInputStream()!!,
-      ringCollection,
+      keyRings,
       protector
     )
     return if (decryptionResult.content != null) {
