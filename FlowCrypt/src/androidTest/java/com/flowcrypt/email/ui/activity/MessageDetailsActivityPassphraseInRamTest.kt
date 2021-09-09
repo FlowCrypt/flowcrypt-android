@@ -21,7 +21,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.matchers.CustomMatchers
@@ -30,6 +29,7 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -78,7 +78,7 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val decryptError = decryptErrorMsgBlock.error!!
-    assertEquals(DecryptErrorDetails.Type.NEED_PASSPHRASE, decryptError.details?.type)
+    assertEquals(PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE, decryptError.details?.type)
 
     //check error message
     val errorMsg = getResString(
@@ -164,7 +164,7 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
     launchActivity(incomingMsgInfo!!.msgEntity)
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val fingerprint = decryptErrorMsgBlock.error?.longIds?.needPassphrase?.first()
+    val fingerprint = decryptErrorMsgBlock.error?.fingerprints?.first()
     val fingerprintFormatted = GeneralUtil.doSectionsInText(
       originalString = fingerprint, groupSize = 4
     )
@@ -297,7 +297,7 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val expectedKeysCount = 2
-    assertEquals(expectedKeysCount, decryptErrorMsgBlock.error?.longIds?.needPassphrase?.size)
+    assertEquals(expectedKeysCount, decryptErrorMsgBlock.error?.fingerprints?.size)
 
     val tVStatusMessageText = getQuantityString(
       resId = R.plurals.please_provide_passphrase_for_following_keys,
