@@ -23,5 +23,6 @@ if [[ ${varShardIndex} -ge ${varNumShards} ]]
   ./gradlew --console=plain :FlowCrypt:connectedDevTestDebugAndroidTest \
     -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
     -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" \
-    -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}"
+    -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}" \
+    -Pandroid.testInstrumentationRunnerArguments.clearPackageData=true
 fi
