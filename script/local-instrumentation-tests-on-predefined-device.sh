@@ -30,6 +30,5 @@ if [[ ${varShardIndex} -ge ${varNumShards} ]]
  else
   ANDROID_SERIAL=emulator-"${varEmulatorPort}" ./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest \
    -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" \
-   -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}" \
-   -Pandroid.testInstrumentationRunnerArguments.clearPackageData=true
+   -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}"
 fi
