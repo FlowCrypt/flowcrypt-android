@@ -974,7 +974,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       ), fingerprint
     )
 
-    textViewPgpPublicKey.text = clipLargeText(block.content)
+    textViewPgpPublicKey.text = clipLargeText(block.keyDetails?.publicKey ?: block.content)
 
     val existingPgpContact = block.existingPgpContact
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)

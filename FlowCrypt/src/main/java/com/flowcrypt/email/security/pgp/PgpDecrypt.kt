@@ -112,6 +112,10 @@ object PgpDecrypt {
           DecryptionException(DecryptionErrorType.FORMAT, e)
         }
 
+        e is IOException && e.message?.startsWith("unexpected packet in stream", true) == true -> {
+          DecryptionException(DecryptionErrorType.FORMAT, e)
+        }
+
         else -> DecryptionException(DecryptionErrorType.OTHER, e)
       }
     }

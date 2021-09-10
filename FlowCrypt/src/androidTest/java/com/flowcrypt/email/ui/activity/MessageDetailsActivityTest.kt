@@ -56,6 +56,7 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.anything
+import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.Ignore
@@ -227,13 +228,11 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testBadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
       "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt"
-    )
-      ?: throw NullPointerException()
+    ) ?: throw NullPointerException()
 
     assertThat(msgInfo, notNullValue())
 
@@ -250,7 +249,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     ) + "\n\n" + decryptError?.details?.type + ": " + decryptError?.details?.message)
 
     onView(withId(R.id.textViewErrorMessage))
-      .check(matches(withText(formatErrorMsg)))
+      .check(matches(withText(containsString(formatErrorMsg))))
 
     testSwitch(block.content ?: "")
     matchReplyButtons(details)
@@ -331,7 +330,6 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testEncryptedMsgPlaintextWithPubKey() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_with_pub_key.json",
@@ -374,7 +372,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     onView(withId(R.id.textViewPgpPublicKey))
       .check(matches(isDisplayed()))
     onView(withId(R.id.textViewPgpPublicKey))
-      .check(matches(withText(TestGeneralUtil.replaceVersionInKey(block.content))))
+      .check(matches(withText(TestGeneralUtil.replaceVersionInKey(block.keyDetails?.publicKey))))
     onView(withId(R.id.switchShowPublicKey))
       .check(matches(isChecked()))
       .perform(scrollTo(), click())
