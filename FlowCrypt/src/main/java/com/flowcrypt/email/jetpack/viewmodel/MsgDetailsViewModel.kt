@@ -267,16 +267,18 @@ class MsgDetailsViewModel(
     mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
-    mediatorMsgLiveData.addSource(afterKeysUpdatedMsgLiveData, object : Observer<MessageEntity?> {
-      var isFirstCall = true
-      override fun onChanged(messageEntity: MessageEntity?) {
-        if (isFirstCall) {
-          isFirstCall = false
-        } else {
-          mediatorMsgLiveData.value = messageEntity
+    mediatorMsgLiveData.addSource(
+      afterKeysStorageUpdatedMsgLiveData,
+      object : Observer<MessageEntity?> {
+        var isFirstCall = true
+        override fun onChanged(messageEntity: MessageEntity?) {
+          if (isFirstCall) {
+            isFirstCall = false
+          } else {
+            mediatorMsgLiveData.value = messageEntity
+          }
         }
-      }
-    })
+      })
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) {
