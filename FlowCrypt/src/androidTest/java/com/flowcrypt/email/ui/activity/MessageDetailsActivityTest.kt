@@ -59,7 +59,6 @@ import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -387,7 +386,6 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun test8bitEncodingUtf8() {
     baseCheck(
       getMsgInfo(
