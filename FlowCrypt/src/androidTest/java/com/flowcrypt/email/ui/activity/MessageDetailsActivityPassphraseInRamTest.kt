@@ -35,7 +35,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -63,7 +62,6 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("fix me")
   fun testShowNeedPassphraseError() {
     val incomingMsgInfo = getMsgInfo(
       "messages/info/encrypted_msg_need_passphrase_single_key.json",
@@ -152,7 +150,6 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
   }
 
   @Test
-  @Ignore("fix me")
   fun testNeedPassphraseSingleFingerprint() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_text.json",
@@ -198,7 +195,6 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
   }
 
   @Test
-  @Ignore("fix me")
   fun testNeedPassphraseMultiplyFingerprintsFirstKey() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_for_2_keys_text.json",
@@ -219,7 +215,6 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
   }
 
   @Test
-  @Ignore("fix me")
   fun testNeedPassphraseMultiplyFingerprintsSecondKey() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_for_2_keys_text.json",
