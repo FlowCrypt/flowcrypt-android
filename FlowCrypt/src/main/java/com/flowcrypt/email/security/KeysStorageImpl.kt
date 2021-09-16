@@ -158,6 +158,14 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     val availablePGPSecretKeyRings = getPGPSecretKeyRings()
     val passphraseProvider = object : SecretKeyPassphraseProvider {
       override fun getPassphraseFor(keyId: Long?): Passphrase? {
+        return doGetPassphraseFor(keyId, true)
+      }
+
+      override fun hasPassphrase(keyId: Long?): Boolean {
+        return doGetPassphraseFor(keyId, false) != null
+      }
+
+      private fun doGetPassphraseFor(keyId: Long?, throwException: Boolean): Passphrase? {
         for (pgpSecretKeyRing in availablePGPSecretKeyRings) {
           val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
           if (keyIDs.contains(keyId)) {
@@ -166,21 +174,21 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
               val fingerprint = openPgpV4Fingerprint.toString()
               val passphrase = getPassphraseByFingerprint(fingerprint)
               if (passphrase == null || passphrase.isEmpty) {
-                throw DecryptionException(
-                  decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
-                  e = PGPException("flowcrypt: need passphrase"),
-                  fingerprints = listOf(fingerprint)
-                )
+                if (throwException) {
+                  throw DecryptionException(
+                    decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
+                    e = PGPException("flowcrypt: need passphrase"),
+                    fingerprints = listOf(fingerprint)
+                  )
+                } else {
+                  return null
+                }
               }
               return passphrase
             }
           }
         }
         return null
-      }
-
-      override fun hasPassphrase(keyId: Long?): Boolean {
-        return getPassphraseFor(keyId) != null
       }
     }
     val keyRingProtectionSettings = KeyRingProtectionSettings.secureDefaultSettings()
