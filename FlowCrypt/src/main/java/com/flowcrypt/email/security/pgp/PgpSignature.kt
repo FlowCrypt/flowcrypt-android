@@ -5,8 +5,9 @@
 
 package com.flowcrypt.email.security.pgp
 
-import org.pgpainless.signature.cleartext_signatures.ClearsignedMessageUtil
-import org.pgpainless.signature.cleartext_signatures.MultiPassStrategy
+
+import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
+import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
@@ -21,18 +22,19 @@ object PgpSignature {
     return extractClearText(ByteArrayInputStream(source?.toByteArray()))
   }
 
+  @Suppress("MemberVisibilityCanBePrivate")
   fun extractClearText(srcInputStream: InputStream): String? {
     srcInputStream.use { srcStream ->
-      try {
+      return try {
         val multiPassStrategy = MultiPassStrategy.keepMessageInMemory()
         ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(
           srcStream,
           multiPassStrategy.messageOutputStream
         )
-        return String(multiPassStrategy.bytes)
+        String(multiPassStrategy.bytes)
       } catch (e: Exception) {
         e.printStackTrace()
-        return null
+        null
       }
     }
   }
