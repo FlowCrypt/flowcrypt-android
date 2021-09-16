@@ -22,6 +22,7 @@ import org.junit.rules.TemporaryFolder
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
@@ -222,21 +223,33 @@ class PgpDecryptTest {
       receiverPGPSecretKeyRing = PGPainless.generateKeyRing()
         .simpleEcKeyRing("receiver@flowcrypt.test", RECEIVER_PASSWORD)
 
-      allPredefinedKeysProtector = PasswordBasedSecretKeyRingProtector(
-        KeyRingProtectionSettings.secureDefaultSettings()
-      ) { keyId ->
-        senderPGPSecretKeyRing.publicKeys.forEach { publicKey ->
-          if (publicKey.keyID == keyId) {
-            return@PasswordBasedSecretKeyRingProtector Passphrase.fromPassword(SENDER_PASSWORD)
-          }
+      val passphraseProvider = object : SecretKeyPassphraseProvider {
+        override fun getPassphraseFor(keyId: Long?): Passphrase? {
+          return doGetPassphrase(keyId)
         }
-        receiverPGPSecretKeyRing.publicKeys.forEach { publicKey ->
-          if (publicKey.keyID == keyId) {
-            return@PasswordBasedSecretKeyRingProtector Passphrase.fromPassword(RECEIVER_PASSWORD)
-          }
+
+        override fun hasPassphrase(keyId: Long?): Boolean {
+          return doGetPassphrase(keyId) != null
         }
-        return@PasswordBasedSecretKeyRingProtector null
+
+        private fun doGetPassphrase(keyId: Long?): Passphrase? {
+          senderPGPSecretKeyRing.publicKeys.forEach { publicKey ->
+            if (publicKey.keyID == keyId) {
+              return Passphrase.fromPassword(SENDER_PASSWORD)
+            }
+          }
+          receiverPGPSecretKeyRing.publicKeys.forEach { publicKey ->
+            if (publicKey.keyID == keyId) {
+              return Passphrase.fromPassword(RECEIVER_PASSWORD)
+            }
+          }
+          return null
+        }
       }
+      allPredefinedKeysProtector = PasswordBasedSecretKeyRingProtector(
+        KeyRingProtectionSettings.secureDefaultSettings(),
+        passphraseProvider
+      )
     }
   }
 }
