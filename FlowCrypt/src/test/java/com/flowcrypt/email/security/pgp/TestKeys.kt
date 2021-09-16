@@ -9,28 +9,40 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.util.Passphrase
 
 object TestKeys {
   fun genRingProtector(keys: List<KeyWithPassPhrase>): PasswordBasedSecretKeyRingProtector {
-    return PasswordBasedSecretKeyRingProtector(
-      KeyRingProtectionSettings.secureDefaultSettings()
-    ) { keyId ->
-      for (pgpSecretKeyRing in keys.map { it.keyRing }) {
-        val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
-        if (keyIDs.contains(keyId)) {
-          for (secretKey in pgpSecretKeyRing.secretKeys) {
-            val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
-            val passphrase = keys.firstOrNull {
-              OpenPgpV4Fingerprint(it.keyRing) == openPgpV4Fingerprint
-            }?.passphrase
-            return@PasswordBasedSecretKeyRingProtector passphrase
-          }
-        }
+    val passphraseProvider = object : SecretKeyPassphraseProvider {
+      override fun getPassphraseFor(keyId: Long?): Passphrase? {
+        return doGetPassphrase(keyId)
       }
 
-      return@PasswordBasedSecretKeyRingProtector null
+      override fun hasPassphrase(keyId: Long?): Boolean {
+        return doGetPassphrase(keyId) != null
+      }
+
+      private fun doGetPassphrase(keyId: Long?): Passphrase? {
+        for (pgpSecretKeyRing in keys.map { it.keyRing }) {
+          val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
+          if (keyIDs.contains(keyId)) {
+            for (secretKey in pgpSecretKeyRing.secretKeys) {
+              val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
+              val passphrase = keys.firstOrNull {
+                OpenPgpV4Fingerprint(it.keyRing) == openPgpV4Fingerprint
+              }?.passphrase
+              return passphrase
+            }
+          }
+        }
+        return null
+      }
     }
+
+    return PasswordBasedSecretKeyRingProtector(
+      KeyRingProtectionSettings.secureDefaultSettings(), passphraseProvider
+    )
   }
 
   data class TestKey(
