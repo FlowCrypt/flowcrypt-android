@@ -32,7 +32,8 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.util.Passphrase
 import java.time.Instant
-import java.util.*
+import java.util.Locale
+import java.util.TreeMap
 import java.util.concurrent.TimeUnit
 import javax.mail.internet.InternetAddress
 
@@ -157,38 +158,42 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   override fun getSecretKeyRingProtector(): SecretKeyRingProtector {
     val availablePGPSecretKeyRings = getPGPSecretKeyRings()
     val passphraseProvider = object : SecretKeyPassphraseProvider {
-      override fun getPassphraseFor(keyId: Long?): Passphrase? {
-        return doGetPassphraseFor(keyId, true)
-      }
-
-      override fun hasPassphrase(keyId: Long?): Boolean {
-        return doGetPassphraseFor(keyId, false) != null
-      }
-
-      private fun doGetPassphraseFor(keyId: Long?, throwException: Boolean): Passphrase? {
+      override fun getPassphraseFor(keyId: Long): Passphrase? {
         for (pgpSecretKeyRing in availablePGPSecretKeyRings) {
-          val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
-          if (keyIDs.contains(keyId)) {
-            for (secretKey in pgpSecretKeyRing.secretKeys) {
-              val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
-              val fingerprint = openPgpV4Fingerprint.toString()
-              val passphrase = getPassphraseByFingerprint(fingerprint)
-              if (passphrase == null || passphrase.isEmpty) {
-                if (throwException) {
-                  throw DecryptionException(
-                    decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
-                    e = PGPException("flowcrypt: need passphrase"),
-                    fingerprints = listOf(fingerprint)
-                  )
-                } else {
-                  return null
-                }
-              }
-              return passphrase
+          val hasMatchingKeyId = pgpSecretKeyRing.secretKeys.iterator().asSequence()
+            .map { it.keyID }
+            .any { it == keyId }
+          if (hasMatchingKeyId) {
+            val openPgpV4Fingerprint = OpenPgpV4Fingerprint(pgpSecretKeyRing)
+            val fingerprint = openPgpV4Fingerprint.toString()
+            val passphrase = getPassphraseByFingerprint(fingerprint)
+            if (passphrase == null || passphrase.isEmpty) {
+              throw DecryptionException(
+                decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
+                e = PGPException("flowcrypt: need passphrase"),
+                fingerprints = listOf(fingerprint)
+              )
             }
+            return passphrase
           }
         }
         return null
+      }
+
+      override fun hasPassphrase(keyId: Long): Boolean {
+        for (pgpSecretKeyRing in availablePGPSecretKeyRings) {
+          val hasMatchingKeyId = pgpSecretKeyRing.secretKeys.iterator().asSequence()
+            .map { it.keyID }
+            .any { it == keyId }
+          if (hasMatchingKeyId) {
+            val fingerprint = OpenPgpV4Fingerprint(pgpSecretKeyRing).toString()
+            val passphrase = getPassphraseByFingerprint(fingerprint)
+            if (passphrase?.isEmpty == false) {
+              return true
+            }
+          }
+        }
+        return false
       }
     }
     val keyRingProtectionSettings = KeyRingProtectionSettings.secureDefaultSettings()
