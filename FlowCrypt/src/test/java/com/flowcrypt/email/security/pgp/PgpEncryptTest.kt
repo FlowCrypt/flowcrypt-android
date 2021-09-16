@@ -15,6 +15,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
@@ -86,15 +87,25 @@ class PgpEncryptTest {
   ): ByteArrayOutputStream {
 
     val protector = PasswordBasedSecretKeyRingProtector(
-      KeyRingProtectionSettings.secureDefaultSettings()
-    ) { keyId ->
-      pgpSecretKeyRing.publicKeys.forEach { publicKey ->
-        if (publicKey.keyID == keyId) {
-          return@PasswordBasedSecretKeyRingProtector passphrase
+      KeyRingProtectionSettings.secureDefaultSettings(), object : SecretKeyPassphraseProvider {
+        override fun getPassphraseFor(keyId: Long?): Passphrase? {
+          return doGetPassphrase(keyId)
+        }
+
+        override fun hasPassphrase(keyId: Long?): Boolean {
+          return doGetPassphrase(keyId) != null
+        }
+
+        private fun doGetPassphrase(keyId: Long?): Passphrase? {
+          pgpSecretKeyRing.publicKeys.forEach { publicKey ->
+            if (publicKey.keyID == keyId) {
+              return passphrase
+            }
+          }
+          return null
         }
       }
-      return@PasswordBasedSecretKeyRingProtector null
-    }
+    )
 
     val decryptionStream = PGPainless.decryptAndOrVerify()
       .onInputStream(inputStream)
