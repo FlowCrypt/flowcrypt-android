@@ -1400,10 +1400,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun downloadAttachment() {
     lastClickedAtt?.let {
-      if (lastClickedAtt?.rawData?.isEmpty() == true) {
-        context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
-      } else {
+      if (lastClickedAtt?.rawData?.isNotEmpty() == true) {
         //todo-denbond7 fix me
+      } else {
+        context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
       }
     }
   }
