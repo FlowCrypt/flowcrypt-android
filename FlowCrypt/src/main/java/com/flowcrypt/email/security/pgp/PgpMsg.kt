@@ -34,7 +34,6 @@ import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.exception.DecryptionException
-import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -794,18 +793,34 @@ object PgpMsg {
         }
 
         block.type == MsgBlock.Type.PUBLIC_KEY -> {
-          var keyRings: List<PGPKeyRing>? = null
-          try {
-            keyRings = PgpKey.parseAndNormalizeKeyRings(block.content!!)
-          } catch (ex: Exception) {
-            ex.printStackTrace()
-          }
-          if (keyRings != null && keyRings.isNotEmpty()) {
-            resultBlocks.addAll(
-              keyRings.map { PublicKeyMsgBlock(it.armor(null), true, it.toPgpKeyDetails()) }
-            )
-          } else {
-            resultBlocks.add(DecryptErrorMsgBlock(block.content, true, null))
+          block.content?.let { source ->
+            try {
+              val keyRings = PgpKey.parseAndNormalizeKeyRings(source)
+              if (keyRings.isNotEmpty()) {
+                resultBlocks.addAll(keyRings.map {
+                  PublicKeyMsgBlock(it.armor(null), true, it.toPgpKeyDetails())
+                })
+              } else {
+                resultBlocks.add(
+                  PublicKeyMsgBlock(
+                    content = block.content,
+                    complete = false,
+                    keyDetails = null,
+                    parseKeyErrorMsg = "empty KeyRing"
+                  )
+                )
+              }
+            } catch (ex: Exception) {
+              ex.printStackTrace()
+              resultBlocks.add(
+                PublicKeyMsgBlock(
+                  content = block.content,
+                  complete = false,
+                  keyDetails = null,
+                  parseKeyErrorMsg = ex.javaClass.simpleName + ": " + ex.message
+                )
+              )
+            }
           }
         }
 

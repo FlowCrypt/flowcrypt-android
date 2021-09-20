@@ -946,6 +946,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * @return The generated view.
    */
   private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
+    if (!block.complete && block.parseKeyErrorMsg?.isNotEmpty() == true) {
+      return getView(
+        clipLargeText(block.content),
+        getString(R.string.msg_contains_not_valid_pub_key, block.parseKeyErrorMsg),
+        layoutInflater
+      )
+    }
 
     val pubKeyView =
       inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup

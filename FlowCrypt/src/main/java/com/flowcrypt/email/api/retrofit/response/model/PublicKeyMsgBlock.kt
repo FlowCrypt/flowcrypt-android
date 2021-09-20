@@ -23,7 +23,8 @@ import com.google.gson.annotations.Expose
 data class PublicKeyMsgBlock constructor(
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
-  @Expose val keyDetails: PgpKeyDetails?
+  @Expose val keyDetails: PgpKeyDetails?,
+  @Expose val parseKeyErrorMsg: String? = null,
 ) : MsgBlock {
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
@@ -33,7 +34,8 @@ data class PublicKeyMsgBlock constructor(
   constructor(source: Parcel) : this(
     source.readString(),
     1 == source.readInt(),
-    source.readParcelable<PgpKeyDetails>(PgpKeyDetails::class.java.classLoader)
+    source.readParcelable<PgpKeyDetails>(PgpKeyDetails::class.java.classLoader),
+    source.readString(),
   )
 
   override fun describeContents(): Int {
@@ -46,6 +48,7 @@ data class PublicKeyMsgBlock constructor(
       writeString(content)
       writeInt((if (complete) 1 else 0))
       writeParcelable(keyDetails, 0)
+      writeString(parseKeyErrorMsg)
     }
 
   companion object {
