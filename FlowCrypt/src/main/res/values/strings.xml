@@ -531,4 +531,6 @@
     <string name="key_sha1_warning_msg">This OpenPGP key is not supported with message: "No suitable signatures found on the key". It could be because it\'s missing internal signatures, or the signatures are wrongly made, or it may be using archaic algorithms that are no longer secure and no longer supported (such as SHA-1).</string>
     <string name="warning_one_of_pub_keys_is_not_usable">The public key of one of your recipients is wrong or not usable due to security reasons.\n\nPlease ask the recipient(s) to send you a new Public Key.</string>
     <string name="could_not_extract_key_details">Could not extract the key details</string>
+    <string name="decrypt_error_message_bad_mdc">Security threat - opening this message is dangerous because it was modified in transit.</string>
+    <string name="decrypt_error_message_no_mdc">Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.</string>
 </resources>

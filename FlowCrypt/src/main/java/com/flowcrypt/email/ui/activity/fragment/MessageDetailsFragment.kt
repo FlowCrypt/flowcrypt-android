@@ -1132,11 +1132,17 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           }
         }
 
+        val detailedMessage = when (decryptError.details?.type) {
+          PgpDecrypt.DecryptionErrorType.NO_MDC -> getString(R.string.decrypt_error_message_no_mdc)
+          PgpDecrypt.DecryptionErrorType.BAD_MDC -> getString(R.string.decrypt_error_message_bad_mdc)
+          else -> decryptError.details?.message
+        }
+
         return getView(
           originalMsg = clipLargeText(block.content),
           errorMsg = getString(
             R.string.could_not_decrypt_message_due_to_error,
-            decryptError.details?.type.toString() + ": " + decryptError.details?.message
+            decryptError.details?.type.toString() + ": " + detailedMessage
           ),
           layoutInflater = layoutInflater,
           buttonText = btText,
