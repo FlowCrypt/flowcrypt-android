@@ -394,7 +394,7 @@ dependencies {
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
-    testImplementation "org.jetbrains.kotlin:kotlin-reflect:1.5.30"
+    testImplementation "org.jetbrains.kotlin:kotlin-reflect:1.5.31"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
