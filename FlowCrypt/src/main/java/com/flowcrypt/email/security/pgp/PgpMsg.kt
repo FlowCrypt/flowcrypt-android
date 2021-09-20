@@ -975,6 +975,15 @@ object PgpMsg {
               signature = msgBlock.signature
             )
           }
+
+          MsgBlock.Type.SIGNED_TEXT -> {
+            // skip verification for now
+            return MsgBlockFactory.fromContent(
+              type = MsgBlock.Type.SIGNED_TEXT,
+              content = msgBlock.content,
+              signature = msgBlock.signature
+            )
+          }
           else -> null
         }
       }
