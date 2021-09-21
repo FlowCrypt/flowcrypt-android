@@ -32,12 +32,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -87,7 +89,9 @@ import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
+import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.DateTimeUtil
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -96,6 +100,8 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import org.apache.commons.io.FileUtils
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.mail.AuthenticationFailedException
@@ -1412,13 +1418,41 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun downloadAttachment() {
-    lastClickedAtt?.let {
-      if (lastClickedAtt?.rawData?.isNotEmpty() == true) {
-        //todo-denbond7 fix me
+    lastClickedAtt?.let { attInfo ->
+      if (attInfo.rawData?.isNotEmpty() == true) {
+        downloadInlinedAtt(attInfo)
       } else {
-        context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
+        context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
       }
     }
+  }
+
+  private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
+    val tempDir = CacheManager.getCurrentMsgTempDir()
+    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
+    val file = if (fileName.isNullOrEmpty()) {
+      File.createTempFile("tmp", null, tempDir)
+    } else {
+      val fileCandidate = File(tempDir, fileName)
+      if (fileCandidate.exists()) {
+        FileAndDirectoryUtils.createFileWithIncreasedIndex(tempDir, fileName)
+      } else {
+        fileCandidate
+      }
+    }
+    FileUtils.writeByteArrayToFile(file, attInfo.rawData)
+    context?.let {
+      attInfo.uri = FileProvider.getUriForFile(it, Constants.FILE_PROVIDER_AUTHORITY, file)
+      it.startService(
+        AttachmentDownloadManagerService.newIntent(
+          context,
+          attInfo.copy(rawData = null, name = file.name)
+        )
+      )
+    }
+  } catch (e: Exception) {
+    e.printStackTrace()
+    ExceptionUtil.handleError(e)
   }
 
   private fun messageNotAvailableInFolder(showToast: Boolean = true) {

@@ -68,8 +68,10 @@ import javax.mail.Folder
  *
  * This service provides the following:
  *
- *  * Can download simultaneously 3 attachments. Other attachments will be added to the queue.
- *  * All loading attachments will visible in the status bar
+ *  * Can download simultaneously 3 attachments via IMAP/HTTPS protocol.
+ *  Other attachments will be added to the queue. Attachments that have [Uri]
+ *  will be downloaded immediately.
+ *  * All loading attachments will be visible in the status bar
  *  * A user can stop loading an attachment at any time.
  *
  *
@@ -252,7 +254,8 @@ class AttachmentDownloadManagerService : Service() {
    */
   private class ServiceWorkerHandler(looper: Looper, private val messenger: Messenger) :
     Handler(looper), OnDownloadAttachmentListener {
-    private val executorService: ExecutorService = Executors.newFixedThreadPool(QUEUE_SIZE)
+    private val executorService: ExecutorService = Executors.newCachedThreadPool()
+    private val queueExecutorService: ExecutorService = Executors.newFixedThreadPool(QUEUE_SIZE)
 
     @Volatile
     private var attsInfoMap: HashMap<String, AttachmentInfo> = HashMap()
@@ -276,7 +279,11 @@ class AttachmentDownloadManagerService : Service() {
               attsInfoMap[attInfo.id!!] = attInfo
               val attDownloadRunnable = AttDownloadRunnable(context, attInfo)
               attDownloadRunnable.setListener(this)
-              futureMap[attInfo.uniqueStringId] = executorService.submit(attDownloadRunnable)
+              futureMap[attInfo.uniqueStringId] = if (attInfo.rawData?.isNotEmpty() == true) {
+                executorService.submit(attDownloadRunnable)
+              } else {
+                queueExecutorService.submit(attDownloadRunnable)
+              }
               val result = DownloadAttachmentTaskResult(attInfo)
               messenger.send(
                 Message.obtain(
@@ -317,6 +324,7 @@ class AttachmentDownloadManagerService : Service() {
 
         MESSAGE_RELEASE_RESOURCES -> {
           executorService.shutdown()
+          queueExecutorService.shutdown()
 
           try {
             val result = DownloadAttachmentTaskResult()

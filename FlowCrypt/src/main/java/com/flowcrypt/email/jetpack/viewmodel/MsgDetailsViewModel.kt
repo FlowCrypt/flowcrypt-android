@@ -44,6 +44,8 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
+import com.flowcrypt.email.util.CacheManager
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
@@ -369,6 +371,8 @@ class MsgDetailsViewModel(
     if (uri != null) {
       val context: Context = getApplication()
       try {
+        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
@@ -393,6 +397,8 @@ class MsgDetailsViewModel(
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       try {
+        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+
         val processedMimeMessageResult =
           PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
         preResultsProcessing(processedMimeMessageResult.blocks)
