@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.gson
 
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 

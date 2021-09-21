@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util.exception
 
+import com.flowcrypt.email.api.retrofit.response.model.DecryptError
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 
 /**
@@ -17,4 +19,13 @@ class DecryptionException(
   val decryptionErrorType: PgpDecrypt.DecryptionErrorType,
   val e: Exception,
   val fingerprints: List<String> = emptyList()
-) : FlowCryptException(e)
+) : FlowCryptException(e) {
+
+  override fun toString(): String {
+    return super.toString() + ", DecryptionErrorType = " + decryptionErrorType
+  }
+
+  fun to(): DecryptError {
+    return DecryptError(DecryptErrorDetails(decryptionErrorType, e.message), fingerprints, true)
+  }
+}

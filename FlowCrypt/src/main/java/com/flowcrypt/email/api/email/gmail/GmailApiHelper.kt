@@ -33,7 +33,6 @@ import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.GmailAPIException
-import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -719,12 +718,7 @@ class GmailApiHelper {
             continue
           }
 
-          try {
-            list.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
-          } catch (e: NodeException) {
-            e.printStackTrace()
-            ExceptionUtil.handleError(e)
-          }
+          list.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
         }
 
         return@withContext list

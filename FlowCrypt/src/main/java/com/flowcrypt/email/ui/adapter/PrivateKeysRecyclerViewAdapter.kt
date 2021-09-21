@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
+import com.flowcrypt.email.ui.adapter.selection.SelectionPgpKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.Date
 
@@ -45,16 +45,16 @@ class PrivateKeysRecyclerViewAdapter(
       dateFormat = DateFormat.getMediumDateFormat(viewHolder.itemView.context)
     }
 
-    val nodeKeyDetails = pgpKeyDetailsList[position]
-    tracker?.isSelected(nodeKeyDetails)?.let { viewHolder.setActivated(it) }
-    val email = nodeKeyDetails.primaryPgpContact.email
+    val pgpKeyDetails = pgpKeyDetailsList[position]
+    tracker?.isSelected(pgpKeyDetails)?.let { viewHolder.setActivated(it) }
+    val email = pgpKeyDetails.primaryPgpContact.email
 
     viewHolder.textViewKeyOwner.text = email
     viewHolder.textViewFingerprint.text = GeneralUtil.doSectionsInText(
-      originalString = nodeKeyDetails.fingerprint, groupSize = 4
+      originalString = pgpKeyDetails.fingerprint, groupSize = 4
     )
 
-    val timestamp = nodeKeyDetails.created
+    val timestamp = pgpKeyDetails.created
     if (timestamp != -1L) {
       viewHolder.textViewCreationDate.text = dateFormat?.format(Date(timestamp))
     } else {
@@ -62,7 +62,7 @@ class PrivateKeysRecyclerViewAdapter(
     }
 
     viewHolder.itemView.setOnClickListener {
-      listener?.onKeySelected(viewHolder.adapterPosition, nodeKeyDetails)
+      listener?.onKeySelected(viewHolder.adapterPosition, pgpKeyDetails)
     }
   }
 
@@ -84,9 +84,9 @@ class PrivateKeysRecyclerViewAdapter(
   }
 
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-    fun getNodeKeyDetails(): ItemDetailsLookup.ItemDetails<PgpKeyDetails>? {
+    fun getPgpKeyDetails(): ItemDetailsLookup.ItemDetails<PgpKeyDetails>? {
       return pgpKeyDetailsList.getOrNull(adapterPosition)?.let {
-        SelectionNodeKeyDetailsDetails(adapterPosition, it)
+        SelectionPgpKeyDetails(adapterPosition, it)
       }
     }
 

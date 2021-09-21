@@ -5,12 +5,7 @@
 
 package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
-import com.flowcrypt.email.api.retrofit.node.NodeService
-import com.flowcrypt.email.api.retrofit.request.node.KeyCacheWipeRequest
 import com.flowcrypt.email.util.TestGeneralUtil
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.io.IOException
@@ -42,11 +37,5 @@ class ClearAppSettingsRule : BaseRule() {
    */
   private fun clearApp() {
     TestGeneralUtil.clearApp(targetContext)
-
-    //todo-denbond7 should be removed when we will drop node
-    GlobalScope.launch {
-      val apiService = NodeRetrofitHelper.getRetrofit()?.create(NodeService::class.java)
-      apiService?.keyCacheWipe(KeyCacheWipeRequest())
-    }
   }
 }

@@ -5,9 +5,46 @@
 
 package com.flowcrypt.email.security.pgp
 
+import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.protection.KeyRingProtectionSettings
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.util.Passphrase
 
 object TestKeys {
+  fun genRingProtector(keys: List<KeyWithPassPhrase>): PasswordBasedSecretKeyRingProtector {
+    val passphraseProvider = object : SecretKeyPassphraseProvider {
+      override fun getPassphraseFor(keyId: Long?): Passphrase? {
+        return doGetPassphrase(keyId)
+      }
+
+      override fun hasPassphrase(keyId: Long?): Boolean {
+        return doGetPassphrase(keyId) != null
+      }
+
+      private fun doGetPassphrase(keyId: Long?): Passphrase? {
+        for (pgpSecretKeyRing in keys.map { it.keyRing }) {
+          val keyIDs = pgpSecretKeyRing.secretKeys.iterator().asSequence().map { it.keyID }
+          if (keyIDs.contains(keyId)) {
+            for (secretKey in pgpSecretKeyRing.secretKeys) {
+              val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
+              val passphrase = keys.firstOrNull {
+                OpenPgpV4Fingerprint(it.keyRing) == openPgpV4Fingerprint
+              }?.passphrase
+              return passphrase
+            }
+          }
+        }
+        return null
+      }
+    }
+
+    return PasswordBasedSecretKeyRingProtector(
+      KeyRingProtectionSettings.secureDefaultSettings(), passphraseProvider
+    )
+  }
+
   data class TestKey(
     val publicKey: String,
     val privateKey: String,
@@ -15,19 +52,21 @@ object TestKeys {
     val passphrase: String,
     val longid: String
   ) {
-    val listOfKeysWithPassPhrase: List<PgpMsg.KeyWithPassPhrase>
+    val listOfKeysWithPassPhrase: List<KeyWithPassPhrase>
       get() {
         return listOf(keyWithPassPhrase)
       }
 
-    private val keyWithPassPhrase: PgpMsg.KeyWithPassPhrase
+    private val keyWithPassPhrase: KeyWithPassPhrase
       get() {
-        return PgpMsg.KeyWithPassPhrase(
+        return KeyWithPassPhrase(
           keyRing = PgpKey.extractSecretKeyRing(privateKey),
           passphrase = Passphrase.fromPassword(passphrase)
         )
       }
   }
+
+  data class KeyWithPassPhrase(val keyRing: PGPSecretKeyRing, val passphrase: Passphrase)
 
   val KEYS = mapOf(
     "rsa1" to TestKey(

@@ -64,7 +64,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
     name = "test.txt",
     email = addAccountToDatabaseRule.account.email,
     encodedSize = STRING.length.toLong(),
-    rawData = STRING,
+    rawData = STRING.toByteArray(),
     type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN,
     folder = "SENT",
     id = EmailUtil.generateContentId(),

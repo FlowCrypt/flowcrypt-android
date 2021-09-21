@@ -68,10 +68,10 @@ class PrivateKeysManager {
       assetsPath: String,
       onlyPrivate: Boolean = false
     ): PgpKeyDetails {
-      return getNodeKeyDetailsListFromAssets(assetsPath, onlyPrivate).first()
+      return getPgpKeyDetailsListFromAssets(assetsPath, onlyPrivate).first()
     }
 
-    fun getNodeKeyDetailsListFromAssets(
+    fun getPgpKeyDetailsListFromAssets(
       assetsPath: String,
       onlyPrivate: Boolean = false
     ): List<PgpKeyDetails> {
@@ -98,20 +98,20 @@ class PrivateKeysManager {
     ): ArrayList<PgpKeyDetails> {
       val privateKeys = ArrayList<PgpKeyDetails>()
       keysPaths.forEach { path ->
-        privateKeys.addAll(getNodeKeyDetailsListFromAssets(path, onlyPrivate))
+        privateKeys.addAll(getPgpKeyDetailsListFromAssets(path, onlyPrivate))
       }
       return privateKeys
     }
 
     fun deleteKey(accountEntity: AccountEntity, keyPath: String) {
-      val nodeKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
-      deleteKey(accountEntity, nodeKeyDetails)
+      val pgpKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
+      deleteKey(accountEntity, pgpKeyDetails)
     }
 
-    fun deleteKey(accountEntity: AccountEntity, nodeKeyDetails: PgpKeyDetails) {
+    fun deleteKey(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      nodeKeyDetails.fingerprint.let {
+      pgpKeyDetails.fingerprint.let {
         roomDatabase.keysDao().deleteByAccountAndFingerprint(accountEntity.email, it)
       }
 

@@ -12,12 +12,4 @@
             android:targetClass="com.flowcrypt.email"
             android:targetPackage="@string/application_id" />
     </Preference>
-
-    <Preference
-        android:title="Node backend test"
-        app:iconSpaceReserved="false">
-        <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.NodeTestActivity"
-            android:targetPackage="@string/application_id" />
-    </Preference>
 </PreferenceScreen>

@@ -70,9 +70,6 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
     when (key) {
       Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED,
       Constants.PREF_KEY_IS_ACRA_ENABLED,
-      Constants.PREF_KEY_IS_NODE_HTTP_DEBUG_ENABLED,
-      Constants.PREF_KEY_NODE_HTTP_LOG_LEVEL,
-      Constants.PREF_KEY_IS_NATIVE_NODE_DEBUG_ENABLED,
       Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED -> showApplicationDetailsSettingsActivity()
     }
   }

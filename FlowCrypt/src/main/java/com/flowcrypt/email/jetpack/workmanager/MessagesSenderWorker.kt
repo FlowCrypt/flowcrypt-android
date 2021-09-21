@@ -52,6 +52,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -599,7 +600,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     override fun getInputStream(): InputStream? {
       val inputStream: InputStream? = if (att.uri == null) {
         val rawData = att.rawData ?: return null
-        IOUtils.toInputStream(rawData, StandardCharsets.UTF_8)
+        ByteArrayInputStream(rawData)
       } else {
         att.uri?.let { context.contentResolver.openInputStream(it) }
       }

@@ -387,7 +387,6 @@
     <string name="network_error">Network error</string>
     <string name="error_no_keys">Error: no keys</string>
     <string name="could_not_load_private_keys">Couldn\'t load private keys</string>
-    <string name="internal_node_init_error">Internal Node initializing error</string>
     <string name="error_loader_result_is_empty">Error. The loader result is empty</string>
     <string name="could_not_import_data">Could\'t import data</string>
     <string name="partially_encrypted_private_key_error_msg">One of the provided Private Keys is a partially encrypted private key (some packets are encrypted, some not). Such keys are not supported. Please only import fully encrypted keys, with the same pass phrase for all secret packets.</string>
@@ -532,4 +531,7 @@
     <string name="key_sha1_warning_msg">This OpenPGP key is not supported with message: "No suitable signatures found on the key". It could be because it\'s missing internal signatures, or the signatures are wrongly made, or it may be using archaic algorithms that are no longer secure and no longer supported (such as SHA-1).</string>
     <string name="warning_one_of_pub_keys_is_not_usable">The public key of one of your recipients is wrong or not usable due to security reasons.\n\nPlease ask the recipient(s) to send you a new Public Key.</string>
     <string name="could_not_extract_key_details">Could not extract the key details</string>
+    <string name="decrypt_error_message_bad_mdc">Security threat - opening this message is dangerous because it was modified in transit.</string>
+    <string name="decrypt_error_message_no_mdc">Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.</string>
+    <string name="msg_contains_not_valid_pub_key">This message contained a Public Key that was not valid:\n\n%1$s</string>
 </resources>

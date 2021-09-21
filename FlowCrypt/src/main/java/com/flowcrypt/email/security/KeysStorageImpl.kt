@@ -10,9 +10,6 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
-import com.flowcrypt.email.api.retrofit.node.NodeService
-import com.flowcrypt.email.api.retrofit.request.node.KeyCacheWipeRequest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
@@ -21,8 +18,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -225,12 +220,6 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     )
 
     passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
-
-    //todo-denbond7 should be removed when we will drop node
-    GlobalScope.launch {
-      val apiService = NodeRetrofitHelper.getRetrofit()?.create(NodeService::class.java)
-      apiService?.keyCacheWipe(KeyCacheWipeRequest())
-    }
   }
 
   override fun hasEmptyPassphrase(): Boolean {
@@ -284,10 +273,6 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
         }
       }
     }
-  }
-
-  interface OnKeysUpdatedListener {
-    fun onKeysUpdated()
   }
 
   private data class PassPhraseInRAM(

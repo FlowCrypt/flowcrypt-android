@@ -13,7 +13,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.LoadContactsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
-import com.flowcrypt.email.ui.activity.BaseNodeActivity
 
 /**
  * This class describes a bind to the email sync service logic.
@@ -24,7 +23,7 @@ import com.flowcrypt.email.ui.activity.BaseNodeActivity
  * E-mail: DenBond7@gmail.com
  */
 //todo-denbond7 need to refactor this class, too many duplicate code
-abstract class BaseSyncActivity : BaseNodeActivity() {
+abstract class BaseSyncActivity : BaseActivity() {
   /**
    * Run update a folders list.
    */

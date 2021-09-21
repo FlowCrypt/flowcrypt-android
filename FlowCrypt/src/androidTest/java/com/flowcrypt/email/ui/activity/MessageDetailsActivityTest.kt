@@ -35,8 +35,8 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
@@ -56,6 +56,7 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.anything
+import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.Rule
@@ -230,8 +231,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
       "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt"
-    )
-      ?: throw NullPointerException()
+    ) ?: throw NullPointerException()
 
     assertThat(msgInfo, notNullValue())
 
@@ -248,7 +248,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     ) + "\n\n" + decryptError?.details?.type + ": " + decryptError?.details?.message)
 
     onView(withId(R.id.textViewErrorMessage))
-      .check(matches(withText(formatErrorMsg)))
+      .check(matches(withText(containsString(formatErrorMsg))))
 
     testSwitch(block.content ?: "")
     matchReplyButtons(details)
@@ -336,9 +336,9 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
-    val nodeKeyDetails =
+    val pgpKeyDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
-    val pgpContact = nodeKeyDetails.primaryPgpContact
+    val pgpContact = pgpKeyDetails.primaryPgpContact
 
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(
       matches(
@@ -354,7 +354,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
           getHtmlString(
             getResString(
               R.string.template_message_part_public_key_fingerprint,
-              GeneralUtil.doSectionsInText(" ", nodeKeyDetails.fingerprint, 4)!!
+              GeneralUtil.doSectionsInText(" ", pgpKeyDetails.fingerprint, 4)!!
             )
           )
         )
@@ -371,7 +371,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     onView(withId(R.id.textViewPgpPublicKey))
       .check(matches(isDisplayed()))
     onView(withId(R.id.textViewPgpPublicKey))
-      .check(matches(withText(TestGeneralUtil.replaceVersionInKey(block.content))))
+      .check(matches(withText(TestGeneralUtil.replaceVersionInKey(block.keyDetails?.publicKey))))
     onView(withId(R.id.switchShowPublicKey))
       .check(matches(isChecked()))
       .perform(scrollTo(), click())

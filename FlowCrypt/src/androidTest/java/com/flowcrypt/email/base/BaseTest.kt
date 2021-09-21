@@ -58,7 +58,6 @@ import javax.mail.internet.MimeMessage
 abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
   private var countingIdlingResource: IdlingResource? = null
-  private var nodeIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
 
   protected var decorView: View? = null
@@ -68,20 +67,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
     activityScenario?.onActivity {
       decorView = it.window.decorView
     }
-  }
-
-  @Before
-  open fun registerNodeIdling() {
-    activityScenario?.onActivity { activity ->
-      val baseActivity = (activity as? BaseActivity) ?: return@onActivity
-      nodeIdlingResource = baseActivity.nodeIdlingResource
-      nodeIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
-    }
-  }
-
-  @After
-  open fun unregisterNodeIdling() {
-    nodeIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
@@ -279,7 +264,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   fun registerAllIdlingResources() {
     registerCountingIdlingResource()
-    registerNodeIdling()
     initDecorView()
   }
 

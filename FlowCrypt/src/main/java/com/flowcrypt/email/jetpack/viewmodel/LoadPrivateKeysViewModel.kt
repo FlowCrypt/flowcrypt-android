@@ -22,7 +22,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
@@ -128,12 +127,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   continue
                 }
 
-                try {
-                  details.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
-                } catch (e: NodeException) {
-                  e.printStackTrace()
-                  ExceptionUtil.handleError(e)
-                }
+                details.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
               }
 
               folder.close(false)

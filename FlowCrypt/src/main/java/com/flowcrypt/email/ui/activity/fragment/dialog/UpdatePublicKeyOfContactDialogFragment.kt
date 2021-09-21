@@ -46,7 +46,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    pgpKeyDetails = arguments?.getParcelable(KEY_NODE_KEY_DETAILS)
+    pgpKeyDetails = arguments?.getParcelable(KEY_PGP_KEY_DETAILS)
     expectedEmail = arguments?.getString(KEY_EXPECTED_EMAIL)
   }
 
@@ -153,9 +153,9 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    private val KEY_NODE_KEY_DETAILS =
+    private val KEY_PGP_KEY_DETAILS =
       GeneralUtil.generateUniqueExtraKey(
-        "KEY_NODE_KEY_DETAILS",
+        "KEY_PGP_KEY_DETAILS",
         UpdatePublicKeyOfContactDialogFragment::class.java
       )
     private val KEY_EXPECTED_EMAIL =
@@ -168,7 +168,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
       return UpdatePublicKeyOfContactDialogFragment().apply {
         arguments = Bundle().apply {
           putString(KEY_EXPECTED_EMAIL, expectedEmail)
-          putParcelable(KEY_NODE_KEY_DETAILS, pgpKeyDetails)
+          putParcelable(KEY_PGP_KEY_DETAILS, pgpKeyDetails)
         }
       }
     }

@@ -65,7 +65,7 @@ import java.util.*
  * Time: 10:50 AM
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application) {
+class PrivateKeysViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
 

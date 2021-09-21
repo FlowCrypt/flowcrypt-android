@@ -49,11 +49,10 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -75,6 +74,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
@@ -89,7 +89,9 @@ import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
+import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.DateTimeUtil
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -98,6 +100,7 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -137,8 +140,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
               val decryptErrorDetails = decryptErrorMsgBlock.error?.details ?: continue
-              if (decryptErrorDetails.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
-                val fingerprints = decryptErrorMsgBlock.error.longIds?.needPassphrase ?: continue
+              if (decryptErrorDetails.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+                val fingerprints = decryptErrorMsgBlock.error.fingerprints ?: continue
                 showNeedPassphraseDialog(
                   fingerprints,
                   REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
@@ -155,9 +158,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             Manifest.permission.WRITE_EXTERNAL_STORAGE
           ) == PackageManager.PERMISSION_GRANTED
         ) {
-          lastClickedAtt?.let {
-            context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
-          }
+          downloadAttachment()
         } else {
           requestPermissions(
             arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
@@ -410,9 +411,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-          lastClickedAtt?.let {
-            context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
-          }
+          downloadAttachment()
         } else {
           Toast.makeText(
             activity,
@@ -847,19 +846,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
-          val att = EmailUtil.getAttInfoFromUri(activity, decryptAtt.fileUri)
-          if (att != null) {
-            att.isDecrypted = true
-            att.uri?.path?.let {
-              att.uri = FileProvider.getUriForFile(
-                requireContext(),
-                Constants.FILE_PROVIDER_AUTHORITY,
-                File(it)
-              )
-            }
-
-            inlineEncryptedAtts.add(att)
-          }
+          inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo())
         }
 
         else -> layoutMsgParts?.addView(
@@ -965,6 +952,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * @return The generated view.
    */
   private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
+    if (!block.complete && block.parseKeyErrorMsg?.isNotEmpty() == true) {
+      return getView(
+        clipLargeText(block.content),
+        getString(R.string.msg_contains_not_valid_pub_key, block.parseKeyErrorMsg),
+        layoutInflater
+      )
+    }
 
     val pubKeyView =
       inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup
@@ -993,7 +987,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       ), fingerprint
     )
 
-    textViewPgpPublicKey.text = clipLargeText(block.content)
+    textViewPgpPublicKey.text = clipLargeText(block.keyDetails?.publicKey ?: block.content)
 
     val existingPgpContact = block.existingPgpContact
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
@@ -1114,13 +1108,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val decryptError = block.error ?: return View(context)
 
     when (decryptError.details?.type) {
-      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
+      PgpDecrypt.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
         clipLargeText(
           block.content
         ), layoutInflater
       )
 
-      DecryptErrorDetails.Type.FORMAT -> {
+      PgpDecrypt.DecryptionErrorType.FORMAT -> {
         val formatErrorMsg = (getString(
           R.string.decrypt_error_message_badly_formatted,
           getString(R.string.app_name)
@@ -1129,7 +1123,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
       }
 
-      DecryptErrorDetails.Type.OTHER -> {
+      PgpDecrypt.DecryptionErrorType.OTHER -> {
         val otherErrorMsg =
           getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
               "\n\n" + getString(
@@ -1143,19 +1137,25 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       else -> {
         var btText: String? = null
         var onClickListener: View.OnClickListener? = null
-        if (decryptError.details?.type == DecryptErrorDetails.Type.NEED_PASSPHRASE) {
+        if (decryptError.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
-            val fingerprints = decryptError.longIds?.needPassphrase ?: return@OnClickListener
+            val fingerprints = decryptError.fingerprints ?: return@OnClickListener
             showNeedPassphraseDialog(fingerprints, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
           }
+        }
+
+        val detailedMessage = when (decryptError.details?.type) {
+          PgpDecrypt.DecryptionErrorType.NO_MDC -> getString(R.string.decrypt_error_message_no_mdc)
+          PgpDecrypt.DecryptionErrorType.BAD_MDC -> getString(R.string.decrypt_error_message_bad_mdc)
+          else -> decryptError.details?.message
         }
 
         return getView(
           originalMsg = clipLargeText(block.content),
           errorMsg = getString(
             R.string.could_not_decrypt_message_due_to_error,
-            decryptError.details?.type.toString() + ": " + decryptError.details?.message
+            decryptError.details?.type.toString() + ": " + detailedMessage
           ),
           layoutInflater = layoutInflater,
           buttonText = btText,
@@ -1415,6 +1415,44 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         showNeedPassphraseDialog(fingerprintList, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
       }
     })
+  }
+
+  private fun downloadAttachment() {
+    lastClickedAtt?.let { attInfo ->
+      if (attInfo.rawData?.isNotEmpty() == true) {
+        downloadInlinedAtt(attInfo)
+      } else {
+        context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+      }
+    }
+  }
+
+  private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
+    val tempDir = CacheManager.getCurrentMsgTempDir()
+    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
+    val file = if (fileName.isNullOrEmpty()) {
+      File.createTempFile("tmp", null, tempDir)
+    } else {
+      val fileCandidate = File(tempDir, fileName)
+      if (fileCandidate.exists()) {
+        FileAndDirectoryUtils.createFileWithIncreasedIndex(tempDir, fileName)
+      } else {
+        fileCandidate
+      }
+    }
+    FileUtils.writeByteArrayToFile(file, attInfo.rawData)
+    context?.let {
+      attInfo.uri = FileProvider.getUriForFile(it, Constants.FILE_PROVIDER_AUTHORITY, file)
+      it.startService(
+        AttachmentDownloadManagerService.newIntent(
+          context,
+          attInfo.copy(rawData = null, name = file.name)
+        )
+      )
+    }
+  } catch (e: Exception) {
+    e.printStackTrace()
+    ExceptionUtil.handleError(e)
   }
 
   private fun messageNotAvailableInFolder(showToast: Boolean = true) {

@@ -269,8 +269,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       var lastProgress = 0f
 
       for (i in 0 until blocksCount) {
-        val nodeKeyDetails = details[i]
-        getPublicKeyInfo(nodeKeyDetails, emails)?.let {
+        val pgpKeyDetails = details[i]
+        getPublicKeyInfo(pgpKeyDetails, emails)?.let {
           if (it.publicKey.length <= Constants.MAX_PUB_KEY_SIZE) {
             publicKeyInfoList.add(it)
           }

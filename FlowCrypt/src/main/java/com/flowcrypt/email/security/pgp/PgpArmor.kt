@@ -6,7 +6,7 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.extensions.kotlin.countOfMatchesZeroOneOrMore
 import com.flowcrypt.email.extensions.kotlin.isWhiteSpace
 import com.flowcrypt.email.extensions.kotlin.normalize

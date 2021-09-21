@@ -20,7 +20,7 @@ import com.flowcrypt.email.security.SecurityUtils
  * E-mail: DenBond7@gmail.com
  */
 data class AttachmentInfo constructor(
-  var rawData: String? = null,
+  var rawData: ByteArray? = null,
   var email: String? = null,
   var folder: String? = null,
   var uid: Long = 0,
@@ -53,7 +53,7 @@ data class AttachmentInfo constructor(
   }
 
   constructor(source: Parcel) : this(
-    source.readString(),
+    source.createByteArray(),
     source.readString(),
     source.readString(),
     source.readLong(),
@@ -78,7 +78,7 @@ data class AttachmentInfo constructor(
 
   override fun writeToParcel(dest: Parcel, flags: Int) {
     with(dest) {
-      writeString(rawData)
+      writeByteArray(rawData)
       writeString(email)
       writeString(folder)
       writeLong(uid)
@@ -104,7 +104,10 @@ data class AttachmentInfo constructor(
 
     other as AttachmentInfo
 
-    if (rawData != other.rawData) return false
+    if (rawData != null) {
+      if (other.rawData == null) return false
+      if (!rawData.contentEquals(other.rawData)) return false
+    } else if (other.rawData != null) return false
     if (email != other.email) return false
     if (folder != other.folder) return false
     if (uid != other.uid) return false
@@ -115,7 +118,7 @@ data class AttachmentInfo constructor(
     if (type != other.type) return false
     if (id != other.id) return false
     if (path != other.path) return false
-    if (uri?.toString() != other.uri?.toString()) return false
+    if (uri != other.uri) return false
     if (isProtected != other.isProtected) return false
     if (isForwarded != other.isForwarded) return false
     if (isDecrypted != other.isDecrypted) return false
@@ -126,7 +129,7 @@ data class AttachmentInfo constructor(
   }
 
   override fun hashCode(): Int {
-    var result = rawData?.hashCode() ?: 0
+    var result = rawData?.contentHashCode() ?: 0
     result = 31 * result + (email?.hashCode() ?: 0)
     result = 31 * result + (folder?.hashCode() ?: 0)
     result = 31 * result + uid.hashCode()

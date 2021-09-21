@@ -6,25 +6,18 @@
 
 package com.flowcrypt.email.core.msg
 
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlockFactory
-import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
 import com.flowcrypt.email.extensions.kotlin.normalize
+import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.security.pgp.PgpArmor
 import com.flowcrypt.email.security.pgp.PgpMsg
 import java.util.Properties
 import javax.mail.Session
 import javax.mail.internet.MimeMessage
 
-@Suppress("unused")
 object MsgBlockParser {
-
   private const val ARMOR_HEADER_MAX_LENGTH = 50
-
-  data class NormalizedTextAndBlocks(
-    val normalized: String,
-    val blocks: List<MsgBlock>
-  )
 
   fun detectBlocks(text: String): NormalizedTextAndBlocks {
     val normalized = text.normalize()
@@ -34,6 +27,62 @@ object MsgBlockParser {
       val continueAt = detectNextBlock(normalized, startAt, blocks)
       if (startAt >= continueAt) return NormalizedTextAndBlocks(normalized, blocks)
       startAt = continueAt
+    }
+  }
+
+  fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): SanitizedBlocks {
+    if (decryptedContent == null) return SanitizedBlocks(emptyList(), false)
+    val blocks = mutableListOf<MsgBlock>()
+    if (MimeUtils.resemblesMsg(decryptedContent)) {
+      val decoded = PgpMsg.extractMimeContent(
+        MimeMessage(Session.getInstance(Properties()), decryptedContent.inputStream())
+      )
+      var isRichText = false
+      when {
+        decoded.html != null -> {
+          // sanitized html
+          val sanitizedHtml = PgpMsg.sanitizeHtmlKeepBasicTags(decoded.html)
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, sanitizedHtml))
+          isRichText = true
+        }
+        decoded.text != null -> {
+          // escaped text as html
+          val html = decoded.text.toEscapedHtml()
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, html))
+        }
+        else -> {
+          // escaped mime text as html
+          val html = String(decryptedContent).toEscapedHtml()
+          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, html))
+        }
+      }
+
+      for (attachment in decoded.attachments) {
+        try {
+          val attMsgBlock = if (PgpMsg.treatAs(attachment) == PgpMsg.TreatAs.PUBLIC_KEY) {
+            val content = String(attachment.inputStream.readBytes())
+            MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, content)
+          } else {
+            MsgBlockFactory.fromAttachment(MsgBlock.Type.DECRYPTED_ATT, attachment)
+          }
+          blocks.add(attMsgBlock)
+        } catch (e: Exception) {
+          e.printStackTrace()
+        }
+      }
+
+      return SanitizedBlocks(blocks, isRichText)
+    } else {
+      val armoredKeys = mutableListOf<String>()
+      val content = PgpMsg.stripPublicKeys(
+        PgpMsg.stripFcReplyToken(PgpMsg.extractFcAttachments(String(decryptedContent), blocks)),
+        armoredKeys
+      ).toEscapedHtml()
+      blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, content))
+      for (armoredKey in armoredKeys) {
+        blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, armoredKey))
+      }
+      return SanitizedBlocks(blocks, false)
     }
   }
 
@@ -99,62 +148,13 @@ object MsgBlockParser {
     return continueAt
   }
 
-  data class SanitizedBlocks(
-    val blocks: List<MsgBlock>,
-    val subject: String?,
-    val isRichText: Boolean
+  data class NormalizedTextAndBlocks(
+    val normalized: String,
+    val blocks: List<MsgBlock>
   )
 
-  fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): SanitizedBlocks {
-    if (decryptedContent == null) return SanitizedBlocks(emptyList(), null, false)
-    val blocks = mutableListOf<MsgBlock>()
-    if (MimeUtils.resemblesMsg(decryptedContent)) {
-      val decoded = PgpMsg.decodeMimeMessage(
-        MimeMessage(Session.getInstance(Properties()), decryptedContent.inputStream())
-      )
-      var isRichText = false
-      when {
-        decoded.html != null -> {
-          // sanitized html
-          val sanitizedHtml = PgpMsg.sanitizeHtmlKeepBasicTags(decoded.html)
-          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, sanitizedHtml))
-          isRichText = true
-        }
-        decoded.text != null -> {
-          // escaped text as html
-          val html = decoded.text.toEscapedHtml()
-          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, html))
-        }
-        else -> {
-          // escaped mime text as html
-          val html = String(decryptedContent).toEscapedHtml()
-          blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, html))
-        }
-      }
-
-      for (attachment in decoded.attachments) {
-        blocks.add(
-          if (PgpMsg.treatAs(attachment) == PgpMsg.TreatAs.PUBLIC_KEY) {
-            val content = String(attachment.inputStream.readBytes())
-            MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, content)
-          } else {
-            MsgBlockFactory.fromAttachment(MsgBlock.Type.DECRYPTED_ATT, attachment)
-          }
-        )
-      }
-
-      return SanitizedBlocks(blocks, decoded.subject, isRichText)
-    } else {
-      val armoredKeys = mutableListOf<String>()
-      val content = PgpMsg.stripPublicKeys(
-        PgpMsg.stripFcReplyToken(PgpMsg.extractFcAttachments(String(decryptedContent), blocks)),
-        armoredKeys
-      ).toEscapedHtml()
-      blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.DECRYPTED_HTML, content))
-      for (armoredKey in armoredKeys) {
-        blocks.add(MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, armoredKey))
-      }
-      return SanitizedBlocks(blocks, null, false)
-    }
-  }
+  data class SanitizedBlocks(
+    val blocks: List<MsgBlock>,
+    val isRichText: Boolean
+  )
 }

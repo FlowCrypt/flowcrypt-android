@@ -54,29 +54,4 @@
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_imap_debug" />
     </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/pref_title_node">
-        <SwitchPreference
-            android:defaultValue="@string/gradle_is_node_http_debug_enabled"
-            android:key="@string/pref_key_is_node_http_debug_enabled"
-            android:summaryOff="@string/pref_summary_disabled"
-            android:summaryOn="@string/pref_summary_enabled"
-            android:title="@string/pref_title_node_http" />
-
-        <ListPreference
-            android:defaultValue="@string/gradle_node_http_log_level"
-            android:dependency="@string/pref_key_is_node_http_debug_enabled"
-            android:entries="@array/http_log_level_entries_and_values"
-            android:entryValues="@array/http_log_level_entries_and_values"
-            android:key="@string/pref_key_node_http_log_level"
-            android:summary="%s"
-            android:title="@string/pref_title_node_http_log_level" />
-
-        <SwitchPreference
-            android:defaultValue="false"
-            android:key="@string/pref_key_is_native_node_debug_enabled"
-            android:summaryOff="@string/pref_summary_disabled"
-            android:summaryOn="@string/pref_summary_enabled"
-            android:title="@string/pref_title_native_node_logs" />
-    </PreferenceCategory>
 </PreferenceScreen>

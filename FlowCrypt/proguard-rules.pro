@@ -50,9 +50,6 @@
     @com.google.gson.annotations.Expose <fields>;
 }
 
-# Keep Node classes
--keep class com.flowcrypt.email.node.** { *; }
-
 -dontnote com.flowcrypt.email.api.retrofit.**
 -dontnote com.flowcrypt.email.test.ui.widget.**
 
