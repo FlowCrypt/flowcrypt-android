@@ -196,10 +196,10 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
+        <!-- https://developer.android.com/topic/libraries/architecture/workmanager/advanced/custom-configuration#remove-default -->
         <provider
-            android:name="androidx.work.impl.WorkManagerInitializer"
-            android:authorities="${applicationId}.workmanager-init"
-            android:exported="false"
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
             tools:node="remove" />
         <!-- Services -->
         <service
