@@ -521,7 +521,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
       //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
       mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
 
-      if (mimeMsg.content is MimeMultipart && !CollectionUtils.isEmpty(atts)) {
+      if (mimeMsg.content is MimeMultipart && atts.isNotEmpty()) {
         val mimeMultipart = mimeMsg.content as MimeMultipart
 
         for (att in atts) {
