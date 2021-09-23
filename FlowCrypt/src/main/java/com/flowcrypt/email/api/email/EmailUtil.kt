@@ -1056,11 +1056,11 @@ class EmailUtil {
       msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
-      val bodyPart = MimeBodyPart()
-      bodyPart.setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
-      val mimeMultipart = MimeMultipart()
-      mimeMultipart.addBodyPart(bodyPart)
-      msg.setContent(mimeMultipart)
+      msg.setContent(MimeMultipart().apply {
+        addBodyPart(MimeBodyPart().apply {
+          setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
+        })
+      })
       return msg
     }
 
@@ -1073,7 +1073,11 @@ class EmailUtil {
     ): Message {
       val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
       reply.setFrom(InternetAddress(info.from))
-      reply.setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
+      reply.setContent(MimeMultipart().apply {
+        addBodyPart(MimeBodyPart().apply {
+          setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
+        })
+      })
       reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
       reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       reply.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
