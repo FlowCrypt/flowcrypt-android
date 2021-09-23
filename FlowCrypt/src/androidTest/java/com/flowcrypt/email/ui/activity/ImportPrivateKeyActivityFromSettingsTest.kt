@@ -43,6 +43,7 @@ import org.hamcrest.Matchers.hasItem
 import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -121,6 +122,9 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
 
   @Test
   @DependsOnMailServer
+  @Ignore(
+    "Temporary disabled due to https://github.com/FlowCrypt/flowcrypt-android/issues/1478"
+  )
   fun testShowErrorWhenImportingKeyFromFileSHA1() {
     val prvKeyAsString = TestGeneralUtil.readFileFromAssetsAsString(
       "pgp/sha1@flowcrypt.test_prv_default.asc"

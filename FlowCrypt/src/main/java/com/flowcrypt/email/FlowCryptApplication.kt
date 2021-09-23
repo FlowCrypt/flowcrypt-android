@@ -30,6 +30,9 @@ import org.acra.config.httpSender
 import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 import org.acra.sender.HttpSender
+import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -45,6 +48,7 @@ import java.util.concurrent.TimeUnit
 class FlowCryptApplication : Application(), Configuration.Provider {
   override fun onCreate() {
     super.onCreate()
+    enableDeprecatedSHA1ForPGPainlessPolicy()
     setupKeysStorage()
     initPerInstallationSharedPrefs()
     CacheManager.init(this)
@@ -64,6 +68,25 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     Configuration.Builder()
       .setJobSchedulerJobIdRange(JobIdManager.JOB_MAX_ID, JobIdManager.JOB_MAX_ID + 10000)
       .build()
+
+  /**
+   * Allow sha1 for all builds except enterprise. It's a temporary solution.
+   * More details here https://github.com/FlowCrypt/flowcrypt-android/issues/1478 and here
+   * https://github.com/pgpainless/pgpainless/issues/158
+   */
+  private fun enableDeprecatedSHA1ForPGPainlessPolicy() {
+    if (BuildConfig.FLAVOR != Constants.FLAVOR_NAME_ENTERPRISE) {
+      PGPainless.getPolicy().signatureHashAlgorithmPolicy = HashAlgorithmPolicy(
+        HashAlgorithm.SHA512, listOf(
+          HashAlgorithm.SHA512,
+          HashAlgorithm.SHA384,
+          HashAlgorithm.SHA256,
+          HashAlgorithm.SHA224,
+          HashAlgorithm.SHA1
+        )
+      )
+    }
+  }
 
   private fun setupKeysStorage() {
     val keysStorage = KeysStorageImpl.getInstance(this)

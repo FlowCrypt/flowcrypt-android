@@ -615,7 +615,8 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   }
 
   @Test
-  fun testShowWarningIfFoundNotUsableKeySHA1() {
+  //fun testShowWarningIfFoundNotUsableKeySHA1() {
+  fun testAcceptIfFoundKeySHA1() {
     val keyWithSHA1Algo =
       TestGeneralUtil.readFileFromAssetsAsString("pgp/sha1@flowcrypt.test_pub.asc")
     val contact = PgpContact(
@@ -639,18 +640,20 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
             contact.email,
             UIUtil.getColor(
               getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_USABLE
+              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
             )
           )
         )
       )
 
+    /*
+    temporary disabled due too https://github.com/FlowCrypt/flowcrypt-android/issues/1478
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(R.string.warning_one_of_pub_keys_is_not_usable))
       .check(matches(isDisplayed()))
-      .perform(click())
+      .perform(click())*/
   }
 
   @Test
