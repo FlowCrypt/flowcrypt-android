@@ -181,7 +181,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  fun testMissingKeyErrorImportKey() {
+  fun testDecryptionError_KEY_MISMATCH_MissingKeyErrorImportKey() {
     testMissingKey(
       getMsgInfo(
         "messages/info/encrypted_msg_info_text_with_missing_key.json",
@@ -217,7 +217,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  fun testMissingPubKey() {
+  fun testDecryptionError_KEY_MISMATCH_MissingPubKey() {
     testMissingKey(
       getMsgInfo(
         "messages/info/encrypted_msg_info_text_error_one_pub_key.json",
@@ -227,7 +227,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  fun testBadlyFormattedMsg() {
+  fun testDecryptionError_FORMAT_BadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
       "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt"
