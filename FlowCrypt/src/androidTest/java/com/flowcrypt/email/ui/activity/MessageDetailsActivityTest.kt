@@ -255,6 +255,31 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
+  fun testDecryptionError_NO_MDC() {
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_info_error_no_mdc.json",
+      "messages/mime/encrypted_msg_info_error_no_mdc.txt"
+    ) ?: throw NullPointerException()
+
+    assertThat(msgInfo, notNullValue())
+
+    val details = msgInfo.msgEntity
+
+    launchActivity(details)
+    matchHeader(msgInfo)
+
+    val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
+    val decryptError = block.error
+    val errorMsg = getResString(
+      R.string.could_not_decrypt_message_due_to_error,
+      decryptError?.details?.type.toString() + ": " + getResString(R.string.decrypt_error_message_no_mdc)
+    )
+    onView(withId(R.id.textViewErrorMessage))
+      .check(matches(withText(errorMsg)))
+    matchReplyButtons(details)
+  }
+
+  @Test
   fun testMissingKeyErrorChooseSinglePubKey() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_with_missing_key.json",
