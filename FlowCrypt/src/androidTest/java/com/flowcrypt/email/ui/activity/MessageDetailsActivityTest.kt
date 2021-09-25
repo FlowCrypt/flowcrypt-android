@@ -181,7 +181,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  fun testMissingKeyErrorImportKey() {
+  fun testDecryptionError_KEY_MISMATCH_MissingKeyErrorImportKey() {
     testMissingKey(
       getMsgInfo(
         "messages/info/encrypted_msg_info_text_with_missing_key.json",
@@ -217,7 +217,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  fun testMissingPubKey() {
+  fun testDecryptionError_KEY_MISMATCH_MissingPubKey() {
     testMissingKey(
       getMsgInfo(
         "messages/info/encrypted_msg_info_text_error_one_pub_key.json",
@@ -227,7 +227,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
-  fun testBadlyFormattedMsg() {
+  fun testDecryptionError_FORMAT_BadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
       "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt"
@@ -251,6 +251,31 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
       .check(matches(withText(containsString(formatErrorMsg))))
 
     testSwitch(block.content ?: "")
+    matchReplyButtons(details)
+  }
+
+  @Test
+  fun testDecryptionError_NO_MDC() {
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_info_error_no_mdc.json",
+      "messages/mime/encrypted_msg_info_error_no_mdc.txt"
+    ) ?: throw NullPointerException()
+
+    assertThat(msgInfo, notNullValue())
+
+    val details = msgInfo.msgEntity
+
+    launchActivity(details)
+    matchHeader(msgInfo)
+
+    val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
+    val decryptError = block.error
+    val errorMsg = getResString(
+      R.string.could_not_decrypt_message_due_to_error,
+      decryptError?.details?.type.toString() + ": " + getResString(R.string.decrypt_error_message_no_mdc)
+    )
+    onView(withId(R.id.textViewErrorMessage))
+      .check(matches(withText(errorMsg)))
     matchReplyButtons(details)
   }
 

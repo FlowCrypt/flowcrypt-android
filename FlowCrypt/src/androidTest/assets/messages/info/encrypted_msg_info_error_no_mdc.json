@@ -1,0 +1,58 @@
+{
+  "encryptionType": "STANDARD",
+  "msgBlocks": [
+    {
+      "complete": true,
+      "content": "\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\n\u003chead\u003e\n    \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\"/\u003e\n    \u003cstyle\u003e\n      body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n      body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n      body pre { white-space: pre-wrap !important; }\n      body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n    \u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\u003c/body\u003e\n\u003c/html\u003e",
+      "type": "plainHtml"
+    },
+    {
+      "complete": true,
+      "content": "-----BEGIN PGP MESSAGE-----\r\n\r\nhQIMA3LvK1JdDBkzAQ//RjLOB+l/hvljxS+WamHcsx6JH4YVWcrElifdlmmFTB0z\r\nR+F3mlJXLLAbpwAs0hLpfpsI+cpf3Ori67FfGyQPxCY3O0ilamPIvaJm7CqBJ08Y\r\nc0zwVXpmOfAj0cv3NtPKERx88LgukolLk72m5UV2jVKv5fwH685B202rO08GcCt6\r\nGO8CfvyzMv42ys8KgiPkZd8snY9NBT5918nHqHywBFmU9N3suiLM2nKvvFsg+bAg\r\n+0yGkhrFxyWuoL+OYiytR1rutDQjiqwBM7rWvwNFqN3hcBtY46qqQNq0PMe2n1Xm\r\n1fcYI2ESganoO6Ovt2m5LbEyRAJYbVpeTAe/zS1EcmF7Abcn4Zy6mrWi+7eaVfju\r\n8zhE4rxCxkQCFLb+bNc5hBl7ZTT7u7PcoRVGG8KSJc401ztef14RpzzpyP/RIhpq\r\nV4m88VZ9yimr7eIvGPG2WHW445JCq47iu61j8FyVnscgFCMNTyn3t2k/IS/dyVEA\r\nPeN36NUBhd8rM5i6WopO9szqFtwNI0Y9+xvjy07OBueU0enmxA3dcdq21Zc80F/3\r\nkkyD7W5dh4p4uBFzyL/o187hSlqGFk2+d9d6qDKVm7Ff3cY2ivF8SHXjtYk9kau2\r\nZhFyoT8D1Jf3sYxCOdj72FyByPv/ugrxce/wu9bVBZbw7WDxcxmgvEsXv+UxTTrJ\r\nwKHaEMxIbu1scpeSVUEaaAKeiviCkkC5m8jHTpjCmcVt8Sl8ucw/m5AwWIJosR20\r\n0NmxsgsEhT10fyuynWi3JhDpi+Z+TPTAxNgTqHR5pCBga/gyAQUbpNcWASylp6qa\r\nAmqrP2IFEhED6MUmxcNLomIscRVUSS29+JHJZ7RLKORKymJq2stMnpuntwV+Hq7P\r\nZqSyI7YtiUvgFsINTdpydAWmIEkSOfIDNoDFDEcxFa7AYz72YEVUHVuuS5pmJ/A+\r\nfmkvS74gJMTqf7NYRE40uUUF9gPCS86qOeyzlYqxYdCZ0ipDrUQEMFNSgwLVuDBH\r\nEM23JNOSs13nABklfWYkS9AAV1WYn/UxOHgBPspS1I+izTt2DQmjCd7RChk6a12K\r\nR8C2GYrhhlsqMNZhwaI6gGKEg5yD2Ru3oVZPGrdifMaAu1mbOVzUHfJTFzzH/2xe\r\nAD30MkqtGBtQ0rBnaMC4E8+JIA\u003d\u003d\r\n\u003d5QII\r\n-----END PGP MESSAGE-----",
+      "decryptErr": {
+        "error": {
+          "message": "Message is encrypted using a \u0027Symmetrically Encrypted Data\u0027 (SED) packet, which enables certain types of attacks. A \u0027Symmetrically Encrypted Integrity Protected\u0027 (SEIP) packet should be used instead.",
+          "type": "NO_MDC"
+        },
+        "fingerprints": [],
+        "isEncrypted": true
+      },
+      "type": "decryptErr"
+    }
+  ],
+  "msgEntity": {
+    "cc": [],
+    "email": "default@flowcrypt.test",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
+    "from": [
+      {
+        "address": "denbond7@flowcrypt.test"
+      }
+    ],
+    "fromAddress": "denbond7@flowcrypt.test",
+    "hasAttachments": false,
+    "id": 90,
+    "isSeen": true,
+    "isEncrypted": true,
+    "msgState": "NONE",
+    "receivedDate": 1632554486000,
+    "replyTo": "denbond7@flowcrypt.test",
+    "replyToAddress": [
+      {
+        "address": "denbond7@flowcrypt.test"
+      }
+    ],
+    "sentDate": 1632554484000,
+    "subject": "Decryption error. NO_MDC",
+    "to": [
+      {
+        "address": "default@flowcrypt.test"
+      }
+    ],
+    "toAddress": "default@flowcrypt.test",
+    "uid": 20,
+    "uidAsHEX": "14"
+  },
+  "text": ""
+}
