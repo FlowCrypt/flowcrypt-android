@@ -61,6 +61,7 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
+import com.flowcrypt.email.extensions.kotlin.lowercase
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -1372,13 +1373,24 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         } else {
           it.toAttInfo().copy(folder = args.localFolder.fullName)
         }
-      }.toMutableList()
+      }.filterNot { isHiddenAtt(it) }
+        .toMutableList()
 
       attachmentsRecyclerViewAdapter.submitList(attachmentInfoList)
       if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
         msgDetailsViewModel.fetchAttachments()
       }
     })
+  }
+
+  private fun isHiddenAtt(it: AttachmentInfo): Boolean {
+    return when {
+      it.name.isNullOrEmpty() && it.type.lowercase() == "application/pgp-encrypted; name=\"\"" -> {
+        true
+      }
+
+      else -> false
+    }
   }
 
   private fun observerMsgStatesLiveData() {
