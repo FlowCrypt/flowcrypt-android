@@ -516,6 +516,24 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
       )
   }
 
+  @Test
+  //more details here https://github.com/FlowCrypt/flowcrypt-android/issues/1475
+  fun testEncryptedMsgHiddenAttPGPMimeModifiedByGoogle() {
+    val attInfo = TestGeneralUtil.getObjectFromJson(
+      "messages/attachments/hidden_att_pgp_mime_modified_by_google.json",
+      AttachmentInfo::class.java
+    )
+
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_hidden_att_pgp_mime_modified_by_google.json",
+      "messages/mime/encrypted_msg_hidden_att_pgp_mime_modified_by_google.txt", attInfo
+    )
+    baseCheck(msgInfo)
+    onView(withId(R.id.rVAttachments))
+      .check(matches(CustomMatchers.withEmptyRecyclerView()))
+      .check(matches(not(isDisplayed())))
+  }
+
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 

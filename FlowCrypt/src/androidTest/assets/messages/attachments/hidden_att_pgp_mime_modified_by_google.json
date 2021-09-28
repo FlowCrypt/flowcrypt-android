@@ -1,0 +1,16 @@
+{
+  "email": "default@flowcrypt.test",
+  "encodedSize": 10,
+  "folder": "INBOX",
+  "fwdUid": 0,
+  "id": "\u003cb9d9d99a-8ce5-448a-8930-fbf365707ff3@flowcrypt\u003e",
+  "isDecrypted": false,
+  "isEncryptionAllowed": true,
+  "isForwarded": false,
+  "isProtected": false,
+  "name": "",
+  "orderNumber": 0,
+  "path": "0/1",
+  "type": "application/pgp-encrypted; name\u003d\"\"",
+  "uid": 21
+}

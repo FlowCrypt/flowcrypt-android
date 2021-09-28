@@ -1372,7 +1372,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         } else {
           it.toAttInfo().copy(folder = args.localFolder.fullName)
         }
-      }.toMutableList()
+      }.filterNot { it.isHidden() }.toMutableList()
 
       attachmentsRecyclerViewAdapter.submitList(attachmentInfoList)
       if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
