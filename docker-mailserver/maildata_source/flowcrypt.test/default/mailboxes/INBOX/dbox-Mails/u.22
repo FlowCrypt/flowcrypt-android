@@ -1,0 +1,57 @@
+2 M1e C6155ad84
+N          00000000000007A5
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id iAspLIStVWGaBAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Thu, 30 Sep 2021 12:28:52 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id B1731222FD4
+	for <default@flowcrypt.test>; Thu, 30 Sep 2021 12:28:52 +0000 (UTC)
+Date: Thu, 30 Sep 2021 15:28:50 +0300 (GMT+03:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <157985706.5.1633004930592@flowcrypt.test>
+Subject: Decryption compatibility. Symantec Encryption Server message
+ format.
+Mime-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_4_157552255.1633004930531"
+
+------=_Part_4_157552255.1633004930531
+Content-Type: text/plain; name=Version.txt; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=Version.txt
+Content-ID: <9ff5a63f-ec1f-468d-8be2-e6bd89713989@flowcrypt>
+
+Version: 1
+------=_Part_4_157552255.1633004930531
+Content-Type: application/pgp-encrypted; name=Message.pgp
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=Message.pgp
+Content-ID: <58611b12-9f16-4179-962f-a0542d342272@flowcrypt>
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+hF4D16Pe22XLHvsSAQdApkpmTVPmaoMrX9vNheHxKZmJfuVFOu5ngweMVXKKRhMw
+iCf735+94l4HNZhOmTfG6MjIb3+bEUWb+sGHh6AuSCX2jHpI32mvRspB5/Ll95vW
+hF4DTxRYvSK3u1MSAQdAF+mz8vx2OEwpyanJjo5IGiAe84QlNNRgDFHgguoEjC0w
+HKQ+D8pi4HN73t61BpkYDrgRrBhnWlKIi8Mt8qACfIF1bE5w+yzIA+bEmdf5fEjO
+0sAFAY3a0BajVNWslVsVPOCgiE0QGp1NtSM+wgOIRbtyLLlXVRUiF27fEXkfXaBs
+YlB1+OQATbsioLYtEJSPrPqCjcVlaTcVw3P/DnfhSatqKSiZHgWs86nDc5F2wJ9/
+Gx8nnNirV0hGS6WCQ1S2Jlwk46f7jXmWUljrTYKoF37Izfj+CPO1eaN+NxUwEepn
+rLK0B2xme3ihZ/lSl4WTOfY1VK9e4OfD18sBkN+rm2RHZM3bqJSp3UvjgD7anS5N
+Eel5cegx/h8=
+=Cs9G
+-----END PGP MESSAGE-----
+
+------=_Part_4_157552255.1633004930531--
+
+
+R6155ad84
+V7d6
+G49af3b2c84ad55619a04000073f46975
+
