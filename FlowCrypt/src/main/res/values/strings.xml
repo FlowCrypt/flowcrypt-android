@@ -533,5 +533,5 @@
     <string name="could_not_extract_key_details">Could not extract the key details</string>
     <string name="decrypt_error_message_bad_mdc">Security threat - opening this message is dangerous because it was modified in transit.</string>
     <string name="decrypt_error_message_no_mdc">Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.</string>
-    <string name="msg_contains_not_valid_pub_key">This message contained a Public Key that was not valid:\n\n%1$s</string>
+    <string name="msg_contains_not_valid_pub_key">This message contained a Public Key that was not valid.\n\n%1$s</string>
 </resources>

@@ -139,9 +139,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           for (block in msgInfo?.msgBlocks ?: emptyList()) {
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
-              val decryptErrorDetails = decryptErrorMsgBlock.error?.details ?: continue
+              val decryptErrorDetails = decryptErrorMsgBlock.decryptErr?.details ?: continue
               if (decryptErrorDetails.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
-                val fingerprints = decryptErrorMsgBlock.error.fingerprints ?: continue
+                val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
                   fingerprints,
                   REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
@@ -952,10 +952,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * @return The generated view.
    */
   private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
-    if (!block.complete && block.parseKeyErrorMsg?.isNotEmpty() == true) {
+    if (!block.complete && block.error?.errorMsg?.isNotEmpty() == true) {
       return getView(
         clipLargeText(block.content),
-        getString(R.string.msg_contains_not_valid_pub_key, block.parseKeyErrorMsg),
+        getString(R.string.msg_contains_not_valid_pub_key, block.error.errorMsg),
         layoutInflater
       )
     }
@@ -1105,7 +1105,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     block: DecryptErrorMsgBlock,
     layoutInflater: LayoutInflater
   ): View {
-    val decryptError = block.error ?: return View(context)
+    val decryptError = block.decryptErr ?: return View(context)
 
     when (decryptError.details?.type) {
       PgpDecrypt.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
