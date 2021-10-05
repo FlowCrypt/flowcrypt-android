@@ -64,7 +64,8 @@ object PgpDecrypt {
   fun decryptWithResult(
     srcInputStream: InputStream,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
-    protector: SecretKeyRingProtector
+    protector: SecretKeyRingProtector,
+    ignoreMdcErrors: Boolean = false
   ): DecryptionResult {
     srcInputStream.use { srcStream ->
       val destOutputStream = ByteArrayOutputStream()
@@ -79,6 +80,7 @@ object PgpDecrypt {
             .withOptions(
               ConsumerOptions()
                 .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
+                .setIgnoreMDCErrors(ignoreMdcErrors)
             )
 
           decryptionStream.use { it.copyTo(outStream) }

@@ -277,6 +277,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
     onView(withId(R.id.textViewErrorMessage))
       .check(matches(withText(errorMsg)))
+    testSwitch(block.content ?: "")
     matchReplyButtons(details)
   }
 
