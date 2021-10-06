@@ -12,21 +12,26 @@ import com.google.gson.annotations.Expose
 
 data class EncryptedAttLinkMsgBlock(
   @Expose override val attMeta: AttMeta,
+  @Expose override val error: MsgBlockError? = null
 ) : AttMsgBlock {
 
   @Expose
   override val content: String = ""
+
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.ENCRYPTED_ATT_LINK
+
   @Expose
   override val complete: Boolean = true
 
   constructor(source: Parcel) : this(
-    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!
+    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeParcelable(attMeta, flags)
+    parcel.writeParcelable(error, flags)
   }
 
   override fun describeContents(): Int {
@@ -34,12 +39,7 @@ data class EncryptedAttLinkMsgBlock(
   }
 
   companion object CREATOR : Parcelable.Creator<EncryptedAttLinkMsgBlock> {
-    override fun createFromParcel(parcel: Parcel): EncryptedAttLinkMsgBlock {
-      return EncryptedAttLinkMsgBlock(parcel)
-    }
-
-    override fun newArray(size: Int): Array<EncryptedAttLinkMsgBlock?> {
-      return arrayOfNulls(size)
-    }
+    override fun createFromParcel(parcel: Parcel) = EncryptedAttLinkMsgBlock(parcel)
+    override fun newArray(size: Int): Array<EncryptedAttLinkMsgBlock?> = arrayOfNulls(size)
   }
 }

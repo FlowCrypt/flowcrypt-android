@@ -42,15 +42,22 @@ object MsgBlockFactory {
     val complete = !missingEnd
     return when (type) {
       MsgBlock.Type.PUBLIC_KEY -> {
-        val keyDetails = if (content != null && complete) {
+        if (content.isNullOrEmpty()) {
+          PublicKeyMsgBlock(content, complete, null, MsgBlockError("empty source"))
+        } else {
           try {
-            PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
+            val keyDetails = PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
+            PublicKeyMsgBlock(content, true, keyDetails)
           } catch (e: Exception) {
             e.printStackTrace()
-            null
+            PublicKeyMsgBlock(
+              content = content,
+              complete = false,
+              keyDetails = null,
+              error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message)
+            )
           }
-        } else null
-        PublicKeyMsgBlock(content, complete, keyDetails)
+        }
       }
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(content, complete, null)
       MsgBlock.Type.SIGNED_MSG -> {
@@ -68,13 +75,6 @@ object MsgBlockFactory {
 
   fun fromAttachment(type: MsgBlock.Type, attachment: MimePart): MsgBlock {
     val attContent = attachment.content
-    //todo-denbond7 need to test it
-
-    /*val data: String? = when (attContent) {
-      is String -> Base64.getEncoder().encode(attachment.inputStream.readBytes())
-      is InputStream -> attContent.toBase64EncodedString()
-      else -> null
-    }*/
     val data = attachment.inputStream.readBytes()
 
     val attMeta = AttMeta(
