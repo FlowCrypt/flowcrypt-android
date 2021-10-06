@@ -242,7 +242,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchHeader(msgInfo)
 
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val decryptError = block.error
+    val decryptError = block.decryptErr
     val formatErrorMsg = (getResString(
       R.string.decrypt_error_message_badly_formatted,
       getResString(R.string.app_name)
@@ -270,7 +270,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchHeader(msgInfo)
 
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val decryptError = block.error
+    val decryptError = block.decryptErr
     val errorMsg = getResString(
       R.string.could_not_decrypt_message_due_to_error,
       decryptError?.details?.type.toString() + ": " + getResString(R.string.decrypt_error_message_no_mdc)
