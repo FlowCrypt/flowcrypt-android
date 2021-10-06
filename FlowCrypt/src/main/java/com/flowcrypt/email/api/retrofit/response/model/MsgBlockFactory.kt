@@ -75,13 +75,6 @@ object MsgBlockFactory {
 
   fun fromAttachment(type: MsgBlock.Type, attachment: MimePart): MsgBlock {
     val attContent = attachment.content
-    //todo-denbond7 need to test it
-
-    /*val data: String? = when (attContent) {
-      is String -> Base64.getEncoder().encode(attachment.inputStream.readBytes())
-      is InputStream -> attContent.toBase64EncodedString()
-      else -> null
-    }*/
     val data = attachment.inputStream.readBytes()
 
     val attMeta = AttMeta(
