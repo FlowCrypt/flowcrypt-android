@@ -47,6 +47,7 @@ data class PublicKeyMsgBlock constructor(
       writeInt((if (complete) 1 else 0))
       writeParcelable(keyDetails, flags)
       writeParcelable(error, flags)
+      writeParcelable(existingPgpContact, flags)
     }
 
   override fun describeContents(): Int = 0
