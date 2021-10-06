@@ -335,7 +335,7 @@ object PgpMsg {
         return TreatAs.SIGNATURE
       }
 
-      name in ENCRYPTED_MSG_NAMES -> {
+      "Message.pgp" == att.fileName || name in ENCRYPTED_MSG_NAMES -> {
         return TreatAs.ENCRYPTED_MSG
       }
 

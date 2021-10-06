@@ -41,6 +41,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -530,8 +531,17 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
     baseCheck(msgInfo)
     onView(withId(R.id.rVAttachments))
-      .check(matches(CustomMatchers.withEmptyRecyclerView()))
+      .check(matches(withEmptyRecyclerView()))
       .check(matches(not(isDisplayed())))
+  }
+
+  @Test
+  fun testEncryptedSymantecEncryptionServerMessageFormat() {
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_symantec_encryption_server_message_format.json",
+      "messages/mime/encrypted_msg_symantec_encryption_server_message_format.txt"
+    )
+    baseCheck(msgInfo)
   }
 
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {

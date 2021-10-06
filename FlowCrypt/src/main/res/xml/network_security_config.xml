@@ -2,6 +2,15 @@
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
-<network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust preinstalled CAs -->
+            <certificates src="system" />
+            <!-- Additionally trust user added CAs -->
+            <certificates
+                src="user"
+                tools:ignore="AcceptsUserCertificates" />
+        </trust-anchors>
+    </base-config>
 </network-security-config>
