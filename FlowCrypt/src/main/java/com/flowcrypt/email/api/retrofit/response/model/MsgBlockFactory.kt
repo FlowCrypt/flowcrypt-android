@@ -74,23 +74,32 @@ object MsgBlockFactory {
   }
 
   fun fromAttachment(type: MsgBlock.Type, attachment: MimePart): MsgBlock {
-    val attContent = attachment.content
-    val data = attachment.inputStream.readBytes()
-
-    val attMeta = AttMeta(
-      name = attachment.fileName,
-      data = attachment.inputStream.readBytes(),
-      length = data.size.toLong(),
-      type = attachment.contentType,
-      contentId = attachment.contentID
-    )
-    val content = if (attContent is String) attachment.content as String else null
-    return when (type) {
-      MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(null, true, attMeta, null)
-      MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(content, attMeta)
-      MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(content, attMeta)
-      else ->
-        throw IllegalArgumentException("Can't create block of type ${type.name} from attachment")
+    try {
+      val attContent = attachment.content
+      val data = attachment.inputStream.readBytes()
+      val attMeta = AttMeta(
+        name = attachment.fileName,
+        data = data,
+        length = data.size.toLong(),
+        type = attachment.contentType,
+        contentId = attachment.contentID
+      )
+      val content = if (attContent is String) attachment.content as String else null
+      return when (type) {
+        MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(null, true, attMeta, null)
+        MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(content, attMeta)
+        MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(content, attMeta)
+        else ->
+          throw IllegalArgumentException("Can't create block of type ${type.name} from attachment")
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      return GenericMsgBlock(
+        type = type,
+        content = null,
+        complete = false,
+        error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message)
+      )
     }
   }
 }
