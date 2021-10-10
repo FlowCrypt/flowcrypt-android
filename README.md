@@ -44,3 +44,40 @@ Please follow these steps to run **all tests** locally:
 - Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 - Run `./script/run-all-tests.sh` to execute all tests.
 - Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
+
+## Running the app in emulator first time
+
+To be able to run the app on an emulator please follow these steps:
+
+### Install and run an emulator
+
+- Run AVD Manager from `Tools -> AVD Manager` or click on 
+![image](https://user-images.githubusercontent.com/2863246/136424474-3de87e4d-ffac-49d6-82e3-ec9831399721.png)
+- Click on `Create Virtual Device`
+![image](https://user-images.githubusercontent.com/2863246/136425173-78ee0834-242d-48a6-8ff0-ec40cc9f9d6a.png)
+- Select Hardware. `Pixel 4` will be a good choice. Then click `Next`
+![image](https://user-images.githubusercontent.com/2863246/136425849-f3839002-cd17-48a6-9027-c7a6561dd588.png)
+- Download one of the latest available system image and click on `Finish`
+![image](https://user-images.githubusercontent.com/2863246/136426398-ebdcf49d-3566-45ee-b06b-698908cd5c55.png)
+![image](https://user-images.githubusercontent.com/2863246/136427125-6aa91bef-f052-432f-a314-369d4b6d4825.png)
+- Then select the downloaded image and click on `Next`
+![image](https://user-images.githubusercontent.com/2863246/136427526-0c0cfc0b-b622-4420-9ea0-14aabff22423.png)
+- Then we will see the final screen where we should click on `Finish`
+![image](https://user-images.githubusercontent.com/2863246/136428104-4eba085d-eddf-46e2-b495-87be8d9a2237.png)
+- After that AVD Manager will show a new emulator. Click on a green triangle to run an emulator
+![image](https://user-images.githubusercontent.com/2863246/136429163-e74b4ccf-360d-49af-a57b-846dd6be23fe.png)
+- Then we will see a home screen of the emulator
+![image](https://user-images.githubusercontent.com/2863246/136430123-1277b324-4910-4594-9f7c-167314d1ecef.png)
+
+### Build and run the app
+- First off all we should select a right version of build variants. Please use `consumerDebug`
+![image](https://user-images.githubusercontent.com/2863246/136431329-2b850d9f-6dc3-4849-817c-86ffcc85ec17.png)
+- Then we should check that our emulator is selected
+![image](https://user-images.githubusercontent.com/2863246/136431790-bd6fd50d-db0f-4a95-bffb-d3bd92e574b3.png)
+- Now we can run the app via `Run -> Run(Alt+Shift+F10)` or click on
+![image](https://user-images.githubusercontent.com/2863246/136432060-088641d6-2bc5-44c0-bc58-80c50a49602e.png)
+- Then we will see the app on the emulator in a few minutes(it depends on hardware)
+![image](https://user-images.githubusercontent.com/2863246/136433066-d98cd03b-9db0-47a6-9ac8-7d21d347b6ea.png)
+
+
+

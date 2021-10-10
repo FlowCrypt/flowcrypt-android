@@ -242,7 +242,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchHeader(msgInfo)
 
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val decryptError = block.error
+    val decryptError = block.decryptErr
     val formatErrorMsg = (getResString(
       R.string.decrypt_error_message_badly_formatted,
       getResString(R.string.app_name)
@@ -270,7 +270,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchHeader(msgInfo)
 
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val decryptError = block.error
+    val decryptError = block.decryptErr
     val errorMsg = getResString(
       R.string.could_not_decrypt_message_due_to_error,
       decryptError?.details?.type.toString() + ": " + getResString(R.string.decrypt_error_message_no_mdc)
@@ -543,6 +543,30 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
       "messages/mime/encrypted_msg_symantec_encryption_server_message_format.txt"
     )
     baseCheck(msgInfo)
+  }
+
+  @Test
+  fun testShowParsePubKeyError() {
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_inline_pub_key_parse_error.json",
+      "messages/mime/encrypted_msg_inline_pub_key_parse_error.txt"
+    ) ?: throw NullPointerException()
+
+    assertThat(msgInfo, notNullValue())
+
+    val details = msgInfo.msgEntity
+
+    launchActivity(details)
+    matchHeader(msgInfo)
+
+    val block = msgInfo.msgBlocks?.get(1) as PublicKeyMsgBlock
+    val errorMsg = getResString(
+      R.string.msg_contains_not_valid_pub_key, requireNotNull(block.error?.errorMsg)
+    )
+    onView(withId(R.id.textViewErrorMessage))
+      .check(matches(withText(errorMsg)))
+    testSwitch(block.content ?: "")
+    matchReplyButtons(details)
   }
 
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {

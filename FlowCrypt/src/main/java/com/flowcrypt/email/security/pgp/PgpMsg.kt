@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttLinkMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlockError
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
@@ -30,7 +31,6 @@ import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.KeysStorageImpl
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -797,7 +797,7 @@ object PgpMsg {
               val keyRings = PgpKey.parseAndNormalizeKeyRings(source)
               if (keyRings.isNotEmpty()) {
                 resultBlocks.addAll(keyRings.map {
-                  PublicKeyMsgBlock(it.armor(null), true, it.toPgpKeyDetails())
+                  MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, it.armor(null))
                 })
               } else {
                 resultBlocks.add(
@@ -805,7 +805,7 @@ object PgpMsg {
                     content = block.content,
                     complete = false,
                     keyDetails = null,
-                    parseKeyErrorMsg = "empty KeyRing"
+                    error = MsgBlockError("empty KeyRing")
                   )
                 )
               }
@@ -816,7 +816,7 @@ object PgpMsg {
                   content = block.content,
                   complete = false,
                   keyDetails = null,
-                  parseKeyErrorMsg = ex.javaClass.simpleName + ": " + ex.message
+                  error = MsgBlockError(ex.javaClass.simpleName + ": " + ex.message)
                 )
               )
             }
@@ -952,13 +952,13 @@ object PgpMsg {
           DecryptErrorMsgBlock(
             content = resultWithIgnoredMDCErrors.content.toString(),
             complete = true,
-            error = decryptionResult.exception.toDecryptError()
+            decryptErr = decryptionResult.exception.toDecryptError()
           )
         } else {
           DecryptErrorMsgBlock(
             content = msgBlock.content,
             complete = true,
-            error = decryptionResult.exception.toDecryptError()
+            decryptErr = decryptionResult.exception.toDecryptError()
           )
         }
 
@@ -968,7 +968,7 @@ object PgpMsg {
           DecryptErrorMsgBlock(
             content = msgBlock.content,
             complete = true,
-            error = decryptionResult.exception.toDecryptError()
+            decryptErr = decryptionResult.exception.toDecryptError()
           )
         )
       }

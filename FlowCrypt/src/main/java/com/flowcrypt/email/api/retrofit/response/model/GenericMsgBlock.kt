@@ -23,13 +23,15 @@ import com.google.gson.annotations.Expose
 data class GenericMsgBlock(
   @Expose override val type: MsgBlock.Type = MsgBlock.Type.UNKNOWN,
   @Expose override val content: String?,
-  @Expose override val complete: Boolean
+  @Expose override val complete: Boolean,
+  @Expose override val error: MsgBlockError? = null
 ) : MsgBlock {
 
   constructor(type: MsgBlock.Type, source: Parcel) : this(
     type,
     source.readString(),
-    1 == source.readInt()
+    1 == source.readInt(),
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
   )
 
   override fun describeContents() = 0
@@ -38,17 +40,15 @@ data class GenericMsgBlock(
     writeParcelable(type, flags)
     writeString(content)
     writeInt(if (complete) 1 else 0)
+    writeParcelable(error, flags)
   }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<MsgBlock> = object : Parcelable.Creator<MsgBlock> {
-      override fun createFromParcel(source: Parcel): MsgBlock {
-        val partType = source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!
-        return MsgBlockFactory.fromParcel(partType, source)
-      }
-
-      override fun newArray(size: Int): Array<MsgBlock?> = arrayOfNulls(size)
+  companion object CREATOR : Parcelable.Creator<MsgBlock> {
+    override fun createFromParcel(parcel: Parcel): MsgBlock {
+      val partType = parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!
+      return MsgBlockFactory.fromParcel(partType, parcel)
     }
+
+    override fun newArray(size: Int): Array<MsgBlock?> = arrayOfNulls(size)
   }
 }

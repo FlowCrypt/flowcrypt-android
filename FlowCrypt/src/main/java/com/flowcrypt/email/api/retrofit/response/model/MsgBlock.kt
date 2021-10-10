@@ -13,6 +13,7 @@ interface MsgBlock : Parcelable {
   val type: Type
   val content: String?
   val complete: Boolean
+  val error: MsgBlockError?
 
   enum class Type : Parcelable {
     UNKNOWN,
@@ -88,7 +89,7 @@ interface MsgBlock : Parcelable {
       dest.writeInt(ordinal)
     }
 
-    fun isContentBlockType() : Boolean = CONTENT_BLOCK_TYPES.contains(this)
+    fun isContentBlockType(): Boolean = CONTENT_BLOCK_TYPES.contains(this)
 
     companion object {
       @JvmField
@@ -126,9 +127,5 @@ interface MsgBlock : Parcelable {
         throw IllegalArgumentException("Unknown block type serialized name '$serializedName'")
       }
     }
-  }
-
-  companion object {
-    const val TAG_TYPE = "type"
   }
 }

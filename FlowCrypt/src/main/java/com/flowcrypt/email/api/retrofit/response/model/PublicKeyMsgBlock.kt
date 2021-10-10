@@ -24,43 +24,40 @@ data class PublicKeyMsgBlock constructor(
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
   @Expose val keyDetails: PgpKeyDetails?,
-  @Expose val parseKeyErrorMsg: String? = null,
+  @Expose override val error: MsgBlockError? = null
 ) : MsgBlock {
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
 
   var existingPgpContact: PgpContact? = null
 
-  constructor(source: Parcel) : this(
-    source.readString(),
-    1 == source.readInt(),
-    source.readParcelable<PgpKeyDetails>(PgpKeyDetails::class.java.classLoader),
-    source.readString(),
-  )
-
-  override fun describeContents(): Int {
-    return 0
+  constructor(parcel: Parcel) : this(
+    parcel.readString(),
+    parcel.readByte() != 0.toByte(),
+    parcel.readParcelable(PgpKeyDetails::class.java.classLoader),
+    parcel.readParcelable(MsgBlockError::class.java.classLoader),
+  ) {
+    existingPgpContact = parcel.readParcelable(PgpContact::class.java.classLoader)
   }
 
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
+  override fun writeToParcel(parcel: Parcel, flags: Int) =
+    with(parcel) {
       writeParcelable(type, flags)
       writeString(content)
       writeInt((if (complete) 1 else 0))
-      writeParcelable(keyDetails, 0)
-      writeString(parseKeyErrorMsg)
+      writeParcelable(keyDetails, flags)
+      writeParcelable(error, flags)
+      writeParcelable(existingPgpContact, flags)
     }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<PublicKeyMsgBlock> =
-      object : Parcelable.Creator<PublicKeyMsgBlock> {
-        override fun createFromParcel(source: Parcel): PublicKeyMsgBlock {
-          source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
-          return PublicKeyMsgBlock(source)
-        }
+  override fun describeContents(): Int = 0
 
-        override fun newArray(size: Int): Array<PublicKeyMsgBlock?> = arrayOfNulls(size)
-      }
+  companion object CREATOR : Parcelable.Creator<PublicKeyMsgBlock> {
+    override fun createFromParcel(parcel: Parcel): PublicKeyMsgBlock {
+      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      return PublicKeyMsgBlock(parcel)
+    }
+
+    override fun newArray(size: Int): Array<PublicKeyMsgBlock?> = arrayOfNulls(size)
   }
 }

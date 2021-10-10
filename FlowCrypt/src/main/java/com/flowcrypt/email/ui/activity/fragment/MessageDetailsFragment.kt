@@ -139,9 +139,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           for (block in msgInfo?.msgBlocks ?: emptyList()) {
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
-              val decryptErrorDetails = decryptErrorMsgBlock.error?.details ?: continue
+              val decryptErrorDetails = decryptErrorMsgBlock.decryptErr?.details ?: continue
               if (decryptErrorDetails.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
-                val fingerprints = decryptErrorMsgBlock.error.fingerprints ?: continue
+                val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
                   fingerprints,
                   REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
@@ -845,16 +845,15 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         }
 
         MsgBlock.Type.DECRYPTED_ATT -> {
-          val decryptAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
-          inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo())
+          val decryptAtt = block as? DecryptedAttMsgBlock
+          if (decryptAtt != null) {
+            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo())
+          } else {
+            handleOtherBlock(block, layoutInflater)
+          }
         }
 
-        else -> layoutMsgParts?.addView(
-          genDefPart(
-            block, layoutInflater,
-            R.layout.message_part_other, layoutMsgParts
-          )
-        )
+        else -> handleOtherBlock(block, layoutInflater)
       }
       isFirstMsgPartText = false
     }
@@ -867,6 +866,18 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       inlineEncryptedAtts.addAll(attachmentsRecyclerViewAdapter.currentList)
       attachmentsRecyclerViewAdapter.submitList(inlineEncryptedAtts)
     }
+  }
+
+  private fun handleOtherBlock(
+    block: @JvmSuppressWildcards MsgBlock,
+    layoutInflater: LayoutInflater
+  ) {
+    layoutMsgParts?.addView(
+      genDefPart(
+        block, layoutInflater,
+        R.layout.message_part_other, layoutMsgParts
+      )
+    )
   }
 
   private fun setupWebView(block: MsgBlock) {
@@ -952,10 +963,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * @return The generated view.
    */
   private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
-    if (!block.complete && block.parseKeyErrorMsg?.isNotEmpty() == true) {
+    if (!block.complete && block.error?.errorMsg?.isNotEmpty() == true) {
       return getView(
         clipLargeText(block.content),
-        getString(R.string.msg_contains_not_valid_pub_key, block.parseKeyErrorMsg),
+        getString(R.string.msg_contains_not_valid_pub_key, block.error.errorMsg),
         layoutInflater
       )
     }
@@ -1087,13 +1098,22 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     inflater: LayoutInflater,
     res: Int,
     viewGroup: ViewGroup?
-  ): TextView {
-    val textViewMsgPartOther = inflater.inflate(res, viewGroup, false) as TextView
-    textViewMsgPartOther.text = clipLargeText(block.content)
-    return textViewMsgPartOther
+  ): View {
+    val errorMsg = block.error?.errorMsg
+    return if (errorMsg?.isNotEmpty() == true) {
+      getView(
+        null,
+        getString(R.string.msg_contains_not_valid_block, block.type.toString(), errorMsg),
+        layoutInflater
+      )
+    } else {
+      val textViewMsgPartOther = inflater.inflate(res, viewGroup, false) as TextView
+      textViewMsgPartOther.text = clipLargeText(block.content)
+      textViewMsgPartOther
+    }
   }
 
-  private fun genTextPart(block: MsgBlock, layoutInflater: LayoutInflater): TextView {
+  private fun genTextPart(block: MsgBlock, layoutInflater: LayoutInflater): View {
     return genDefPart(block, layoutInflater, R.layout.message_part_text, layoutMsgParts)
   }
 
@@ -1105,7 +1125,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     block: DecryptErrorMsgBlock,
     layoutInflater: LayoutInflater
   ): View {
-    val decryptError = block.error ?: return View(context)
+    val decryptError = block.decryptErr ?: return View(context)
 
     when (decryptError.details?.type) {
       PgpDecrypt.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
@@ -1179,12 +1199,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
     ExceptionUtil.handleError(ManualHandledException(errorMsg))
     textViewErrorMsg.text = errorMsg
-    viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup))
-    onClickListener?.let {
-      val btAction = viewGroup.findViewById<TextView>(R.id.btAction)
-      btAction.text = buttonText
-      btAction.visible()
-      btAction.setOnClickListener(it)
+    if (originalMsg != null) {
+      viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup))
+      onClickListener?.let {
+        val btAction = viewGroup.findViewById<TextView>(R.id.btAction)
+        btAction.text = buttonText
+        btAction.visible()
+        btAction.setOnClickListener(it)
+      }
     }
     return viewGroup
   }
