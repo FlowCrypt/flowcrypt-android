@@ -84,8 +84,10 @@ object PgpDecrypt {
             )
 
           decryptionStream.use { it.copyTo(outStream) }
-          return DecryptionResult.withDecrypted(
+          return DecryptionResult(
             content = destOutputStream,
+            isEncrypted = decryptionStream.result.isEncrypted,
+            isSigned = decryptionStream.result.isSigned,
             filename = decryptionStream.result.fileName
           )
         } catch (e: Exception) {
@@ -173,6 +175,8 @@ object PgpDecrypt {
     // also false when error happens.
     val isEncrypted: Boolean = false,
 
+    val isSigned: Boolean = false,
+
     // pgp messages may include original filename in them
     val filename: String? = null,
 
@@ -185,10 +189,6 @@ object PgpDecrypt {
     companion object {
       fun withError(exception: DecryptionException): DecryptionResult {
         return DecryptionResult(exception = exception)
-      }
-
-      fun withDecrypted(content: ByteArrayOutputStream, filename: String?): DecryptionResult {
-        return DecryptionResult(content = content, isEncrypted = true, filename = filename)
       }
     }
   }
