@@ -568,6 +568,15 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchReplyButtons(details)
   }
 
+  @Test
+  fun testSignedArmoredMsg() {
+    val msgInfo = getMsgInfo(
+      "messages/info/signed_msg_armored.json",
+      "messages/mime/signed_msg_armored.txt"
+    )
+    baseCheck(msgInfo)
+  }
+
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 
