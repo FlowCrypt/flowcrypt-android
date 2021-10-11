@@ -25,7 +25,7 @@ class DecryptionException(
     return super.toString() + ", DecryptionErrorType = " + decryptionErrorType
   }
 
-  fun to(): DecryptError {
+  fun toDecryptError(): DecryptError {
     return DecryptError(DecryptErrorDetails(decryptionErrorType, e.message), fingerprints, true)
   }
 }

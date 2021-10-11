@@ -33,7 +33,6 @@ import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -942,13 +941,37 @@ object PgpMsg {
         )
       }
     } else {
-      results.add(
-        DecryptErrorMsgBlock(
-          content = msgBlock.content,
-          complete = true,
-          decryptErr = (decryptionResult.exception as? DecryptionException)?.to()
+      if (PgpDecrypt.DecryptionErrorType.NO_MDC == decryptionResult.exception.decryptionErrorType) {
+        val resultWithIgnoredMDCErrors = PgpDecrypt.decryptWithResult(
+          msgBlock.content?.toInputStream()!!,
+          ringCollection,
+          protector,
+          true
         )
-      )
+        val decryptErrorMsgBlock = if (resultWithIgnoredMDCErrors.exception == null) {
+          DecryptErrorMsgBlock(
+            content = resultWithIgnoredMDCErrors.content.toString(),
+            complete = true,
+            decryptErr = decryptionResult.exception.toDecryptError()
+          )
+        } else {
+          DecryptErrorMsgBlock(
+            content = msgBlock.content,
+            complete = true,
+            decryptErr = decryptionResult.exception.toDecryptError()
+          )
+        }
+
+        results.add(decryptErrorMsgBlock)
+      } else {
+        results.add(
+          DecryptErrorMsgBlock(
+            content = msgBlock.content,
+            complete = true,
+            decryptErr = decryptionResult.exception.toDecryptError()
+          )
+        )
+      }
     }
 
     return results
