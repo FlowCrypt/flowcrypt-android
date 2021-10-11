@@ -352,7 +352,7 @@ dependencies {
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
     testImplementation 'org.robolectric:robolectric:4.6.1'
-    testImplementation 'io.github.classgraph:classgraph:4.8.116'
+    testImplementation 'io.github.classgraph:classgraph:4.8.125'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
@@ -420,10 +420,10 @@ dependencies {
     implementation 'org.bitbucket.b_c:jose4j:0.7.9'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20200713.1'
-    implementation 'org.jsoup:jsoup:1.14.2'
+    implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.14') {
+    implementation ('org.pgpainless:pgpainless-core:0.2.15') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }

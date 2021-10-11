@@ -419,8 +419,8 @@ class MsgDetailsViewModel(
       }
 
       if (block is DecryptErrorMsgBlock) {
-        if (block.error?.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
-          val fingerprints = block.error.fingerprints ?: emptyList()
+        if (block.decryptErr?.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+          val fingerprints = block.decryptErr.fingerprints ?: emptyList()
           if (fingerprints.isEmpty()) {
             ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
           } else {

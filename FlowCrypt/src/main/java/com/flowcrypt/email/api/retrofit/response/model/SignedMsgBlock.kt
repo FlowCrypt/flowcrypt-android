@@ -17,7 +17,8 @@ data class SignedMsgBlock(
   @Expose val signedType: Type,
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
-  @Expose val signature: String?
+  @Expose val signature: String?,
+  @Expose override val error: MsgBlockError? = null
 ) : MsgBlock {
 
   @Expose
@@ -32,7 +33,8 @@ data class SignedMsgBlock(
       ?: throw IllegalArgumentException("Undefined type"),
     source.readString(),
     1 == source.readInt(),
-    source.readString()
+    source.readString(),
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
   )
 
   override fun describeContents() = 0
@@ -43,6 +45,7 @@ data class SignedMsgBlock(
     writeString(content)
     writeInt(if (complete) 1 else 0)
     writeString(signature)
+    writeParcelable(error, flags)
   }
 
   enum class Type : Parcelable {
@@ -67,15 +70,12 @@ data class SignedMsgBlock(
     }
   }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<MsgBlock> = object : Parcelable.Creator<MsgBlock> {
-      override fun createFromParcel(source: Parcel): MsgBlock {
-        val partType = source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!
-        return MsgBlockFactory.fromParcel(partType, source)
-      }
-
-      override fun newArray(size: Int): Array<MsgBlock?> = arrayOfNulls(size)
+  companion object CREATOR : Parcelable.Creator<MsgBlock> {
+    override fun createFromParcel(parcel: Parcel): MsgBlock {
+      val partType = parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!
+      return MsgBlockFactory.fromParcel(partType, parcel)
     }
+
+    override fun newArray(size: Int): Array<SignedMsgBlock?> = arrayOfNulls(size)
   }
 }

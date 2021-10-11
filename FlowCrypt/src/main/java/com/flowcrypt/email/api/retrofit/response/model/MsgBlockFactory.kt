@@ -42,15 +42,22 @@ object MsgBlockFactory {
     val complete = !missingEnd
     return when (type) {
       MsgBlock.Type.PUBLIC_KEY -> {
-        val keyDetails = if (content != null && complete) {
+        if (content.isNullOrEmpty()) {
+          PublicKeyMsgBlock(content, complete, null, MsgBlockError("empty source"))
+        } else {
           try {
-            PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
+            val keyDetails = PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
+            PublicKeyMsgBlock(content, true, keyDetails)
           } catch (e: Exception) {
             e.printStackTrace()
-            null
+            PublicKeyMsgBlock(
+              content = content,
+              complete = false,
+              keyDetails = null,
+              error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message)
+            )
           }
-        } else null
-        PublicKeyMsgBlock(content, complete, keyDetails)
+        }
       }
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(content, complete, null)
       MsgBlock.Type.SIGNED_MSG -> {
@@ -67,30 +74,32 @@ object MsgBlockFactory {
   }
 
   fun fromAttachment(type: MsgBlock.Type, attachment: MimePart): MsgBlock {
-    val attContent = attachment.content
-    //todo-denbond7 need to test it
-
-    /*val data: String? = when (attContent) {
-      is String -> Base64.getEncoder().encode(attachment.inputStream.readBytes())
-      is InputStream -> attContent.toBase64EncodedString()
-      else -> null
-    }*/
-    val data = attachment.inputStream.readBytes()
-
-    val attMeta = AttMeta(
-      name = attachment.fileName,
-      data = attachment.inputStream.readBytes(),
-      length = data.size.toLong(),
-      type = attachment.contentType,
-      contentId = attachment.contentID
-    )
-    val content = if (attContent is String) attachment.content as String else null
-    return when (type) {
-      MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(null, true, attMeta, null)
-      MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(content, attMeta)
-      MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(content, attMeta)
-      else ->
-        throw IllegalArgumentException("Can't create block of type ${type.name} from attachment")
+    try {
+      val attContent = attachment.content
+      val data = attachment.inputStream.readBytes()
+      val attMeta = AttMeta(
+        name = attachment.fileName,
+        data = data,
+        length = data.size.toLong(),
+        type = attachment.contentType,
+        contentId = attachment.contentID
+      )
+      val content = if (attContent is String) attachment.content as String else null
+      return when (type) {
+        MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(null, true, attMeta, null)
+        MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(content, attMeta)
+        MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(content, attMeta)
+        else ->
+          throw IllegalArgumentException("Can't create block of type ${type.name} from attachment")
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      return GenericMsgBlock(
+        type = type,
+        content = null,
+        complete = false,
+        error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message)
+      )
     }
   }
 }

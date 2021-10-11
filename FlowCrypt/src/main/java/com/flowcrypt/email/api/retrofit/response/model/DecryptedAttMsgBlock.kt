@@ -25,7 +25,8 @@ data class DecryptedAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
   @Expose override val attMeta: AttMeta,
-  @SerializedName("decryptErr") @Expose val error: DecryptError?
+  @SerializedName("decryptErr") @Expose val decryptErr: DecryptError?,
+  @Expose override val error: MsgBlockError? = null
 ) : AttMsgBlock {
 
   var fileUri: Uri? = null
@@ -37,7 +38,8 @@ data class DecryptedAttMsgBlock(
     source.readString(),
     1 == source.readInt(),
     source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
-    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)
+    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader),
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
   ) {
     fileUri = source.readParcelable(Uri::class.java.classLoader)
   }
@@ -52,6 +54,7 @@ data class DecryptedAttMsgBlock(
       writeString(content)
       writeInt((if (complete) 1 else 0))
       writeParcelable(attMeta, flags)
+      writeParcelable(decryptErr, flags)
       writeParcelable(error, flags)
       writeParcelable(fileUri, flags)
     }
@@ -67,16 +70,12 @@ data class DecryptedAttMsgBlock(
     )
   }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<DecryptedAttMsgBlock> =
-      object : Parcelable.Creator<DecryptedAttMsgBlock> {
-        override fun createFromParcel(source: Parcel): DecryptedAttMsgBlock {
-          source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
-          return DecryptedAttMsgBlock(source)
-        }
+  companion object CREATOR : Parcelable.Creator<DecryptedAttMsgBlock> {
+    override fun createFromParcel(parcel: Parcel): DecryptedAttMsgBlock {
+      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      return DecryptedAttMsgBlock(parcel)
+    }
 
-        override fun newArray(size: Int): Array<DecryptedAttMsgBlock?> = arrayOfNulls(size)
-      }
+    override fun newArray(size: Int): Array<DecryptedAttMsgBlock?> = arrayOfNulls(size)
   }
 }

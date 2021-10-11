@@ -41,6 +41,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -241,7 +242,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchHeader(msgInfo)
 
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val decryptError = block.error
+    val decryptError = block.decryptErr
     val formatErrorMsg = (getResString(
       R.string.decrypt_error_message_badly_formatted,
       getResString(R.string.app_name)
@@ -269,7 +270,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchHeader(msgInfo)
 
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val decryptError = block.error
+    val decryptError = block.decryptErr
     val errorMsg = getResString(
       R.string.could_not_decrypt_message_due_to_error,
       decryptError?.details?.type.toString() + ": " + getResString(R.string.decrypt_error_message_no_mdc)
@@ -530,8 +531,41 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
     baseCheck(msgInfo)
     onView(withId(R.id.rVAttachments))
-      .check(matches(CustomMatchers.withEmptyRecyclerView()))
+      .check(matches(withEmptyRecyclerView()))
       .check(matches(not(isDisplayed())))
+  }
+
+  @Test
+  fun testEncryptedSymantecEncryptionServerMessageFormat() {
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_symantec_encryption_server_message_format.json",
+      "messages/mime/encrypted_msg_symantec_encryption_server_message_format.txt"
+    )
+    baseCheck(msgInfo)
+  }
+
+  @Test
+  fun testShowParsePubKeyError() {
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_inline_pub_key_parse_error.json",
+      "messages/mime/encrypted_msg_inline_pub_key_parse_error.txt"
+    ) ?: throw NullPointerException()
+
+    assertThat(msgInfo, notNullValue())
+
+    val details = msgInfo.msgEntity
+
+    launchActivity(details)
+    matchHeader(msgInfo)
+
+    val block = msgInfo.msgBlocks?.get(1) as PublicKeyMsgBlock
+    val errorMsg = getResString(
+      R.string.msg_contains_not_valid_pub_key, requireNotNull(block.error?.errorMsg)
+    )
+    onView(withId(R.id.textViewErrorMessage))
+      .check(matches(withText(errorMsg)))
+    testSwitch(block.content ?: "")
+    matchReplyButtons(details)
   }
 
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {

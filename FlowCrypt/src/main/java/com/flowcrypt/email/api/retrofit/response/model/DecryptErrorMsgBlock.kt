@@ -19,7 +19,8 @@ import com.google.gson.annotations.SerializedName
 data class DecryptErrorMsgBlock(
   @Expose override val content: String?,
   @Expose override val complete: Boolean,
-  @SerializedName("decryptErr") @Expose val error: DecryptError?
+  @SerializedName("decryptErr") @Expose val decryptErr: DecryptError?,
+  @Expose override val error: MsgBlockError? = null
 ) : MsgBlock {
 
   @Expose
@@ -28,31 +29,28 @@ data class DecryptErrorMsgBlock(
   constructor(source: Parcel) : this(
     source.readString(),
     1 == source.readInt(),
-    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)
+    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader),
+    source.readParcelable(MsgBlockError::class.java.classLoader),
   )
 
   override fun describeContents(): Int {
     return 0
   }
 
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeParcelable(type, flags)
-      writeString(content)
-      writeInt(if (complete) 1 else 0)
-      writeParcelable(error, flags)
+  override fun writeToParcel(parcel: Parcel, flags: Int) {
+    parcel.writeParcelable(type, flags)
+    parcel.writeString(content)
+    parcel.writeByte(if (complete) 1 else 0)
+    parcel.writeParcelable(decryptErr, flags)
+    parcel.writeParcelable(error, flags)
+  }
+
+  companion object CREATOR : Parcelable.Creator<DecryptErrorMsgBlock> {
+    override fun createFromParcel(parcel: Parcel): DecryptErrorMsgBlock {
+      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      return DecryptErrorMsgBlock(parcel)
     }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<DecryptErrorMsgBlock> =
-      object : Parcelable.Creator<DecryptErrorMsgBlock> {
-        override fun createFromParcel(source: Parcel): DecryptErrorMsgBlock {
-          source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
-          return DecryptErrorMsgBlock(source)
-        }
-
-        override fun newArray(size: Int): Array<DecryptErrorMsgBlock?> = arrayOfNulls(size)
-      }
+    override fun newArray(size: Int): Array<DecryptErrorMsgBlock?> = arrayOfNulls(size)
   }
 }

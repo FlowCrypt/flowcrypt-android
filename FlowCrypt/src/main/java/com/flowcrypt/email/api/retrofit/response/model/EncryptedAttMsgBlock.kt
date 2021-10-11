@@ -13,21 +13,24 @@ import com.google.gson.annotations.Expose
 
 data class EncryptedAttMsgBlock(
   @Expose override val content: String?,
-  @Expose override val attMeta: AttMeta
+  @Expose override val attMeta: AttMeta,
+  @Expose override val error: MsgBlockError? = null
 ) : AttMsgBlock {
 
   var fileUri: Uri? = null
 
   @Expose
   override val complete: Boolean = true
+
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.ENCRYPTED_ATT
 
   constructor(source: Parcel) : this(
     source.readString(),
-    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!
+    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
   ) {
-    fileUri = source.readParcelable<Uri>(Uri::class.java.classLoader)
+    fileUri = source.readParcelable(Uri::class.java.classLoader)
   }
 
   override fun describeContents(): Int {
@@ -39,18 +42,16 @@ data class EncryptedAttMsgBlock(
       writeParcelable(type, flags)
       writeString(content)
       writeParcelable(attMeta, flags)
+      writeParcelable(error, flags)
       writeParcelable(fileUri, flags)
     }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<EncryptedAttMsgBlock> = object : Parcelable.Creator<EncryptedAttMsgBlock> {
-      override fun createFromParcel(source: Parcel): EncryptedAttMsgBlock {
-        source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
-        return EncryptedAttMsgBlock(source)
-      }
-
-      override fun newArray(size: Int): Array<EncryptedAttMsgBlock?> = arrayOfNulls(size)
+  companion object CREATOR : Parcelable.Creator<EncryptedAttMsgBlock> {
+    override fun createFromParcel(parcel: Parcel): EncryptedAttMsgBlock {
+      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      return EncryptedAttMsgBlock(parcel)
     }
+
+    override fun newArray(size: Int): Array<EncryptedAttMsgBlock?> = arrayOfNulls(size)
   }
 }

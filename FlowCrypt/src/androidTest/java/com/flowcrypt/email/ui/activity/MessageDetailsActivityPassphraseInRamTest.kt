@@ -77,7 +77,7 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
       .perform(click())
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val decryptError = decryptErrorMsgBlock.error!!
+    val decryptError = decryptErrorMsgBlock.decryptErr!!
     assertEquals(PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE, decryptError.details?.type)
 
     //check error message
@@ -164,7 +164,7 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
     launchActivity(incomingMsgInfo!!.msgEntity)
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val fingerprint = decryptErrorMsgBlock.error?.fingerprints?.first()
+    val fingerprint = decryptErrorMsgBlock.decryptErr?.fingerprints?.first()
     val fingerprintFormatted = GeneralUtil.doSectionsInText(
       originalString = fingerprint, groupSize = 4
     )
@@ -297,7 +297,7 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val expectedKeysCount = 2
-    assertEquals(expectedKeysCount, decryptErrorMsgBlock.error?.fingerprints?.size)
+    assertEquals(expectedKeysCount, decryptErrorMsgBlock.decryptErr?.fingerprints?.size)
 
     val tVStatusMessageText = getQuantityString(
       resId = R.plurals.please_provide_passphrase_for_following_keys,

@@ -13,7 +13,8 @@ import com.google.gson.annotations.Expose
 
 data class PlainAttMsgBlock(
   @Expose override val content: String?,
-  @Expose override val attMeta: AttMeta
+  @Expose override val attMeta: AttMeta,
+  @Expose override val error: MsgBlockError? = null
 ) : AttMsgBlock {
 
   var fileUri: Uri? = null
@@ -26,7 +27,8 @@ data class PlainAttMsgBlock(
 
   constructor(source: Parcel) : this(
     source.readString(),
-    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!
+    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
   ) {
     fileUri = source.readParcelable(Uri::class.java.classLoader)
   }
@@ -40,18 +42,16 @@ data class PlainAttMsgBlock(
       writeParcelable(type, flags)
       writeString(content)
       writeParcelable(attMeta, flags)
+      writeParcelable(error, flags)
       writeParcelable(fileUri, flags)
     }
 
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<PlainAttMsgBlock> = object : Parcelable.Creator<PlainAttMsgBlock> {
-      override fun createFromParcel(source: Parcel): PlainAttMsgBlock {
-        source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
-        return PlainAttMsgBlock(source)
-      }
-
-      override fun newArray(size: Int): Array<PlainAttMsgBlock?> = arrayOfNulls(size)
+  companion object CREATOR : Parcelable.Creator<PlainAttMsgBlock> {
+    override fun createFromParcel(parcel: Parcel): PlainAttMsgBlock {
+      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      return PlainAttMsgBlock(parcel)
     }
+
+    override fun newArray(size: Int): Array<PlainAttMsgBlock?> = arrayOfNulls(size)
   }
 }
