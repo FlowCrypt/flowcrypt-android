@@ -1,0 +1,35 @@
+2 M1e C6166fa60
+N          0000000000000310
+Date: Wed, 13 Oct 2021 18:25:17 +0300 (GMT+03:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <231862942.5.1634138717382@flowcrypt.test>
+Subject: SIGNED_MESSAGE. --clearsign. Broken
+MIME-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_4_36792537.1634138717374"
+User-Agent: FlowCrypt_Android_1.2.3_dev_123__2021_10_13
+
+------=_Part_4_36792537.1634138717374
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Some important text that is signed
+-----BEGIN PGP SIGNATURE-----
+Version: PGPainless
+
+iHUEARYKAAYFAmFm9GEAIQkQwyCJzWr41s4WIQTBZCjWAcs5N4nPYdTDIInNavjW
+VMWbrRaCiEghT5b3tpYn6jzVDenjxwg=
+=vdIK
+-----END PGP SIGNATURE-----
+
+------=_Part_4_36792537.1634138717374--
+
+
+R6166fa5d
+V32b
+Ge8e60c1060fa6661a804000073f46975
+
