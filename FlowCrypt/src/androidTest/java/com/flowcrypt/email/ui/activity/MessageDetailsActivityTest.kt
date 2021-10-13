@@ -36,6 +36,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
@@ -576,6 +577,40 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
       "messages/mime/signed_msg_armored.txt"
     )
     baseCheck(msgInfo)
+  }
+
+  @Test
+  fun testSignedMsgClearSign() {
+    val msgInfo = getMsgInfo(
+      "messages/info/signed_msg_clearsign.json",
+      "messages/mime/signed_msg_clearsign.txt"
+    )
+    baseCheck(msgInfo)
+  }
+
+  @Test
+  fun testSignedMsgClearSignBroken() {
+    val msgInfo = getMsgInfo(
+      "messages/info/signed_msg_clearsign_broken.json",
+      "messages/mime/signed_msg_clearsign_broken.txt"
+    ) ?: throw NullPointerException()
+
+    assertThat(msgInfo, notNullValue())
+
+    val details = msgInfo.msgEntity
+
+    launchActivity(details)
+    matchHeader(msgInfo)
+
+    val block = msgInfo.msgBlocks?.get(1) as GenericMsgBlock
+    val errorMsg = getResString(
+      R.string.msg_contains_not_valid_block,
+      block.type.toString(),
+      requireNotNull(block.error?.errorMsg)
+    )
+    onView(withId(R.id.textViewErrorMessage))
+      .check(matches(withText(errorMsg)))
+    matchReplyButtons(details)
   }
 
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {

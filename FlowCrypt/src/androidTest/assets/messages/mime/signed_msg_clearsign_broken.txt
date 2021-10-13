@@ -1,0 +1,36 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id y3fSEmD6ZmG+BAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Wed, 13 Oct 2021 15:25:20 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 49C011C2101
+	for <default@flowcrypt.test>; Wed, 13 Oct 2021 15:25:20 +0000 (UTC)
+Date: Wed, 13 Oct 2021 18:25:17 +0300 (GMT+03:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <231862942.5.1634138717382@flowcrypt.test>
+Subject: SIGNED_MESSAGE. --clearsign. Broken
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_4_36792537.1634138717374"
+
+------=_Part_4_36792537.1634138717374
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Some important text that is signed
+-----BEGIN PGP SIGNATURE-----
+Version: PGPainless
+
+iHUEARYKAAYFAmFm9GEAIQkQwyCJzWr41s4WIQTBZCjWAcs5N4nPYdTDIInNavjW
+VMWbrRaCiEghT5b3tpYn6jzVDenjxwg=
+=vdIK
+-----END PGP SIGNATURE-----
+
+------=_Part_4_36792537.1634138717374--

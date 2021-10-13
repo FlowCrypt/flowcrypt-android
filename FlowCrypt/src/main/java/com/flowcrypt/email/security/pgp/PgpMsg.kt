@@ -824,7 +824,11 @@ object PgpMsg {
         }
 
         block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block) -> {
-          contentBlocks.add(block)
+          if (block.error != null) {
+            resultBlocks.add(block)
+          } else {
+            contentBlocks.add(block)
+          }
         }
 
         block.type != MsgBlock.Type.PLAIN_ATT -> {
@@ -1012,8 +1016,12 @@ object PgpMsg {
       }
 
       msgBlock.type == MsgBlock.Type.SIGNED_MSG -> {
-        val cleartext = PgpSignature.extractClearText(msgBlock.content)
-        return msgBlock.copy(content = cleartext)
+        return try {
+          val cleartext = PgpSignature.extractClearText(msgBlock.content, false)
+          msgBlock.copy(content = cleartext)
+        } catch (e: Exception) {
+          msgBlock.copy(error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message))
+        }
       }
 
       else -> null
