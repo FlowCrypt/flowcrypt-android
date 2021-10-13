@@ -18,12 +18,12 @@ import java.io.InputStream
  *         E-mail: DenBond7@gmail.com
  */
 object PgpSignature {
-  fun extractClearText(source: String?): String? {
-    return extractClearText(ByteArrayInputStream(source?.toByteArray()))
+  fun extractClearText(source: String?, isSilent: Boolean = true): String? {
+    return extractClearText(ByteArrayInputStream(source?.toByteArray()), isSilent)
   }
 
   @Suppress("MemberVisibilityCanBePrivate")
-  fun extractClearText(srcInputStream: InputStream): String? {
+  fun extractClearText(srcInputStream: InputStream, isSilent: Boolean = true): String? {
     srcInputStream.use { srcStream ->
       return try {
         val multiPassStrategy = MultiPassStrategy.keepMessageInMemory()
@@ -33,8 +33,10 @@ object PgpSignature {
         )
         String(multiPassStrategy.bytes)
       } catch (e: Exception) {
-        e.printStackTrace()
-        null
+        if (isSilent) {
+          e.printStackTrace()
+          null
+        } else throw e
       }
     }
   }
