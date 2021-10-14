@@ -14,6 +14,7 @@
         <!--We need to modified this activity (drop android:launchMode="singleTask")
          to be able to run tests-->
         <activity
+            android:exported="false"
             android:name=".ui.activity.SignInActivity"
             android:screenOrientation="portrait"
             tools:node="replace">
