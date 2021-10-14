@@ -41,6 +41,7 @@
 
         <activity
             android:name=".ui.activity.LauncherActivity"
+            android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Launcher">
             <intent-filter>
@@ -52,6 +53,7 @@
         </activity>
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.SignInActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait">
@@ -60,6 +62,7 @@
 
         <activity
             android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            android:exported="true"
             tools:node="replace">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -76,18 +79,21 @@
         </activity>
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.EmailManagerActivity"
             android:label="@string/loading"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.MessageDetailsActivity"
             android:parentActivityName=".ui.activity.EmailManagerActivity"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.CreateMessageActivity"
+            android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
                 <!--Handle the clicks on email links in a browser-->
@@ -122,22 +128,27 @@
         </activity>
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.CreateOrImportKeyActivity"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.ImportPrivateKeyActivity"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.ImportPublicKeyActivity"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.CheckKeysActivity"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:screenOrientation="portrait">
@@ -145,43 +156,52 @@
         </activity>
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.HtmlViewFromAssetsRawActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.SelectContactsActivity"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.CreatePrivateKeyActivity"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.SearchMessagesActivity"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.ImportPgpContactActivity"
             android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.PreviewImportPgpContactActivity"
             android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.CorruptedStorageActivity"
             android:launchMode="singleTop" />
 
         <activity
+            android:exported="false"
             android:name=".ui.activity.EditContactActivity"
             android:screenOrientation="portrait" />
 
@@ -253,7 +273,9 @@
 
         <receiver android:name=".broadcastreceivers.CorruptedStorageBroadcastReceiver" />
 
-        <receiver android:name=".broadcastreceivers.AppUpdateBroadcastReceiver">
+        <receiver
+            android:name=".broadcastreceivers.AppUpdateBroadcastReceiver"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>

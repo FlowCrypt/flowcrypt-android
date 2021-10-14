@@ -8,9 +8,9 @@ ext {
     /*Global*/
     appVersionCode = 123
     appVersionName = '1.2.3'
-    buildToolsVersion = '30.0.3'
-    compileSdkVersion = 30
-    targetSdkVersion = 30
+    buildToolsVersion = '31.0.0'
+    compileSdkVersion = 31
+    targetSdkVersion = 31
     minSdkVersion = 26
     /*https://developer.android.com/jetpack/androidx/androidx-rn*/
     androidxBaseVersion = '1.0.0'
