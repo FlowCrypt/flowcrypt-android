@@ -23,6 +23,9 @@
         <action
             android:id="@+id/action_mainSignInFragment_to_checkPassphraseStrengthFragment"
             app:destination="@id/checkPassphraseStrengthFragment" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/sign-in/gmail" />
     </fragment>
     <fragment
         android:id="@+id/addOtherAccountFragment"
@@ -32,6 +35,9 @@
         <action
             android:id="@+id/action_addOtherAccountFragment_to_authorizeAndSearchBackupsFragment"
             app:destination="@id/authorizeAndSearchBackupsFragment" />
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/sign-in/other" />
     </fragment>
     <fragment
         android:id="@+id/authorizeAndSearchBackupsFragment"
