@@ -24,6 +24,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.kotlin.uppercase
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
@@ -144,7 +145,11 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
         Result.Status.SUCCESS -> {
           binding?.pBLoading?.gone()
           val filteredKeyDetailsList = (it.data ?: emptyList()).filter { pgpKeyDetails ->
-            fingerprintList.any { element -> element.equals(pgpKeyDetails.fingerprint, true) }
+            fingerprintList.any { element ->
+              element.uppercase() in pgpKeyDetails.ids.map { keyId ->
+                keyId.fingerprint.uppercase()
+              }
+            }
           }
           if (filteredKeyDetailsList.isEmpty()) {
             binding?.tVStatusMessage?.text = getString(R.string.error_no_keys)
