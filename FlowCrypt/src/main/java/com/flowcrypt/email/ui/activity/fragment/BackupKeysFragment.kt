@@ -18,9 +18,12 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentBackupKeysBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.getNavigationResult
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
@@ -111,6 +114,13 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    if (accountEntity?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
+      binding?.btBackup?.gone()
+    }
+  }
+
   private fun initViews() {
     binding?.rGBackupOptions?.setOnCheckedChangeListener { group, checkedId ->
       when (group.id) {
@@ -129,35 +139,37 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     }
 
     binding?.btBackup?.setOnClickListener {
-      if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isNullOrEmpty()) {
-        showInfoSnackbar(
-          view = binding?.root,
-          msgText = getString(
-            R.string.there_are_no_private_keys,
-            account?.email
-          ), duration = Snackbar.LENGTH_LONG
-        )
-      } else {
-        when (binding?.rGBackupOptions?.checkedRadioButtonId) {
-          R.id.rBEmailOption -> {
-            dismissCurrentSnackBar()
-            checkForEmptyPassphraseOrRunAction {
-              if (GeneralUtil.isConnected(requireContext())) {
-                backupsViewModel.postBackup()
-              } else {
-                showInfoSnackbar(
-                  view = binding?.root,
-                  msgText = getString(R.string.internet_connection_is_not_available)
-                )
+      if (account?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)?.not() == true) {
+        if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isNullOrEmpty()) {
+          showInfoSnackbar(
+            view = binding?.root,
+            msgText = getString(
+              R.string.there_are_no_private_keys,
+              account?.email
+            ), duration = Snackbar.LENGTH_LONG
+          )
+        } else {
+          when (binding?.rGBackupOptions?.checkedRadioButtonId) {
+            R.id.rBEmailOption -> {
+              dismissCurrentSnackBar()
+              checkForEmptyPassphraseOrRunAction {
+                if (GeneralUtil.isConnected(requireContext())) {
+                  backupsViewModel.postBackup()
+                } else {
+                  showInfoSnackbar(
+                    view = binding?.root,
+                    msgText = getString(R.string.internet_connection_is_not_available)
+                  )
+                }
               }
             }
-          }
 
-          R.id.rBDownloadOption -> {
-            dismissCurrentSnackBar()
-            destinationUri = null
-            checkForEmptyPassphraseOrRunAction {
-              chooseDestForExportedKey()
+            R.id.rBDownloadOption -> {
+              dismissCurrentSnackBar()
+              destinationUri = null
+              checkForEmptyPassphraseOrRunAction {
+                chooseDestForExportedKey()
+              }
             }
           }
         }
