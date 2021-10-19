@@ -10,15 +10,17 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
 import com.flowcrypt.email.util.AccountDaoManager
+import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -27,13 +29,27 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 6/17/21
- *         Time: 5:13 PM
+ *         Date: 10/18/21
+ *         Time: 4:40 PM
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentNoKeysTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentNoPrvBackupOrgRuleTest : BaseBackupKeysFragmentTest() {
+  private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
+    OrgRules(
+      flags = listOf(
+        OrgRules.DomainRule.NO_PRV_CREATE,
+        OrgRules.DomainRule.NO_PRV_BACKUP
+      ),
+      customKeyserverUrl = null,
+      keyManagerUrl = "https://keymanagerurl.test",
+      disallowAttesterSearchForDomains = null,
+      enforceKeygenAlgo = null,
+      enforceKeygenExpireMonths = null
+    )
+  )
+
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -43,41 +59,20 @@ class BackupKeysFragmentNoKeysTest : BaseBackupKeysFragmentTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  @Test
-  fun testNoKeysEmailOption() {
-    onView(withId(R.id.rBEmailOption))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withId(R.id.btBackup))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(
-      withText(
-        getResString(
-          R.string.there_are_no_private_keys,
-          AccountDaoManager.getDefaultAccountDao().email
-        )
-      )
-    )
-      .check(matches(isDisplayed()))
-  }
+  override val addAccountToDatabaseRule: AddAccountToDatabaseRule
+    get() = AddAccountToDatabaseRule(userWithOrgRules)
 
   @Test
-  fun testNoKeysDownloadOption() {
+  fun testBtBackupGone() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withId(R.id.btBackup))
+      .check(matches(not(isDisplayed())))
+    onView(withId(R.id.rBEmailOption))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(
-      withText(
-        getResString(
-          R.string.there_are_no_private_keys,
-          AccountDaoManager.getDefaultAccountDao().email
-        )
-      )
-    )
-      .check(matches(isDisplayed()))
+    onView(withId(R.id.btBackup))
+      .check(matches(not(isDisplayed())))
   }
 }

@@ -14,7 +14,6 @@ import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.ext.junit.rules.activityScenarioRule
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers
@@ -26,15 +25,13 @@ import java.io.File
  *         Time: 5:26 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseBackupKeysFragmentTest : BaseTest() {
+abstract class BaseBackupKeysFragmentTest : BaseTest(), AddAccountToDatabaseRuleInterface {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/settings/make_backup"
     )
   )
-
-  val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   protected fun intendingFileChoose(file: File) {
     val resultData = Intent()
