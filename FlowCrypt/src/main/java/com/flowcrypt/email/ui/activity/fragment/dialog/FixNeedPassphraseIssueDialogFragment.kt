@@ -124,7 +124,14 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
       binding?.eTKeyPassword?.let {
         val passPhrase = Passphrase.fromPassword(typedText)
         val keys = keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData
-          .value?.data?.filter { it.fingerprint in fingerprintList } ?: return@let
+          .value?.data?.filter { pgpKeyDetails ->
+            for (fingerprint in pgpKeyDetails.ids.map { id -> id.fingerprint }) {
+              if (fingerprint in fingerprintList) {
+                return@filter true
+              }
+            }
+            return@filter false
+          } ?: return@let
         checkPrivateKeysViewModel.checkKeys(
           keys = keys,
           passphrase = passPhrase
