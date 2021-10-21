@@ -4,7 +4,7 @@
  */
 
 ext {
-    kotlinVersion = '1.4.31'
+    kotlinVersion = '1.5.31'
     /*Global*/
     appVersionCode = 123
     appVersionName = '1.2.3'
@@ -29,7 +29,7 @@ ext {
     /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
     retrofitVersion = '2.9.0'
     /*https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor*/
-    okhttpVersion = '4.9.1'
+    okhttpVersion = '4.9.2'
     /*https://mvnrepository.com/artifact/com.squareup.okio/okio*/
     okioVersion = '2.10.0'
     /*https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android*/
