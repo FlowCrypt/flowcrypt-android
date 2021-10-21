@@ -7,20 +7,20 @@ package com.flowcrypt.email.security.pgp
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.kotlin.uppercase
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
-import org.pgpainless.decryption_verification.MessageInspector
+import org.pgpainless.decryption_verification.MissingKeyPassphraseStrategy
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
 import org.pgpainless.exception.MissingDecryptionMethodException
+import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.exception.WrongPassphraseException
-import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -51,6 +51,7 @@ object PgpDecrypt {
             .withOptions(
               ConsumerOptions()
                 .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
+                .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
             )
           decryptionStream.use { it.copyTo(outStream) }
           return decryptionStream.result
@@ -70,16 +71,13 @@ object PgpDecrypt {
     srcInputStream.use { srcStream ->
       val destOutputStream = ByteArrayOutputStream()
       destOutputStream.use { outStream ->
-        if (srcStream.markSupported()) {
-          srcStream.mark(0)
-        }
-
         try {
           val decryptionStream = PGPainless.decryptAndOrVerify()
             .onInputStream(srcStream)
             .withOptions(
               ConsumerOptions()
                 .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
+                .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                 .setIgnoreMDCErrors(ignoreMdcErrors)
             )
 
@@ -91,38 +89,6 @@ object PgpDecrypt {
             filename = decryptionStream.result.fileName
           )
         } catch (e: Exception) {
-          if (e is DecryptionException && e.decryptionErrorType == DecryptionErrorType.NEED_PASSPHRASE) {
-            if (srcStream.markSupported()) {
-              srcStream.reset()
-              val keyIds = MessageInspector.determineEncryptionInfoForMessage(srcInputStream).keyIds
-              val fingerprints = mutableListOf<String>()
-              for (id in keyIds) {
-                var key: PGPKeyRing? = null
-                try {
-                  key = pgpSecretKeyRingCollection.getSecretKeyRing(id)
-                  protector.getDecryptor(id)
-                } catch (e: DecryptionException) {
-                  key?.let {
-                    val fingerprint = OpenPgpV4Fingerprint(key)
-                    fingerprints.add(fingerprint.toString())
-                  }
-                }
-              }
-
-              if (fingerprints.isNotEmpty()) {
-                return DecryptionResult.withError(
-                  processDecryptionException(
-                    DecryptionException(
-                      decryptionErrorType = DecryptionErrorType.NEED_PASSPHRASE,
-                      e = PGPException("flowcrypt: need passphrase"),
-                      fingerprints = fingerprints
-                    )
-                  )
-                )
-              }
-            }
-          }
-
           return DecryptionResult.withError(
             processDecryptionException(e)
           )
@@ -135,6 +101,14 @@ object PgpDecrypt {
     return when (e) {
       is WrongPassphraseException -> {
         DecryptionException(DecryptionErrorType.WRONG_PASSPHRASE, e)
+      }
+
+      is MissingPassphraseException -> {
+        DecryptionException(
+          decryptionErrorType = DecryptionErrorType.NEED_PASSPHRASE,
+          e = PGPException("flowcrypt: need passphrase"),
+          fingerprints = e.keyIds.map { it.fingerprint.toString().uppercase() }
+        )
       }
 
       is MessageNotIntegrityProtectedException -> {

@@ -24,6 +24,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.kotlin.uppercase
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
@@ -122,10 +123,15 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     } else {
       binding?.eTKeyPassword?.let {
         val passPhrase = Passphrase.fromPassword(typedText)
-        val keys = keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData
-          .value?.data?.filter { it.fingerprint in fingerprintList } ?: return@let
+        val existedKeys =
+          keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData.value?.data
+        val matchingKeys = (existedKeys ?: emptyList()).filter { pgpKeyDetails ->
+          fingerprintList.any { element ->
+            element.uppercase() in pgpKeyDetails.ids.map { keyId -> keyId.fingerprint.uppercase() }
+          }
+        }
         checkPrivateKeysViewModel.checkKeys(
-          keys = keys,
+          keys = matchingKeys,
           passphrase = passPhrase
         )
       }
@@ -143,10 +149,12 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
         Result.Status.SUCCESS -> {
           binding?.pBLoading?.gone()
-          val filteredKeyDetailsList = (it.data ?: emptyList()).filter { pgpKeyDetails ->
-            fingerprintList.any { element -> element.equals(pgpKeyDetails.fingerprint, true) }
+          val matchingKeys = (it.data ?: emptyList()).filter { pgpKeyDetails ->
+            fingerprintList.any { element ->
+              element.uppercase() in pgpKeyDetails.ids.map { keyId -> keyId.fingerprint.uppercase() }
+            }
           }
-          if (filteredKeyDetailsList.isEmpty()) {
+          if (matchingKeys.isEmpty()) {
             binding?.tVStatusMessage?.text = getString(R.string.error_no_keys)
           } else {
             binding?.btnUpdatePassphrase?.visible()
@@ -156,19 +164,19 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
               LogicType.ALL -> {
                 binding?.tVStatusMessage?.text = resources.getQuantityString(
                   R.plurals.please_provide_passphrase_for_all_following_keys,
-                  filteredKeyDetailsList.size
+                  matchingKeys.size
                 )
               }
               LogicType.AT_LEAST_ONE -> {
                 if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
                   binding?.tVStatusMessage?.text = resources.getQuantityString(
                     R.plurals.please_provide_passphrase_for_following_keys,
-                    filteredKeyDetailsList.size
+                    matchingKeys.size
                   )
                 }
               }
             }
-            prvKeysRecyclerViewAdapter.submitList(filteredKeyDetailsList)
+            prvKeysRecyclerViewAdapter.submitList(matchingKeys)
           }
           baseActivity?.countingIdlingResource?.decrementSafely()
         }
