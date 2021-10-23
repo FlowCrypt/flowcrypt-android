@@ -415,7 +415,7 @@ class MsgDetailsViewModel(
         val keyDetails = block.keyDetails ?: continue
         val pgpContact = keyDetails.primaryPgpContact
         val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
-        block.existingPgpContact = contactEntity?.toPgpContact()
+        //block.existingPgpContact = contactEntity?.toPgpContact()
       }
 
       if (block is DecryptErrorMsgBlock) {

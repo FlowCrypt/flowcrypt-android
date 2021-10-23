@@ -9,7 +9,9 @@ import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 
 /**
  * This object describes a logic of work with [ContactEntity].
@@ -21,19 +23,28 @@ import com.flowcrypt.email.database.entity.ContactEntity
  */
 @Dao
 interface ContactsDao : BaseDao<ContactEntity> {
+  //fixed
   @Query("SELECT * FROM contacts")
   suspend fun getAllContacts(): List<ContactEntity>
 
+  //fixed
   @Query("SELECT * FROM contacts")
   fun getAllContactsLD(): LiveData<List<ContactEntity>>
 
-  @Query("SELECT * FROM contacts WHERE has_pgp = 1")
+  @Transaction
+  @Query("SELECT * FROM contacts WHERE email IN (SELECT recipient FROM public_keys GROUP BY recipient)")
+  fun getAllContactsWithPgpLD1(): LiveData<List<RecipientWithPubKeys>>
+
+  @Query("SELECT * FROM contacts")
+  //@Query("SELECT * FROM contacts WHERE has_pgp = 1")
   fun getAllContactsWithPgpLD(): LiveData<List<ContactEntity>>
 
-  @Query("SELECT * FROM contacts WHERE has_pgp = 1")
+  @Query("SELECT * FROM contacts")
+  //@Query("SELECT * FROM contacts WHERE has_pgp = 1")
   suspend fun getAllContactsWithPgp(): List<ContactEntity>
 
-  @Query("SELECT * FROM contacts WHERE has_pgp = 1 AND (email LIKE :searchPattern OR name LIKE :searchPattern)")
+  @Query("SELECT * FROM contacts WHERE (email LIKE :searchPattern OR name LIKE :searchPattern)")
+  //@Query("SELECT * FROM contacts WHERE has_pgp = 1 AND (email LIKE :searchPattern OR name LIKE :searchPattern)")
   suspend fun getAllContactsWithPgpWhichMatched(searchPattern: String): List<ContactEntity>
 
   @Query("SELECT * FROM contacts WHERE email = :email")

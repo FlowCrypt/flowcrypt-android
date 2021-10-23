@@ -93,9 +93,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         ?: return@launch
       roomDatabase.contactsDao().updateSuspend(
         originalContactEntity.copy(
-          publicKey = contactEntity.publicKey,
+          /*publicKey = contactEntity.publicKey,
           fingerprint = contactEntity.fingerprint,
-          hasPgp = true
+          hasPgp = true*/
         )
       )
     }
@@ -136,7 +136,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       try {
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
-            val emailLowerCase = email.toLowerCase(Locale.getDefault())
+            val emailLowerCase = email.lowercase(Locale.getDefault())
             var cachedContactEntity =
               roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
@@ -147,10 +147,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
                 roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
             } else {
               try {
-                cachedContactEntity.publicKey?.let {
+                /*cachedContactEntity.publicKey?.let {
                   val result = PgpKey.parseKeys(it).pgpKeyDetailsList
                   cachedContactEntity?.pgpKeyDetails = result.firstOrNull()
-                }
+                }*/
               } catch (e: Exception) {
                 e.printStackTrace()
                 pgpContacts.add(cachedContactEntity.toPgpContact().copy(hasNotUsablePubKey = true))
@@ -159,7 +159,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
             }
 
             try {
-              if (cachedContactEntity?.hasPgp == false) {
+              if (true) {
                 getPgpContactInfoFromServer(email = emailLowerCase)?.let {
                   cachedContactEntity =
                     updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
@@ -223,10 +223,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     roomDatabase.contactsDao().updateSuspend(updateCandidate)
     val lastVersion = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
-    lastVersion?.publicKey?.let {
+    /*lastVersion?.publicKey?.let {
       val result = PgpKey.parseKeys(it).pgpKeyDetailsList
       lastVersion.pgpKeyDetails = result.firstOrNull()
-    }
+    }*/
 
     return lastVersion
   }
@@ -263,8 +263,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         roomDatabase.contactsDao().updateSuspend(
           contactEntityFromPrimaryPgpContact.copy(
             id = contactEntity.id,
-            email = contactEntity.email.toLowerCase(Locale.US),
-            client = ContactEntity.CLIENT_PGP,
+            email = contactEntity.email.lowercase(Locale.US),
           )
         )
       }
@@ -337,12 +336,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       when (response.status) {
         Result.Status.SUCCESS -> {
           val pubKeyString = response.data?.pubkey
-          val client = ContactEntity.CLIENT_PGP
-
           if (pubKeyString?.isNotEmpty() == true) {
             PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList.firstOrNull()?.let {
               val pgpContact = it.primaryPgpContact
-              pgpContact.client = client
               pgpContact.pgpKeyDetails = it
               return@withContext pgpContact
             }

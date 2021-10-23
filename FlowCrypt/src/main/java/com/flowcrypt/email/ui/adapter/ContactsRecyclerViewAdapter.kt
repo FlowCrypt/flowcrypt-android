@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 
 /**
  * This adapter describes logic to prepare show contacts from the database.
@@ -26,7 +26,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true) :
   RecyclerView.Adapter<ContactsRecyclerViewAdapter.ViewHolder>() {
 
-  private val list: MutableList<ContactEntity> = mutableListOf()
+  private val list: MutableList<RecipientWithPubKeys> = mutableListOf()
   var onDeleteContactListener: OnDeleteContactListener? = null
   var onContactClickListener: OnContactClickListener? = null
 
@@ -41,14 +41,14 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   override fun onBindViewHolder(viewHolder: ContactsRecyclerViewAdapter.ViewHolder, position: Int) {
-    val contactEntity = list[position]
+    val contactWithPubKeys = list[position]
 
-    if (contactEntity.name.isNullOrEmpty()) {
+    if (contactWithPubKeys.contact.name.isNullOrEmpty()) {
       viewHolder.textViewName.visibility = View.GONE
       viewHolder.textViewEmail.visibility = View.GONE
       viewHolder.textViewOnlyEmail.visibility = View.VISIBLE
 
-      viewHolder.textViewOnlyEmail.text = contactEntity.email
+      viewHolder.textViewOnlyEmail.text = contactWithPubKeys.contact.email
       viewHolder.textViewEmail.text = null
       viewHolder.textViewName.text = null
     } else {
@@ -56,22 +56,22 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
       viewHolder.textViewEmail.visibility = View.VISIBLE
       viewHolder.textViewOnlyEmail.visibility = View.GONE
 
-      viewHolder.textViewEmail.text = contactEntity.email
-      viewHolder.textViewName.text = contactEntity.name
+      viewHolder.textViewEmail.text = contactWithPubKeys.contact.email
+      viewHolder.textViewName.text = contactWithPubKeys.contact.name
       viewHolder.textViewOnlyEmail.text = null
     }
 
     if (isDeleteEnabled) {
       viewHolder.imageButtonDeleteContact.visibility = View.VISIBLE
       viewHolder.imageButtonDeleteContact.setOnClickListener {
-        onDeleteContactListener?.onDeleteContact(contactEntity)
+        onDeleteContactListener?.onDeleteContact(contactWithPubKeys)
       }
     } else {
       viewHolder.imageButtonDeleteContact.visibility = View.GONE
     }
 
     viewHolder.itemView.setOnClickListener {
-      onContactClickListener?.onContactClick(contactEntity)
+      onContactClickListener?.onContactClick(contactWithPubKeys)
     }
   }
 
@@ -79,7 +79,7 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
     return list.size
   }
 
-  fun swap(newList: List<ContactEntity>) {
+  fun swap(newList: List<RecipientWithPubKeys>) {
     val diffUtilCallback = DiffUtilCallback(this.list, newList)
     val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
 
@@ -89,11 +89,11 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   interface OnDeleteContactListener {
-    fun onDeleteContact(contactEntity: ContactEntity)
+    fun onDeleteContact(contactWithPubKeys: RecipientWithPubKeys)
   }
 
   interface OnContactClickListener {
-    fun onContactClick(contactEntity: ContactEntity)
+    fun onContactClick(contactWithPubKeys: RecipientWithPubKeys)
   }
 
   /**
@@ -107,13 +107,13 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   inner class DiffUtilCallback(
-    private val oldList: List<ContactEntity>,
-    private val newList: List<ContactEntity>
+    private val oldList: List<RecipientWithPubKeys>,
+    private val newList: List<RecipientWithPubKeys>
   ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldItem = oldList[oldItemPosition]
       val newItem = newList[newItemPosition]
-      return oldItem.fingerprint == newItem.fingerprint
+      return oldItem.publicKeys == newItem.publicKeys
     }
 
     override fun getOldListSize(): Int = oldList.size

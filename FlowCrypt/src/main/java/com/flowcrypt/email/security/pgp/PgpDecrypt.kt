@@ -7,7 +7,6 @@ package com.flowcrypt.email.security.pgp
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.extensions.kotlin.uppercase
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException

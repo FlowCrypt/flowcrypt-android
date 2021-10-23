@@ -10,7 +10,6 @@ import android.os.Parcelable
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import java.util.ArrayList
-import java.util.Locale
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -61,14 +60,9 @@ data class PgpContact constructor(
 
   fun toContactEntity(): ContactEntity {
     return ContactEntity(
-      email = email.toLowerCase(Locale.getDefault()),
+      email = email.lowercase(),
       name = name,
-      publicKey = pubkey?.toByteArray(),
-      hasPgp = hasPgp,
-      client = client,
-      fingerprint = fingerprint,
-      lastUse = lastUse,
-      attested = false
+      lastUse = lastUse
     )
   }
 
@@ -86,7 +80,7 @@ data class PgpContact constructor(
           val internetAddresses = InternetAddress.parse(user)
 
           for (internetAddress in internetAddresses) {
-            val email = internetAddress.address.toLowerCase(Locale.US)
+            val email = internetAddress.address.lowercase()
             val name = internetAddress.personal
 
             pgpContacts.add(PgpContact(email, name))

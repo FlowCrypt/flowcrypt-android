@@ -9,7 +9,6 @@ import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.extensions.kotlin.lowercase
 import com.flowcrypt.email.security.SecurityUtils
 
 /**

@@ -296,7 +296,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       var keyOwner: String? = pgpKeyDetails.primaryPgpContact.email
 
       if (keyOwner != null) {
-        keyOwner = keyOwner.toLowerCase(Locale.getDefault())
+        keyOwner = keyOwner.lowercase(Locale.getDefault())
 
         if (emails.contains(keyOwner)) {
           return null
@@ -304,11 +304,11 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
         emails.add(keyOwner)
 
-        if (weakRef.get() != null) {
+        /*if (weakRef.get() != null) {
           val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
             .contactsDao().getContactByEmail(keyOwner)?.toPgpContact()
           return PublicKeyInfo(fingerprint, keyOwner, contact, pgpKeyDetails.publicKey)
-        }
+        }*/
       }
       return null
     }
@@ -386,9 +386,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
                 FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
                   .contactsDao().getContactByEmail(pgpContact.email)
               foundContactEntity?.let { entity ->
-                contacts.add(
+                /*contacts.add(
                   pgpContact.toContactEntity().copy(id = entity.id)
-                )
+                )*/
               }
             }
 

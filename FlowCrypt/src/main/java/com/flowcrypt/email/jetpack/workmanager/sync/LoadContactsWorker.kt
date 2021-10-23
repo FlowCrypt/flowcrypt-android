@@ -65,9 +65,9 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
 
           if (msgs.isNotEmpty()) {
             val fetchProfile = FetchProfile()
-            fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
-            fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
-            fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
+            fetchProfile.add(Message.RecipientType.TO.toString().uppercase(Locale.getDefault()))
+            fetchProfile.add(Message.RecipientType.CC.toString().uppercase(Locale.getDefault()))
+            fetchProfile.add(Message.RecipientType.BCC.toString().uppercase(Locale.getDefault()))
             imapFolder.fetch(msgs, fetchProfile)
 
             return@fetchContactsInternal msgs
@@ -171,8 +171,8 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
     val updateCandidates = mutableListOf<ContactEntity>()
 
     for (contact in availableContacts) {
-      contactsInDatabase.add(contact.email.toLowerCase(Locale.getDefault()))
-      contactsByEmailMap[contact.email.toLowerCase(Locale.getDefault())] = contact
+      contactsInDatabase.add(contact.email.lowercase())
+      contactsByEmailMap[contact.email.lowercase()] = contact
     }
 
     for (emailAndNamePair in emailAndNamePairs) {
@@ -193,8 +193,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
             newCandidates.add(
               ContactEntity(
                 email = it,
-                name = emailAndNamePair.name,
-                hasPgp = false
+                name = emailAndNamePair.name
               )
             )
           }
@@ -228,7 +227,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
             for (address in addresses) {
               emailAndNamePairs.add(
                 EmailAndNamePair(
-                  address.address.toLowerCase(Locale.getDefault()), address.personal
+                  address.address.lowercase(Locale.getDefault()), address.personal
                 )
               )
             }

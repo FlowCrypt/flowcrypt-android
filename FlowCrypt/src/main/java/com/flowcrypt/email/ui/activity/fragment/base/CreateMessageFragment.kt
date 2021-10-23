@@ -432,7 +432,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             val contactEntity =
               data.getParcelableExtra<ContactEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
             contactEntity?.let {
-              pgpContactWithNoPublicKey?.pubkey = String(contactEntity.publicKey ?: byteArrayOf())
+              //pgpContactWithNoPublicKey?.pubkey = String(contactEntity.publicKey ?: byteArrayOf())
               pgpContactWithNoPublicKey?.email?.let { email ->
                 contactsViewModel.updateContactPgpInfo(
                   email,

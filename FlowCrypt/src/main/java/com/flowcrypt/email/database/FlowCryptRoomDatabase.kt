@@ -26,6 +26,7 @@ import com.flowcrypt.email.database.dao.ContactsDao
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
+import com.flowcrypt.email.database.dao.PubKeysDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -34,6 +35,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.OpenPgpV4Fingerprint
 
@@ -56,7 +58,8 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
     ContactEntity::class,
     KeyEntity::class,
     LabelEntity::class,
-    MessageEntity::class
+    MessageEntity::class,
+    PublicKeyEntity::class
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
@@ -78,6 +81,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun contactsDao(): ContactsDao
 
+  abstract fun pubKeysDao(): PubKeysDao
+
   @WorkerThread
   fun forceDatabaseCreationIfNeeded() {
     super.getOpenHelper().readableDatabase
@@ -85,7 +90,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 26
+    const val DB_VERSION = 27
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {

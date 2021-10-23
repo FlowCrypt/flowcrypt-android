@@ -135,8 +135,8 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private fun setupContactsViewModel() {
     contactEntity?.let {
       contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, { contactEntity ->
-        this.contactEntity = contactEntity
-        parseKeysViewModel.fetchKeys(it.publicKey)
+        /*this.contactEntity = contactEntity
+        parseKeysViewModel.fetchKeys(it.publicKey)*/
       })
     }
   }

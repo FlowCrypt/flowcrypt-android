@@ -15,7 +15,6 @@ import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import java.util.Locale
 
 fun String.normalizeDashes(): String {
   return this.replace(DASHES_REGEX, "-----")
@@ -167,6 +166,3 @@ fun String.isValidEmail(): Boolean {
 fun String.isValidLocalhostEmail(): Boolean {
   return BetterInternetAddress.isValidLocalhostEmail(this)
 }
-
-fun String.lowercase(): String = toLowerCase(Locale.ROOT)
-fun String.uppercase(): String = toUpperCase(Locale.ROOT)

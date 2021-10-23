@@ -120,9 +120,9 @@ class SecurityUtils {
         .getContactsByEmails(emails)
 
       for (contact in contacts) {
-        if (contact.publicKey?.isNotEmpty() == true) {
+        /*if (contact.publicKey?.isNotEmpty() == true) {
           contact.publicKey.let { publicKeys.add(String(it)) }
-        }
+        }*/
       }
 
       return publicKeys

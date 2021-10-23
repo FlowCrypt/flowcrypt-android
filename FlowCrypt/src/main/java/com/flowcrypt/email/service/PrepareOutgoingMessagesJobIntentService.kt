@@ -79,7 +79,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
         ?: return
     val accountEntity =
-      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.toLowerCase(Locale.US))
+      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.lowercase(Locale.US))
         ?: return
 
     val uid = outgoingMsgInfo.uid
@@ -385,7 +385,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         if (contactEntity == null) {
           contactsDao.insert(PgpContact(email, null).toContactEntity())
         } else {
-          contactsDao.update(contactEntity.copy(lastUse = System.currentTimeMillis()))
+          //contactsDao.update(contactEntity.copy(lastUse = System.currentTimeMillis()))
         }
       }
     } catch (e: Exception) {

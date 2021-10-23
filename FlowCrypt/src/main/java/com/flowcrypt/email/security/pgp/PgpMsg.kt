@@ -25,7 +25,6 @@ import com.flowcrypt.email.extensions.javax.mail.internet.hasFileName
 import com.flowcrypt.email.extensions.javax.mail.isInline
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.escapeHtmlAttr
-import com.flowcrypt.email.extensions.kotlin.lowercase
 import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.toInputStream
