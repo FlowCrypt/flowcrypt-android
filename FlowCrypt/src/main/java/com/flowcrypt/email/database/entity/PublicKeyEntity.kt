@@ -56,7 +56,6 @@ class PublicKeyEntity(
     requireNotNull(parcel.createByteArray())
   )
 
-
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeValue(id)
     parcel.writeString(recipient)

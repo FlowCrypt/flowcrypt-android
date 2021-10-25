@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -22,7 +23,6 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.ContactEntity
-import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
@@ -41,7 +41,7 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class SelectContactsActivity : BaseBackStackActivity(),
-  ContactsRecyclerViewAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
+  ContactsRecyclerViewAdapter.OnContactActionsListener, SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
@@ -65,7 +65,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    contactsRecyclerViewAdapter.onContactClickListener = this
+    contactsRecyclerViewAdapter.onContactActionsListener = this
     //todo-denbond7 need to fix this in the future. Not urgent
     //val isMultiply = intent.getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false)
 
@@ -108,12 +108,14 @@ class SelectContactsActivity : BaseBackStackActivity(),
     return super.onPrepareOptionsMenu(menu)
   }
 
-  /*override fun onContactClick(contactEntity: ContactEntity) {
+  override fun onContactClick(contactEntity: ContactEntity) {
     val intent = Intent()
     intent.putExtra(KEY_EXTRA_PGP_CONTACT, contactEntity)
     setResult(Activity.RESULT_OK, intent)
     finish()
-  }*/
+  }
+
+  override fun onDeleteContact(contactEntity: ContactEntity) {}
 
   override fun onQueryTextSubmit(query: String): Boolean {
     searchPattern = query
@@ -179,9 +181,5 @@ class SelectContactsActivity : BaseBackStackActivity(),
       intent.putExtra(KEY_EXTRA_IS_MULTIPLY, isMultiply)
       return intent
     }
-  }
-
-  override fun onContactClick(contactWithPubKeys: RecipientWithPubKeys) {
-    TODO("Not yet implemented")
   }
 }

@@ -17,7 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -32,8 +33,7 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 6:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDeleteContactListener,
-  ContactsRecyclerViewAdapter.OnContactClickListener {
+class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnContactActionsListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
@@ -46,8 +46,7 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    contactsRecyclerViewAdapter.onDeleteContactListener = this
-    contactsRecyclerViewAdapter.onContactClickListener = this
+    contactsRecyclerViewAdapter.onContactActionsListener = this
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -71,20 +70,20 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
     }
   }
 
-  /*override fun onContactClick(contactEntity: ContactEntity) {
+  override fun onContactClick(contactEntity: ContactEntity) {
     navController?.navigate(
       ContactsListFragmentDirections
         .actionContactsListFragmentToPublicKeyDetailsFragment(contactEntity)
     )
-  }*/
+  }
 
-  /*override fun onDeleteContact(contactEntity: ContactEntity) {
+  override fun onDeleteContact(contactEntity: ContactEntity) {
     contactsViewModel.deleteContact(contactEntity)
     Toast.makeText(
       context, getString(R.string.the_contact_was_deleted, contactEntity.email),
       Toast.LENGTH_SHORT
     ).show()
-  }*/
+  }
 
   private fun initViews(root: View) {
     this.progressBar = root.findViewById(R.id.progressBar)
@@ -122,7 +121,7 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
           if (it.data.isNullOrEmpty()) {
             UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
           } else {
-            //contactsRecyclerViewAdapter.swap(it.data)
+            contactsRecyclerViewAdapter.swap(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
         }
@@ -135,13 +134,5 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
 
   companion object {
     private const val REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY = 0
-  }
-
-  override fun onContactClick(contactWithPubKeys: RecipientWithPubKeys) {
-    TODO("Not yet implemented")
-  }
-
-  override fun onDeleteContact(contactWithPubKeys: RecipientWithPubKeys) {
-    TODO("Not yet implemented")
   }
 }

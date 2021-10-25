@@ -9,9 +9,7 @@ import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.ContactEntity
-import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 
 /**
  * This object describes a logic of work with [ContactEntity].
@@ -31,12 +29,8 @@ interface ContactsDao : BaseDao<ContactEntity> {
   @Query("SELECT * FROM contacts")
   fun getAllContactsLD(): LiveData<List<ContactEntity>>
 
-  @Transaction
-  @Query("SELECT * FROM contacts WHERE email IN (SELECT recipient FROM public_keys GROUP BY recipient)")
-  fun getAllContactsWithPgpLD1(): LiveData<List<RecipientWithPubKeys>>
-
-  @Query("SELECT * FROM contacts")
-  //@Query("SELECT * FROM contacts WHERE has_pgp = 1")
+  //fixed
+  @Query("SELECT contacts.* FROM contacts INNER JOIN public_keys ON contacts.email = public_keys.recipient GROUP BY contacts.email ORDER BY contacts._id")
   fun getAllContactsWithPgpLD(): LiveData<List<ContactEntity>>
 
   @Query("SELECT * FROM contacts")

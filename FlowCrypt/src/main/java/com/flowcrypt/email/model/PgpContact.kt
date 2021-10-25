@@ -8,6 +8,7 @@ package com.flowcrypt.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import java.util.ArrayList
 import javax.mail.internet.AddressException
@@ -63,6 +64,14 @@ data class PgpContact constructor(
       email = email.lowercase(),
       name = name,
       lastUse = lastUse
+    )
+  }
+
+  fun toPubKey(): PublicKeyEntity {
+    return PublicKeyEntity(
+      recipient = email,
+      fingerprint = fingerprint!!,
+      publicKey = pubkey!!.toByteArray()
     )
   }
 

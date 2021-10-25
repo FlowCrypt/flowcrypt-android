@@ -6,11 +6,14 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
@@ -241,7 +244,16 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     viewModelScope.launch {
       val contact = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
       if (contact == null) {
-        roomDatabase.contactsDao().insertSuspend(pgpContact.toContactEntity())
+        val isInserted = roomDatabase.contactsDao().insertSuspend(pgpContact.toContactEntity()) > 0
+        if (isInserted) {
+          roomDatabase.pubKeysDao().insertSuspend(pgpContact.toPubKey())
+        } else {
+          val context: Context = getApplication()
+          Toast.makeText(
+            context,
+            context.getString(R.string.could_not_save_new_recipient), Toast.LENGTH_LONG
+          ).show()
+        }
       }
     }
   }

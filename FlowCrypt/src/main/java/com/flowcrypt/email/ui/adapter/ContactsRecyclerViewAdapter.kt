@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.database.entity.ContactEntity
 
 /**
  * This adapter describes logic to prepare show contacts from the database.
@@ -26,10 +26,8 @@ import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true) :
   RecyclerView.Adapter<ContactsRecyclerViewAdapter.ViewHolder>() {
 
-  private val list: MutableList<RecipientWithPubKeys> = mutableListOf()
-  var onDeleteContactListener: OnDeleteContactListener? = null
-  var onContactClickListener: OnContactClickListener? = null
-
+  private val list: MutableList<ContactEntity> = mutableListOf()
+  var onContactActionsListener: OnContactActionsListener? = null
 
   override fun onCreateViewHolder(
     parent: ViewGroup,
@@ -41,14 +39,14 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   override fun onBindViewHolder(viewHolder: ContactsRecyclerViewAdapter.ViewHolder, position: Int) {
-    val contactWithPubKeys = list[position]
+    val contactEntity = list[position]
 
-    if (contactWithPubKeys.contact.name.isNullOrEmpty()) {
+    if (contactEntity.name.isNullOrEmpty()) {
       viewHolder.textViewName.visibility = View.GONE
       viewHolder.textViewEmail.visibility = View.GONE
       viewHolder.textViewOnlyEmail.visibility = View.VISIBLE
 
-      viewHolder.textViewOnlyEmail.text = contactWithPubKeys.contact.email
+      viewHolder.textViewOnlyEmail.text = contactEntity.email
       viewHolder.textViewEmail.text = null
       viewHolder.textViewName.text = null
     } else {
@@ -56,22 +54,22 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
       viewHolder.textViewEmail.visibility = View.VISIBLE
       viewHolder.textViewOnlyEmail.visibility = View.GONE
 
-      viewHolder.textViewEmail.text = contactWithPubKeys.contact.email
-      viewHolder.textViewName.text = contactWithPubKeys.contact.name
+      viewHolder.textViewEmail.text = contactEntity.email
+      viewHolder.textViewName.text = contactEntity.name
       viewHolder.textViewOnlyEmail.text = null
     }
 
     if (isDeleteEnabled) {
       viewHolder.imageButtonDeleteContact.visibility = View.VISIBLE
       viewHolder.imageButtonDeleteContact.setOnClickListener {
-        onDeleteContactListener?.onDeleteContact(contactWithPubKeys)
+        onContactActionsListener?.onDeleteContact(contactEntity)
       }
     } else {
       viewHolder.imageButtonDeleteContact.visibility = View.GONE
     }
 
     viewHolder.itemView.setOnClickListener {
-      onContactClickListener?.onContactClick(contactWithPubKeys)
+      onContactActionsListener?.onContactClick(contactEntity)
     }
   }
 
@@ -79,7 +77,7 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
     return list.size
   }
 
-  fun swap(newList: List<RecipientWithPubKeys>) {
+  fun swap(newList: List<ContactEntity>) {
     val diffUtilCallback = DiffUtilCallback(this.list, newList)
     val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
 
@@ -88,12 +86,9 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
     productDiffResult.dispatchUpdatesTo(this)
   }
 
-  interface OnDeleteContactListener {
-    fun onDeleteContact(contactWithPubKeys: RecipientWithPubKeys)
-  }
-
-  interface OnContactClickListener {
-    fun onContactClick(contactWithPubKeys: RecipientWithPubKeys)
+  interface OnContactActionsListener {
+    fun onDeleteContact(contactEntity: ContactEntity)
+    fun onContactClick(contactEntity: ContactEntity)
   }
 
   /**
@@ -107,13 +102,13 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   inner class DiffUtilCallback(
-    private val oldList: List<RecipientWithPubKeys>,
-    private val newList: List<RecipientWithPubKeys>
+    private val oldList: List<ContactEntity>,
+    private val newList: List<ContactEntity>
   ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldItem = oldList[oldItemPosition]
       val newItem = newList[newItemPosition]
-      return oldItem.publicKeys == newItem.publicKeys
+      return oldItem.email == newItem.email
     }
 
     override fun getOldListSize(): Int = oldList.size
