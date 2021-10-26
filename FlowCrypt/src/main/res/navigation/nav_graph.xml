@@ -136,8 +136,8 @@
         android:label="PublicKeyDetailsFragment"
         tools:layout="@layout/fragment_public_key_details">
         <argument
-            android:name="contactEntity"
-            app:argType="com.flowcrypt.email.database.entity.ContactEntity" />
+            android:name="recipientEntity"
+            app:argType="com.flowcrypt.email.database.entity.RecipientEntity" />
     </fragment>
 
     <fragment

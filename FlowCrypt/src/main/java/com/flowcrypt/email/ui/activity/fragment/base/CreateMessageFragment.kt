@@ -429,13 +429,13 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT -> {
         when (resultCode) {
           Activity.RESULT_OK -> if (data != null) {
-            val contactEntity =
+            val recipientEntity =
               data.getParcelableExtra<RecipientEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
-            contactEntity?.let {
+            recipientEntity?.let {
               pgpContactWithNoPublicKey?.email?.let { email ->
                 contactsViewModel.copyPubKeysToRecipient(
                   email,
-                  contactEntity
+                  recipientEntity
                 )
               }
 

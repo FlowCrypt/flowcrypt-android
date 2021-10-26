@@ -23,11 +23,11 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
  *         E-mail: DenBond7@gmail.com
  */
 @Entity(
-  tableName = "contacts",
+  tableName = "recipients",
   indices = [
-    Index(name = "name_in_contacts", value = ["name"]),
-    Index(name = "last_use_in_contacts", value = ["last_use"]),
-    Index(name = "email_in_contacts", value = ["email"], unique = true)
+    Index(name = "name_in_recipients", value = ["name"]),
+    Index(name = "last_use_in_recipients", value = ["last_use"]),
+    Index(name = "email_in_recipients", value = ["email"], unique = true)
   ]
 )
 data class RecipientEntity(

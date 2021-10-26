@@ -160,7 +160,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
     }
 
     val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
-    val availableContacts = contactsDao.getAllContacts()
+    val availableContacts = contactsDao.getAllRecipients()
 
     val contactsInDatabase = HashSet<String>()
     val contactsWhichWillBeUpdated = HashSet<String>()
@@ -177,13 +177,13 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
 
     for (emailAndNamePair in emailAndNamePairs) {
       if (contactsInDatabase.contains(emailAndNamePair.email)) {
-        val contactEntity = contactsByEmailMap[emailAndNamePair.email]
-        if (contactEntity?.email.isNullOrEmpty()) {
+        val recipientEntity = contactsByEmailMap[emailAndNamePair.email]
+        if (recipientEntity?.email.isNullOrEmpty()) {
           if (!contactsWhichWillBeUpdated.contains(emailAndNamePair.email)) {
             emailAndNamePair.email?.let {
               contactsWhichWillBeUpdated.add(it)
             }
-            contactEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
+            recipientEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
           }
         }
       } else {

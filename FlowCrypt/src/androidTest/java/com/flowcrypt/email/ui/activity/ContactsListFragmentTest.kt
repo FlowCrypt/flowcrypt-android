@@ -99,7 +99,7 @@ class ContactsListFragmentTest : BaseTest() {
     for (email in EMAILS) {
       val pgpContact = PgpContact(email, null, "", true, null, null, 0)
       FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
-        .insert(pgpContact.toContactEntity())
+        .insert(pgpContact.toRecipientEntity())
     }
   }
 
@@ -117,7 +117,7 @@ class ContactsListFragmentTest : BaseTest() {
         val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext())
           .recipientDao()
 
-        val contact = dao.getContactByEmail(email) ?: continue
+        val contact = dao.getRecipientByEmail(email) ?: continue
         dao.delete(contact)
       }
     }

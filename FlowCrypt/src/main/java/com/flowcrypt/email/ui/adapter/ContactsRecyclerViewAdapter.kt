@@ -39,14 +39,14 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   override fun onBindViewHolder(viewHolder: ContactsRecyclerViewAdapter.ViewHolder, position: Int) {
-    val contactEntity = list[position]
+    val recipientEntity = list[position]
 
-    if (contactEntity.name.isNullOrEmpty()) {
+    if (recipientEntity.name.isNullOrEmpty()) {
       viewHolder.textViewName.visibility = View.GONE
       viewHolder.textViewEmail.visibility = View.GONE
       viewHolder.textViewOnlyEmail.visibility = View.VISIBLE
 
-      viewHolder.textViewOnlyEmail.text = contactEntity.email
+      viewHolder.textViewOnlyEmail.text = recipientEntity.email
       viewHolder.textViewEmail.text = null
       viewHolder.textViewName.text = null
     } else {
@@ -54,22 +54,22 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
       viewHolder.textViewEmail.visibility = View.VISIBLE
       viewHolder.textViewOnlyEmail.visibility = View.GONE
 
-      viewHolder.textViewEmail.text = contactEntity.email
-      viewHolder.textViewName.text = contactEntity.name
+      viewHolder.textViewEmail.text = recipientEntity.email
+      viewHolder.textViewName.text = recipientEntity.name
       viewHolder.textViewOnlyEmail.text = null
     }
 
     if (isDeleteEnabled) {
       viewHolder.imageButtonDeleteContact.visibility = View.VISIBLE
       viewHolder.imageButtonDeleteContact.setOnClickListener {
-        onContactActionsListener?.onDeleteContact(contactEntity)
+        onContactActionsListener?.onDeleteContact(recipientEntity)
       }
     } else {
       viewHolder.imageButtonDeleteContact.visibility = View.GONE
     }
 
     viewHolder.itemView.setOnClickListener {
-      onContactActionsListener?.onContactClick(contactEntity)
+      onContactActionsListener?.onContactClick(recipientEntity)
     }
   }
 

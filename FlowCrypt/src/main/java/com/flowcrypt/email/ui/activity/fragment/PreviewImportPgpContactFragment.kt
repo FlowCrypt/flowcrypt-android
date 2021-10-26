@@ -357,7 +357,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             if (weakRef.get() != null) {
               FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
                 .recipientDao()
-                .insert(newCandidates.subList(start, end).map { it.toContactEntity() })
+                .insert(newCandidates.subList(start, end).map { it.toRecipientEntity() })
             }
             i = end
 
@@ -383,12 +383,12 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             val list = updateCandidates.subList(start, end + 1)
 
             list.forEach { pgpContact ->
-              val foundContactEntity =
+              val foundRecipientEntity =
                 FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-                  .recipientDao().getContactByEmail(pgpContact.email)
-              foundContactEntity?.let { entity ->
+                  .recipientDao().getRecipientByEmail(pgpContact.email)
+              foundRecipientEntity?.let { entity ->
                 /*contacts.add(
-                  pgpContact.toContactEntity().copy(id = entity.id)
+                  pgpContact.toRecipientEntity().copy(id = entity.id)
                 )*/
               }
             }

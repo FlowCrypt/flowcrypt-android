@@ -47,9 +47,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 
   val allContactsLiveData: LiveData<List<RecipientEntity>> =
-    roomDatabase.recipientDao().getAllContactsLD()
+    roomDatabase.recipientDao().getAllRecipientsLD()
   val contactsWithPgpLiveData: LiveData<Result<List<RecipientEntity>>> =
-    Transformations.switchMap(roomDatabase.recipientDao().getAllContactsWithPgpLD()) {
+    Transformations.switchMap(roomDatabase.recipientDao().getAllRecipientsWithPgpLD()) {
       liveData {
         emit(Result.success(it))
       }
@@ -59,9 +59,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       liveData {
         emit(Result.loading())
         val foundContacts = if (it.isNullOrEmpty()) {
-          roomDatabase.recipientDao().getAllContactsWithPgp()
+          roomDatabase.recipientDao().getAllRecipientsWithPgp()
         } else {
-          roomDatabase.recipientDao().getAllContactsWithPgpWhichMatched("%$it%")
+          roomDatabase.recipientDao().getAllRecipientsWithPgpWhichMatched("%$it%")
         }
         emit(Result.success(foundContacts))
       }
@@ -74,17 +74,17 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun copyPubKeysToRecipient(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
-      val contact = roomDatabase.recipientDao().getContactByEmailSuspend(pgpContact.email)
+      val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
       if (contact != null) {
-        val updateCandidate = pgpContact.toContactEntity().copy(id = contact.id)
+        val updateCandidate = pgpContact.toRecipientEntity().copy(id = contact.id)
         roomDatabase.recipientDao().updateSuspend(updateCandidate)
       }
 
       if (!pgpContact.email.equals(pgpContactFromKey.email, ignoreCase = true)) {
         val existedContact =
-          roomDatabase.recipientDao().getContactByEmailSuspend(pgpContactFromKey.email)
+          roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContactFromKey.email)
         if (existedContact == null) {
-          roomDatabase.recipientDao().insertSuspend(pgpContactFromKey.toContactEntity())
+          roomDatabase.recipientDao().insertSuspend(pgpContactFromKey.toRecipientEntity())
         }
       }
     }
@@ -102,7 +102,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   }
 
   fun contactChangesLiveData(recipientEntity: RecipientEntity): LiveData<RecipientEntity?> {
-    return roomDatabase.recipientDao().getContactByEmailLD(recipientEntity.email)
+    return roomDatabase.recipientDao().getRecipientByEmailLD(recipientEntity.email)
   }
 
   /**
@@ -137,23 +137,25 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
             val emailLowerCase = email.lowercase(Locale.getDefault())
-            var cachedContactEntity =
-              roomDatabase.recipientDao().getContactByEmailSuspend(emailLowerCase)
+            var cachedRecipientEntity =
+              roomDatabase.recipientDao().getRecipientByEmailSuspend(emailLowerCase)
 
-            if (cachedContactEntity == null) {
-              cachedContactEntity = PgpContact(emailLowerCase, null).toContactEntity()
-              roomDatabase.recipientDao().insertSuspend(cachedContactEntity)
-              cachedContactEntity =
-                roomDatabase.recipientDao().getContactByEmailSuspend(emailLowerCase)
+            if (cachedRecipientEntity == null) {
+              cachedRecipientEntity = PgpContact(emailLowerCase, null).toRecipientEntity()
+              roomDatabase.recipientDao().insertSuspend(cachedRecipientEntity)
+              cachedRecipientEntity =
+                roomDatabase.recipientDao().getRecipientByEmailSuspend(emailLowerCase)
             } else {
               try {
-                /*cachedContactEntity.publicKey?.let {
+                /*cachedRecipientEntity.publicKey?.let {
                   val result = PgpKey.parseKeys(it).pgpKeyDetailsList
-                  cachedContactEntity?.pgpKeyDetails = result.firstOrNull()
+                  cachedRecipientEntity?.pgpKeyDetails = result.firstOrNull()
                 }*/
               } catch (e: Exception) {
                 e.printStackTrace()
-                pgpContacts.add(cachedContactEntity.toPgpContact().copy(hasNotUsablePubKey = true))
+                pgpContacts.add(
+                  cachedRecipientEntity.toPgpContact().copy(hasNotUsablePubKey = true)
+                )
                 continue
               }
             }
@@ -161,13 +163,13 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
             try {
               if (true) {
                 getPgpContactInfoFromServer(email = emailLowerCase)?.let {
-                  cachedContactEntity =
-                    updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                  cachedRecipientEntity =
+                    updateCachedInfoWithAttesterInfo(cachedRecipientEntity, it, emailLowerCase)
                 }
               } else {
-                cachedContactEntity?.pgpKeyDetails?.fingerprint?.let { fingerprint ->
+                cachedRecipientEntity?.pgpKeyDetails?.fingerprint?.let { fingerprint ->
                   getPgpContactInfoFromServer(fingerprint = fingerprint)?.let {
-                    val cacheLastModified = cachedContactEntity?.pgpKeyDetails?.lastModified ?: 0
+                    val cacheLastModified = cachedRecipientEntity?.pgpKeyDetails?.lastModified ?: 0
                     val attesterLastModified = it.pgpKeyDetails?.lastModified ?: 0
                     val attesterFingerprint = it.pgpKeyDetails?.fingerprint
 
@@ -176,14 +178,14 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
                         true
                       )
                     ) {
-                      cachedContactEntity =
-                        updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                      cachedRecipientEntity =
+                        updateCachedInfoWithAttesterInfo(cachedRecipientEntity, it, emailLowerCase)
                     }
                   }
                 }
               }
 
-              cachedContactEntity?.let { pgpContacts.add(it.toPgpContact()) }
+              cachedRecipientEntity?.let { pgpContacts.add(it.toPgpContact()) }
             } catch (e: Exception) {
               e.printStackTrace()
               ExceptionUtil.handleError(e)
@@ -208,12 +210,12 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       cachedRecipientEntity.name.isNullOrEmpty()
       && cachedRecipientEntity.email.equals(attesterPgpContact.email, ignoreCase = true)
     ) {
-      attesterPgpContact.toContactEntity().copy(
+      attesterPgpContact.toRecipientEntity().copy(
         id = cachedRecipientEntity.id,
         email = cachedRecipientEntity.email
       )
     } else {
-      attesterPgpContact.toContactEntity().copy(
+      attesterPgpContact.toRecipientEntity().copy(
         id = cachedRecipientEntity.id,
         name = cachedRecipientEntity.name,
         email = cachedRecipientEntity.email
@@ -221,7 +223,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
 
     roomDatabase.recipientDao().updateSuspend(updateCandidate)
-    val lastVersion = roomDatabase.recipientDao().getContactByEmailSuspend(emailLowerCase)
+    val lastVersion = roomDatabase.recipientDao().getRecipientByEmailSuspend(emailLowerCase)
 
     /*lastVersion?.publicKey?.let {
       val result = PgpKey.parseKeys(it).pgpKeyDetailsList
@@ -239,9 +241,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun addContact(pgpContact: PgpContact) {
     viewModelScope.launch {
-      val contact = roomDatabase.recipientDao().getContactByEmailSuspend(pgpContact.email)
+      val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
       if (contact == null) {
-        val isInserted = roomDatabase.recipientDao().insertSuspend(pgpContact.toContactEntity()) > 0
+        val isInserted =
+          roomDatabase.recipientDao().insertSuspend(pgpContact.toRecipientEntity()) > 0
         if (isInserted) {
           roomDatabase.pubKeysDao().insertSuspend(pgpContact.toPubKey())
         } else {
@@ -257,9 +260,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun updateContact(pgpContact: PgpContact) {
     viewModelScope.launch {
-      val contact = roomDatabase.recipientDao().getContactByEmailSuspend(pgpContact.email)
+      val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
       if (contact != null) {
-        val updateCandidate = pgpContact.toContactEntity().copy(id = contact.id)
+        val updateCandidate = pgpContact.toRecipientEntity().copy(id = contact.id)
         roomDatabase.recipientDao().updateSuspend(updateCandidate)
       }
     }
@@ -268,9 +271,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   fun copyPubKeysToRecipient(recipientEntity: RecipientEntity?, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
       recipientEntity?.let {
-        val contactEntityFromPrimaryPgpContact = pgpKeyDetails.primaryPgpContact.toContactEntity()
+        val recipientEntityFromPrimaryPgpContact =
+          pgpKeyDetails.primaryPgpContact.toRecipientEntity()
         roomDatabase.recipientDao().updateSuspend(
-          contactEntityFromPrimaryPgpContact.copy(
+          recipientEntityFromPrimaryPgpContact.copy(
             id = recipientEntity.id,
             email = recipientEntity.email.lowercase(Locale.US),
           )
@@ -285,7 +289,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun deleteContactByEmail(email: String) {
     viewModelScope.launch {
-      roomDatabase.recipientDao().getContactByEmailSuspend(email)?.let {
+      roomDatabase.recipientDao().getRecipientByEmailSuspend(email)?.let {
         roomDatabase.recipientDao().deleteSuspend(it)
       }
     }

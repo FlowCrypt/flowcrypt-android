@@ -73,10 +73,10 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       uri = "flowcrypt://email.flowcrypt.com/settings/contacts/details",
       extras = Bundle().apply {
         putParcelable(
-          "contactEntity", PgpContact(
+          "recipientEntity", PgpContact(
             EMAIL_DENBOND7, USER_DENBOND7,
             keyDetails.publicKey, true, null, null, 0
-          ).toContactEntity()
+          ).toRecipientEntity()
         )
       }
     )
@@ -220,7 +220,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       val dao =
         FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext())
           .recipientDao()
-      dao.getContactByEmail(EMAIL_DENBOND7)?.let { dao.delete(it) }
+      dao.getRecipientByEmail(EMAIL_DENBOND7)?.let { dao.delete(it) }
     }
   }
 }

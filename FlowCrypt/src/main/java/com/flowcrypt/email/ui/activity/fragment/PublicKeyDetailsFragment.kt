@@ -76,7 +76,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    recipientEntity = args.contactEntity
+    recipientEntity = args.recipientEntity
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -134,8 +134,8 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
 
   private fun setupContactsViewModel() {
     recipientEntity?.let {
-      contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, { contactEntity ->
-        /*this.contactEntity = contactEntity
+      contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, { recipientEntity ->
+        /*this.recipientEntity = recipientEntity
         parseKeysViewModel.fetchKeys(it.publicKey)*/
       })
     }

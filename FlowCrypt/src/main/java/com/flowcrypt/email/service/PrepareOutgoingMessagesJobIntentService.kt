@@ -381,11 +381,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
 
       for (email in msgInfo.getAllRecipients()) {
-        val contactEntity = contactsDao.getContactByEmail(email)
-        if (contactEntity == null) {
-          contactsDao.insert(PgpContact(email, null).toContactEntity())
+        val recipientEntity = contactsDao.getRecipientByEmail(email)
+        if (recipientEntity == null) {
+          contactsDao.insert(PgpContact(email, null).toRecipientEntity())
         } else {
-          //contactsDao.update(contactEntity.copy(lastUse = System.currentTimeMillis()))
+          //contactsDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
         }
       }
     } catch (e: Exception) {

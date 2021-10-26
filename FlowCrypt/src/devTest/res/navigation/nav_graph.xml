@@ -151,8 +151,8 @@
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/contacts/details" />
         <argument
-            android:name="contactEntity"
-            app:argType="com.flowcrypt.email.database.entity.ContactEntity" />
+            android:name="recipientEntity"
+            app:argType="com.flowcrypt.email.database.entity.RecipientEntity" />
     </fragment>
 
     <fragment

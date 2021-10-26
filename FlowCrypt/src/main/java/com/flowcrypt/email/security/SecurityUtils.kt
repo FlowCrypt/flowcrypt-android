@@ -117,7 +117,7 @@ class SecurityUtils {
     fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): MutableList<String> {
       val publicKeys = mutableListOf<String>()
       val contacts = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
-        .getContactsByEmails(emails)
+        .getRecipientsByEmails(emails)
 
       for (contact in contacts) {
         /*if (contact.publicKey?.isNotEmpty() == true) {

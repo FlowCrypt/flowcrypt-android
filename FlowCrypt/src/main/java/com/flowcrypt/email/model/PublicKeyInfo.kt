@@ -46,7 +46,7 @@ data class PublicKeyInfo constructor(
     writeString(publicKey)
   }
 
-  fun toContactEntity(): RecipientEntity {
+  fun toRecipientEntity(): RecipientEntity {
     return RecipientEntity(
       email = keyOwner.lowercase()
     )

@@ -59,7 +59,7 @@ data class PgpContact constructor(
       writeInt((if (hasNotUsablePubKey) 1 else 0))
     }
 
-  fun toContactEntity(): RecipientEntity {
+  fun toRecipientEntity(): RecipientEntity {
     return RecipientEntity(
       email = email.lowercase(),
       name = name,
