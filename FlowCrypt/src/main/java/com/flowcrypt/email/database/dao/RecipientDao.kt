@@ -46,6 +46,7 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients WHERE email = :email")
   suspend fun getRecipientByEmailSuspend(email: String): RecipientEntity?
 
+  //fixed
   @Query("SELECT * FROM recipients WHERE email = :email")
   fun getRecipientByEmail(email: String): RecipientEntity?
 
@@ -64,4 +65,7 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   //fixed
   @Query("DELETE FROM recipients")
   suspend fun deleteAll(): Int
+
+  @Query("SELECT * FROM recipients WHERE email = :email")
+  fun getRecipientWithPubKeysByEmail(email: String): RecipientWithPubKeys?
 }

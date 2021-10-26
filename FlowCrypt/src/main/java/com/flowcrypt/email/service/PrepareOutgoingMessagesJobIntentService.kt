@@ -385,7 +385,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         if (recipientEntity == null) {
           recipientDao.insert(PgpContact(email, null).toRecipientEntity())
         } else {
-          //recipientDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
+          recipientDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
         }
       }
     } catch (e: Exception) {

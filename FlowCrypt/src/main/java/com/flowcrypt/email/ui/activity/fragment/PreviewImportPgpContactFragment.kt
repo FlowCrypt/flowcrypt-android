@@ -326,6 +326,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     override fun doInBackground(vararg uris: Void): Boolean {
       val newCandidates = ArrayList<PgpContact>()
       val updateCandidates = ArrayList<PgpContact>()
+      val recipientDao =
+        FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!).recipientDao()
 
       for (publicKeyInfo in publicKeyInfoList) {
         val pgpContact = PgpContact(
@@ -355,9 +357,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
               if (newCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else newCandidates.size
 
             if (weakRef.get() != null) {
-              FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-                .recipientDao()
-                .insert(newCandidates.subList(start, end).map { it.toRecipientEntity() })
+              recipientDao.insert(newCandidates.subList(start, end).map { it.toRecipientEntity() })
             }
             i = end
 
@@ -379,22 +379,21 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
 
           if (weakRef.get() != null) {
-            val contacts = mutableListOf<RecipientEntity>()
+            val recipients = mutableListOf<RecipientEntity>()
             val list = updateCandidates.subList(start, end + 1)
 
             list.forEach { pgpContact ->
               val foundRecipientEntity =
-                FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-                  .recipientDao().getRecipientByEmail(pgpContact.email)
+                recipientDao.getRecipientWithPubKeysByEmail(pgpContact.email)
               foundRecipientEntity?.let { entity ->
-                /*contacts.add(
+                //todo-denbond7 fix me
+                /*recipients.add(
                   pgpContact.toRecipientEntity().copy(id = entity.id)
                 )*/
               }
             }
 
-            FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!).recipientDao()
-              .update(contacts)
+            recipientDao.update(recipients)
           }
           i = end + 1
 

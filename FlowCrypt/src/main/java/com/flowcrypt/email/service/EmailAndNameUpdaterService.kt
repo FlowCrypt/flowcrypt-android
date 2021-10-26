@@ -50,9 +50,9 @@ class EmailAndNameUpdaterService : JobIntentService() {
       val email = pair.email?.lowercase(Locale.getDefault()) ?: continue
       val recipientEntity = recipientDao.getRecipientByEmail(email)
       if (recipientEntity != null) {
-        /*if (recipientEntity.name.isNullOrEmpty()) {
+        if (recipientEntity.name.isNullOrEmpty()) {
           recipientDao.update(recipientEntity.copy(name = pair.name))
-        }*/
+        }
       } else {
         recipientDao.insert(PgpContact(email, pair.name).toRecipientEntity())
       }
