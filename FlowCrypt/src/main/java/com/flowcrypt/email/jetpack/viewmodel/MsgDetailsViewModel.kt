@@ -414,7 +414,7 @@ class MsgDetailsViewModel(
       if (block is PublicKeyMsgBlock) {
         val keyDetails = block.keyDetails ?: continue
         val pgpContact = keyDetails.primaryPgpContact
-        val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
+        val contactEntity = roomDatabase.recipientDao().getContactByEmailSuspend(pgpContact.email)
         //block.existingPgpContact = contactEntity?.toPgpContact()
       }
 

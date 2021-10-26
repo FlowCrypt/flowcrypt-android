@@ -116,7 +116,7 @@ class SecurityUtils {
     @JvmStatic
     fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): MutableList<String> {
       val publicKeys = mutableListOf<String>()
-      val contacts = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
+      val contacts = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
         .getContactsByEmails(emails)
 
       for (contact in contacts) {

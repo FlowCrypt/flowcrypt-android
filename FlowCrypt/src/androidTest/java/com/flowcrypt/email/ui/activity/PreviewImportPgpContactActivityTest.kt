@@ -82,7 +82,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
       "default@flowcrypt.test", null,
       singlePublicKeyForUnsavedContact, true, null, null, 0
     )
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
+    FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
       .insert(pgpContact.toContactEntity())
     activeActivityRule.launch(
       PreviewImportPgpContactActivity.newIntent(

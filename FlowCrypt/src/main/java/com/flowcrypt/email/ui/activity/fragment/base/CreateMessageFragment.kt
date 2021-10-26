@@ -1477,7 +1477,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     val pgpContactAdapter = PgpContactAdapter(requireContext(), null, true)
     //setup a search contacts logic in the database
     pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
-      val dao = FlowCryptRoomDatabase.getDatabase(requireContext()).contactsDao()
+      val dao = FlowCryptRoomDatabase.getDatabase(requireContext()).recipientDao()
       dao.getFilteredCursor("%$constraint%")
     }
 

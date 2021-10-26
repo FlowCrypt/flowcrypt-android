@@ -24,7 +24,7 @@ class AddContactsToDatabaseRule(val pgpContacts: List<PgpContact>) : BaseRule() 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        FlowCryptRoomDatabase.getDatabase(targetContext).contactsDao().insert(
+        FlowCryptRoomDatabase.getDatabase(targetContext).recipientDao().insert(
           pgpContacts.map { it.toContactEntity() })
         base.evaluate()
       }

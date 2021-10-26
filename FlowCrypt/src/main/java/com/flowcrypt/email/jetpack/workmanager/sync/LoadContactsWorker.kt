@@ -159,7 +159,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.BCC))
     }
 
-    val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).contactsDao()
+    val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
     val availableContacts = contactsDao.getAllContacts()
 
     val contactsInDatabase = HashSet<String>()

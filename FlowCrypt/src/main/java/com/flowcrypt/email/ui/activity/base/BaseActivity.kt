@@ -238,7 +238,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
         val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
         if (newActiveAccount == null) {
-          roomDatabase.contactsDao().deleteAll()
+          roomDatabase.recipientDao().deleteAll()
           stopService(Intent(applicationContext, IdleService::class.java))
           val intent = Intent(applicationContext, SignInActivity::class.java)
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

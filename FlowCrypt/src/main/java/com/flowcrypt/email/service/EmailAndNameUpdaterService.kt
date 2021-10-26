@@ -10,7 +10,7 @@ import android.content.Intent
 import androidx.core.app.JobIntentService
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.ContactsDao
+import com.flowcrypt.email.database.dao.RecipientDao
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.model.PgpContact
@@ -39,7 +39,7 @@ import java.util.Locale
  * E-mail: DenBond7@gmail.com
  */
 class EmailAndNameUpdaterService : JobIntentService() {
-  private var contactsDao: ContactsDao = FlowCryptRoomDatabase.getDatabase(this).contactsDao()
+  private var recipientDao: RecipientDao = FlowCryptRoomDatabase.getDatabase(this).recipientDao()
 
   override fun onHandleWork(intent: Intent) {
     val pairs =
@@ -48,13 +48,13 @@ class EmailAndNameUpdaterService : JobIntentService() {
 
     for (pair in pairs) {
       val email = pair.email?.lowercase(Locale.getDefault()) ?: continue
-      val contactEntity = contactsDao.getContactByEmail(email)
+      val contactEntity = recipientDao.getContactByEmail(email)
       if (contactEntity != null) {
         /*if (contactEntity.name.isNullOrEmpty()) {
           contactsDao.update(contactEntity.copy(name = pair.name))
         }*/
       } else {
-        contactsDao.insert(PgpContact(email, pair.name).toContactEntity())
+        recipientDao.insert(PgpContact(email, pair.name).toContactEntity())
       }
     }
   }

@@ -20,7 +20,7 @@ import com.flowcrypt.email.database.entity.RecipientEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-interface ContactsDao : BaseDao<RecipientEntity> {
+interface RecipientDao : BaseDao<RecipientEntity> {
   //fixed
   @Query("SELECT * FROM contacts")
   suspend fun getAllContacts(): List<RecipientEntity>

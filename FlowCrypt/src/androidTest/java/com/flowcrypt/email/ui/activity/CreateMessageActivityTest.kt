@@ -40,7 +40,6 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.model.KeyImportDetails
@@ -385,8 +384,8 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .perform(click())
 
     val database = FlowCryptRoomDatabase.getDatabase(getTargetContext())
-    val existedContact = requireNotNull(database.contactsDao().getContactByEmail(pgpContact.email))
-    database.contactsDao().update(
+    val existedContact = requireNotNull(database.recipientDao().getContactByEmail(pgpContact.email))
+    database.recipientDao().update(
       existedContact.copy(
         publicKey = pgpContact.pubkey?.toByteArray(),
         hasPgp = true
@@ -586,7 +585,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
     val contact = keyDetails.primaryPgpContact
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
-      .contactsDao().insert(contact.toContactEntity())
+      .recipientDao().insert(contact.toContactEntity())
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -626,7 +625,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       pubkey = keyWithSHA1Algo
     )
     FlowCryptRoomDatabase.getDatabase(getTargetContext())
-      .contactsDao().insert(contact.toContactEntity())
+      .recipientDao().insert(contact.toContactEntity())
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -661,7 +660,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     val keyDetailsFromAssets =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
     val contact = keyDetailsFromAssets.primaryPgpContact
-    val contactsDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
+    val contactsDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
     contactsDao.insert(contact.toContactEntity())
     val existedContact = contactsDao.getContactByEmail(contact.email)
       ?: throw IllegalArgumentException("Contact not found")
@@ -704,7 +703,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   }
 
   private fun savePublicKeyInDatabase() {
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
+    FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
       .insert(pgpContact.toContactEntity())
   }
 

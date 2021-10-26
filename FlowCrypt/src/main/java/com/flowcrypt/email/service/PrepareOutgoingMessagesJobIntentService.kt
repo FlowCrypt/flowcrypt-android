@@ -378,7 +378,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
    */
   private fun updateContactsLastUseDateTime(msgInfo: OutgoingMessageInfo) {
     try {
-      val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).contactsDao()
+      val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
 
       for (email in msgInfo.getAllRecipients()) {
         val contactEntity = contactsDao.getContactByEmail(email)

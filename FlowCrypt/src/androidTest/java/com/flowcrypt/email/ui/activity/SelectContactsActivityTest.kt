@@ -149,7 +149,7 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   private fun clearContactsFromDatabase() {
-    val dao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
+    val dao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
     for (email in EMAILS) {
       val contact = dao.getContactByEmail(email) ?: continue
       dao.delete(contact)

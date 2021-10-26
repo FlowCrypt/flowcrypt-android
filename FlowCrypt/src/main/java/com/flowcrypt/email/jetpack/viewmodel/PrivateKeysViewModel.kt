@@ -205,13 +205,13 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           }
 
           if (roomDatabase.keysDao().getKeyByAccountAndFingerprintSuspend(
-              accountEntity.email.toLowerCase(Locale.US),
+              accountEntity.email.lowercase(Locale.US),
               fingerprint
             ) == null
           ) {
             if (addAccountIfNotExist) {
               val existedAccount = roomDatabase.accountDao()
-                .getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
+                .getAccountSuspend(accountEntity.email.lowercase(Locale.US))
               if (existedAccount == null) {
                 roomDatabase.accountDao().addAccountSuspend(accountEntity)
               }
@@ -244,7 +244,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
                 )
               }
               //update contacts table
-              val contactsDao = roomDatabase.contactsDao()
+              val contactsDao = roomDatabase.recipientDao()
               for (pgpContact in keyDetails.pgpContacts) {
                 pgpContact.pubkey = keyDetails.publicKey
                 val temp = contactsDao.getContactByEmailSuspend(pgpContact.email)
@@ -341,7 +341,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         ).toPgpKeyDetails().copy(passphraseType = passphraseType)
 
         val existedAccount =
-          roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
+          roomDatabase.accountDao().getAccountSuspend(accountEntity.email.lowercase(Locale.US))
         if (existedAccount == null) {
           roomDatabase.accountDao().addAccountSuspend(accountEntity)
         }
@@ -368,10 +368,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         val allKeyEntitiesOfAccount =
           roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
         val fingerprintListOfDeleteCandidates = keys.map {
-          it.fingerprint.toLowerCase(Locale.US)
+          it.fingerprint.lowercase(Locale.US)
         }
         val deleteCandidates = allKeyEntitiesOfAccount.filter {
-          fingerprintListOfDeleteCandidates.contains(it.fingerprint.toLowerCase(Locale.US))
+          fingerprintListOfDeleteCandidates.contains(it.fingerprint.lowercase(Locale.US))
         }
 
         if (keys.size == allKeyEntitiesOfAccount.size) {

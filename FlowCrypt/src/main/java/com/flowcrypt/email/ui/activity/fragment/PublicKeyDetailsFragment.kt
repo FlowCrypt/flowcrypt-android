@@ -167,7 +167,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       R.id.menuActionDelete -> {
         lifecycleScope.launch {
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-          recipientEntity?.let { roomDatabase.contactsDao().deleteSuspend(it) }
+          recipientEntity?.let { roomDatabase.recipientDao().deleteSuspend(it) }
           navController?.navigateUp()
         }
         return true
