@@ -26,7 +26,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.model.results.LoaderResult
@@ -69,7 +69,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
   private var publicKeysString: String? = null
   private var publicKeysFileUri: Uri? = null
 
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val adapter: ImportPgpContactsRecyclerViewAdapter = ImportPgpContactsRecyclerViewAdapter()
   private var isParsingStarted: Boolean = false
 
@@ -149,11 +149,11 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
   }
 
   override fun onSaveContactClick(publicKeyInfo: PublicKeyInfo) {
-    contactsViewModel.addContact(publicKeyInfo.toPgpContact())
+    recipientsViewModel.addContact(publicKeyInfo.toPgpContact())
   }
 
   override fun onUpdateContactClick(publicKeyInfo: PublicKeyInfo) {
-    contactsViewModel.updateContact(publicKeyInfo.toPgpContact())
+    recipientsViewModel.updateContact(publicKeyInfo.toPgpContact())
   }
 
   private fun initViews(root: View) {

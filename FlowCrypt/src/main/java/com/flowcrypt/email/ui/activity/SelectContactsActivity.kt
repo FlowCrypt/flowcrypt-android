@@ -25,7 +25,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
 import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
 import com.flowcrypt.email.util.GeneralUtil
@@ -49,7 +49,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
   private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
     ContactsRecyclerViewAdapter(false)
   private var searchPattern: String? = null
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   @VisibleForTesting
   private val countingIdlingResourceForFilter = CountingIdlingResource(
@@ -119,22 +119,22 @@ class SelectContactsActivity : BaseBackStackActivity(),
 
   override fun onQueryTextSubmit(query: String): Boolean {
     searchPattern = query
-    contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(searchPattern)
     return true
   }
 
   override fun onQueryTextChange(newText: String): Boolean {
     searchPattern = newText
-    contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(searchPattern)
     return true
   }
 
   private fun setupContactsViewModel() {
-    contactsViewModel.allContactsLiveData.observe(this, {
-      contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.allContactsLiveData.observe(this, {
+      recipientsViewModel.filterContacts(searchPattern)
     })
 
-    contactsViewModel.contactsWithPgpSearchLiveData.observe(this, {
+    recipientsViewModel.contactsWithPgpSearchLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResourceForFilter.incrementSafely("searchPattern = $searchPattern")
@@ -158,7 +158,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
       }
     })
 
-    contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(searchPattern)
   }
 
   companion object {

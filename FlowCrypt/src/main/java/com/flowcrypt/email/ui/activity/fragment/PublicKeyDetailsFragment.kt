@@ -30,8 +30,8 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -54,7 +54,7 @@ import java.util.Date
 class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val args by navArgs<PublicKeyDetailsFragmentArgs>()
 
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val parseKeysViewModel: ParseKeysViewModel by viewModels()
 
   private var recipientEntity: RecipientEntity? = null
@@ -134,10 +134,11 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
 
   private fun setupContactsViewModel() {
     recipientEntity?.let {
-      contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, { recipientEntity ->
-        /*this.recipientEntity = recipientEntity
-        parseKeysViewModel.fetchKeys(it.publicKey)*/
-      })
+      recipientsViewModel.contactChangesLiveData(it)
+        .observe(viewLifecycleOwner, { recipientEntity ->
+          /*this.recipientEntity = recipientEntity
+          parseKeysViewModel.fetchKeys(it.publicKey)*/
+        })
     }
   }
 

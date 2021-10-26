@@ -19,7 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
@@ -40,7 +40,7 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnConta
   private var emptyView: View? = null
   private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
     ContactsRecyclerViewAdapter(true)
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   override val contentResourceId: Int = R.layout.fragment_contacts_list
 
@@ -78,7 +78,7 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnConta
   }
 
   override fun onDeleteContact(recipientEntity: RecipientEntity) {
-    contactsViewModel.deleteContact(recipientEntity)
+    recipientsViewModel.deleteContact(recipientEntity)
     Toast.makeText(
       context, getString(R.string.the_contact_was_deleted, recipientEntity.email),
       Toast.LENGTH_SHORT
@@ -110,7 +110,7 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnConta
   }
 
   private fun setupContactsViewModel() {
-    contactsViewModel.contactsWithPgpLiveData.observe(viewLifecycleOwner, {
+    recipientsViewModel.contactsWithPgpLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           UIUtil.exchangeViewVisibility(true, progressBar, recyclerViewContacts)

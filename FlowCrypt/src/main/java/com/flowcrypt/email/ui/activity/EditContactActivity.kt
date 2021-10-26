@@ -18,7 +18,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialogFragment
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -34,7 +34,7 @@ import com.flowcrypt.email.util.GeneralUtil
  */
 class EditContactActivity : BaseImportKeyActivity(),
   UpdatePublicKeyOfContactDialogFragment.OnKeySelectedListener {
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
   private var recipientEntity: RecipientEntity? = null
   private var editTextNewPubKey: EditText? = null
 
@@ -96,7 +96,7 @@ class EditContactActivity : BaseImportKeyActivity(),
   }
 
   override fun onKeySelected(pgpKeyDetails: PgpKeyDetails) {
-    contactsViewModel.copyPubKeysToRecipient(recipientEntity, pgpKeyDetails)
+    recipientsViewModel.copyPubKeysToRecipient(recipientEntity, pgpKeyDetails)
     finish()
   }
 

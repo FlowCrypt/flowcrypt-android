@@ -60,7 +60,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -115,7 +115,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private lateinit var draftCacheDir: File
 
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   private var pgpContactsTo: MutableList<PgpContact>? = null
   private var pgpContactsCc: MutableList<PgpContact>? = null
@@ -433,7 +433,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               data.getParcelableExtra<RecipientEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
             recipientEntity?.let {
               pgpContactWithNoPublicKey?.email?.let { email ->
-                contactsViewModel.copyPubKeysToRecipient(
+                recipientsViewModel.copyPubKeysToRecipient(
                   email,
                   recipientEntity
                 )
@@ -831,7 +831,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun updateRecipients() {
     recipientsTo?.chipAndTokenValues?.let {
-      contactsViewModel.fetchAndUpdateInfoAboutContacts(
+      recipientsViewModel.fetchAndUpdateInfoAboutContacts(
         RecipientEntity.Type.TO,
         it
       )
@@ -839,7 +839,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     if (layoutCc?.visibility == View.VISIBLE) {
       recipientsCc?.chipAndTokenValues?.let {
-        contactsViewModel.fetchAndUpdateInfoAboutContacts(
+        recipientsViewModel.fetchAndUpdateInfoAboutContacts(
           RecipientEntity.Type.CC,
           it
         )
@@ -851,7 +851,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     if (layoutBcc?.visibility == View.VISIBLE) {
       recipientsBcc?.chipAndTokenValues?.let {
-        contactsViewModel.fetchAndUpdateInfoAboutContacts(
+        recipientsViewModel.fetchAndUpdateInfoAboutContacts(
           RecipientEntity.Type.BCC,
           it
         )
@@ -896,19 +896,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     when (type) {
       RecipientEntity.Type.TO -> {
         recipientsTo?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.TO, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.TO, it)
         }
       }
 
       RecipientEntity.Type.CC -> {
         recipientsCc?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.CC, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.CC, it)
         }
       }
 
       RecipientEntity.Type.BCC -> {
         recipientsBcc?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.BCC, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.BCC, it)
         }
       }
     }
@@ -1674,7 +1674,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun handleUpdatingToContacts() {
-    contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, {
+    recipientsViewModel.contactsToLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.countingIdlingResource?.incrementSafely()
@@ -1705,7 +1705,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun handleUpdatingCcContacts() {
-    contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, {
+    recipientsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.countingIdlingResource?.incrementSafely()
@@ -1736,7 +1736,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun handleUpdatingBccContacts() {
-    contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, {
+    recipientsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.countingIdlingResource?.incrementSafely()

@@ -66,9 +66,9 @@ import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -191,7 +191,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
 
   private var isAdditionalActionEnabled: Boolean = false
@@ -1031,7 +1031,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     button.setOnClickListener { v ->
       val pgpContact = block.keyDetails?.primaryPgpContact
       if (pgpContact != null) {
-        contactsViewModel.addContact(pgpContact)
+        recipientsViewModel.addContact(pgpContact)
         v.visibility = View.GONE
       } else {
         Toast.makeText(
@@ -1055,7 +1055,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     button.setOnClickListener { v ->
       val pgpContact = block.keyDetails?.primaryPgpContact
       if (pgpContact != null) {
-        contactsViewModel.updateContact(pgpContact)
+        recipientsViewModel.updateContact(pgpContact)
         Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {
@@ -1080,7 +1080,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     button.setOnClickListener { v ->
       val pgpContact = block.keyDetails?.primaryPgpContact
       if (pgpContact != null) {
-        contactsViewModel.updateContact(pgpContact)
+        recipientsViewModel.updateContact(pgpContact)
         Toast.makeText(context, R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {

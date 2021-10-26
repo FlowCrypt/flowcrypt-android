@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 27,
-    "identityHash": "eaedc306ac21cf0fe3b68066c95d72e8",
+    "identityHash": "df7631eb8344e5890023dcb59321a47a",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -471,7 +471,7 @@
         ]
       },
       {
-        "tableName": "contacts",
+        "tableName": "recipients",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
@@ -509,28 +509,28 @@
         },
         "indices": [
           {
-            "name": "name_in_contacts",
+            "name": "name_in_recipients",
             "unique": false,
             "columnNames": [
               "name"
             ],
-            "createSql": "CREATE INDEX IF NOT EXISTS `name_in_contacts` ON `${TABLE_NAME}` (`name`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `name_in_recipients` ON `${TABLE_NAME}` (`name`)"
           },
           {
-            "name": "last_use_in_contacts",
+            "name": "last_use_in_recipients",
             "unique": false,
             "columnNames": [
               "last_use"
             ],
-            "createSql": "CREATE INDEX IF NOT EXISTS `last_use_in_contacts` ON `${TABLE_NAME}` (`last_use`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `last_use_in_recipients` ON `${TABLE_NAME}` (`last_use`)"
           },
           {
-            "name": "email_in_contacts",
+            "name": "email_in_recipients",
             "unique": true,
             "columnNames": [
               "email"
             ],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_in_contacts` ON `${TABLE_NAME}` (`email`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_in_recipients` ON `${TABLE_NAME}` (`email`)"
           }
         ],
         "foreignKeys": []
@@ -921,7 +921,7 @@
       },
       {
         "tableName": "public_keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `recipient` TEXT NOT NULL, `fingerprint` TEXT NOT NULL, `public_key` BLOB NOT NULL, FOREIGN KEY(`recipient`) REFERENCES `contacts`(`email`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `recipient` TEXT NOT NULL, `fingerprint` TEXT NOT NULL, `public_key` BLOB NOT NULL, FOREIGN KEY(`recipient`) REFERENCES `recipients`(`email`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -975,7 +975,7 @@
         ],
         "foreignKeys": [
           {
-            "table": "contacts",
+            "table": "recipients",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
@@ -991,7 +991,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'eaedc306ac21cf0fe3b68066c95d72e8')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'df7631eb8344e5890023dcb59321a47a')"
     ]
   }
 }

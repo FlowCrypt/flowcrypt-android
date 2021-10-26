@@ -12,7 +12,7 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -31,7 +31,7 @@ import com.google.android.material.snackbar.Snackbar
 class ImportPublicKeyActivity : BaseImportKeyActivity() {
 
   private var pgpContact: PgpContact? = null
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_public_key_for_pgp_contact
@@ -82,7 +82,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     val pgpContactFromKey = keyDetails.primaryPgpContact
     pgpContact?.pubkey = pgpContactFromKey.pubkey
     pgpContact?.hasPgp = pgpContact?.pubkey?.isNotEmpty() == true
-    pgpContact?.let { contactsViewModel.copyPubKeysToRecipient(it, pgpContactFromKey) }
+    pgpContact?.let { recipientsViewModel.copyPubKeysToRecipient(it, pgpContactFromKey) }
   }
 
   companion object {

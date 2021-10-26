@@ -42,7 +42,7 @@ import java.util.*
  *         Time: 11:19 AM
  *         E-mail: DenBond7@gmail.com
  */
-class ContactsViewModel(application: Application) : AccountViewModel(application) {
+class RecipientsViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 

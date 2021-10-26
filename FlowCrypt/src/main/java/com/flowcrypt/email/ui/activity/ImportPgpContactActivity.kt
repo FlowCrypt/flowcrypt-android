@@ -24,7 +24,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -43,7 +43,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class ImportPgpContactActivity : BaseImportKeyActivity() {
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
   private var editTextEmailOrId: EditText? = null
 
   private var isSearchingActiveNow: Boolean = false
@@ -158,7 +158,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
     if (GeneralUtil.isConnected(this)) {
       editTextEmailOrId?.text?.toString()?.let {
         fetchPubKeysRequestCode = System.currentTimeMillis()
-        contactsViewModel.fetchPubKeys(it, fetchPubKeysRequestCode)
+        recipientsViewModel.fetchPubKeys(it, fetchPubKeysRequestCode)
       }
     } else {
       showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
@@ -166,7 +166,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
   }
 
   private fun setupContactsViewModel() {
-    contactsViewModel.pubKeysFromServerLiveData.observe(this, Observer {
+    recipientsViewModel.pubKeysFromServerLiveData.observe(this, Observer {
       if (it.requestCode != fetchPubKeysRequestCode) return@Observer
 
       when (it.status) {
