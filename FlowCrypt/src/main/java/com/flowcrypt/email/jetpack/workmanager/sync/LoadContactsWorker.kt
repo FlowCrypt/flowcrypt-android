@@ -159,8 +159,8 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.BCC))
     }
 
-    val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
-    val availableContacts = contactsDao.getAllRecipients()
+    val recipientDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
+    val availableContacts = recipientDao.getAllRecipients()
 
     val contactsInDatabase = HashSet<String>()
     val contactsWhichWillBeUpdated = HashSet<String>()
@@ -201,8 +201,8 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
       }
     }
 
-    contactsDao.updateSuspend(updateCandidates)
-    contactsDao.insertSuspend(newCandidates)
+    recipientDao.updateSuspend(updateCandidates)
+    recipientDao.insertSuspend(newCandidates)
   }
 
   /**

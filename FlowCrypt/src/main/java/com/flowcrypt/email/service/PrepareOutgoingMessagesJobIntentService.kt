@@ -378,14 +378,14 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
    */
   private fun updateContactsLastUseDateTime(msgInfo: OutgoingMessageInfo) {
     try {
-      val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
+      val recipientDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
 
       for (email in msgInfo.getAllRecipients()) {
-        val recipientEntity = contactsDao.getRecipientByEmail(email)
+        val recipientEntity = recipientDao.getRecipientByEmail(email)
         if (recipientEntity == null) {
-          contactsDao.insert(PgpContact(email, null).toRecipientEntity())
+          recipientDao.insert(PgpContact(email, null).toRecipientEntity())
         } else {
-          //contactsDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
+          //recipientDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
         }
       }
     } catch (e: Exception) {

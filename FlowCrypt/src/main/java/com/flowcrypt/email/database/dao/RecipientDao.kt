@@ -9,7 +9,9 @@ import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 
 /**
  * This object describes a logic of work with [RecipientEntity].
@@ -50,12 +52,16 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients WHERE email = :email")
   fun getRecipientByEmailLD(email: String): LiveData<RecipientEntity?>
 
+  //fixed
+  @Transaction
   @Query("SELECT * FROM recipients WHERE email IN (:emails)")
-  fun getRecipientsByEmails(emails: Collection<String>): List<RecipientEntity>
+  fun getRecipientsWithPubKeysByEmails(emails: Collection<String>): List<RecipientWithPubKeys>
 
+  //fixed
   @Query("SELECT * FROM recipients WHERE email LIKE :searchPattern ORDER BY last_use DESC")
   fun getFilteredCursor(searchPattern: String): Cursor?
 
+  //fixed
   @Query("DELETE FROM recipients")
   suspend fun deleteAll(): Int
 }

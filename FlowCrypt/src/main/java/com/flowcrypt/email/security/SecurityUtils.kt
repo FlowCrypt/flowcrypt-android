@@ -116,13 +116,14 @@ class SecurityUtils {
     @JvmStatic
     fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): MutableList<String> {
       val publicKeys = mutableListOf<String>()
-      val contacts = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
-        .getRecipientsByEmails(emails)
+      val recipientsWithPubKeys = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
+        .getRecipientsWithPubKeysByEmails(emails)
 
-      for (contact in contacts) {
-        /*if (contact.publicKey?.isNotEmpty() == true) {
-          contact.publicKey.let { publicKeys.add(String(it)) }
-        }*/
+      //Note: for now we encrypt a message for all public keys of the given recipient
+      for (recipientWithPubKeys in recipientsWithPubKeys) {
+        if (recipientWithPubKeys.publicKeys.isNotEmpty()) {
+          publicKeys.addAll(recipientWithPubKeys.publicKeys.map { String(it.publicKey) })
+        }
       }
 
       return publicKeys

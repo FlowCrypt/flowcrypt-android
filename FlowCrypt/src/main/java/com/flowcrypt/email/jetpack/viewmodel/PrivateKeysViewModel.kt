@@ -244,12 +244,12 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
                 )
               }
               //update contacts table
-              val contactsDao = roomDatabase.recipientDao()
+              val recipientDao = roomDatabase.recipientDao()
               for (pgpContact in keyDetails.pgpContacts) {
                 pgpContact.pubkey = keyDetails.publicKey
-                val temp = contactsDao.getRecipientByEmailSuspend(pgpContact.email)
+                val temp = recipientDao.getRecipientByEmailSuspend(pgpContact.email)
                 if (temp == null && GeneralUtil.isEmailValid(pgpContact.email)) {
-                  contactsDao.insertWithReplaceSuspend(pgpContact.toRecipientEntity())
+                  recipientDao.insertWithReplaceSuspend(pgpContact.toRecipientEntity())
                   //todo-DenBond7 Need to resolve a situation with different public keys. For example
                   // we can have a situation when we have to different public keys with the same email
                 }

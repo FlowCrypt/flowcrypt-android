@@ -74,9 +74,9 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
   fun copyPubKeysToRecipient(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
-      val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
-      if (contact != null) {
-        val updateCandidate = pgpContact.toRecipientEntity().copy(id = contact.id)
+      val recipient = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
+      if (recipient != null) {
+        val updateCandidate = pgpContact.toRecipientEntity().copy(id = recipient.id)
         roomDatabase.recipientDao().updateSuspend(updateCandidate)
       }
 
