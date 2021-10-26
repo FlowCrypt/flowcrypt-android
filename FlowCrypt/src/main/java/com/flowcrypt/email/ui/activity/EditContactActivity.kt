@@ -96,7 +96,7 @@ class EditContactActivity : BaseImportKeyActivity(),
   }
 
   override fun onKeySelected(pgpKeyDetails: PgpKeyDetails) {
-    contactsViewModel.updateContactPgpInfo(contactEntity, pgpKeyDetails)
+    contactsViewModel.copyPubKeysToRecipient(contactEntity, pgpKeyDetails)
     finish()
   }
 

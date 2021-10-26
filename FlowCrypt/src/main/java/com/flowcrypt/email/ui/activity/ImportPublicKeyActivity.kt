@@ -82,7 +82,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     val pgpContactFromKey = keyDetails.primaryPgpContact
     pgpContact?.pubkey = pgpContactFromKey.pubkey
     pgpContact?.hasPgp = pgpContact?.pubkey?.isNotEmpty() == true
-    pgpContact?.let { contactsViewModel.updateContactPgpInfo(it, pgpContactFromKey) }
+    pgpContact?.let { contactsViewModel.copyPubKeysToRecipient(it, pgpContactFromKey) }
   }
 
   companion object {

@@ -43,7 +43,7 @@ import androidx.room.PrimaryKey
     )
   ]
 )
-class PublicKeyEntity(
+data class PublicKeyEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   @ColumnInfo(name = "recipient") val recipient: String,
   @ColumnInfo(name = "fingerprint") val fingerprint: String,

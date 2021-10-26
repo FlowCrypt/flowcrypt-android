@@ -72,7 +72,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
 
-  fun updateContactPgpInfo(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
+  fun copyPubKeysToRecipient(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
       val contact = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
       if (contact != null) {
@@ -90,16 +90,13 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun updateContactPgpInfo(email: String, contactEntity: ContactEntity) {
+  fun copyPubKeysToRecipient(email: String, contactEntity: ContactEntity) {
     viewModelScope.launch {
-      val originalContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(email)
-        ?: return@launch
-      roomDatabase.contactsDao().updateSuspend(
-        originalContactEntity.copy(
-          /*publicKey = contactEntity.publicKey,
-          fingerprint = contactEntity.fingerprint,
-          hasPgp = true*/
-        )
+      val pubKeysOfCopyCandidate =
+        roomDatabase.pubKeysDao().getPublicKeysByRecipient(contactEntity.email)
+      if (pubKeysOfCopyCandidate.isEmpty()) return@launch
+      roomDatabase.pubKeysDao().insertSuspend(
+        pubKeysOfCopyCandidate.map { it.copy(id = null, recipient = email) }
       )
     }
   }
@@ -268,7 +265,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun updateContactPgpInfo(contactEntity: ContactEntity?, pgpKeyDetails: PgpKeyDetails) {
+  fun copyPubKeysToRecipient(contactEntity: ContactEntity?, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
       contactEntity?.let {
         val contactEntityFromPrimaryPgpContact = pgpKeyDetails.primaryPgpContact.toContactEntity()

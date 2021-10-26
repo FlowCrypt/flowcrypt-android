@@ -33,12 +33,12 @@ interface ContactsDao : BaseDao<ContactEntity> {
   @Query("SELECT contacts.* FROM contacts INNER JOIN public_keys ON contacts.email = public_keys.recipient GROUP BY contacts.email ORDER BY contacts._id")
   fun getAllContactsWithPgpLD(): LiveData<List<ContactEntity>>
 
-  @Query("SELECT * FROM contacts")
-  //@Query("SELECT * FROM contacts WHERE has_pgp = 1")
+  //fixed
+  @Query("SELECT contacts.* FROM contacts INNER JOIN public_keys ON contacts.email = public_keys.recipient GROUP BY contacts.email ORDER BY contacts._id")
   suspend fun getAllContactsWithPgp(): List<ContactEntity>
 
-  @Query("SELECT * FROM contacts WHERE (email LIKE :searchPattern OR name LIKE :searchPattern)")
-  //@Query("SELECT * FROM contacts WHERE has_pgp = 1 AND (email LIKE :searchPattern OR name LIKE :searchPattern)")
+  //fixed
+  @Query("SELECT contacts.* FROM contacts INNER JOIN public_keys ON contacts.email = public_keys.recipient WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) GROUP BY contacts.email ORDER BY contacts._id")
   suspend fun getAllContactsWithPgpWhichMatched(searchPattern: String): List<ContactEntity>
 
   @Query("SELECT * FROM contacts WHERE email = :email")

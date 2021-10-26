@@ -146,7 +146,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
           if (it.data.isNullOrEmpty()) {
             UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
           } else {
-            //contactsRecyclerViewAdapter.swap(it.data)
+            contactsRecyclerViewAdapter.swap(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
           countingIdlingResourceForFilter.decrementSafely()
