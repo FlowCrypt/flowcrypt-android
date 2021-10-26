@@ -31,11 +31,11 @@ import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
-import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.OpenPgpV4Fingerprint
 
@@ -55,7 +55,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
     AccountEntity::class,
     ActionQueueEntity::class,
     AttachmentEntity::class,
-    ContactEntity::class,
+    RecipientEntity::class,
     KeyEntity::class,
     LabelEntity::class,
     MessageEntity::class,

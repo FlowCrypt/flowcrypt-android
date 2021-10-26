@@ -28,7 +28,7 @@ import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
@@ -57,7 +57,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val contactsViewModel: ContactsViewModel by viewModels()
   private val parseKeysViewModel: ParseKeysViewModel by viewModels()
 
-  private var contactEntity: ContactEntity? = null
+  private var recipientEntity: RecipientEntity? = null
   private var details: PgpKeyDetails? = null
   private var layoutUsers: ViewGroup? = null
   private var layoutFingerprints: ViewGroup? = null
@@ -76,7 +76,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    contactEntity = args.contactEntity
+    recipientEntity = args.contactEntity
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -133,7 +133,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupContactsViewModel() {
-    contactEntity?.let {
+    recipientEntity?.let {
       contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, { contactEntity ->
         /*this.contactEntity = contactEntity
         parseKeysViewModel.fetchKeys(it.publicKey)*/
@@ -167,14 +167,14 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       R.id.menuActionDelete -> {
         lifecycleScope.launch {
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-          contactEntity?.let { roomDatabase.contactsDao().deleteSuspend(it) }
+          recipientEntity?.let { roomDatabase.contactsDao().deleteSuspend(it) }
           navController?.navigateUp()
         }
         return true
       }
 
       R.id.menuActionEdit -> {
-        contactEntity?.let {
+        recipientEntity?.let {
           startActivity(EditContactActivity.newIntent(requireContext(), account, it))
         }
 
@@ -265,7 +265,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = Constants.MIME_TYPE_PGP_KEY
 
-    val sanitizedEmail = contactEntity?.email?.replace("[^a-z0-9]".toRegex(), "")
+    val sanitizedEmail = recipientEntity?.email?.replace("[^a-z0-9]".toRegex(), "")
     val fileName = "0x" + details?.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     intent.putExtra(Intent.EXTRA_TITLE, fileName)

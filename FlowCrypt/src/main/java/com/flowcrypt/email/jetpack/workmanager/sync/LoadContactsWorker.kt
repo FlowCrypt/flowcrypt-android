@@ -20,7 +20,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
@@ -165,10 +165,10 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
     val contactsInDatabase = HashSet<String>()
     val contactsWhichWillBeUpdated = HashSet<String>()
     val contactsWhichWillBeCreated = HashSet<String>()
-    val contactsByEmailMap = HashMap<String, ContactEntity?>()
+    val contactsByEmailMap = HashMap<String, RecipientEntity?>()
 
-    val newCandidates = mutableListOf<ContactEntity>()
-    val updateCandidates = mutableListOf<ContactEntity>()
+    val newCandidates = mutableListOf<RecipientEntity>()
+    val updateCandidates = mutableListOf<RecipientEntity>()
 
     for (contact in availableContacts) {
       contactsInDatabase.add(contact.email.lowercase())
@@ -191,7 +191,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
           emailAndNamePair.email?.let {
             contactsWhichWillBeCreated.add(it)
             newCandidates.add(
-              ContactEntity(
+              RecipientEntity(
                 email = it,
                 name = emailAndNamePair.name
               )

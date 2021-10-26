@@ -25,7 +25,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
@@ -379,7 +379,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
 
           if (weakRef.get() != null) {
-            val contacts = mutableListOf<ContactEntity>()
+            val contacts = mutableListOf<RecipientEntity>()
             val list = updateCandidates.subList(start, end + 1)
 
             list.forEach { pgpContact ->

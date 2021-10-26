@@ -30,7 +30,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
     Index(name = "email_in_contacts", value = ["email"], unique = true)
   ]
 )
-data class ContactEntity(
+data class RecipientEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
   @ColumnInfo(defaultValue = "NULL") val name: String? = null,
@@ -75,8 +75,8 @@ data class ContactEntity(
     return 0
   }
 
-  companion object CREATOR : Parcelable.Creator<ContactEntity> {
-    override fun createFromParcel(parcel: Parcel): ContactEntity = ContactEntity(parcel)
-    override fun newArray(size: Int): Array<ContactEntity?> = arrayOfNulls(size)
+  companion object CREATOR : Parcelable.Creator<RecipientEntity> {
+    override fun createFromParcel(parcel: Parcel): RecipientEntity = RecipientEntity(parcel)
+    override fun newArray(size: Int): Array<RecipientEntity?> = arrayOfNulls(size)
   }
 }

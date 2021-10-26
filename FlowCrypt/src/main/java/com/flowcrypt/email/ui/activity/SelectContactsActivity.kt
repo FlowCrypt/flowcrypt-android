@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
@@ -33,7 +33,7 @@ import com.flowcrypt.email.util.UIUtil
 
 /**
  * This activity can be used for select single or multiply contacts (not implemented yet) from the local database. The
- * activity returns [ContactEntity] as a result.
+ * activity returns [RecipientEntity] as a result.
  *
  * @author Denis Bondarenko
  * Date: 14.11.2017
@@ -108,14 +108,14 @@ class SelectContactsActivity : BaseBackStackActivity(),
     return super.onPrepareOptionsMenu(menu)
   }
 
-  override fun onContactClick(contactEntity: ContactEntity) {
+  override fun onContactClick(recipientEntity: RecipientEntity) {
     val intent = Intent()
-    intent.putExtra(KEY_EXTRA_PGP_CONTACT, contactEntity)
+    intent.putExtra(KEY_EXTRA_PGP_CONTACT, recipientEntity)
     setResult(Activity.RESULT_OK, intent)
     finish()
   }
 
-  override fun onDeleteContact(contactEntity: ContactEntity) {}
+  override fun onDeleteContact(recipientEntity: RecipientEntity) {}
 
   override fun onQueryTextSubmit(query: String): Boolean {
     searchPattern = query

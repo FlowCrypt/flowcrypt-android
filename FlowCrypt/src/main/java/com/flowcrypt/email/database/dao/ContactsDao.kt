@@ -9,10 +9,10 @@ import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 
 /**
- * This object describes a logic of work with [ContactEntity].
+ * This object describes a logic of work with [RecipientEntity].
  *
  * @author DenBond7
  * Date: 17.05.2017
@@ -20,38 +20,38 @@ import com.flowcrypt.email.database.entity.ContactEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-interface ContactsDao : BaseDao<ContactEntity> {
+interface ContactsDao : BaseDao<RecipientEntity> {
   //fixed
   @Query("SELECT * FROM contacts")
-  suspend fun getAllContacts(): List<ContactEntity>
+  suspend fun getAllContacts(): List<RecipientEntity>
 
   //fixed
   @Query("SELECT * FROM contacts")
-  fun getAllContactsLD(): LiveData<List<ContactEntity>>
+  fun getAllContactsLD(): LiveData<List<RecipientEntity>>
 
   //fixed
   @Query("SELECT contacts.* FROM contacts INNER JOIN public_keys ON contacts.email = public_keys.recipient GROUP BY contacts.email ORDER BY contacts._id")
-  fun getAllContactsWithPgpLD(): LiveData<List<ContactEntity>>
+  fun getAllContactsWithPgpLD(): LiveData<List<RecipientEntity>>
 
   //fixed
   @Query("SELECT contacts.* FROM contacts INNER JOIN public_keys ON contacts.email = public_keys.recipient GROUP BY contacts.email ORDER BY contacts._id")
-  suspend fun getAllContactsWithPgp(): List<ContactEntity>
+  suspend fun getAllContactsWithPgp(): List<RecipientEntity>
 
   //fixed
   @Query("SELECT contacts.* FROM contacts INNER JOIN public_keys ON contacts.email = public_keys.recipient WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) GROUP BY contacts.email ORDER BY contacts._id")
-  suspend fun getAllContactsWithPgpWhichMatched(searchPattern: String): List<ContactEntity>
+  suspend fun getAllContactsWithPgpWhichMatched(searchPattern: String): List<RecipientEntity>
 
   @Query("SELECT * FROM contacts WHERE email = :email")
-  suspend fun getContactByEmailSuspend(email: String): ContactEntity?
+  suspend fun getContactByEmailSuspend(email: String): RecipientEntity?
 
   @Query("SELECT * FROM contacts WHERE email = :email")
-  fun getContactByEmail(email: String): ContactEntity?
+  fun getContactByEmail(email: String): RecipientEntity?
 
   @Query("SELECT * FROM contacts WHERE email = :email")
-  fun getContactByEmailLD(email: String): LiveData<ContactEntity?>
+  fun getContactByEmailLD(email: String): LiveData<RecipientEntity?>
 
   @Query("SELECT * FROM contacts WHERE email IN (:emails)")
-  fun getContactsByEmails(emails: Collection<String>): List<ContactEntity>
+  fun getContactsByEmails(emails: Collection<String>): List<RecipientEntity>
 
   @Query("SELECT * FROM contacts WHERE email LIKE :searchPattern ORDER BY last_use DESC")
   fun getFilteredCursor(searchPattern: String): Cursor?

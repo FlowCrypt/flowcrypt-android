@@ -36,7 +36,7 @@ import androidx.room.PrimaryKey
   ],
   foreignKeys = [
     ForeignKey(
-      entity = ContactEntity::class,
+      entity = RecipientEntity::class,
       parentColumns = ["email"],
       childColumns = ["recipient"],
       onDelete = ForeignKey.CASCADE

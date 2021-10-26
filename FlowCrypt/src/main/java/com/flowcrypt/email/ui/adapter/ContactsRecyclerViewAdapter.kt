@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 
 /**
  * This adapter describes logic to prepare show contacts from the database.
@@ -26,7 +26,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true) :
   RecyclerView.Adapter<ContactsRecyclerViewAdapter.ViewHolder>() {
 
-  private val list: MutableList<ContactEntity> = mutableListOf()
+  private val list: MutableList<RecipientEntity> = mutableListOf()
   var onContactActionsListener: OnContactActionsListener? = null
 
   override fun onCreateViewHolder(
@@ -77,7 +77,7 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
     return list.size
   }
 
-  fun swap(newList: List<ContactEntity>) {
+  fun swap(newList: List<RecipientEntity>) {
     val diffUtilCallback = DiffUtilCallback(this.list, newList)
     val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
 
@@ -87,8 +87,8 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   interface OnContactActionsListener {
-    fun onDeleteContact(contactEntity: ContactEntity)
-    fun onContactClick(contactEntity: ContactEntity)
+    fun onDeleteContact(recipientEntity: RecipientEntity)
+    fun onContactClick(recipientEntity: RecipientEntity)
   }
 
   /**
@@ -102,8 +102,8 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   }
 
   inner class DiffUtilCallback(
-    private val oldList: List<ContactEntity>,
-    private val newList: List<ContactEntity>
+    private val oldList: List<RecipientEntity>,
+    private val newList: List<RecipientEntity>
   ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldItem = oldList[oldItemPosition]

@@ -7,7 +7,7 @@ package com.flowcrypt.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 
 /**
  * This class describes information about some public key.
@@ -46,8 +46,8 @@ data class PublicKeyInfo constructor(
     writeString(publicKey)
   }
 
-  fun toContactEntity(): ContactEntity {
-    return ContactEntity(
+  fun toContactEntity(): RecipientEntity {
+    return RecipientEntity(
       email = keyOwner.lowercase()
     )
   }

@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
@@ -70,17 +70,17 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnConta
     }
   }
 
-  override fun onContactClick(contactEntity: ContactEntity) {
+  override fun onContactClick(recipientEntity: RecipientEntity) {
     navController?.navigate(
       ContactsListFragmentDirections
-        .actionContactsListFragmentToPublicKeyDetailsFragment(contactEntity)
+        .actionContactsListFragmentToPublicKeyDetailsFragment(recipientEntity)
     )
   }
 
-  override fun onDeleteContact(contactEntity: ContactEntity) {
-    contactsViewModel.deleteContact(contactEntity)
+  override fun onDeleteContact(recipientEntity: RecipientEntity) {
+    contactsViewModel.deleteContact(recipientEntity)
     Toast.makeText(
-      context, getString(R.string.the_contact_was_deleted, contactEntity.email),
+      context, getString(R.string.the_contact_was_deleted, recipientEntity.email),
       Toast.LENGTH_SHORT
     ).show()
   }

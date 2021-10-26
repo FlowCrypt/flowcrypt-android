@@ -15,7 +15,7 @@ import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
@@ -35,7 +35,7 @@ import com.flowcrypt.email.util.GeneralUtil
 class EditContactActivity : BaseImportKeyActivity(),
   UpdatePublicKeyOfContactDialogFragment.OnKeySelectedListener {
   private val contactsViewModel: ContactsViewModel by viewModels()
-  private var contactEntity: ContactEntity? = null
+  private var recipientEntity: RecipientEntity? = null
   private var editTextNewPubKey: EditText? = null
 
   override val contentViewResourceId: Int = R.layout.activity_edit_pgp_contact
@@ -43,12 +43,12 @@ class EditContactActivity : BaseImportKeyActivity(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    contactEntity = intent?.getParcelableExtra(KEY_EXTRA_CONTACT)
-    if (contactEntity == null) {
+    recipientEntity = intent?.getParcelableExtra(KEY_EXTRA_CONTACT)
+    if (recipientEntity == null) {
       finish()
       Toast.makeText(this, getString(R.string.contact_can_not_be_null), Toast.LENGTH_LONG).show()
     } else {
-      supportActionBar?.title = contactEntity?.email
+      supportActionBar?.title = recipientEntity?.email
     }
   }
 
@@ -68,7 +68,7 @@ class EditContactActivity : BaseImportKeyActivity(),
 
     showDialogFragment(
       UpdatePublicKeyOfContactDialogFragment.newInstance(
-        contactEntity?.email,
+        recipientEntity?.email,
         keyDetailsList.first()
       )
     )
@@ -96,7 +96,7 @@ class EditContactActivity : BaseImportKeyActivity(),
   }
 
   override fun onKeySelected(pgpKeyDetails: PgpKeyDetails) {
-    contactsViewModel.copyPubKeysToRecipient(contactEntity, pgpKeyDetails)
+    contactsViewModel.copyPubKeysToRecipient(recipientEntity, pgpKeyDetails)
     finish()
   }
 
@@ -107,7 +107,7 @@ class EditContactActivity : BaseImportKeyActivity(),
     fun newIntent(
       context: Context,
       accountEntity: AccountEntity?,
-      contactEntity: ContactEntity?
+      recipientEntity: RecipientEntity?
     ): Intent {
       return newIntent(
         context = context,
@@ -116,7 +116,7 @@ class EditContactActivity : BaseImportKeyActivity(),
         throwErrorIfDuplicateFoundEnabled = false,
         cls = EditContactActivity::class.java
       ).apply {
-        putExtra(KEY_EXTRA_CONTACT, contactEntity)
+        putExtra(KEY_EXTRA_CONTACT, recipientEntity)
       }
     }
   }

@@ -9,8 +9,8 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 
 /**
  * @author Denis Bondarenko
@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
  *         E-mail: DenBond7@gmail.com
  */
 data class RecipientWithPubKeys(
-  @Embedded val contact: ContactEntity,
+  @Embedded val recipient: RecipientEntity,
   @Relation(
     parentColumn = "email",
     entityColumn = "recipient",
@@ -29,12 +29,12 @@ data class RecipientWithPubKeys(
   val publicKeys: List<PublicKeyEntity>
 ) : Parcelable {
   constructor(parcel: Parcel) : this(
-    requireNotNull(parcel.readParcelable(ContactEntity::class.java.classLoader)),
+    requireNotNull(parcel.readParcelable(RecipientEntity::class.java.classLoader)),
     requireNotNull(parcel.createTypedArrayList(PublicKeyEntity))
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeParcelable(contact, flags)
+    parcel.writeParcelable(recipient, flags)
     parcel.writeTypedList(publicKeys)
   }
 

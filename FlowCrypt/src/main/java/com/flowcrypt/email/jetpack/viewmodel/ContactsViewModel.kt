@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -46,15 +46,15 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 
-  val allContactsLiveData: LiveData<List<ContactEntity>> =
+  val allContactsLiveData: LiveData<List<RecipientEntity>> =
     roomDatabase.contactsDao().getAllContactsLD()
-  val contactsWithPgpLiveData: LiveData<Result<List<ContactEntity>>> =
+  val contactsWithPgpLiveData: LiveData<Result<List<RecipientEntity>>> =
     Transformations.switchMap(roomDatabase.contactsDao().getAllContactsWithPgpLD()) {
       liveData {
         emit(Result.success(it))
       }
     }
-  val contactsWithPgpSearchLiveData: LiveData<Result<List<ContactEntity>>> =
+  val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity>>> =
     Transformations.switchMap(searchPatternLiveData) {
       liveData {
         emit(Result.loading())
@@ -90,10 +90,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun copyPubKeysToRecipient(email: String, contactEntity: ContactEntity) {
+  fun copyPubKeysToRecipient(email: String, recipientEntity: RecipientEntity) {
     viewModelScope.launch {
       val pubKeysOfCopyCandidate =
-        roomDatabase.pubKeysDao().getPublicKeysByRecipient(contactEntity.email)
+        roomDatabase.pubKeysDao().getPublicKeysByRecipient(recipientEntity.email)
       if (pubKeysOfCopyCandidate.isEmpty()) return@launch
       roomDatabase.pubKeysDao().insertSuspend(
         pubKeysOfCopyCandidate.map { it.copy(id = null, recipient = email) }
@@ -101,8 +101,8 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun contactChangesLiveData(contactEntity: ContactEntity): LiveData<ContactEntity?> {
-    return roomDatabase.contactsDao().getContactByEmailLD(contactEntity.email)
+  fun contactChangesLiveData(recipientEntity: RecipientEntity): LiveData<RecipientEntity?> {
+    return roomDatabase.contactsDao().getContactByEmailLD(recipientEntity.email)
   }
 
   /**
@@ -124,7 +124,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    *  1. if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
    * means we know they don't currently have PGP
    */
-  fun fetchAndUpdateInfoAboutContacts(type: ContactEntity.Type, emails: List<String>) {
+  fun fetchAndUpdateInfoAboutContacts(type: RecipientEntity.Type, emails: List<String>) {
     viewModelScope.launch {
       if (emails.isEmpty()) {
         return@launch
@@ -200,23 +200,23 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   }
 
   private suspend fun updateCachedInfoWithAttesterInfo(
-    cachedContactEntity: ContactEntity?,
+    cachedRecipientEntity: RecipientEntity?,
     attesterPgpContact: PgpContact, emailLowerCase: String
-  ): ContactEntity? {
-    cachedContactEntity ?: return null
+  ): RecipientEntity? {
+    cachedRecipientEntity ?: return null
     val updateCandidate = if (
-      cachedContactEntity.name.isNullOrEmpty()
-      && cachedContactEntity.email.equals(attesterPgpContact.email, ignoreCase = true)
+      cachedRecipientEntity.name.isNullOrEmpty()
+      && cachedRecipientEntity.email.equals(attesterPgpContact.email, ignoreCase = true)
     ) {
       attesterPgpContact.toContactEntity().copy(
-        id = cachedContactEntity.id,
-        email = cachedContactEntity.email
+        id = cachedRecipientEntity.id,
+        email = cachedRecipientEntity.email
       )
     } else {
       attesterPgpContact.toContactEntity().copy(
-        id = cachedContactEntity.id,
-        name = cachedContactEntity.name,
-        email = cachedContactEntity.email
+        id = cachedRecipientEntity.id,
+        name = cachedRecipientEntity.name,
+        email = cachedRecipientEntity.email
       )
     }
 
@@ -231,9 +231,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     return lastVersion
   }
 
-  fun deleteContact(contactEntity: ContactEntity) {
+  fun deleteContact(recipientEntity: RecipientEntity) {
     viewModelScope.launch {
-      roomDatabase.contactsDao().deleteSuspend(contactEntity)
+      roomDatabase.contactsDao().deleteSuspend(recipientEntity)
     }
   }
 
@@ -265,14 +265,14 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun copyPubKeysToRecipient(contactEntity: ContactEntity?, pgpKeyDetails: PgpKeyDetails) {
+  fun copyPubKeysToRecipient(recipientEntity: RecipientEntity?, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
-      contactEntity?.let {
+      recipientEntity?.let {
         val contactEntityFromPrimaryPgpContact = pgpKeyDetails.primaryPgpContact.toContactEntity()
         roomDatabase.contactsDao().updateSuspend(
           contactEntityFromPrimaryPgpContact.copy(
-            id = contactEntity.id,
-            email = contactEntity.email.lowercase(Locale.US),
+            id = recipientEntity.id,
+            email = recipientEntity.email.lowercase(Locale.US),
           )
         )
       }
@@ -305,19 +305,19 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   }
 
   private fun setResultForRemoteContactsLiveData(
-    type: ContactEntity.Type,
+    type: RecipientEntity.Type,
     result: Result<List<PgpContact>>
   ) {
     when (type) {
-      ContactEntity.Type.TO -> {
+      RecipientEntity.Type.TO -> {
         contactsToLiveData.value = result
       }
 
-      ContactEntity.Type.CC -> {
+      RecipientEntity.Type.CC -> {
         contactsCcLiveData.value = result
       }
 
-      ContactEntity.Type.BCC -> {
+      RecipientEntity.Type.BCC -> {
         contactsBccLiveData.value = result
       }
     }

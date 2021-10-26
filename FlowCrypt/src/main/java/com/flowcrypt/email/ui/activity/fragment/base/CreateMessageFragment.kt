@@ -52,7 +52,7 @@ import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.pgpContacts
@@ -234,15 +234,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
       if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
         if (recipientsTo?.text?.isNotEmpty() == true && pgpContactsTo?.isEmpty() == true) {
-          fetchDetailsAboutContacts(ContactEntity.Type.TO)
+          fetchDetailsAboutContacts(RecipientEntity.Type.TO)
           return false
         }
         if (recipientsCc?.text?.isNotEmpty() == true && pgpContactsCc?.isEmpty() == true) {
-          fetchDetailsAboutContacts(ContactEntity.Type.CC)
+          fetchDetailsAboutContacts(RecipientEntity.Type.CC)
           return false
         }
         if (recipientsBcc?.text?.isNotEmpty() == true && pgpContactsBcc?.isEmpty() == true) {
-          fetchDetailsAboutContacts(ContactEntity.Type.BCC)
+          fetchDetailsAboutContacts(RecipientEntity.Type.BCC)
           return false
         }
         if (hasRecipientWithoutPgp(true, pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
@@ -430,7 +430,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         when (resultCode) {
           Activity.RESULT_OK -> if (data != null) {
             val contactEntity =
-              data.getParcelableExtra<ContactEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
+              data.getParcelableExtra<RecipientEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
             contactEntity?.let {
               pgpContactWithNoPublicKey?.email?.let { email ->
                 contactsViewModel.copyPubKeysToRecipient(
@@ -588,17 +588,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     when (v.id) {
       R.id.editTextRecipientTo -> runUpdatePgpContactsAction(
         pgpContactsTo, progressBarTo,
-        ContactEntity.Type.TO, hasFocus
+        RecipientEntity.Type.TO, hasFocus
       )
 
       R.id.editTextRecipientCc -> runUpdatePgpContactsAction(
         pgpContactsCc, progressBarCc,
-        ContactEntity.Type.CC, hasFocus
+        RecipientEntity.Type.CC, hasFocus
       )
 
       R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(
         pgpContactsBcc, progressBarBcc,
-        ContactEntity.Type.BCC, hasFocus
+        RecipientEntity.Type.BCC, hasFocus
       )
 
       R.id.editTextEmailSubject, R.id.editTextEmailMessage -> if (hasFocus) {
@@ -832,7 +832,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private fun updateRecipients() {
     recipientsTo?.chipAndTokenValues?.let {
       contactsViewModel.fetchAndUpdateInfoAboutContacts(
-        ContactEntity.Type.TO,
+        RecipientEntity.Type.TO,
         it
       )
     }
@@ -840,7 +840,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     if (layoutCc?.visibility == View.VISIBLE) {
       recipientsCc?.chipAndTokenValues?.let {
         contactsViewModel.fetchAndUpdateInfoAboutContacts(
-          ContactEntity.Type.CC,
+          RecipientEntity.Type.CC,
           it
         )
       }
@@ -852,7 +852,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     if (layoutBcc?.visibility == View.VISIBLE) {
       recipientsBcc?.chipAndTokenValues?.let {
         contactsViewModel.fetchAndUpdateInfoAboutContacts(
-          ContactEntity.Type.BCC,
+          RecipientEntity.Type.BCC,
           it
         )
       }
@@ -873,7 +873,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    */
   private fun runUpdatePgpContactsAction(
     pgpContacts: MutableList<PgpContact>?, progressBar: View?,
-    type: ContactEntity.Type, hasFocus: Boolean
+    type: RecipientEntity.Type, hasFocus: Boolean
   ): List<PgpContact>? {
     if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
       if (hasFocus) {
@@ -892,23 +892,23 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     return pgpContacts
   }
 
-  private fun fetchDetailsAboutContacts(type: ContactEntity.Type) {
+  private fun fetchDetailsAboutContacts(type: RecipientEntity.Type) {
     when (type) {
-      ContactEntity.Type.TO -> {
+      RecipientEntity.Type.TO -> {
         recipientsTo?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.TO, it)
+          contactsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.TO, it)
         }
       }
 
-      ContactEntity.Type.CC -> {
+      RecipientEntity.Type.CC -> {
         recipientsCc?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.CC, it)
+          contactsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.CC, it)
         }
       }
 
-      ContactEntity.Type.BCC -> {
+      RecipientEntity.Type.BCC -> {
         recipientsBcc?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.BCC, it)
+          contactsViewModel.fetchAndUpdateInfoAboutContacts(RecipientEntity.Type.BCC, it)
         }
       }
     }
