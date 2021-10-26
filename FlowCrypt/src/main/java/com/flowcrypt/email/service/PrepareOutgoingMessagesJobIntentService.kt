@@ -21,12 +21,12 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
@@ -379,11 +379,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   private fun updateContactsLastUseDateTime(msgInfo: OutgoingMessageInfo) {
     try {
       val recipientDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
-
+      //todo-denbond7 we can improve it to use a single request to the local database
       for (email in msgInfo.getAllRecipients()) {
         val recipientEntity = recipientDao.getRecipientByEmail(email)
         if (recipientEntity == null) {
-          recipientDao.insert(PgpContact(email, null).toRecipientEntity())
+          recipientDao.insert(RecipientEntity(email = email))
         } else {
           recipientDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
         }

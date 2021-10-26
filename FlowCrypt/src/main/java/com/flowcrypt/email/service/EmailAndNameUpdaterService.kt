@@ -11,11 +11,10 @@ import androidx.core.app.JobIntentService
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.RecipientDao
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.EmailAndNamePair
-import com.flowcrypt.email.model.PgpContact
 import java.util.ArrayList
-import java.util.Locale
 
 /**
  * This service does update a name of some email entry or creates a new email entry if it not
@@ -47,14 +46,14 @@ class EmailAndNameUpdaterService : JobIntentService() {
         ?: return
 
     for (pair in pairs) {
-      val email = pair.email?.lowercase(Locale.getDefault()) ?: continue
+      val email = pair.email?.lowercase() ?: continue
       val recipientEntity = recipientDao.getRecipientByEmail(email)
       if (recipientEntity != null) {
         if (recipientEntity.name.isNullOrEmpty()) {
           recipientDao.update(recipientEntity.copy(name = pair.name))
         }
       } else {
-        recipientDao.insert(PgpContact(email, pair.name).toRecipientEntity())
+        recipientDao.insert(RecipientEntity(email = email, name = pair.name))
       }
     }
   }

@@ -190,12 +190,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
         if (!contactsWhichWillBeCreated.contains(emailAndNamePair.email)) {
           emailAndNamePair.email?.let {
             contactsWhichWillBeCreated.add(it)
-            newCandidates.add(
-              RecipientEntity(
-                email = it,
-                name = emailAndNamePair.name
-              )
-            )
+            newCandidates.add(RecipientEntity(email = it, name = emailAndNamePair.name))
           }
         }
       }

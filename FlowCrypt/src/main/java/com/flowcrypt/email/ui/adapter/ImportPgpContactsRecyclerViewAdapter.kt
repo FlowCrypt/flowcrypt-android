@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.util.GeneralUtil
@@ -61,21 +62,8 @@ class ImportPgpContactsRecyclerViewAdapter
       ), viewHolder.textViewFingerprintTemplate
     )
 
-    if (publicKeyInfo.hasPgpContact()) {
-      if (publicKeyInfo.isUpdateEnabled) {
-        viewHolder.textViewAlreadyImported.visibility = View.GONE
-        viewHolder.buttonUpdateContact.visibility = View.VISIBLE
-        viewHolder.buttonUpdateContact.setOnClickListener { v ->
-          updateContact(
-            viewHolder.adapterPosition,
-            v,
-            context,
-            publicKeyInfo
-          )
-        }
-      } else {
-        viewHolder.textViewAlreadyImported.visibility = View.VISIBLE
-      }
+    if (publicKeyInfo.hasPgp()) {
+      viewHolder.textViewAlreadyImported.visibility = View.VISIBLE
     } else {
       viewHolder.textViewAlreadyImported.visibility = View.GONE
       viewHolder.buttonSaveContact.visibility = View.VISIBLE
@@ -109,7 +97,8 @@ class ImportPgpContactsRecyclerViewAdapter
     contactActionsListener?.onSaveContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
     v.visibility = View.GONE
-    publicKeyInfo.pgpContact = pgpContact
+    publicKeyInfo.recipientWithPubKeys =
+      RecipientWithPubKeys(pgpContact.toRecipientEntity(), listOf(pgpContact.toPubKey()))
     notifyItemChanged(position)
   }
 
@@ -127,7 +116,8 @@ class ImportPgpContactsRecyclerViewAdapter
     contactActionsListener?.onUpdateContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
     v.visibility = View.GONE
-    publicKeyInfo.pgpContact = pgpContact
+    publicKeyInfo.recipientWithPubKeys =
+      RecipientWithPubKeys(pgpContact.toRecipientEntity(), listOf(pgpContact.toPubKey()))
     notifyItemChanged(position)
   }
 

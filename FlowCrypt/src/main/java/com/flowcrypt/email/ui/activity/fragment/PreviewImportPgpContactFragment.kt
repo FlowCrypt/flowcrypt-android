@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
@@ -305,10 +304,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         emails.add(keyOwner)
 
         if (weakRef.get() != null) {
-          //todo-denbond7 fix me
-          val contact = null/*FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-            .recipientDao().getContactByEmail(keyOwner)?.toPgpContact()*/
-          return PublicKeyInfo(fingerprint, keyOwner, contact, pgpKeyDetails.publicKey)
+          val recipientWithPubKeys =
+            FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+              .recipientDao().getRecipientWithPubKeysByEmail(keyOwner)
+          return PublicKeyInfo(fingerprint, keyOwner, recipientWithPubKeys, pgpKeyDetails.publicKey)
         }
       }
       return null
@@ -326,8 +325,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     override fun doInBackground(vararg uris: Void): Boolean {
       val newCandidates = ArrayList<PgpContact>()
       val updateCandidates = ArrayList<PgpContact>()
-      val recipientDao =
-        FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!).recipientDao()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+      val recipientDao = roomDatabase.recipientDao()
+      val pubKeysDao = roomDatabase.pubKeysDao()
 
       for (publicKeyInfo in publicKeyInfoList) {
         val pgpContact = PgpContact(
@@ -335,11 +335,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
           true, null, publicKeyInfo.fingerprint, 0
         )
 
-        if (publicKeyInfo.hasPgpContact()) {
-          if (publicKeyInfo.isUpdateEnabled) {
-            updateCandidates.add(pgpContact)
-          }
-        } else {
+        if (!publicKeyInfo.hasPgp()) {
           newCandidates.add(pgpContact)
         }
       }
@@ -357,7 +353,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
               if (newCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else newCandidates.size
 
             if (weakRef.get() != null) {
-              recipientDao.insert(newCandidates.subList(start, end).map { it.toRecipientEntity() })
+              val subList = newCandidates.subList(start, end)
+              recipientDao.insertWithReplace(subList.map { it.toRecipientEntity() })
+              pubKeysDao.insert(subList.map { it.toPubKey() })
             }
             i = end
 
@@ -372,7 +370,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
           }
         }
 
-        var i = 0
+        //todo-denbond7 need to think about this a little more
+        /*var i = 0
         while (i < updateCandidates.size) {
           val start = i
           val end =
@@ -387,13 +386,13 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
                 recipientDao.getRecipientWithPubKeysByEmail(pgpContact.email)
               foundRecipientEntity?.let { entity ->
                 //todo-denbond7 fix me
-                /*recipients.add(
+                *//*recipients.add(
                   pgpContact.toRecipientEntity().copy(id = entity.id)
-                )*/
+                )*//*
               }
             }
 
-            recipientDao.update(recipients)
+            //recipientDao.update(recipients)
           }
           i = end + 1
 
@@ -403,7 +402,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             lastProgress = progress
           }
           i++
-        }
+        }*/
 
       } catch (e: RemoteException) {
         e.printStackTrace()
