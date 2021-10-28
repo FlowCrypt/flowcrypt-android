@@ -423,7 +423,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.17') {
+    implementation ('org.pgpainless:pgpainless-core:0.2.18') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }
