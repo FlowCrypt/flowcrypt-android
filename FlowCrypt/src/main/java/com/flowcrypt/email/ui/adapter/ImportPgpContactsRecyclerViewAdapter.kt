@@ -12,28 +12,26 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
 /**
- * This adapter can be used for showing information about [PgpContact]s when we want to import them
+ * This adapter can be used for showing information about recipients when we want to import them
  *
  * @author Denis Bondarenko
  * Date: 09.05.2018
  * Time: 08:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportPgpContactsRecyclerViewAdapter
-  : RecyclerView.Adapter<ImportPgpContactsRecyclerViewAdapter.ViewHolder>() {
+//todo-denbond7 Need to think about this functionality more
+class ImportRecipientWithPubKeysRecyclerViewAdapter
+  : RecyclerView.Adapter<ImportRecipientWithPubKeysRecyclerViewAdapter.ViewHolder>() {
 
   val publicKeys = mutableListOf<PublicKeyInfo>()
-  var contactActionsListener: ContactActionsListener? = null
+  var recipientActionsListener: RecipientActionsListener? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
@@ -63,6 +61,21 @@ class ImportPgpContactsRecyclerViewAdapter
     )
 
     if (publicKeyInfo.hasPgp()) {
+      //todo-denbond7 temporary disabled. Need to think about this functionality
+      /*if (publicKeyInfo.isUpdateEnabled) {
+        viewHolder.textViewAlreadyImported.visibility = View.GONE
+        viewHolder.buttonUpdateContact.visibility = View.VISIBLE
+        viewHolder.buttonUpdateContact.setOnClickListener { v ->
+          updateContact(
+            viewHolder.adapterPosition,
+            v,
+            context,
+            publicKeyInfo
+          )
+        }
+      } else {
+        viewHolder.textViewAlreadyImported.visibility = View.VISIBLE
+      }*/
       viewHolder.textViewAlreadyImported.visibility = View.VISIBLE
     } else {
       viewHolder.textViewAlreadyImported.visibility = View.GONE
@@ -89,17 +102,15 @@ class ImportPgpContactsRecyclerViewAdapter
   }
 
   private fun saveContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
-    val pgpContact = PgpContact(
+    /*val pgpContact = PgpContact(
       publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
       null, publicKeyInfo.fingerprint, 0
     )
-
-    contactActionsListener?.onSaveContactClick(publicKeyInfo)
+    recipientActionsListener?.onSaveContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
     v.visibility = View.GONE
-    publicKeyInfo.recipientWithPubKeys =
-      RecipientWithPubKeys(pgpContact.toRecipientEntity(), listOf(pgpContact.toPubKey()))
-    notifyItemChanged(position)
+    publicKeyInfo.pgpContact = pgpContact
+    notifyItemChanged(position)*/
   }
 
   private fun updateContact(
@@ -108,17 +119,16 @@ class ImportPgpContactsRecyclerViewAdapter
     context: Context,
     publicKeyInfo: PublicKeyInfo
   ) {
-    val pgpContact = PgpContact(
+    /*val pgpContact = PgpContact(
       publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
       null, publicKeyInfo.fingerprint, 0
     )
 
-    contactActionsListener?.onUpdateContactClick(publicKeyInfo)
+    recipientActionsListener?.onUpdateContactClick(publicKeyInfo)
     Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
     v.visibility = View.GONE
-    publicKeyInfo.recipientWithPubKeys =
-      RecipientWithPubKeys(pgpContact.toRecipientEntity(), listOf(pgpContact.toPubKey()))
-    notifyItemChanged(position)
+    publicKeyInfo.pgpContact = pgpContact
+    notifyItemChanged(position)*/
   }
 
   /**
@@ -133,7 +143,7 @@ class ImportPgpContactsRecyclerViewAdapter
     var buttonUpdateContact: Button = itemView.findViewById(R.id.buttonUpdateContact)
   }
 
-  interface ContactActionsListener {
+  interface RecipientActionsListener {
     fun onSaveContactClick(publicKeyInfo: PublicKeyInfo)
     fun onUpdateContactClick(publicKeyInfo: PublicKeyInfo)
   }

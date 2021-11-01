@@ -23,50 +23,42 @@ import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
  */
 @Dao
 interface RecipientDao : BaseDao<RecipientEntity> {
-  //fixed
   @Query("SELECT * FROM recipients")
   suspend fun getAllRecipients(): List<RecipientEntity>
 
-  //fixed
   @Query("SELECT * FROM recipients")
   fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
 
-  //fixed
   @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient GROUP BY recipients.email ORDER BY recipients._id")
   fun getAllRecipientsWithPgpLD(): LiveData<List<RecipientEntity>>
 
-  //fixed
   @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient GROUP BY recipients.email ORDER BY recipients._id")
   suspend fun getAllRecipientsWithPgp(): List<RecipientEntity>
 
-  //fixed
   @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) GROUP BY recipients.email ORDER BY recipients._id")
   suspend fun getAllRecipientsWithPgpWhichMatched(searchPattern: String): List<RecipientEntity>
 
   @Query("SELECT * FROM recipients WHERE email = :email")
   suspend fun getRecipientByEmailSuspend(email: String): RecipientEntity?
 
-  //fixed
   @Query("SELECT * FROM recipients WHERE email = :email")
   fun getRecipientByEmail(email: String): RecipientEntity?
 
+  @Transaction
   @Query("SELECT * FROM recipients WHERE email = :email")
-  fun getRecipientByEmailLD(email: String): LiveData<RecipientEntity?>
+  fun getRecipientsWithPubKeysByEmailsLD(email: String): LiveData<RecipientWithPubKeys?>
 
-  //fixed
   @Transaction
   @Query("SELECT * FROM recipients WHERE email IN (:emails)")
   fun getRecipientsWithPubKeysByEmails(emails: Collection<String>): List<RecipientWithPubKeys>
 
-  //fixed
   @Query("SELECT * FROM recipients WHERE email LIKE :searchPattern ORDER BY last_use DESC")
   fun getFilteredCursor(searchPattern: String): Cursor?
 
-  //fixed
   @Query("DELETE FROM recipients")
   suspend fun deleteAll(): Int
 
   @Transaction
   @Query("SELECT * FROM recipients WHERE email = :email")
-  fun getRecipientWithPubKeysByEmail(email: String): RecipientWithPubKeys?
+  suspend fun getRecipientWithPubKeysByEmail(email: String): RecipientWithPubKeys?
 }

@@ -72,7 +72,6 @@ import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
@@ -983,11 +982,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
 
     val keyDetails = block.keyDetails
-    val pgpContact = keyDetails?.primaryPgpContact ?: PgpContact(email = "")
+    val userIds = keyDetails?.getUserIdsAsSingleString()
 
-    if (!TextUtils.isEmpty(pgpContact.email)) {
+    if (userIds?.isNotEmpty() == true) {
       val keyOwner = pubKeyView.findViewById<TextView>(R.id.textViewKeyOwnerTemplate)
-      keyOwner.text = getString(R.string.template_message_part_public_key_owner, pgpContact.email)
+      keyOwner.text = getString(R.string.template_message_part_public_key_owner, userIds)
     }
 
     val fingerprint = pubKeyView.findViewById<TextView>(R.id.textViewFingerprintTemplate)
@@ -1000,38 +999,41 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     textViewPgpPublicKey.text = clipLargeText(block.keyDetails?.publicKey ?: block.content)
 
-    val existingPgpContact = block.existingPgpContact
+    val existingRecipientWithPubKeys = block.existingRecipientWithPubKeys
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
     if (button != null) {
-      if (existingPgpContact == null) {
-        initSaveContactButton(block, button)
-      } else if (TextUtils.isEmpty(existingPgpContact.fingerprint)
+      if (existingRecipientWithPubKeys == null) {
+        initSaveRecipientButton(block, button)
+      } else {
+        //todo-denbond7 temporary disable updating
+        button.gone()
+      }/*else if (existingRecipientWithPubKeys.publicKeys.firstOrNull()?.fingerprint.isNullOrEmpty()
         || keyDetails?.fingerprint?.equals(
-          existingPgpContact.fingerprint!!, ignoreCase = true
+          existingRecipientWithPubKeys.publicKeys.firstOrNull()?.fingerprint, ignoreCase = true
         ) == true
       ) {
         initUpdateContactButton(block, button)
       } else {
         initReplaceContactButton(block, button)
-      }
+      }*/
     }
 
     return pubKeyView
   }
 
   /**
-   * Init the save contact button. When we press this button a new contact will be saved to the
+   * Init the save recipient button. When we press this button a new contact will be saved to the
    * local database.
    *
    * @param block  The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
    * @param button The key action button.
    */
-  private fun initSaveContactButton(block: PublicKeyMsgBlock, button: Button) {
+  private fun initSaveRecipientButton(block: PublicKeyMsgBlock, button: Button) {
     button.setText(R.string.save_contact)
     button.setOnClickListener { v ->
-      val pgpContact = block.keyDetails?.primaryPgpContact
-      if (pgpContact != null) {
-        recipientsViewModel.addContact(pgpContact)
+      val pgpKeyDetails = block.keyDetails
+      if (pgpKeyDetails != null) {
+        recipientsViewModel.addRecipientsBasedOnPgpKeyDetails(pgpKeyDetails)
         v.visibility = View.GONE
       } else {
         Toast.makeText(
@@ -1053,9 +1055,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun initUpdateContactButton(block: PublicKeyMsgBlock, button: Button) {
     button.setText(R.string.update_contact)
     button.setOnClickListener { v ->
-      val pgpContact = block.keyDetails?.primaryPgpContact
-      if (pgpContact != null) {
-        recipientsViewModel.updateContact(pgpContact)
+      val recipientWithPubKeys = block.existingRecipientWithPubKeys
+      if (recipientWithPubKeys != null && block.keyDetails != null) {
+        //recipientsViewModel.updateContact(recipientWithPubKeys, block.keyDetails)
         Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {
@@ -1077,10 +1079,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    */
   private fun initReplaceContactButton(block: PublicKeyMsgBlock, button: Button) {
     button.setText(R.string.replace_contact)
-    button.setOnClickListener { v ->
-      val pgpContact = block.keyDetails?.primaryPgpContact
-      if (pgpContact != null) {
-        recipientsViewModel.updateContact(pgpContact)
+    /*button.setOnClickListener { v ->
+      val RecipientWithPubKeys = block.keyDetails?.primaryRecipientWithPubKeys
+      if (RecipientWithPubKeys != null) {
+        recipientsViewModel.updateContact(RecipientWithPubKeys)
         Toast.makeText(context, R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {
@@ -1090,7 +1092,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           Toast.LENGTH_SHORT
         ).show()
       }
-    }
+    }*/
   }
 
   private fun genDefPart(

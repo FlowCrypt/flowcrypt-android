@@ -42,6 +42,18 @@ data class RecipientWithPubKeys(
     return 0
   }
 
+  fun hasPgp(): Boolean {
+    return publicKeys.isNotEmpty()
+  }
+
+  fun hasNotExpiredKeys(): Boolean {
+    return publicKeys.any { it.pgpKeyDetails?.isExpired?.not() ?: false }
+  }
+
+  fun hasUsableKeys(): Boolean {
+    return publicKeys.any { if (it.isNotUsable != null) it.isNotUsable?.not() ?: false else true }
+  }
+
   companion object CREATOR : Parcelable.Creator<RecipientWithPubKeys> {
     override fun createFromParcel(parcel: Parcel) = RecipientWithPubKeys(parcel)
     override fun newArray(size: Int): Array<RecipientWithPubKeys?> = arrayOfNulls(size)

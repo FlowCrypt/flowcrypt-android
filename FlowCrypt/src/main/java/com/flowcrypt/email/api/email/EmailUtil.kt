@@ -201,9 +201,9 @@ class EmailUtil {
      * @param pgpKeyDetails The key details
      * @return A generated [AttachmentInfo].
      */
-    fun genAttInfoFromPubKey(pgpKeyDetails: PgpKeyDetails?): AttachmentInfo? {
+    fun genAttInfoFromPubKey(pgpKeyDetails: PgpKeyDetails?, email: String): AttachmentInfo? {
       if (pgpKeyDetails != null) {
-        val fileName = "0x" + pgpKeyDetails.fingerprint.toUpperCase(Locale.getDefault()) + ".asc"
+        val fileName = "0x" + pgpKeyDetails.fingerprint.uppercase() + ".asc"
 
         return if (!TextUtils.isEmpty(pgpKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()
@@ -212,7 +212,7 @@ class EmailUtil {
           attachmentInfo.encodedSize = pgpKeyDetails.publicKey.length.toLong()
           attachmentInfo.rawData = pgpKeyDetails.publicKey.toByteArray()
           attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
-          attachmentInfo.email = pgpKeyDetails.primaryPgpContact.email
+          attachmentInfo.email = email
           attachmentInfo.id = generateContentId()
           attachmentInfo.isEncryptionAllowed = false
 

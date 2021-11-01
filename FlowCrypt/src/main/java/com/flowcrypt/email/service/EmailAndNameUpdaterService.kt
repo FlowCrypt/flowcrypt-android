@@ -29,7 +29,7 @@ import java.util.ArrayList
  * "save that person's name into the existing DB record"
  *
  *  *  else:
- * "save that email, name pair into DB like so: new PgpContact(email, name);"
+ * "save that email, name pair into DB like so: new RecipientEntity(email, name);"
  *
  *
  * @author DenBond7

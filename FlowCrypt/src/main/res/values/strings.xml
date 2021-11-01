@@ -48,7 +48,7 @@
     <string name="reply_all">Reply All</string>
     <string name="please_wait_while_backup_will_be_saved">Making a backup, please wait</string>
     <string name="please_wait_while_message_will_be_sent">Sending message, please wait</string>
-    <string name="please_wait_while_information_about_contacts_will_be_updated">Loading information about contacts, please wait</string>
+    <string name="please_wait_while_information_about_recipients_will_be_updated">Loading information about recipients, please wait</string>
     <string name="create_a_new_key">Create a new key</string>
     <string name="import_my_key">Import my key</string>
     <string name="select_key_to_import">Select a key to import</string>

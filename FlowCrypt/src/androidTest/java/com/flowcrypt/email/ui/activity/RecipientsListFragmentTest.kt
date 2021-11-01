@@ -45,7 +45,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ContactsListFragmentTest : BaseTest() {
+class RecipientsListFragmentTest : BaseTest() {
 
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(

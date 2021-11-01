@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 27,
-    "identityHash": "df7631eb8344e5890023dcb59321a47a",
+    "identityHash": "f9ed281f0ebf8698ba19b1bd8dde0336",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -965,6 +965,14 @@
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `recipient_fingerprint_in_public_keys` ON `${TABLE_NAME}` (`recipient`, `fingerprint`)"
           },
           {
+            "name": "recipient_in_public_keys",
+            "unique": false,
+            "columnNames": [
+              "recipient"
+            ],
+            "createSql": "CREATE INDEX IF NOT EXISTS `recipient_in_public_keys` ON `${TABLE_NAME}` (`recipient`)"
+          },
+          {
             "name": "fingerprint_in_public_keys",
             "unique": false,
             "columnNames": [
@@ -991,7 +999,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'df7631eb8344e5890023dcb59321a47a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f9ed281f0ebf8698ba19b1bd8dde0336')"
     ]
   }
 }

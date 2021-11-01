@@ -12,9 +12,9 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -30,7 +30,7 @@ import com.google.android.material.snackbar.Snackbar
  */
 class ImportPublicKeyActivity : BaseImportKeyActivity() {
 
-  private var pgpContact: PgpContact? = null
+  private var recipientWithPubKeys: RecipientWithPubKeys? = null
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   override val contentViewResourceId: Int
@@ -42,7 +42,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     if (intent != null && intent.hasExtra(KEY_EXTRA_PGP_CONTACT)) {
-      this.pgpContact = intent.getParcelableExtra(KEY_EXTRA_PGP_CONTACT)
+      this.recipientWithPubKeys = intent.getParcelableExtra(KEY_EXTRA_PGP_CONTACT)
     } else {
       finish()
     }
@@ -67,7 +67,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
           return
         }
 
-        updateInformationAboutPgpContact(key)
+        updateInformationAboutRecipientWithPubKeys(key)
         setResult(Activity.RESULT_OK)
         finish()
       } else {
@@ -78,11 +78,10 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     }
   }
 
-  private fun updateInformationAboutPgpContact(keyDetails: PgpKeyDetails) {
-    val pgpContactFromKey = keyDetails.primaryPgpContact
-    pgpContact?.pubkey = pgpContactFromKey.pubkey
-    pgpContact?.hasPgp = pgpContact?.pubkey?.isNotEmpty() == true
-    pgpContact?.let { recipientsViewModel.copyPubKeysToRecipient(it, pgpContactFromKey) }
+  private fun updateInformationAboutRecipientWithPubKeys(keyDetails: PgpKeyDetails) {
+    recipientWithPubKeys?.recipient?.let {
+      recipientsViewModel.copyPubKeysToRecipient(it, keyDetails)
+    }
   }
 
   companion object {
@@ -95,13 +94,13 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
       context: Context?,
       accountEntity: AccountEntity?,
       title: String,
-      pgpContact: PgpContact
+      recipientWithPubKeys: RecipientWithPubKeys
     ): Intent {
       val intent = newIntent(
         context = context, accountEntity = accountEntity, title = title,
         throwErrorIfDuplicateFoundEnabled = false, cls = ImportPublicKeyActivity::class.java
       )
-      intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact)
+      intent.putExtra(KEY_EXTRA_PGP_CONTACT, recipientWithPubKeys)
       return intent
     }
   }

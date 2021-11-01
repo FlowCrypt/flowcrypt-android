@@ -17,7 +17,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.sync.LoadContactsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.LoadRecipientsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.service.IdleService
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +84,7 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
           )
         }
 
-        LoadContactsWorker.enqueue(getApplication())
+        LoadRecipientsWorker.enqueue(getApplication())
 
         addNewAccountLiveData.value = Result.success(true)
       } catch (e: Exception) {

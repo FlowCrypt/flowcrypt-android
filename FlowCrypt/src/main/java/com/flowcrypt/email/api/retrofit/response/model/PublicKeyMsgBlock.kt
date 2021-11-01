@@ -7,7 +7,8 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+
 import com.flowcrypt.email.security.model.PgpKeyDetails
 
 import com.google.gson.annotations.Expose
@@ -29,7 +30,7 @@ data class PublicKeyMsgBlock constructor(
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
 
-  var existingPgpContact: PgpContact? = null
+  var existingRecipientWithPubKeys: RecipientWithPubKeys? = null
 
   constructor(parcel: Parcel) : this(
     parcel.readString(),
@@ -37,7 +38,8 @@ data class PublicKeyMsgBlock constructor(
     parcel.readParcelable(PgpKeyDetails::class.java.classLoader),
     parcel.readParcelable(MsgBlockError::class.java.classLoader),
   ) {
-    existingPgpContact = parcel.readParcelable(PgpContact::class.java.classLoader)
+    existingRecipientWithPubKeys =
+      parcel.readParcelable(RecipientWithPubKeys::class.java.classLoader)
   }
 
   override fun writeToParcel(parcel: Parcel, flags: Int) =
@@ -47,7 +49,7 @@ data class PublicKeyMsgBlock constructor(
       writeInt((if (complete) 1 else 0))
       writeParcelable(keyDetails, flags)
       writeParcelable(error, flags)
-      writeParcelable(existingPgpContact, flags)
+      writeParcelable(existingRecipientWithPubKeys, flags)
     }
 
   override fun describeContents(): Int = 0

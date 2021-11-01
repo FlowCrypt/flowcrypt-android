@@ -16,15 +16,15 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.RecipientEntity
 
 /**
- * This adapter describes logic to prepare show contacts from the database.
+ * This adapter describes logic to prepare show recipients from the database.
  *
  * @author DenBond7
  * Date: 26.05.2017
  * Time: 18:00
  * E-mail: DenBond7@gmail.com
  */
-class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true) :
-  RecyclerView.Adapter<ContactsRecyclerViewAdapter.ViewHolder>() {
+class RecipientsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true) :
+  RecyclerView.Adapter<RecipientsRecyclerViewAdapter.ViewHolder>() {
 
   private val list: MutableList<RecipientEntity> = mutableListOf()
   var onContactActionsListener: OnContactActionsListener? = null
@@ -32,13 +32,16 @@ class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boole
   override fun onCreateViewHolder(
     parent: ViewGroup,
     viewType: Int
-  ): ContactsRecyclerViewAdapter.ViewHolder {
+  ): RecipientsRecyclerViewAdapter.ViewHolder {
     return ViewHolder(
       LayoutInflater.from(parent.context).inflate(R.layout.contact_item, parent, false)
     )
   }
 
-  override fun onBindViewHolder(viewHolder: ContactsRecyclerViewAdapter.ViewHolder, position: Int) {
+  override fun onBindViewHolder(
+    viewHolder: RecipientsRecyclerViewAdapter.ViewHolder,
+    position: Int
+  ) {
     val recipientEntity = list[position]
 
     if (recipientEntity.name.isNullOrEmpty()) {

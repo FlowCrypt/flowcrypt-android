@@ -17,7 +17,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
  *         E-mail: DenBond7@gmail.com
  */
 @Dao
-interface PubKeysDao : BaseDao<PublicKeyEntity> {
+interface PubKeyDao : BaseDao<PublicKeyEntity> {
   @Query("SELECT * FROM public_keys")
   suspend fun getAllPublicKeys(): List<PublicKeyEntity>
 
@@ -29,4 +29,10 @@ interface PubKeysDao : BaseDao<PublicKeyEntity> {
 
   @Query("SELECT * FROM public_keys WHERE fingerprint = :fingerprint")
   suspend fun getPublicKeysByFingerprint(fingerprint: String): List<PublicKeyEntity>
+
+  @Query("SELECT * FROM public_keys WHERE recipient = :recipient AND fingerprint = :fingerprint")
+  suspend fun getPublicKeyByRecipientAndFingerprint(
+    recipient: String,
+    fingerprint: String
+  ): PublicKeyEntity?
 }

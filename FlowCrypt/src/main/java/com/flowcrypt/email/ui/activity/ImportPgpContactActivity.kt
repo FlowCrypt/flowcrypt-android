@@ -35,14 +35,14 @@ import java.util.*
 
 /**
  * This [Activity] retrieves a public keys string from the different sources and sends it to
- * [PreviewImportPgpContactActivity]
+ * [PreviewImportRecipientWithPubKeysActivity]
  *
  * @author Denis Bondarenko
  * Date: 04.05.2018
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportPgpContactActivity : BaseImportKeyActivity() {
+class ImportRecipientWithPubKeysActivity : BaseImportKeyActivity() {
   private val recipientsViewModel: RecipientsViewModel by viewModels()
   private var editTextEmailOrId: EditText? = null
 
@@ -110,7 +110,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
       if (keyDetailsList.isNotEmpty()) {
         UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         startActivityForResult(
-          PreviewImportPgpContactActivity.newIntent(
+          PreviewImportRecipientWithPubKeysActivity.newIntent(
             this, keyImportModel!!
               .keyString
           ), REQUEST_CODE_RUN_PREVIEW_ACTIVITY
@@ -125,7 +125,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
   override fun handleSelectedFile(uri: Uri) {
     UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
     startActivityForResult(
-      PreviewImportPgpContactActivity.newIntent(this, uri),
+      PreviewImportRecipientWithPubKeysActivity.newIntent(this, uri),
       REQUEST_CODE_RUN_PREVIEW_ACTIVITY
     )
   }
@@ -147,7 +147,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
 
   private fun fetchPubKey() {
     val v = editTextEmailOrId ?: return
-    UIUtil.hideSoftInput(this@ImportPgpContactActivity, v)
+    UIUtil.hideSoftInput(this@ImportRecipientWithPubKeysActivity, v)
 
     if (v.text.isNullOrEmpty()) {
       Toast.makeText(this, R.string.please_type_key_id_or_email, Toast.LENGTH_SHORT).show()
@@ -207,7 +207,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
       val pubkey = pubResponse.pubkey
       if (!pubkey.isNullOrEmpty()) {
         startActivityForResult(
-          PreviewImportPgpContactActivity.newIntent(this, pubkey),
+          PreviewImportRecipientWithPubKeysActivity.newIntent(this, pubkey),
           REQUEST_CODE_RUN_PREVIEW_ACTIVITY
         )
       } else {
@@ -226,7 +226,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity() {
         accountEntity = accountEntity,
         title = context.getString(R.string.add_public_keys_of_your_contacts),
         throwErrorIfDuplicateFoundEnabled = false,
-        cls = ImportPgpContactActivity::class.java
+        cls = ImportRecipientWithPubKeysActivity::class.java
       )
     }
   }

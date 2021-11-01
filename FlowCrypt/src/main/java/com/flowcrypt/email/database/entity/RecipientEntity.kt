@@ -10,11 +10,8 @@ import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
  * @author Denis Bondarenko
@@ -37,26 +34,12 @@ data class RecipientEntity(
   @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long = 0
 ) : Parcelable {
 
-  @Ignore
-  var pgpKeyDetails: PgpKeyDetails? = null
-
   constructor(parcel: Parcel) : this(
     parcel.readValue(Long::class.java.classLoader) as? Long,
     requireNotNull(parcel.readString()),
     parcel.readString(),
     parcel.readLong()
-  ) {
-    pgpKeyDetails = parcel.readParcelable(PgpKeyDetails::class.java.classLoader)
-  }
-
-  fun toPgpContact(): PgpContact {
-    return PgpContact(
-      email = email,
-      name = name,
-      lastUse = lastUse,
-      pgpKeyDetails = pgpKeyDetails
-    )
-  }
+  )
 
   //todo-denbond7 need to think about this class.
   enum class Type {
@@ -68,7 +51,6 @@ data class RecipientEntity(
     parcel.writeString(email)
     parcel.writeString(name)
     parcel.writeLong(lastUse)
-    parcel.writeParcelable(pgpKeyDetails, flags)
   }
 
   override fun describeContents(): Int {

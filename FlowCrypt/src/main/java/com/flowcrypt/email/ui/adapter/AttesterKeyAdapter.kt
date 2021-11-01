@@ -56,10 +56,10 @@ class AttesterKeyAdapter(
   }
 
   private fun updateView(pgpKeyDetails: PgpKeyDetails, context: Context, viewHolder: ViewHolder) {
-    viewHolder.textViewKeyOwner.text = pgpKeyDetails.primaryPgpContact.email
+    viewHolder.textViewKeyOwner.text = pgpKeyDetails.getUserIdsAsSingleString()
 
     when {
-      pgpKeyDetails.publicKey.isNullOrEmpty() -> {
+      pgpKeyDetails.publicKey.isEmpty() -> {
         viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded)
         viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange))
       }

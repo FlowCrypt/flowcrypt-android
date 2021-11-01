@@ -20,9 +20,9 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
+import com.flowcrypt.email.ui.activity.ImportRecipientWithPubKeysActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -33,20 +33,21 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 6:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnContactActionsListener {
+class RecipientsListFragment : BaseFragment(),
+  RecipientsRecyclerViewAdapter.OnContactActionsListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
-    ContactsRecyclerViewAdapter(true)
+  private val recipientsRecyclerViewAdapter: RecipientsRecyclerViewAdapter =
+    RecipientsRecyclerViewAdapter(true)
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
-  override val contentResourceId: Int = R.layout.fragment_contacts_list
+  override val contentResourceId: Int = R.layout.fragment_recipients_list
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    contactsRecyclerViewAdapter.onContactActionsListener = this
+    recipientsRecyclerViewAdapter.onContactActionsListener = this
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,8 +73,8 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnConta
 
   override fun onContactClick(recipientEntity: RecipientEntity) {
     navController?.navigate(
-      ContactsListFragmentDirections
-        .actionContactsListFragmentToPublicKeyDetailsFragment(recipientEntity)
+      RecipientsListFragmentDirections
+        .actionRecipientsListFragmentToPublicKeyDetailsFragment(recipientEntity)
     )
   }
 
@@ -97,12 +98,12 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnConta
     drawable?.let { decoration.setDrawable(drawable) }
     recyclerViewContacts?.addItemDecoration(decoration)
     recyclerViewContacts?.layoutManager = manager
-    recyclerViewContacts?.adapter = contactsRecyclerViewAdapter
+    recyclerViewContacts?.adapter = recipientsRecyclerViewAdapter
 
     root.findViewById<View>(R.id.floatActionButtonImportPublicKey)?.setOnClickListener {
       context?.let {
         startActivityForResult(
-          ImportPgpContactActivity.newIntent(it, account),
+          ImportRecipientWithPubKeysActivity.newIntent(it, account),
           REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY
         )
       }
@@ -121,7 +122,7 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnConta
           if (it.data.isNullOrEmpty()) {
             UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
           } else {
-            contactsRecyclerViewAdapter.swap(it.data)
+            recipientsRecyclerViewAdapter.swap(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
         }

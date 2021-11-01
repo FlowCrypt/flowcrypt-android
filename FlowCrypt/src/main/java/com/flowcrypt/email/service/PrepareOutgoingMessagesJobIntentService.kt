@@ -43,7 +43,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.util.ArrayList
-import java.util.Locale
 import java.util.UUID
 import javax.mail.Message
 
@@ -79,7 +78,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
         ?: return
     val accountEntity =
-      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.lowercase(Locale.US))
+      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.lowercase())
         ?: return
 
     val uid = outgoingMsgInfo.uid

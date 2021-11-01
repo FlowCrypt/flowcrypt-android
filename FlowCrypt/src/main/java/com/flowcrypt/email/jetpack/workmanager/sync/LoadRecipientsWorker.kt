@@ -35,14 +35,14 @@ import javax.mail.Store
 import javax.mail.internet.InternetAddress
 
 /**
- * This [CoroutineWorker] loads information about contacts from the SENT folder.
+ * This [CoroutineWorker] loads information about recipients from the SENT folder.
  *
  * @author Denis Bondarenko
  * Date: 23.04.2018
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-class LoadContactsWorker(context: Context, params: WorkerParameters) :
+class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     fetchContacts(accountEntity, store)
@@ -65,9 +65,9 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
 
           if (msgs.isNotEmpty()) {
             val fetchProfile = FetchProfile()
-            fetchProfile.add(Message.RecipientType.TO.toString().uppercase(Locale.getDefault()))
-            fetchProfile.add(Message.RecipientType.CC.toString().uppercase(Locale.getDefault()))
-            fetchProfile.add(Message.RecipientType.BCC.toString().uppercase(Locale.getDefault()))
+            fetchProfile.add(Message.RecipientType.TO.toString().uppercase())
+            fetchProfile.add(Message.RecipientType.CC.toString().uppercase())
+            fetchProfile.add(Message.RecipientType.BCC.toString().uppercase())
             imapFolder.fetch(msgs, fetchProfile)
 
             return@fetchContactsInternal msgs
@@ -160,36 +160,36 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
     }
 
     val recipientDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
-    val availableContacts = recipientDao.getAllRecipients()
+    val availableRecipients = recipientDao.getAllRecipients()
 
-    val contactsInDatabase = HashSet<String>()
-    val contactsWhichWillBeUpdated = HashSet<String>()
-    val contactsWhichWillBeCreated = HashSet<String>()
-    val contactsByEmailMap = HashMap<String, RecipientEntity?>()
+    val recipientsInDatabase = HashSet<String>()
+    val recipientsWhichWillBeUpdated = HashSet<String>()
+    val recipientsWhichWillBeCreated = HashSet<String>()
+    val recipientsByEmailMap = HashMap<String, RecipientEntity?>()
 
     val newCandidates = mutableListOf<RecipientEntity>()
     val updateCandidates = mutableListOf<RecipientEntity>()
 
-    for (contact in availableContacts) {
-      contactsInDatabase.add(contact.email.lowercase())
-      contactsByEmailMap[contact.email.lowercase()] = contact
+    for (recipientEntity in availableRecipients) {
+      recipientsInDatabase.add(recipientEntity.email.lowercase())
+      recipientsByEmailMap[recipientEntity.email.lowercase()] = recipientEntity
     }
 
     for (emailAndNamePair in emailAndNamePairs) {
-      if (contactsInDatabase.contains(emailAndNamePair.email)) {
-        val recipientEntity = contactsByEmailMap[emailAndNamePair.email]
+      if (recipientsInDatabase.contains(emailAndNamePair.email)) {
+        val recipientEntity = recipientsByEmailMap[emailAndNamePair.email]
         if (recipientEntity?.email.isNullOrEmpty()) {
-          if (!contactsWhichWillBeUpdated.contains(emailAndNamePair.email)) {
+          if (!recipientsWhichWillBeUpdated.contains(emailAndNamePair.email)) {
             emailAndNamePair.email?.let {
-              contactsWhichWillBeUpdated.add(it)
+              recipientsWhichWillBeUpdated.add(it)
             }
             recipientEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
           }
         }
       } else {
-        if (!contactsWhichWillBeCreated.contains(emailAndNamePair.email)) {
+        if (!recipientsWhichWillBeCreated.contains(emailAndNamePair.email)) {
           emailAndNamePair.email?.let {
-            contactsWhichWillBeCreated.add(it)
+            recipientsWhichWillBeCreated.add(it)
             newCandidates.add(RecipientEntity(email = it, name = emailAndNamePair.name))
           }
         }
@@ -222,7 +222,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
             for (address in addresses) {
               emailAndNamePairs.add(
                 EmailAndNamePair(
-                  address.address.lowercase(Locale.getDefault()), address.personal
+                  address.address.lowercase(), address.personal
                 )
               )
             }
@@ -254,7 +254,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
         .enqueueUniqueWork(
           GROUP_UNIQUE_TAG,
           ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<LoadContactsWorker>()
+          OneTimeWorkRequestBuilder<LoadRecipientsWorker>()
             .addTag(TAG_SYNC)
             .setConstraints(constraints)
             .build()

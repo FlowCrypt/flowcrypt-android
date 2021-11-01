@@ -411,22 +411,22 @@ class MsgDetailsViewModel(
 
   private suspend fun preResultsProcessing(blocks: List<MsgBlock>) {
     for (block in blocks) {
-      if (block is PublicKeyMsgBlock) {
-        val keyDetails = block.keyDetails ?: continue
-        val pgpContact = keyDetails.primaryPgpContact
-        //todo-denbond7 need to rework on this code
-        val recipientEntity =
-          roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
-        //block.existingPgpContact = recipientEntity?.toPgpContact()
-      }
+      when (block) {
+        is PublicKeyMsgBlock -> {
+          val keyDetails = block.keyDetails ?: continue
+          val recipient = keyDetails.mimeAddresses.firstOrNull()?.address ?: continue
+          block.existingRecipientWithPubKeys =
+            roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(recipient)
+        }
 
-      if (block is DecryptErrorMsgBlock) {
-        if (block.decryptErr?.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
-          val fingerprints = block.decryptErr.fingerprints ?: emptyList()
-          if (fingerprints.isEmpty()) {
-            ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
-          } else {
-            passphraseNeededLiveData.postValue(fingerprints)
+        is DecryptErrorMsgBlock -> {
+          if (block.decryptErr?.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+            val fingerprints = block.decryptErr.fingerprints ?: emptyList()
+            if (fingerprints.isEmpty()) {
+              ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
+            } else {
+              passphraseNeededLiveData.postValue(fingerprints)
+            }
           }
         }
       }

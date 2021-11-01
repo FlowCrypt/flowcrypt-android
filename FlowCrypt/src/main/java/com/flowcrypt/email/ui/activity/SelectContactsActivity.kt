@@ -27,7 +27,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
-import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -41,13 +41,13 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class SelectContactsActivity : BaseBackStackActivity(),
-  ContactsRecyclerViewAdapter.OnContactActionsListener, SearchView.OnQueryTextListener {
+  RecipientsRecyclerViewAdapter.OnContactActionsListener, SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
-    ContactsRecyclerViewAdapter(false)
+  private val recipientsRecyclerViewAdapter: RecipientsRecyclerViewAdapter =
+    RecipientsRecyclerViewAdapter(false)
   private var searchPattern: String? = null
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
@@ -65,7 +65,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    contactsRecyclerViewAdapter.onContactActionsListener = this
+    recipientsRecyclerViewAdapter.onContactActionsListener = this
     //todo-denbond7 need to fix this in the future. Not urgent
     //val isMultiply = intent.getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false)
 
@@ -80,7 +80,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
     drawable?.let { decoration.setDrawable(drawable) }
     recyclerViewContacts?.addItemDecoration(decoration)
     recyclerViewContacts?.layoutManager = manager
-    recyclerViewContacts?.adapter = contactsRecyclerViewAdapter
+    recyclerViewContacts?.adapter = recipientsRecyclerViewAdapter
 
     if (!TextUtils.isEmpty(title)) {
       supportActionBar?.title = title
@@ -146,7 +146,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
           if (it.data.isNullOrEmpty()) {
             UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
           } else {
-            contactsRecyclerViewAdapter.swap(it.data)
+            recipientsRecyclerViewAdapter.swap(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
           countingIdlingResourceForFilter.decrementSafely()

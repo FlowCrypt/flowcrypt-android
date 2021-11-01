@@ -25,14 +25,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.flowcrypt.email.ui.adapter.ImportPgpContactsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.ImportRecipientWithPubKeysRecyclerViewAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -42,7 +42,6 @@ import java.io.InputStream
 import java.lang.ref.WeakReference
 import java.util.ArrayList
 import java.util.HashSet
-import java.util.Locale
 
 /**
  * This fragment displays information about public keys owners and information about keys.
@@ -54,8 +53,8 @@ import java.util.Locale
  */
 //todo-denbond7 Improve this class.
 //Need to migrate to use LiveData and improve performance for the file parsing.
-class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
-  ImportPgpContactsRecyclerViewAdapter.ContactActionsListener {
+class PreviewImportRecipientWithPubKeysFragment : BaseFragment(), View.OnClickListener,
+  ImportRecipientWithPubKeysRecyclerViewAdapter.RecipientActionsListener {
 
   private var recyclerView: RecyclerView? = null
   private var btnImportAll: TextView? = null
@@ -69,7 +68,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
   private var publicKeysFileUri: Uri? = null
 
   private val recipientsViewModel: RecipientsViewModel by viewModels()
-  private val adapter: ImportPgpContactsRecyclerViewAdapter = ImportPgpContactsRecyclerViewAdapter()
+  private val adapter: ImportRecipientWithPubKeysRecyclerViewAdapter =
+    ImportRecipientWithPubKeysRecyclerViewAdapter()
   private var isParsingStarted: Boolean = false
 
   override val contentResourceId: Int = R.layout.fragment_preview_import_pgp_contact
@@ -85,7 +85,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       publicKeysFileUri = bundle.getParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)
     }
 
-    adapter.contactActionsListener = this
+    adapter.recipientActionsListener = this
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -147,13 +147,13 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     }
   }
 
-  override fun onSaveContactClick(publicKeyInfo: PublicKeyInfo) {
-    recipientsViewModel.addContact(publicKeyInfo.toPgpContact())
+  /*override fun onSaveContactClick(publicKeyInfo: PublicKeyInfo) {
+    recipientsViewModel.addContact(publicKeyInfo.toRecipientWithPubKeys())
   }
 
   override fun onUpdateContactClick(publicKeyInfo: PublicKeyInfo) {
-    recipientsViewModel.updateContact(publicKeyInfo.toPgpContact())
-  }
+    recipientsViewModel.updateContact(publicKeyInfo.toRecipientWithPubKeys())
+  }*/
 
   private fun initViews(root: View) {
     layoutContentView = root.findViewById(R.id.layoutContentView)
@@ -186,7 +186,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
   }
 
   private class PublicKeysParserAsyncTask(
-    fragment: PreviewImportPgpContactFragment,
+    fragment: PreviewImportRecipientWithPubKeysFragment,
     private val publicKeysString: String,
     private val publicKeysFileUri: Uri?
   ) : BaseAsyncTask<Void, Int, LoaderResult>(fragment) {
@@ -291,8 +291,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       pgpKeyDetails: PgpKeyDetails,
       emails: MutableSet<String>
     ): PublicKeyInfo? {
-      val fingerprint = pgpKeyDetails.fingerprint
-      var keyOwner: String? = pgpKeyDetails.primaryPgpContact.email
+      /*val fingerprint = pgpKeyDetails.fingerprint
+      var keyOwner: String? = pgpKeyDetails.primaryRecipientWithPubKeys.email
 
       if (keyOwner != null) {
         keyOwner = keyOwner.lowercase(Locale.getDefault())
@@ -309,13 +309,13 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
               .recipientDao().getRecipientWithPubKeysByEmail(keyOwner)
           return PublicKeyInfo(fingerprint, keyOwner, recipientWithPubKeys, pgpKeyDetails.publicKey)
         }
-      }
+      }*/
       return null
     }
   }
 
   private class SaveAllContactsAsyncTask(
-    fragment: PreviewImportPgpContactFragment,
+    fragment: PreviewImportRecipientWithPubKeysFragment,
     private val publicKeyInfoList: List<PublicKeyInfo>
   ) : BaseAsyncTask<Void, Int, Boolean>(fragment) {
 
@@ -323,29 +323,29 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
       get() = R.string.importing_public_keys
 
     override fun doInBackground(vararg uris: Void): Boolean {
-      val newCandidates = ArrayList<PgpContact>()
-      val updateCandidates = ArrayList<PgpContact>()
+      val newCandidates = ArrayList<RecipientWithPubKeys>()
+      val updateCandidates = ArrayList<RecipientWithPubKeys>()
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
       val recipientDao = roomDatabase.recipientDao()
-      val pubKeysDao = roomDatabase.pubKeysDao()
+      val pubKeysDao = roomDatabase.pubKeyDao()
 
-      for (publicKeyInfo in publicKeyInfoList) {
-        val pgpContact = PgpContact(
-          publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey,
-          true, null, publicKeyInfo.fingerprint, 0
-        )
+      /* for (publicKeyInfo in publicKeyInfoList) {
+         val RecipientWithPubKeys = RecipientWithPubKeys(
+           publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey,
+           true, null, publicKeyInfo.fingerprint, 0
+         )
 
-        if (!publicKeyInfo.hasPgp()) {
-          newCandidates.add(pgpContact)
-        }
-      }
+         if (!publicKeyInfo.hasPgp()) {
+           newCandidates.add(RecipientWithPubKeys)
+         }
+       }*/
 
       try {
         var progress: Float
         var lastProgress = 0f
         val totalOperationsCount = newCandidates.size + updateCandidates.size
 
-        run {
+        /*run {
           var i = 0
           while (i < newCandidates.size) {
             val start = i
@@ -355,7 +355,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             if (weakRef.get() != null) {
               val subList = newCandidates.subList(start, end)
               recipientDao.insertWithReplace(subList.map { it.toRecipientEntity() })
-              pubKeysDao.insert(subList.map { it.toPubKey() })
+              pubKeysDao.insert(subList.map { it.toPublicKeyEntity() })
             }
             i = end
 
@@ -368,7 +368,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             i--
             i++
           }
-        }
+        }*/
 
         //todo-denbond7 need to think about this a little more
         /*var i = 0
@@ -381,13 +381,13 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
             val recipients = mutableListOf<RecipientEntity>()
             val list = updateCandidates.subList(start, end + 1)
 
-            list.forEach { pgpContact ->
+            list.forEach { RecipientWithPubKeys ->
               val foundRecipientEntity =
-                recipientDao.getRecipientWithPubKeysByEmail(pgpContact.email)
+                recipientDao.getRecipientWithPubKeysByEmail(RecipientWithPubKeys.email)
               foundRecipientEntity?.let { entity ->
                 //todo-denbond7 fix me
                 *//*recipients.add(
-                  pgpContact.toRecipientEntity().copy(id = entity.id)
+                  RecipientWithPubKeys.toRecipientEntity().copy(id = entity.id)
                 )*//*
               }
             }
@@ -435,10 +435,12 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     }
   }
 
-  private abstract class BaseAsyncTask<Params, Progress, Result>(previewImportPgpContactFragment: PreviewImportPgpContactFragment) :
+  private abstract class BaseAsyncTask<Params, Progress, Result>(
+    previewImportRecipientWithPubKeysFragment: PreviewImportRecipientWithPubKeysFragment
+  ) :
     AsyncTask<Params, Progress, Result>() {
-    val weakRef: WeakReference<PreviewImportPgpContactFragment> =
-      WeakReference(previewImportPgpContactFragment)
+    val weakRef: WeakReference<PreviewImportRecipientWithPubKeysFragment> =
+      WeakReference(previewImportRecipientWithPubKeysFragment)
 
     abstract val progressTitleResourcesId: Int
 
@@ -472,23 +474,34 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     private val KEY_EXTRA_PUBLIC_KEY_STRING =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_PUBLIC_KEY_STRING",
-        PreviewImportPgpContactFragment::class.java
+        PreviewImportRecipientWithPubKeysFragment::class.java
       )
 
     private val KEY_EXTRA_PUBLIC_KEYS_FILE_URI =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
-        PreviewImportPgpContactFragment::class.java
+        PreviewImportRecipientWithPubKeysFragment::class.java
       )
 
-    fun newInstance(stringExtra: String?, fileUri: Parcelable?): PreviewImportPgpContactFragment {
+    fun newInstance(
+      stringExtra: String?,
+      fileUri: Parcelable?
+    ): PreviewImportRecipientWithPubKeysFragment {
       val args = Bundle()
       args.putString(KEY_EXTRA_PUBLIC_KEY_STRING, stringExtra)
       args.putParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, fileUri)
 
-      val previewImportPgpContactFragment = PreviewImportPgpContactFragment()
-      previewImportPgpContactFragment.arguments = args
-      return previewImportPgpContactFragment
+      val previewImportRecipientWithPubKeysFragment = PreviewImportRecipientWithPubKeysFragment()
+      previewImportRecipientWithPubKeysFragment.arguments = args
+      return previewImportRecipientWithPubKeysFragment
     }
+  }
+
+  override fun onSaveContactClick(publicKeyInfo: PublicKeyInfo) {
+    TODO("Not yet implemented")
+  }
+
+  override fun onUpdateContactClick(publicKeyInfo: PublicKeyInfo) {
+    TODO("Not yet implemented")
   }
 }

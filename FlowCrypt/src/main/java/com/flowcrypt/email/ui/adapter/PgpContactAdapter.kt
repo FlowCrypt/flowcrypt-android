@@ -14,11 +14,11 @@ import android.view.ViewGroup
 import android.widget.CursorAdapter
 import android.widget.TextView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.hootsuite.nachos.NachoTextView
 
 /**
- * This class describe a logic of create and show [PgpContact] objects in the
+ * This class describe a logic of create and show [RecipientWithPubKeys] objects in the
  * [NachoTextView].
  *
  * @author DenBond7

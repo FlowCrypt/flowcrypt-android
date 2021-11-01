@@ -20,7 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
@@ -66,43 +66,14 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
         emit(Result.success(foundContacts))
       }
     }
-  val contactsToLiveData: MutableLiveData<Result<List<PgpContact>>> = MutableLiveData()
-  val contactsCcLiveData: MutableLiveData<Result<List<PgpContact>>> = MutableLiveData()
-  val contactsBccLiveData: MutableLiveData<Result<List<PgpContact>>> = MutableLiveData()
+  val recipientsToLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
+  val recipientsCcLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
+  val recipientsBccLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
 
   val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
 
-  fun copyPubKeysToRecipient(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
-    viewModelScope.launch {
-      val recipient = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
-      if (recipient != null) {
-        val updateCandidate = pgpContact.toRecipientEntity().copy(id = recipient.id)
-        roomDatabase.recipientDao().updateSuspend(updateCandidate)
-      }
-
-      if (!pgpContact.email.equals(pgpContactFromKey.email, ignoreCase = true)) {
-        val existedContact =
-          roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContactFromKey.email)
-        if (existedContact == null) {
-          roomDatabase.recipientDao().insertSuspend(pgpContactFromKey.toRecipientEntity())
-        }
-      }
-    }
-  }
-
-  fun copyPubKeysToRecipient(email: String, recipientEntity: RecipientEntity) {
-    viewModelScope.launch {
-      val pubKeysOfCopyCandidate =
-        roomDatabase.pubKeysDao().getPublicKeysByRecipient(recipientEntity.email)
-      if (pubKeysOfCopyCandidate.isEmpty()) return@launch
-      roomDatabase.pubKeysDao().insertSuspend(
-        pubKeysOfCopyCandidate.map { it.copy(id = null, recipient = email) }
-      )
-    }
-  }
-
-  fun contactChangesLiveData(recipientEntity: RecipientEntity): LiveData<RecipientEntity?> {
-    return roomDatabase.recipientDao().getRecipientByEmailLD(recipientEntity.email)
+  fun contactChangesLiveData(recipientEntity: RecipientEntity): LiveData<RecipientWithPubKeys?> {
+    return roomDatabase.recipientDao().getRecipientsWithPubKeysByEmailsLD(recipientEntity.email)
   }
 
   /**
@@ -116,15 +87,15 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
    *  call
    * to see if you can now get the pubkey. If a pubkey is available, save it back to the database.
    *  c) no record in the db found:
-   *  1. save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
+   *  1. save an empty record eg `new RecipientWithPubKeys(email, null);` - this means we don't know if they have PGP yet
    *  1. look up the email on `flowcrypt.com/attester/pub/EMAIL>`
-   *  1. if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
-   * client);`. The PgpContact constructor will define has_pgp, fingerprint, etc
+   *  1. if pubkey comes back, create something like `new RecipientWithPubKeys(js, email, null, pubkey,
+   * client);`. The RecipientWithPubKeys constructor will define has_pgp, fingerprint, etc
    * for you. Then save that object into database.
-   *  1. if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
+   *  1. if no pubkey found, create `new RecipientWithPubKeys(js, email, null, null, null, null);` - this
    * means we know they don't currently have PGP
    */
-  fun fetchAndUpdateInfoAboutContacts(type: RecipientEntity.Type, emails: List<String>) {
+  fun fetchAndUpdateInfoAboutRecipients(type: RecipientEntity.Type, emails: List<String>) {
     viewModelScope.launch {
       if (emails.isEmpty()) {
         return@launch
@@ -132,67 +103,70 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
       setResultForRemoteContactsLiveData(type, Result.loading())
 
-      val pgpContacts = ArrayList<PgpContact>()
+      val recipients = ArrayList<RecipientWithPubKeys>()
       try {
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
             val emailLowerCase = email.lowercase(Locale.getDefault())
-            var cachedRecipientEntity =
-              roomDatabase.recipientDao().getRecipientByEmailSuspend(emailLowerCase)
+            var cachedRecipientWithPubKeys =
+              roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(emailLowerCase)
 
-            if (cachedRecipientEntity == null) {
-              cachedRecipientEntity = PgpContact(emailLowerCase, null).toRecipientEntity()
-              roomDatabase.recipientDao().insertSuspend(cachedRecipientEntity)
-              cachedRecipientEntity =
-                roomDatabase.recipientDao().getRecipientByEmailSuspend(emailLowerCase)
+            if (cachedRecipientWithPubKeys == null) {
+              roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = emailLowerCase))
+              cachedRecipientWithPubKeys =
+                roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(emailLowerCase)
             } else {
-              try {
-                /*cachedRecipientEntity.publicKey?.let {
-                  val result = PgpKey.parseKeys(it).pgpKeyDetailsList
-                  cachedRecipientEntity?.pgpKeyDetails = result.firstOrNull()
-                }*/
-              } catch (e: Exception) {
-                e.printStackTrace()
-                pgpContacts.add(
-                  cachedRecipientEntity.toPgpContact().copy(hasNotUsablePubKey = true)
-                )
-                continue
+              for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
+                try {
+                  val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+                  publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+                } catch (e: Exception) {
+                  e.printStackTrace()
+                  publicKeyEntity.isNotUsable = true
+                }
               }
             }
 
             try {
-              if (true) {
-                getPgpContactInfoFromServer(email = emailLowerCase)?.let {
-                  cachedRecipientEntity =
-                    updateCachedInfoWithAttesterInfo(cachedRecipientEntity, it, emailLowerCase)
+              if (cachedRecipientWithPubKeys?.hasPgp() == false) {
+                getPgpInfoFromServer(email = emailLowerCase)?.let { pgpKeyDetailsList ->
+                  cachedRecipientWithPubKeys = cachedRecipientWithPubKeys?.let {
+                    updateCachedInfoWithPubKeysFromAttester(it, pgpKeyDetailsList, emailLowerCase)
+                  }
                 }
               } else {
-                cachedRecipientEntity?.pgpKeyDetails?.fingerprint?.let { fingerprint ->
-                  getPgpContactInfoFromServer(fingerprint = fingerprint)?.let {
-                    val cacheLastModified = cachedRecipientEntity?.pgpKeyDetails?.lastModified ?: 0
-                    val attesterLastModified = it.pgpKeyDetails?.lastModified ?: 0
-                    val attesterFingerprint = it.pgpKeyDetails?.fingerprint
+                //todo-denbond7 need to think about this code. Clarify can we have a few pubkeys as a single source
+                for (publicKeyEntity in cachedRecipientWithPubKeys?.publicKeys ?: emptyList()) {
+                  val pgpKeyDetails = publicKeyEntity.pgpKeyDetails ?: continue
+                  getPgpInfoFromServer(fingerprint = publicKeyEntity.fingerprint)?.let {
+                    val cacheLastModified = pgpKeyDetails.lastModified ?: 0
+                    val attesterLastModified = it.firstOrNull()?.lastModified ?: 0
+                    val attesterFingerprint = it.firstOrNull()?.fingerprint
 
-                    if (attesterLastModified > cacheLastModified && fingerprint.equals(
-                        attesterFingerprint,
-                        true
-                      )
+                    if (attesterLastModified > cacheLastModified
+                      && publicKeyEntity.fingerprint.equals(attesterFingerprint, true)
                     ) {
-                      cachedRecipientEntity =
-                        updateCachedInfoWithAttesterInfo(cachedRecipientEntity, it, emailLowerCase)
+                      cachedRecipientWithPubKeys =
+                        cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
+                          updateCachedInfoWithPubKeysFromAttester(
+                            recipientWithPubKeys,
+                            listOf(pgpKeyDetails),
+                            emailLowerCase
+                          )
+                        }
                     }
                   }
                 }
               }
 
-              cachedRecipientEntity?.let { pgpContacts.add(it.toPgpContact()) }
+              cachedRecipientWithPubKeys?.let { recipients.add(it) }
             } catch (e: Exception) {
               e.printStackTrace()
               ExceptionUtil.handleError(e)
             }
           }
         }
-        setResultForRemoteContactsLiveData(type, Result.success(pgpContacts))
+        setResultForRemoteContactsLiveData(type, Result.success(recipients))
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
@@ -201,35 +175,23 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  private suspend fun updateCachedInfoWithAttesterInfo(
-    cachedRecipientEntity: RecipientEntity?,
-    attesterPgpContact: PgpContact, emailLowerCase: String
-  ): RecipientEntity? {
-    cachedRecipientEntity ?: return null
-    val updateCandidate = if (
-      cachedRecipientEntity.name.isNullOrEmpty()
-      && cachedRecipientEntity.email.equals(attesterPgpContact.email, ignoreCase = true)
-    ) {
-      attesterPgpContact.toRecipientEntity().copy(
-        id = cachedRecipientEntity.id,
-        email = cachedRecipientEntity.email
-      )
-    } else {
-      attesterPgpContact.toRecipientEntity().copy(
-        id = cachedRecipientEntity.id,
-        name = cachedRecipientEntity.name,
-        email = cachedRecipientEntity.email
-      )
+  private suspend fun updateCachedInfoWithPubKeysFromAttester(
+    cachedRecipientEntity: RecipientWithPubKeys,
+    list: List<PgpKeyDetails>, emailLowerCase: String
+  ): RecipientWithPubKeys {
+    val publicKeyEntities = list.map { it.toPublicKeyEntity(cachedRecipientEntity.recipient.email) }
+    roomDatabase.pubKeyDao().insertWithReplaceSuspend(publicKeyEntities)
+    val lastVersion =
+      requireNotNull(roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(emailLowerCase))
+    for (publicKeyEntity in lastVersion.publicKeys) {
+      try {
+        val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+        publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+      } catch (e: Exception) {
+        e.printStackTrace()
+        publicKeyEntity.isNotUsable = true
+      }
     }
-
-    roomDatabase.recipientDao().updateSuspend(updateCandidate)
-    val lastVersion = roomDatabase.recipientDao().getRecipientByEmailSuspend(emailLowerCase)
-
-    /*lastVersion?.publicKey?.let {
-      val result = PgpKey.parseKeys(it).pgpKeyDetailsList
-      lastVersion.pgpKeyDetails = result.firstOrNull()
-    }*/
-
     return lastVersion
   }
 
@@ -239,14 +201,15 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun addContact(pgpContact: PgpContact) {
+  fun addRecipientsBasedOnPgpKeyDetails(pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
-      val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
+      val primaryAddress = pgpKeyDetails.mimeAddresses.firstOrNull()?.address ?: return@launch
+      val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(primaryAddress)
       if (contact == null) {
         val isInserted =
-          roomDatabase.recipientDao().insertSuspend(pgpContact.toRecipientEntity()) > 0
+          roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = primaryAddress)) > 0
         if (isInserted) {
-          roomDatabase.pubKeysDao().insertSuspend(pgpContact.toPubKey())
+          roomDatabase.pubKeyDao().insertSuspend(pgpKeyDetails.toPublicKeyEntity(primaryAddress))
         } else {
           val context: Context = getApplication()
           Toast.makeText(
@@ -258,27 +221,47 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun updateContact(pgpContact: PgpContact) {
+  fun copyPubKeysToRecipient(recipientEntity: RecipientEntity?, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
-      val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(pgpContact.email)
-      if (contact != null) {
-        val updateCandidate = pgpContact.toRecipientEntity().copy(id = contact.id)
-        roomDatabase.recipientDao().updateSuspend(updateCandidate)
+      recipientEntity?.let {
+        val existedPubKey = roomDatabase.pubKeyDao()
+          .getPublicKeyByRecipientAndFingerprint(recipientEntity.email, pgpKeyDetails.fingerprint)
+        if (existedPubKey == null) {
+          roomDatabase.pubKeyDao()
+            .insertSuspend(pgpKeyDetails.toPublicKeyEntity(recipientEntity.email))
+        }
       }
     }
   }
 
-  fun copyPubKeysToRecipient(recipientEntity: RecipientEntity?, pgpKeyDetails: PgpKeyDetails) {
+  fun copyPubKeysBetweenRecipients(
+    sourceRecipientEntity: RecipientEntity?,
+    destinationRecipientEntity: RecipientEntity?
+  ) {
     viewModelScope.launch {
-      recipientEntity?.let {
-        val recipientEntityFromPrimaryPgpContact =
-          pgpKeyDetails.primaryPgpContact.toRecipientEntity()
-        roomDatabase.recipientDao().updateSuspend(
-          recipientEntityFromPrimaryPgpContact.copy(
-            id = recipientEntity.id,
-            email = recipientEntity.email.lowercase(Locale.US),
+      sourceRecipientEntity ?: return@launch
+      destinationRecipientEntity ?: return@launch
+
+      val existedPubKeysOfSource =
+        roomDatabase.pubKeyDao().getPublicKeysByRecipient(sourceRecipientEntity.email)
+
+      if (existedPubKeysOfSource.isNotEmpty()) {
+        for (existedPubKey in existedPubKeysOfSource) {
+          val fetchedPubKey = roomDatabase.pubKeyDao().getPublicKeyByRecipientAndFingerprint(
+            destinationRecipientEntity.email,
+            existedPubKey.fingerprint
           )
-        )
+
+          if (fetchedPubKey == null) {
+            roomDatabase.pubKeyDao()
+              .insertSuspend(
+                existedPubKey.copy(
+                  id = null,
+                  recipient = destinationRecipientEntity.email.lowercase()
+                )
+              )
+          }
+        }
       }
     }
   }
@@ -310,34 +293,34 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
   private fun setResultForRemoteContactsLiveData(
     type: RecipientEntity.Type,
-    result: Result<List<PgpContact>>
+    result: Result<List<RecipientWithPubKeys>>
   ) {
     when (type) {
       RecipientEntity.Type.TO -> {
-        contactsToLiveData.value = result
+        recipientsToLiveData.value = result
       }
 
       RecipientEntity.Type.CC -> {
-        contactsCcLiveData.value = result
+        recipientsCcLiveData.value = result
       }
 
       RecipientEntity.Type.BCC -> {
-        contactsBccLiveData.value = result
+        recipientsBccLiveData.value = result
       }
     }
   }
 
   /**
-   * Get information about [PgpContact] from the remote server.
+   * Get information about [RecipientWithPubKeys] from the remote server.
    *
    * @param email Used to generate a request to the server.
-   * @return [PgpContact]
+   * @return [RecipientWithPubKeys]
    * @throws IOException
    */
-  private suspend fun getPgpContactInfoFromServer(
+  private suspend fun getPgpInfoFromServer(
     email: String? = null,
     fingerprint: String? = null
-  ): PgpContact? = withContext(Dispatchers.IO) {
+  ): List<PgpKeyDetails>? = withContext(Dispatchers.IO) {
     try {
       val activeAccount = getActiveAccountSuspend()
       val response = apiRepository.pubLookup(
@@ -350,10 +333,9 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
         Result.Status.SUCCESS -> {
           val pubKeyString = response.data?.pubkey
           if (pubKeyString?.isNotEmpty() == true) {
-            PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList.firstOrNull()?.let {
-              val pgpContact = it.primaryPgpContact
-              pgpContact.pgpKeyDetails = it
-              return@withContext pgpContact
+            val parsedResult = PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList
+            if (parsedResult.isNotEmpty()) {
+              return@withContext parsedResult
             }
           }
         }

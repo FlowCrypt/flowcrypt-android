@@ -84,7 +84,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     supportActionBar?.setTitle(R.string.pub_key)
     initViews(view)
 
-    setupContactsViewModel()
+    setupRecipientsViewModel()
     setupParseKeysViewModel()
   }
 
@@ -132,12 +132,14 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     })
   }
 
-  private fun setupContactsViewModel() {
+  private fun setupRecipientsViewModel() {
     recipientEntity?.let {
       recipientsViewModel.contactChangesLiveData(it)
-        .observe(viewLifecycleOwner, { recipientEntity ->
-          /*this.recipientEntity = recipientEntity
-          parseKeysViewModel.fetchKeys(it.publicKey)*/
+        .observe(viewLifecycleOwner, { recipientWithPubKeys ->
+          this.recipientEntity = recipientWithPubKeys?.recipient
+          parseKeysViewModel.fetchKeys(
+            recipientWithPubKeys?.publicKeys?.firstOrNull()?.publicKey ?: byteArrayOf()
+          )
         })
     }
   }

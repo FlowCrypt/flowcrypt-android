@@ -43,7 +43,7 @@ class PrvKeysRecyclerViewAdapter(
     private val tVFingerprint: TextView = itemView.findViewById(R.id.tVFingerprint)
 
     fun bind(pgpKeyDetails: PgpKeyDetails) {
-      tVEmail.text = pgpKeyDetails.primaryPgpContact.email
+      tVEmail.text = pgpKeyDetails.getUserIdsAsSingleString()
       tVFingerprint.text = GeneralUtil.doSectionsInText(
         originalString = pgpKeyDetails.fingerprint, groupSize = 4
       )

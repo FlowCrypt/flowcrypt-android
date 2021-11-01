@@ -31,16 +31,4 @@ data class PublicKeyInfo constructor(
       email = keyOwner.lowercase()
     )
   }
-
-  fun toPgpContact(): PgpContact {
-    return PgpContact(
-      email = keyOwner,
-      name = null,
-      pubkey = publicKey,
-      hasPgp = true,
-      client = null,
-      fingerprint = fingerprint,
-      lastUse = 0
-    )
-  }
 }
