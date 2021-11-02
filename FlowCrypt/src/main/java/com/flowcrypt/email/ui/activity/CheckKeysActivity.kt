@@ -46,8 +46,7 @@ import java.nio.charset.StandardCharsets
  * Time: 9:59
  * E-mail: DenBond7@gmail.com
  */
-class CheckKeysActivity : BaseActivity(), View.OnClickListener,
-  InfoDialogFragment.OnInfoDialogButtonClickListener {
+class CheckKeysActivity : BaseActivity(), View.OnClickListener {
   private var originalKeys: MutableList<PgpKeyDetails> = mutableListOf()
   private val unlockedKeys: ArrayList<PgpKeyDetails> = ArrayList()
   private val remainingKeys: ArrayList<PgpKeyDetails> = ArrayList()
@@ -142,15 +141,17 @@ class CheckKeysActivity : BaseActivity(), View.OnClickListener,
     when (v.id) {
       R.id.buttonPositiveAction -> {
         UIUtil.hideSoftInput(this, editTextKeyPassword)
-        val typedText = editTextKeyPassword?.text?.toString()
-        if (typedText.isNullOrEmpty()) {
+        val length: Int = editTextKeyPassword?.length() ?: 0
+        val chars = CharArray(length)
+        editTextKeyPassword?.text?.getChars(0, length, chars, 0)
+        if (chars.isEmpty()) {
           showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty))
         } else {
           snackBar?.dismiss()
           getPassphraseType()?.let { passphraseType ->
             checkPrivateKeysViewModel.checkKeys(
               keys = remainingKeys.map { it.copy(passphraseType = passphraseType) },
-              passphrase = Passphrase.fromPassword(typedText)
+              passphrase = Passphrase(chars)
             )
           }
         }
@@ -188,11 +189,6 @@ class CheckKeysActivity : BaseActivity(), View.OnClickListener,
         e.printStackTrace()
       }
     }
-  }
-
-  override fun onInfoDialogButtonClick(requestCode: Int) {
-    setResult(RESULT_CANCELED)
-    finish()
   }
 
   private fun getExtras() {
@@ -289,11 +285,16 @@ class CheckKeysActivity : BaseActivity(), View.OnClickListener,
                   }
 
                 } else {
-                  if (resultKeys.size == 1) {
-                    showInfoSnackbar(rootView, resultKeys.first().e?.message)
-                  } else {
-                    showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
-                  }
+                  showInfoDialogFragment(
+                    dialogMsg = StringBuilder(
+                      resultKeys.first().e?.message ?: getString(R.string.unknown_error)
+                    ).apply {
+                      resultKeys.first().e?.cause?.message?.let { msg ->
+                        clear()
+                        append(getString(R.string.cause, resultKeys.first().e?.message, msg))
+                      }
+                    }.toString()
+                  )
                 }
               }
 

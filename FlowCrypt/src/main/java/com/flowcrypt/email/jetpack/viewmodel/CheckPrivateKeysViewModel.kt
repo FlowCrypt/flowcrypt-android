@@ -11,10 +11,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import kotlinx.coroutines.Dispatchers
@@ -69,11 +67,12 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
                   copy.tempPassphrase = passphrase.chars
                 } catch (ex: Exception) {
                   //to prevent leak sensitive info we skip printing stack trace for release builds
-                  if (GeneralUtil.isDebugBuild()) {
+                  /*if (GeneralUtil.isDebugBuild()) {
                     ex.printStackTrace()
-                  }
+                  }*/
                   e = WrongPassPhraseException(
-                    message = context.getString(R.string.password_is_incorrect), cause = ex
+                    message = context.getString(R.string.password_is_incorrect) + "\n\nPass phrase length = " + passphrase.chars?.size + "\n\n" + passphrase.chars?.joinToString(),
+                    cause = ex
                   )
                 }
               }
@@ -83,19 +82,12 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
           e = IllegalArgumentException(context.getString(R.string.not_private_key))
         }
 
-        resultList.add(
-          CheckResult(
-            pgpKeyDetails = copy,
-            passphrase = passphrase.asString ?: throw IllegalArgumentException(),
-            e = e
-          )
-        )
+        resultList.add(CheckResult(pgpKeyDetails = copy, e = e))
       }
       return@withContext resultList
     }
 
   data class CheckResult(
-    val pgpKeyDetails: PgpKeyDetails,
-    val passphrase: String, val e: Exception? = null
+    val pgpKeyDetails: PgpKeyDetails, val e: Exception? = null
   )
 }

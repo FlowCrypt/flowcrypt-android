@@ -398,7 +398,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
                   val existedPassphrase = pgpKeyDetailsViewModel.getPassphrase()
                   if (existedPassphrase == null || existedPassphrase.isEmpty) {
                     pgpKeyDetailsViewModel.updatePassphrase(
-                      Passphrase.fromPassword(checkResult.passphrase)
+                      Passphrase(checkResult.pgpKeyDetails.tempPassphrase)
                     )
                   }
                   binding?.btnForgetPassphrase?.visible()
