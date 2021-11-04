@@ -433,5 +433,5 @@ dependencies {
 
     implementation 'ch.acra:acra-http:5.8.4'
     //ACRA needs the following dependency to use a custom report sender
-    compileOnly("com.google.auto.service:auto-service-annotations:1.0")
+    compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
 }
