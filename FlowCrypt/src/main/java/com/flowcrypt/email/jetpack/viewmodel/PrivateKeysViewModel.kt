@@ -251,7 +251,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
                 val name = mimeAddress.personal
 
                 val existedRecipientWithPubKeys =
-                  recipientDao.getRecipientWithPubKeysByEmail(address)
+                  recipientDao.getRecipientWithPubKeysByEmailSuspend(address)
                 if (existedRecipientWithPubKeys == null) {
                   recipientDao.insertSuspend(RecipientEntity(email = address, name = name))
                 }

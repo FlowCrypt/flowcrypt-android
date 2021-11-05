@@ -40,7 +40,7 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 17:23
  * E-mail: DenBond7@gmail.com
  */
-class SelectContactsActivity : BaseBackStackActivity(),
+class SelectRecipientsActivity : BaseBackStackActivity(),
   RecipientsRecyclerViewAdapter.OnContactActionsListener, SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
@@ -165,18 +165,18 @@ class SelectContactsActivity : BaseBackStackActivity(),
     val KEY_EXTRA_PGP_CONTACT =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_PGP_CONTACT",
-        SelectContactsActivity::class.java
+        SelectRecipientsActivity::class.java
       )
     private val KEY_EXTRA_TITLE =
-      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectContactsActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectRecipientsActivity::class.java)
     private val KEY_EXTRA_IS_MULTIPLY =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_MULTIPLY",
-        SelectContactsActivity::class.java
+        SelectRecipientsActivity::class.java
       )
 
     fun newIntent(context: Context?, title: String, isMultiply: Boolean): Intent {
-      val intent = Intent(context, SelectContactsActivity::class.java)
+      val intent = Intent(context, SelectRecipientsActivity::class.java)
       intent.putExtra(KEY_EXTRA_TITLE, title)
       intent.putExtra(KEY_EXTRA_IS_MULTIPLY, isMultiply)
       return intent

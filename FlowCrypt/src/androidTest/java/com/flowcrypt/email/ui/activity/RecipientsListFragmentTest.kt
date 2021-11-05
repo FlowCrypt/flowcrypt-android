@@ -19,9 +19,10 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -97,9 +98,14 @@ class RecipientsListFragmentTest : BaseTest() {
 
   private fun addContactsToDatabase() {
     for (email in EMAILS) {
-      val pgpContact = PgpContact(email, null, "", true, null, null, 0)
-      FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
-        .insert(pgpContact.toRecipientEntity())
+      roomDatabase.recipientDao().insert(RecipientEntity(email = email))
+      roomDatabase.pubKeyDao().insert(
+        PublicKeyEntity(
+          recipient = email,
+          fingerprint = "FINGER",
+          publicKey = "KEY".toByteArray()
+        )
+      )
     }
   }
 

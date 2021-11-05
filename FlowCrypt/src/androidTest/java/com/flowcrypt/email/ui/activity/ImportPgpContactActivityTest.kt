@@ -67,8 +67,8 @@ class ImportPgpContactActivityTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<ImportPgpContactActivity>(
-    intent = ImportPgpContactActivity.newIntent(
+  override val activityScenarioRule = activityScenarioRule<ImportRecipientWithPubKeysActivity>(
+    intent = ImportRecipientWithPubKeysActivity.newIntent(
       context = getTargetContext(),
       accountEntity = addAccountToDatabaseRule.account
     )
@@ -77,7 +77,8 @@ class ImportPgpContactActivityTest : BaseTest() {
   private lateinit var fileWithPublicKey: File
   private lateinit var publicKey: String
 
-  private val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+  private val mockWebServerRule = FlowCryptMockWebServerRule(
+    TestConstants.MOCK_WEB_SERVER_PORT,
     object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         if (request.path?.startsWith("/pub", ignoreCase = true) == true) {

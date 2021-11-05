@@ -70,7 +70,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
     .around(
       AddPrivateKeyToDatabaseRule(
         accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "pgp/not_attester_user@flowcrypt.test_prv_default.asc",
+        keyPath = "pgp/not_attested_user@flowcrypt.test_prv_default.asc",
         passphrase = TestConstants.DEFAULT_PASSWORD,
         sourceType = KeyImportDetails.SourceType.EMAIL
       )

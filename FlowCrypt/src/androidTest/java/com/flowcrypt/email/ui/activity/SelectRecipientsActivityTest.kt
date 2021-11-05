@@ -26,9 +26,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddContactsToDatabaseRule
+import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -53,30 +55,30 @@ import java.util.*
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class SelectContactsActivityTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<SelectContactsActivity>()
+class SelectRecipientsActivityTest : BaseTest() {
+  override val activityScenarioRule = activityScenarioRule<SelectRecipientsActivity>()
   private var filterIdlingResource: IdlingResource? = null
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
     .around(AddAccountToDatabaseRule())
-    .around(AddContactsToDatabaseRule(CONTACTS))
+    .around(AddRecipientsToDatabaseRule(CONTACTS))
     .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Before
-  open fun registerFilterIdling() {
+  fun registerFilterIdling() {
     activityScenario?.onActivity { activity ->
-      val baseActivity = (activity as? SelectContactsActivityTest) ?: return@onActivity
+      val baseActivity = (activity as? SelectRecipientsActivityTest) ?: return@onActivity
       filterIdlingResource = baseActivity.filterIdlingResource
       filterIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
   }
 
   @After
-  open fun unregisterFilterIdling() {
+  fun unregisterFilterIdling() {
     filterIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
@@ -171,17 +173,25 @@ class SelectContactsActivityTest : BaseTest() {
       "contact_2@flowcrypt.test",
       "contact_3@flowcrypt.test"
     )
-    private val CONTACTS = ArrayList<PgpContact>()
+    private val CONTACTS = ArrayList<RecipientWithPubKeys>()
 
     init {
       for (i in EMAILS.indices) {
         val email = EMAILS[i]
-        val pgpContact = if (i % 2 == 0) {
-          PgpContact(email, getUserName(email), "publicKey", true, null, null, 0)
-        } else {
-          PgpContact(email, null, "publicKey", true, null, null, 0)
-        }
-        CONTACTS.add(pgpContact)
+        val recipientWithPubKeys = RecipientWithPubKeys(
+          RecipientEntity(
+            email = email,
+            name = if (i % 2 == 0) getUserName(email) else null
+          ),
+          listOf(
+            PublicKeyEntity(
+              recipient = email,
+              fingerprint = "FINGERPRINT",
+              publicKey = "PUBLIC_KEY".toByteArray()
+            )
+          )
+        )
+        CONTACTS.add(recipientWithPubKeys)
       }
     }
 

@@ -32,9 +32,11 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddContactsToDatabaseRule
+import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -73,10 +75,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       uri = "flowcrypt://email.flowcrypt.com/settings/contacts/details",
       extras = Bundle().apply {
         putParcelable(
-          "recipientEntity", PgpContact(
-            EMAIL_DENBOND7, USER_DENBOND7,
-            keyDetails.publicKey, true, null, null, 0
-          ).toRecipientEntity()
+          "recipientEntity", RecipientEntity(email = EMAIL_DENBOND7, name = USER_DENBOND7)
         )
       }
     )
@@ -87,11 +86,17 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     .outerRule(ClearAppSettingsRule())
     .around(AddAccountToDatabaseRule())
     .around(
-      AddContactsToDatabaseRule(
+      AddRecipientsToDatabaseRule(
         listOf(
-          PgpContact(
-            EMAIL_DENBOND7, USER_DENBOND7,
-            keyDetails.publicKey, true, null, null, 0
+          RecipientWithPubKeys(
+            RecipientEntity(email = EMAIL_DENBOND7, name = USER_DENBOND7),
+            listOf(
+              PublicKeyEntity(
+                recipient = EMAIL_DENBOND7,
+                fingerprint = keyDetails.fingerprint,
+                publicKey = keyDetails.publicKey.toByteArray()
+              )
+            )
           )
         )
       )

@@ -67,7 +67,7 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
-import com.flowcrypt.email.ui.activity.SelectContactsActivity
+import com.flowcrypt.email.ui.activity.SelectRecipientsActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -416,7 +416,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
           if (cachedRecipientWithoutPubKeys != null) {
             startActivityForResult(
-              SelectContactsActivity.newIntent(
+              SelectRecipientsActivity.newIntent(
                 context,
                 getString(R.string.use_public_key_from), false
               ), REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT
@@ -448,13 +448,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         when (resultCode) {
           Activity.RESULT_OK -> if (data != null) {
             val recipientEntity =
-              data.getParcelableExtra<RecipientEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
+              data.getParcelableExtra<RecipientEntity>(SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT)
             recipientEntity?.let {
               recipientsViewModel.copyPubKeysBetweenRecipients(
                 recipientEntity,
                 cachedRecipientWithoutPubKeys?.recipient
               )
 
+              updateRecipients()
               updateChips(recipientsTo, recipientWithPubKeysTo)
               updateChips(recipientsCc, recipientWithPubKeysCc)
               updateChips(recipientsBcc, recipientWithPubKeysBcc)

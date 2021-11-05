@@ -132,7 +132,7 @@
     <fragment
         android:id="@+id/recipientsListFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.RecipientsListFragment"
-        android:label="ContactsListFragment"
+        android:label="RecipientsListFragment"
         tools:layout="@layout/fragment_recipients_list">
         <deepLink
             android:id="@+id/deepLink"

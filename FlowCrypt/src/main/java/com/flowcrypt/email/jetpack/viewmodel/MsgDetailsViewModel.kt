@@ -416,7 +416,7 @@ class MsgDetailsViewModel(
           val keyDetails = block.keyDetails ?: continue
           val recipient = keyDetails.mimeAddresses.firstOrNull()?.address ?: continue
           block.existingRecipientWithPubKeys =
-            roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(recipient)
+            roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(recipient)
         }
 
         is DecryptErrorMsgBlock -> {

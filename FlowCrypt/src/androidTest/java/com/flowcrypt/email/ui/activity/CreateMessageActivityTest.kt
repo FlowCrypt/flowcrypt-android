@@ -39,18 +39,20 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
@@ -110,13 +112,9 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
 
   private val defaultMsgEncryptionType: MessageEncryptionType = MessageEncryptionType.ENCRYPTED
 
-  private val pgpContact: PgpContact
-    get() {
-      val details = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-        "pgp/not_attester_user@flowcrypt.test_prv_default.asc"
-      )
-      return details.primaryPgpContact
-    }
+  private val pgpKeyDetails: PgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    "pgp/not_attested_user@flowcrypt.test_prv_default.asc"
+  )
 
   @Test
   fun testEmptyRecipient() {
@@ -358,15 +356,15 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     registerAllIdlingResources()
     intending(hasComponent(ComponentName(getTargetContext(), ImportPublicKeyActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-
-    fillInAllFields(pgpContact.email)
+    val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+    fillInAllFields(email)
 
     //check that we show the right background for a chip
     onView(withId(R.id.editTextRecipientTo))
       .check(
         matches(
           withChipsBackgroundColor(
-            chipText = pgpContact.email,
+            chipText = email,
             backgroundColor = UIUtil.getColor(
               context = getTargetContext(),
               colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
@@ -383,14 +381,8 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val database = FlowCryptRoomDatabase.getDatabase(getTargetContext())
-    val existedContact =
-      requireNotNull(database.recipientDao().getRecipientByEmail(pgpContact.email))
-    database.recipientDao().update(
-      existedContact.copy(
-        publicKey = pgpContact.pubkey?.toByteArray(),
-        hasPgp = true
-      )
+    roomDatabase.pubKeyDao().insert(
+      pgpKeyDetails.toPublicKeyEntity(email)
     )
 
     //move focus to request the field updates
@@ -402,7 +394,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .check(
         matches(
           withChipsBackgroundColor(
-            chipText = pgpContact.email,
+            chipText = email,
             backgroundColor = UIUtil.getColor(
               context = getTargetContext(),
               colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
@@ -480,10 +472,23 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
+    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      "pgp/attested_user@flowcrypt.test_prv_default_strong.asc"
+    )
+
+    pgpKeyDetails.toRecipientEntity()?.let {
+      roomDatabase.recipientDao().insert(it)
+      roomDatabase.pubKeyDao().insert(pgpKeyDetails.toPublicKeyEntity(it.email))
+    }
+
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
+
     val result = Intent()
-    result.putExtra(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT, pgpContact.toRecipientEntity())
-    intending(hasComponent(ComponentName(getTargetContext(), SelectContactsActivity::class.java)))
+    result.putExtra(
+      SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT,
+      pgpKeyDetails.toRecipientEntity()
+    )
+    intending(hasComponent(ComponentName(getTargetContext(), SelectRecipientsActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, result))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -491,6 +496,13 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     onView(withText(R.string.copy_from_other_contact))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    onView(withId(R.id.editTextRecipientTo))
+      .perform(scrollTo(), click(), closeSoftKeyboard())
+
+    onView(withId(R.id.editTextEmailSubject))
+      .perform(scrollTo(), click())
+
     onView(withId(R.id.editTextRecipientTo))
       .check(
         matches(
@@ -516,7 +528,10 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.pgpKeyDetails)
+    val att = EmailUtil.genAttInfoFromPubKey(
+      addPrivateKeyToDatabaseRule.pgpKeyDetails,
+      addPrivateKeyToDatabaseRule.accountEntity.email
+    )
 
     onView(withText(att?.name))
       .check(matches(isDisplayed()))
@@ -530,7 +545,8 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       addAccountToDatabaseRule.account, secondKeyDetails,
       TestConstants.DEFAULT_STRONG_PASSWORD, KeyImportDetails.SourceType.EMAIL
     )
-    val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
+    val att =
+      EmailUtil.genAttInfoFromPubKey(secondKeyDetails, addAccountToDatabaseRule.account.email)
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -574,7 +590,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val att = EmailUtil.genAttInfoFromPubKey(keyDetails)
+    val att = EmailUtil.genAttInfoFromPubKey(keyDetails, addAccountToDatabaseRule.account.email)
 
     onView(withText(att?.name))
       .check(matches(isDisplayed()))
@@ -584,20 +600,20 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
-    val contact = keyDetails.primaryPgpContact
-    FlowCryptRoomDatabase.getDatabase(getTargetContext())
-      .recipientDao().insert(contact.toRecipientEntity())
+    val email = requireNotNull(keyDetails.getPrimaryInternetAddress()).address
+    roomDatabase.recipientDao().insert(requireNotNull(keyDetails.toRecipientEntity()))
+    roomDatabase.pubKeyDao().insert(keyDetails.toPublicKeyEntity(email))
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(contact.email)
+    fillInAllFields(email)
 
     onView(withId(R.id.editTextRecipientTo))
       .check(
         matches(
           withChipsBackgroundColor(
-            contact.email,
+            email,
             UIUtil.getColor(
               getTargetContext(),
               CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED
@@ -618,26 +634,27 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   //fun testShowWarningIfFoundNotUsableKeySHA1() {
   fun testAcceptIfFoundKeySHA1() {
     val keyWithSHA1Algo =
-      TestGeneralUtil.readFileFromAssetsAsString("pgp/sha1@flowcrypt.test_pub.asc")
-    val contact = PgpContact(
-      email = "sha1@flowcrypt.test",
-      hasPgp = true,
-      fingerprint = "5DE92AB364B3100D89FBF460241512660BDDC426",
-      pubkey = keyWithSHA1Algo
+      TestGeneralUtil.readFileFromAssetsAsByteArray("pgp/sha1@flowcrypt.test_pub.asc")
+    val email = "sha1@flowcrypt.test"
+    roomDatabase.recipientDao().insert(RecipientEntity(email = email))
+    roomDatabase.pubKeyDao().insert(
+      PublicKeyEntity(
+        recipient = email,
+        fingerprint = "5DE92AB364B3100D89FBF460241512660BDDC426",
+        publicKey = keyWithSHA1Algo
+      )
     )
-    FlowCryptRoomDatabase.getDatabase(getTargetContext())
-      .recipientDao().insert(contact.toRecipientEntity())
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(contact.email)
+    fillInAllFields(email)
 
     onView(withId(R.id.editTextRecipientTo))
       .check(
         matches(
           withChipsBackgroundColor(
-            contact.email,
+            email,
             UIUtil.getColor(
               getTargetContext(),
               CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
@@ -646,8 +663,8 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
         )
       )
 
-    /*
-    temporary disabled due too https://github.com/FlowCrypt/flowcrypt-android/issues/1478
+
+    /*temporary disabled due too https://github.com/FlowCrypt/flowcrypt-android/issues/1478
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -660,30 +677,33 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
-    val contact = keyDetailsFromAssets.primaryPgpContact
-    val recipientDao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
-    recipientDao.insert(contact.toRecipientEntity())
-    val existedContact = recipientDao.getRecipientByEmail(contact.email)
-      ?: throw IllegalArgumentException("Contact not found")
-
-    val existedKeyExpiration = PgpKey.parseKeys(
-      existedContact.publicKey ?: throw IllegalArgumentException("Empty pub key")
+    val internetAddress = requireNotNull(keyDetailsFromAssets.getPrimaryInternetAddress())
+    val recipientEntity = keyDetailsFromAssets.toRecipientEntity()
+    roomDatabase.recipientDao().insert(requireNotNull(recipientEntity))
+    roomDatabase.pubKeyDao().insert(
+      requireNotNull(keyDetailsFromAssets.toPublicKeyEntity(recipientEntity.email))
     )
-      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
-      ?: throw IllegalArgumentException("No expiration date")
+    val existedRecipient =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existedKeyExpiration =
+      PgpKey.parseKeys(String(existedRecipient.publicKeys.first().publicKey))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
+        ?: throw IllegalArgumentException("No expiration date")
 
     Assert.assertTrue(existedKeyExpiration.isBefore(Instant.now()))
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(contact.email)
+    fillInAllFields(internetAddress.address)
 
     onView(withId(R.id.editTextRecipientTo))
       .check(
         matches(
           withChipsBackgroundColor(
-            contact.email,
+            internetAddress.address,
             UIUtil.getColor(getTargetContext(), R.color.colorPrimary)
           )
         )
@@ -701,11 +721,6 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
           )
         )
       )
-  }
-
-  private fun savePublicKeyInDatabase() {
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
-      .insert(pgpContact.toRecipientEntity())
   }
 
   private fun deleteAtt(att: File) {

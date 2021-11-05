@@ -11,6 +11,7 @@ import android.util.Patterns
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import java.util.Locale
@@ -129,6 +130,14 @@ data class PgpKeyDetails constructor(
       storedPassphrase = tempPassphrase?.let { String(it) },
       passphraseType = passphraseType
         ?: throw IllegalArgumentException("passphraseType is not defined")
+    )
+  }
+
+  fun toRecipientEntity(): RecipientEntity? {
+    val primaryAddress = getPrimaryInternetAddress() ?: return null
+    return RecipientEntity(
+      email = primaryAddress.address,
+      name = primaryAddress.personal
     )
   }
 

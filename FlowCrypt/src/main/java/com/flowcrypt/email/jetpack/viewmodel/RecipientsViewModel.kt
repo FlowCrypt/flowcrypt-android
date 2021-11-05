@@ -109,12 +109,12 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
           if (GeneralUtil.isEmailValid(email)) {
             val emailLowerCase = email.lowercase(Locale.getDefault())
             var cachedRecipientWithPubKeys =
-              roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(emailLowerCase)
+              roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
 
             if (cachedRecipientWithPubKeys == null) {
               roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = emailLowerCase))
               cachedRecipientWithPubKeys =
-                roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(emailLowerCase)
+                roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
             } else {
               for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
                 try {
@@ -138,10 +138,10 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
                 //todo-denbond7 need to think about this code. Clarify can we have a few pubkeys as a single source
                 for (publicKeyEntity in cachedRecipientWithPubKeys?.publicKeys ?: emptyList()) {
                   val pgpKeyDetails = publicKeyEntity.pgpKeyDetails ?: continue
-                  getPgpInfoFromServer(fingerprint = publicKeyEntity.fingerprint)?.let {
+                  getPgpInfoFromServer(fingerprint = publicKeyEntity.fingerprint)?.let { list ->
                     val cacheLastModified = pgpKeyDetails.lastModified ?: 0
-                    val attesterLastModified = it.firstOrNull()?.lastModified ?: 0
-                    val attesterFingerprint = it.firstOrNull()?.fingerprint
+                    val attesterLastModified = list.firstOrNull()?.lastModified ?: 0
+                    val attesterFingerprint = list.firstOrNull()?.fingerprint
 
                     if (attesterLastModified > cacheLastModified
                       && publicKeyEntity.fingerprint.equals(attesterFingerprint, true)
@@ -150,7 +150,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
                         cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
                           updateCachedInfoWithPubKeysFromAttester(
                             recipientWithPubKeys,
-                            listOf(pgpKeyDetails),
+                            list,
                             emailLowerCase
                           )
                         }
@@ -178,11 +178,26 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   private suspend fun updateCachedInfoWithPubKeysFromAttester(
     cachedRecipientEntity: RecipientWithPubKeys,
     list: List<PgpKeyDetails>, emailLowerCase: String
-  ): RecipientWithPubKeys {
+  ): RecipientWithPubKeys = withContext(Dispatchers.IO) {
     val publicKeyEntities = list.map { it.toPublicKeyEntity(cachedRecipientEntity.recipient.email) }
     roomDatabase.pubKeyDao().insertWithReplaceSuspend(publicKeyEntities)
+
+    for (pgpKeyDetails in list) {
+      val existedPublicKeyEntity = roomDatabase.pubKeyDao().getPublicKeyByRecipientAndFingerprint(
+        cachedRecipientEntity.recipient.email,
+        pgpKeyDetails.fingerprint
+      )
+
+      existedPublicKeyEntity?.let {
+        roomDatabase.pubKeyDao()
+          .updateSuspend(it.copy(publicKey = pgpKeyDetails.publicKey.toByteArray()))
+      }
+    }
+
     val lastVersion =
-      requireNotNull(roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(emailLowerCase))
+      requireNotNull(
+        roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
+      )
     for (publicKeyEntity in lastVersion.publicKeys) {
       try {
         val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
@@ -192,7 +207,8 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
         publicKeyEntity.isNotUsable = true
       }
     }
-    return lastVersion
+
+    return@withContext lastVersion
   }
 
   fun deleteContact(recipientEntity: RecipientEntity) {

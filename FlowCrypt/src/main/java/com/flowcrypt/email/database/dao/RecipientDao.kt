@@ -60,5 +60,9 @@ interface RecipientDao : BaseDao<RecipientEntity> {
 
   @Transaction
   @Query("SELECT * FROM recipients WHERE email = :email")
-  suspend fun getRecipientWithPubKeysByEmail(email: String): RecipientWithPubKeys?
+  suspend fun getRecipientWithPubKeysByEmailSuspend(email: String): RecipientWithPubKeys?
+
+  @Transaction
+  @Query("SELECT * FROM recipients WHERE email = :email")
+  fun getRecipientWithPubKeysByEmail(email: String): RecipientWithPubKeys?
 }
