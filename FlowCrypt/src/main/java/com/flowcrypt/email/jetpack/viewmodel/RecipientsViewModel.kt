@@ -108,8 +108,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
             val emailLowerCase = email.lowercase(Locale.getDefault())
-            var cachedRecipientWithPubKeys =
-              roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
+            var cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
 
             if (cachedRecipientWithPubKeys == null) {
               roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = emailLowerCase))
@@ -128,37 +127,15 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
             }
 
             try {
-              if (cachedRecipientWithPubKeys?.hasPgp() == false) {
-                getPgpInfoFromServer(email = emailLowerCase)?.let { pgpKeyDetailsList ->
-                  cachedRecipientWithPubKeys = cachedRecipientWithPubKeys?.let {
-                    updateCachedInfoWithPubKeysFromAttester(it, pgpKeyDetailsList, emailLowerCase)
-                  }
-                }
-              } else {
-                //todo-denbond7 need to think about this code. Clarify can we have a few pubkeys as a single source
-                for (publicKeyEntity in cachedRecipientWithPubKeys?.publicKeys ?: emptyList()) {
-                  val pgpKeyDetails = publicKeyEntity.pgpKeyDetails ?: continue
-                  getPgpInfoFromServer(fingerprint = publicKeyEntity.fingerprint)?.let { list ->
-                    val cacheLastModified = pgpKeyDetails.lastModified ?: 0
-                    val attesterLastModified = list.firstOrNull()?.lastModified ?: 0
-                    val attesterFingerprint = list.firstOrNull()?.fingerprint
-
-                    if (attesterLastModified > cacheLastModified
-                      && publicKeyEntity.fingerprint.equals(attesterFingerprint, true)
-                    ) {
-                      cachedRecipientWithPubKeys =
-                        cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
-                          updateCachedInfoWithPubKeysFromAttester(
-                            recipientWithPubKeys,
-                            list,
-                            emailLowerCase
-                          )
-                        }
-                    }
-                  }
+              getPgpInfoFromServer(email = emailLowerCase)?.let { pgpKeyDetailsList ->
+                cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
+                  updateCachedInfoWithPubKeysFromLookUp(
+                    recipientWithPubKeys,
+                    pgpKeyDetailsList
+                  )
                 }
               }
-
+              cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
               cachedRecipientWithPubKeys?.let { recipients.add(it) }
             } catch (e: Exception) {
               e.printStackTrace()
@@ -175,40 +152,60 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  private suspend fun updateCachedInfoWithPubKeysFromAttester(
-    cachedRecipientEntity: RecipientWithPubKeys,
-    list: List<PgpKeyDetails>, emailLowerCase: String
-  ): RecipientWithPubKeys = withContext(Dispatchers.IO) {
-    val publicKeyEntities = list.map { it.toPublicKeyEntity(cachedRecipientEntity.recipient.email) }
-    roomDatabase.pubKeyDao().insertWithReplaceSuspend(publicKeyEntities)
+  private suspend fun getCachedRecipientWithPubKeys(emailLowerCase: String): RecipientWithPubKeys? =
+    withContext(Dispatchers.IO) {
+      val cachedRecipientWithPubKeys = roomDatabase.recipientDao()
+        .getRecipientWithPubKeysByEmailSuspend(emailLowerCase) ?: return@withContext null
+
+      for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
+        try {
+          val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+          publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+        } catch (e: Exception) {
+          e.printStackTrace()
+          publicKeyEntity.isNotUsable = true
+        }
+      }
+      return@withContext cachedRecipientWithPubKeys
+    }
+
+  private suspend fun updateCachedInfoWithPubKeysFromLookUp(
+    cachedRecipientEntity: RecipientWithPubKeys, list: List<PgpKeyDetails>
+  ) = withContext(Dispatchers.IO) {
+    val email = cachedRecipientEntity.recipient.email
+    val mapOfUniquePubKeysFromLookUp = mutableMapOf<String, PgpKeyDetails>()
 
     for (pgpKeyDetails in list) {
-      val existedPublicKeyEntity = roomDatabase.pubKeyDao().getPublicKeyByRecipientAndFingerprint(
-        cachedRecipientEntity.recipient.email,
-        pgpKeyDetails.fingerprint
-      )
-
-      existedPublicKeyEntity?.let {
-        roomDatabase.pubKeyDao()
-          .updateSuspend(it.copy(publicKey = pgpKeyDetails.publicKey.toByteArray()))
+      val fingerprint = pgpKeyDetails.fingerprint
+      val existingPgpKeyDetails = mapOfUniquePubKeysFromLookUp[fingerprint]
+      if (existingPgpKeyDetails == null) {
+        mapOfUniquePubKeysFromLookUp[fingerprint] = pgpKeyDetails
+      } else {
+        val existingLastModified = existingPgpKeyDetails.lastModified ?: 0
+        val candidateLastModified = pgpKeyDetails.lastModified ?: 0
+        if (candidateLastModified > existingLastModified) {
+          mapOfUniquePubKeysFromLookUp[fingerprint] = pgpKeyDetails
+        }
       }
     }
 
-    val lastVersion =
-      requireNotNull(
-        roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
-      )
-    for (publicKeyEntity in lastVersion.publicKeys) {
-      try {
-        val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
-        publicKeyEntity.pgpKeyDetails = result.firstOrNull()
-      } catch (e: Exception) {
-        e.printStackTrace()
-        publicKeyEntity.isNotUsable = true
+    val lookUpList = mapOfUniquePubKeysFromLookUp.values
+    for (pgpKeyDetails in lookUpList) {
+      val existingPublicKeyEntity =
+        cachedRecipientEntity.publicKeys.firstOrNull { it.fingerprint == pgpKeyDetails.fingerprint }
+      if (existingPublicKeyEntity != null) {
+        val existingLastModified = existingPublicKeyEntity.pgpKeyDetails?.lastModified ?: 0
+        val lookUpLastModified = pgpKeyDetails.lastModified ?: 0
+
+        if (lookUpLastModified > existingLastModified) {
+          roomDatabase.pubKeyDao().updateSuspend(
+            existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
+          )
+        }
+      } else {
+        roomDatabase.pubKeyDao().insertWithReplaceSuspend(pgpKeyDetails.toPublicKeyEntity(email))
       }
     }
-
-    return@withContext lastVersion
   }
 
   fun deleteContact(recipientEntity: RecipientEntity) {
@@ -240,9 +237,9 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   fun copyPubKeysToRecipient(recipientEntity: RecipientEntity?, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
       recipientEntity?.let {
-        val existedPubKey = roomDatabase.pubKeyDao()
+        val existingPubKey = roomDatabase.pubKeyDao()
           .getPublicKeyByRecipientAndFingerprint(recipientEntity.email, pgpKeyDetails.fingerprint)
-        if (existedPubKey == null) {
+        if (existingPubKey == null) {
           roomDatabase.pubKeyDao()
             .insertSuspend(pgpKeyDetails.toPublicKeyEntity(recipientEntity.email))
         }
@@ -258,20 +255,20 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       sourceRecipientEntity ?: return@launch
       destinationRecipientEntity ?: return@launch
 
-      val existedPubKeysOfSource =
+      val existingPubKeysOfSource =
         roomDatabase.pubKeyDao().getPublicKeysByRecipient(sourceRecipientEntity.email)
 
-      if (existedPubKeysOfSource.isNotEmpty()) {
-        for (existedPubKey in existedPubKeysOfSource) {
+      if (existingPubKeysOfSource.isNotEmpty()) {
+        for (existingPubKey in existingPubKeysOfSource) {
           val fetchedPubKey = roomDatabase.pubKeyDao().getPublicKeyByRecipientAndFingerprint(
             destinationRecipientEntity.email,
-            existedPubKey.fingerprint
+            existingPubKey.fingerprint
           )
 
           if (fetchedPubKey == null) {
             roomDatabase.pubKeyDao()
               .insertSuspend(
-                existedPubKey.copy(
+                existingPubKey.copy(
                   id = null,
                   recipient = destinationRecipientEntity.email.lowercase()
                 )

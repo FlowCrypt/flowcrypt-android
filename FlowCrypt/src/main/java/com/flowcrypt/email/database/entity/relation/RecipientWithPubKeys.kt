@@ -23,8 +23,7 @@ data class RecipientWithPubKeys(
   @Relation(
     parentColumn = "email",
     entityColumn = "recipient",
-    entity = PublicKeyEntity::class,
-    projection = ["fingerprint", "public_key"]
+    entity = PublicKeyEntity::class
   )
   val publicKeys: List<PublicKeyEntity>
 ) : Parcelable {
