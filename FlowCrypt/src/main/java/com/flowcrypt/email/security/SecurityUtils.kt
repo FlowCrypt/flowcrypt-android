@@ -114,15 +114,19 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): MutableList<String> {
+    fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): List<String> {
       val publicKeys = mutableListOf<String>()
       val recipientsWithPubKeys = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
         .getRecipientsWithPubKeysByEmails(emails)
 
-      //Note: for now we encrypt a message for all public keys of the given recipient
       for (recipientWithPubKeys in recipientsWithPubKeys) {
-        if (recipientWithPubKeys.publicKeys.isNotEmpty()) {
-          publicKeys.addAll(recipientWithPubKeys.publicKeys.map { String(it.publicKey) })
+        for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
+          val pgpKeyDetailsList = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+          for (pgpKeyDetails in pgpKeyDetailsList) {
+            if (!pgpKeyDetails.isExpired && !pgpKeyDetails.isRevoked) {
+              publicKeys.add(pgpKeyDetails.publicKey)
+            }
+          }
         }
       }
 
@@ -139,15 +143,14 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderKeyDetails(
+    fun getSenderPgpKeyDetailsList(
       context: Context,
       account: AccountEntity,
       senderEmail: String
-    ): PgpKeyDetails {
+    ): List<PgpKeyDetails> {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
-      val keys = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
-
-      if (keys.isEmpty()) {
+      val matchingRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
+      if (matchingRings.isEmpty()) {
         if (account.email.equals(senderEmail, ignoreCase = true)) {
           throw NoKeyAvailableException(context, account.email)
         } else {
@@ -155,7 +158,7 @@ class SecurityUtils {
         }
       }
 
-      return keys.first().toPgpKeyDetails()
+      return keysStorage.getPgpKeyDetailsList(keysStorage.getPGPSecretKeyRingsByUserId(senderEmail))
     }
 
     /**

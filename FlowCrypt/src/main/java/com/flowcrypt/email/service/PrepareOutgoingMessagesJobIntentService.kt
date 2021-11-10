@@ -262,13 +262,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
       val senderEmail = outgoingMsgInfo.from
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-      pubKeys = SecurityUtils.getRecipientsPubKeys(applicationContext, recipients)
-      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(
-        applicationContext,
-        accountEntity, senderEmail
-      )
-      pubKeys.add(
-        senderKeyDetails.publicKey
+      pubKeys = mutableListOf()
+      pubKeys.addAll(SecurityUtils.getRecipientsPubKeys(applicationContext, recipients))
+      pubKeys.addAll(
+        SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, accountEntity, senderEmail)
+          .map { it.publicKey }
       )
     }
 

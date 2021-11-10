@@ -678,21 +678,18 @@ class EmailUtil {
     ): Message {
       val session = Session.getInstance(Properties())
       val senderEmail = outgoingMsgInfo.from
-      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(context, accountEntity, senderEmail)
+      val senderPgpKeyDetailsList =
+        SecurityUtils.getSenderPgpKeyDetailsList(context, accountEntity, senderEmail)
       var pubKeys: List<String>? = null
       var prvKeys: List<String>? = null
       var ringProtector: SecretKeyRingProtector? = null
 
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-        pubKeys = SecurityUtils.getRecipientsPubKeys(context, recipients)
-        pubKeys.add(
-          senderKeyDetails.publicKey
-        )
-        prvKeys = listOf(
-          senderKeyDetails.privateKey
-            ?: throw IllegalStateException("Sender private key not found")
-        )
+        pubKeys = mutableListOf()
+        pubKeys.addAll(SecurityUtils.getRecipientsPubKeys(context, recipients))
+        pubKeys.addAll(senderPgpKeyDetailsList.map { it.publicKey })
+        prvKeys = senderPgpKeyDetailsList.map { requireNotNull(it.privateKey) }
         ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
       }
 
