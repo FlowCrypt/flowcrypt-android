@@ -20,7 +20,6 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.ui.activity.ImportRecipientWithPubKeysActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
 import com.flowcrypt.email.util.UIUtil
@@ -101,12 +100,10 @@ class RecipientsListFragment : BaseFragment(),
     recyclerViewContacts?.adapter = recipientsRecyclerViewAdapter
 
     root.findViewById<View>(R.id.floatActionButtonImportPublicKey)?.setOnClickListener {
-      context?.let {
-        startActivityForResult(
-          ImportRecipientWithPubKeysActivity.newIntent(it, account),
-          REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY
-        )
-      }
+      navController?.navigate(
+        RecipientsListFragmentDirections
+          .actionRecipientsListFragmentToImportRecipientsFromSourceFragment()
+      )
     }
   }
 

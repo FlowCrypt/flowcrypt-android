@@ -58,8 +58,8 @@ class ImportPgpContactActivityDisallowAttesterSearchTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<ImportRecipientWithPubKeysActivity>(
-    intent = ImportRecipientWithPubKeysActivity.newIntent(
+  override val activityScenarioRule = activityScenarioRule<ImportRecipientsFromSourceActivity>(
+    intent = ImportRecipientsFromSourceActivity.newIntent(
       context = getTargetContext(),
       accountEntity = addAccountToDatabaseRule.account
     )

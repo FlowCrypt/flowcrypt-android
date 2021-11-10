@@ -42,7 +42,7 @@ import java.util.*
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportRecipientWithPubKeysActivity : BaseImportKeyActivity() {
+class ImportRecipientsFromSourceActivity : BaseImportKeyActivity() {
   private val recipientsViewModel: RecipientsViewModel by viewModels()
   private var editTextEmailOrId: EditText? = null
 
@@ -50,7 +50,7 @@ class ImportRecipientWithPubKeysActivity : BaseImportKeyActivity() {
   private var fetchPubKeysRequestCode = 0L
 
   override val contentViewResourceId: Int
-    get() = R.layout.activity_import_public_keys
+    get() = R.layout.fragment_import_recipients_from_source
 
   override val isPrivateKeyMode: Boolean
     get() = false
@@ -147,7 +147,7 @@ class ImportRecipientWithPubKeysActivity : BaseImportKeyActivity() {
 
   private fun fetchPubKey() {
     val v = editTextEmailOrId ?: return
-    UIUtil.hideSoftInput(this@ImportRecipientWithPubKeysActivity, v)
+    UIUtil.hideSoftInput(this@ImportRecipientsFromSourceActivity, v)
 
     if (v.text.isNullOrEmpty()) {
       Toast.makeText(this, R.string.please_type_key_id_or_email, Toast.LENGTH_SHORT).show()
@@ -158,7 +158,7 @@ class ImportRecipientWithPubKeysActivity : BaseImportKeyActivity() {
     if (GeneralUtil.isConnected(this)) {
       editTextEmailOrId?.text?.toString()?.let {
         fetchPubKeysRequestCode = System.currentTimeMillis()
-        recipientsViewModel.fetchPubKeys(it, fetchPubKeysRequestCode)
+        recipientsViewModel.fetchPubKeys(it)
       }
     } else {
       showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
@@ -226,7 +226,7 @@ class ImportRecipientWithPubKeysActivity : BaseImportKeyActivity() {
         accountEntity = accountEntity,
         title = context.getString(R.string.add_public_keys_of_your_contacts),
         throwErrorIfDuplicateFoundEnabled = false,
-        cls = ImportRecipientWithPubKeysActivity::class.java
+        cls = ImportRecipientsFromSourceActivity::class.java
       )
     }
   }

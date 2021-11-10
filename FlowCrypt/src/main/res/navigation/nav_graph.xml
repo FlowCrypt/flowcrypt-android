@@ -128,6 +128,9 @@
         <action
             android:id="@+id/action_recipientsListFragment_to_publicKeyDetailsFragment"
             app:destination="@id/publicKeyDetailsFragment" />
+        <action
+            android:id="@+id/action_recipientsListFragment_to_importRecipientsFromSourceFragment"
+            app:destination="@id/importRecipientsFromSourceFragment" />
     </fragment>
 
     <fragment
@@ -164,21 +167,18 @@
         android:id="@+id/attesterSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment"
         android:label="AttesterSettingsFragment"
-        tools:layout="@layout/fragment_attester_settings">
-    </fragment>
+        tools:layout="@layout/fragment_attester_settings"></fragment>
 
     <fragment
         android:id="@+id/notificationsSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment"
-        android:label="NotificationsSettingsFragment">
-    </fragment>
+        android:label="NotificationsSettingsFragment"></fragment>
 
     <fragment
         android:id="@+id/legalSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment"
         android:label="LegalSettingsFragment"
-        tools:layout="@layout/fragment_legal">
-    </fragment>
+        tools:layout="@layout/fragment_legal"></fragment>
 
     <fragment
         android:id="@+id/serverSettingsFragment"
@@ -242,6 +242,12 @@
             android:id="@+id/action_experimentalSettingsFragment_to_mainDevPreferencesFragment"
             app:destination="@id/mainDevPreferencesFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/importRecipientsFromSourceFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ImportRecipientsFromSourceFragment"
+        android:label="ImportRecipientsFromSourceFragment"
+        tools:layout="@layout/fragment_import_recipients_from_source" />
 
     <fragment
         android:id="@+id/mainDevPreferencesFragment"
@@ -349,6 +355,16 @@
             app:argType="com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment$LogicType" />
     </dialog>
 
+    <dialog
+        android:id="@+id/lookUpPubKeysDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment"
+        android:label="LookUpPubKeyDialogFragment"
+        tools:layout="@layout/fragment_look_up_pub_keys">
+        <argument
+            android:name="keyIdOrEmail"
+            app:argType="string" />
+    </dialog>
+
     <action
         android:id="@+id/action_global_twoWayDialogFragment"
         app:destination="@id/twoWayDialogFragment" />
@@ -358,4 +374,7 @@
     <action
         android:id="@+id/action_global_fixNeedPassphraseIssueDialogFragment"
         app:destination="@id/fixNeedPassphraseIssueDialogFragment" />
+    <action
+        android:id="@+id/action_global_lookUpPubKeysDialogFragment"
+        app:destination="@id/lookUpPubKeysDialogFragment" />
 </navigation>

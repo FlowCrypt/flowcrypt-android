@@ -185,7 +185,7 @@
 
         <activity
             android:exported="false"
-            android:name=".ui.activity.ImportRecipientWithPubKeysActivity"
+            android:name=".ui.activity.ImportRecipientsFromSourceActivity"
             android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 

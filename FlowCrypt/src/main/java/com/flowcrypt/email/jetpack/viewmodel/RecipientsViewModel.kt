@@ -24,9 +24,13 @@ import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -45,6 +49,7 @@ import java.util.*
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
+  private val controlledRunnerForPubKeysFromServer = ControlledRunner<Result<PubResponse?>>()
 
   val allContactsLiveData: LiveData<List<RecipientEntity>> =
     roomDatabase.recipientDao().getAllRecipientsLD()
@@ -71,6 +76,10 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   val recipientsBccLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
 
   val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
+  private val lookUpPubKeysMutableStateFlow: MutableStateFlow<Result<PubResponse?>> =
+    MutableStateFlow(Result.loading())
+  val lookUpPubKeysStateFlow: StateFlow<Result<PubResponse?>> =
+    lookUpPubKeysMutableStateFlow.asStateFlow()
 
   fun contactChangesLiveData(recipientEntity: RecipientEntity): LiveData<RecipientWithPubKeys?> {
     return roomDatabase.recipientDao().getRecipientsWithPubKeysByEmailsLD(recipientEntity.email)
@@ -291,16 +300,18 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
+  fun fetchPubKeys(keyIdOrEmail: String) {
     viewModelScope.launch {
-      pubKeysFromServerLiveData.value = Result.loading(requestCode = requestCode)
+      lookUpPubKeysMutableStateFlow.value = Result.loading()
       val activeAccount = getActiveAccountSuspend()
-      pubKeysFromServerLiveData.value = apiRepository.pubLookup(
-        requestCode = requestCode,
-        context = getApplication(),
-        identData = keyIdOrEmail,
-        orgRules = activeAccount?.clientConfiguration
-      )
+      lookUpPubKeysMutableStateFlow.value =
+        controlledRunnerForPubKeysFromServer.cancelPreviousThenRun {
+          return@cancelPreviousThenRun apiRepository.pubLookup(
+            context = getApplication(),
+            identData = keyIdOrEmail,
+            orgRules = activeAccount?.clientConfiguration
+          )
+        }
     }
   }
 
