@@ -689,7 +689,10 @@ class EmailUtil {
         pubKeys = mutableListOf()
         pubKeys.addAll(SecurityUtils.getRecipientsPubKeys(context, recipients))
         pubKeys.addAll(senderPgpKeyDetailsList.map { it.publicKey })
-        prvKeys = senderPgpKeyDetailsList.map { requireNotNull(it.privateKey) }
+        prvKeys = listOf(
+          senderPgpKeyDetailsList.firstOrNull()?.privateKey
+            ?: throw IllegalStateException("Sender private key not found")
+        )
         ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
       }
 
