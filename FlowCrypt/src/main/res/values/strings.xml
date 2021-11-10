@@ -461,7 +461,9 @@
     <string name="fingerprints_">Fingerprints:</string>
     <string name="warning_key_expired">Warning: this key was expired on %1$s</string>
     <string name="warning_no_expected_email">Warning: it seems this key doesn\'t relates to expected email address %1$s</string>
-    <string name="warning_one_of_pub_keys_is_expired">The public key of one of your recipients is expired. Sending encrypted emails to expired public keys is not possible.\n\nPlease ask the recipient(s) to send you an updated Public Key.</string>
+    <string name="warning_one_of_recipients_has_expired_pub_key">One or more of your recipients have expired public keys (marked in orange).\n\nPlease ask them to send you updated public key. If this is an enterprise installation, please ask your systems admin.</string>
+    <string name="warning_one_of_recipients_has_revoked_pub_key">One or more of your recipients have revoked public keys (marked in red).\n\nPlease ask them to send you a new public key. If this is an enterprise installation, please ask your systems admin.</string>
+    <string name="warning_one_of_recipients_has_not_usable_pub_key">The public key of one of your recipients is wrong or not usable due to security reasons.\n\nPlease ask the recipient(s) to send you a new Public Key.</string>
     <string name="create_new_message">Create a new message</string>
     <string name="add_new_contact">Add a new contact</string>
     <string name="add_new_private_key">Add a new private key</string>
@@ -529,7 +531,6 @@
     <string name="no_connection_or_server_is_not_reachable">No connection or the server is not reachable</string>
     <string name="inform_sender">Inform the sender</string>
     <string name="key_sha1_warning_msg">This OpenPGP key is not supported with message: "No suitable signatures found on the key". It could be because it\'s missing internal signatures, or the signatures are wrongly made, or it may be using archaic algorithms that are no longer secure and no longer supported (such as SHA-1).</string>
-    <string name="warning_one_of_pub_keys_is_not_usable">The public key of one of your recipients is wrong or not usable due to security reasons.\n\nPlease ask the recipient(s) to send you a new Public Key.</string>
     <string name="could_not_extract_key_details">Could not extract the key details</string>
     <string name="decrypt_error_message_bad_mdc">Security threat - opening this message is dangerous because it was modified in transit.</string>
     <string name="decrypt_error_message_no_mdc">Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.</string>

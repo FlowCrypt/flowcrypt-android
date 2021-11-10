@@ -41,16 +41,20 @@ data class RecipientWithPubKeys(
     return 0
   }
 
-  fun hasPgp(): Boolean {
+  fun hasAtLeastOnePubKey(): Boolean {
     return publicKeys.isNotEmpty()
   }
 
-  fun hasNotExpiredKeys(): Boolean {
+  fun hasNotExpiredPubKey(): Boolean {
     return publicKeys.any { it.pgpKeyDetails?.isExpired?.not() ?: false }
   }
 
-  fun hasUsableKeys(): Boolean {
-    return publicKeys.any { if (it.isNotUsable != null) it.isNotUsable?.not() ?: false else true }
+  fun hasNotRevokedPubKey(): Boolean {
+    return publicKeys.any { it.pgpKeyDetails?.isRevoked?.not() ?: false }
+  }
+
+  fun hasUsablePubKey(): Boolean {
+    return publicKeys.any { (it.isNotUsable ?: false).not() }
   }
 
   companion object CREATOR : Parcelable.Creator<RecipientWithPubKeys> {

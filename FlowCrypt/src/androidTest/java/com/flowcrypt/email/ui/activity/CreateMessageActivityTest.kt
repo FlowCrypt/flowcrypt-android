@@ -367,7 +367,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
             chipText = email,
             backgroundColor = UIUtil.getColor(
               context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
             )
           )
         )
@@ -397,7 +397,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
             chipText = email,
             backgroundColor = UIUtil.getColor(
               context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
             )
           )
         )
@@ -510,7 +510,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
             chipText = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
             backgroundColor = UIUtil.getColor(
               context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
             )
           )
         )
@@ -616,7 +616,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
             email,
             UIUtil.getColor(
               getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED
+              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED
             )
           )
         )
@@ -625,7 +625,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withText(R.string.warning_one_of_pub_keys_is_expired))
+    onView(withText(R.string.warning_one_of_recipients_has_expired_pub_key))
       .check(matches(isDisplayed()))
       .perform(click())
   }
@@ -657,7 +657,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
             email,
             UIUtil.getColor(
               getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
             )
           )
         )

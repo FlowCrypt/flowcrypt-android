@@ -245,25 +245,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           fetchDetailsAboutRecipients(RecipientEntity.Type.BCC)
           return false
         }
-        if (hasRecipientWithoutPgp(
-            true,
-            recipientWithPubKeysTo,
-            recipientWithPubKeysCc,
-            recipientWithPubKeysBcc
-          )
-        ) {
-          return false
-        }
-        if (hasRecipientWithExpiredPubKey(
-            recipientWithPubKeysTo,
-            recipientWithPubKeysCc,
-            recipientWithPubKeysBcc
-          )
-        ) {
-          return false
-        }
-
-        if (hasRecipientWithNotUsablePubKey(
+        if (hasUnusableRecipient(
             recipientWithPubKeysTo,
             recipientWithPubKeysCc,
             recipientWithPubKeysBcc
@@ -978,59 +960,29 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   /**
-   * Check that all recipients have PGP.
-   *
-   * @return true if all recipients have PGP, other wise false.
+   * Check that all recipients are usable.
    */
-  private fun hasRecipientWithoutPgp(
-    isRemoveActionEnabled: Boolean,
-    vararg list: List<RecipientWithPubKeys>?
-  ): Boolean {
+  private fun hasUnusableRecipient(vararg list: List<RecipientWithPubKeys>?): Boolean {
     for (sublist in list) {
       sublist?.let {
         for (recipientWithPubKeys in it) {
-          if (!recipientWithPubKeys.hasPgp()) {
-            showNoPgpFoundDialog(recipientWithPubKeys, isRemoveActionEnabled)
+          if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
+            showNoPgpFoundDialog(recipientWithPubKeys, true)
             return true
           }
-        }
-      }
-    }
 
-    return false
-  }
-
-  /**
-   * Check that all recipients have not-expired pub keys.
-   *
-   * @return true if all recipients have not-expired pub keys, other wise false.
-   */
-  private fun hasRecipientWithExpiredPubKey(vararg list: List<RecipientWithPubKeys>?): Boolean {
-    for (sublist in list) {
-      sublist?.let {
-        for (recipientWithPubKeys in it) {
-          if (!recipientWithPubKeys.hasNotExpiredKeys()) {
-            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_expired))
+          if (!recipientWithPubKeys.hasNotExpiredPubKey()) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_expired_pub_key))
             return true
           }
-        }
-      }
-    }
 
-    return false
-  }
+          if (!recipientWithPubKeys.hasNotRevokedPubKey()) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_revoked_pub_key))
+            return true
+          }
 
-  /**
-   * Check that all recipients have usable pub keys.
-   *
-   * @return true if all recipients have usable pub keys, other wise false.
-   */
-  private fun hasRecipientWithNotUsablePubKey(vararg list: List<RecipientWithPubKeys>?): Boolean {
-    for (sublist in list) {
-      sublist?.let {
-        for (recipientWithPubKeys in it) {
-          if (!recipientWithPubKeys.hasUsableKeys()) {
-            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_not_usable))
+          if (!recipientWithPubKeys.hasUsablePubKey()) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_not_usable_pub_key))
             return true
           }
         }
@@ -1062,9 +1014,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               pgpContactChipSpan.text.toString(), ignoreCase = true
             )
           ) {
-            pgpContactChipSpan.hasPgp = recipientWithPubKeys.hasPgp()
-            pgpContactChipSpan.isExpired = !recipientWithPubKeys.hasNotExpiredKeys()
-            pgpContactChipSpan.hasNotUsablePubKey = !recipientWithPubKeys.hasUsableKeys()
+            pgpContactChipSpan.hasAtLeastOnePubKey = recipientWithPubKeys.hasAtLeastOnePubKey()
+            pgpContactChipSpan.hasNotExpiredPubKey = recipientWithPubKeys.hasNotExpiredPubKey()
+            pgpContactChipSpan.hasUsablePubKey = recipientWithPubKeys.hasUsablePubKey()
+            pgpContactChipSpan.hasNotRevokedPubKey = recipientWithPubKeys.hasNotRevokedPubKey()
             break
           }
         }

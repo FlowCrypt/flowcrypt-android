@@ -30,6 +30,7 @@ import javax.mail.internet.InternetAddress
 data class PgpKeyDetails constructor(
   @Expose val isFullyDecrypted: Boolean,
   @Expose val isFullyEncrypted: Boolean,
+  @Expose val isRevoked: Boolean,
   @Expose @SerializedName("private") val privateKey: String?,
   @Expose @SerializedName("public") val publicKey: String,
   @Expose val users: List<String>,
@@ -60,6 +61,7 @@ data class PgpKeyDetails constructor(
   constructor(source: Parcel) : this(
     source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean,
+    source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readString(),
     source.readString() ?: throw IllegalArgumentException("pubkey can't be null"),
     source.createStringArrayList() ?: throw NullPointerException(),
@@ -79,6 +81,7 @@ data class PgpKeyDetails constructor(
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeValue(isFullyDecrypted)
     writeValue(isFullyEncrypted)
+    writeValue(isRevoked)
     writeString(privateKey)
     writeString(publicKey)
     writeStringList(users)
@@ -157,6 +160,7 @@ data class PgpKeyDetails constructor(
 
     if (isFullyDecrypted != other.isFullyDecrypted) return false
     if (isFullyEncrypted != other.isFullyEncrypted) return false
+    if (isRevoked != other.isRevoked) return false
     if (privateKey != other.privateKey) return false
     if (publicKey != other.publicKey) return false
     if (users != other.users) return false
@@ -177,6 +181,7 @@ data class PgpKeyDetails constructor(
   override fun hashCode(): Int {
     var result = isFullyDecrypted.hashCode()
     result = 31 * result + isFullyEncrypted.hashCode()
+    result = 31 * result + isRevoked.hashCode()
     result = 31 * result + (privateKey?.hashCode() ?: 0)
     result = 31 * result + publicKey.hashCode()
     result = 31 * result + users.hashCode()

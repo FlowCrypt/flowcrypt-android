@@ -99,7 +99,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdAdvancedNoResult() {
     check(
       recipient = "wkd_advanced_no_result@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -107,7 +107,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdAdvancedPub() {
     check(
       recipient = "wkd_advanced_pub@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
     )
   }
 
@@ -115,7 +115,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdAdvancedSkippedWkdDirectNoPolicyPub() {
     check(
       recipient = "wkd_direct_no_policy@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -123,7 +123,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdAdvancedSkippedWkdDirectNoResult() {
     check(
       recipient = "wkd_direct_no_result@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -131,7 +131,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdAdvancedSkippedWkdDirectPub() {
     check(
       recipient = "wkd_direct_pub@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
     )
   }
 
@@ -139,7 +139,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdAdvancedTimeOutWkdDirectAvailable() {
     check(
       recipient = "wkd_direct_pub@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
     )
   }
 
@@ -147,7 +147,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdAdvancedTimeOutWkdDirectTimeOut() {
     check(
       recipient = "wkd_advanced_direct_timeout@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -155,7 +155,7 @@ class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
   fun testWkdPrv() {
     check(
       recipient = "wkd_prv@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 

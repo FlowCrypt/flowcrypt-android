@@ -73,6 +73,7 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
   return PgpKeyDetails(
     isFullyDecrypted = keyRingInfo.isFullyDecrypted,
     isFullyEncrypted = keyRingInfo.isFullyEncrypted,
+    isRevoked = getPublicKey().hasRevocation(),
     privateKey = privateKey,
     publicKey = publicKey,
     users = keyRingInfo.userIds,
