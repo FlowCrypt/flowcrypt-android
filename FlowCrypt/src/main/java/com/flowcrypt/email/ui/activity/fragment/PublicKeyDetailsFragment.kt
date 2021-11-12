@@ -39,6 +39,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.util.Date
@@ -77,6 +78,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
     recipientEntity = args.recipientEntity
+    setupParseKeysViewModel()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -85,51 +87,52 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     initViews(view)
 
     setupRecipientsViewModel()
-    setupParseKeysViewModel()
   }
 
   private fun setupParseKeysViewModel() {
-    parseKeysViewModel.parseKeysLiveData.observe(viewLifecycleOwner, {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          showProgress()
-        }
-
-        Result.Status.SUCCESS -> {
-          val pgpKeyDetailsList = it.data
-          if (pgpKeyDetailsList.isNullOrEmpty()) {
-            Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
-            navController?.navigateUp()
-          } else {
-            details = pgpKeyDetailsList.first()
-            updateViews()
-            showContent()
+    lifecycleScope.launchWhenStarted {
+      parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            showProgress()
           }
-        }
 
-        Result.Status.EXCEPTION -> {
-          showStatus(getString(R.string.could_not_extract_key_details))
-
-          var msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-          ?: getString(R.string.unknown_error)
-
-          if (it.exception is NoSuchElementException) {
-            val matchingString = "No suitable signatures found on the key."
-            if (matchingString.equals(other = it.exception.message, ignoreCase = true)) {
-              msg = getString(R.string.key_sha1_warning_msg)
+          Result.Status.SUCCESS -> {
+            val pgpKeyDetailsList = it.data
+            if (pgpKeyDetailsList.isNullOrEmpty()) {
+              Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
+              navController?.navigateUp()
+            } else {
+              details = pgpKeyDetailsList.first()
+              updateViews()
+              showContent()
             }
           }
 
-          navController?.navigate(
-            NavGraphDirections.actionGlobalInfoDialogFragment(
-              requestCode = 0,
-              dialogTitle = "",
-              dialogMsg = msg
+          Result.Status.EXCEPTION -> {
+            showStatus(getString(R.string.could_not_extract_key_details))
+
+            var msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: getString(R.string.unknown_error)
+
+            if (it.exception is NoSuchElementException) {
+              val matchingString = "No suitable signatures found on the key."
+              if (matchingString.equals(other = it.exception.message, ignoreCase = true)) {
+                msg = getString(R.string.key_sha1_warning_msg)
+              }
+            }
+
+            navController?.navigate(
+              NavGraphDirections.actionGlobalInfoDialogFragment(
+                requestCode = 0,
+                dialogTitle = "",
+                dialogMsg = msg
+              )
             )
-          )
+          }
         }
       }
-    })
+    }
   }
 
   private fun setupRecipientsViewModel() {
@@ -137,7 +140,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       recipientsViewModel.contactChangesLiveData(it)
         .observe(viewLifecycleOwner, { recipientWithPubKeys ->
           this.recipientEntity = recipientWithPubKeys?.recipient
-          parseKeysViewModel.fetchKeys(
+          parseKeysViewModel.parseKeys(
             recipientWithPubKeys?.publicKeys?.firstOrNull()?.publicKey ?: byteArrayOf()
           )
         })

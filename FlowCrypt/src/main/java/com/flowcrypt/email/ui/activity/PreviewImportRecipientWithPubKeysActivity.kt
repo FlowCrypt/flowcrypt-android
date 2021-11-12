@@ -15,7 +15,7 @@ import android.view.MenuItem
 import android.view.View
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
-import com.flowcrypt.email.ui.activity.fragment.PreviewImportRecipientWithPubKeysFragment
+import com.flowcrypt.email.ui.activity.fragment.PreviewImportPubKeyWithPubKeysFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 
@@ -27,6 +27,7 @@ import com.flowcrypt.email.util.GeneralUtil
  * Time: 18:01
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 delete me
 class PreviewImportRecipientWithPubKeysActivity : BaseBackStackActivity() {
 
   override val contentViewResourceId: Int
@@ -49,11 +50,11 @@ class PreviewImportRecipientWithPubKeysActivity : BaseBackStackActivity() {
 
     val fragmentManager = supportFragmentManager
     var fragment =
-      fragmentManager.findFragmentById(R.id.layoutContent) as PreviewImportRecipientWithPubKeysFragment?
+      fragmentManager.findFragmentById(R.id.layoutContent) as PreviewImportPubKeyWithPubKeysFragment?
 
     if (fragment == null) {
       fragment =
-        PreviewImportRecipientWithPubKeysFragment.newInstance(publicKeysString, publicKeysFileUri)
+        PreviewImportPubKeyWithPubKeysFragment.newInstance(publicKeysString, publicKeysFileUri)
       fragmentManager.beginTransaction().add(R.id.layoutContent, fragment).commit()
     }
   }

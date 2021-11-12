@@ -5,146 +5,140 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.content.Context
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.model.PublicKeyInfo
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.visible
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
 /**
- * This adapter can be used for showing information about recipients when we want to import them
+ * This adapter can be used for showing information about public keys when we want to import them
  *
  * @author Denis Bondarenko
  * Date: 09.05.2018
  * Time: 08:07
  * E-mail: DenBond7@gmail.com
  */
-//todo-denbond7 Need to think about this functionality more
-class ImportRecipientWithPubKeysRecyclerViewAdapter
-  : RecyclerView.Adapter<ImportRecipientWithPubKeysRecyclerViewAdapter.ViewHolder>() {
+class ImportOrUpdatePubKeysRecyclerViewAdapter(
+  private val pubKeyActionsListener: PubKeyActionsListener? = null
+) : ListAdapter<PgpKeyDetails, ImportOrUpdatePubKeysRecyclerViewAdapter.ViewHolder>
+  (DiffUtilCallBack()) {
 
-  val publicKeys = mutableListOf<PublicKeyInfo>()
-  var recipientActionsListener: RecipientActionsListener? = null
+  val existingPubKeyEntities = mutableMapOf<String, PublicKeyEntity>()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    return ViewHolder(
+    val view =
       LayoutInflater.from(parent.context).inflate(R.layout.import_pgp_contact_item, parent, false)
-    )
+    return ViewHolder(view)
   }
 
-  override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-    val context = viewHolder.itemView.context
-    val publicKeyInfo = publicKeys[position]
-
-    viewHolder.buttonUpdateContact.visibility = View.GONE
-    viewHolder.buttonSaveContact.visibility = View.GONE
-
-    if (!TextUtils.isEmpty(publicKeyInfo.keyOwner)) {
-      viewHolder.textViewKeyOwnerTemplate.text = context.getString(
-        R.string.template_message_part_public_key_owner,
-        publicKeyInfo.keyOwner
-      )
-    }
-
-    UIUtil.setHtmlTextToTextView(
-      context.getString(
-        R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", publicKeyInfo.fingerprint, 4)
-      ), viewHolder.textViewFingerprintTemplate
-    )
-
-    if (publicKeyInfo.hasPgp()) {
-      //todo-denbond7 temporary disabled. Need to think about this functionality
-      /*if (publicKeyInfo.isUpdateEnabled) {
-        viewHolder.textViewAlreadyImported.visibility = View.GONE
-        viewHolder.buttonUpdateContact.visibility = View.VISIBLE
-        viewHolder.buttonUpdateContact.setOnClickListener { v ->
-          updateContact(
-            viewHolder.adapterPosition,
-            v,
-            context,
-            publicKeyInfo
-          )
-        }
-      } else {
-        viewHolder.textViewAlreadyImported.visibility = View.VISIBLE
-      }*/
-      viewHolder.textViewAlreadyImported.visibility = View.VISIBLE
-    } else {
-      viewHolder.textViewAlreadyImported.visibility = View.GONE
-      viewHolder.buttonSaveContact.visibility = View.VISIBLE
-      viewHolder.buttonSaveContact.setOnClickListener { v ->
-        saveContact(
-          viewHolder.adapterPosition,
-          v,
-          context,
-          publicKeyInfo
-        )
-      }
-    }
+  override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    getItem(position)?.let { holder.bind(it, pubKeyActionsListener) }
   }
 
-  override fun getItemCount(): Int {
-    return publicKeys.size
-  }
-
-  fun swap(newList: Collection<PublicKeyInfo>) {
-    publicKeys.clear()
-    publicKeys.addAll(newList)
-    notifyDataSetChanged()
-  }
-
-  private fun saveContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
-    /*val pgpContact = PgpContact(
-      publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-      null, publicKeyInfo.fingerprint, 0
-    )
-    recipientActionsListener?.onSaveContactClick(publicKeyInfo)
-    Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
-    v.visibility = View.GONE
-    publicKeyInfo.pgpContact = pgpContact
-    notifyItemChanged(position)*/
-  }
-
-  private fun updateContact(
-    position: Int,
-    v: View,
-    context: Context,
-    publicKeyInfo: PublicKeyInfo
-  ) {
-    /*val pgpContact = PgpContact(
-      publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
-      null, publicKeyInfo.fingerprint, 0
-    )
-
-    recipientActionsListener?.onUpdateContactClick(publicKeyInfo)
-    Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
-    v.visibility = View.GONE
-    publicKeyInfo.pgpContact = pgpContact
-    notifyItemChanged(position)*/
+  fun swap(map: Map<String, PublicKeyEntity>) {
+    existingPubKeyEntities.clear()
+    existingPubKeyEntities.putAll(map)
+    notifyItemRangeChanged(0, itemCount)
   }
 
   /**
    * The view holder implementation for a better performance.
    */
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    var textViewKeyOwnerTemplate: TextView = itemView.findViewById(R.id.textViewKeyOwnerTemplate)
-    var textViewFingerprintTemplate: TextView =
+    private val textViewKeyOwnerTemplate: TextView =
+      itemView.findViewById(R.id.textViewKeyOwnerTemplate)
+    private val textViewFingerprintTemplate: TextView =
       itemView.findViewById(R.id.textViewFingerprintTemplate)
-    var textViewAlreadyImported: TextView = itemView.findViewById(R.id.textViewAlreadyImported)
-    var buttonSaveContact: Button = itemView.findViewById(R.id.buttonSaveContact)
-    var buttonUpdateContact: Button = itemView.findViewById(R.id.buttonUpdateContact)
+    private val textViewAlreadyImported: TextView =
+      itemView.findViewById(R.id.textViewAlreadyImported)
+    private val buttonSaveContact: Button = itemView.findViewById(R.id.buttonSaveContact)
+    private val buttonUpdateContact: Button = itemView.findViewById(R.id.buttonUpdateContact)
+
+    fun bind(
+      pgpKeyDetails: PgpKeyDetails,
+      pubKeyActionsListener: PubKeyActionsListener?
+    ) {
+      val context = itemView.context
+      val address = pgpKeyDetails.getPrimaryInternetAddress()?.address?.lowercase() ?: ""
+      val existingPubKeyEntity = existingPubKeyEntities[address + pgpKeyDetails.fingerprint]
+
+      buttonUpdateContact.visibility = View.GONE
+      buttonSaveContact.visibility = View.GONE
+
+      if (pgpKeyDetails.getPrimaryInternetAddress()?.address?.isNotEmpty() == true) {
+        textViewKeyOwnerTemplate.text = context.getString(
+          R.string.template_message_part_public_key_owner,
+          address
+        )
+      }
+
+      UIUtil.setHtmlTextToTextView(
+        context.getString(
+          R.string.template_message_part_public_key_fingerprint,
+          GeneralUtil.doSectionsInText(" ", pgpKeyDetails.fingerprint, 4)
+        ), textViewFingerprintTemplate
+      )
+
+      if (existingPubKeyEntity != null) {
+        val existingLastModified = existingPubKeyEntity.pgpKeyDetails?.lastModified ?: 0
+        val candidateLastModified = pgpKeyDetails.lastModified ?: 0
+
+        if (candidateLastModified > existingLastModified) {
+          textViewAlreadyImported.visible()
+          buttonUpdateContact.visible()
+          buttonUpdateContact.setOnClickListener {
+            if (GeneralUtil.isEmailValid(address)) {
+              pubKeyActionsListener?.onUpdatePubKeyClick(
+                pgpKeyDetails = pgpKeyDetails,
+                existingPublicKeyEntity = existingPubKeyEntity
+              )
+            }
+          }
+        } else {
+          textViewAlreadyImported.visible()
+        }
+        textViewAlreadyImported.visible()
+      } else {
+        textViewAlreadyImported.gone()
+        buttonSaveContact.visible()
+        buttonSaveContact.setOnClickListener {
+          if (GeneralUtil.isEmailValid(address)) {
+            pubKeyActionsListener?.onSavePubKeyClick(
+              pgpKeyDetails = pgpKeyDetails
+            )
+          }
+        }
+      }
+    }
   }
 
-  interface RecipientActionsListener {
-    fun onSaveContactClick(publicKeyInfo: PublicKeyInfo)
-    fun onUpdateContactClick(publicKeyInfo: PublicKeyInfo)
+  class DiffUtilCallBack : DiffUtil.ItemCallback<PgpKeyDetails>() {
+    override fun areItemsTheSame(oldItem: PgpKeyDetails, newItem: PgpKeyDetails) =
+      oldItem.fingerprint == newItem.fingerprint
+
+    override fun areContentsTheSame(oldItem: PgpKeyDetails, newItem: PgpKeyDetails) =
+      oldItem == newItem
+  }
+
+  interface PubKeyActionsListener {
+    fun onSavePubKeyClick(
+      pgpKeyDetails: PgpKeyDetails
+    )
+
+    fun onUpdatePubKeyClick(
+      pgpKeyDetails: PgpKeyDetails,
+      existingPublicKeyEntity: PublicKeyEntity
+    )
   }
 }

@@ -537,4 +537,9 @@
     <string name="msg_contains_not_valid_pub_key">This message contained a Public Key that was not valid.\n\n%1$s</string>
     <string name="msg_contains_not_valid_block">This message contained a block with type = %1$s that was not valid.\n\n%2$s</string>
     <string name="could_not_save_new_recipient">Couldn\'t save a new recipient</string>
+    <string name="recipient_already_exist">Recipient %1$s is already exist</string>
+    <string name="primary_address_not_defined">Primary address is not defined</string>
+    <string name="key_has_already_been_added">This key has already been added</string>
+    <string name="could_not_save_pub_key_for_recipient">Couldn\'t save %1$s for %2$s</string>
+    <string name="could_not_update_pub_key_for_recipient">Couldn\'t update a public key for %1$s</string>
 </resources>

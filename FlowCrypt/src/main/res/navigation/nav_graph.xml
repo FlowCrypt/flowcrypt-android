@@ -167,18 +167,18 @@
         android:id="@+id/attesterSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment"
         android:label="AttesterSettingsFragment"
-        tools:layout="@layout/fragment_attester_settings"></fragment>
+        tools:layout="@layout/fragment_attester_settings" />
 
     <fragment
         android:id="@+id/notificationsSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment"
-        android:label="NotificationsSettingsFragment"></fragment>
+        android:label="NotificationsSettingsFragment" />
 
     <fragment
         android:id="@+id/legalSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment"
         android:label="LegalSettingsFragment"
-        tools:layout="@layout/fragment_legal"></fragment>
+        tools:layout="@layout/fragment_legal" />
 
     <fragment
         android:id="@+id/serverSettingsFragment"
@@ -247,12 +247,32 @@
         android:id="@+id/importRecipientsFromSourceFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ImportRecipientsFromSourceFragment"
         android:label="ImportRecipientsFromSourceFragment"
-        tools:layout="@layout/fragment_import_recipients_from_source" />
+        tools:layout="@layout/fragment_import_recipients_from_source">
+        <action
+            android:id="@+id/action_importRecipientsFromSourceFragment_to_parseAndSavePubKeysFragment"
+            app:destination="@id/parseAndSavePubKeysFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/mainDevPreferencesFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.preferences.MainDevPreferencesFragment"
         android:label="MainDevPreferencesFragment" />
+
+    <fragment
+        android:id="@+id/parseAndSavePubKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ParseAndSavePubKeysFragment"
+        android:label="ParseAndSavePubKeysFragment">
+        <argument
+            android:name="source"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="uri"
+            android:defaultValue="@null"
+            app:argType="android.net.Uri"
+            app:nullable="true" />
+    </fragment>
 
     <dialog
         android:id="@+id/twoWayDialogFragment"
@@ -365,6 +385,16 @@
             app:argType="string" />
     </dialog>
 
+    <dialog
+        android:id="@+id/findKeysInClipboardDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment"
+        android:label="FindKeysInClipboardDialogFragment"
+        tools:layout="@layout/fragment_find_keys_in_clipboard">
+        <argument
+            android:name="isPrivateKeyMode"
+            app:argType="boolean" />
+    </dialog>
+
     <action
         android:id="@+id/action_global_twoWayDialogFragment"
         app:destination="@id/twoWayDialogFragment" />
@@ -377,4 +407,7 @@
     <action
         android:id="@+id/action_global_lookUpPubKeysDialogFragment"
         app:destination="@id/lookUpPubKeysDialogFragment" />
+    <action
+        android:id="@+id/action_global_findKeysInClipboardDialogFragment"
+        app:destination="@id/findKeysInClipboardDialogFragment" />
 </navigation>

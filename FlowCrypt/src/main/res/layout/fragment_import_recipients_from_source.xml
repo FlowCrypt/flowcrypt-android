@@ -9,7 +9,7 @@
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/textViewTitle"
+        android:id="@+id/tVTitle"
         style="@style/ScreenHeading"
         android:layout_width="0dp"
         android:layout_marginBottom="@dimen/default_margin_content"
@@ -21,7 +21,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputLayoutKeyIdOrEmail"
+        android:id="@+id/tILKeyIdOrEmail"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -32,10 +32,10 @@
         android:orientation="horizontal"
         app:layout_constraintEnd_toStartOf="@+id/iBSearchKey"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/textViewTitle">
+        app:layout_constraintTop_toBottomOf="@+id/tVTitle">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editTextKeyIdOrEmail"
+            android:id="@+id/eTKeyIdOrEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -50,13 +50,13 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/search_by_key_id_or_email"
-        app:layout_constraintBottom_toBottomOf="@+id/textInputLayoutKeyIdOrEmail"
+        app:layout_constraintBottom_toBottomOf="@+id/tILKeyIdOrEmail"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-        app:layout_constraintTop_toTopOf="@+id/textInputLayoutKeyIdOrEmail"
+        app:layout_constraintTop_toTopOf="@+id/tILKeyIdOrEmail"
         app:srcCompat="@drawable/ic_person_search_green_24dp" />
 
     <Button
-        android:id="@+id/buttonLoadFromFile"
+        android:id="@+id/btLoadFromFile"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
@@ -64,10 +64,10 @@
         android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyIdOrEmail" />
+        app:layout_constraintTop_toBottomOf="@+id/tILKeyIdOrEmail" />
 
     <Button
-        android:id="@+id/buttonLoadFromClipboard"
+        android:id="@+id/btLoadFromClipboard"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
@@ -75,7 +75,7 @@
         android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/buttonLoadFromFile" />
+        app:layout_constraintTop_toBottomOf="@+id/btLoadFromFile" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineLeft"

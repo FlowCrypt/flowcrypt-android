@@ -5,10 +5,10 @@
 
 package com.flowcrypt.email.database.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import kotlinx.coroutines.flow.Flow
 
 /**
  * @author Denis Bondarenko
@@ -22,7 +22,7 @@ interface PubKeyDao : BaseDao<PublicKeyEntity> {
   suspend fun getAllPublicKeys(): List<PublicKeyEntity>
 
   @Query("SELECT * FROM public_keys")
-  fun getAllPublicKeysLD(): LiveData<List<PublicKeyEntity>>
+  fun getAllPublicKeysFlow(): Flow<List<PublicKeyEntity>>
 
   @Query("SELECT * FROM public_keys WHERE recipient = :recipient")
   suspend fun getPublicKeysByRecipient(recipient: String): List<PublicKeyEntity>

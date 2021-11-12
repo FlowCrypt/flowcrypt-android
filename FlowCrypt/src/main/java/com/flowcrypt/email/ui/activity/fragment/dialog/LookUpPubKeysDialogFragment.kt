@@ -39,44 +39,8 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    collectLookUpPubKeysStateFlow()
     recipientsViewModel.fetchPubKeys(args.keyIdOrEmail)
-    lifecycleScope.launchWhenStarted {
-      recipientsViewModel.lookUpPubKeysStateFlow.collect {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            baseActivity?.countingIdlingResource?.incrementSafely()
-            binding?.pBLoading?.visible()
-            binding?.btnRetry?.gone()
-            binding?.tVStatusMessage?.text = getString(R.string.loading)
-          }
-
-          Result.Status.SUCCESS -> {
-            it.data?.pubkey.let { pubKeys ->
-              setFragmentResult(
-                REQUEST_KEY_PUB_KEYS,
-                bundleOf(KEY_PUB_KEYS to pubKeys)
-              )
-            }
-            baseActivity?.countingIdlingResource?.decrementSafely()
-            navController?.navigateUp()
-          }
-
-          Result.Status.EXCEPTION, Result.Status.ERROR -> {
-            binding?.pBLoading?.gone()
-            binding?.btnRetry?.visible()
-
-            val exception = it.exception ?: return@collect
-            binding?.tVStatusMessage?.text = if (exception.message.isNullOrEmpty()) {
-              exception.javaClass.simpleName
-            } else exception.message
-
-            baseActivity?.countingIdlingResource?.decrementSafely()
-          }
-          else -> {
-          }
-        }
-      }
-    }
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -98,6 +62,46 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
     }
 
     return builder.create()
+  }
+
+  private fun collectLookUpPubKeysStateFlow() {
+    lifecycleScope.launchWhenStarted {
+      recipientsViewModel.lookUpPubKeysStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            baseActivity?.countingIdlingResource?.incrementSafely()
+            binding?.pBLoading?.visible()
+            binding?.btnRetry?.gone()
+            binding?.tVStatusMessage?.text = getString(R.string.loading)
+          }
+
+          Result.Status.SUCCESS -> {
+            navController?.navigateUp()
+            it.data?.pubkey.let { pubKeys ->
+              setFragmentResult(
+                REQUEST_KEY_PUB_KEYS,
+                bundleOf(KEY_PUB_KEYS to pubKeys)
+              )
+            }
+            baseActivity?.countingIdlingResource?.decrementSafely()
+          }
+
+          Result.Status.EXCEPTION, Result.Status.ERROR -> {
+            binding?.pBLoading?.gone()
+            binding?.btnRetry?.visible()
+
+            val exception = it.exception ?: return@collect
+            binding?.tVStatusMessage?.text = if (exception.message.isNullOrEmpty()) {
+              exception.javaClass.simpleName
+            } else exception.message
+
+            baseActivity?.countingIdlingResource?.decrementSafely()
+          }
+          else -> {
+          }
+        }
+      }
+    }
   }
 
   companion object {

@@ -42,6 +42,7 @@ import java.util.*
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 delete me
 class ImportRecipientsFromSourceActivity : BaseImportKeyActivity() {
   private val recipientsViewModel: RecipientsViewModel by viewModels()
   private var editTextEmailOrId: EditText? = null
@@ -132,7 +133,7 @@ class ImportRecipientsFromSourceActivity : BaseImportKeyActivity() {
 
   override fun initViews() {
     super.initViews()
-    this.editTextEmailOrId = findViewById(R.id.editTextKeyIdOrEmail)
+    this.editTextEmailOrId = findViewById(R.id.eTKeyIdOrEmail)
     this.editTextEmailOrId?.setOnEditorActionListener { _, actionId, _ ->
       if (actionId == EditorInfo.IME_ACTION_SEARCH) {
         fetchPubKey()
