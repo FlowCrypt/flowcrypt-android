@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
@@ -21,10 +23,11 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
-import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
+import com.flowcrypt.email.jetpack.viewmodel.ImportPubKeysFromSourceSharedViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment
 import com.flowcrypt.email.ui.adapter.ImportOrUpdatePubKeysRecyclerViewAdapter
 import kotlinx.coroutines.flow.collect
 
@@ -36,7 +39,8 @@ import kotlinx.coroutines.flow.collect
  */
 class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
   private val args by navArgs<ParseAndSavePubKeysFragmentArgs>()
-  private val parseKeysViewModel: ParseKeysViewModel by viewModels()
+  private val importPubKeysFromSourceSharedViewModel: ImportPubKeysFromSourceSharedViewModel
+      by activityViewModels()
   private val cachedPubKeysKeysViewModel: CachedPubKeysKeysViewModel by viewModels()
   private var binding: FragmentParseAndSavePubKeysBinding? = null
 
@@ -67,7 +71,8 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    parseKeysViewModel.parseKeys(getSourceInputStreamFromArgs())
+    subscribeToImportAllPubKeysFromSourceResult()
+    importPubKeysFromSourceSharedViewModel.parseKeys(getSourceInputStreamFromArgs())
   }
 
   override fun onCreateView(
@@ -82,13 +87,16 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
     supportActionBar?.title = getString(R.string.add_contact)
     initViews()
 
-    setupParseKeysViewModel()
+    setupImportPubKeysFromSourceSharedViewModel()
     setupCachedPubKeysKeysViewModel()
   }
 
   private fun initViews() {
     binding?.btImportAll?.setOnClickListener {
-      cachedPubKeysKeysViewModel.importAllPubKeysWithConflictResolution(pubKeysAdapter.currentList)
+      navController?.navigate(
+        ParseAndSavePubKeysFragmentDirections
+          .actionParseAndSavePubKeysFragmentToImportAllPubKeysFromSourceDialogFragment()
+      )
     }
 
     binding?.rVPubKeys?.setHasFixedSize(true)
@@ -96,9 +104,9 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
     binding?.rVPubKeys?.adapter = pubKeysAdapter
   }
 
-  private fun setupParseKeysViewModel() {
+  private fun setupImportPubKeysFromSourceSharedViewModel() {
     lifecycleScope.launchWhenStarted {
-      parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
+      importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
             showProgress()
@@ -169,20 +177,6 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
         }
       }
     }
-
-    lifecycleScope.launchWhenStarted {
-      cachedPubKeysKeysViewModel.importAllPubKeysPubKeyStateFlow.collect {
-        when (it.status) {
-          Result.Status.SUCCESS -> {
-            toast(R.string.success)
-            navController?.navigateUp()
-          }
-
-          else -> {
-          }
-        }
-      }
-    }
   }
 
   private fun getSourceInputStreamFromArgs() = when {
@@ -201,6 +195,19 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
 
     else -> {
       byteArrayOf().inputStream()
+    }
+  }
+
+  private fun subscribeToImportAllPubKeysFromSourceResult() {
+    setFragmentResultListener(
+      ImportAllPubKeysFromSourceDialogFragment.REQUEST_KEY_IMPORT_PUB_KEYS_RESULT
+    ) { _, bundle ->
+      val result =
+        bundle.getBoolean(ImportAllPubKeysFromSourceDialogFragment.KEY_IMPORT_PUB_KEYS_RESULT)
+      if (result) {
+        toast(R.string.success)
+        navController?.popBackStack(R.id.recipientsListFragment, false)
+      }
     }
   }
 }

@@ -28,7 +28,7 @@ import java.io.InputStream
  *         Time: 2:24 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ParseKeysViewModel(application: Application) : AccountViewModel(application) {
+open class ParseKeysViewModel(application: Application) : AccountViewModel(application) {
   private val pgpKeyDetailsListMutableStateFlow: MutableStateFlow<Result<List<PgpKeyDetails>>> =
     MutableStateFlow(Result.none())
   val pgpKeyDetailsListStateFlow: StateFlow<Result<List<PgpKeyDetails>>> =

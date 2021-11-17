@@ -261,7 +261,8 @@
     <fragment
         android:id="@+id/parseAndSavePubKeysFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ParseAndSavePubKeysFragment"
-        android:label="ParseAndSavePubKeysFragment">
+        android:label="ParseAndSavePubKeysFragment"
+        tools:layout="@layout/fragment_parse_and_save_pub_keys">
         <argument
             android:name="source"
             android:defaultValue="@null"
@@ -272,6 +273,9 @@
             android:defaultValue="@null"
             app:argType="android.net.Uri"
             app:nullable="true" />
+        <action
+            android:id="@+id/action_parseAndSavePubKeysFragment_to_importAllPubKeysFromSourceDialogFragment"
+            app:destination="@id/importAllPubKeysFromSourceDialogFragment" />
     </fragment>
 
     <dialog
@@ -394,6 +398,12 @@
             android:name="isPrivateKeyMode"
             app:argType="boolean" />
     </dialog>
+
+    <dialog
+        android:id="@+id/importAllPubKeysFromSourceDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment"
+        android:label="ImportAllPubKeysFromSourceDialogFragment"
+        tools:layout="@layout/fragment_import_all_pub_keys_from_source"></dialog>
 
     <action
         android:id="@+id/action_global_twoWayDialogFragment"

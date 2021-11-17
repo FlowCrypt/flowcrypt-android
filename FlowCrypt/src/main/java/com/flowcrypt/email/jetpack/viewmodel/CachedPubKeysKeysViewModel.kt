@@ -191,7 +191,11 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
       importAllPubKeysMutableStateFlow.value =
         Result.loading(progressMsg = context.getString(R.string.importing_public_keys))
 
-      for (pgpKeyDetails in list) {
+      var progress: Float
+      var lastProgress = 0f
+      val totalOperationsCount = list.size
+
+      for ((index, pgpKeyDetails) in list.withIndex()) {
         try {
           val primaryAddress =
             pgpKeyDetails.mimeAddresses.firstOrNull()?.address?.lowercase() ?: continue
@@ -223,8 +227,17 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
         } catch (e: Exception) {
           //skip errors for now
         }
+        progress = index * 100f / totalOperationsCount
+        if (progress - lastProgress >= 1) {
+          importAllPubKeysMutableStateFlow.value = Result.loading(
+            progressMsg = context.getString(R.string.processing),
+            progress = progress.toDouble()
+          )
+          lastProgress = progress
+        }
       }
 
+      importAllPubKeysMutableStateFlow.value = Result.loading(progress = 100.0)
       importAllPubKeysMutableStateFlow.value = Result.success(true)
     }
   }
