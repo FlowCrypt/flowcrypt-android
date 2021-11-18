@@ -185,18 +185,6 @@
 
         <activity
             android:exported="false"
-            android:name=".ui.activity.ImportRecipientsFromSourceActivity"
-            android:label="@string/add_contact"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:exported="false"
-            android:name=".ui.activity.PreviewImportRecipientWithPubKeysActivity"
-            android:label="@string/add_contact"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:exported="false"
             android:name=".ui.activity.CorruptedStorageActivity"
             android:launchMode="singleTop" />
 
