@@ -83,8 +83,9 @@ class RecipientDetailsFragment : BaseFragment(), ListProgressBehaviour {
   private fun setupRecipientDetailsViewModel() {
     lifecycleScope.launchWhenStarted {
       recipientDetailsViewModel.recipientPubKeysFlow.collect {
+        it ?: return@collect
         if (it.isNullOrEmpty()) {
-          showEmptyView()
+          showEmptyView(resourcesId = R.drawable.ic_no_result_grey_24dp)
         } else {
           pubKeysRecyclerViewAdapter.submitList(it)
           showContent()

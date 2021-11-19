@@ -11,6 +11,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.security.pgp.PgpKey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapLatest
@@ -29,7 +30,8 @@ class RecipientDetailsViewModel(
   private val pureRecipientPubKeysFlow =
     roomDatabase.pubKeyDao().getPublicKeysByRecipientFlow(recipientEntity.email)
 
-  val recipientPubKeysFlow: StateFlow<List<PublicKeyEntity>> =
+  @ExperimentalCoroutinesApi
+  val recipientPubKeysFlow: StateFlow<List<PublicKeyEntity>?> =
     pureRecipientPubKeysFlow.mapLatest { fullList ->
       fullList.forEach {
         withContext(Dispatchers.IO) {
@@ -46,6 +48,6 @@ class RecipientDetailsViewModel(
     }.stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
-      initialValue = emptyList()
+      initialValue = null
     )
 }

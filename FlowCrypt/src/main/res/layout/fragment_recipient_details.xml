@@ -9,6 +9,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ImageView
+        android:id="@+id/iVPerson"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:contentDescription="@string/recipient_detail"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_baseline_person_green_24" />
+
     <TextView
         android:id="@+id/tVName"
         android:layout_width="0dp"
@@ -23,6 +34,17 @@
         app:layout_constraintStart_toEndOf="@+id/iVPerson"
         app:layout_constraintTop_toTopOf="@+id/iVPerson"
         tools:text="Den at FlowCrypt" />
+
+    <ImageView
+        android:id="@+id/iVEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:contentDescription="@string/recipient_detail"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iVPerson"
+        app:srcCompat="@drawable/ic_email_encrypted" />
 
     <TextView
         android:id="@+id/tVEmail"
@@ -79,7 +101,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/rVPubKeys"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tVPubKeys" />
 
@@ -90,36 +112,8 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/rVPubKeys"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tVPubKeys" />
-
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/barrier"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:barrierDirection="left" />
-
-    <ImageView
-        android:id="@+id/iVPerson"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/default_margin_content"
-        android:layout_marginTop="@dimen/default_margin_content"
-        android:contentDescription="@string/recipient_detail"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_baseline_person_green_24" />
-
-    <ImageView
-        android:id="@+id/iVEmail"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/default_margin_content"
-        android:layout_marginTop="@dimen/default_margin_content_small"
-        android:contentDescription="@string/recipient_detail"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/iVPerson"
-        app:srcCompat="@drawable/ic_email_encrypted" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
