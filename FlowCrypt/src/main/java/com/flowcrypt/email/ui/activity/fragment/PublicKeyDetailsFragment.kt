@@ -5,11 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.format.DateFormat
@@ -21,6 +21,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
@@ -55,6 +56,9 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val args by navArgs<PublicKeyDetailsFragmentArgs>()
   private var binding: FragmentPublicKeyDetailsBinding? = null
   private val parseKeysViewModel: ParseKeysViewModel by viewModels()
+
+  private val savePubKeyActivityResultLauncher =
+    registerForActivityResult(ExportPubKeyCreateDocument()) { uri: Uri? -> uri?.let { saveKey(it) } }
 
   override val contentResourceId: Int = R.layout.fragment_public_key_details
 
@@ -124,6 +128,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               )
             )
           }
+          else -> {}
         }
       }
     }
@@ -182,20 +187,11 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    when (requestCode) {
-      REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> saveKey(data)
-      }
-    }
-  }
-
-  private fun saveKey(data: Intent?) {
+  private fun saveKey(uri: Uri?) {
+    uri ?: return
     try {
       val context = this.context ?: return
-      val uri = data?.data ?: return
-      val pubKey = args.publicKeyEntity.toString()
+      val pubKey = String(args.publicKeyEntity.publicKey)
       GeneralUtil.writeFileFromStringToUri(context, uri, pubKey)
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
@@ -209,7 +205,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
 
           try {
             context?.contentResolver?.let { contentResolver ->
-              data?.data?.let { DocumentsContract.deleteDocument(contentResolver, it) }
+              DocumentsContract.deleteDocument(contentResolver, uri)
             }
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
@@ -253,19 +249,19 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun chooseDest() {
-    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-    intent.addCategory(Intent.CATEGORY_OPENABLE)
-    intent.type = Constants.MIME_TYPE_PGP_KEY
-
     val sanitizedEmail = args.recipientEntity.email.replace("[^a-z0-9]".toRegex(), "")
-    val fileName =
-      "0x" + args.publicKeyEntity.pgpKeyDetails?.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
-
-    intent.putExtra(Intent.EXTRA_TITLE, fileName)
-    startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
+    val fileName = "0x" + args.publicKeyEntity.pgpKeyDetails?.fingerprint + "-" +
+        sanitizedEmail + "-publickey" + ".asc"
+    savePubKeyActivityResultLauncher.launch(fileName)
   }
 
-  companion object {
-    private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
+  inner class ExportPubKeyCreateDocument :
+    ActivityResultContracts.CreateDocument() {
+    override fun createIntent(context: Context, input: String): Intent {
+
+      return super.createIntent(context, input)
+        .addCategory(Intent.CATEGORY_OPENABLE)
+        .setType(Constants.MIME_TYPE_PGP_KEY)
+    }
   }
 }
