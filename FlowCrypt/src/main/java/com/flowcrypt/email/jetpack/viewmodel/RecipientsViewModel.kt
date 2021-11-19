@@ -53,12 +53,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
   val allContactsLiveData: LiveData<List<RecipientEntity>> =
     roomDatabase.recipientDao().getAllRecipientsLD()
-  val contactsWithPgpLiveData: LiveData<Result<List<RecipientEntity>>> =
-    Transformations.switchMap(roomDatabase.recipientDao().getAllRecipientsWithPgpLD()) {
-      liveData {
-        emit(Result.success(it))
-      }
-    }
+  val recipientsWithPgpFlow = roomDatabase.recipientDao().getAllRecipientsWithPgpFlow()
   val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity>>> =
     Transformations.switchMap(searchPatternLiveData) {
       liveData {

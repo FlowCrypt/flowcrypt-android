@@ -40,14 +40,24 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 17:23
  * E-mail: DenBond7@gmail.com
  */
-class SelectRecipientsActivity : BaseBackStackActivity(),
-  RecipientsRecyclerViewAdapter.OnContactActionsListener, SearchView.OnQueryTextListener {
+class SelectRecipientsActivity : BaseBackStackActivity(), SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
   private val recipientsRecyclerViewAdapter: RecipientsRecyclerViewAdapter =
-    RecipientsRecyclerViewAdapter(false)
+    RecipientsRecyclerViewAdapter(
+      false,
+      object : RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
+        override fun onDeleteRecipient(recipientEntity: RecipientEntity) {}
+
+        override fun onRecipientClick(recipientEntity: RecipientEntity) {
+          val intent = Intent()
+          intent.putExtra(KEY_EXTRA_PGP_CONTACT, recipientEntity)
+          setResult(Activity.RESULT_OK, intent)
+          finish()
+        }
+      })
   private var searchPattern: String? = null
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
@@ -65,7 +75,6 @@ class SelectRecipientsActivity : BaseBackStackActivity(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    recipientsRecyclerViewAdapter.onContactActionsListener = this
     //todo-denbond7 need to fix this in the future. Not urgent
     //val isMultiply = intent.getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false)
 
@@ -108,15 +117,6 @@ class SelectRecipientsActivity : BaseBackStackActivity(),
     return super.onPrepareOptionsMenu(menu)
   }
 
-  override fun onContactClick(recipientEntity: RecipientEntity) {
-    val intent = Intent()
-    intent.putExtra(KEY_EXTRA_PGP_CONTACT, recipientEntity)
-    setResult(Activity.RESULT_OK, intent)
-    finish()
-  }
-
-  override fun onDeleteContact(recipientEntity: RecipientEntity) {}
-
   override fun onQueryTextSubmit(query: String): Boolean {
     searchPattern = query
     recipientsViewModel.filterContacts(searchPattern)
@@ -146,7 +146,7 @@ class SelectRecipientsActivity : BaseBackStackActivity(),
           if (it.data.isNullOrEmpty()) {
             UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
           } else {
-            recipientsRecyclerViewAdapter.swap(it.data)
+            recipientsRecyclerViewAdapter.submitList(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
           countingIdlingResourceForFilter.decrementSafely()

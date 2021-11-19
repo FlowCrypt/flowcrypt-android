@@ -11,9 +11,12 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.visible
 
 /**
  * This adapter describes logic to prepare show recipients from the database.
@@ -23,105 +26,73 @@ import com.flowcrypt.email.database.entity.RecipientEntity
  * Time: 18:00
  * E-mail: DenBond7@gmail.com
  */
-class RecipientsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true) :
-  RecyclerView.Adapter<RecipientsRecyclerViewAdapter.ViewHolder>() {
+class RecipientsRecyclerViewAdapter(
+  val isDeleteEnabled: Boolean = true,
+  private val onRecipientActionsListener: OnRecipientActionsListener? = null
+) :
+  ListAdapter<RecipientEntity, RecipientsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
 
-  private val list: MutableList<RecipientEntity> = mutableListOf()
-  var onContactActionsListener: OnContactActionsListener? = null
-
-  override fun onCreateViewHolder(
-    parent: ViewGroup,
-    viewType: Int
-  ): RecipientsRecyclerViewAdapter.ViewHolder {
-    return ViewHolder(
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    val view =
       LayoutInflater.from(parent.context).inflate(R.layout.contact_item, parent, false)
-    )
+    return ViewHolder(view)
   }
 
-  override fun onBindViewHolder(
-    viewHolder: RecipientsRecyclerViewAdapter.ViewHolder,
-    position: Int
-  ) {
-    val recipientEntity = list[position]
-
-    if (recipientEntity.name.isNullOrEmpty()) {
-      viewHolder.textViewName.visibility = View.GONE
-      viewHolder.textViewEmail.visibility = View.GONE
-      viewHolder.textViewOnlyEmail.visibility = View.VISIBLE
-
-      viewHolder.textViewOnlyEmail.text = recipientEntity.email
-      viewHolder.textViewEmail.text = null
-      viewHolder.textViewName.text = null
-    } else {
-      viewHolder.textViewName.visibility = View.VISIBLE
-      viewHolder.textViewEmail.visibility = View.VISIBLE
-      viewHolder.textViewOnlyEmail.visibility = View.GONE
-
-      viewHolder.textViewEmail.text = recipientEntity.email
-      viewHolder.textViewName.text = recipientEntity.name
-      viewHolder.textViewOnlyEmail.text = null
-    }
-
-    if (isDeleteEnabled) {
-      viewHolder.imageButtonDeleteContact.visibility = View.VISIBLE
-      viewHolder.imageButtonDeleteContact.setOnClickListener {
-        onContactActionsListener?.onDeleteContact(recipientEntity)
-      }
-    } else {
-      viewHolder.imageButtonDeleteContact.visibility = View.GONE
-    }
-
-    viewHolder.itemView.setOnClickListener {
-      onContactActionsListener?.onContactClick(recipientEntity)
-    }
+  override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    getItem(position)?.let { holder.bind(it, onRecipientActionsListener) }
   }
 
-  override fun getItemCount(): Int {
-    return list.size
-  }
-
-  fun swap(newList: List<RecipientEntity>) {
-    val diffUtilCallback = DiffUtilCallback(this.list, newList)
-    val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
-
-    list.clear()
-    list.addAll(newList)
-    productDiffResult.dispatchUpdatesTo(this)
-  }
-
-  interface OnContactActionsListener {
-    fun onDeleteContact(recipientEntity: RecipientEntity)
-    fun onContactClick(recipientEntity: RecipientEntity)
-  }
-
-  /**
-   * The view holder implementation for a better performance.
-   */
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    val textViewName: TextView = itemView.findViewById(R.id.textViewName)
-    val textViewEmail: TextView = itemView.findViewById(R.id.textViewEmail)
-    val textViewOnlyEmail: TextView = itemView.findViewById(R.id.textViewOnlyEmail)
-    val imageButtonDeleteContact: ImageButton = itemView.findViewById(R.id.imageButtonDeleteContact)
+    private val tVName: TextView = itemView.findViewById(R.id.tVName)
+    private val tVEmail: TextView = itemView.findViewById(R.id.tVEmail)
+    private val tVOnlyEmail: TextView = itemView.findViewById(R.id.tVOnlyEmail)
+    private val iBtDeleteContact: ImageButton = itemView.findViewById(R.id.iBtDeleteContact)
+
+    fun bind(
+      recipientEntity: RecipientEntity,
+      onRecipientActionsListener: OnRecipientActionsListener?
+    ) {
+      if (recipientEntity.name.isNullOrEmpty()) {
+        tVName.gone()
+        tVEmail.gone()
+        tVOnlyEmail.visible()
+        tVOnlyEmail.text = recipientEntity.email
+        tVEmail.text = null
+        tVName.text = null
+      } else {
+        tVName.visible()
+        tVEmail.visible()
+        tVOnlyEmail.gone()
+        tVEmail.text = recipientEntity.email
+        tVName.text = recipientEntity.name
+        tVOnlyEmail.text = null
+      }
+
+      if (isDeleteEnabled) {
+        iBtDeleteContact.visible()
+        iBtDeleteContact.setOnClickListener {
+          onRecipientActionsListener?.onDeleteRecipient(recipientEntity)
+        }
+      } else {
+        iBtDeleteContact.gone()
+      }
+
+      itemView.setOnClickListener {
+        onRecipientActionsListener?.onRecipientClick(recipientEntity)
+      }
+    }
   }
 
-  inner class DiffUtilCallback(
-    private val oldList: List<RecipientEntity>,
-    private val newList: List<RecipientEntity>
-  ) : DiffUtil.Callback() {
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-      val oldItem = oldList[oldItemPosition]
-      val newItem = newList[newItemPosition]
-      return oldItem.email == newItem.email
-    }
+  interface OnRecipientActionsListener {
+    fun onDeleteRecipient(recipientEntity: RecipientEntity)
+    fun onRecipientClick(recipientEntity: RecipientEntity)
+  }
 
-    override fun getOldListSize(): Int = oldList.size
+  class DiffUtilCallBack : DiffUtil.ItemCallback<RecipientEntity>() {
+    override fun areItemsTheSame(oldItem: RecipientEntity, newItem: RecipientEntity) =
+      oldItem.email == newItem.email
 
-    override fun getNewListSize(): Int = newList.size
-
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-      val oldItem = oldList[oldItemPosition]
-      val newItem = newList[newItemPosition]
-      return oldItem == newItem
-    }
+    override fun areContentsTheSame(oldItem: RecipientEntity, newItem: RecipientEntity) =
+      oldItem == newItem
   }
 }

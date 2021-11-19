@@ -5,24 +5,25 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.databinding.FragmentRecipientsListBinding
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
-import com.flowcrypt.email.util.UIUtil
+import kotlinx.coroutines.flow.collect
 
 /**
  * This fragment shows a list of contacts which have a public key.
@@ -32,74 +33,64 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 6:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-class RecipientsListFragment : BaseFragment(),
-  RecipientsRecyclerViewAdapter.OnContactActionsListener {
-
-  private var progressBar: View? = null
-  private var recyclerViewContacts: RecyclerView? = null
-  private var emptyView: View? = null
+class RecipientsListFragment : BaseFragment(), ListProgressBehaviour {
+  private var binding: FragmentRecipientsListBinding? = null
   private val recipientsRecyclerViewAdapter: RecipientsRecyclerViewAdapter =
-    RecipientsRecyclerViewAdapter(true)
+    RecipientsRecyclerViewAdapter(
+      true,
+      object : RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
+        override fun onDeleteRecipient(recipientEntity: RecipientEntity) {
+          recipientsViewModel.deleteContact(recipientEntity)
+          Toast.makeText(
+            context, getString(R.string.the_contact_was_deleted, recipientEntity.email),
+            Toast.LENGTH_SHORT
+          ).show()
+        }
+
+        override fun onRecipientClick(recipientEntity: RecipientEntity) {
+          navController?.navigate(
+            RecipientsListFragmentDirections
+              .actionRecipientsListFragmentToPublicKeyDetailsFragment(recipientEntity)
+          )
+        }
+      })
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   override val contentResourceId: Int = R.layout.fragment_recipients_list
+  override val emptyView: View?
+    get() = binding?.emptyView
+  override val progressView: View?
+    get() = binding?.pB
+  override val contentView: View?
+    get() = binding?.rVRecipients
+  override val statusView: View?
+    get() = null
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    recipientsRecyclerViewAdapter.onContactActionsListener = this
+  override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentRecipientsListBinding.inflate(inflater, container, false)
+    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.setTitle(R.string.contacts)
-    initViews(view)
-    setupContactsViewModel()
+    initViews()
+    setupRecipientsViewModel()
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY -> when (resultCode) {
-        Activity.RESULT_OK -> Toast.makeText(
-          context,
-          R.string.key_successfully_imported,
-          Toast.LENGTH_SHORT
-        ).show()
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
-  override fun onContactClick(recipientEntity: RecipientEntity) {
-    navController?.navigate(
-      RecipientsListFragmentDirections
-        .actionRecipientsListFragmentToPublicKeyDetailsFragment(recipientEntity)
-    )
-  }
-
-  override fun onDeleteContact(recipientEntity: RecipientEntity) {
-    recipientsViewModel.deleteContact(recipientEntity)
-    Toast.makeText(
-      context, getString(R.string.the_contact_was_deleted, recipientEntity.email),
-      Toast.LENGTH_SHORT
-    ).show()
-  }
-
-  private fun initViews(root: View) {
-    this.progressBar = root.findViewById(R.id.progressBar)
-    this.emptyView = root.findViewById(R.id.emptyView)
-
-    recyclerViewContacts = root.findViewById(R.id.recyclerViewContacts)
+  private fun initViews() {
     val manager = LinearLayoutManager(context)
     val decoration = DividerItemDecoration(context, manager.orientation)
     val drawable =
       ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, requireContext().theme)
     drawable?.let { decoration.setDrawable(drawable) }
-    recyclerViewContacts?.addItemDecoration(decoration)
-    recyclerViewContacts?.layoutManager = manager
-    recyclerViewContacts?.adapter = recipientsRecyclerViewAdapter
+    binding?.rVRecipients?.addItemDecoration(decoration)
+    binding?.rVRecipients?.layoutManager = manager
+    binding?.rVRecipients?.adapter = recipientsRecyclerViewAdapter
 
-    root.findViewById<View>(R.id.floatActionButtonImportPublicKey)?.setOnClickListener {
+    binding?.fABtImportPublicKey?.setOnClickListener {
       navController?.navigate(
         RecipientsListFragmentDirections
           .actionRecipientsListFragmentToImportRecipientsFromSourceFragment()
@@ -107,30 +98,16 @@ class RecipientsListFragment : BaseFragment(),
     }
   }
 
-  private fun setupContactsViewModel() {
-    recipientsViewModel.contactsWithPgpLiveData.observe(viewLifecycleOwner, {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          UIUtil.exchangeViewVisibility(true, progressBar, recyclerViewContacts)
-        }
-
-        Result.Status.SUCCESS -> {
-          UIUtil.exchangeViewVisibility(false, progressBar, recyclerViewContacts)
-          if (it.data.isNullOrEmpty()) {
-            UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
-          } else {
-            recipientsRecyclerViewAdapter.swap(it.data)
-            UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
-          }
-        }
-
-        else -> {
+  private fun setupRecipientsViewModel() {
+    lifecycleScope.launchWhenStarted {
+      recipientsViewModel.recipientsWithPgpFlow.collect {
+        if (it.isNullOrEmpty()) {
+          showEmptyView()
+        } else {
+          recipientsRecyclerViewAdapter.submitList(it)
+          showContent()
         }
       }
-    })
-  }
-
-  companion object {
-    private const val REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY = 0
+    }
   }
 }

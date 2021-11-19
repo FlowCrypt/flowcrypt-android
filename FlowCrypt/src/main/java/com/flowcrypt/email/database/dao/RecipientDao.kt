@@ -12,6 +12,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import kotlinx.coroutines.flow.Flow
 
 /**
  * This object describes a logic of work with [RecipientEntity].
@@ -30,7 +31,7 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
 
   @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient GROUP BY recipients.email ORDER BY recipients._id")
-  fun getAllRecipientsWithPgpLD(): LiveData<List<RecipientEntity>>
+  fun getAllRecipientsWithPgpFlow(): Flow<List<RecipientEntity>>
 
   @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient GROUP BY recipients.email ORDER BY recipients._id")
   suspend fun getAllRecipientsWithPgp(): List<RecipientEntity>

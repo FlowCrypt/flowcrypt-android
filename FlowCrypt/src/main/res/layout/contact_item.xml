@@ -14,46 +14,32 @@
     android:focusable="true"
     android:orientation="vertical">
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineLeft"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="@dimen/default_margin_content" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineRight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_end="@dimen/default_margin_content" />
-
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
+        android:id="@+id/cL"
         android:layout_width="0dp"
         android:layout_height="@dimen/default_button_height"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginEnd="@dimen/default_margin_content_small"
         android:orientation="vertical"
-        app:layout_constraintEnd_toStartOf="@+id/imageButtonDeleteContact"
+        app:layout_constraintEnd_toStartOf="@+id/iBtDeleteContact"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/textViewName"
+            android:id="@+id/tVName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
             android:textSize="@dimen/default_text_size_big"
             android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/textViewEmail"
+            app:layout_constraintBottom_toTopOf="@+id/tVEmail"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Den Bondarenko" />
 
         <TextView
-            android:id="@+id/textViewEmail"
+            android:id="@+id/tVEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:ellipsize="end"
@@ -62,11 +48,11 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewName"
+            app:layout_constraintTop_toBottomOf="@+id/tVName"
             tools:text="denbond7@gmail.com" />
 
         <TextView
-            android:id="@+id/textViewOnlyEmail"
+            android:id="@+id/tVOnlyEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
@@ -83,7 +69,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageButton
-        android:id="@+id/imageButtonDeleteContact"
+        android:id="@+id/iBtDeleteContact"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
@@ -92,8 +78,22 @@
         android:contentDescription="@string/delete"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout"
+        app:layout_constraintBottom_toBottomOf="@+id/cL"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@mipmap/ic_delete" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/default_margin_content" />
 </androidx.constraintlayout.widget.ConstraintLayout>
