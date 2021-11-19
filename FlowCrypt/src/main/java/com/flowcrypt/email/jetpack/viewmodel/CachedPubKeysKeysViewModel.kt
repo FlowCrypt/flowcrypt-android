@@ -44,6 +44,12 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
         val filteredList = fullList.filter {
           (it.recipient + it.fingerprint) in setOfRecipientsAndFingerprintsStateFlow.value
         }
+        filteredList.forEach {
+          withContext(Dispatchers.IO) {
+            val result = PgpKey.parseKeys(it.publicKey, false).pgpKeyDetailsList
+            it.pgpKeyDetails = result.firstOrNull()
+          }
+        }
         emit(filteredList.associateBy({ it.recipient + it.fingerprint }, { it }))
       }
     }.stateIn(

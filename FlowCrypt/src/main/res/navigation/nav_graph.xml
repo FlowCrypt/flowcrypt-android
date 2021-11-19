@@ -126,11 +126,24 @@
         android:label="RecipientsListFragment"
         tools:layout="@layout/fragment_recipients_list">
         <action
-            android:id="@+id/action_recipientsListFragment_to_publicKeyDetailsFragment"
-            app:destination="@id/publicKeyDetailsFragment" />
-        <action
             android:id="@+id/action_recipientsListFragment_to_importRecipientsFromSourceFragment"
             app:destination="@id/importRecipientsFromSourceFragment" />
+        <action
+            android:id="@+id/action_recipientsListFragment_to_recipientDetailsFragment"
+            app:destination="@id/recipientDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recipientDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.RecipientDetailsFragment"
+        android:label="RecipientDetailsFragment"
+        tools:layout="@layout/fragment_recipient_details">
+        <action
+            android:id="@+id/action_recipientDetailsFragment_to_publicKeyDetailsFragment"
+            app:destination="@id/publicKeyDetailsFragment" />
+        <argument
+            android:name="recipientEntity"
+            app:argType="com.flowcrypt.email.database.entity.RecipientEntity" />
     </fragment>
 
     <fragment
@@ -403,7 +416,7 @@
         android:id="@+id/importAllPubKeysFromSourceDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment"
         android:label="ImportAllPubKeysFromSourceDialogFragment"
-        tools:layout="@layout/fragment_import_all_pub_keys_from_source"></dialog>
+        tools:layout="@layout/fragment_import_all_pub_keys_from_source" />
 
     <action
         android:id="@+id/action_global_twoWayDialogFragment"

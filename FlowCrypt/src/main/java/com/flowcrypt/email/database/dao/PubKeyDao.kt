@@ -27,6 +27,9 @@ interface PubKeyDao : BaseDao<PublicKeyEntity> {
   @Query("SELECT * FROM public_keys WHERE recipient = :recipient")
   suspend fun getPublicKeysByRecipient(recipient: String): List<PublicKeyEntity>
 
+  @Query("SELECT * FROM public_keys WHERE recipient = :recipient")
+  fun getPublicKeysByRecipientFlow(recipient: String): Flow<List<PublicKeyEntity>>
+
   @Query("SELECT * FROM public_keys WHERE fingerprint = :fingerprint")
   suspend fun getPublicKeysByFingerprint(fingerprint: String): List<PublicKeyEntity>
 

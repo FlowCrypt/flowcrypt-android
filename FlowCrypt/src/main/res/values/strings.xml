@@ -542,4 +542,6 @@
     <string name="key_has_already_been_added">This key has already been added</string>
     <string name="could_not_save_pub_key_for_recipient">Couldn\'t save %1$s for %2$s</string>
     <string name="could_not_update_pub_key_for_recipient">Couldn\'t update a public key for %1$s</string>
+    <string name="pub_keys">Public keys</string>
+    <string name="recipient_detail">Recipient details</string>
 </resources>

@@ -50,7 +50,7 @@ class RecipientsListFragment : BaseFragment(), ListProgressBehaviour {
         override fun onRecipientClick(recipientEntity: RecipientEntity) {
           navController?.navigate(
             RecipientsListFragmentDirections
-              .actionRecipientsListFragmentToPublicKeyDetailsFragment(recipientEntity)
+              .actionRecipientsListFragmentToRecipientDetailsFragment(recipientEntity)
           )
         }
       })
