@@ -154,6 +154,9 @@
         <argument
             android:name="recipientEntity"
             app:argType="com.flowcrypt.email.database.entity.RecipientEntity" />
+        <argument
+            android:name="publicKeyEntity"
+            app:argType="com.flowcrypt.email.database.entity.PublicKeyEntity" />
     </fragment>
 
     <fragment

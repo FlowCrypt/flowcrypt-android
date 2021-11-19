@@ -58,7 +58,10 @@ class RecipientDetailsFragment : BaseFragment(), ListProgressBehaviour {
       override fun onPubKeyClick(publicKeyEntity: PublicKeyEntity) {
         navController?.navigate(
           RecipientDetailsFragmentDirections
-            .actionRecipientDetailsFragmentToPublicKeyDetailsFragment(args.recipientEntity)
+            .actionRecipientDetailsFragmentToPublicKeyDetailsFragment(
+              args.recipientEntity,
+              publicKeyEntity
+            )
         )
       }
     })
