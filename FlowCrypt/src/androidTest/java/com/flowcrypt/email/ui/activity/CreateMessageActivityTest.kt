@@ -75,6 +75,7 @@ import org.hamcrest.Matchers.not
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -674,6 +675,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   }
 
   @Test
+  @Ignore("fix me")
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
