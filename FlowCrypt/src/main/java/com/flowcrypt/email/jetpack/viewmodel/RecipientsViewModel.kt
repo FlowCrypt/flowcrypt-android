@@ -71,7 +71,6 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   val recipientsCcLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
   val recipientsBccLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
 
-  val pubKeysFromServerLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
   private val lookUpPubKeysMutableStateFlow: MutableStateFlow<Result<PubResponse?>> =
     MutableStateFlow(Result.loading())
   val lookUpPubKeysStateFlow: StateFlow<Result<PubResponse?>> =

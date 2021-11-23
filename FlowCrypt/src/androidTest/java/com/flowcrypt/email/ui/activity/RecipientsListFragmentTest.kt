@@ -32,7 +32,6 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -69,9 +68,8 @@ class RecipientsListFragmentTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testEmptyList() {
-    onView(withId(R.id.recyclerViewContacts))
+    onView(withId(R.id.rVRecipients))
       .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))
     onView(withId(R.id.emptyView))
       .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
@@ -84,7 +82,7 @@ class RecipientsListFragmentTest : BaseTest() {
     //todo-denbond7 improve this in the future. When we have a good solution for ROOM, coroutines and Espresso
     Thread.sleep(2000)
     for (ignored in EMAILS) {
-      onView(withId(R.id.recyclerViewContacts))
+      onView(withId(R.id.rVRecipients))
         .perform(
           actionOnItemAtPosition<RecyclerView.ViewHolder>(
             0,

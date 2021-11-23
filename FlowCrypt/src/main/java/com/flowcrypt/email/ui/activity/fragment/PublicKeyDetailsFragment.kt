@@ -34,6 +34,8 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentPublicKeyDetailsBinding
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -108,6 +110,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
             showProgress()
           }
 
@@ -120,6 +123,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               updateViews(pgpKeyDetails)
               showContent()
             }
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -142,6 +146,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
                 dialogMsg = msg
               )
             )
+            baseActivity.countingIdlingResource.decrementSafely()
           }
           else -> {}
         }
@@ -162,7 +167,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
         clipboard.setPrimaryClip(
           ClipData.newPlainText(
             "pubKey",
-            publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.value.data?.publicKey.toString()
+            String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
           )
         )
         Toast.makeText(

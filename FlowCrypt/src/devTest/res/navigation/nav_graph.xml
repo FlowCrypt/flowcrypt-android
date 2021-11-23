@@ -165,7 +165,7 @@
         tools:layout="@layout/fragment_public_key_details">
         <deepLink
             android:id="@+id/deepLink"
-            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts/details" />
+            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts/recipient_details/pubkey_details" />
         <argument
             android:name="recipientEntity"
             app:argType="com.flowcrypt.email.database.entity.RecipientEntity" />
@@ -303,6 +303,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.ImportRecipientsFromSourceFragment"
         android:label="ImportRecipientsFromSourceFragment"
         tools:layout="@layout/fragment_import_recipients_from_source">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts/import" />
         <action
             android:id="@+id/action_importRecipientsFromSourceFragment_to_parseAndSavePubKeysFragment"
             app:destination="@id/parseAndSavePubKeysFragment" />
@@ -318,6 +321,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.ParseAndSavePubKeysFragment"
         android:label="ParseAndSavePubKeysFragment"
         tools:layout="@layout/fragment_parse_and_save_pub_keys">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/contacts/import/parse_and_save" />
         <argument
             android:name="source"
             android:defaultValue="@null"

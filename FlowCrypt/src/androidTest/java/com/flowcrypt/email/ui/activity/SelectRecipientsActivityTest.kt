@@ -56,6 +56,7 @@ import java.util.*
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("will be fixed after migration to NavController")
 class SelectRecipientsActivityTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SelectRecipientsActivity>()
   private var filterIdlingResource: IdlingResource? = null

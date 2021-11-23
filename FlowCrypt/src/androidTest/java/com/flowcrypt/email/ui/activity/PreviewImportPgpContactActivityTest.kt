@@ -39,8 +39,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
-//todo-denbond7 need to fix it
+@Ignore("We've migrated this functionality to NavController. Need to review this class.")
 class PreviewImportPgpContactActivityTest : BaseTest() {
   /*override val activeActivityRule =
     lazyActivityScenarioRule<PreviewImportPgpContactActivity>(launchActivity = false)*/

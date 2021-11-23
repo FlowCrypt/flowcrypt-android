@@ -55,8 +55,6 @@ import java.io.File
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
-//todo-denbond7 need to fix it
 class ImportPublicKeyActivityTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ImportPublicKeyActivity>(
@@ -82,6 +80,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  @Ignore("Review this test after migration to NavController")
   fun testImportKeyFromFile() {
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPublicKey)
     intending(
@@ -131,6 +130,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
+  @Ignore("Review this test after migration to NavController")
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))

@@ -19,6 +19,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentParseAndSavePubKeysBinding
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.toast
@@ -109,6 +111,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
             showProgress()
           }
 
@@ -121,6 +124,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
               pubKeysAdapter.submitList(pgpKeyDetailsList)
               showContent()
             }
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -128,6 +132,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
               getString(R.string.source_has_wrong_pgp_structure, getString(R.string.public_))
             )
             showInfoDialogWithExceptionDetails(it.exception)
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           else -> {

@@ -9,11 +9,12 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
-import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -23,9 +24,9 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
-import org.hamcrest.CoreMatchers
-import org.junit.Ignore
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,7 +41,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class ImportPgpContactActivityDisallowAttesterSearchTest : BaseTest() {
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
@@ -59,12 +59,11 @@ class ImportPgpContactActivityDisallowAttesterSearchTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
 
   override val useIntents: Boolean = true
-  /*override val activityScenarioRule = activityScenarioRule<ImportRecipientsFromSourceActivity>(
-    intent = ImportRecipientsFromSourceActivity.newIntent(
-      context = getTargetContext(),
-      accountEntity = addAccountToDatabaseRule.account
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
     )
-  )*/
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -78,7 +77,6 @@ class ImportPgpContactActivityDisallowAttesterSearchTest : BaseTest() {
   fun testDisallowLookupOnAttester() {
     onView(withId(R.id.eTKeyIdOrEmail))
       .perform(
-        scrollTo(),
         clearText(),
         typeText("user@$DISALLOWED_DOMAIN"),
         closeSoftKeyboard()
@@ -87,10 +85,8 @@ class ImportPgpContactActivityDisallowAttesterSearchTest : BaseTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    onView(withId(R.id.layoutProgress))
-      .check(matches(CoreMatchers.not((isDisplayed()))))
-
-    isToastDisplayed(getResString(R.string.supported_public_key_not_found))
+    onView(withText(R.string.supported_public_key_not_found))
+      .check(matches((isDisplayed())))
   }
 
   companion object {
