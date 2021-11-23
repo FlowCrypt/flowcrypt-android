@@ -38,4 +38,7 @@ interface PubKeyDao : BaseDao<PublicKeyEntity> {
     recipient: String,
     fingerprint: String
   ): PublicKeyEntity?
+
+  @Query("SELECT * FROM public_keys WHERE _id = :id")
+  fun getPublicKeyByIdFlow(id: Long): Flow<PublicKeyEntity?>
 }

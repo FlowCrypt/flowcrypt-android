@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -248,6 +249,18 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
             .insertSuspend(pgpKeyDetails.toPublicKeyEntity(recipientEntity.email))
         }
       }
+    }
+  }
+
+  fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyDetails: PgpKeyDetails) {
+    viewModelScope.launch {
+      roomDatabase.pubKeyDao()
+        .updateSuspend(
+          pgpKeyDetails.toPublicKeyEntity(publicKeyEntity.recipient).copy(
+            id = publicKeyEntity.id,
+            recipient = publicKeyEntity.recipient
+          )
+        )
     }
   }
 
