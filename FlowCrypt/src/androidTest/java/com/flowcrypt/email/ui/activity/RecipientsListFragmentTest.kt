@@ -86,7 +86,7 @@ class RecipientsListFragmentTest : BaseTest() {
         .perform(
           actionOnItemAtPosition<RecyclerView.ViewHolder>(
             0,
-            ClickOnViewInRecyclerViewItem(R.id.imageButtonDeleteContact)
+            ClickOnViewInRecyclerViewItem(R.id.iBtDeleteContact)
           )
         )
     }

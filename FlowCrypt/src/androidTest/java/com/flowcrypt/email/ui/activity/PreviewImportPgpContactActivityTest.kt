@@ -146,7 +146,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
       )
     )*/
     registerAllIdlingResources()
-    onView(withId(R.id.buttonImportAll))
+    onView(withId(R.id.btImportAll))
       .check(matches(isDisplayed()))
   }
 
