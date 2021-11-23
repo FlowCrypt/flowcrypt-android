@@ -538,7 +538,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `recipient_fingerprint_in_public_keys` ON `public_keys` (`recipient`, `fingerprint`)")
         database.execSQL("CREATE INDEX IF NOT EXISTS `recipient_in_public_keys` ON `public_keys` (`recipient`)")
         database.execSQL("CREATE INDEX IF NOT EXISTS `fingerprint_in_public_keys` ON `public_keys` (`fingerprint`)")
-        database.execSQL("INSERT INTO public_keys(recipient, fingerprint, public_key) SELECT email, fingerprint, public_key FROM contacts_temp WHERE contacts_temp.public_key NOT NULL")
+        database.execSQL("INSERT INTO public_keys(recipient, fingerprint, public_key) SELECT email, fingerprint, public_key FROM contacts_temp WHERE contacts_temp.public_key NOT NULL AND contacts_temp.fingerprint NOT NULL")
 
         //delete unused `contacts_temp` table
         database.execSQL("DROP TABLE IF EXISTS contacts_temp;")
