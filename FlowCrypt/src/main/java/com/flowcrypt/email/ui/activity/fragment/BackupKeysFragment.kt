@@ -116,9 +116,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
-    if (accountEntity?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
-      binding?.btBackup?.gone()
-    }
+    updateBackupButtonVisibility(accountEntity)
   }
 
   private fun initViews() {
@@ -128,11 +126,13 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           R.id.rBEmailOption -> {
             binding?.tVHint?.text = getString(R.string.backup_as_email_hint)
             binding?.btBackup?.text = getString(R.string.backup_as_email)
+            updateBackupButtonVisibility(account)
           }
 
           R.id.rBDownloadOption -> {
             binding?.tVHint?.text = getString(R.string.backup_as_download_hint)
             binding?.btBackup?.text = getString(R.string.backup_as_a_file)
+            updateBackupButtonVisibility(account)
           }
         }
       }
@@ -370,6 +370,12 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           )
         }
       }
+    }
+  }
+
+  private fun updateBackupButtonVisibility(accountEntity: AccountEntity?) {
+    if (accountEntity?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
+      binding?.btBackup?.gone()
     }
   }
 
