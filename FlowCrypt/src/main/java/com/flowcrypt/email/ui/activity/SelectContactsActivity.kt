@@ -48,7 +48,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
   private var emptyView: View? = null
   private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
     ContactsRecyclerViewAdapter(false)
-  private var searchPattern: String? = null
+  private var searchPattern: String = ""
   private val contactsViewModel: ContactsViewModel by viewModels()
 
   @VisibleForTesting

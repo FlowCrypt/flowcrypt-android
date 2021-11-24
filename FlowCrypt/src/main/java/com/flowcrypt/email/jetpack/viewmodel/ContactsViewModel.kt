@@ -136,7 +136,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       try {
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
-            val emailLowerCase = email.toLowerCase(Locale.getDefault())
+            val emailLowerCase = email.lowercase(Locale.getDefault())
             var cachedContactEntity =
               roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
@@ -263,7 +263,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         roomDatabase.contactsDao().updateSuspend(
           contactEntityFromPrimaryPgpContact.copy(
             id = contactEntity.id,
-            email = contactEntity.email.toLowerCase(Locale.US),
+            email = contactEntity.email.lowercase(Locale.US),
             client = ContactEntity.CLIENT_PGP,
           )
         )
@@ -271,7 +271,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun filterContacts(searchPattern: String?) {
+  fun filterContacts(searchPattern: String) {
     searchPatternLiveData.value = searchPattern
   }
 
