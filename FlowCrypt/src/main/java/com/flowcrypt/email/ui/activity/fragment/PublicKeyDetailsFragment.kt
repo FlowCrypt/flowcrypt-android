@@ -5,14 +5,15 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.format.DateFormat
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -20,7 +21,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
@@ -28,10 +32,12 @@ import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.databinding.FragmentPublicKeyDetailsBinding
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
-import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -39,6 +45,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.util.Date
@@ -51,93 +59,98 @@ import java.util.Date
  *         Time: 8:54 AM
  *         E-mail: DenBond7@gmail.com
  */
+@ExperimentalCoroutinesApi
 class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val args by navArgs<PublicKeyDetailsFragmentArgs>()
+  private var binding: FragmentPublicKeyDetailsBinding? = null
+  private val publicKeyDetailsViewModel: PublicKeyDetailsViewModel by viewModels {
+    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        return PublicKeyDetailsViewModel(args.publicKeyEntity, requireActivity().application) as T
+      }
+    }
+  }
 
-  private val contactsViewModel: ContactsViewModel by viewModels()
-  private val parseKeysViewModel: ParseKeysViewModel by viewModels()
+  private val cachedPublicKeyEntity: PublicKeyEntity?
+    get() = publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.value.data
 
-  private var contactEntity: ContactEntity? = null
-  private var details: PgpKeyDetails? = null
-  private var layoutUsers: ViewGroup? = null
-  private var layoutFingerprints: ViewGroup? = null
-  private var textViewAlgorithm: TextView? = null
-  private var textViewCreated: TextView? = null
+  private val savePubKeyActivityResultLauncher =
+    registerForActivityResult(ExportPubKeyCreateDocument()) { uri: Uri? -> uri?.let { saveKey(it) } }
 
   override val contentResourceId: Int = R.layout.fragment_public_key_details
 
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.layoutContent)
+    get() = binding?.layoutContent
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    contactEntity = args.contactEntity
+    setupPublicKeyDetailsViewModel()
+  }
+
+  override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentPublicKeyDetailsBinding.inflate(inflater, container, false)
+    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.setTitle(R.string.pub_key)
-    initViews(view)
-
-    setupContactsViewModel()
-    setupParseKeysViewModel()
   }
 
-  private fun setupParseKeysViewModel() {
-    parseKeysViewModel.parseKeysLiveData.observe(viewLifecycleOwner, {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          showProgress()
-        }
-
-        Result.Status.SUCCESS -> {
-          val pgpKeyDetailsList = it.data
-          if (pgpKeyDetailsList.isNullOrEmpty()) {
-            Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
-            navController?.navigateUp()
-          } else {
-            details = pgpKeyDetailsList.first()
-            updateViews()
-            showContent()
+  private fun setupPublicKeyDetailsViewModel() {
+    lifecycleScope.launchWhenStarted {
+      publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
+            showProgress()
           }
-        }
 
-        Result.Status.EXCEPTION -> {
-          showStatus(getString(R.string.could_not_extract_key_details))
-
-          var msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-          ?: getString(R.string.unknown_error)
-
-          if (it.exception is NoSuchElementException) {
-            val matchingString = "No suitable signatures found on the key."
-            if (matchingString.equals(other = it.exception.message, ignoreCase = true)) {
-              msg = getString(R.string.key_sha1_warning_msg)
+          Result.Status.SUCCESS -> {
+            val pgpKeyDetails = it.data?.pgpKeyDetails
+            if (pgpKeyDetails == null) {
+              Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
+              navController?.navigateUp()
+            } else {
+              updateViews(pgpKeyDetails)
+              showContent()
             }
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
-          navController?.navigate(
-            NavGraphDirections.actionGlobalInfoDialogFragment(
-              requestCode = 0,
-              dialogTitle = "",
-              dialogMsg = msg
+          Result.Status.EXCEPTION -> {
+            showStatus(getString(R.string.could_not_extract_key_details))
+
+            var msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: getString(R.string.unknown_error)
+
+            if (it.exception is NoSuchElementException) {
+              val matchingString = "No suitable signatures found on the key."
+              if (matchingString.equals(other = it.exception.message, ignoreCase = true)) {
+                msg = getString(R.string.key_sha1_warning_msg)
+              }
+            }
+
+            navController?.navigate(
+              NavGraphDirections.actionGlobalInfoDialogFragment(
+                requestCode = 0,
+                dialogTitle = "",
+                dialogMsg = msg
+              )
             )
-          )
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+          else -> {}
         }
       }
-    })
-  }
-
-  private fun setupContactsViewModel() {
-    contactEntity?.let {
-      contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, { contactEntity ->
-        this.contactEntity = contactEntity
-        parseKeysViewModel.fetchKeys(it.publicKey)
-      })
     }
   }
 
@@ -151,7 +164,12 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       R.id.menuActionCopy -> {
         val clipboard =
           requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
+        clipboard.setPrimaryClip(
+          ClipData.newPlainText(
+            "pubKey",
+            String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
+          )
+        )
         Toast.makeText(
           context, getString(R.string.public_key_copied_to_clipboard),
           Toast.LENGTH_SHORT
@@ -167,16 +185,20 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       R.id.menuActionDelete -> {
         lifecycleScope.launch {
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-          contactEntity?.let { roomDatabase.contactsDao().deleteSuspend(it) }
+          roomDatabase.pubKeyDao().deleteSuspend(args.publicKeyEntity)
           navController?.navigateUp()
         }
         return true
       }
 
       R.id.menuActionEdit -> {
-        contactEntity?.let {
-          startActivity(EditContactActivity.newIntent(requireContext(), account, it))
-        }
+        startActivity(
+          EditContactActivity.newIntent(
+            requireContext(),
+            account,
+            cachedPublicKeyEntity
+          )
+        )
 
         return true
       }
@@ -185,20 +207,12 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    when (requestCode) {
-      REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> saveKey(data)
-      }
-    }
-  }
-
-  private fun saveKey(data: Intent?) {
+  private fun saveKey(uri: Uri?) {
+    uri ?: return
     try {
       val context = this.context ?: return
-      val uri = data?.data ?: return
-      val pubKey = details?.publicKey ?: return
+      val publicKeySource = cachedPublicKeyEntity?.publicKey ?: return
+      val pubKey = String(publicKeySource)
       GeneralUtil.writeFileFromStringToUri(context, uri, pubKey)
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
@@ -212,7 +226,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
 
           try {
             context?.contentResolver?.let { contentResolver ->
-              data?.data?.let { DocumentsContract.deleteDocument(contentResolver, it) }
+              DocumentsContract.deleteDocument(contentResolver, uri)
             }
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
@@ -230,49 +244,44 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
-  private fun initViews(view: View) {
-    layoutUsers = view.findViewById(R.id.layoutUsers)
-    layoutFingerprints = view.findViewById(R.id.layoutFingerprints)
-    textViewAlgorithm = view.findViewById(R.id.textViewAlgorithm)
-    textViewCreated = view.findViewById(R.id.textViewCreated)
-  }
-
-  private fun updateViews() {
-    layoutUsers?.removeAllViews()
-    details?.users?.forEachIndexed { index, s ->
+  private fun updateViews(pgpKeyDetails: PgpKeyDetails) {
+    binding?.layoutUsers?.removeAllViews()
+    pgpKeyDetails.users.forEachIndexed { index, s ->
       val textView = TextView(context)
       textView.text = getString(R.string.template_user, index + 1, s)
-      layoutUsers?.addView(textView)
+      binding?.layoutUsers?.addView(textView)
     }
 
-    layoutFingerprints?.removeAllViews()
-    details?.ids?.forEachIndexed { index, s ->
+    binding?.layoutFingerprints?.removeAllViews()
+    pgpKeyDetails.ids.forEachIndexed { index, s ->
       val textViewFingerprint = TextView(context)
       textViewFingerprint.text =
         getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
-      layoutFingerprints?.addView(textViewFingerprint)
+      binding?.layoutFingerprints?.addView(textViewFingerprint)
     }
 
-    textViewAlgorithm?.text = getString(R.string.template_algorithm, details?.algo?.algorithm)
-    textViewCreated?.text = getString(
+    binding?.textViewAlgorithm?.text =
+      getString(R.string.template_algorithm, pgpKeyDetails.algo.algorithm)
+    binding?.textViewCreated?.text = getString(
       R.string.template_created,
-      DateFormat.getMediumDateFormat(context).format(Date(details?.created ?: 0))
+      DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails.created))
     )
   }
 
   private fun chooseDest() {
-    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-    intent.addCategory(Intent.CATEGORY_OPENABLE)
-    intent.type = Constants.MIME_TYPE_PGP_KEY
-
-    val sanitizedEmail = contactEntity?.email?.replace("[^a-z0-9]".toRegex(), "")
-    val fileName = "0x" + details?.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
-
-    intent.putExtra(Intent.EXTRA_TITLE, fileName)
-    startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
+    val sanitizedEmail = args.recipientEntity.email.replace("[^a-z0-9]".toRegex(), "")
+    val fileName = "0x" + cachedPublicKeyEntity?.fingerprint + "-" +
+        sanitizedEmail + "-publickey" + ".asc"
+    savePubKeyActivityResultLauncher.launch(fileName)
   }
 
-  companion object {
-    private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
+  inner class ExportPubKeyCreateDocument :
+    ActivityResultContracts.CreateDocument() {
+    override fun createIntent(context: Context, input: String): Intent {
+
+      return super.createIntent(context, input)
+        .addCategory(Intent.CATEGORY_OPENABLE)
+        .setType(Constants.MIME_TYPE_PGP_KEY)
+    }
   }
 }

@@ -89,7 +89,7 @@ class CreateMessageFragmentDisallowAttesterSearchForDomainTest : BaseCreateMessa
             recipient,
             UIUtil.getColor(
               getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_PGP_NOT_EXISTS
+              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
             )
           )
         )

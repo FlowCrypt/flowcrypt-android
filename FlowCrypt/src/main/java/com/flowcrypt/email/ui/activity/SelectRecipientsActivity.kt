@@ -22,34 +22,44 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
-import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
 /**
  * This activity can be used for select single or multiply contacts (not implemented yet) from the local database. The
- * activity returns [ContactEntity] as a result.
+ * activity returns [RecipientEntity] as a result.
  *
  * @author Denis Bondarenko
  * Date: 14.11.2017
  * Time: 17:23
  * E-mail: DenBond7@gmail.com
  */
-class SelectContactsActivity : BaseBackStackActivity(),
-  ContactsRecyclerViewAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
+class SelectRecipientsActivity : BaseBackStackActivity(), SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter =
-    ContactsRecyclerViewAdapter(false)
+  private val recipientsRecyclerViewAdapter: RecipientsRecyclerViewAdapter =
+    RecipientsRecyclerViewAdapter(
+      false,
+      object : RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
+        override fun onDeleteRecipient(recipientEntity: RecipientEntity) {}
+
+        override fun onRecipientClick(recipientEntity: RecipientEntity) {
+          val intent = Intent()
+          intent.putExtra(KEY_EXTRA_PGP_CONTACT, recipientEntity)
+          setResult(Activity.RESULT_OK, intent)
+          finish()
+        }
+      })
   private var searchPattern: String = ""
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   @VisibleForTesting
   private val countingIdlingResourceForFilter = CountingIdlingResource(
@@ -65,7 +75,6 @@ class SelectContactsActivity : BaseBackStackActivity(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    contactsRecyclerViewAdapter.onContactClickListener = this
     //todo-denbond7 need to fix this in the future. Not urgent
     //val isMultiply = intent.getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false)
 
@@ -80,7 +89,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
     drawable?.let { decoration.setDrawable(drawable) }
     recyclerViewContacts?.addItemDecoration(decoration)
     recyclerViewContacts?.layoutManager = manager
-    recyclerViewContacts?.adapter = contactsRecyclerViewAdapter
+    recyclerViewContacts?.adapter = recipientsRecyclerViewAdapter
 
     if (!TextUtils.isEmpty(title)) {
       supportActionBar?.title = title
@@ -108,31 +117,24 @@ class SelectContactsActivity : BaseBackStackActivity(),
     return super.onPrepareOptionsMenu(menu)
   }
 
-  override fun onContactClick(contactEntity: ContactEntity) {
-    val intent = Intent()
-    intent.putExtra(KEY_EXTRA_PGP_CONTACT, contactEntity)
-    setResult(Activity.RESULT_OK, intent)
-    finish()
-  }
-
   override fun onQueryTextSubmit(query: String): Boolean {
     searchPattern = query
-    contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(searchPattern)
     return true
   }
 
   override fun onQueryTextChange(newText: String): Boolean {
     searchPattern = newText
-    contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(searchPattern)
     return true
   }
 
   private fun setupContactsViewModel() {
-    contactsViewModel.allContactsLiveData.observe(this, {
-      contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.allContactsLiveData.observe(this, {
+      recipientsViewModel.filterContacts(searchPattern)
     })
 
-    contactsViewModel.contactsWithPgpSearchLiveData.observe(this, {
+    recipientsViewModel.contactsWithPgpSearchLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResourceForFilter.incrementSafely("searchPattern = $searchPattern")
@@ -144,7 +146,7 @@ class SelectContactsActivity : BaseBackStackActivity(),
           if (it.data.isNullOrEmpty()) {
             UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
           } else {
-            contactsRecyclerViewAdapter.swap(it.data)
+            recipientsRecyclerViewAdapter.submitList(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
           countingIdlingResourceForFilter.decrementSafely()
@@ -156,25 +158,25 @@ class SelectContactsActivity : BaseBackStackActivity(),
       }
     })
 
-    contactsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(searchPattern)
   }
 
   companion object {
     val KEY_EXTRA_PGP_CONTACT =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_PGP_CONTACT",
-        SelectContactsActivity::class.java
+        SelectRecipientsActivity::class.java
       )
     private val KEY_EXTRA_TITLE =
-      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectContactsActivity::class.java)
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectRecipientsActivity::class.java)
     private val KEY_EXTRA_IS_MULTIPLY =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_MULTIPLY",
-        SelectContactsActivity::class.java
+        SelectRecipientsActivity::class.java
       )
 
     fun newIntent(context: Context?, title: String, isMultiply: Boolean): Intent {
-      val intent = Intent(context, SelectContactsActivity::class.java)
+      val intent = Intent(context, SelectRecipientsActivity::class.java)
       intent.putExtra(KEY_EXTRA_TITLE, title)
       intent.putExtra(KEY_EXTRA_IS_MULTIPLY, isMultiply)
       return intent

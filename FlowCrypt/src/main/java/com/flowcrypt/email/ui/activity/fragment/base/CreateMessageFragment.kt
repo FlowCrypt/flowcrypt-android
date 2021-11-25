@@ -52,28 +52,28 @@ import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.pgpContacts
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
-import com.flowcrypt.email.ui.activity.SelectContactsActivity
+import com.flowcrypt.email.ui.activity.SelectRecipientsActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
-import com.flowcrypt.email.ui.adapter.PgpContactAdapter
+import com.flowcrypt.email.ui.adapter.RecipientAdapter
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
@@ -115,17 +115,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private lateinit var draftCacheDir: File
 
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
-  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
 
-  private var pgpContactsTo: MutableList<PgpContact>? = null
-  private var pgpContactsCc: MutableList<PgpContact>? = null
-  private var pgpContactsBcc: MutableList<PgpContact>? = null
+  private var recipientWithPubKeysTo: MutableList<RecipientWithPubKeys>? = null
+  private var recipientWithPubKeysCc: MutableList<RecipientWithPubKeys>? = null
+  private var recipientWithPubKeysBcc: MutableList<RecipientWithPubKeys>? = null
   private val atts: MutableList<AttachmentInfo>?
   private var folderType: FoldersManager.FolderType? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var serviceInfo: ServiceInfo? = null
   private var fromAddrs: FromAddressesAdapter<String>? = null
-  private var pgpContactWithNoPublicKey: PgpContact? = null
+  private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
   private var extraActionInfo: ExtraActionInfo? = null
   private var messageType = MessageType.NEW
 
@@ -149,7 +149,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private var imageButtonAdditionalRecipientsVisibility: View? = null
   private var iBShowQuotedText: View? = null
 
-  private var isContactsUpdateEnabled = true
   private var isUpdateToCompleted = true
   private var isUpdateCcCompleted = true
   private var isUpdateBccCompleted = true
@@ -233,26 +232,24 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         return false
       }
       if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
-        if (recipientsTo?.text?.isNotEmpty() == true && pgpContactsTo?.isEmpty() == true) {
-          fetchDetailsAboutContacts(ContactEntity.Type.TO)
+        if (recipientsTo?.text?.isNotEmpty() == true && recipientWithPubKeysTo?.isEmpty() == true) {
+          fetchDetailsAboutRecipients(RecipientEntity.Type.TO)
           return false
         }
-        if (recipientsCc?.text?.isNotEmpty() == true && pgpContactsCc?.isEmpty() == true) {
-          fetchDetailsAboutContacts(ContactEntity.Type.CC)
+        if (recipientsCc?.text?.isNotEmpty() == true && recipientWithPubKeysCc?.isEmpty() == true) {
+          fetchDetailsAboutRecipients(RecipientEntity.Type.CC)
           return false
         }
-        if (recipientsBcc?.text?.isNotEmpty() == true && pgpContactsBcc?.isEmpty() == true) {
-          fetchDetailsAboutContacts(ContactEntity.Type.BCC)
+        if (recipientsBcc?.text?.isNotEmpty() == true && recipientWithPubKeysBcc?.isEmpty() == true) {
+          fetchDetailsAboutRecipients(RecipientEntity.Type.BCC)
           return false
         }
-        if (hasRecipientWithoutPgp(true, pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
-          return false
-        }
-        if (hasRecipientWithExpiredPubKey(pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
-          return false
-        }
-
-        if (hasRecipientWithNotUsablePubKey(pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
+        if (hasUnusableRecipient(
+            recipientWithPubKeysTo,
+            recipientWithPubKeysCc,
+            recipientWithPubKeysBcc
+          )
+        ) {
           return false
         }
       }
@@ -299,9 +296,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     }
 
   init {
-    pgpContactsTo = mutableListOf()
-    pgpContactsCc = mutableListOf()
-    pgpContactsBcc = mutableListOf()
+    recipientWithPubKeysTo = mutableListOf()
+    recipientWithPubKeysCc = mutableListOf()
+    recipientWithPubKeysBcc = mutableListOf()
     atts = ArrayList()
   }
 
@@ -347,7 +344,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     initViews(view)
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
-    setupContactsViewModel()
+    setupRecipientsViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -380,41 +377,43 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           listener.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD)
 
         NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> if (data != null) {
-          val pgpContact =
-            data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
+          val recipientWithPubKeys = data.getParcelableExtra<RecipientWithPubKeys>(
+            NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
+          )
 
-          if (pgpContact != null) {
+          if (recipientWithPubKeys != null) {
             startActivityForResult(
               ImportPublicKeyActivity.newIntent(
                 context, account,
-                getString(R.string.import_public_key), pgpContact
+                getString(R.string.import_public_key), recipientWithPubKeys
               ), REQUEST_CODE_IMPORT_PUBLIC_KEY
             )
           }
         }
 
         NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT -> if (data != null) {
-          pgpContactWithNoPublicKey =
+          cachedRecipientWithoutPubKeys =
             data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
-          if (pgpContactWithNoPublicKey != null) {
+          if (cachedRecipientWithoutPubKeys != null) {
             startActivityForResult(
-              SelectContactsActivity.newIntent(
+              SelectRecipientsActivity.newIntent(
                 context,
                 getString(R.string.use_public_key_from), false
-              ), REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT
+              ), REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT
             )
           }
         }
 
         NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT -> if (data != null) {
-          val pgpContact =
-            data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
+          val recipientWithPubKeys = data.getParcelableExtra<RecipientWithPubKeys>(
+            NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
+          )
 
-          if (pgpContact != null) {
-            removePgpContact(pgpContact, recipientsTo, pgpContactsTo)
-            removePgpContact(pgpContact, recipientsCc, pgpContactsCc)
-            removePgpContact(pgpContact, recipientsBcc, pgpContactsBcc)
+          if (recipientWithPubKeys != null) {
+            removeRecipientWithPubKey(recipientWithPubKeys, recipientsTo, recipientWithPubKeysTo)
+            removeRecipientWithPubKey(recipientWithPubKeys, recipientsCc, recipientWithPubKeysCc)
+            removeRecipientWithPubKey(recipientWithPubKeys, recipientsBcc, recipientWithPubKeysBcc)
           }
         }
       }
@@ -426,48 +425,28 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         }
       }
 
-      REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT -> {
+      REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT -> {
         when (resultCode) {
           Activity.RESULT_OK -> if (data != null) {
-            val contactEntity =
-              data.getParcelableExtra<ContactEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
-            contactEntity?.let {
-              pgpContactWithNoPublicKey?.pubkey = String(contactEntity.publicKey ?: byteArrayOf())
-              pgpContactWithNoPublicKey?.email?.let { email ->
-                contactsViewModel.updateContactPgpInfo(
-                  email,
-                  contactEntity
-                )
-              }
+            val recipientEntity =
+              data.getParcelableExtra<RecipientEntity>(SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT)
+            recipientEntity?.let {
+              recipientsViewModel.copyPubKeysBetweenRecipients(
+                recipientEntity,
+                cachedRecipientWithoutPubKeys?.recipient
+              )
 
-              pgpContactsTo?.forEach {
-                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
-                  it.hasPgp = true
-                }
-              }
-
-              pgpContactsCc?.forEach {
-                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
-                  it.hasPgp = true
-                }
-              }
-
-              pgpContactsBcc?.forEach {
-                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
-                  it.hasPgp = true
-                }
-              }
-
-              updateChips(recipientsTo, pgpContactsTo)
-              updateChips(recipientsCc, pgpContactsCc)
-              updateChips(recipientsBcc, pgpContactsBcc)
+              updateRecipients()
+              updateChips(recipientsTo, recipientWithPubKeysTo)
+              updateChips(recipientsCc, recipientWithPubKeysCc)
+              updateChips(recipientsBcc, recipientWithPubKeysBcc)
 
               Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
             }
           }
         }
 
-        pgpContactWithNoPublicKey = null
+        cachedRecipientWithoutPubKeys = null
       }
 
       REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
@@ -538,7 +517,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           }
         } else {
           Toast.makeText(
-            context, R.string.please_wait_while_information_about_contacts_will_be_updated,
+            context, R.string.please_wait_while_information_about_recipients_will_be_updated,
             Toast.LENGTH_SHORT
           ).show()
         }
@@ -587,19 +566,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   override fun onFocusChange(v: View, hasFocus: Boolean) {
     when (v.id) {
-      R.id.editTextRecipientTo -> runUpdatePgpContactsAction(
-        pgpContactsTo, progressBarTo,
-        ContactEntity.Type.TO, hasFocus
+      R.id.editTextRecipientTo -> runUpdateActionForRecipients(
+        recipientWithPubKeysTo, progressBarTo,
+        RecipientEntity.Type.TO, hasFocus
       )
 
-      R.id.editTextRecipientCc -> runUpdatePgpContactsAction(
-        pgpContactsCc, progressBarCc,
-        ContactEntity.Type.CC, hasFocus
+      R.id.editTextRecipientCc -> runUpdateActionForRecipients(
+        recipientWithPubKeysCc, progressBarCc,
+        RecipientEntity.Type.CC, hasFocus
       )
 
-      R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(
-        pgpContactsBcc, progressBarBcc,
-        ContactEntity.Type.BCC, hasFocus
+      R.id.editTextRecipientBcc -> runUpdateActionForRecipients(
+        recipientWithPubKeysBcc, progressBarBcc,
+        RecipientEntity.Type.BCC, hasFocus
       )
 
       R.id.editTextEmailSubject, R.id.editTextEmailMessage -> if (hasFocus) {
@@ -711,9 +690,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
         MessageEncryptionType.STANDARD -> {
           emailMassageHint = getString(R.string.prompt_compose_standard_email)
-          pgpContactsTo?.clear()
-          pgpContactsCc?.clear()
-          pgpContactsBcc?.clear()
+          recipientWithPubKeysTo?.clear()
+          recipientWithPubKeysCc?.clear()
+          recipientWithPubKeysBcc?.clear()
           isUpdateToCompleted = true
           isUpdateCcCompleted = true
           isUpdateBccCompleted = true
@@ -832,84 +811,82 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun updateRecipients() {
     recipientsTo?.chipAndTokenValues?.let {
-      contactsViewModel.fetchAndUpdateInfoAboutContacts(
-        ContactEntity.Type.TO,
+      recipientsViewModel.fetchAndUpdateInfoAboutRecipients(
+        RecipientEntity.Type.TO,
         it
       )
     }
 
     if (layoutCc?.visibility == View.VISIBLE) {
       recipientsCc?.chipAndTokenValues?.let {
-        contactsViewModel.fetchAndUpdateInfoAboutContacts(
-          ContactEntity.Type.CC,
+        recipientsViewModel.fetchAndUpdateInfoAboutRecipients(
+          RecipientEntity.Type.CC,
           it
         )
       }
     } else {
       recipientsCc?.setText(null as CharSequence?)
-      pgpContactsCc?.clear()
+      recipientWithPubKeysCc?.clear()
     }
 
     if (layoutBcc?.visibility == View.VISIBLE) {
       recipientsBcc?.chipAndTokenValues?.let {
-        contactsViewModel.fetchAndUpdateInfoAboutContacts(
-          ContactEntity.Type.BCC,
+        recipientsViewModel.fetchAndUpdateInfoAboutRecipients(
+          RecipientEntity.Type.BCC,
           it
         )
       }
     } else {
       recipientsBcc?.setText(null as CharSequence?)
-      pgpContactsBcc?.clear()
+      recipientWithPubKeysBcc?.clear()
     }
   }
 
   /**
-   * Run an action to update information about some [PgpContact]s.
+   * Run an action to update information about some [RecipientWithPubKeys]s.
    *
-   * @param pgpContacts Old [PgpContact]s
+   * @param recipients Old [RecipientWithPubKeys]s
    * @param progressBar A [ProgressBar] which is showing an action progress.
-   * @param type        A type of contacts
+   * @param type        A type of recipients
    * @param hasFocus    A value which indicates the view focus.
-   * @return A modified contacts list.
+   * @return A modified recipients list.
    */
-  private fun runUpdatePgpContactsAction(
-    pgpContacts: MutableList<PgpContact>?, progressBar: View?,
-    type: ContactEntity.Type, hasFocus: Boolean
-  ): List<PgpContact>? {
+  private fun runUpdateActionForRecipients(
+    recipients: MutableList<RecipientWithPubKeys>?,
+    progressBar: View?,
+    type: RecipientEntity.Type,
+    hasFocus: Boolean
+  ): List<RecipientWithPubKeys>? {
     if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
       if (hasFocus) {
-        pgpContacts?.clear()
+        recipients?.clear()
       } else {
-        if (isContactsUpdateEnabled) {
-          if (isAdded) {
-            fetchDetailsAboutContacts(type)
-          }
-        } else {
-          progressBar?.visibility = View.INVISIBLE
+        if (isAdded) {
+          fetchDetailsAboutRecipients(type)
         }
       }
     }
 
-    return pgpContacts
+    return recipients
   }
 
-  private fun fetchDetailsAboutContacts(type: ContactEntity.Type) {
+  private fun fetchDetailsAboutRecipients(type: RecipientEntity.Type) {
     when (type) {
-      ContactEntity.Type.TO -> {
+      RecipientEntity.Type.TO -> {
         recipientsTo?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.TO, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(RecipientEntity.Type.TO, it)
         }
       }
 
-      ContactEntity.Type.CC -> {
+      RecipientEntity.Type.CC -> {
         recipientsCc?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.CC, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(RecipientEntity.Type.CC, it)
         }
       }
 
-      ContactEntity.Type.BCC -> {
+      RecipientEntity.Type.BCC -> {
         recipientsBcc?.chipAndTokenValues?.let {
-          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.BCC, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(RecipientEntity.Type.BCC, it)
         }
       }
     }
@@ -978,59 +955,29 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   /**
-   * Check that all recipients have PGP.
-   *
-   * @return true if all recipients have PGP, other wise false.
+   * Check that all recipients are usable.
    */
-  private fun hasRecipientWithoutPgp(
-    isRemoveActionEnabled: Boolean,
-    vararg pgpContactsList: List<PgpContact>?
-  ): Boolean {
-    for (sublist in pgpContactsList) {
+  private fun hasUnusableRecipient(vararg list: List<RecipientWithPubKeys>?): Boolean {
+    for (sublist in list) {
       sublist?.let {
-        for (pgpContact in it) {
-          if (!pgpContact.hasPgp) {
-            showNoPgpFoundDialog(pgpContact, isRemoveActionEnabled)
+        for (recipientWithPubKeys in it) {
+          if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
+            showNoPgpFoundDialog(recipientWithPubKeys, true)
             return true
           }
-        }
-      }
-    }
 
-    return false
-  }
-
-  /**
-   * Check that all recipients have not-expired pub keys.
-   *
-   * @return true if all recipients have not-expired pub keys, other wise false.
-   */
-  private fun hasRecipientWithExpiredPubKey(vararg pgpContactsList: List<PgpContact>?): Boolean {
-    for (sublist in pgpContactsList) {
-      sublist?.let {
-        for (pgpContact in it) {
-          if (pgpContact.pgpKeyDetails?.isExpired == true) {
-            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_expired))
+          if (!recipientWithPubKeys.hasNotExpiredPubKey()) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_expired_pub_key))
             return true
           }
-        }
-      }
-    }
 
-    return false
-  }
+          if (!recipientWithPubKeys.hasNotRevokedPubKey()) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_revoked_pub_key))
+            return true
+          }
 
-  /**
-   * Check that all recipients have usable pub keys.
-   *
-   * @return true if all recipients have usable pub keys, other wise false.
-   */
-  private fun hasRecipientWithNotUsablePubKey(vararg pgpContactsList: List<PgpContact>?): Boolean {
-    for (sublist in pgpContactsList) {
-      sublist?.let {
-        for (pgpContact in it) {
-          if (pgpContact.hasNotUsablePubKey) {
-            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_not_usable))
+          if (!recipientWithPubKeys.hasUsablePubKey()) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_not_usable_pub_key))
             return true
           }
         }
@@ -1043,22 +990,29 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   /**
    * This method does update chips in the recipients field.
    *
-   * @param view        A view which contains input [PgpContact](s).
-   * @param pgpContacts The input [PgpContact](s)
+   * @param view        A view which contains input [RecipientWithPubKeys](s).
+   * @param list The input [RecipientWithPubKeys](s)
    */
-  private fun updateChips(view: PgpContactsNachoTextView?, pgpContacts: List<PgpContact>?) {
+  private fun updateChips(
+    view: PgpContactsNachoTextView?,
+    list: List<RecipientWithPubKeys>?
+  ) {
     view ?: return
     val builder = SpannableStringBuilder(view.text)
 
     val pgpContactChipSpans = builder.getSpans(0, view.length(), PGPContactChipSpan::class.java)
 
     if (pgpContactChipSpans.isNotEmpty()) {
-      for (pgpContact in pgpContacts ?: emptyList()) {
+      for (recipientWithPubKeys in list ?: emptyList()) {
         for (pgpContactChipSpan in pgpContactChipSpans) {
-          if (pgpContact.email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
-            pgpContactChipSpan.hasPgp = pgpContact.hasPgp
-            pgpContactChipSpan.isExpired = pgpContact.pgpKeyDetails?.isExpired
-            pgpContactChipSpan.hasNotUsablePubKey = pgpContact.hasNotUsablePubKey
+          if (recipientWithPubKeys.recipient.email.equals(
+              pgpContactChipSpan.text.toString(), ignoreCase = true
+            )
+          ) {
+            pgpContactChipSpan.hasAtLeastOnePubKey = recipientWithPubKeys.hasAtLeastOnePubKey()
+            pgpContactChipSpan.hasNotExpiredPubKey = recipientWithPubKeys.hasNotExpiredPubKey()
+            pgpContactChipSpan.hasUsablePubKey = recipientWithPubKeys.hasUsablePubKey()
+            pgpContactChipSpan.hasNotRevokedPubKey = recipientWithPubKeys.hasNotRevokedPubKey()
             break
           }
         }
@@ -1083,7 +1037,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       requireContext(),
       CustomChipSpanChipCreator(requireContext()), PGPContactChipSpan::class.java
     )
-    pgpContactsNachoTextView?.setAdapter(preparePgpContactAdapter())
+    pgpContactsNachoTextView?.setAdapter(prepareRecipientsAdapter())
     pgpContactsNachoTextView?.onFocusChangeListener = this
     pgpContactsNachoTextView?.setListener(this)
   }
@@ -1100,20 +1054,20 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   /**
-   * Remove the current [PgpContact] from recipients.
+   * Remove the current [RecipientWithPubKeys] from recipients.
    *
-   * @param pgpContact               The [PgpContact] which will be removed.
+   * @param recipientWithPubKeys     The [RecipientWithPubKeys] which will be removed.
    * @param pgpContactsNachoTextView The [NachoTextView] which contains the delete candidate.
-   * @param pgpContacts              The list which contains the delete candidate.
+   * @param list                     The list which contains the delete candidate.
    */
-  private fun removePgpContact(
-    pgpContact: PgpContact, pgpContactsNachoTextView: PgpContactsNachoTextView?,
-    pgpContacts: MutableList<PgpContact>?
+  private fun removeRecipientWithPubKey(
+    recipientWithPubKeys: RecipientWithPubKeys, pgpContactsNachoTextView: PgpContactsNachoTextView?,
+    list: MutableList<RecipientWithPubKeys>?
   ) {
     val chipTokenizer = pgpContactsNachoTextView?.chipTokenizer
     pgpContactsNachoTextView?.allChips?.let {
       for (chip in it) {
-        if (pgpContact.email.equals(
+        if (recipientWithPubKeys.recipient.email.equals(
             chip.text.toString(),
             ignoreCase = true
           ) && chipTokenizer != null
@@ -1123,10 +1077,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
     }
 
-    val iterator = pgpContacts?.iterator()
+    val iterator = list?.iterator()
     while (iterator?.hasNext() == true) {
       val next = iterator.next()
-      if (next.email.equals(next.email, ignoreCase = true)) {
+      if (next.recipient.email.equals(recipientWithPubKeys.recipient.email, ignoreCase = true)) {
         iterator.remove()
       }
     }
@@ -1469,16 +1423,16 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   /**
-   * Prepare a [PgpContactAdapter] for the [NachoTextView] object.
+   * Prepare a [RecipientAdapter] for the [NachoTextView] object.
    *
-   * @return <tt>[PgpContactAdapter]</tt>
+   * @return <tt>[RecipientAdapter]</tt>
    */
   @SuppressLint("Recycle")
-  private fun preparePgpContactAdapter(): PgpContactAdapter {
-    val pgpContactAdapter = PgpContactAdapter(requireContext(), null, true)
+  private fun prepareRecipientsAdapter(): RecipientAdapter {
+    val pgpContactAdapter = RecipientAdapter(requireContext(), null, true)
     //setup a search contacts logic in the database
     pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
-      val dao = FlowCryptRoomDatabase.getDatabase(requireContext()).contactsDao()
+      val dao = FlowCryptRoomDatabase.getDatabase(requireContext()).recipientDao()
       dao.getFilteredCursor("%$constraint%")
     }
 
@@ -1522,11 +1476,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   /**
    * Show a dialog where we can select different actions.
    *
-   * @param pgpContact            The [PgpContact] which will be used when we select the remove action.
+   * @param recipient            The [RecipientWithPubKeys] which will be used when we select the remove action.
    * @param isRemoveActionEnabled true if we want to show the remove action, false otherwise.
    */
-  private fun showNoPgpFoundDialog(pgpContact: PgpContact, isRemoveActionEnabled: Boolean) {
-    val dialogFragment = NoPgpFoundDialogFragment.newInstance(pgpContact, isRemoveActionEnabled)
+  private fun showNoPgpFoundDialog(
+    recipient: RecipientWithPubKeys,
+    isRemoveActionEnabled: Boolean
+  ) {
+    val dialogFragment = NoPgpFoundDialogFragment.newInstance(recipient, isRemoveActionEnabled)
     dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
     dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
   }
@@ -1536,8 +1493,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
-
-    isContactsUpdateEnabled = false
     onMsgSendListener.sendMsg(getOutgoingMsgInfo())
   }
 
@@ -1657,9 +1612,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun updateFromAddressAdapter(list: List<PGPSecretKeyRing>) {
-    val setOfUsers = list.map { keyRing -> keyRing.pgpContacts() }
+    val setOfUsers = list.map { keyRing -> keyRing.toPgpKeyDetails().mimeAddresses }
       .flatten()
-      .map { contact -> contact.email }
+      .map { mimeAddress -> mimeAddress.address }
 
     fromAddrs?.let { adapter ->
       for (email in adapter.objects) {
@@ -1668,18 +1623,18 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     }
   }
 
-  private fun setupContactsViewModel() {
-    handleUpdatingToContacts()
-    handleUpdatingCcContacts()
-    handleUpdatingBccContacts()
+  private fun setupRecipientsViewModel() {
+    handleUpdatingToRecipients()
+    handleUpdatingCcRecipients()
+    handleUpdatingBccRecipients()
   }
 
-  private fun handleUpdatingToContacts() {
-    contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, {
+  private fun handleUpdatingToRecipients() {
+    recipientsViewModel.recipientsToLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.countingIdlingResource?.incrementSafely()
-          pgpContactsTo?.clear()
+          recipientWithPubKeysTo?.clear()
           progressBarTo?.visibility = View.VISIBLE
           isUpdateToCompleted = false
         }
@@ -1688,9 +1643,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           isUpdateToCompleted = true
           progressBarTo?.visibility = View.INVISIBLE
 
-          pgpContactsTo = it.data?.toMutableList()
-          if (pgpContactsTo?.isNotEmpty() == true) {
-            updateChips(recipientsTo, pgpContactsTo)
+          recipientWithPubKeysTo = it.data?.toMutableList()
+          if (recipientWithPubKeysTo?.isNotEmpty() == true) {
+            updateChips(recipientsTo, recipientWithPubKeysTo)
           }
           hostActivity?.countingIdlingResource?.decrementSafely()
         }
@@ -1705,12 +1660,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     })
   }
 
-  private fun handleUpdatingCcContacts() {
-    contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, {
+  private fun handleUpdatingCcRecipients() {
+    recipientsViewModel.recipientsCcLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.countingIdlingResource?.incrementSafely()
-          pgpContactsCc?.clear()
+          recipientWithPubKeysCc?.clear()
           progressBarCc?.visibility = View.VISIBLE
           isUpdateCcCompleted = false
         }
@@ -1718,10 +1673,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         Result.Status.SUCCESS -> {
           isUpdateCcCompleted = true
           progressBarCc?.visibility = View.INVISIBLE
-          pgpContactsCc = it.data?.toMutableList()
+          recipientWithPubKeysCc = it.data?.toMutableList()
 
-          if (pgpContactsCc?.isNotEmpty() == true) {
-            updateChips(recipientsCc, pgpContactsCc)
+          if (recipientWithPubKeysCc?.isNotEmpty() == true) {
+            updateChips(recipientsCc, recipientWithPubKeysCc)
           }
           hostActivity?.countingIdlingResource?.decrementSafely()
         }
@@ -1736,12 +1691,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     })
   }
 
-  private fun handleUpdatingBccContacts() {
-    contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, {
+  private fun handleUpdatingBccRecipients() {
+    recipientsViewModel.recipientsBccLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.countingIdlingResource?.incrementSafely()
-          pgpContactsBcc?.clear()
+          recipientWithPubKeysBcc?.clear()
           progressBarBcc?.visibility = View.VISIBLE
           isUpdateBccCompleted = false
         }
@@ -1749,10 +1704,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         Result.Status.SUCCESS -> {
           isUpdateBccCompleted = true
           progressBarBcc?.visibility = View.INVISIBLE
-          pgpContactsBcc = it.data?.toMutableList()
+          recipientWithPubKeysBcc = it.data?.toMutableList()
 
-          if (pgpContactsBcc?.isNotEmpty() == true) {
-            updateChips(recipientsBcc, pgpContactsBcc)
+          if (recipientWithPubKeysBcc?.isNotEmpty() == true) {
+            updateChips(recipientsBcc, recipientWithPubKeysBcc)
           }
           hostActivity?.countingIdlingResource?.decrementSafely()
         }
@@ -1821,7 +1776,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
     private const val REQUEST_CODE_IMPORT_PUBLIC_KEY = 101
     private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
-    private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103
+    private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT = 103
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 107
     private val TAG = CreateMessageFragment::class.java.simpleName

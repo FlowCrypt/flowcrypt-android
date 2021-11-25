@@ -21,12 +21,12 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncrypt
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
@@ -43,7 +43,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.util.ArrayList
-import java.util.Locale
 import java.util.UUID
 import javax.mail.Message
 
@@ -79,7 +78,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
         ?: return
     val accountEntity =
-      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.toLowerCase(Locale.US))
+      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.lowercase())
         ?: return
 
     val uid = outgoingMsgInfo.uid
@@ -263,13 +262,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
       val senderEmail = outgoingMsgInfo.from
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-      pubKeys = SecurityUtils.getRecipientsPubKeys(applicationContext, recipients)
-      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(
-        applicationContext,
-        accountEntity, senderEmail
-      )
-      pubKeys.add(
-        senderKeyDetails.publicKey
+      pubKeys = mutableListOf()
+      pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients))
+      pubKeys.addAll(
+        SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, accountEntity, senderEmail)
+          .map { it.publicKey }
       )
     }
 
@@ -378,14 +375,14 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
    */
   private fun updateContactsLastUseDateTime(msgInfo: OutgoingMessageInfo) {
     try {
-      val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).contactsDao()
-
+      val recipientDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
+      //todo-denbond7 we can improve it to use a single request to the local database
       for (email in msgInfo.getAllRecipients()) {
-        val contactEntity = contactsDao.getContactByEmail(email)
-        if (contactEntity == null) {
-          contactsDao.insert(PgpContact(email, null).toContactEntity())
+        val recipientEntity = recipientDao.getRecipientByEmail(email)
+        if (recipientEntity == null) {
+          recipientDao.insert(RecipientEntity(email = email))
         } else {
-          contactsDao.update(contactEntity.copy(lastUse = System.currentTimeMillis()))
+          recipientDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
         }
       }
     } catch (e: Exception) {

@@ -30,11 +30,11 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
@@ -205,13 +205,12 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           }
 
           if (roomDatabase.keysDao().getKeyByAccountAndFingerprintSuspend(
-              accountEntity.email.toLowerCase(Locale.US),
-              fingerprint
+              accountEntity.email.lowercase(), fingerprint
             ) == null
           ) {
             if (addAccountIfNotExist) {
               val existedAccount = roomDatabase.accountDao()
-                .getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
+                .getAccountSuspend(accountEntity.email.lowercase())
               if (existedAccount == null) {
                 roomDatabase.accountDao().addAccountSuspend(accountEntity)
               }
@@ -243,15 +242,24 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
                   passphraseType = KeyEntity.PassphraseType.RAM
                 )
               }
-              //update contacts table
-              val contactsDao = roomDatabase.contactsDao()
-              for (pgpContact in keyDetails.pgpContacts) {
-                pgpContact.pubkey = keyDetails.publicKey
-                val temp = contactsDao.getContactByEmailSuspend(pgpContact.email)
-                if (temp == null && GeneralUtil.isEmailValid(pgpContact.email)) {
-                  contactsDao.insertWithReplaceSuspend(pgpContact.toContactEntity())
-                  //todo-DenBond7 Need to resolve a situation with different public keys. For example
-                  // we can have a situation when we have to different public keys with the same email
+
+              //update pub keys
+              val recipientDao = roomDatabase.recipientDao()
+              val pubKeysDao = roomDatabase.pubKeyDao()
+              for (mimeAddress in keyDetails.mimeAddresses) {
+                val address = mimeAddress.address.lowercase()
+                val name = mimeAddress.personal
+
+                val existedRecipientWithPubKeys =
+                  recipientDao.getRecipientWithPubKeysByEmailSuspend(address)
+                if (existedRecipientWithPubKeys == null) {
+                  recipientDao.insertSuspend(RecipientEntity(email = address, name = name))
+                }
+
+                val existedPubKeyEntity =
+                  pubKeysDao.getPublicKeyByRecipientAndFingerprint(address, keyDetails.fingerprint)
+                if (existedPubKeyEntity == null) {
+                  pubKeysDao.insertSuspend(keyDetails.toPublicKeyEntity(address))
                 }
               }
             }
@@ -333,6 +341,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       createPrivateKeyLiveData.value = Result.loading()
       var pgpKeyDetails: PgpKeyDetails? = null
       try {
+        //use genUserIds()
         pgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
           UserId.nameAndEmail(
             accountEntity.displayName
@@ -341,7 +350,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         ).toPgpKeyDetails().copy(passphraseType = passphraseType)
 
         val existedAccount =
-          roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
+          roomDatabase.accountDao().getAccountSuspend(accountEntity.email.lowercase())
         if (existedAccount == null) {
           roomDatabase.accountDao().addAccountSuspend(accountEntity)
         }
@@ -368,10 +377,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         val allKeyEntitiesOfAccount =
           roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
         val fingerprintListOfDeleteCandidates = keys.map {
-          it.fingerprint.toLowerCase(Locale.US)
+          it.fingerprint.lowercase()
         }
         val deleteCandidates = allKeyEntitiesOfAccount.filter {
-          fingerprintListOfDeleteCandidates.contains(it.fingerprint.toLowerCase(Locale.US))
+          fingerprintListOfDeleteCandidates.contains(it.fingerprint.lowercase())
         }
 
         if (keys.size == allKeyEntitiesOfAccount.size) {
@@ -554,28 +563,36 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       }
     }
 
-  private suspend fun genContacts(accountEntity: AccountEntity): List<PgpContact> =
+  private suspend fun genUserIds(accountEntity: AccountEntity): List<UserId> =
     withContext(Dispatchers.IO) {
-      val pgpContactMain = PgpContact(accountEntity.email, accountEntity.displayName)
-      val contacts = ArrayList<PgpContact>()
+      val userIds = ArrayList<UserId>()
+      userIds.add(UserId.newBuilder().withEmail(accountEntity.email).apply {
+        accountEntity.displayName?.let { name ->
+          withName(name)
+        }
+      }.build())
 
-      when (accountEntity.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          contacts.add(pgpContactMain)
+      if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+        try {
           val gmail = GmailApiHelper.generateGmailApiService(getApplication(), accountEntity)
           val aliases =
             gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
           for (alias in aliases.sendAs) {
             if (alias.verificationStatus != null) {
-              contacts.add(PgpContact(alias.sendAsEmail, alias.displayName))
+              userIds.add(UserId.newBuilder().withEmail(alias.sendAsEmail).apply {
+                alias.displayName?.let { name ->
+                  withName(name)
+                }
+              }.build())
             }
           }
+        } catch (e: Exception) {
+          //skip any issues
+          e.printStackTrace()
         }
-
-        else -> contacts.add(pgpContactMain)
       }
 
-      return@withContext contacts
+      return@withContext userIds
     }
 
   /**

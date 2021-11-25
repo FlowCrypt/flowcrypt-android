@@ -20,7 +20,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
@@ -35,14 +35,14 @@ import javax.mail.Store
 import javax.mail.internet.InternetAddress
 
 /**
- * This [CoroutineWorker] loads information about contacts from the SENT folder.
+ * This [CoroutineWorker] loads information about recipients from the SENT folder.
  *
  * @author Denis Bondarenko
  * Date: 23.04.2018
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-class LoadContactsWorker(context: Context, params: WorkerParameters) :
+class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     fetchContacts(accountEntity, store)
@@ -65,9 +65,9 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
 
           if (msgs.isNotEmpty()) {
             val fetchProfile = FetchProfile()
-            fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
-            fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
-            fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
+            fetchProfile.add(Message.RecipientType.TO.toString().uppercase())
+            fetchProfile.add(Message.RecipientType.CC.toString().uppercase())
+            fetchProfile.add(Message.RecipientType.BCC.toString().uppercase())
             imapFolder.fetch(msgs, fetchProfile)
 
             return@fetchContactsInternal msgs
@@ -159,51 +159,45 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.BCC))
     }
 
-    val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).contactsDao()
-    val availableContacts = contactsDao.getAllContacts()
+    val recipientDao = FlowCryptRoomDatabase.getDatabase(applicationContext).recipientDao()
+    val availableRecipients = recipientDao.getAllRecipients()
 
-    val contactsInDatabase = HashSet<String>()
-    val contactsWhichWillBeUpdated = HashSet<String>()
-    val contactsWhichWillBeCreated = HashSet<String>()
-    val contactsByEmailMap = HashMap<String, ContactEntity?>()
+    val recipientsInDatabase = HashSet<String>()
+    val recipientsToUpdate = HashSet<String>()
+    val recipientsToCreate = HashSet<String>()
+    val recipientsByEmailMap = HashMap<String, RecipientEntity?>()
 
-    val newCandidates = mutableListOf<ContactEntity>()
-    val updateCandidates = mutableListOf<ContactEntity>()
+    val newCandidates = mutableListOf<RecipientEntity>()
+    val updateCandidates = mutableListOf<RecipientEntity>()
 
-    for (contact in availableContacts) {
-      contactsInDatabase.add(contact.email.toLowerCase(Locale.getDefault()))
-      contactsByEmailMap[contact.email.toLowerCase(Locale.getDefault())] = contact
+    for (recipientEntity in availableRecipients) {
+      recipientsInDatabase.add(recipientEntity.email.lowercase())
+      recipientsByEmailMap[recipientEntity.email.lowercase()] = recipientEntity
     }
 
     for (emailAndNamePair in emailAndNamePairs) {
-      if (contactsInDatabase.contains(emailAndNamePair.email)) {
-        val contactEntity = contactsByEmailMap[emailAndNamePair.email]
-        if (contactEntity?.email.isNullOrEmpty()) {
-          if (!contactsWhichWillBeUpdated.contains(emailAndNamePair.email)) {
+      if (recipientsInDatabase.contains(emailAndNamePair.email)) {
+        val recipientEntity = recipientsByEmailMap[emailAndNamePair.email]
+        if (recipientEntity?.email.isNullOrEmpty()) {
+          if (!recipientsToUpdate.contains(emailAndNamePair.email)) {
             emailAndNamePair.email?.let {
-              contactsWhichWillBeUpdated.add(it)
+              recipientsToUpdate.add(it)
             }
-            contactEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
+            recipientEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
           }
         }
       } else {
-        if (!contactsWhichWillBeCreated.contains(emailAndNamePair.email)) {
+        if (!recipientsToCreate.contains(emailAndNamePair.email)) {
           emailAndNamePair.email?.let {
-            contactsWhichWillBeCreated.add(it)
-            newCandidates.add(
-              ContactEntity(
-                email = it,
-                name = emailAndNamePair.name,
-                hasPgp = false
-              )
-            )
+            recipientsToCreate.add(it)
+            newCandidates.add(RecipientEntity(email = it, name = emailAndNamePair.name))
           }
         }
       }
     }
 
-    contactsDao.updateSuspend(updateCandidates)
-    contactsDao.insertSuspend(newCandidates)
+    recipientDao.updateSuspend(updateCandidates)
+    recipientDao.insertSuspend(newCandidates)
   }
 
   /**
@@ -228,7 +222,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
             for (address in addresses) {
               emailAndNamePairs.add(
                 EmailAndNamePair(
-                  address.address.toLowerCase(Locale.getDefault()), address.personal
+                  address.address.lowercase(), address.personal
                 )
               )
             }
@@ -260,7 +254,7 @@ class LoadContactsWorker(context: Context, params: WorkerParameters) :
         .enqueueUniqueWork(
           GROUP_UNIQUE_TAG,
           ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<LoadContactsWorker>()
+          OneTimeWorkRequestBuilder<LoadRecipientsWorker>()
             .addTag(TAG_SYNC)
             .setConstraints(constraints)
             .build()

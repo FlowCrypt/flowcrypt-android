@@ -47,7 +47,6 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import java.io.File
-import java.util.ArrayList
 import java.util.Date
 
 /**
@@ -117,19 +116,13 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
 
-    val emails = ArrayList<String>()
-
-    for (pgpContact in details.pgpContacts) {
-      emails.add(pgpContact.email)
-    }
-
     onView(withId(R.id.tVUsers))
       .check(
         matches(
           withText(
             getResString(
               R.string.template_users,
-              TextUtils.join(", ", emails)
+              TextUtils.join(", ", details.mimeAddresses.map { it.address })
             )
           )
         )

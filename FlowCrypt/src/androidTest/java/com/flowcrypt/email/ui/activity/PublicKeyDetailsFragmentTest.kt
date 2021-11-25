@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.os.Environment
 import android.text.format.DateFormat
@@ -20,7 +19,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -32,9 +30,10 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddContactsToDatabaseRule
+import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -42,8 +41,6 @@ import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers
-import org.hamcrest.Description
-import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.AllOf
 import org.junit.AfterClass
@@ -70,13 +67,13 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/details",
+      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/recipient_details/pubkey_details",
       extras = Bundle().apply {
         putParcelable(
-          "contactEntity", PgpContact(
-            EMAIL_DENBOND7, USER_DENBOND7,
-            keyDetails.publicKey, true, null, null, 0
-          ).toContactEntity()
+          "recipientEntity", RecipientEntity(email = EMAIL_DENBOND7, name = USER_DENBOND7)
+        )
+        putParcelable(
+          "publicKeyEntity", keyDetails.toPublicKeyEntity(EMAIL_DENBOND7).copy(id = 12)
         )
       }
     )
@@ -87,11 +84,11 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     .outerRule(ClearAppSettingsRule())
     .around(AddAccountToDatabaseRule())
     .around(
-      AddContactsToDatabaseRule(
+      AddRecipientsToDatabaseRule(
         listOf(
-          PgpContact(
-            EMAIL_DENBOND7, USER_DENBOND7,
-            keyDetails.publicKey, true, null, null, 0
+          RecipientWithPubKeys(
+            RecipientEntity(email = EMAIL_DENBOND7, name = USER_DENBOND7),
+            listOf(keyDetails.toPublicKeyEntity(EMAIL_DENBOND7).copy(id = 12))
           )
         )
       )
@@ -193,23 +190,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     testHelpScreen()
   }
 
-  /**
-   * Match an item in an adapter which has the given text
-   */
-  private fun withItemContent(itemTextMatcher: String): Matcher<Any> {
-    // use preconditions to fail fast when a test is creating an invalid matcher.
-    return object : BoundedMatcher<Any, Cursor>(Cursor::class.java) {
-      public override fun matchesSafely(cursor: Cursor): Boolean {
-        //todo-denbond7 - fix me
-        return "cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))" == itemTextMatcher
-      }
-
-      override fun describeTo(description: Description) {
-        description.appendText("with item content: ")
-      }
-    }
-  }
-
   companion object {
     private const val EMAIL_DENBOND7 = "denbond7@flowcrypt.test"
     private const val USER_DENBOND7 = "DenBond7"
@@ -218,8 +198,9 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     @JvmStatic
     fun removeContactFromDatabase() {
       val dao =
-        FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
-      dao.getContactByEmail(EMAIL_DENBOND7)?.let { dao.delete(it) }
+        FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext())
+          .recipientDao()
+      dao.getRecipientByEmail(EMAIL_DENBOND7)?.let { dao.delete(it) }
     }
   }
 }

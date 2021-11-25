@@ -7,6 +7,7 @@ package com.flowcrypt.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
@@ -28,17 +29,44 @@ data class KeyImportDetails constructor(
   val value: String,
   val sourceType: SourceType,
   val isPrivateKey: Boolean = false,
-  val pgpContact: PgpContact? = null
+  val recipientWithPubKeys: RecipientWithPubKeys? = null
 ) : Parcelable {
 
-  constructor(value: String, sourceType: SourceType) : this(null, value, sourceType, true)
-  constructor(value: String, sourceType: SourceType, isPrivateKey: Boolean) : this(
-    null,
-    value,
-    sourceType,
-    isPrivateKey,
-    null
+  constructor(parcel: Parcel) : this(
+    parcel.readString(),
+    parcel.readString()!!,
+    parcel.readParcelable(SourceType::class.java.classLoader)!!,
+    parcel.readByte() != 0.toByte(),
+    parcel.readParcelable(RecipientWithPubKeys::class.java.classLoader)
   )
+
+  constructor(value: String, sourceType: SourceType) : this(
+    keyName = null,
+    value = value,
+    sourceType = sourceType,
+    isPrivateKey = true
+  )
+
+  constructor(value: String, sourceType: SourceType, isPrivateKey: Boolean) : this(
+    keyName = null,
+    value = value,
+    sourceType = sourceType,
+    isPrivateKey = isPrivateKey,
+    recipientWithPubKeys = null
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+    with(dest) {
+      writeString(keyName)
+      writeString(value)
+      writeParcelable(sourceType, flags)
+      writeInt((if (isPrivateKey) 1 else 0))
+      writeParcelable(recipientWithPubKeys, flags)
+    }
 
   /**
    * The key available types.
@@ -71,33 +99,8 @@ data class KeyImportDetails constructor(
     }
   }
 
-  constructor(source: Parcel) : this(
-    source.readString(),
-    source.readString()!!,
-    source.readParcelable(SourceType::class.java.classLoader)!!,
-    source.readInt() == 1,
-    source.readParcelable(PgpContact::class.java.classLoader)!!
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeString(keyName)
-      writeString(value)
-      writeParcelable(sourceType, flags)
-      writeInt((if (isPrivateKey) 1 else 0))
-      writeParcelable(pgpContact, flags)
-    }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<KeyImportDetails> =
-      object : Parcelable.Creator<KeyImportDetails> {
-        override fun createFromParcel(source: Parcel): KeyImportDetails = KeyImportDetails(source)
-        override fun newArray(size: Int): Array<KeyImportDetails?> = arrayOfNulls(size)
-      }
+  companion object CREATOR : Parcelable.Creator<KeyImportDetails> {
+    override fun createFromParcel(parcel: Parcel): KeyImportDetails = KeyImportDetails(parcel)
+    override fun newArray(size: Int): Array<KeyImportDetails?> = arrayOfNulls(size)
   }
 }

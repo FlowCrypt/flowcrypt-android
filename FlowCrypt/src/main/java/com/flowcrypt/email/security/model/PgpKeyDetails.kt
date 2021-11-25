@@ -10,11 +10,10 @@ import android.os.Parcelable
 import android.util.Patterns
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.util.exception.FlowCryptException
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import java.util.ArrayList
 import java.util.Locale
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
@@ -31,6 +30,7 @@ import javax.mail.internet.InternetAddress
 data class PgpKeyDetails constructor(
   @Expose val isFullyDecrypted: Boolean,
   @Expose val isFullyEncrypted: Boolean,
+  @Expose val isRevoked: Boolean,
   @Expose @SerializedName("private") val privateKey: String?,
   @Expose @SerializedName("public") val publicKey: String,
   @Expose val users: List<String>,
@@ -42,11 +42,6 @@ data class PgpKeyDetails constructor(
   var tempPassphrase: CharArray? = null,
   var passphraseType: KeyEntity.PassphraseType? = null
 ) : Parcelable {
-
-  val primaryPgpContact: PgpContact
-    get() = determinePrimaryPgpContact()
-  val pgpContacts: ArrayList<PgpContact>
-    get() = PgpContact.determinePgpContacts(users)
   val fingerprint: String
     get() = ids.first().fingerprint
   val isPrivate: Boolean
@@ -64,6 +59,7 @@ data class PgpKeyDetails constructor(
     }
 
   constructor(source: Parcel) : this(
+    source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readString(),
@@ -85,6 +81,7 @@ data class PgpKeyDetails constructor(
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeValue(isFullyDecrypted)
     writeValue(isFullyEncrypted)
+    writeValue(isRevoked)
     writeString(privateKey)
     writeString(publicKey)
     writeStringList(users)
@@ -97,37 +94,18 @@ data class PgpKeyDetails constructor(
     writeParcelable(passphraseType, flags)
   }
 
-  private fun determinePrimaryPgpContact(): PgpContact {
-    val address = users.first()
-    val fingerprintFromKeyId = ids.first().fingerprint
-    var email: String? = null
-    var name: String? = null
-    try {
-      val internetAddresses = InternetAddress.parse(address)
-      email = internetAddresses.first().address
-      name = internetAddresses.first().personal
-    } catch (e: AddressException) {
-      e.printStackTrace()
-      val pattern = Patterns.EMAIL_ADDRESS
-      val matcher = pattern.matcher(users.first())
-      if (matcher.find()) {
-        email = matcher.group()
-        name = email
-      }
-    }
+  fun getUserIdsAsSingleString(): String {
+    return mimeAddresses.joinToString { it.address }
+  }
 
-    if (email == null) {
-      throw object : FlowCryptException("No user ids with mail address") {}
-    }
+  fun getPrimaryInternetAddress(): InternetAddress? {
+    return mimeAddresses.firstOrNull()
+  }
 
-    return PgpContact(
-      email = email.toLowerCase(Locale.US),
-      name = name,
-      pubkey = publicKey,
-      hasPgp = true,
-      client = null,
-      fingerprint = fingerprintFromKeyId
-    )
+  fun isNewerThan(pgpKeyDetails: PgpKeyDetails?): Boolean {
+    val existingLastModified = lastModified ?: 0
+    val providedLastModified = pgpKeyDetails?.lastModified ?: 0
+    return existingLastModified > providedLastModified
   }
 
   private fun parseMimeAddresses(): List<InternetAddress> {
@@ -137,7 +115,12 @@ data class PgpKeyDetails constructor(
       try {
         results.addAll(listOf(*InternetAddress.parse(user)))
       } catch (e: AddressException) {
-        //do nothing
+        e.printStackTrace()
+        val pattern = Patterns.EMAIL_ADDRESS
+        val matcher = pattern.matcher(user)
+        if (matcher.find()) {
+          results.add(InternetAddress(matcher.group()))
+        }
       }
     }
 
@@ -147,7 +130,7 @@ data class PgpKeyDetails constructor(
   fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
     return KeyEntity(
       fingerprint = fingerprint,
-      account = accountEntity.email.toLowerCase(Locale.US),
+      account = accountEntity.email.lowercase(Locale.US),
       accountType = accountEntity.accountType,
       source = PrivateKeySourceType.BACKUP.toString(),
       publicKey = publicKey.toByteArray(),
@@ -159,6 +142,22 @@ data class PgpKeyDetails constructor(
     )
   }
 
+  fun toRecipientEntity(): RecipientEntity? {
+    val primaryAddress = getPrimaryInternetAddress() ?: return null
+    return RecipientEntity(
+      email = primaryAddress.address,
+      name = primaryAddress.personal
+    )
+  }
+
+  fun toPublicKeyEntity(recipient: String): PublicKeyEntity {
+    return PublicKeyEntity(
+      recipient = recipient,
+      fingerprint = fingerprint,
+      publicKey = publicKey.toByteArray()
+    )
+  }
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
@@ -167,6 +166,7 @@ data class PgpKeyDetails constructor(
 
     if (isFullyDecrypted != other.isFullyDecrypted) return false
     if (isFullyEncrypted != other.isFullyEncrypted) return false
+    if (isRevoked != other.isRevoked) return false
     if (privateKey != other.privateKey) return false
     if (publicKey != other.publicKey) return false
     if (users != other.users) return false
@@ -187,6 +187,7 @@ data class PgpKeyDetails constructor(
   override fun hashCode(): Int {
     var result = isFullyDecrypted.hashCode()
     result = 31 * result + isFullyEncrypted.hashCode()
+    result = 31 * result + isRevoked.hashCode()
     result = 31 * result + (privateKey?.hashCode() ?: 0)
     result = 31 * result + publicKey.hashCode()
     result = 31 * result + users.hashCode()

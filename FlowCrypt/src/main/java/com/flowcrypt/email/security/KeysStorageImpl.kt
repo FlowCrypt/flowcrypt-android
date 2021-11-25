@@ -27,7 +27,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.util.Passphrase
 import java.time.Instant
-import java.util.Locale
 import java.util.TreeMap
 import java.util.concurrent.TimeUnit
 import javax.mail.internet.InternetAddress
@@ -90,11 +89,15 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return secretKeyRingsLiveData.value ?: emptyList()
   }
 
+  override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
+    return getPgpKeyDetailsList(getPGPSecretKeyRings())
+  }
+
   @WorkerThread
   @Synchronized
-  override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
+  fun getPgpKeyDetailsList(rings: List<PGPSecretKeyRing>): List<PgpKeyDetails> {
     val list = mutableListOf<PgpKeyDetails>()
-    for (secretKey in getPGPSecretKeyRings()) {
+    for (secretKey in rings) {
       val pgpKeyDetails = secretKey.toPgpKeyDetails()
       val passphrase = getPassphraseByFingerprint(pgpKeyDetails.fingerprint)
       list.add(pgpKeyDetails.copy(tempPassphrase = passphrase?.chars))
@@ -112,7 +115,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   override fun getPGPSecretKeyRingsByFingerprints(fingerprints: Collection<String>):
       List<PGPSecretKeyRing> {
     val list = mutableListOf<PGPSecretKeyRing>()
-    val set = fingerprints.map { it.toUpperCase(Locale.US) }.toSet()
+    val set = fingerprints.map { it.uppercase() }.toSet()
     for (secretKey in getPGPSecretKeyRings()) {
       val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
       if (openPgpV4Fingerprint.toString() in set) {

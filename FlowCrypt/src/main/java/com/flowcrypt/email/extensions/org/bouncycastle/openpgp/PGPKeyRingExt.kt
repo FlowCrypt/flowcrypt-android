@@ -6,7 +6,6 @@
 package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import androidx.annotation.WorkerThread
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -74,6 +73,7 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
   return PgpKeyDetails(
     isFullyDecrypted = keyRingInfo.isFullyDecrypted,
     isFullyEncrypted = keyRingInfo.isFullyEncrypted,
+    isRevoked = getPublicKey().hasRevocation(),
     privateKey = privateKey,
     publicKey = publicKey,
     users = keyRingInfo.userIds,
@@ -83,11 +83,6 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
     expiration = keyRingInfo.primaryKeyExpirationDate?.time,
     algo = algo
   )
-}
-
-fun PGPKeyRing.pgpContacts(): List<PgpContact> {
-  val list = publicKey.userIDs.iterator().asSequence().toList()
-  return PgpContact.determinePgpContacts(list)
 }
 
 @Throws(IOException::class)

@@ -164,7 +164,7 @@ android {
         devTest {
             versionNameSuffix "_devTest"
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://localhost:1212/\""
@@ -422,6 +422,7 @@ dependencies {
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20211018.2'
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
 
     implementation ('org.pgpainless:pgpainless-core:0.2.19') {
         // exclude group: 'org.bouncycastle' because we will specify it manually

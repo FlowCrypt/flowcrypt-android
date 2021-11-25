@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.extensions.javax.mail
 
-import com.flowcrypt.email.extensions.kotlin.lowercase
 import javax.mail.Part
 
 fun Part.isInline(): Boolean {

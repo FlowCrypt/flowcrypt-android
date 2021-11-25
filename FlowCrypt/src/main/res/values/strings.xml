@@ -48,7 +48,7 @@
     <string name="reply_all">Reply All</string>
     <string name="please_wait_while_backup_will_be_saved">Making a backup, please wait</string>
     <string name="please_wait_while_message_will_be_sent">Sending message, please wait</string>
-    <string name="please_wait_while_information_about_contacts_will_be_updated">Loading information about contacts, please wait</string>
+    <string name="please_wait_while_information_about_recipients_will_be_updated">Loading information about recipients, please wait</string>
     <string name="create_a_new_key">Create a new key</string>
     <string name="import_my_key">Import my key</string>
     <string name="select_key_to_import">Select a key to import</string>
@@ -97,12 +97,10 @@
     <string name="template_message_part_public_key_fingerprint" formatted="false"><![CDATA[(Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
     <string name="show_the_public_key">Show the Public Key</string>
     <string name="hide_the_public_key">Hide the Public Key</string>
-    <string name="save_contact">Save contact</string>
-    <string name="update_contact">Update contact</string>
-    <string name="replace_contact">Replace Contact</string>
-    <string name="contact_successfully_saved">Contact saved</string>
-    <string name="contact_successfully_updated">Contact updated</string>
-    <string name="contact_successfully_replaced">Contact replaced</string>
+    <string name="import_pub_key">Import public key</string>
+    <string name="update_pub_key">Update public key</string>
+    <string name="pub_key_successfully_imported">Public key imported</string>
+    <string name="pub_key_successfully_updated">Public key updated</string>
     <string name="import_private_key">Import Private Key</string>
     <string name="load_from_a_file">Load from a file</string>
     <string name="load_from_clipboard">Load from clipboard</string>
@@ -395,9 +393,8 @@
     <string name="parsing_keys_please_wait">Parsing keys, please wait</string>
     <string name="empty_pass_phrase">Empty pass phrase</string>
     <string name="keys_have_different_pass_phrase">The keys have different pass phrase</string>
-    <string name="contact_for_saving_not_found">Contact for saving is not found</string>
-    <string name="contact_for_updating_is_not_found">Contact for updating is not found</string>
-    <string name="contact_for_replacing_is_not_found">Contact for replacing is not found</string>
+    <string name="pub_key_for_saving_not_found">Public key for saving is not found</string>
+    <string name="pub_key_for_updating_is_not_found">Public key for updating is not found</string>
     <string name="error_could_not_save_private_keys">Error: couldn\'t save private keys</string>
     <string name="show_more">Show more</string>
     <string name="delete_quoted_text">Delete quoted text</string>
@@ -461,7 +458,9 @@
     <string name="fingerprints_">Fingerprints:</string>
     <string name="warning_key_expired">Warning: this key was expired on %1$s</string>
     <string name="warning_no_expected_email">Warning: it seems this key doesn\'t relates to expected email address %1$s</string>
-    <string name="warning_one_of_pub_keys_is_expired">The public key of one of your recipients is expired. Sending encrypted emails to expired public keys is not possible.\n\nPlease ask the recipient(s) to send you an updated Public Key.</string>
+    <string name="warning_one_of_recipients_has_expired_pub_key">One or more of your recipients have expired public keys (marked in orange).\n\nPlease ask them to send you updated public key. If this is an enterprise installation, please ask your systems admin.</string>
+    <string name="warning_one_of_recipients_has_revoked_pub_key">One or more of your recipients have revoked public keys (marked in red).\n\nPlease ask them to send you a new public key. If this is an enterprise installation, please ask your systems admin.</string>
+    <string name="warning_one_of_recipients_has_not_usable_pub_key">The public key of one of your recipients is wrong or not usable due to security reasons.\n\nPlease ask the recipient(s) to send you a new Public Key.</string>
     <string name="create_new_message">Create a new message</string>
     <string name="add_new_contact">Add a new contact</string>
     <string name="add_new_private_key">Add a new private key</string>
@@ -529,10 +528,18 @@
     <string name="no_connection_or_server_is_not_reachable">No connection or the server is not reachable</string>
     <string name="inform_sender">Inform the sender</string>
     <string name="key_sha1_warning_msg">This OpenPGP key is not supported with message: "No suitable signatures found on the key". It could be because it\'s missing internal signatures, or the signatures are wrongly made, or it may be using archaic algorithms that are no longer secure and no longer supported (such as SHA-1).</string>
-    <string name="warning_one_of_pub_keys_is_not_usable">The public key of one of your recipients is wrong or not usable due to security reasons.\n\nPlease ask the recipient(s) to send you a new Public Key.</string>
     <string name="could_not_extract_key_details">Could not extract the key details</string>
     <string name="decrypt_error_message_bad_mdc">Security threat - opening this message is dangerous because it was modified in transit.</string>
     <string name="decrypt_error_message_no_mdc">Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.</string>
     <string name="msg_contains_not_valid_pub_key">This message contained a Public Key that was not valid.\n\n%1$s</string>
     <string name="msg_contains_not_valid_block">This message contained a block with type = %1$s that was not valid.\n\n%2$s</string>
+    <string name="could_not_save_new_recipient">Couldn\'t save a new recipient</string>
+    <string name="recipient_already_exist">Recipient %1$s is already exist</string>
+    <string name="primary_address_not_defined">Primary address is not defined</string>
+    <string name="key_has_already_been_added">This key has already been added</string>
+    <string name="could_not_save_pub_key_for_recipient">Couldn\'t save %1$s for %2$s</string>
+    <string name="could_not_update_pub_key_for_recipient">Couldn\'t update a public key for %1$s</string>
+    <string name="pub_keys">Public keys</string>
+    <string name="recipient_detail">Recipient details</string>
+    <string name="you_trying_replace_pub_key_with_older_version">You are trying to replace a public key with an older version</string>
 </resources>

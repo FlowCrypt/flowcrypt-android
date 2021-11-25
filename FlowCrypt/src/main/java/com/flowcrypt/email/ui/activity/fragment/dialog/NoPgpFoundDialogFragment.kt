@@ -11,14 +11,14 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.model.DialogItem
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.ui.adapter.DialogItemAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.ArrayList
 
 /**
- * This dialog will be used to show for user different options to resolve a PGP not found situation.
+ * This dialog will be used to show for a user different options to resolve a PGP not found situation.
  *
  * @author Denis Bondarenko
  * Date: 01.08.2017
@@ -27,46 +27,48 @@ import java.util.ArrayList
  */
 class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
 
-  private var pgpContact: PgpContact? = null
+  private var recipientWithPubKeys: RecipientWithPubKeys? = null
   private var dialogItems: MutableList<DialogItem> = mutableListOf()
   private var isRemoveActionEnabled: Boolean = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-
-    this.pgpContact = arguments?.getParcelable(EXTRA_KEY_PGP_CONTACT)
+    this.recipientWithPubKeys = arguments?.getParcelable(EXTRA_KEY_PGP_CONTACT)
     this.isRemoveActionEnabled = arguments?.getBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED) ?: false
 
     dialogItems = ArrayList()
 
     dialogItems.add(
       DialogItem(
-        R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
-        RESULT_CODE_SWITCH_TO_STANDARD_EMAIL
+        iconResourceId = R.mipmap.ic_switch,
+        title = getString(R.string.switch_to_standard_email),
+        id = RESULT_CODE_SWITCH_TO_STANDARD_EMAIL
       )
     )
     dialogItems.add(
       DialogItem(
-        R.mipmap.ic_document, getString(R.string.import_their_public_key),
-        RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY
+        iconResourceId = R.mipmap.ic_document,
+        title = getString(R.string.import_their_public_key),
+        id = RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY
       )
     )
     dialogItems.add(
       DialogItem(
-        R.mipmap.ic_content_copy, getString(
-          R.string
-            .copy_from_other_contact
-        ), RESULT_CODE_COPY_FROM_OTHER_CONTACT
+        iconResourceId = R.mipmap.ic_content_copy,
+        title = getString(R.string.copy_from_other_contact),
+        id = RESULT_CODE_COPY_FROM_OTHER_CONTACT
       )
     )
+
     if (isRemoveActionEnabled) {
       dialogItems.add(
         DialogItem(
-          R.mipmap.ic_remove_recipient, getString(
-            R.string
-              .template_remove_recipient, pgpContact!!.email
-          ), RESULT_CODE_REMOVE_CONTACT
+          iconResourceId = R.mipmap.ic_remove_recipient,
+          title = getString(
+            R.string.template_remove_recipient, recipientWithPubKeys?.recipient?.email
+          ),
+          id = RESULT_CODE_REMOVE_CONTACT
         )
       )
     }
@@ -92,7 +94,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
     }
 
     val returnIntent = Intent()
-    returnIntent.putExtra(EXTRA_KEY_PGP_CONTACT, pgpContact)
+    returnIntent.putExtra(EXTRA_KEY_PGP_CONTACT, recipientWithPubKeys)
     targetFragment?.onActivityResult(targetRequestCode, result, returnIntent)
   }
 
@@ -115,11 +117,11 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
       )
 
     fun newInstance(
-      pgpContact: PgpContact,
+      RecipientWithPubKeys: RecipientWithPubKeys,
       isRemoveActionEnabled: Boolean
     ): NoPgpFoundDialogFragment {
       val args = Bundle()
-      args.putParcelable(EXTRA_KEY_PGP_CONTACT, pgpContact)
+      args.putParcelable(EXTRA_KEY_PGP_CONTACT, RecipientWithPubKeys)
       args.putBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED, isRemoveActionEnabled)
       val noPgpFoundDialogFragment = NoPgpFoundDialogFragment()
       noPgpFoundDialogFragment.arguments = args

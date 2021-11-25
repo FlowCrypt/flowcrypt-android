@@ -10,12 +10,11 @@ import android.content.Intent
 import androidx.core.app.JobIntentService
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.ContactsDao
+import com.flowcrypt.email.database.dao.RecipientDao
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.EmailAndNamePair
-import com.flowcrypt.email.model.PgpContact
 import java.util.ArrayList
-import java.util.Locale
 
 /**
  * This service does update a name of some email entry or creates a new email entry if it not
@@ -30,7 +29,7 @@ import java.util.Locale
  * "save that person's name into the existing DB record"
  *
  *  *  else:
- * "save that email, name pair into DB like so: new PgpContact(email, name);"
+ * "save that email, name pair into DB like so: new RecipientEntity(email, name);"
  *
  *
  * @author DenBond7
@@ -39,7 +38,7 @@ import java.util.Locale
  * E-mail: DenBond7@gmail.com
  */
 class EmailAndNameUpdaterService : JobIntentService() {
-  private var contactsDao: ContactsDao = FlowCryptRoomDatabase.getDatabase(this).contactsDao()
+  private var recipientDao: RecipientDao = FlowCryptRoomDatabase.getDatabase(this).recipientDao()
 
   override fun onHandleWork(intent: Intent) {
     val pairs =
@@ -47,14 +46,14 @@ class EmailAndNameUpdaterService : JobIntentService() {
         ?: return
 
     for (pair in pairs) {
-      val email = pair.email?.toLowerCase(Locale.getDefault()) ?: continue
-      val contactEntity = contactsDao.getContactByEmail(email)
-      if (contactEntity != null) {
-        if (contactEntity.name.isNullOrEmpty()) {
-          contactsDao.update(contactEntity.copy(name = pair.name))
+      val email = pair.email?.lowercase() ?: continue
+      val recipientEntity = recipientDao.getRecipientByEmail(email)
+      if (recipientEntity != null) {
+        if (recipientEntity.name.isNullOrEmpty()) {
+          recipientDao.update(recipientEntity.copy(name = pair.name))
         }
       } else {
-        contactsDao.insert(PgpContact(email, pair.name).toContactEntity())
+        recipientDao.insert(RecipientEntity(email = email, name = pair.name))
       }
     }
   }

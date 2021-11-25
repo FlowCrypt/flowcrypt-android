@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/iVPerson"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:contentDescription="@string/recipient_detail"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_baseline_person_green_24" />
+
+    <TextView
+        android:id="@+id/tVName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content"
+        android:ellipsize="middle"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        app:layout_constraintBottom_toBottomOf="@+id/iVPerson"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/iVPerson"
+        app:layout_constraintTop_toTopOf="@+id/iVPerson"
+        tools:text="Den at FlowCrypt" />
+
+    <ImageView
+        android:id="@+id/iVEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:contentDescription="@string/recipient_detail"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iVPerson"
+        app:srcCompat="@drawable/ic_email_encrypted" />
+
+    <TextView
+        android:id="@+id/tVEmail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content"
+        android:ellipsize="middle"
+        android:maxLines="1"
+        app:layout_constraintBottom_toBottomOf="@+id/iVEmail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/iVEmail"
+        app:layout_constraintTop_toTopOf="@+id/iVEmail"
+        tools:text="flowcrypt@flowcrypt.test" />
+
+    <TextView
+        android:id="@+id/tVPubKeys"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content_big"
+        android:text="@string/pub_keys"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tVEmail" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rVPubKeys"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tVPubKeys"
+        tools:listitem="@layout/public_key_item" />
+
+    <include
+        android:id="@+id/progress"
+        layout="@layout/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/rVPubKeys"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tVPubKeys"
+        tools:visibility="gone" />
+
+    <include
+        android:id="@+id/status"
+        layout="@layout/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tVPubKeys" />
+
+    <include
+        android:id="@+id/empty"
+        layout="@layout/empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tVPubKeys" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -209,7 +209,7 @@ abstract class BaseFragment : Fragment() {
     }
   }
 
-  //todo-denbond7 remove me after improved PreviewImportPgpContactFragment
+  //todo-denbond7 remove me after improved PreviewImportRecipientWithPubKeysFragment
   protected fun handleLoaderResult(loaderId: Int, loaderResult: LoaderResult?) {
     if (loaderResult != null) {
       when {

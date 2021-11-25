@@ -12,6 +12,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
@@ -158,4 +159,15 @@ fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
     fragment.setTargetFragment(this, requestCode)
     fragment.show(parentFragmentManager, tag)
   }
+}
+
+fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(e: Throwable?) {
+  val msg = e?.message ?: e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
+
+  navController?.navigate(
+    NavGraphDirections.actionGlobalInfoDialogFragment(
+      dialogTitle = "",
+      dialogMsg = msg
+    )
+  )
 }

@@ -170,7 +170,7 @@
 
         <activity
             android:exported="false"
-            android:name=".ui.activity.SelectContactsActivity"
+            android:name=".ui.activity.SelectRecipientsActivity"
             android:screenOrientation="portrait" />
 
         <activity
@@ -181,18 +181,6 @@
         <activity
             android:exported="false"
             android:name=".ui.activity.SearchMessagesActivity"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:exported="false"
-            android:name=".ui.activity.ImportPgpContactActivity"
-            android:label="@string/add_contact"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:exported="false"
-            android:name=".ui.activity.PreviewImportPgpContactActivity"
-            android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
         <activity

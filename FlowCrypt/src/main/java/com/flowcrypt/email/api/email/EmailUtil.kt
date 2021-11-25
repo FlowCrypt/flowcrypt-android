@@ -201,9 +201,9 @@ class EmailUtil {
      * @param pgpKeyDetails The key details
      * @return A generated [AttachmentInfo].
      */
-    fun genAttInfoFromPubKey(pgpKeyDetails: PgpKeyDetails?): AttachmentInfo? {
+    fun genAttInfoFromPubKey(pgpKeyDetails: PgpKeyDetails?, email: String): AttachmentInfo? {
       if (pgpKeyDetails != null) {
-        val fileName = "0x" + pgpKeyDetails.fingerprint.toUpperCase(Locale.getDefault()) + ".asc"
+        val fileName = "0x" + pgpKeyDetails.fingerprint.uppercase() + ".asc"
 
         return if (!TextUtils.isEmpty(pgpKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()
@@ -212,7 +212,7 @@ class EmailUtil {
           attachmentInfo.encodedSize = pgpKeyDetails.publicKey.length.toLong()
           attachmentInfo.rawData = pgpKeyDetails.publicKey.toByteArray()
           attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
-          attachmentInfo.email = pgpKeyDetails.primaryPgpContact.email
+          attachmentInfo.email = email
           attachmentInfo.id = generateContentId()
           attachmentInfo.isEncryptionAllowed = false
 
@@ -678,19 +678,19 @@ class EmailUtil {
     ): Message {
       val session = Session.getInstance(Properties())
       val senderEmail = outgoingMsgInfo.from
-      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(context, accountEntity, senderEmail)
+      val senderPgpKeyDetailsList =
+        SecurityUtils.getSenderPgpKeyDetailsList(context, accountEntity, senderEmail)
       var pubKeys: List<String>? = null
       var prvKeys: List<String>? = null
       var ringProtector: SecretKeyRingProtector? = null
 
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-        pubKeys = SecurityUtils.getRecipientsPubKeys(context, recipients)
-        pubKeys.add(
-          senderKeyDetails.publicKey
-        )
+        pubKeys = mutableListOf()
+        pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
+        pubKeys.addAll(senderPgpKeyDetailsList.map { it.publicKey })
         prvKeys = listOf(
-          senderKeyDetails.privateKey
+          senderPgpKeyDetailsList.firstOrNull()?.privateKey
             ?: throw IllegalStateException("Sender private key not found")
         )
         ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()

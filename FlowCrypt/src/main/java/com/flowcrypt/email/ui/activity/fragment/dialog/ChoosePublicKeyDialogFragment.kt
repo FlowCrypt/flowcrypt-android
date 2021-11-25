@@ -22,10 +22,10 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
 import com.flowcrypt.email.util.GeneralUtil
@@ -128,7 +128,8 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             val matchedKeys = getMatchedKeys(pgpKeyDetailsList)
             if (CollectionUtils.isEmpty(matchedKeys)) {
               for (pgpKeyDetails in pgpKeyDetailsList) {
-                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails)
+                val nonNullEmail = email ?: continue
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, nonNullEmail)
                 if (att != null) {
                   atts.add(att)
                 }
@@ -136,7 +137,8 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             } else {
               atts.clear()
               for (pgpKeyDetails in matchedKeys) {
-                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails)
+                val nonNullEmail = email ?: continue
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, nonNullEmail)
                 if (att != null) {
                   atts.add(att)
                 }
@@ -208,7 +210,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   /**
    * Get a list with the matched [PgpKeyDetails]. If the sender email matched email the email from
-   * [PgpContact] which got from the private key than we return a list with relevant public keys.
+   * [RecipientWithPubKeys] which got from the private key than we return a list with relevant public keys.
    *
    * @return A matched [PgpKeyDetails] or null.
    */
@@ -216,8 +218,8 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     val keyDetails = ArrayList<PgpKeyDetails>()
 
     for (pgpKeyDetails in pgpKeyDetailsList) {
-      val (email) = pgpKeyDetails.primaryPgpContact
-      if (email.equals(this.email, ignoreCase = true)) {
+      val addresses = pgpKeyDetails.mimeAddresses.map { it.address.lowercase() }
+      if (email?.lowercase() in addresses) {
         keyDetails.add(pgpKeyDetails)
       }
     }

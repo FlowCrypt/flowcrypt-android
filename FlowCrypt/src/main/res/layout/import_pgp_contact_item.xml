@@ -43,7 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:text="@string/save_contact"
+        android:text="@string/import_pub_key"
         android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
         tools:visibility="visible" />
@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:text="@string/update_contact"
+        android:text="@string/update_pub_key"
         android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
         tools:visibility="visible" />

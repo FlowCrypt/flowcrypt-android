@@ -47,9 +47,8 @@ class PrivateKeysRecyclerViewAdapter(
 
     val pgpKeyDetails = pgpKeyDetailsList[position]
     tracker?.isSelected(pgpKeyDetails)?.let { viewHolder.setActivated(it) }
-    val email = pgpKeyDetails.primaryPgpContact.email
 
-    viewHolder.textViewKeyOwner.text = email
+    viewHolder.textViewKeyOwner.text = pgpKeyDetails.getUserIdsAsSingleString()
     viewHolder.textViewFingerprint.text = GeneralUtil.doSectionsInText(
       originalString = pgpKeyDetails.fingerprint, groupSize = 4
     )

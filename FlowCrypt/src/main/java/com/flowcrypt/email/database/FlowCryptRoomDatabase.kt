@@ -22,18 +22,20 @@ import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
 import com.flowcrypt.email.database.dao.AttachmentDao
-import com.flowcrypt.email.database.dao.ContactsDao
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
+import com.flowcrypt.email.database.dao.PubKeyDao
+import com.flowcrypt.email.database.dao.RecipientDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
-import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.OpenPgpV4Fingerprint
 
@@ -53,10 +55,11 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
     AccountEntity::class,
     ActionQueueEntity::class,
     AttachmentEntity::class,
-    ContactEntity::class,
+    RecipientEntity::class,
     KeyEntity::class,
     LabelEntity::class,
-    MessageEntity::class
+    MessageEntity::class,
+    PublicKeyEntity::class
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
@@ -76,7 +79,9 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun keysDao(): KeysDao
 
-  abstract fun contactsDao(): ContactsDao
+  abstract fun recipientDao(): RecipientDao
+
+  abstract fun pubKeyDao(): PubKeyDao
 
   @WorkerThread
   fun forceDatabaseCreationIfNeeded() {
@@ -85,7 +90,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 26
+    const val DB_VERSION = 27
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -512,6 +517,34 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    /**
+     * Here we do preparation for https://github.com/FlowCrypt/flowcrypt-android/issues/1188
+     */
+    @VisibleForTesting
+    val MIGRATION_26_27 = object : FlowCryptMigration(26, 27) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS contacts_temp AS SELECT * FROM contacts;")
+
+        //create `recipients` table
+        database.execSQL("CREATE TABLE IF NOT EXISTS `recipients` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)")
+        database.execSQL("CREATE INDEX IF NOT EXISTS `name_in_recipients` ON `recipients` (`name`)")
+        database.execSQL("CREATE INDEX IF NOT EXISTS `last_use_in_recipients` ON `recipients` (`last_use`)")
+        database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `email_in_recipients` ON `recipients` (`email`)")
+        database.execSQL("INSERT INTO recipients(email, name, last_use) SELECT email, name, last_use FROM contacts_temp")
+
+        //create `public_keys` table
+        database.execSQL("CREATE TABLE IF NOT EXISTS `public_keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `recipient` TEXT NOT NULL, `fingerprint` TEXT NOT NULL, `public_key` BLOB NOT NULL, FOREIGN KEY(`recipient`) REFERENCES `recipients`(`email`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+        database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `recipient_fingerprint_in_public_keys` ON `public_keys` (`recipient`, `fingerprint`)")
+        database.execSQL("CREATE INDEX IF NOT EXISTS `recipient_in_public_keys` ON `public_keys` (`recipient`)")
+        database.execSQL("CREATE INDEX IF NOT EXISTS `fingerprint_in_public_keys` ON `public_keys` (`fingerprint`)")
+        database.execSQL("INSERT INTO public_keys(recipient, fingerprint, public_key) SELECT email, fingerprint, public_key FROM contacts_temp WHERE contacts_temp.public_key NOT NULL AND contacts_temp.fingerprint NOT NULL")
+
+        //delete unused tables
+        database.execSQL("DROP TABLE IF EXISTS contacts_temp;")
+        database.execSQL("DROP TABLE IF EXISTS contacts;")
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -551,7 +584,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_22_23,
           MIGRATION_23_24,
           MIGRATION_24_25,
-          MIGRATION_25_26
+          MIGRATION_25_26,
+          MIGRATION_26_27
         ).build()
         INSTANCE = instance
         return instance

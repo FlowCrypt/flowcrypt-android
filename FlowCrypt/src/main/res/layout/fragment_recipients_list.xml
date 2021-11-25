@@ -10,7 +10,7 @@
     android:layout_height="match_parent">
 
     <ProgressBar
-        android:id="@+id/progressBar"
+        android:id="@+id/pB"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -19,7 +19,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewContacts"
+        android:id="@+id/rVRecipients"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
@@ -30,7 +30,7 @@
         tools:listitem="@layout/contact_item" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floatActionButtonImportPublicKey"
+        android:id="@+id/fABtImportPublicKey"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/default_margin_content"

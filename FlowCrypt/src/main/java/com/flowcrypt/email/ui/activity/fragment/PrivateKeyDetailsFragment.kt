@@ -12,7 +12,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.text.TextUtils
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.Menu
@@ -275,11 +274,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
         R.string.template_date,
         DateFormat.getMediumDateFormat(context).format(Date(value.created))
       )
-
-      binding?.tVUsers?.text = getString(
-        R.string.template_users,
-        TextUtils.join(", ", value.pgpContacts.map { it.email })
-      )
+      binding?.tVUsers?.text = getString(R.string.template_users, value.getUserIdsAsSingleString())
 
       val passPhrase = pgpKeyDetailsViewModel.getPassphrase()
       val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType()

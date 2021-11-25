@@ -15,7 +15,6 @@ import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.chip.ChipCreator
 import com.hootsuite.nachos.chip.ChipSpan
 import com.hootsuite.nachos.chip.ChipSpanChipCreator
-import java.util.Locale
 
 /**
  * This [ChipSpanChipCreator] responsible for displaying [Chip].
@@ -26,19 +25,21 @@ import java.util.Locale
  * E-mail: DenBond7@gmail.com
  */
 class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSpan> {
-  private val backgroundColorPgpExists =
-    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_EXISTS)
-  private val backgroundColorPgpExistsButKeyExpired =
-    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED)
-  private val backgroundColorPgpNotExist =
-    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_NOT_EXISTS)
-  private val backgroundColorPgpNotUsable =
-    UIUtil.getColor(context, CHIP_COLOR_RES_ID_PGP_NOT_USABLE)
-  private val textColorPgpExists = UIUtil.getColor(context, android.R.color.white)
-  private val textColorNoPgpNoExists = UIUtil.getColor(context, R.color.dark)
+  private val bGColorHasUsablePubKey =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY)
+  private val bgColorHasPubKeyButExpired =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED)
+  private val bgColorHasPubKeyButRevoked =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED)
+  private val bgColorNoPubKey =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_NO_PUB_KEY)
+  private val bgColorNoUsablePubKey =
+    UIUtil.getColor(context, CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY)
+  private val textColorHasPubKey = UIUtil.getColor(context, android.R.color.white)
+  private val textColorNoPubKey = UIUtil.getColor(context, R.color.dark)
 
   override fun createChip(context: Context, text: CharSequence, data: Any?): PGPContactChipSpan {
-    return PGPContactChipSpan(context, text.toString().toLowerCase(Locale.getDefault()), null, data)
+    return PGPContactChipSpan(context, text.toString().lowercase(), null, data)
   }
 
   override fun createChip(
@@ -80,15 +81,15 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
       span.setMaxAvailableWidth(maxAvailableWidth)
     }
 
-    if (span.hasPgp != null) {
-      span.hasPgp?.let { updateChipSpanBackground(span) }
+    if (span.hasAtLeastOnePubKey != null) {
+      span.hasAtLeastOnePubKey?.let { updateChipSpanBackground(span) }
     } else if (span.data != null && span.data is Cursor) {
       val cursor = span.data as? Cursor ?: return
       if (!cursor.isClosed) {
         val columnIndex = cursor.getColumnIndex("has_pgp")
         if (columnIndex != -1) {
           val hasPgp = cursor.getInt(columnIndex) == 1
-          span.hasPgp = hasPgp
+          span.hasAtLeastOnePubKey = hasPgp
           updateChipSpanBackground(span)
         }
       }
@@ -106,31 +107,36 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
    * @param span   The [ChipSpan] object.
    */
   private fun updateChipSpanBackground(span: PGPContactChipSpan) {
-    if (span.hasPgp == true) {
+    if (span.hasAtLeastOnePubKey == true) {
       when {
-        span.isExpired == true -> {
-          span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExistsButKeyExpired))
+        span.hasUsablePubKey == false -> {
+          span.setBackgroundColor(ColorStateList.valueOf(bgColorNoUsablePubKey))
         }
 
-        span.hasNotUsablePubKey == true -> {
-          span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotUsable))
+        span.hasNotRevokedPubKey == false -> {
+          span.setBackgroundColor(ColorStateList.valueOf(bgColorHasPubKeyButRevoked))
+        }
+
+        span.hasNotExpiredPubKey == false -> {
+          span.setBackgroundColor(ColorStateList.valueOf(bgColorHasPubKeyButExpired))
         }
 
         else -> {
-          span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists))
+          span.setBackgroundColor(ColorStateList.valueOf(bGColorHasUsablePubKey))
         }
       }
-      span.setTextColor(textColorPgpExists)
+      span.setTextColor(textColorHasPubKey)
     } else {
-      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExist))
-      span.setTextColor(textColorNoPgpNoExists)
+      span.setBackgroundColor(ColorStateList.valueOf(bgColorNoPubKey))
+      span.setTextColor(textColorNoPubKey)
     }
   }
 
   companion object {
-    const val CHIP_COLOR_RES_ID_PGP_EXISTS = R.color.colorPrimary
-    const val CHIP_COLOR_RES_ID_PGP_EXISTS_KEY_EXPIRED = R.color.orange
-    const val CHIP_COLOR_RES_ID_PGP_NOT_EXISTS = R.color.aluminum
-    const val CHIP_COLOR_RES_ID_PGP_NOT_USABLE = R.color.red
+    const val CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY = R.color.colorPrimary
+    const val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED = R.color.orange
+    const val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED = R.color.red
+    const val CHIP_COLOR_RES_ID_NO_PUB_KEY = R.color.aluminum
+    const val CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY = R.color.red
   }
 }

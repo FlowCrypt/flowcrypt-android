@@ -230,13 +230,11 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     if (msgEntity.isEncrypted == true) {
       val senderEmail = EmailUtil.getFirstAddressString(msgEntity.from)
       val recipients = msgEntity.allRecipients.toMutableList()
-      pubKeys = SecurityUtils.getRecipientsPubKeys(applicationContext, recipients)
-      val senderKeyDetails = SecurityUtils.getSenderKeyDetails(
-        applicationContext,
-        account, senderEmail
-      )
-      pubKeys.add(
-        senderKeyDetails.publicKey
+      pubKeys = mutableListOf()
+      pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients))
+      pubKeys.addAll(
+        SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, account, senderEmail)
+          .map { it.publicKey }
       )
     }
 
