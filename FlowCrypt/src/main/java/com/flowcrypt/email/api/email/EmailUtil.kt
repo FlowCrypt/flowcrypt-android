@@ -687,7 +687,7 @@ class EmailUtil {
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
         pubKeys = mutableListOf()
-        pubKeys.addAll(SecurityUtils.getRecipientsPubKeys(context, recipients))
+        pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
         pubKeys.addAll(senderPgpKeyDetailsList.map { it.publicKey })
         prvKeys = listOf(
           senderPgpKeyDetailsList.firstOrNull()?.privateKey

@@ -18,10 +18,10 @@ import kotlinx.coroutines.flow.Flow
  */
 @Dao
 interface PubKeyDao : BaseDao<PublicKeyEntity> {
-  @Query("SELECT * FROM public_keys")
+  @Query(SELECT_ALL_PUB_KEYS)
   suspend fun getAllPublicKeys(): List<PublicKeyEntity>
 
-  @Query("SELECT * FROM public_keys")
+  @Query(SELECT_ALL_PUB_KEYS)
   fun getAllPublicKeysFlow(): Flow<List<PublicKeyEntity>>
 
   @Query("SELECT * FROM public_keys WHERE recipient = :recipient")
@@ -41,4 +41,8 @@ interface PubKeyDao : BaseDao<PublicKeyEntity> {
 
   @Query("SELECT * FROM public_keys WHERE _id = :id")
   fun getPublicKeyByIdFlow(id: Long): Flow<PublicKeyEntity?>
+
+  companion object {
+    private const val SELECT_ALL_PUB_KEYS = "SELECT * FROM public_keys"
+  }
 }

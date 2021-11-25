@@ -231,7 +231,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       val senderEmail = EmailUtil.getFirstAddressString(msgEntity.from)
       val recipients = msgEntity.allRecipients.toMutableList()
       pubKeys = mutableListOf()
-      pubKeys.addAll(SecurityUtils.getRecipientsPubKeys(applicationContext, recipients))
+      pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients))
       pubKeys.addAll(
         SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, account, senderEmail)
           .map { it.publicKey }

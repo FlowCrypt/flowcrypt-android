@@ -263,7 +263,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val senderEmail = outgoingMsgInfo.from
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
       pubKeys = mutableListOf()
-      pubKeys.addAll(SecurityUtils.getRecipientsPubKeys(applicationContext, recipients))
+      pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients))
       pubKeys.addAll(
         SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, accountEntity, senderEmail)
           .map { it.publicKey }

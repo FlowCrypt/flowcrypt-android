@@ -137,7 +137,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun deleteContact(recipientEntity: RecipientEntity) {
+  fun deleteRecipient(recipientEntity: RecipientEntity) {
     viewModelScope.launch {
       roomDatabase.recipientDao().deleteSuspend(recipientEntity)
     }
@@ -220,7 +220,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun filterContacts(searchPattern: String?) {
+  fun filterContacts(searchPattern: String) {
     searchPatternLiveData.value = searchPattern
   }
 

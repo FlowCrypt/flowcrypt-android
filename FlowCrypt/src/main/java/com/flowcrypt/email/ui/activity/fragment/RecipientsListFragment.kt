@@ -40,7 +40,7 @@ class RecipientsListFragment : BaseFragment(), ListProgressBehaviour {
       true,
       object : RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
         override fun onDeleteRecipient(recipientEntity: RecipientEntity) {
-          recipientsViewModel.deleteContact(recipientEntity)
+          recipientsViewModel.deleteRecipient(recipientEntity)
           Toast.makeText(
             context, getString(R.string.the_contact_was_deleted, recipientEntity.email),
             Toast.LENGTH_SHORT

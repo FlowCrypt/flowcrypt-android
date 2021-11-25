@@ -114,7 +114,7 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getRecipientsPubKeys(context: Context, emails: MutableList<String>): List<String> {
+    fun getRecipientsUsablePubKeys(context: Context, emails: MutableList<String>): List<String> {
       val publicKeys = mutableListOf<String>()
       val recipientsWithPubKeys = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
         .getRecipientsWithPubKeysByEmails(emails)

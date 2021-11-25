@@ -149,7 +149,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private var imageButtonAdditionalRecipientsVisibility: View? = null
   private var iBShowQuotedText: View? = null
 
-  private var isRecipientsUpdateEnabled = true
   private var isUpdateToCompleted = true
   private var isUpdateCcCompleted = true
   private var isUpdateBccCompleted = true
@@ -862,12 +861,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       if (hasFocus) {
         recipients?.clear()
       } else {
-        if (isRecipientsUpdateEnabled) {
-          if (isAdded) {
-            fetchDetailsAboutRecipients(type)
-          }
-        } else {
-          progressBar?.visibility = View.INVISIBLE
+        if (isAdded) {
+          fetchDetailsAboutRecipients(type)
         }
       }
     }
@@ -1498,8 +1493,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
-
-    isRecipientsUpdateEnabled = false
     onMsgSendListener.sendMsg(getOutgoingMsgInfo())
   }
 
