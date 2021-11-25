@@ -40,7 +40,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     collectLookUpPubKeysStateFlow()
-    recipientsViewModel.fetchPubKeys(args.keyIdOrEmail)
+    recipientsViewModel.getRawPublicKeysFromRemoteServers(args.email)
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -51,7 +51,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
     )
 
     binding?.btnRetry?.setOnClickListener {
-      recipientsViewModel.fetchPubKeys(args.keyIdOrEmail)
+      recipientsViewModel.getRawPublicKeysFromRemoteServers(args.email)
     }
 
     val builder = AlertDialog.Builder(requireContext()).apply {

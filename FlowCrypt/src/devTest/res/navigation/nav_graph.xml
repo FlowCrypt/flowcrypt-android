@@ -446,7 +446,7 @@
         android:label="LookUpPubKeyDialogFragment"
         tools:layout="@layout/fragment_look_up_pub_keys">
         <argument
-            android:name="keyIdOrEmail"
+            android:name="email"
             app:argType="string" />
     </dialog>
 

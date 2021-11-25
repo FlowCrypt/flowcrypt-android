@@ -26,7 +26,7 @@ import com.hootsuite.nachos.NachoTextView
  * Time: 17:44
  * E-mail: DenBond7@gmail.com
  */
-class PgpContactAdapter(
+class RecipientAdapter(
   context: Context,
   c: Cursor?,
   autoRequery: Boolean

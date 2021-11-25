@@ -73,7 +73,6 @@ data class PublicKeyEntity(
     isNotUsable = parcel.readValue(Boolean::class.java.classLoader) as? Boolean
   }
 
-
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeValue(id)
     parcel.writeString(recipient)

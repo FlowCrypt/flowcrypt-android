@@ -73,7 +73,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDia
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
-import com.flowcrypt.email.ui.adapter.PgpContactAdapter
+import com.flowcrypt.email.ui.adapter.RecipientAdapter
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
@@ -1428,13 +1428,13 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   /**
-   * Prepare a [PgpContactAdapter] for the [NachoTextView] object.
+   * Prepare a [RecipientAdapter] for the [NachoTextView] object.
    *
-   * @return <tt>[PgpContactAdapter]</tt>
+   * @return <tt>[RecipientAdapter]</tt>
    */
   @SuppressLint("Recycle")
-  private fun prepareRecipientsAdapter(): PgpContactAdapter {
-    val pgpContactAdapter = PgpContactAdapter(requireContext(), null, true)
+  private fun prepareRecipientsAdapter(): RecipientAdapter {
+    val pgpContactAdapter = RecipientAdapter(requireContext(), null, true)
     //setup a search contacts logic in the database
     pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
       val dao = FlowCryptRoomDatabase.getDatabase(requireContext()).recipientDao()

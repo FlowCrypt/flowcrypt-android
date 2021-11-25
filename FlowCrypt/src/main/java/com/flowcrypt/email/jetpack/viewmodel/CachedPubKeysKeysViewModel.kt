@@ -164,29 +164,43 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
     }
   }
 
-  fun updateExistingPubKey(
-    pgpKeyDetails: PgpKeyDetails,
-    existingPublicKeyEntity: PublicKeyEntity
-  ) {
+  fun updateExistingPubKey(pgpKeyDetails: PgpKeyDetails, existingPublicKeyEntity: PublicKeyEntity) {
     viewModelScope.launch {
       updateExistingPubKeyMutableStateFlow.value = Result.loading()
       val context: Context = getApplication()
+      try {
+        if (existingPublicKeyEntity.pgpKeyDetails == null) {
+          existingPublicKeyEntity.pgpKeyDetails =
+            PgpKey.parseKeys(source = existingPublicKeyEntity.publicKey)
+              .pgpKeyDetailsList.firstOrNull()
+        }
 
-      val publicKeyEntity =
-        existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
+        if (pgpKeyDetails.isNewerThan(existingPublicKeyEntity.pgpKeyDetails)) {
+          val publicKeyEntity =
+            existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
 
-      val isPubKeyUpdated = roomDatabase.pubKeyDao().updateSuspend(publicKeyEntity) > 0
-      if (isPubKeyUpdated) {
-        updateExistingPubKeyMutableStateFlow.value = Result.success(true)
-      } else {
-        updateExistingPubKeyMutableStateFlow.value = Result.exception(
-          IllegalStateException(
-            context.getString(
-              R.string.could_not_update_pub_key_for_recipient,
-              publicKeyEntity.recipient
+          val isPubKeyUpdated = roomDatabase.pubKeyDao().updateSuspend(publicKeyEntity) > 0
+          if (isPubKeyUpdated) {
+            updateExistingPubKeyMutableStateFlow.value = Result.success(true)
+          } else {
+            updateExistingPubKeyMutableStateFlow.value = Result.exception(
+              IllegalStateException(
+                context.getString(
+                  R.string.could_not_update_pub_key_for_recipient,
+                  publicKeyEntity.recipient
+                )
+              )
+            )
+          }
+        } else {
+          updateExistingPubKeyMutableStateFlow.value = Result.exception(
+            IllegalStateException(
+              context.getString(R.string.you_trying_replace_pub_key_with_older_version)
             )
           )
-        )
+        }
+      } catch (e: Exception) {
+        updateExistingPubKeyMutableStateFlow.value = Result.exception(e)
       }
     }
   }
@@ -222,9 +236,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
               val result = PgpKey.parseKeys(pgpKeyDetails.publicKey, false).pgpKeyDetailsList
               result.firstOrNull()
             } ?: continue
-            val existingLastModified = existingPgpKeyDetails.lastModified ?: 0
-            val candidateLastModified = pgpKeyDetails.lastModified ?: 0
-            if (candidateLastModified > existingLastModified) {
+            if (pgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
               roomDatabase.pubKeyDao().updateSuspend(
                 existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
               )

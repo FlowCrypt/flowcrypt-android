@@ -91,10 +91,7 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
       )
 
       if (existingPubKeyEntity != null) {
-        val existingLastModified = existingPubKeyEntity.pgpKeyDetails?.lastModified ?: 0
-        val candidateLastModified = pgpKeyDetails.lastModified ?: 0
-
-        if (candidateLastModified > existingLastModified) {
+        if (pgpKeyDetails.isNewerThan(existingPubKeyEntity.pgpKeyDetails)) {
           textViewAlreadyImported.visible()
           buttonUpdateContact.visible()
           buttonUpdateContact.setOnClickListener {

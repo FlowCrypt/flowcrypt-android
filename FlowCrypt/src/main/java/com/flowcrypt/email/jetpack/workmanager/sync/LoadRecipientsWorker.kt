@@ -163,8 +163,8 @@ class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
     val availableRecipients = recipientDao.getAllRecipients()
 
     val recipientsInDatabase = HashSet<String>()
-    val recipientsWhichWillBeUpdated = HashSet<String>()
-    val recipientsWhichWillBeCreated = HashSet<String>()
+    val recipientsToUpdate = HashSet<String>()
+    val recipientsToCreate = HashSet<String>()
     val recipientsByEmailMap = HashMap<String, RecipientEntity?>()
 
     val newCandidates = mutableListOf<RecipientEntity>()
@@ -179,17 +179,17 @@ class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
       if (recipientsInDatabase.contains(emailAndNamePair.email)) {
         val recipientEntity = recipientsByEmailMap[emailAndNamePair.email]
         if (recipientEntity?.email.isNullOrEmpty()) {
-          if (!recipientsWhichWillBeUpdated.contains(emailAndNamePair.email)) {
+          if (!recipientsToUpdate.contains(emailAndNamePair.email)) {
             emailAndNamePair.email?.let {
-              recipientsWhichWillBeUpdated.add(it)
+              recipientsToUpdate.add(it)
             }
             recipientEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
           }
         }
       } else {
-        if (!recipientsWhichWillBeCreated.contains(emailAndNamePair.email)) {
+        if (!recipientsToCreate.contains(emailAndNamePair.email)) {
           emailAndNamePair.email?.let {
-            recipientsWhichWillBeCreated.add(it)
+            recipientsToCreate.add(it)
             newCandidates.add(RecipientEntity(email = it, name = emailAndNamePair.name))
           }
         }

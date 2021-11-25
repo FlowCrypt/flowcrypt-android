@@ -102,6 +102,12 @@ data class PgpKeyDetails constructor(
     return mimeAddresses.firstOrNull()
   }
 
+  fun isNewerThan(pgpKeyDetails: PgpKeyDetails?): Boolean {
+    val existingLastModified = lastModified ?: 0
+    val providedLastModified = pgpKeyDetails?.lastModified ?: 0
+    return existingLastModified > providedLastModified
+  }
+
   private fun parseMimeAddresses(): List<InternetAddress> {
     val results = mutableListOf<InternetAddress>()
 
