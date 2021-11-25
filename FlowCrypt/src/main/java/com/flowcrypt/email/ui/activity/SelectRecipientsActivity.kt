@@ -58,7 +58,7 @@ class SelectRecipientsActivity : BaseBackStackActivity(), SearchView.OnQueryText
           finish()
         }
       })
-  private var searchPattern: String? = null
+  private var searchPattern: String = ""
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   @VisibleForTesting
