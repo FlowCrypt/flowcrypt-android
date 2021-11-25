@@ -42,6 +42,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
@@ -417,6 +418,13 @@ class MsgDetailsViewModel(
           val recipient = keyDetails.mimeAddresses.firstOrNull()?.address ?: continue
           block.existingRecipientWithPubKeys =
             roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(recipient)
+          try {
+            block.existingRecipientWithPubKeys?.publicKeys?.forEach {
+              it.pgpKeyDetails = PgpKey.parseKeys(it.publicKey).pgpKeyDetailsList.firstOrNull()
+            }
+          } catch (e: Exception) {
+            e.printStackTrace()
+          }
         }
 
         is DecryptErrorMsgBlock -> {

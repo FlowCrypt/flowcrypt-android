@@ -153,7 +153,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
       cachedPubKeysKeysViewModel.addPubKeysStateFlow.collect {
         when (it.status) {
           Result.Status.SUCCESS -> {
-            toast(R.string.contact_successfully_saved)
+            toast(R.string.pub_key_successfully_imported)
           }
 
           Result.Status.EXCEPTION -> {
@@ -170,7 +170,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
       cachedPubKeysKeysViewModel.updateExistingPubKeyStateFlow.collect {
         when (it.status) {
           Result.Status.SUCCESS -> {
-            toast(R.string.contact_successfully_updated)
+            toast(R.string.pub_key_successfully_updated)
           }
 
           Result.Status.EXCEPTION -> {

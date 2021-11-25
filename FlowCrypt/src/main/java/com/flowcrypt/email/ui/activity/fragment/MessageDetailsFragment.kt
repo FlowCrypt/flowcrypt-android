@@ -56,6 +56,7 @@ import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -73,6 +74,7 @@ import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecrypt
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
@@ -1001,98 +1003,58 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     val existingRecipientWithPubKeys = block.existingRecipientWithPubKeys
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
+    val textViewAlreadyImported = pubKeyView.findViewById<View>(R.id.textViewAlreadyImported)
     if (button != null) {
       if (existingRecipientWithPubKeys == null) {
-        initSaveRecipientButton(block, button)
+        initImportPubKeyButton(keyDetails, button)
       } else {
-        //todo-denbond7 temporary disable updating
-        button.gone()
-      }/*else if (existingRecipientWithPubKeys.publicKeys.firstOrNull()?.fingerprint.isNullOrEmpty()
-        || keyDetails?.fingerprint?.equals(
-          existingRecipientWithPubKeys.publicKeys.firstOrNull()?.fingerprint, ignoreCase = true
-        ) == true
-      ) {
-        initUpdateContactButton(block, button)
-      } else {
-        initReplaceContactButton(block, button)
-      }*/
+        val matchingKeyByFingerprint = existingRecipientWithPubKeys.publicKeys.firstOrNull {
+          it.fingerprint.equals(keyDetails?.fingerprint, true)
+        }
+        if (matchingKeyByFingerprint != null) {
+          if (keyDetails?.isNewerThan(matchingKeyByFingerprint.pgpKeyDetails) == true) {
+            initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
+          } else {
+            textViewAlreadyImported.visible()
+            button.gone()
+          }
+        } else {
+          button.gone()
+        }
+      }
     }
 
     return pubKeyView
   }
 
-  /**
-   * Init the save recipient button. When we press this button a new contact will be saved to the
-   * local database.
-   *
-   * @param block  The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
-   * @param button The key action button.
-   */
-  private fun initSaveRecipientButton(block: PublicKeyMsgBlock, button: Button) {
-    button.setText(R.string.save_contact)
+  private fun initImportPubKeyButton(pgpKeyDetails: PgpKeyDetails?, button: Button) {
+    button.setText(R.string.import_pub_key)
     button.setOnClickListener { v ->
-      val pgpKeyDetails = block.keyDetails
       if (pgpKeyDetails != null) {
         recipientsViewModel.addRecipientsBasedOnPgpKeyDetails(pgpKeyDetails)
-        v.visibility = View.GONE
+        toast(R.string.pub_key_successfully_imported)
+        v.gone()
       } else {
-        Toast.makeText(
-          context,
-          getString(R.string.contact_for_saving_not_found),
-          Toast.LENGTH_SHORT
-        ).show()
+        toast(R.string.pub_key_for_saving_not_found)
       }
     }
   }
 
-  /**
-   * Init the update contact button. When we press this button the contact will be updated in the
-   * local database.
-   *
-   * @param block  The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
-   * @param button The key action button.
-   */
-  private fun initUpdateContactButton(block: PublicKeyMsgBlock, button: Button) {
-    button.setText(R.string.update_contact)
+  private fun initUpdatePubKeyButton(
+    publicKeyEntity: PublicKeyEntity,
+    pgpKeyDetails: PgpKeyDetails?,
+    button: Button
+  ) {
+    button.setText(R.string.update_pub_key)
     button.setOnClickListener { v ->
-      val recipientWithPubKeys = block.existingRecipientWithPubKeys
-      if (recipientWithPubKeys != null && block.keyDetails != null) {
-        //recipientsViewModel.updateContact(recipientWithPubKeys, block.keyDetails)
-        Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
-        v.visibility = View.GONE
+      if (pgpKeyDetails != null) {
+        recipientsViewModel.updateExistingPubKey(publicKeyEntity, pgpKeyDetails)
+        toast(R.string.pub_key_successfully_updated)
+        v.gone()
       } else {
-        Toast.makeText(
-          context,
-          getString(R.string.contact_for_updating_is_not_found),
-          Toast.LENGTH_SHORT
-        ).show()
+        toast(R.string.pub_key_for_updating_is_not_found)
       }
     }
-  }
-
-  /**
-   * Init the replace contact button. When we press this button the contact will be replaced in the
-   * local database.
-   *
-   * @param block  The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
-   * @param button The key action button.
-   */
-  private fun initReplaceContactButton(block: PublicKeyMsgBlock, button: Button) {
-    button.setText(R.string.replace_contact)
-    /*button.setOnClickListener { v ->
-      val RecipientWithPubKeys = block.keyDetails?.primaryRecipientWithPubKeys
-      if (RecipientWithPubKeys != null) {
-        recipientsViewModel.updateContact(RecipientWithPubKeys)
-        Toast.makeText(context, R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show()
-        v.visibility = View.GONE
-      } else {
-        Toast.makeText(
-          context,
-          getString(R.string.contact_for_replacing_is_not_found),
-          Toast.LENGTH_SHORT
-        ).show()
-      }
-    }*/
   }
 
   private fun genDefPart(

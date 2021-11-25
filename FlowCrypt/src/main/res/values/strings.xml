@@ -97,12 +97,10 @@
     <string name="template_message_part_public_key_fingerprint" formatted="false"><![CDATA[(Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
     <string name="show_the_public_key">Show the Public Key</string>
     <string name="hide_the_public_key">Hide the Public Key</string>
-    <string name="save_contact">Save contact</string>
-    <string name="update_contact">Update contact</string>
-    <string name="replace_contact">Replace Contact</string>
-    <string name="contact_successfully_saved">Contact saved</string>
-    <string name="contact_successfully_updated">Contact updated</string>
-    <string name="contact_successfully_replaced">Contact replaced</string>
+    <string name="import_pub_key">Import public key</string>
+    <string name="update_pub_key">Update public key</string>
+    <string name="pub_key_successfully_imported">Public key imported</string>
+    <string name="pub_key_successfully_updated">Public key updated</string>
     <string name="import_private_key">Import Private Key</string>
     <string name="load_from_a_file">Load from a file</string>
     <string name="load_from_clipboard">Load from clipboard</string>
@@ -395,9 +393,8 @@
     <string name="parsing_keys_please_wait">Parsing keys, please wait</string>
     <string name="empty_pass_phrase">Empty pass phrase</string>
     <string name="keys_have_different_pass_phrase">The keys have different pass phrase</string>
-    <string name="contact_for_saving_not_found">Contact for saving is not found</string>
-    <string name="contact_for_updating_is_not_found">Contact for updating is not found</string>
-    <string name="contact_for_replacing_is_not_found">Contact for replacing is not found</string>
+    <string name="pub_key_for_saving_not_found">Public key for saving is not found</string>
+    <string name="pub_key_for_updating_is_not_found">Public key for updating is not found</string>
     <string name="error_could_not_save_private_keys">Error: couldn\'t save private keys</string>
     <string name="show_more">Show more</string>
     <string name="delete_quoted_text">Delete quoted text</string>

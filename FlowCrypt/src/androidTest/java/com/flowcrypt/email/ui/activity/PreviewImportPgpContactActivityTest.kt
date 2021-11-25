@@ -133,7 +133,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
           ClickOnViewInRecyclerViewItem(R.id.buttonSaveContact)
         )
       )
-    isToastDisplayed(getResString(R.string.contact_successfully_saved))
+    isToastDisplayed(getResString(R.string.pub_key_successfully_imported))
   }
 
   @Test
