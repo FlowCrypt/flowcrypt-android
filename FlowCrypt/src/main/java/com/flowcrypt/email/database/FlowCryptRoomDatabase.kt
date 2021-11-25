@@ -526,18 +526,11 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.execSQL("CREATE TEMP TABLE IF NOT EXISTS contacts_temp AS SELECT * FROM contacts;")
 
         //create `recipients` table
-        database.execSQL(
-          """CREATE TABLE IF NOT EXISTS `recipients`
-           (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL,
-            `name` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)""".trimMargin()
-        )
+        database.execSQL("CREATE TABLE IF NOT EXISTS `recipients` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)")
         database.execSQL("CREATE INDEX IF NOT EXISTS `name_in_recipients` ON `recipients` (`name`)")
         database.execSQL("CREATE INDEX IF NOT EXISTS `last_use_in_recipients` ON `recipients` (`last_use`)")
         database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `email_in_recipients` ON `recipients` (`email`)")
-        database.execSQL(
-          "INSERT INTO recipients(email, name, last_use)" +
-              " SELECT email, name, last_use FROM contacts_temp"
-        )
+        database.execSQL("INSERT INTO recipients(email, name, last_use) SELECT email, name, last_use FROM contacts_temp")
 
         //create `public_keys` table
         database.execSQL("CREATE TABLE IF NOT EXISTS `public_keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `recipient` TEXT NOT NULL, `fingerprint` TEXT NOT NULL, `public_key` BLOB NOT NULL, FOREIGN KEY(`recipient`) REFERENCES `recipients`(`email`) ON UPDATE NO ACTION ON DELETE CASCADE )")
