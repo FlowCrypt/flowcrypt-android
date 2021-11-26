@@ -58,7 +58,6 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
   BaseWorker(context, params) {
   private val attCacheDir = File(applicationContext.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
   private val fwdAttsCacheDir = File(attCacheDir, Constants.FORWARDED_ATTACHMENTS_CACHE_DIR)
-  override val useIndependentConnection: Boolean = false
 
   override suspend fun doWork(): Result =
     withContext(Dispatchers.IO) {

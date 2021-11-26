@@ -17,7 +17,6 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
@@ -256,12 +255,8 @@ class MainSignInFragment : BaseSingInFragment() {
         val account = googleSignInAccount?.account?.name ?: return
         uuid = SecurityUtils.generateRandomUUID()
 
-        val publicEmailDomains = arrayOf(
-          JavaEmailConstants.EMAIL_PROVIDER_GMAIL,
-          JavaEmailConstants.EMAIL_PROVIDER_GOOGLEMAIL
-        )
-
-        if (EmailUtil.getDomain(account).toLowerCase(Locale.US) in publicEmailDomains) {
+        val publicEmailDomains = EmailUtil.getPublicEmailDomains()
+        if (EmailUtil.getDomain(account) in publicEmailDomains) {
           onSignSuccess(googleSignInAccount)
         } else {
           orgRules = null
@@ -461,7 +456,7 @@ class MainSignInFragment : BaseSingInFragment() {
           if ("enterprise-server" == it.data?.service) {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
-              fesUrl = "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+              fesUrl = GeneralUtil.generateFesUrl(domain)
               domainOrgRulesViewModel.fetchOrgRules(
                 account = account,
                 uuid = uuid,
