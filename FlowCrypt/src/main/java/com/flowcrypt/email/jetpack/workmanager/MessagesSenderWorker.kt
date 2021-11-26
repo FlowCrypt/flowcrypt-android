@@ -86,7 +86,6 @@ import javax.net.ssl.SSLException
  */
 class MessagesSenderWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {
-  override val useIndependentConnection: Boolean = false
 
   override suspend fun doWork(): Result =
     withContext(Dispatchers.IO) {

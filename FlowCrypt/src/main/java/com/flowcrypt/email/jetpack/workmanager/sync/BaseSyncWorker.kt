@@ -29,8 +29,7 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
-  BaseWorker(context, params) {
-  override val useIndependentConnection: Boolean = false
+  BaseWorker(context, params), SyncInterface {
 
   abstract suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store)
   abstract suspend fun runAPIAction(accountEntity: AccountEntity)
@@ -43,7 +42,7 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
     try {
       val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
       activeAccountEntity?.let {
-        if (useIndependentConnection) {
+        if (useIndependentConnection()) {
           AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(it)
             ?.let { accountWithDecryptedInfo ->
               if (accountWithDecryptedInfo.useAPI) {

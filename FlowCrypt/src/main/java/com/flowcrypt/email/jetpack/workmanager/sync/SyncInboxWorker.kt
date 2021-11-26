@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit
  */
 class SyncInboxWorker(context: Context, params: WorkerParameters) :
   InboxIdleSyncWorker(context, params) {
-  override val useIndependentConnection: Boolean = true
+
+  override fun useIndependentConnection(): Boolean = true
 
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".SYNC_INBOX"

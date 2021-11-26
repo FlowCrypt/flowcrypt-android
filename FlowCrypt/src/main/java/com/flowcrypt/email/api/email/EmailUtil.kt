@@ -150,7 +150,7 @@ class EmailUtil {
         TextUtils.isEmpty(email) -> ""
         email?.contains("@") == true -> email.substring(email.indexOf('@') + 1)
         else -> ""
-      }
+      }.lowercase()
     }
 
     /**
@@ -758,32 +758,6 @@ class EmailUtil {
       }
     }
 
-    private fun getBodyPartWithBackupText(context: Context): BodyPart {
-      val messageBodyPart = MimeBodyPart()
-      messageBodyPart.setContent(
-        GeneralUtil.removeAllComments(
-          IOUtils.toString(
-            context.assets
-              .open(HTML_EMAIL_INTRO_TEMPLATE_HTM), StandardCharsets.UTF_8
-          )
-        ), JavaEmailConstants.MIME_TYPE_TEXT_HTML
-      )
-      return messageBodyPart
-    }
-
-    private fun genMsgWithBackupTemplate(
-      context: Context,
-      account: AccountEntity,
-      session: Session
-    ): Message {
-      val msg = FlowCryptMimeMessage(session)
-
-      msg.setFrom(InternetAddress(account.email))
-      msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
-      msg.subject = context.getString(R.string.your_key_backup)
-      return msg
-    }
-
     /**
      * Get only headers from the raw MIME
      */
@@ -1084,6 +1058,16 @@ class EmailUtil {
       return reply
     }
 
+    /**
+     * Get public email domains.
+     */
+    fun getPublicEmailDomains(): Array<String> {
+      return arrayOf(
+        JavaEmailConstants.EMAIL_PROVIDER_GMAIL,
+        JavaEmailConstants.EMAIL_PROVIDER_GOOGLEMAIL
+      )
+    }
+
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
       return OrTerm(
         arrayOf(
@@ -1146,6 +1130,32 @@ class EmailUtil {
       } else {
         info.msg ?: ""
       }
+    }
+
+    private fun getBodyPartWithBackupText(context: Context): BodyPart {
+      val messageBodyPart = MimeBodyPart()
+      messageBodyPart.setContent(
+        GeneralUtil.removeAllComments(
+          IOUtils.toString(
+            context.assets
+              .open(HTML_EMAIL_INTRO_TEMPLATE_HTM), StandardCharsets.UTF_8
+          )
+        ), JavaEmailConstants.MIME_TYPE_TEXT_HTML
+      )
+      return messageBodyPart
+    }
+
+    private fun genMsgWithBackupTemplate(
+      context: Context,
+      account: AccountEntity,
+      session: Session
+    ): Message {
+      val msg = FlowCryptMimeMessage(session)
+
+      msg.setFrom(InternetAddress(account.email))
+      msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
+      msg.subject = context.getString(R.string.your_key_backup)
+      return msg
     }
   }
 }

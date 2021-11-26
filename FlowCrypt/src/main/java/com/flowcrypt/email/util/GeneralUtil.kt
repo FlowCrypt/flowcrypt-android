@@ -276,7 +276,7 @@ class GeneralUtil {
      */
     fun isEmailValid(email: CharSequence?): Boolean {
       return email?.isNotEmpty() == true && (android.util.Patterns.EMAIL_ADDRESS.matcher(email)
-        .matches() || EmailUtil.getDomain(email.toString()).toLowerCase(Locale.ROOT) == "localhost")
+        .matches() || EmailUtil.getDomain(email.toString()).lowercase(Locale.ROOT) == "localhost")
     }
 
     /**
@@ -293,7 +293,7 @@ class GeneralUtil {
       } else {
         val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
         MimeTypeMap.getSingleton()
-          .getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
+          .getMimeTypeFromExtension(fileExtension.lowercase(Locale.getDefault()))
           ?: Constants.MIME_TYPE_BINARY_DATA
       }
     }
@@ -396,7 +396,14 @@ class GeneralUtil {
       context ?: return "en"
       return if (context.resources.configuration.locales.isEmpty) {
         "en"
-      } else context.resources.configuration.locales.get(0).language.toLowerCase(Locale.getDefault())
+      } else context.resources.configuration.locales.get(0).language.lowercase(Locale.getDefault())
+    }
+
+    /**
+     * Generate a FES url.
+     */
+    fun generateFesUrl(domain: String): String {
+      return "https://fes.$domain/api/v1/client-configuration?domain=$domain"
     }
   }
 }
