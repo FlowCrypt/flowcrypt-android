@@ -15,7 +15,22 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
  */
 val <T> Result<T>.exceptionMsg: String
   get() {
-    return exception?.message
-      ?: exception?.cause?.message
-      ?: "Unknown error"
+    val stringBuilder = StringBuilder()
+
+    exception?.let {
+      stringBuilder.append(it.javaClass.simpleName)
+      stringBuilder.append(":")
+      stringBuilder.append(it.message)
+    }
+
+    exception?.cause?.let {
+      if (stringBuilder.isNotEmpty()) {
+        stringBuilder.append("\n\n")
+      }
+      stringBuilder.append(it.javaClass.simpleName)
+      stringBuilder.append(":")
+      stringBuilder.append(it.message)
+    }
+
+    return if (stringBuilder.isEmpty()) "Unknown error" else stringBuilder.toString()
   }
