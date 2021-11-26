@@ -140,7 +140,6 @@
                 android:id="@+id/rBStoreInRAM"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false"
                 android:text="@string/remember_pass_phrase_temporarily" />
         </RadioGroup>
 
