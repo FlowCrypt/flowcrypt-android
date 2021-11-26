@@ -1064,7 +1064,10 @@ class EmailUtil {
     fun getPublicEmailDomains(): Array<String> {
       return arrayOf(
         JavaEmailConstants.EMAIL_PROVIDER_GMAIL,
-        JavaEmailConstants.EMAIL_PROVIDER_GOOGLEMAIL
+        JavaEmailConstants.EMAIL_PROVIDER_GOOGLEMAIL,
+        JavaEmailConstants.EMAIL_PROVIDER_YAHOO,
+        JavaEmailConstants.EMAIL_PROVIDER_OUTLOOK,
+        JavaEmailConstants.EMAIL_PROVIDER_LIVE,
       )
     }
 

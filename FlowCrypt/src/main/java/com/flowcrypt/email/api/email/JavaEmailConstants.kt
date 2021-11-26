@@ -91,5 +91,8 @@ class JavaEmailConstants {
 
     const val EMAIL_PROVIDER_GMAIL = "gmail.com"
     const val EMAIL_PROVIDER_GOOGLEMAIL = "googlemail.com"
+    const val EMAIL_PROVIDER_YAHOO = "yahoo.com"
+    const val EMAIL_PROVIDER_OUTLOOK = "outlook.com"
+    const val EMAIL_PROVIDER_LIVE = "live.com"
   }
 }
