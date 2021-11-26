@@ -111,6 +111,11 @@ abstract class BaseActivity : AppCompatActivity() {
     LogsUtil.d(tag, "onResume")
   }
 
+  override fun onPause() {
+    super.onPause()
+    LogsUtil.d(tag, "onPause")
+  }
+
   public override fun onStop() {
     super.onStop()
     LogsUtil.d(tag, "onStop")

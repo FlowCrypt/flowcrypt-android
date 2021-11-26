@@ -31,6 +31,9 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.work.WorkManager
@@ -50,6 +53,7 @@ import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
@@ -106,6 +110,7 @@ class EmailManagerActivity : BaseEmailListActivity(),
   private var currentAccountDetailsItem: View? = null
   private var switchView: SwitchMaterial? = null
   private var isForceSendingEnabled: Boolean = true
+  private var isUpdateOrgRulesRequired: Boolean = true
 
   private val idleServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, service: IBinder) {}
@@ -123,6 +128,7 @@ class EmailManagerActivity : BaseEmailListActivity(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    observeMovingToBackground()
     updateLabels()
     loadContactsIfNeeded()
     IdleService.bind(this, idleServiceConnection)
@@ -162,6 +168,14 @@ class EmailManagerActivity : BaseEmailListActivity(),
     val nonNullAccount = activeAccount ?: return
     val manager = foldersManager ?: return
     MessagesNotificationManager(this).cancelAll(this, nonNullAccount, manager)
+  }
+
+  override fun onStart() {
+    super.onStart()
+    if (isUpdateOrgRulesRequired) {
+      RefreshClientConfigurationWorker.enqueue(applicationContext)
+      isUpdateOrgRulesRequired = false
+    }
   }
 
   override fun onDestroy() {
@@ -713,6 +727,17 @@ class EmailManagerActivity : BaseEmailListActivity(),
         toast(getString(R.string.open_side_menu_and_do_logout, it.name), Toast.LENGTH_LONG)
       }
     }
+  }
+
+  private fun observeMovingToBackground() {
+    ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+      /**
+       * The app moved to background
+       */
+      override fun onStop(owner: LifecycleOwner) {
+        isUpdateOrgRulesRequired = true
+      }
+    })
   }
 
   /**
