@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -238,10 +239,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
    */
   private fun prepareSenderNamePattern(): Pattern {
     val domains = ArrayList<String>()
-    domains.add("gmail.com")
-    domains.add("yahoo.com")
-    domains.add("live.com")
-    domains.add("outlook.com")
+    domains.add(JavaEmailConstants.EMAIL_PROVIDER_GMAIL)
+    domains.add(JavaEmailConstants.EMAIL_PROVIDER_YAHOO)
+    domains.add(JavaEmailConstants.EMAIL_PROVIDER_LIVE)
+    domains.add(JavaEmailConstants.EMAIL_PROVIDER_OUTLOOK)
 
     val stringBuilder = StringBuilder()
     stringBuilder.append("@")
