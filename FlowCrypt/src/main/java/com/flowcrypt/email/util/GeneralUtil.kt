@@ -23,6 +23,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.text.TextUtils
+import android.util.Patterns
 import android.webkit.MimeTypeMap
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
@@ -275,8 +276,13 @@ class GeneralUtil {
      * @return true if the email has valid format, otherwise false.
      */
     fun isEmailValid(email: CharSequence?): Boolean {
-      return email?.isNotEmpty() == true && (android.util.Patterns.EMAIL_ADDRESS.matcher(email)
-        .matches() || EmailUtil.getDomain(email.toString()).lowercase(Locale.ROOT) == "localhost")
+      email ?: return false
+      val isLocalhostAddress = try {
+        EmailUtil.getDomain(email.toString()).lowercase() == "localhost"
+      } catch (e: IllegalArgumentException) {
+        false
+      }
+      return Patterns.EMAIL_ADDRESS.matcher(email).matches() || isLocalhostAddress
     }
 
     /**
