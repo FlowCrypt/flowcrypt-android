@@ -67,6 +67,7 @@ import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.util.*
+import javax.net.ssl.SSLException
 
 /**
  * @author Denis Bondarenko
@@ -472,7 +473,6 @@ class MainSignInFragment : BaseSingInFragment() {
         }
 
         Result.Status.ERROR -> {
-          showContent()
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
           baseActivity.countingIdlingResource.decrementSafely()
@@ -484,7 +484,6 @@ class MainSignInFragment : BaseSingInFragment() {
               if (it.exception.hasInternetAccess == true) {
                 continueBasedOnFlavorSettings()
               } else {
-                showContent()
                 showDialogWithRetryButton(
                   getString(R.string.no_connection_or_server_is_not_reachable),
                   REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
@@ -504,8 +503,15 @@ class MainSignInFragment : BaseSingInFragment() {
               }
             }
 
+            is SSLException -> {
+              if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+                showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
+              } else {
+                continueWithRegularFlow()
+              }
+            }
+
             else -> {
-              showContent()
               showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
             }
           }
@@ -570,7 +576,6 @@ class MainSignInFragment : BaseSingInFragment() {
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showContent()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_LOGIN)
           loginViewModel.loginLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
@@ -603,7 +608,6 @@ class MainSignInFragment : BaseSingInFragment() {
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showContent()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES)
           domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
@@ -698,10 +702,8 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun showDialogWithRetryButton(it: Result<ApiResponse>, resultCode: Int) {
-    val errorMsg = it.data?.apiError?.msg
-      ?: it.exception?.message
-      ?: getString(R.string.unknown_error)
-    showDialogWithRetryButton(errorMsg, resultCode)
+    showContent()
+    showDialogWithRetryButton(it.exceptionMsg, resultCode)
   }
 
   private fun showDialogWithRetryButton(errorMsg: String, resultCode: Int) {

@@ -18,6 +18,7 @@ import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import kotlinx.coroutines.launch
+import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
@@ -48,7 +49,7 @@ class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(a
           val causedException = result.exception
           if (causedException != null) {
             val processedException = when (causedException) {
-              is UnknownHostException, is SocketTimeoutException -> {
+              is UnknownHostException, is SocketTimeoutException, is ConnectException -> {
                 if (context.hasActiveConnection()) {
                   CommonConnectionException(
                     cause = causedException,
