@@ -223,7 +223,12 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   private fun getInboxPendingIntent(context: Context): PendingIntent {
     val inboxIntent = Intent(context, EmailManagerActivity::class.java)
     inboxIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-    return PendingIntent.getActivity(context, 0, inboxIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+    return PendingIntent.getActivity(
+      context,
+      0,
+      inboxIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
   }
 
   private fun genDeletePendingIntent(
@@ -258,7 +263,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       context,
       requestCode,
       intent,
-      PendingIntent.FLAG_UPDATE_CURRENT
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
   }
 

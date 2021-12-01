@@ -194,7 +194,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
                     requireContext(), 0, Intent(
                       requireContext(),
                       SignInActivity::class.java
-                    ), 0
+                    ), PendingIntent.FLAG_IMMUTABLE
                   )
                 )
             }
@@ -226,7 +226,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
             account?.let { accountEntity ->
               val accountManager = AccountManager.get(requireContext())
               val account = Account(
-                accountEntity.email.toLowerCase(Locale.US),
+                accountEntity.email.lowercase(Locale.US),
                 FlowcryptAccountAuthenticator.ACCOUNT_TYPE
               )
               accountManager.setUserData(

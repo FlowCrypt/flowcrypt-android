@@ -549,7 +549,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
                     requireContext(),
                     0,
                     Intent(requireContext(), SignInActivity::class.java),
-                    0
+                    PendingIntent.FLAG_IMMUTABLE
                   )
                 )
             }
@@ -842,7 +842,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     getTempAccount()?.let { accountEntity ->
       val accountManager = AccountManager.get(requireContext())
       val account = Account(
-        accountEntity.email.toLowerCase(Locale.US),
+        accountEntity.email.lowercase(Locale.US),
         FlowcryptAccountAuthenticator.ACCOUNT_TYPE
       )
       accountManager.addAccountExplicitly(account, null, Bundle().apply {
