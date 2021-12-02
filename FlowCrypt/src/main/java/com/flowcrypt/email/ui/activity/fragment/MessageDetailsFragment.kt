@@ -1003,25 +1003,33 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     val existingRecipientWithPubKeys = block.existingRecipientWithPubKeys
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
-    val textViewAlreadyImported = pubKeyView.findViewById<View>(R.id.textViewAlreadyImported)
-    if (button != null) {
-      if (existingRecipientWithPubKeys == null) {
-        initImportPubKeyButton(keyDetails, button)
-      } else {
-        val matchingKeyByFingerprint = existingRecipientWithPubKeys.publicKeys.firstOrNull {
-          it.fingerprint.equals(keyDetails?.fingerprint, true)
-        }
-        if (matchingKeyByFingerprint != null) {
-          if (keyDetails?.isNewerThan(matchingKeyByFingerprint.pgpKeyDetails) == true) {
-            initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
+    val textViewStatus = pubKeyView.findViewById<TextView>(R.id.textViewStatus)
+    if (keyDetails?.usableForEncryption == true) {
+      if (button != null) {
+        if (existingRecipientWithPubKeys == null) {
+          initImportPubKeyButton(keyDetails, button)
+        } else {
+          val matchingKeyByFingerprint = existingRecipientWithPubKeys.publicKeys.firstOrNull {
+            it.fingerprint.equals(keyDetails.fingerprint, true)
+          }
+          if (matchingKeyByFingerprint != null) {
+            if (keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyDetails)) {
+              initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
+            } else {
+              textViewStatus?.text = getString(R.string.already_imported)
+              textViewStatus.visible()
+              button.gone()
+            }
           } else {
-            textViewAlreadyImported.visible()
             button.gone()
           }
-        } else {
-          button.gone()
         }
       }
+    } else {
+      textViewStatus.text = getString(R.string.not_usable_for_encryption)
+      textViewStatus.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
+      textViewStatus.visible()
+      button?.gone()
     }
 
     return pubKeyView

@@ -60,8 +60,8 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
       itemView.findViewById(R.id.textViewKeyOwnerTemplate)
     private val textViewFingerprintTemplate: TextView =
       itemView.findViewById(R.id.textViewFingerprintTemplate)
-    private val textViewAlreadyImported: TextView =
-      itemView.findViewById(R.id.textViewAlreadyImported)
+    private val textViewStatus: TextView =
+      itemView.findViewById(R.id.textViewStatus)
     private val buttonSaveContact: Button = itemView.findViewById(R.id.buttonSaveContact)
     private val buttonUpdateContact: Button = itemView.findViewById(R.id.buttonUpdateContact)
 
@@ -90,9 +90,17 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
         ), textViewFingerprintTemplate
       )
 
+      if (!pgpKeyDetails.usableForEncryption) {
+        textViewStatus.visible()
+        textViewStatus.text = context.getString(R.string.not_usable_for_encryption)
+        textViewStatus.setTextColor(UIUtil.getColor(context, R.color.red))
+        return
+      } else {
+        textViewStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
+      }
+
       if (existingPubKeyEntity != null) {
         if (pgpKeyDetails.isNewerThan(existingPubKeyEntity.pgpKeyDetails)) {
-          textViewAlreadyImported.visible()
           buttonUpdateContact.visible()
           buttonUpdateContact.setOnClickListener {
             if (GeneralUtil.isEmailValid(address)) {
@@ -102,12 +110,11 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
               )
             }
           }
-        } else {
-          textViewAlreadyImported.visible()
         }
-        textViewAlreadyImported.visible()
+        textViewStatus.text = context.getString(R.string.already_imported)
+        textViewStatus.visible()
       } else {
-        textViewAlreadyImported.gone()
+        textViewStatus.gone()
         buttonSaveContact.visible()
         buttonSaveContact.setOnClickListener {
           if (GeneralUtil.isEmailValid(address)) {

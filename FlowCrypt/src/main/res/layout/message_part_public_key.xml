@@ -64,7 +64,7 @@
         tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/textViewAlreadyImported"
+        android:id="@+id/textViewStatus"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center|end"
@@ -85,7 +85,7 @@
         android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toEndOf="@+id/textViewFingerprintTemplate"
         app:layout_constraintStart_toStartOf="@+id/textViewFingerprintTemplate"
-        app:layout_constraintTop_toBottomOf="@+id/textViewAlreadyImported"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
         tools:text="@string/import_pub_key" />
 
     <androidx.constraintlayout.widget.Guideline

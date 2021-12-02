@@ -14,7 +14,6 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import java.util.Locale
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -31,6 +30,7 @@ data class PgpKeyDetails constructor(
   @Expose val isFullyDecrypted: Boolean,
   @Expose val isFullyEncrypted: Boolean,
   @Expose val isRevoked: Boolean,
+  @Expose val usableForEncryption: Boolean,
   @Expose @SerializedName("private") val privateKey: String?,
   @Expose @SerializedName("public") val publicKey: String,
   @Expose val users: List<String>,
@@ -62,6 +62,7 @@ data class PgpKeyDetails constructor(
     source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean,
+    source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readString(),
     source.readString() ?: throw IllegalArgumentException("pubkey can't be null"),
     source.createStringArrayList() ?: throw NullPointerException(),
@@ -82,6 +83,7 @@ data class PgpKeyDetails constructor(
     writeValue(isFullyDecrypted)
     writeValue(isFullyEncrypted)
     writeValue(isRevoked)
+    writeValue(usableForEncryption)
     writeString(privateKey)
     writeString(publicKey)
     writeStringList(users)
@@ -130,7 +132,7 @@ data class PgpKeyDetails constructor(
   fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
     return KeyEntity(
       fingerprint = fingerprint,
-      account = accountEntity.email.lowercase(Locale.US),
+      account = accountEntity.email.lowercase(),
       accountType = accountEntity.accountType,
       source = PrivateKeySourceType.BACKUP.toString(),
       publicKey = publicKey.toByteArray(),

@@ -28,13 +28,13 @@
         tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
     <TextView
-        android:id="@+id/textViewAlreadyImported"
+        android:id="@+id/textViewStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:gravity="center|end"
-        android:text="@string/already_imported"
-        android:textColor="@color/colorPrimary" />
+        android:textColor="@color/colorPrimary"
+        tools:text="@string/already_imported" />
 
     <Button
         android:id="@+id/buttonSaveContact"

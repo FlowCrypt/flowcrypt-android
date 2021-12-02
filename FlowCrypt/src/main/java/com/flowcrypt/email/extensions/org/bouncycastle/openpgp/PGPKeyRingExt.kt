@@ -6,6 +6,7 @@
 package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import androidx.annotation.WorkerThread
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -74,6 +75,7 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
     isFullyDecrypted = keyRingInfo.isFullyDecrypted,
     isFullyEncrypted = keyRingInfo.isFullyEncrypted,
     isRevoked = getPublicKey().hasRevocation(),
+    usableForEncryption = keyRingInfo.usableForEncryption(),
     privateKey = privateKey,
     publicKey = publicKey,
     users = keyRingInfo.userIds,
