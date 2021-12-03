@@ -56,6 +56,14 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
       if (keyDetailsList.size == 1) {
         val key = keyDetailsList.first()
 
+        if (!key.usableForEncryption) {
+          showInfoSnackbar(
+            view = rootView,
+            messageText = getString(R.string.cannot_be_used_for_encryption)
+          )
+          return
+        }
+
         if (key.isPrivate) {
           showInfoSnackbar(
             view = rootView,

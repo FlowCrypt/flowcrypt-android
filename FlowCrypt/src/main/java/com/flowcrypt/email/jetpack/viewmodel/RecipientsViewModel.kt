@@ -337,6 +337,11 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
     val deDuplicatedListOfFetchedPubKeys = uniqueMapOfFetchedPubKeys.values
     for (fetchedPgpKeyDetails in deDuplicatedListOfFetchedPubKeys) {
+      if (!fetchedPgpKeyDetails.usableForEncryption) {
+        //we skip a key that is not usable for encryption
+        continue
+      }
+
       val existingPublicKeyEntity = cachedRecipientEntity.publicKeys.firstOrNull {
         it.fingerprint == fetchedPgpKeyDetails.fingerprint
       }

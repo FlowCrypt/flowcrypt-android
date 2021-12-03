@@ -612,6 +612,20 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     matchReplyButtons(details)
   }
 
+  @Test
+  fun testMsgWithKeyThatHasNoSuitableEncryptionSubKeys() {
+    val msgInfo = getMsgInfo(
+      "messages/info/standard_msg_with_pub_key_that_has_no_suitable_encryption_subkeys.json",
+      "messages/mime/standard_msg_with_pub_key_that_has_no_suitable_encryption_subkeys.txt"
+    )
+    baseCheck(msgInfo)
+
+    onView(withId(R.id.textViewStatus))
+      .check(matches(withText(getResString(R.string.cannot_be_used_for_encryption))))
+    onView(withId(R.id.buttonKeyAction))
+      .check(matches(not(isDisplayed())))
+  }
+
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 

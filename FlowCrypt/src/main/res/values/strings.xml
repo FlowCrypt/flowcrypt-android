@@ -542,4 +542,5 @@
     <string name="pub_keys">Public keys</string>
     <string name="recipient_detail">Recipient details</string>
     <string name="you_trying_replace_pub_key_with_older_version">You are trying to replace a public key with an older version</string>
+    <string name="cannot_be_used_for_encryption">Warning: cannot be used for encryption</string>
 </resources>
