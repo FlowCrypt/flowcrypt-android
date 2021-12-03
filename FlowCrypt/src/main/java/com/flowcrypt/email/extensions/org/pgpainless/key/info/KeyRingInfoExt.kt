@@ -15,15 +15,17 @@ import org.pgpainless.key.info.KeyRingInfo
  *         E-mail: DenBond7@gmail.com
  */
 fun KeyRingInfo.usableForEncryption(): Boolean {
-  val isExpired = try {
-    System.currentTimeMillis() > primaryKeyExpirationDate?.time ?: 0
+  return !publicKey.hasRevocation()
+      && !isExpired()
+      && getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).isNotEmpty()
+      && primaryUserId?.isNotEmpty() == true
+}
+
+fun KeyRingInfo.isExpired(): Boolean {
+  return try {
+    primaryKeyExpirationDate?.time?.let { System.currentTimeMillis() > it } ?: false
   } catch (e: Exception) {
     e.printStackTrace()
     false
   }
-
-  return !publicKey.hasRevocation()
-      && !isExpired
-      && getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).isNotEmpty()
-      && primaryUserId?.isNotEmpty() == true
 }
