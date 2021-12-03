@@ -92,7 +92,7 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
 
       if (!pgpKeyDetails.usableForEncryption) {
         textViewStatus.visible()
-        textViewStatus.text = context.getString(R.string.not_usable_for_encryption)
+        textViewStatus.text = context.getString(R.string.cannot_be_used_for_encryption)
         textViewStatus.setTextColor(UIUtil.getColor(context, R.color.red))
         return
       } else {

@@ -59,7 +59,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
         if (!key.usableForEncryption) {
           showInfoSnackbar(
             view = rootView,
-            messageText = getString(R.string.not_usable_for_encryption)
+            messageText = getString(R.string.cannot_be_used_for_encryption)
           )
           return
         }

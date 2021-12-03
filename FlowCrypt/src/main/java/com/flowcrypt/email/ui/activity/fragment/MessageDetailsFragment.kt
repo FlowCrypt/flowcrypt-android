@@ -1026,7 +1026,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         }
       }
     } else {
-      textViewStatus.text = getString(R.string.not_usable_for_encryption)
+      textViewStatus.text = getString(R.string.cannot_be_used_for_encryption)
       textViewStatus.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
       textViewStatus.visible()
       button?.gone()
