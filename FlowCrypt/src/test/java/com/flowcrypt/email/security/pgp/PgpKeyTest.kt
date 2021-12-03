@@ -43,6 +43,7 @@ class PgpKeyTest {
     val expected = PgpKeyDetails(
       isFullyDecrypted = true,
       isFullyEncrypted = false,
+      usableForEncryption = true,
       isRevoked = false,
       privateKey = null,
       publicKey = loadResourceAsString(
@@ -72,6 +73,7 @@ class PgpKeyTest {
       isFullyDecrypted = true,
       isFullyEncrypted = false,
       isRevoked = false,
+      usableForEncryption = true,
       privateKey = null,
       publicKey = loadResourceAsString(
         "keys/6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9.public.gpg-key"
