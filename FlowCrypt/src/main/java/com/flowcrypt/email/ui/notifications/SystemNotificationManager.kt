@@ -50,7 +50,12 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
     }
 
     val pendingIntent =
-      PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
+      PendingIntent.getActivity(
+        context,
+        System.currentTimeMillis().toInt(),
+        intent,
+        PendingIntent.FLAG_IMMUTABLE
+      )
 
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_SYSTEM)
       .setSmallIcon(android.R.drawable.stat_sys_warning)

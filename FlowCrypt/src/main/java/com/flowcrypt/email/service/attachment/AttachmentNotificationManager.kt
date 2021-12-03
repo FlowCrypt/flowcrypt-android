@@ -100,7 +100,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-    val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+    val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
     val builder = genDefBuilder(context, attInfo)
 
@@ -220,7 +220,8 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     intent.action = AttachmentDownloadManagerService.ACTION_CANCEL_DOWNLOAD_ATTACHMENT
     intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attInfo)
 
-    val pendingIntent = PendingIntent.getService(context, Random().nextInt(), intent, 0)
+    val pendingIntent =
+      PendingIntent.getService(context, Random().nextInt(), intent, PendingIntent.FLAG_IMMUTABLE)
     return NotificationCompat.Action.Builder(0, context.getString(R.string.cancel), pendingIntent)
       .build()
   }
@@ -240,7 +241,8 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     intent.action = AttachmentDownloadManagerService.ACTION_RETRY_DOWNLOAD_ATTACHMENT
     intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attInfo)
 
-    val pendingIntent = PendingIntent.getService(context, Random().nextInt(), intent, 0)
+    val pendingIntent =
+      PendingIntent.getService(context, Random().nextInt(), intent, PendingIntent.FLAG_IMMUTABLE)
     return NotificationCompat.Action.Builder(0, context.getString(R.string.retry), pendingIntent)
       .build()
   }

@@ -45,7 +45,7 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
   private fun runAsForeground() {
     val pendingIntent: PendingIntent =
       Intent(this, EmailManagerActivity::class.java).let { notificationIntent ->
-        PendingIntent.getActivity(this, 0, notificationIntent, 0)
+        PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
       }
 
     val notification: Notification = Notification.Builder(

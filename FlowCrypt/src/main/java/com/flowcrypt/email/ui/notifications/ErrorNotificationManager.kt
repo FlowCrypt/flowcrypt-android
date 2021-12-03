@@ -37,7 +37,12 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     }
 
     val pendingIntent =
-      PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
+      PendingIntent.getActivity(
+        context,
+        System.currentTimeMillis().toInt(),
+        intent,
+        PendingIntent.FLAG_IMMUTABLE
+      )
 
     val contentText = context.resources.getQuantityString(
       R.plurals.has_failed_outgoing_msgs,
@@ -78,7 +83,12 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     val intent = getFixAuthIssueIntent(context, account, recoverableIntent)
 
     val pendingIntent =
-      PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
+      PendingIntent.getActivity(
+        context,
+        System.currentTimeMillis().toInt(),
+        intent,
+        PendingIntent.FLAG_IMMUTABLE
+      )
 
     val contentText = when (account.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> context.getString(
