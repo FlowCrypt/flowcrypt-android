@@ -1576,6 +1576,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       fromAddrs?.clear()
       fromAddrs?.addAll(aliases)
 
+      updateFromAddressAdapter(KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings())
+
       if (msgInfo != null) {
         prepareAliasForReplyIfNeeded(aliases)
       } else if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
