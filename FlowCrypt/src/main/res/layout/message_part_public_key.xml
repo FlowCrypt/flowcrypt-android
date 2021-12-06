@@ -35,7 +35,7 @@
         tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
     <TextView
-        android:id="@+id/textViewWarning"
+        android:id="@+id/textViewManualImportWarning"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
@@ -57,7 +57,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewWarning" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewManualImportWarning" />
 
     <TextView
         android:id="@+id/textViewPgpPublicKey"

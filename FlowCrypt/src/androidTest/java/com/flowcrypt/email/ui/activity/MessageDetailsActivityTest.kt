@@ -368,11 +368,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
     val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(
-      matches(
-        withText(
-          getResString(R.string.template_message_part_public_key_owner, email)
-        )
-      )
+      matches(withText(getResString(R.string.template_message_part_public_key_owner, email)))
     )
 
     onView(withId(R.id.textViewFingerprintTemplate)).check(
@@ -386,6 +382,10 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
           )
         )
       )
+    )
+
+    onView(withId(R.id.textViewManualImportWarning)).check(
+      matches(withText(getResString(R.string.warning_about_manual_import, email)))
     )
 
     val block = msgInfo?.msgBlocks?.get(1) as PublicKeyMsgBlock
@@ -623,6 +623,8 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     onView(withId(R.id.textViewStatus))
       .check(matches(withText(getResString(R.string.cannot_be_used_for_encryption))))
     onView(withId(R.id.buttonKeyAction))
+      .check(matches(not(isDisplayed())))
+    onView(withId(R.id.textViewManualImportWarning))
       .check(matches(not(isDisplayed())))
   }
 

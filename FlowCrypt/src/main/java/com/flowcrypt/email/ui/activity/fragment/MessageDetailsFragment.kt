@@ -1004,7 +1004,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val existingRecipientWithPubKeys = block.existingRecipientWithPubKeys
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
     val textViewStatus = pubKeyView.findViewById<TextView>(R.id.textViewStatus)
-    val textViewWarning = pubKeyView.findViewById<TextView>(R.id.textViewWarning)
+    val textViewManualImportWarning =
+      pubKeyView.findViewById<TextView>(R.id.textViewManualImportWarning)
     if (keyDetails?.usableForEncryption == true) {
       if (button != null) {
         if (existingRecipientWithPubKeys == null) {
@@ -1015,10 +1016,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           }
           if (matchingKeyByFingerprint != null) {
             if (keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyDetails)) {
-              textViewWarning?.visible()
+              textViewManualImportWarning?.visible()
               initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
             } else {
-              textViewWarning?.gone()
+              textViewManualImportWarning?.gone()
               textViewStatus?.text = getString(R.string.already_imported)
               textViewStatus.visible()
               button.gone()
@@ -1031,7 +1032,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     } else {
       textViewStatus.text = getString(R.string.cannot_be_used_for_encryption)
       textViewStatus.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
-      textViewWarning?.gone()
+      textViewManualImportWarning?.gone()
       textViewStatus.visible()
       button?.gone()
     }

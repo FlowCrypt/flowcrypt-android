@@ -545,4 +545,5 @@
     <string name="cannot_be_used_for_encryption">Warning: cannot be used for encryption</string>
     <string name="warning_about_manual_import">Manually importing Public Keys received over email can be dangerous.
       Contact the sender to verify that the fingerprint matches.</string>
+    <string name="manually_importing_public_keys_can_be_dangerous">Manually importing Public Keys can be dangerous</string>
 </resources>
