@@ -22,6 +22,11 @@
         <item name="colorButtonNormal">@color/colorPrimary</item>
     </style>
 
+    <style name="AppWidget.Button.Orange">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="colorButtonNormal">@color/orange</item>
+    </style>
+
     <style name="AppWidget.Button.Green.WithDisabled" parent="Widget.MaterialComponents.Button">
         <item name="colorOnSurface">@color/dark</item>
     </style>

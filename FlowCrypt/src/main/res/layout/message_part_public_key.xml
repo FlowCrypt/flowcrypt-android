@@ -34,6 +34,17 @@
         app:layout_constraintTop_toBottomOf="@+id/textViewKeyOwnerTemplate"
         tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
+    <TextView
+        android:id="@+id/textViewWarning"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:text="@string/warning_about_manual_import"
+        android:textColor="@color/orange"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFingerprintTemplate" />
+
     <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/switchShowPublicKey"
         android:layout_width="wrap_content"
@@ -46,7 +57,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewFingerprintTemplate" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewWarning" />
 
     <TextView
         android:id="@+id/textViewPgpPublicKey"
@@ -82,7 +93,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:theme="@style/AppWidget.Button.Green"
+        android:theme="@style/AppWidget.Button.Orange"
         app:layout_constraintEnd_toEndOf="@+id/textViewFingerprintTemplate"
         app:layout_constraintStart_toStartOf="@+id/textViewFingerprintTemplate"
         app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
