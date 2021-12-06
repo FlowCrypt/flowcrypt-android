@@ -20,6 +20,17 @@
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/textViewManualImportWarning"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:text="@string/manually_importing_public_keys_can_be_dangerous"
+        android:textColor="@color/orange"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/tVTitle" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tILKeyIdOrEmail"
         android:layout_width="0dp"
@@ -30,9 +41,9 @@
         android:layout_weight="1"
         android:hint="@string/search_by_key_id_or_email"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toStartOf="@+id/iBSearchKey"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/tVTitle">
+        app:layout_constraintTop_toBottomOf="@+id/textViewManualImportWarning">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/eTKeyIdOrEmail"
@@ -61,7 +72,7 @@
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/load_from_a_file"
-        android:theme="@style/AppWidget.Button.Green"
+        android:theme="@style/AppWidget.Button.Orange"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/tILKeyIdOrEmail" />
@@ -72,7 +83,7 @@
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/load_from_clipboard"
-        android:theme="@style/AppWidget.Button.Green"
+        android:theme="@style/AppWidget.Button.Orange"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/btLoadFromFile" />
