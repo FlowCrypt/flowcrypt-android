@@ -10,6 +10,7 @@ import android.os.Parcelable
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
@@ -63,6 +64,7 @@ object PgpDecrypt {
 
   fun decryptWithResult(
     srcInputStream: InputStream,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector,
     ignoreMdcErrors: Boolean = false
@@ -78,14 +80,13 @@ object PgpDecrypt {
                 .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                 .setIgnoreMDCErrors(ignoreMdcErrors)
+                .addVerificationCerts(pgpPublicKeyRingCollection)
             )
 
           decryptionStream.use { it.copyTo(outStream) }
           return DecryptionResult(
-            content = destOutputStream,
-            isEncrypted = decryptionStream.result.isEncrypted,
-            isSigned = decryptionStream.result.isSigned,
-            filename = decryptionStream.result.fileName
+            openPgpMetadata = decryptionStream.result,
+            content = destOutputStream
           )
         } catch (e: Exception) {
           return DecryptionResult.withError(
@@ -139,19 +140,9 @@ object PgpDecrypt {
   }
 
   data class DecryptionResult(
+    val openPgpMetadata: OpenPgpMetadata? = null,
     // provided if decryption was successful
     val content: ByteArrayOutputStream? = null,
-
-    // true if message was encrypted.
-    // Alternatively false (because it could have also been plaintext signed,
-    // or wrapped in PGP armor as plaintext packet without encrypting)
-    // also false when error happens.
-    val isEncrypted: Boolean = false,
-
-    val isSigned: Boolean = false,
-
-    // pgp messages may include original filename in them
-    val filename: String? = null,
 
     // todo later - signature verification not supported on Android yet
     val signature: String? = null,
@@ -159,6 +150,17 @@ object PgpDecrypt {
     // provided if error happens
     val exception: DecryptionException? = null
   ) {
+    /**
+     * true if message was encrypted.
+     * Alternatively false (because it could have also been plaintext signed, or wrapped in
+     * PGP armor as plaintext packet without encrypting). Also false when error happens.
+     */
+    val isEncrypted: Boolean = openPgpMetadata?.isEncrypted ?: false
+    val isSigned = openPgpMetadata?.isSigned ?: false
+
+    // pgp messages may include original filename in them
+    val filename = openPgpMetadata?.fileName
+
     companion object {
       fun withError(exception: DecryptionException): DecryptionResult {
         return DecryptionResult(exception = exception)

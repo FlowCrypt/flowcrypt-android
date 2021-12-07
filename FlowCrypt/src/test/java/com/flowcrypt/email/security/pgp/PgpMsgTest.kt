@@ -16,6 +16,7 @@ import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.util.TestUtil
 import com.google.gson.JsonParser
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.jsoup.Jsoup
@@ -225,9 +226,10 @@ class PgpMsgTest {
       TestKeys.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = wrongPassphrase)
     }
     val r = PgpDecrypt.decryptWithResult(
-      messageInfo.armored.byteInputStream(),
-      PGPSecretKeyRingCollection(privateKeysWithWrongPassPhrases.map { it.keyRing }),
-      SecretKeyRingProtector.unprotectedKeys()
+      srcInputStream = messageInfo.armored.byteInputStream(),
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(privateKeysWithWrongPassPhrases.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
     assertTrue("Error not returned", r.exception != null)
@@ -241,9 +243,10 @@ class PgpMsgTest {
   fun missingPassphraseTest() {
     val messageInfo = findMessage("decrypt - without a subject")
     val r = PgpDecrypt.decryptWithResult(
-      messageInfo.armored.byteInputStream(),
-      PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
-      SecretKeyRingProtector.unprotectedKeys()
+      srcInputStream = messageInfo.armored.byteInputStream(),
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
     assertTrue("Error returned", r.exception != null)
@@ -259,8 +262,9 @@ class PgpMsgTest {
     val wrongKey = listOf(PRIVATE_KEYS[1])
     val r = PgpDecrypt.decryptWithResult(
       messageInfo.armored.byteInputStream(),
-      PGPSecretKeyRingCollection(wrongKey.map { it.keyRing }),
-      SecretKeyRingProtector.unprotectedKeys()
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(wrongKey.map { it.keyRing }),
+      protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
     assertTrue("Error not returned", r.exception != null)
@@ -290,8 +294,9 @@ class PgpMsgTest {
     val messageInfo = findMessage(messageKey)
     val result = PgpDecrypt.decryptWithResult(
       messageInfo.armored.byteInputStream(),
-      PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
-      secretKeyRingProtector
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
+      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
+      protector = secretKeyRingProtector
     )
     if (result.content != null) {
       val s = String(result.content!!.toByteArray(), Charset.forName(messageInfo.charset))
@@ -430,7 +435,8 @@ class PgpMsgTest {
     val text = loadResourceAsString("compat/direct-encrypted-pgpmime-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val decryptResult = PgpDecrypt.decryptWithResult(
-      text.toInputStream(),
+      srcInputStream = text.toInputStream(),
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = TestKeys.genRingProtector(keys)
     )
@@ -454,6 +460,7 @@ class PgpMsgTest {
 
     val decryptResult = PgpDecrypt.decryptWithResult(
       text.toInputStream(),
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = TestKeys.genRingProtector(keys)
     )

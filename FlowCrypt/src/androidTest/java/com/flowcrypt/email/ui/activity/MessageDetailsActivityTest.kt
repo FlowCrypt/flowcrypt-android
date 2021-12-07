@@ -365,7 +365,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
     val pgpKeyDetails =
-      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
     val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(
       matches(withText(getResString(R.string.template_message_part_public_key_owner, email)))

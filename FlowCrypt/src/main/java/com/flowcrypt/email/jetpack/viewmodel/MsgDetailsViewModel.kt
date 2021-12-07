@@ -211,11 +211,12 @@ class MsgDetailsViewModel(
                   text = processedMimeMessageResult.text,
                   //subject = parseDecryptedMsgResult.subject,
                   msgBlocks = processedMimeMessageResult.blocks,
-                  encryptionType = if (processedMimeMessageResult.isReplyEncrypted) {
+                  encryptionType = if (processedMimeMessageResult.verificationResult.isEncrypted) {
                     MessageEncryptionType.ENCRYPTED
                   } else {
                     MessageEncryptionType.STANDARD
-                  }
+                  },
+                  verificationResult = processedMimeMessageResult.verificationResult
                 )
                 Result.success(requestCode = it.requestCode, data = msgInfo)
               } catch (e: Exception) {
