@@ -817,6 +817,7 @@ object PgpMsg {
 
     var hasMixedSignatures = false
     var hasUnverifiedSignatures = false
+    var hasBadSignatures = false
     var signedBlockCount = 0
     var isPartialSigned = false
     val verifiedSignatures = mutableMapOf<SubkeyIdentifier, PGPSignature>()
@@ -855,7 +856,18 @@ object PgpMsg {
           if (openPgpMetadata.invalidInbandSignatures.isNotEmpty()
             || openPgpMetadata.invalidDetachedSignatures.isNotEmpty()
           ) {
-            hasUnverifiedSignatures = true
+            val invalidSignatureFailures = openPgpMetadata.invalidInbandSignatures +
+                openPgpMetadata.invalidDetachedSignatures
+
+            hasBadSignatures = invalidSignatureFailures.any {
+              it.validationException.underlyingException != null
+            }
+
+            hasUnverifiedSignatures = invalidSignatureFailures.any {
+              it.validationException.message?.startsWith(
+                "Missing verification certificate", true
+              ) ?: false
+            }
           }
 
           if (verifiedSignatures.isEmpty()) {
@@ -903,7 +915,8 @@ object PgpMsg {
         isSigned = signedBlockCount > 0,
         hasMixedSignatures = hasMixedSignatures,
         isPartialSigned = isPartialSigned,
-        hasUnverifiedSignatures = hasUnverifiedSignatures
+        hasUnverifiedSignatures = hasUnverifiedSignatures,
+        hasBadSignatures = hasBadSignatures
       )
     )
   }

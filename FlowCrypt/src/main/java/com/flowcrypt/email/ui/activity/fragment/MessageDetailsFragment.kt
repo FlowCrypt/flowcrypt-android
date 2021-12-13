@@ -484,6 +484,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
       if (verificationResult.isSigned) {
         val badge = when {
+          verificationResult.hasBadSignatures -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.BAD_SIGNATURE)
+          }
+
           verificationResult.hasUnverifiedSignatures -> {
             PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
           }

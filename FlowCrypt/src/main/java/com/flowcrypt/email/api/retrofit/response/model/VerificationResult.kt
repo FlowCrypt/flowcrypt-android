@@ -21,8 +21,10 @@ class VerificationResult(
   @Expose val hasMixedSignatures: Boolean,
   @Expose val isPartialSigned: Boolean,
   @Expose val hasUnverifiedSignatures: Boolean,
+  @Expose val hasBadSignatures: Boolean,
 ) : Parcelable {
   constructor(parcel: Parcel) : this(
+    parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
@@ -36,6 +38,7 @@ class VerificationResult(
     parcel.writeByte(if (hasMixedSignatures) 1 else 0)
     parcel.writeByte(if (isPartialSigned) 1 else 0)
     parcel.writeByte(if (hasUnverifiedSignatures) 1 else 0)
+    parcel.writeByte(if (hasBadSignatures) 1 else 0)
   }
 
   override fun describeContents(): Int {
