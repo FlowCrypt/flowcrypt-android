@@ -7,7 +7,7 @@ package com.flowcrypt.email.util.exception
 
 import com.flowcrypt.email.api.retrofit.response.model.DecryptError
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 
 /**
  * @author Denis Bondarenko
@@ -16,7 +16,7 @@ import com.flowcrypt.email.security.pgp.PgpDecrypt
  *         E-mail: DenBond7@gmail.com
  */
 class DecryptionException(
-  val decryptionErrorType: PgpDecrypt.DecryptionErrorType,
+  val decryptionErrorType: PgpDecryptAndOrVerify.DecryptionErrorType,
   val e: Exception,
   val fingerprints: List<String> = emptyList()
 ) : FlowCryptException(e) {

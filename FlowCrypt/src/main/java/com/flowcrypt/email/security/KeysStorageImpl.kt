@@ -15,7 +15,7 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.bouncycastle.openpgp.PGPException
@@ -176,7 +176,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
             if (passphrase == null || passphrase.isEmpty) {
               if (throwException) {
                 throw DecryptionException(
-                  decryptionErrorType = PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE,
+                  decryptionErrorType = PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE,
                   e = PGPException("flowcrypt: need passphrase"),
                   fingerprints = listOf(fingerprint)
                 )

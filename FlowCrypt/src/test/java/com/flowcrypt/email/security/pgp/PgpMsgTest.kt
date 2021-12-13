@@ -173,7 +173,7 @@ class PgpMsgTest {
     assertTrue("Error not returned", r.exception != null)
     assertTrue(
       "Missing MDC not detected",
-      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.NO_MDC
+      r.exception?.decryptionErrorType == PgpDecryptAndOrVerify.DecryptionErrorType.NO_MDC
     )
   }
 
@@ -184,7 +184,7 @@ class PgpMsgTest {
     assertTrue("Error not returned", r.exception != null)
     assertTrue(
       "Bad MDC not detected",
-      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.BAD_MDC
+      r.exception?.decryptionErrorType == PgpDecryptAndOrVerify.DecryptionErrorType.BAD_MDC
     )
   }
 
@@ -215,7 +215,7 @@ class PgpMsgTest {
   fun wrongArmorChecksumTest() {
     val r = processMessage("decrypt - issue 1347 - wrong checksum")
     assertTrue("Error not returned", r.exception != null)
-    assertEquals(PgpDecrypt.DecryptionErrorType.FORMAT, r.exception?.decryptionErrorType)
+    assertEquals(PgpDecryptAndOrVerify.DecryptionErrorType.FORMAT, r.exception?.decryptionErrorType)
   }
 
   @Test
@@ -225,7 +225,7 @@ class PgpMsgTest {
     val privateKeysWithWrongPassPhrases = PRIVATE_KEYS.map {
       TestKeys.KeyWithPassPhrase(keyRing = it.keyRing, passphrase = wrongPassphrase)
     }
-    val r = PgpDecrypt.decryptWithResult(
+    val r = PgpDecryptAndOrVerify.decryptWithResult(
       srcInputStream = messageInfo.armored.byteInputStream(),
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(privateKeysWithWrongPassPhrases.map { it.keyRing }),
@@ -235,14 +235,14 @@ class PgpMsgTest {
     assertTrue("Error not returned", r.exception != null)
     assertTrue(
       "Wrong passphrase not detected",
-      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE
+      r.exception?.decryptionErrorType == PgpDecryptAndOrVerify.DecryptionErrorType.WRONG_PASSPHRASE
     )
   }
 
   @Test
   fun missingPassphraseTest() {
     val messageInfo = findMessage("decrypt - without a subject")
-    val r = PgpDecrypt.decryptWithResult(
+    val r = PgpDecryptAndOrVerify.decryptWithResult(
       srcInputStream = messageInfo.armored.byteInputStream(),
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
@@ -252,7 +252,7 @@ class PgpMsgTest {
     assertTrue("Error returned", r.exception != null)
     assertTrue(
       "Missing passphrase not detected",
-      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE
+      r.exception?.decryptionErrorType == PgpDecryptAndOrVerify.DecryptionErrorType.WRONG_PASSPHRASE
     )
   }
 
@@ -260,7 +260,7 @@ class PgpMsgTest {
   fun wrongKeyTest() {
     val messageInfo = findMessage("decrypt - without a subject")
     val wrongKey = listOf(PRIVATE_KEYS[1])
-    val r = PgpDecrypt.decryptWithResult(
+    val r = PgpDecryptAndOrVerify.decryptWithResult(
       messageInfo.armored.byteInputStream(),
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(wrongKey.map { it.keyRing }),
@@ -270,7 +270,7 @@ class PgpMsgTest {
     assertTrue("Error not returned", r.exception != null)
     assertTrue(
       "Key mismatch not detected",
-      r.exception?.decryptionErrorType == PgpDecrypt.DecryptionErrorType.KEY_MISMATCH
+      r.exception?.decryptionErrorType == PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH
     )
   }
 
@@ -290,9 +290,9 @@ class PgpMsgTest {
     )
   }
 
-  private fun processMessage(messageKey: String): PgpDecrypt.DecryptionResult {
+  private fun processMessage(messageKey: String): PgpDecryptAndOrVerify.DecryptionResult {
     val messageInfo = findMessage(messageKey)
-    val result = PgpDecrypt.decryptWithResult(
+    val result = PgpDecryptAndOrVerify.decryptWithResult(
       messageInfo.armored.byteInputStream(),
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
@@ -434,7 +434,7 @@ class PgpMsgTest {
   fun testParseDecryptMsgUnescapedSpecialCharactersInEncryptedPgpMime() {
     val text = loadResourceAsString("compat/direct-encrypted-pgpmime-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
-    val decryptResult = PgpDecrypt.decryptWithResult(
+    val decryptResult = PgpDecryptAndOrVerify.decryptWithResult(
       srcInputStream = text.toInputStream(),
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
@@ -458,7 +458,7 @@ class PgpMsgTest {
     val text = loadResourceAsString("compat/direct-encrypted-text-special-chars.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
 
-    val decryptResult = PgpDecrypt.decryptWithResult(
+    val decryptResult = PgpDecryptAndOrVerify.decryptWithResult(
       text.toInputStream(),
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),

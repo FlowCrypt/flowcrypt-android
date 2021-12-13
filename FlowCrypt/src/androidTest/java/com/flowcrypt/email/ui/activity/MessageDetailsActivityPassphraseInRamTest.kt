@@ -29,7 +29,7 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -78,7 +78,10 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val decryptError = decryptErrorMsgBlock.decryptErr!!
-    assertEquals(PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE, decryptError.details?.type)
+    assertEquals(
+      PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE,
+      decryptError.details?.type
+    )
 
     //check error message
     val errorMsg = getResString(

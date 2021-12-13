@@ -27,7 +27,7 @@ import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.util.*
+import java.util.UUID
 
 /**
  * @author Denis Bondarenko
@@ -35,7 +35,7 @@ import java.util.*
  * Time: 9:28 AM
  * E-mail: DenBond7@gmail.com
  */
-class PgpDecryptTest {
+class PgpDecryptAndOrVerifyTest {
 
   @get:Rule
   val temporaryFolder: TemporaryFolder = TemporaryFolder()
@@ -79,7 +79,7 @@ class PgpDecryptTest {
       .simpleEcKeyRing("random@flowcrypt.test", "qwerty")
 
     val exception = Assert.assertThrows(DecryptionException::class.java) {
-      PgpDecrypt.decrypt(
+      PgpDecryptAndOrVerify.decrypt(
         srcInputStream = ByteArrayInputStream(encryptedBytes),
         destOutputStream = outputStreamWithDecryptedData,
         pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(randomKey)),
@@ -92,7 +92,7 @@ class PgpDecryptTest {
 
     Assert.assertEquals(
       exception.decryptionErrorType,
-      PgpDecrypt.DecryptionErrorType.KEY_MISMATCH
+      PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH
     )
   }
 
@@ -116,7 +116,7 @@ class PgpDecryptTest {
     val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
     val outputStreamWithDecryptedData = ByteArrayOutputStream()
     val exception = Assert.assertThrows(DecryptionException::class.java) {
-      PgpDecrypt.decrypt(
+      PgpDecryptAndOrVerify.decrypt(
         srcInputStream = ByteArrayInputStream(encryptedBytes),
         destOutputStream = outputStreamWithDecryptedData,
         pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),
@@ -129,7 +129,7 @@ class PgpDecryptTest {
 
     Assert.assertEquals(
       exception.decryptionErrorType,
-      PgpDecrypt.DecryptionErrorType.WRONG_PASSPHRASE
+      PgpDecryptAndOrVerify.DecryptionErrorType.WRONG_PASSPHRASE
     )
   }
 
@@ -160,22 +160,22 @@ class PgpDecryptTest {
   @Test
   fun testPatternToDetectEncryptedAtts() {
     //"(?i)(\\.pgp$)|(\\.gpg$)|(\\.[a-zA-Z0-9]{3,4}\\.asc$)"
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.pgp"))
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.PgP"))
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gpg"))
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gPg"))
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.asc"))
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.ASC"))
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12.asc"))
-    assertNotNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2.ASC"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filepgp"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filePgP"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegpg"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegPg"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12asc"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12ASC"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12asc"))
-    assertNull(PgpDecrypt.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2ASC"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.pgp"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.PgP"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gpg"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gPg"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.asc"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.ASC"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12.asc"))
+    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2.ASC"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filepgp"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filePgP"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegpg"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegPg"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12asc"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12ASC"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12asc"))
+    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2ASC"))
   }
 
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {
@@ -196,7 +196,7 @@ class PgpDecryptTest {
 
     val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
     val outputStreamWithDecryptedData = ByteArrayOutputStream()
-    PgpDecrypt.decrypt(
+    PgpDecryptAndOrVerify.decrypt(
       srcInputStream = ByteArrayInputStream(encryptedBytes),
       destOutputStream = outputStreamWithDecryptedData,
       pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),

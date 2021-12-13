@@ -38,7 +38,7 @@ import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -534,7 +534,7 @@ class AttachmentDownloadManagerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(att.name).toLowerCase(Locale.getDefault())
+      val fileExtension = FilenameUtils.getExtension(att.name).lowercase(Locale.getDefault())
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {
@@ -673,7 +673,7 @@ class AttachmentDownloadManagerService : Service() {
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
 
         try {
-          val result = PgpDecrypt.decrypt(
+          val result = PgpDecryptAndOrVerify.decrypt(
             srcInputStream = inputStream,
             destOutputStream = decryptedFile.outputStream(),
             pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,

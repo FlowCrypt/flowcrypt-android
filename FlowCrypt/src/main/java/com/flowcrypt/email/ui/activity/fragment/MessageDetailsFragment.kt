@@ -76,7 +76,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
@@ -144,7 +144,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
               val decryptErrorDetails = decryptErrorMsgBlock.decryptErr?.details ?: continue
-              if (decryptErrorDetails.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+              if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
                   fingerprints,
@@ -1156,13 +1156,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val decryptError = block.decryptErr ?: return View(context)
 
     when (decryptError.details?.type) {
-      PgpDecrypt.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
+      PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
         clipLargeText(
           block.content
         ), layoutInflater
       )
 
-      PgpDecrypt.DecryptionErrorType.FORMAT -> {
+      PgpDecryptAndOrVerify.DecryptionErrorType.FORMAT -> {
         val formatErrorMsg = (getString(
           R.string.decrypt_error_message_badly_formatted,
           getString(R.string.app_name)
@@ -1171,7 +1171,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
       }
 
-      PgpDecrypt.DecryptionErrorType.OTHER -> {
+      PgpDecryptAndOrVerify.DecryptionErrorType.OTHER -> {
         val otherErrorMsg =
           getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
               "\n\n" + getString(
@@ -1185,7 +1185,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       else -> {
         var btText: String? = null
         var onClickListener: View.OnClickListener? = null
-        if (decryptError.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+        if (decryptError.details?.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.fingerprints ?: return@OnClickListener
@@ -1194,8 +1194,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         }
 
         val detailedMessage = when (decryptError.details?.type) {
-          PgpDecrypt.DecryptionErrorType.NO_MDC -> getString(R.string.decrypt_error_message_no_mdc)
-          PgpDecrypt.DecryptionErrorType.BAD_MDC -> getString(R.string.decrypt_error_message_bad_mdc)
+          PgpDecryptAndOrVerify.DecryptionErrorType.NO_MDC -> getString(R.string.decrypt_error_message_no_mdc)
+          PgpDecryptAndOrVerify.DecryptionErrorType.BAD_MDC -> getString(R.string.decrypt_error_message_bad_mdc)
           else -> decryptError.details?.message
         }
 

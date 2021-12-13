@@ -41,7 +41,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
@@ -429,7 +429,7 @@ class MsgDetailsViewModel(
         }
 
         is DecryptErrorMsgBlock -> {
-          if (block.decryptErr?.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+          if (block.decryptErr?.details?.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
             val fingerprints = block.decryptErr.fingerprints ?: emptyList()
             if (fingerprints.isEmpty()) {
               ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))

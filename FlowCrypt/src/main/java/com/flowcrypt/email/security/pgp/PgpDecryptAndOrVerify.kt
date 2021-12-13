@@ -33,7 +33,7 @@ import java.io.OutputStream
  *         Time: 2:10 PM
  *         E-mail: DenBond7@gmail.com
  */
-object PgpDecrypt {
+object PgpDecryptAndOrVerify {
   val DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN =
     "(?i)(\\.pgp$)|(\\.gpg$)|(\\.[a-zA-Z0-9]{3,4}\\.asc$)".toRegex()
 
