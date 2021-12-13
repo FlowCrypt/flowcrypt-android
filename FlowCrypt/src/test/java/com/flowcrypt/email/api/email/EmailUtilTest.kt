@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -106,7 +107,15 @@ class EmailUtilTest {
         receivedDate = receivedDate.toEpochMilli()
       ),
       text = replyToText,
-      encryptionType = MessageEncryptionType.STANDARD
+      encryptionType = MessageEncryptionType.STANDARD,
+      verificationResult = VerificationResult(
+        isEncrypted = false,
+        isSigned = false,
+        hasMixedSignatures = false,
+        isPartialSigned = false,
+        hasUnverifiedSignatures = false,
+        hasBadSignatures = false
+      )
     )
 
     val replyText = "Reply text" + EmailUtil.genReplyContent(incomingMessageInfo)

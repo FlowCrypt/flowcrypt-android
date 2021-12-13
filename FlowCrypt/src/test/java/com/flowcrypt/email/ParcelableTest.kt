@@ -10,6 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.model.DecryptedAndOrSignedContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -23,6 +24,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.annotation.Config
 import javax.mail.internet.InternetAddress
@@ -48,6 +50,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       GenericMsgBlock::class.java,
       GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false)
     )
+    fixture.customise().sameInstance(OpenPgpMetadata::class.java, null)
     //todo-denbond7 improve that
     fixture.customise().sameInstance(
       OutgoingMessageInfo::class.java,
@@ -81,6 +84,10 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
         enforceKeygenAlgo = OrgRules.KeyAlgo.curve25519,
         enforceKeygenExpireMonths = 12
       )
+    )
+    fixture.customise().sameInstance(
+      DecryptedAndOrSignedContentMsgBlock::class.java,
+      DecryptedAndOrSignedContentMsgBlock(error = null, blocks = emptyList())
     )
     objectInstance = currentClass.kotlin.objectInstance ?: fixture.create(currentClass)
   }

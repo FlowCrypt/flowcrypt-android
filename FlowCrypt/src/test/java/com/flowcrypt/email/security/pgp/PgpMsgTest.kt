@@ -399,7 +399,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
-    assertEquals(false, result.isReplyEncrypted)
+    assertEquals(false, result.verificationResult.isEncrypted)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -423,7 +423,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
-    assertEquals(false, result.isReplyEncrypted)
+    assertEquals(false, result.verificationResult.isEncrypted)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -478,8 +478,8 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
-    assertEquals(false, result.isReplyEncrypted)
-    assertEquals(1, result.blocks.size)
+    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(2, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
     val htmlContent = loadResourceAsString("other/plain-inline-image-html-content.txt")
@@ -513,7 +513,7 @@ class PgpMsgTest {
       "other/plain-google-security-alert-20210416-084836-UTC-text-content.txt"
     )
     assertEquals(textContent, result.text)
-    assertEquals(false, result.isReplyEncrypted)
+    assertEquals(false, result.verificationResult.isEncrypted)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)

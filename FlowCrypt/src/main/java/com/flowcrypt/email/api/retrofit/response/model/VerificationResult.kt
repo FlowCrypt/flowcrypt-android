@@ -15,7 +15,7 @@ import com.google.gson.annotations.Expose
  *         Time: 10:09 AM
  *         E-mail: DenBond7@gmail.com
  */
-class VerificationResult(
+data class VerificationResult(
   @Expose val isEncrypted: Boolean,
   @Expose val isSigned: Boolean,
   @Expose val hasMixedSignatures: Boolean,
