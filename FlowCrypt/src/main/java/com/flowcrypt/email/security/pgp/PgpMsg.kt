@@ -982,7 +982,7 @@ object PgpMsg {
     protector: SecretKeyRingProtector
   ): MsgBlock {
     // encrypted public key attached
-    val decryptionResult = PgpDecryptAndOrVerify.decryptWithResult(
+    val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = msgBlock.content?.toInputStream()!!,
       pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
       pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
@@ -1003,7 +1003,7 @@ object PgpMsg {
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): DecryptedAndOrSignedContentMsgBlock {
-    val decryptionResult = PgpDecryptAndOrVerify.decryptWithResult(
+    val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = msgBlock.content?.toInputStream()!!,
       pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
       pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
@@ -1040,7 +1040,7 @@ object PgpMsg {
       }
     } else {
       if (PgpDecryptAndOrVerify.DecryptionErrorType.NO_MDC == decryptionResult.exception.decryptionErrorType) {
-        val resultWithIgnoredMDCErrors = PgpDecryptAndOrVerify.decryptWithResult(
+        val resultWithIgnoredMDCErrors = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
           srcInputStream = msgBlock.content?.toInputStream()!!,
           pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
           pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,

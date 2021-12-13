@@ -62,7 +62,7 @@ object PgpDecryptAndOrVerify {
     }
   }
 
-  fun decryptWithResult(
+  fun decryptAndOrVerifyWithResult(
     srcInputStream: InputStream,
     pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
