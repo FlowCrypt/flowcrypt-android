@@ -9,6 +9,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.Expose
+import org.pgpainless.decryption_verification.OpenPgpMetadata
 
 /**
  * Message block which represents content with a signature.
@@ -20,6 +21,8 @@ data class SignedMsgBlock(
   @Expose val signature: String?,
   @Expose override val error: MsgBlockError? = null
 ) : MsgBlock {
+
+  var openPgpMetadata: OpenPgpMetadata? = null
 
   @Expose
   override val type: MsgBlock.Type = when (signedType) {

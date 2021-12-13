@@ -6,9 +6,15 @@
 package com.flowcrypt.email.security.pgp
 
 
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
+import org.pgpainless.PGPainless
+import org.pgpainless.decryption_verification.ConsumerOptions
+import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
+import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
@@ -40,4 +46,33 @@ object PgpSignature {
       }
     }
   }
+
+  fun verifyClearTextSignature(
+    srcInputStream: InputStream,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection
+  ): ClearTextVerificationResult {
+    ByteArrayOutputStream().use { outStream ->
+      return try {
+        val verificationStream = PGPainless.verifyCleartextSignedMessage()
+          .onInputStream(srcInputStream)
+          .withStrategy(InMemoryMultiPassStrategy())
+          .withOptions(ConsumerOptions().addVerificationCerts(pgpPublicKeyRingCollection))
+          .verificationStream
+
+        verificationStream.use { it.copyTo(outStream) }
+        ClearTextVerificationResult(
+          openPgpMetadata = verificationStream.result,
+          clearText = String(outStream.toByteArray())
+        )
+      } catch (e: Exception) {
+        ClearTextVerificationResult(exception = e)
+      }
+    }
+  }
+
+  data class ClearTextVerificationResult(
+    val openPgpMetadata: OpenPgpMetadata? = null,
+    val clearText: String? = null,
+    val exception: Exception? = null
+  )
 }

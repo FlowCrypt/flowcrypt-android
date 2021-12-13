@@ -828,31 +828,50 @@ object PgpMsg {
       // So, at least meanwhile, not porting this:
       // block.content = isContentBlock(block.type)
       //     ? block.content.toUtfStr() : block.content.toRawBytesStr();
-      if (block is DecryptedAndOrSignedContentMsgBlock) {
-        if (!isEncrypted) {
-          isEncrypted = block.openPgpMetadata?.isEncrypted ?: false
+      if (block.type in listOf(
+          MsgBlock.Type.SIGNED_MSG,
+          MsgBlock.Type.DECRYPTED_AND_OR_SIGNED_CONTENT
+        )
+      ) {
+        val openPgpMetadata = when (block) {
+          is DecryptedAndOrSignedContentMsgBlock -> {
+            block.openPgpMetadata
+          }
+
+          is SignedMsgBlock -> {
+            block.openPgpMetadata
+          }
+
+          else -> null
         }
 
-        if (block.openPgpMetadata?.isSigned == true) {
+        if (!isEncrypted) {
+          isEncrypted = openPgpMetadata?.isEncrypted ?: false
+        }
+
+        if (openPgpMetadata?.isSigned == true) {
           signedBlockCount++
-          block.openPgpMetadata?.let { openPgpMetadata ->
-            if (openPgpMetadata.invalidInbandSignatures.isNotEmpty()
-              || openPgpMetadata.invalidDetachedSignatures.isNotEmpty()
-            ) {
-              hasUnverifiedSignatures = true
-            }
-            if (verifiedSignatures.isEmpty()) {
+
+          if (openPgpMetadata.invalidInbandSignatures.isNotEmpty()
+            || openPgpMetadata.invalidDetachedSignatures.isNotEmpty()
+          ) {
+            hasUnverifiedSignatures = true
+          }
+
+          if (verifiedSignatures.isEmpty()) {
+            verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
+          } else {
+            val bufferedKeysIds = verifiedSignatures.keys.map { it.keyId }
+            val iteratedKeysIds = openPgpMetadata.verifiedSignatures.keys.map { it.keyId }
+            if (bufferedKeysIds != iteratedKeysIds) {
+              hasMixedSignatures = true
               verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
-            } else {
-              if (verifiedSignatures.keys.map { it.keyId } != openPgpMetadata.verifiedSignatures.keys.map { it.keyId }) {
-                hasMixedSignatures = true
-                //todo-denbond7 need to check it
-                verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
-              }
             }
           }
         }
+      }
 
+      if (block is DecryptedAndOrSignedContentMsgBlock) {
         for (innerBlock in block.blocks) {
           if (canBeAddedToCombinedContent(innerBlock)) {
             contentBlocks.add(innerBlock)
@@ -909,7 +928,9 @@ object PgpMsg {
     for (msgBlock in msgBlocks) {
       when {
         msgBlock is SignedMsgBlock -> {
-          processSignedMsgBlock(msgBlock)?.let { sequentialProcessedBlocks.add(it) }
+          processSignedMsgBlock(msgBlock, pgpPublicKeyRingCollection)?.let {
+            sequentialProcessedBlocks.add(it)
+          }
         }
 
         msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG -> {
@@ -1078,7 +1099,10 @@ object PgpMsg {
     }
   }
 
-  private fun processSignedMsgBlock(msgBlock: SignedMsgBlock): MsgBlock? {
+  private fun processSignedMsgBlock(
+    msgBlock: SignedMsgBlock,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection
+  ): MsgBlock? {
     return when {
       msgBlock.signature != null -> {
         when (msgBlock.type) {
@@ -1114,8 +1138,13 @@ object PgpMsg {
 
       msgBlock.type == MsgBlock.Type.SIGNED_MSG -> {
         return try {
-          val cleartext = PgpSignature.extractClearText(msgBlock.content, false)
-          msgBlock.copy(content = cleartext)
+          val clearTextVerificationResult = PgpSignature.verifyClearTextSignature(
+            srcInputStream = requireNotNull(msgBlock.content?.toInputStream()),
+            pgpPublicKeyRingCollection = pgpPublicKeyRingCollection
+          )
+          clearTextVerificationResult.exception?.let { throw it }
+          msgBlock.copy(content = clearTextVerificationResult.clearText)
+            .apply { openPgpMetadata = clearTextVerificationResult.openPgpMetadata }
         } catch (e: Exception) {
           msgBlock.copy(error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message))
         }
