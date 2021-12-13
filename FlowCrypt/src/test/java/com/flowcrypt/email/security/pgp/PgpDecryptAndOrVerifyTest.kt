@@ -61,7 +61,7 @@ class PgpDecryptAndOrVerifyTest {
     val srcFile = temporaryFolder.createFileWithRandomData(fileSizeInBytes = FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
-    PgpEncrypt.encryptAndOrSign(
+    PgpEncryptAndOrSign.encryptAndOrSign(
       srcInputStream = ByteArrayInputStream(sourceBytes),
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
@@ -101,7 +101,7 @@ class PgpDecryptAndOrVerifyTest {
     val srcFile = temporaryFolder.createFileWithRandomData(fileSizeInBytes = FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
-    PgpEncrypt.encryptAndOrSign(
+    PgpEncryptAndOrSign.encryptAndOrSign(
       srcInputStream = ByteArrayInputStream(sourceBytes),
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
@@ -182,7 +182,7 @@ class PgpDecryptAndOrVerifyTest {
     val srcFile = temporaryFolder.createFileWithRandomData(fileSizeInBytes = FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
-    PgpEncrypt.encryptAndOrSign(
+    PgpEncryptAndOrSign.encryptAndOrSign(
       srcInputStream = ByteArrayInputStream(sourceBytes),
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(

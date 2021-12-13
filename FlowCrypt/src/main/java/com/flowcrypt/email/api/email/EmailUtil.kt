@@ -30,7 +30,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.security.pgp.PgpEncrypt
+import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -1123,7 +1123,7 @@ class EmailUtil {
       protector: SecretKeyRingProtector? = null
     ): String {
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
-        PgpEncrypt.encryptAndOrSignMsg(
+        PgpEncryptAndOrSign.encryptAndOrSignMsg(
           msg = info.msg ?: "",
           pubKeys = pubKeys ?: emptyList(),
           prvKeys = prvKeys,

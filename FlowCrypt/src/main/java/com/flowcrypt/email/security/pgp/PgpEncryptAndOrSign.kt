@@ -27,7 +27,7 @@ import java.io.OutputStream
  *         Time: 3:28 PM
  *         E-mail: DenBond7@gmail.com
  */
-object PgpEncrypt {
+object PgpEncryptAndOrSign {
   fun encryptAndOrSignMsg(
     msg: String,
     pubKeys: List<String>,
