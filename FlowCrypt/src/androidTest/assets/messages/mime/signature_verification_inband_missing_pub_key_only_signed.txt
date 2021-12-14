@@ -1,0 +1,34 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id 7nTaL3JMt2EwEQAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Mon, 13 Dec 2021 13:36:50 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id C0AAD84061F
+	for <default@flowcrypt.test>; Mon, 13 Dec 2021 13:36:50 +0000 (UTC)
+Date: Mon, 13 Dec 2021 15:36:48 +0200 (GMT+02:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <2967984.1.1639402608568@flowcrypt.test>
+Subject: NOT encrypted + signed(inband) + no pub key
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_0_15474263.1639402608553"
+
+------=_Part_0_15474263.1639402608553
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+owGbwMvMwCX2jaFz8aOWw08ZT6cnMYCAZ4l6sUKiQlFqemlOYpFCbmpxcWJ6qkJJ
+RmKJQnlisUJxZnpeaopCeWZJBlBZeVF+XrpCQVFmWWJJqkJ2aqWeQnBqXkpqkUJi
+XgpELZBZlKqQkpmWllqUmlei11HKwiDGxcDGypS4pfkigyKnAMwNYoosHXsObGz8
+luG6RyfyAkx4oz8jw8yK2S9W5S19cGL2MsGt7+3eVS0MPiv4Zp367xdLbDUKb0xn
++O+T+pZxU/QMpfK1GqsbxbL2eXkEq9kvZjlr4FvM3tH7kBEA
+=BWVd
+-----END PGP MESSAGE-----
+------=_Part_0_15474263.1639402608553--

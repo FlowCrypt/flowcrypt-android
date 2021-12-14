@@ -1,0 +1,53 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id hynLJ+votmFNBwAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Mon, 13 Dec 2021 06:32:11 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 9F6B67E0E3C
+	for <default@flowcrypt.test>; Mon, 13 Dec 2021 06:32:11 +0000 (UTC)
+Date: Sat, 11 Dec 2021 14:47:14 +0200 (GMT+02:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <110314482.1.1639226834163@flowcrypt.test>
+Subject: Encrypted + signed mixed(inband)
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_0_150365359.1639226834147"
+
+------=_Part_0_150365359.1639226834147
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+hF4DTxRYvSK3u1MSAQdAyDv4lT7yZwY+k7XTngGbM9R3TSIDfJ05jjPtP1tgVhww
+Ow986yKDq8RwNwRuOP+Zetgzv3Rueds53oH6WubsfFbkfqDddSuxbivSPMaJrsEa
+hF4D16Pe22XLHvsSAQdAm0JxdCnyvGhOwCeljYCmXnnR6bd7sfxTpHbiBN5eiUYw
+vXWpjLvybfnbIwMFOkYJY7xLi0nbiMG4GYKTUzy1UZYezPlig0CN65zXmQtwSX+I
+0sAXAXZTOnpBBAC7adCCn98X8ym6EhabfV/Kxtk54zNP4/E2tEs88G3eKRHAcFYA
+dsSRpd6fbQ+Od+2MxRr29gKdH/IMk+zuhg4K45HEu24039/1KyV31g+L35A9764A
+yxGwyMw816TcSK4Rfx3ZdRc4gxRy1chCLf9QDlTowDiaiAk14ntfqqUOZTUj+OcV
+80bEHI8VxTs1KPgqHvt0dOkSQBJzLk/4OlqOhoRBTJq2TBaP2iBlO4/MMKlhG4NG
+ubaIKDKh/tfhMteAfWE52yiz3htm980akzc=
+=rudy
+-----END PGP MESSAGE-----
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+hF4DTxRYvSK3u1MSAQdArBX9SbPgfhP9wqWOBFvkfDKBxszXMVfDrmKr31dNOh8w
+tOprLXmSEJw6YwEIqAXByU/olv90UG7sEmIkI7J6AEmyFOkSDokJPAQrpU9Umcum
+hF4DdhH7TgaiP74SAQdANFfZyN86QhSBkh5ywThUC/nNmQlkIUJ2pEuCF7IEKAIw
+4xVCdmdRlEltVVP4K7OnGme3nQEmnANDXdZ69HQJYUSMsgFWB3HkFJ/iqM4b3TNe
+0sAXATT2v+7RWASJS/tLN1a2XEMy+ybwNremGO0IPo8ji9EQOcFaD029OvMdq2C+
+AHXxBqmi1hcnn2CuLVyAOWh5bj0VJSKuMsgx1yDMpYItfuhTLs0dQ1JA93dJCfi2
+7r6ueKx5eDv5y6hr3thNn+ctOF0r7CDOZWtE5oznOErmmg05Q+nGMJzN85kGV6mj
+1cmYEq6/sVjYf6J+iYFVkywdY7ne+FBHjJ0cX4JEmvy4SCfO51cM+cGzFtup+a6P
+afd0d2jaJS9rkgbmS4VMtGIlfrCMIOhl6ws=
+=1cM4
+-----END PGP MESSAGE-----
+------=_Part_0_150365359.1639226834147--

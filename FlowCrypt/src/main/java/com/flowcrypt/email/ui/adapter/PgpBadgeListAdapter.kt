@@ -39,8 +39,10 @@ class PgpBadgeListAdapter : ListAdapter<PgpBadgeListAdapter.PgpBadge,
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val imageViewIcon: ImageView = itemView.findViewById(R.id.imageViewIcon)
     private val textViewStatus: TextView = itemView.findViewById(R.id.textViewStatus)
+    var badgeType: PgpBadge.Type? = null
 
     fun bindTo(item: PgpBadge) {
+      badgeType = item.type
       itemView.backgroundTintList = ContextCompat.getColorStateList(
         itemView.context, item.type.backgroundColorId
       )
