@@ -47,6 +47,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -97,7 +98,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     .outerRule(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    //.around(RetryRule.DEFAULT)
+    .around(RetryRule.DEFAULT)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
