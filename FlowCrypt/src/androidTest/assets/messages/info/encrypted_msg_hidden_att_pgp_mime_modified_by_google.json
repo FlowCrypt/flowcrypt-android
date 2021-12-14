@@ -41,5 +41,13 @@
     "uidAsHEX": "15",
     "isEncrypted": true
   },
+  "verificationResult": {
+    "isEncrypted": true,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
   "text": "Encrypted text"
 }

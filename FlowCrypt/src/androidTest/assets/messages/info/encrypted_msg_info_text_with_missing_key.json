@@ -67,5 +67,13 @@
     "toAddress": "default@flowcrypt.test",
     "uid": 16
   },
+  "verificationResult": {
+    "isEncrypted": false,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
   "text": ""
 }

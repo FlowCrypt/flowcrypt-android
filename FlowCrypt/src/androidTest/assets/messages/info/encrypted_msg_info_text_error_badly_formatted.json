@@ -58,5 +58,13 @@
     "uid": 12,
     "uidAsHEX": "c"
   },
+  "verificationResult": {
+    "isEncrypted": false,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
   "text": ""
 }

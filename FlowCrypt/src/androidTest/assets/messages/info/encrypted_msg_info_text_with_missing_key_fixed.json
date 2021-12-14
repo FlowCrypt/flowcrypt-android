@@ -42,5 +42,13 @@
     "toAddress": "default@flowcrypt.test",
     "uid": 16
   },
+  "verificationResult": {
+    "isEncrypted": true,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
   "text": "It\u0027s a message with a missing key."
 }

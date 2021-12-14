@@ -24,6 +24,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -46,7 +47,6 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -56,6 +56,7 @@ import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
@@ -96,7 +97,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     .outerRule(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(RetryRule.DEFAULT)
+    //.around(RetryRule.DEFAULT)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
@@ -620,7 +621,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
     baseCheck(msgInfo)
 
-    onView(withId(R.id.textViewStatus))
+    onView(allOf(withId(R.id.textViewStatus), hasSibling(withId(R.id.switchShowPublicKey))))
       .check(matches(withText(getResString(R.string.cannot_be_used_for_encryption))))
     onView(withId(R.id.buttonKeyAction))
       .check(matches(not(isDisplayed())))
