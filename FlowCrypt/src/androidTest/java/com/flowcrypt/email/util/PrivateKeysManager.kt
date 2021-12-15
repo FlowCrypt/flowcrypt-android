@@ -64,6 +64,22 @@ class PrivateKeysManager {
       Thread.sleep(3000)
     }
 
+    fun savePubKeyToDatabase(assetsPath: String) {
+      savePubKeyToDatabase(getPgpKeyDetailsFromAssets(assetsPath))
+    }
+
+    fun savePubKeyToDatabase(pgpKeyDetails: PgpKeyDetails) {
+      val context = InstrumentationRegistry.getInstrumentation().targetContext
+      val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address.lowercase()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      if (roomDatabase.recipientDao().getRecipientByEmail(email) == null) {
+        roomDatabase.recipientDao().insert(requireNotNull(pgpKeyDetails.toRecipientEntity()))
+      }
+      roomDatabase.pubKeyDao().insert(pgpKeyDetails.toPublicKeyEntity(email))
+      // Added timeout for a better sync between threads.
+      Thread.sleep(500)
+    }
+
     fun getPgpKeyDetailsFromAssets(
       assetsPath: String,
       onlyPrivate: Boolean = false

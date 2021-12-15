@@ -24,6 +24,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -43,6 +44,8 @@ import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -50,12 +53,14 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
@@ -365,7 +370,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
     val pgpKeyDetails =
-      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub.asc")
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
     val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(
       matches(withText(getResString(R.string.template_message_part_public_key_owner, email)))
@@ -451,7 +456,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
       .perform(scrollTo(), click())
     onView(withId(R.id.rVMsgDetails))
       .check(matches(isDisplayed()))
-      .check(matches(CustomMatchers.withRecyclerViewItemCount(5)))
+      .check(matches(withRecyclerViewItemCount(5)))
 
     onView(withId(R.id.rVMsgDetails))
       .perform(
@@ -620,12 +625,159 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
     baseCheck(msgInfo)
 
-    onView(withId(R.id.textViewStatus))
+    onView(allOf(withId(R.id.textViewStatus), hasSibling(withId(R.id.switchShowPublicKey))))
       .check(matches(withText(getResString(R.string.cannot_be_used_for_encryption))))
     onView(withId(R.id.buttonKeyAction))
       .check(matches(not(isDisplayed())))
     onView(withId(R.id.textViewManualImportWarning))
       .check(matches(not(isDisplayed())))
+  }
+
+  @Test
+  fun testSignatureVerificationInbandMissingPubKeyEncryptedAndSigned() {
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_missing_pub_key_encrypted_signed.json",
+      "messages/mime/signature_verification_inband_missing_pub_key_encrypted_signed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandMissingPubKeyOnlySigned() {
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_missing_pub_key_only_signed.json",
+      "messages/mime/signature_verification_inband_missing_pub_key_only_signed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandOnlySignedMixed() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_second.asc")
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_only_signed_mixed.json",
+      "messages/mime/signature_verification_inband_only_signed_mixed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.MIXED_SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandEncryptedAndSignedMixed() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_second.asc")
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_encrypted_signed_mixed.json",
+      "messages/mime/signature_verification_inband_encrypted_signed_mixed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.MIXED_SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandOnlySignedPartially() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_only_signed_partially.json",
+      "messages/mime/signature_verification_inband_only_signed_partially.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.ONLY_PARTIALLY_SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandEncryptedSignedPartially() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_encrypted_signed_partially.json",
+      "messages/mime/signature_verification_inband_encrypted_signed_partially.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.ONLY_PARTIALLY_SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandEncryptedSigned() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_encrypted_signed.json",
+      "messages/mime/signature_verification_inband_encrypted_signed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandOnlySigned() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_only_signed.json",
+      "messages/mime/signature_verification_inband_only_signed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationInbandOnlyEncrypted() {
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_inband_only_encrypted.json",
+      "messages/mime/signature_verification_inband_only_encrypted.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED
+    )
   }
 
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
@@ -789,6 +941,17 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
       override fun describeTo(description: Description) {
         description.appendText("with: $header")
       }
+    }
+  }
+
+  private fun testPgpBadges(badgeCount: Int, vararg badgeTypes: PgpBadgeListAdapter.PgpBadge.Type) {
+    onView(withId(R.id.rVPgpBadges))
+      .check(matches(withRecyclerViewItemCount(badgeCount)))
+
+
+    for (badgeType in badgeTypes) {
+      onView(withId(R.id.rVPgpBadges))
+        .perform(scrollToHolder(withPgpBadge(PgpBadgeListAdapter.PgpBadge(badgeType))))
     }
   }
 }

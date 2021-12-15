@@ -17,7 +17,7 @@ import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.GeneralUtil
@@ -150,7 +150,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     }
 
     if (e is DecryptionException) {
-      if (e.decryptionErrorType == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+      if (e.decryptionErrorType == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
         contentText.clear()
         contentText.append(context.getString(R.string.provide_passphrase_to_decrypt_file))
         val fingerprint = e.fingerprints.firstOrNull()

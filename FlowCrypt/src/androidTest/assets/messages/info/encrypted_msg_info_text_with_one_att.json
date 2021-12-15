@@ -41,5 +41,13 @@
     "toAddress": "default@flowcrypt.test",
     "uid": 12
   },
+  "verificationResult": {
+    "isEncrypted": true,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
   "text": "It\u0027s an encrypted message with one encrypted attachment."
 }

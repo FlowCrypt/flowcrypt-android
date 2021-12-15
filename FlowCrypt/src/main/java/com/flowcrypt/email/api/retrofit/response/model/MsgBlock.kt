@@ -39,9 +39,6 @@ interface MsgBlock : Parcelable {
     @SerializedName("attestPacket")
     ATTEST_PACKET,
 
-    @SerializedName("cryptupVerification")
-    VERIFICATION,
-
     @SerializedName("privateKey")
     PRIVATE_KEY,
 
@@ -79,7 +76,10 @@ interface MsgBlock : Parcelable {
     SIGNED_HTML,
 
     @SerializedName("verifiedMsg")
-    VERIFIED_MSG;
+    VERIFIED_MSG,
+
+    @SerializedName("decryptedAndOrSignedContent")
+    DECRYPTED_AND_OR_SIGNED_CONTENT;
 
     override fun describeContents(): Int {
       return 0
@@ -108,10 +108,18 @@ interface MsgBlock : Parcelable {
         PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
       )
 
-      val SIGNED_BLOCK_TYPES = setOf(SIGNED_TEXT, SIGNED_HTML, SIGNED_MSG)
+      val SIGNED_BLOCK_TYPES = setOf(
+        SIGNED_TEXT, SIGNED_HTML, SIGNED_MSG, DECRYPTED_AND_OR_SIGNED_CONTENT
+      )
 
       val CONTENT_BLOCK_TYPES = setOf(
-        PLAIN_TEXT, PLAIN_HTML, DECRYPTED_TEXT, DECRYPTED_HTML, SIGNED_MSG, VERIFIED_MSG
+        PLAIN_TEXT,
+        PLAIN_HTML,
+        DECRYPTED_TEXT,
+        DECRYPTED_HTML,
+        SIGNED_MSG,
+        VERIFIED_MSG,
+        DECRYPTED_AND_OR_SIGNED_CONTENT
       )
 
       val DECRYPTED_CONTENT_BLOCK_TYPES = setOf(

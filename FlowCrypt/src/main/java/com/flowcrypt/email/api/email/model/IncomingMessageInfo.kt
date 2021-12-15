@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import java.util.Date
@@ -30,7 +31,8 @@ data class IncomingMessageInfo constructor(
   var text: String? = null,
   var inlineSubject: String? = null,
   val msgBlocks: List<@JvmSuppressWildcards MsgBlock>? = null,
-  val encryptionType: MessageEncryptionType
+  val encryptionType: MessageEncryptionType,
+  val verificationResult: VerificationResult
 ) : Parcelable {
   fun getSubject(): String? = msgEntity.subject
 
@@ -62,7 +64,7 @@ data class IncomingMessageInfo constructor(
 
   constructor(
     msgEntity: MessageEntity, text: String?, subject: String?, msgBlocks: List<MsgBlock>,
-    encryptionType: MessageEncryptionType
+    encryptionType: MessageEncryptionType, verificationResult: VerificationResult
   ) : this(
     msgEntity,
     null,
@@ -70,7 +72,8 @@ data class IncomingMessageInfo constructor(
     text,
     subject,
     msgBlocks,
-    encryptionType
+    encryptionType,
+    verificationResult
   )
 
   fun hasHtmlText(): Boolean {
@@ -98,7 +101,8 @@ data class IncomingMessageInfo constructor(
     source.readString(),
     source.readString(),
     mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
-    source.readParcelable(MessageEncryptionType::class.java.classLoader)!!
+    source.readParcelable(MessageEncryptionType::class.java.classLoader)!!,
+    source.readParcelable(VerificationResult::class.java.classLoader)!!
   )
 
   override fun describeContents() = 0
@@ -111,6 +115,7 @@ data class IncomingMessageInfo constructor(
     writeString(inlineSubject)
     writeTypedList(msgBlocks)
     writeParcelable(encryptionType, flags)
+    writeParcelable(verificationResult, flags)
   }
 
   companion object {

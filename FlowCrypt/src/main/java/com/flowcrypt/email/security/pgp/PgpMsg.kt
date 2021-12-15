@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptedAndOrSignedContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttLinkMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
@@ -18,8 +19,10 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlockError
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.MsgBlockParser
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.javax.mail.internet.hasFileName
 import com.flowcrypt.email.extensions.javax.mail.isInline
@@ -32,7 +35,12 @@ import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.KeysStorageImpl
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.bouncycastle.openpgp.PGPSignature
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -40,6 +48,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.owasp.html.HtmlPolicyBuilder
+import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -48,6 +57,7 @@ import javax.mail.Multipart
 import javax.mail.Part
 import javax.mail.Session
 import javax.mail.internet.ContentType
+import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimePart
 import kotlin.random.Random
@@ -198,37 +208,63 @@ object PgpMsg {
     .allowAttributesOnElementsExt(ALLOWED_ATTRS)
     .toFactory()
 
-  fun processMimeMessage(context: Context, inputStream: InputStream): ProcessedMimeMessageResult {
+  suspend fun processMimeMessage(context: Context, inputStream: InputStream):
+      ProcessedMimeMessageResult = withContext(Dispatchers.IO) {
     val keysStorage = KeysStorageImpl.getInstance(context)
-    val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
+    val accountSecretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
     val protector = keysStorage.getSecretKeyRingProtector()
-    return processMimeMessage(
-      msg = MimeMessage(Session.getInstance(Properties()), inputStream),
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+    val msg = MimeMessage(Session.getInstance(Properties()), inputStream)
+
+    val verificationPublicKeys = mutableListOf<PGPPublicKeyRing>()
+    val pubKeyDao = FlowCryptRoomDatabase.getDatabase(context).pubKeyDao()
+
+    for (address in msg.from) {
+      if (address is InternetAddress) {
+        val existingPubKeysInfo = pubKeyDao.getPublicKeysByRecipient(address.address.lowercase())
+        for (existingPublicKeyEntity in existingPubKeysInfo) {
+          verificationPublicKeys.addAll(
+            //ask Tom about this place. Do we need to catch exception here or we can throw it
+            PgpKey.parseKeys(source = existingPublicKeyEntity.publicKey)
+              .pgpKeyRingCollection.pgpPublicKeyRingCollection
+          )
+        }
+      }
+    }
+
+    return@withContext processMimeMessage(
+      msg = msg,
+      verificationPublicKeys = PGPPublicKeyRingCollection(verificationPublicKeys),
+      secretKeys = accountSecretKeys,
       protector = protector
     )
   }
 
   fun processMimeMessage(
     inputStream: InputStream,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): ProcessedMimeMessageResult {
     return processMimeMessage(
       msg = MimeMessage(Session.getInstance(Properties()), inputStream),
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      secretKeys = secretKeys,
       protector = protector
     )
   }
 
   fun processMimeMessage(
     msg: MimeMessage,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf()),
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): ProcessedMimeMessageResult {
     val extractedMimeContent = extractMimeContent(msg)
     val extractedMsgBlocks = extractMsgBlocks(extractedMimeContent)
-    return processExtractedMsgBlocks(extractedMsgBlocks, pgpSecretKeyRingCollection, protector)
+    return processExtractedMsgBlocks(
+      msgBlocks = extractedMsgBlocks,
+      verificationPublicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
+      protector = protector
+    )
   }
 
   fun extractMimeContent(msg: MimeMessage): ExtractedMimeContent {
@@ -764,14 +800,27 @@ object PgpMsg {
 
   private fun processExtractedMsgBlocks(
     msgBlocks: List<MsgBlock>,
-    ringCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): ProcessedMimeMessageResult {
-    val sequentialProcessedBlocks = handleExtractedMsgBlocks(msgBlocks, ringCollection, protector)
+    val sequentialProcessedBlocks = handleExtractedMsgBlocks(
+      msgBlocks = msgBlocks,
+      verificationPublicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
+      protector = protector
+    )
 
-    var isReplyEncrypted = false
+    var isEncrypted = false
     val contentBlocks = mutableListOf<MsgBlock>()
     val resultBlocks = mutableListOf<MsgBlock>()
+
+    var hasMixedSignatures = false
+    var hasUnverifiedSignatures = false
+    var hasBadSignatures = false
+    var signedBlockCount = 0
+    var isPartialSigned = false
+    val verifiedSignatures = mutableMapOf<SubkeyIdentifier, PGPSignature>()
 
     for (block in sequentialProcessedBlocks) {
       // We don't need Base64 correction here, fromAttachment() does this for us
@@ -780,28 +829,149 @@ object PgpMsg {
       // So, at least meanwhile, not porting this:
       // block.content = isContentBlock(block.type)
       //     ? block.content.toUtfStr() : block.content.toRawBytesStr();
+      if (block.type in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
+        val openPgpMetadata = when (block) {
+          is DecryptedAndOrSignedContentMsgBlock -> {
+            block.openPgpMetadata
+          }
 
-      if (block.type in MsgBlock.Type.DECRYPTED_CONTENT_BLOCK_TYPES) {
-        isReplyEncrypted = true
-      }
+          is SignedMsgBlock -> {
+            block.openPgpMetadata
+          }
 
-      when {
-        block.type == MsgBlock.Type.DECRYPTED_ATT -> {
-          resultBlocks.add(block)
+          else -> null
         }
 
-        block.type == MsgBlock.Type.PUBLIC_KEY -> {
-          block.content?.let { source ->
+        if (!isEncrypted) {
+          isEncrypted = openPgpMetadata?.isEncrypted ?: false
+        }
+
+        if (openPgpMetadata?.isSigned == true) {
+          signedBlockCount++
+
+          if (openPgpMetadata.invalidInbandSignatures.isNotEmpty()
+            || openPgpMetadata.invalidDetachedSignatures.isNotEmpty()
+          ) {
+            val invalidSignatureFailures = openPgpMetadata.invalidInbandSignatures +
+                openPgpMetadata.invalidDetachedSignatures
+
+            hasBadSignatures = invalidSignatureFailures.any {
+              it.validationException.underlyingException != null
+            }
+
+            hasUnverifiedSignatures = invalidSignatureFailures.any {
+              it.validationException.message?.startsWith(
+                "Missing verification certificate", true
+              ) ?: false
+            }
+          }
+
+          if (verifiedSignatures.isEmpty()) {
+            verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
+          } else {
+            val keyIdsOfAllVerifiedSignatures = verifiedSignatures.keys.map { it.keyId }
+            val keyIdsOfCurrentVerifiedSignatures = openPgpMetadata.verifiedSignatures.keys.map {
+              it.keyId
+            }
+            if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
+              hasMixedSignatures = true
+              verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
+            }
+          }
+        }
+      }
+
+      if (block is DecryptedAndOrSignedContentMsgBlock) {
+        for (innerBlock in block.blocks) {
+          if (canBeAddedToCombinedContent(innerBlock)) {
+            contentBlocks.add(innerBlock)
+          } else {
+            resultBlocks.add(innerBlock)
+          }
+        }
+      }
+
+      if (canBeAddedToCombinedContent(block)) {
+        contentBlocks.add(block)
+      } else {
+        resultBlocks.add(block)
+      }
+    }
+
+    val fmtRes = prepareFormattedContentBlock(contentBlocks)
+    resultBlocks.add(0, fmtRes.contentBlock)
+
+    if (signedBlockCount > 0 && signedBlockCount != sequentialProcessedBlocks.size) {
+      isPartialSigned = true
+    }
+
+    return ProcessedMimeMessageResult(
+      text = fmtRes.text,
+      blocks = resultBlocks,
+      verificationResult = VerificationResult(
+        isEncrypted = isEncrypted,
+        isSigned = signedBlockCount > 0,
+        hasMixedSignatures = hasMixedSignatures,
+        isPartialSigned = isPartialSigned,
+        hasUnverifiedSignatures = hasUnverifiedSignatures,
+        hasBadSignatures = hasBadSignatures
+      )
+    )
+  }
+
+  private fun canBeAddedToCombinedContent(block: MsgBlock): Boolean =
+    (block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block)) && block.error == null
+
+  private fun handleExtractedMsgBlocks(
+    msgBlocks: List<MsgBlock>,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector
+  ): MutableList<MsgBlock> {
+    val sequentialProcessedBlocks = mutableListOf<MsgBlock>()
+    for (msgBlock in msgBlocks) {
+      when {
+        msgBlock is SignedMsgBlock -> {
+          processSignedMsgBlock(msgBlock, verificationPublicKeys)?.let {
+            sequentialProcessedBlocks.add(it)
+          }
+        }
+
+        msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG -> {
+          val decryptedContentMsgBlock = processEncryptedMsgBlock(
+            msgBlock = msgBlock,
+            verificationPublicKeys = verificationPublicKeys,
+            secretKeys = secretKeys,
+            protector = protector
+          )
+          sequentialProcessedBlocks.add(decryptedContentMsgBlock)
+        }
+
+        msgBlock.type == MsgBlock.Type.ENCRYPTED_ATT
+            && (msgBlock as EncryptedAttMsgBlock).attMeta.name != null
+            && PUBLIC_KEY_REGEX_3.matches(msgBlock.attMeta.name ?: "") -> {
+          sequentialProcessedBlocks.add(
+            processPublicKeyMsgBlock(
+              msgBlock = msgBlock,
+              verificationPublicKeys = verificationPublicKeys,
+              secretKeys = secretKeys,
+              protector = protector
+            )
+          )
+        }
+
+        msgBlock.type == MsgBlock.Type.PUBLIC_KEY -> {
+          msgBlock.content?.let { source ->
             try {
               val keyRings = PgpKey.parseAndNormalizeKeyRings(source)
               if (keyRings.isNotEmpty()) {
-                resultBlocks.addAll(keyRings.map {
+                sequentialProcessedBlocks.addAll(keyRings.map {
                   MsgBlockFactory.fromContent(MsgBlock.Type.PUBLIC_KEY, it.armor(null))
                 })
               } else {
-                resultBlocks.add(
+                sequentialProcessedBlocks.add(
                   PublicKeyMsgBlock(
-                    content = block.content,
+                    content = source,
                     complete = false,
                     keyDetails = null,
                     error = MsgBlockError("empty KeyRing")
@@ -810,9 +980,9 @@ object PgpMsg {
               }
             } catch (ex: Exception) {
               ex.printStackTrace()
-              resultBlocks.add(
+              sequentialProcessedBlocks.add(
                 PublicKeyMsgBlock(
-                  content = block.content,
+                  content = source,
                   complete = false,
                   keyDetails = null,
                   error = MsgBlockError(ex.javaClass.simpleName + ": " + ex.message)
@@ -820,59 +990,6 @@ object PgpMsg {
               )
             }
           }
-        }
-
-        block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block) -> {
-          if (block.error != null) {
-            resultBlocks.add(block)
-          } else {
-            contentBlocks.add(block)
-          }
-        }
-
-        block.type != MsgBlock.Type.PLAIN_ATT -> {
-          resultBlocks.add(block)
-        }
-      }
-    }
-
-    val fmtRes = prepareFormattedContentBlock(contentBlocks)
-    resultBlocks.add(0, fmtRes.contentBlock)
-
-    return ProcessedMimeMessageResult(
-      isReplyEncrypted = isReplyEncrypted,
-      text = fmtRes.text,
-      blocks = resultBlocks
-    )
-  }
-
-  private fun handleExtractedMsgBlocks(
-    msgBlocks: List<MsgBlock>,
-    keyRings: PGPSecretKeyRingCollection,
-    protector: SecretKeyRingProtector
-  ): MutableList<MsgBlock> {
-    val sequentialProcessedBlocks = mutableListOf<MsgBlock>()
-    for (msgBlock in msgBlocks) {
-      when {
-        msgBlock is SignedMsgBlock -> {
-          processSignedMsgBlock(msgBlock)?.let { sequentialProcessedBlocks.add(it) }
-        }
-
-        msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG -> {
-          val handledBlocks = processEncryptedMsgBlock(msgBlock, keyRings, protector)
-          sequentialProcessedBlocks.addAll(handledBlocks)
-        }
-
-        msgBlock.type == MsgBlock.Type.ENCRYPTED_ATT
-            && (msgBlock as EncryptedAttMsgBlock).attMeta.name != null
-            && PUBLIC_KEY_REGEX_3.matches(msgBlock.attMeta.name ?: "") -> {
-          sequentialProcessedBlocks.add(
-            processPublicKeyMsgBlock(
-              msgBlock,
-              keyRings,
-              protector
-            )
-          )
         }
 
         else -> {
@@ -885,14 +1002,16 @@ object PgpMsg {
 
   private fun processPublicKeyMsgBlock(
     msgBlock: MsgBlock,
-    keyRings: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): MsgBlock {
     // encrypted public key attached
-    val decryptionResult = PgpDecrypt.decryptWithResult(
-      msgBlock.content?.toInputStream()!!,
-      keyRings,
-      protector
+    val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
+      srcInputStream = msgBlock.content?.toInputStream()!!,
+      publicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
+      protector = protector
     )
     return if (decryptionResult.content != null) {
       val content = decryptionResult.content.toString(StandardCharsets.UTF_8.displayName())
@@ -905,23 +1024,24 @@ object PgpMsg {
 
   private fun processEncryptedMsgBlock(
     msgBlock: MsgBlock,
-    ringCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
-  ): List<MsgBlock> {
-    val decryptionResult = PgpDecrypt.decryptWithResult(
-      msgBlock.content?.toInputStream()!!,
-      ringCollection,
-      protector
+  ): DecryptedAndOrSignedContentMsgBlock {
+    val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
+      srcInputStream = msgBlock.content?.toInputStream()!!,
+      publicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
+      protector = protector
     )
 
-    val results = mutableListOf<MsgBlock>()
-
+    val blocks = mutableListOf<MsgBlock>()
     if (decryptionResult.exception == null) {
       if (decryptionResult.isEncrypted) {
         val decrypted = decryptionResult.content?.toByteArray()
         val formatted = MsgBlockParser.fmtDecryptedAsSanitizedHtmlBlocks(decrypted)
         //todo-denbond7 fix it //if (subject == null) subject = formatted.subject
-        results.addAll(formatted.blocks)
+        blocks.addAll(formatted.blocks)
       } else {
         // ------------------------------------------------------------------------------------
         // Comment from TS code:
@@ -933,7 +1053,7 @@ object PgpMsg {
         // message that was actually fully armored (text not visible) with a mime msg inside
         // ... -> in which case the user would I think see full mime content?
         // ------------------------------------------------------------------------------------
-        results.add(
+        blocks.add(
           MsgBlockFactory.fromContent(
             type = MsgBlock.Type.VERIFIED_MSG,
             content = decryptionResult.content?.toString(
@@ -944,16 +1064,17 @@ object PgpMsg {
         )
       }
     } else {
-      if (PgpDecrypt.DecryptionErrorType.NO_MDC == decryptionResult.exception.decryptionErrorType) {
-        val resultWithIgnoredMDCErrors = PgpDecrypt.decryptWithResult(
-          msgBlock.content?.toInputStream()!!,
-          ringCollection,
-          protector,
-          true
+      if (PgpDecryptAndOrVerify.DecryptionErrorType.NO_MDC == decryptionResult.exception.decryptionErrorType) {
+        val resultWithIgnoredMDCErrors = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
+          srcInputStream = msgBlock.content?.toInputStream()!!,
+          publicKeys = verificationPublicKeys,
+          secretKeys = secretKeys,
+          protector = protector,
+          ignoreMdcErrors = true
         )
         val decryptErrorMsgBlock = if (resultWithIgnoredMDCErrors.exception == null) {
           DecryptErrorMsgBlock(
-            content = resultWithIgnoredMDCErrors.content.toString(),
+            content = String(resultWithIgnoredMDCErrors.content?.toByteArray() ?: byteArrayOf()),
             complete = true,
             decryptErr = decryptionResult.exception.toDecryptError()
           )
@@ -965,9 +1086,9 @@ object PgpMsg {
           )
         }
 
-        results.add(decryptErrorMsgBlock)
+        blocks.add(decryptErrorMsgBlock)
       } else {
-        results.add(
+        blocks.add(
           DecryptErrorMsgBlock(
             content = msgBlock.content,
             complete = true,
@@ -977,10 +1098,15 @@ object PgpMsg {
       }
     }
 
-    return results
+    return DecryptedAndOrSignedContentMsgBlock(blocks = blocks).apply {
+      openPgpMetadata = decryptionResult.openPgpMetadata
+    }
   }
 
-  private fun processSignedMsgBlock(msgBlock: SignedMsgBlock): MsgBlock? {
+  private fun processSignedMsgBlock(
+    msgBlock: SignedMsgBlock,
+    verificationPublicKeys: PGPPublicKeyRingCollection
+  ): MsgBlock? {
     return when {
       msgBlock.signature != null -> {
         when (msgBlock.type) {
@@ -1016,8 +1142,13 @@ object PgpMsg {
 
       msgBlock.type == MsgBlock.Type.SIGNED_MSG -> {
         return try {
-          val cleartext = PgpSignature.extractClearText(msgBlock.content, false)
-          msgBlock.copy(content = cleartext)
+          val clearTextVerificationResult = PgpSignature.verifyClearTextSignature(
+            srcInputStream = requireNotNull(msgBlock.content?.toInputStream()),
+            publicKeys = verificationPublicKeys
+          )
+          clearTextVerificationResult.exception?.let { throw it }
+          msgBlock.copy(content = clearTextVerificationResult.clearText)
+            .apply { openPgpMetadata = clearTextVerificationResult.openPgpMetadata }
         } catch (e: Exception) {
           msgBlock.copy(error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message))
         }
@@ -1266,9 +1397,9 @@ object PgpMsg {
   }
 
   data class ProcessedMimeMessageResult(
-    val isReplyEncrypted: Boolean,
     val text: String,
-    val blocks: List<MsgBlock>
+    val blocks: List<MsgBlock>,
+    val verificationResult: VerificationResult
   )
 
   enum class TreatAs {

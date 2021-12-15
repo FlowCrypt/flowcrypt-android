@@ -69,13 +69,14 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PgpSignatureHandlerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.security.pgp.PgpDecrypt
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
@@ -87,6 +88,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFrag
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
@@ -129,6 +131,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
+  private val pgpSignatureHandlerViewModel: PgpSignatureHandlerViewModel by viewModels()
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.Listener {
@@ -141,7 +144,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
               val decryptErrorDetails = decryptErrorMsgBlock.decryptErr?.details ?: continue
-              if (decryptErrorDetails.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+              if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
                   fingerprints,
@@ -188,12 +191,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var progressBarActionProgress: ProgressBar? = null
   private var rVAttachments: RecyclerView? = null
   private var rVMsgDetails: RecyclerView? = null
+  private var rVPgpBadges: RecyclerView? = null
 
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
+  private val pgpBadgeListAdapter = PgpBadgeListAdapter()
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
@@ -462,7 +467,46 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun updateMsgBody() {
     if (msgInfo != null) {
+      updatePgpBadges()
       updateMsgView()
+    }
+  }
+
+  private fun updatePgpBadges() {
+    msgInfo?.verificationResult?.let { verificationResult ->
+      val badges = mutableListOf<PgpBadgeListAdapter.PgpBadge>()
+
+      if (msgInfo?.encryptionType == MessageEncryptionType.ENCRYPTED) {
+        badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED))
+      } else {
+        badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED))
+      }
+
+      if (verificationResult.isSigned) {
+        val badge = when {
+          verificationResult.hasBadSignatures -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.BAD_SIGNATURE)
+          }
+
+          verificationResult.hasUnverifiedSignatures -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
+          }
+
+          verificationResult.isPartialSigned -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.ONLY_PARTIALLY_SIGNED)
+          }
+
+          !verificationResult.isPartialSigned && verificationResult.hasMixedSignatures -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.MIXED_SIGNED)
+          }
+
+          else -> PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.SIGNED)
+        }
+        badges.add(badge)
+      } else {
+        badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED))
+      }
+      pgpBadgeListAdapter.submitList(badges)
     }
   }
 
@@ -649,6 +693,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     rVAttachments = view.findViewById(R.id.rVAttachments)
     rVMsgDetails = view.findViewById(R.id.rVMsgDetails)
+    rVPgpBadges = view.findViewById(R.id.rVPgpBadges)
   }
 
   private fun updateViews() {
@@ -701,6 +746,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         )
       )
       adapter = msgDetailsAdapter
+    }
+
+    rVPgpBadges?.apply {
+      layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+        )
+      )
+      adapter = pgpBadgeListAdapter
     }
 
     tVTo?.text = prepareToText()
@@ -1105,13 +1160,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     val decryptError = block.decryptErr ?: return View(context)
 
     when (decryptError.details?.type) {
-      PgpDecrypt.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
+      PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
         clipLargeText(
           block.content
         ), layoutInflater
       )
 
-      PgpDecrypt.DecryptionErrorType.FORMAT -> {
+      PgpDecryptAndOrVerify.DecryptionErrorType.FORMAT -> {
         val formatErrorMsg = (getString(
           R.string.decrypt_error_message_badly_formatted,
           getString(R.string.app_name)
@@ -1120,7 +1175,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
       }
 
-      PgpDecrypt.DecryptionErrorType.OTHER -> {
+      PgpDecryptAndOrVerify.DecryptionErrorType.OTHER -> {
         val otherErrorMsg =
           getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
               "\n\n" + getString(
@@ -1134,7 +1189,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       else -> {
         var btText: String? = null
         var onClickListener: View.OnClickListener? = null
-        if (decryptError.details?.type == PgpDecrypt.DecryptionErrorType.NEED_PASSPHRASE) {
+        if (decryptError.details?.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.fingerprints ?: return@OnClickListener
@@ -1143,8 +1198,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         }
 
         val detailedMessage = when (decryptError.details?.type) {
-          PgpDecrypt.DecryptionErrorType.NO_MDC -> getString(R.string.decrypt_error_message_no_mdc)
-          PgpDecrypt.DecryptionErrorType.BAD_MDC -> getString(R.string.decrypt_error_message_bad_mdc)
+          PgpDecryptAndOrVerify.DecryptionErrorType.NO_MDC -> getString(R.string.decrypt_error_message_no_mdc)
+          PgpDecryptAndOrVerify.DecryptionErrorType.BAD_MDC -> getString(R.string.decrypt_error_message_bad_mdc)
           else -> decryptError.details?.message
         }
 

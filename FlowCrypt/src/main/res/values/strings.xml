@@ -546,4 +546,14 @@
     <string name="warning_about_manual_import">Manually importing Public Keys received over email can be dangerous.
       Contact the sender to verify that the fingerprint matches.</string>
     <string name="manually_importing_public_keys_can_be_dangerous">Manually importing Public Keys can be dangerous</string>
+    <string name="pgp_details_badge">PGP details badge</string>
+    <string name="encrypted">encrypted</string>
+    <string name="signed">signed</string>
+    <string name="not_encrypted">not encrypted</string>
+    <string name="bad_signature">bad signature</string>
+    <string name="only_partially_signed">only partially signed</string>
+    <string name="can_not_verify_signature">can\'t verify signature</string>
+    <string name="verifying_signature">verifying signature&#8230;</string>
+    <string name="not_signed">not signed</string>
+    <string name="mixed_signed">mixed signed</string>
 </resources>

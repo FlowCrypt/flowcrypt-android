@@ -10,7 +10,6 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PlainAttMsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import java.nio.charset.StandardCharsets
-import java.util.Locale
 import java.util.Properties
 import javax.mail.Session
 import javax.mail.internet.MimeMessage
@@ -20,7 +19,7 @@ object MimeUtils {
     if (msg == null) return false
     val firstChars = msg.copyOfRange(0, msg.size.coerceAtMost(1000))
       .toString(StandardCharsets.US_ASCII)
-      .toLowerCase(Locale.ROOT)
+      .lowercase()
     val contentType = CONTENT_TYPE_REGEX.find(firstChars) ?: return false
     return CONTENT_TRANSFER_ENCODING_REGEX.containsMatchIn(firstChars)
       || CONTENT_DISPOSITION_REGEX.containsMatchIn(firstChars)

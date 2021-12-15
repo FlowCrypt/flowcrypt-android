@@ -41,5 +41,13 @@
     "toAddress": "default@flowcrypt.test",
     "uid": 14
   },
+  "verificationResult": {
+    "isEncrypted": true,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
   "text": "Simple encrypted text"
 }

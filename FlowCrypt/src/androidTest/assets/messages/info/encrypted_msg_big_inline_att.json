@@ -56,5 +56,13 @@
     "toAddress": "default@flowcrypt.test",
     "uid": 17
   },
+  "verificationResult": {
+    "isEncrypted": true,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
   "text": "This is an encrypted message with inline attachment"
 }

@@ -28,7 +28,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpEncrypt
+import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -295,7 +295,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     withContext(Dispatchers.IO) {
       if (msgEntity.isEncrypted == true) {
         requireNotNull(pubKeys)
-        PgpEncrypt.encryptAndOrSign(srcInputStream, destFile.outputStream(), pubKeys)
+        PgpEncryptAndOrSign.encryptAndOrSign(srcInputStream, destFile.outputStream(), pubKeys)
       } else {
         FileUtils.copyInputStreamToFile(srcInputStream, destFile)
       }

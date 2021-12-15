@@ -28,7 +28,7 @@ import java.io.ByteArrayOutputStream
  * Time: 3:59 PM
  * E-mail: DenBond7@gmail.com
  */
-class PgpEncryptTest {
+class PgpEncryptAndOrSignTest {
 
   @Test
   fun testEncryptFile() {
@@ -37,7 +37,7 @@ class PgpEncryptTest {
 
     val sourceBytes = source.toByteArray()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
-    PgpEncrypt.encryptAndOrSign(
+    PgpEncryptAndOrSign.encryptAndOrSign(
       srcInputStream = ByteArrayInputStream(sourceBytes),
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(

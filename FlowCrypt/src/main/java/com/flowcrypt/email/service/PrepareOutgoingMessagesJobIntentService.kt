@@ -28,7 +28,7 @@ import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpEncrypt
+import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -311,7 +311,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             }
             requireNotNull(pubKeys)
 
-            PgpEncrypt.encryptAndOrSign(
+            PgpEncryptAndOrSign.encryptAndOrSign(
               originalFileInputStream,
               encryptedTempFile.outputStream(),
               pubKeys

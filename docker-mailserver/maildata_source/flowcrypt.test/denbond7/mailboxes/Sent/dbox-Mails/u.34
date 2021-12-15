@@ -1,0 +1,35 @@
+2 M1e C61b48fc7
+N          0000000000000343
+Date: Sat, 11 Dec 2021 13:47:17 +0200 (GMT+02:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <134516345.1.1639223237410@flowcrypt.test>
+Subject: NOT encrypted + signed partially(inband)
+MIME-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_0_104860116.1639223237396"
+User-Agent: FlowCrypt_Android_1.2.5_dev_125__2021_12_11
+
+------=_Part_0_104860116.1639223237396
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+Some plain text
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+owGbwMvMwCV2WKHzbNaPa+cYT0smMYCAf15OpUJxZnpeaopCbmpxcWJ6akcpC4MY
+FwMbK1Pilt7tDIqcAjBdYoosB1M0rjGetjTvPJ94BSZ8iZmR4cTMG9aGhvM/T7z3
+ceaf7VPS4l55x0m3eXiIXqm71HX8sQcjw7/JfNKsbvpM+sH6siuTFmrfPrjCsp+J
+VTNI6HmdjMpMVgA=
+=4Gih
+-----END PGP MESSAGE-----
+
+------=_Part_0_104860116.1639223237396--
+
+
+R61b48fc5
+V35e
+G50b4e024c78fb461b008000073f46975
+

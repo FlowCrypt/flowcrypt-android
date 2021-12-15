@@ -112,22 +112,6 @@
                     app:layout_constraintTop_toTopOf="@+id/tVTo"
                     tools:text="1:05 PM" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rVMsgDetails"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_mime_headers"
-                    android:nestedScrollingEnabled="false"
-                    android:overScrollMode="never"
-                    android:padding="@dimen/default_margin_content_small"
-                    android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/iBShowDetails"
-                    tools:itemCount="4"
-                    tools:listitem="@layout/item_mime_header"
-                    tools:visibility="visible" />
-
                 <ImageButton
                     android:id="@+id/iBShowDetails"
                     android:layout_width="wrap_content"
@@ -151,6 +135,37 @@
                     app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
                     app:layout_constraintWidth_max="@dimen/max_width_field_to"
                     tools:text="To me" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rVMsgDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_mime_headers"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    android:padding="@dimen/default_margin_content_small"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/iBShowDetails"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/item_mime_header"
+                    tools:visibility="visible" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rVPgpBadges"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/rVMsgDetails"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/item_pgp_badge"
+                    tools:orientation="horizontal" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
