@@ -302,7 +302,7 @@ class EmailManagerActivity : BaseEmailListActivity(),
     when (requestCode) {
       REQUEST_CODE_SIGN_IN -> when (resultCode) {
         Activity.RESULT_OK -> {
-          val signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+          val signInResult = data?.let { Auth.GoogleSignInApi.getSignInResultFromIntent(data) }
           if (signInResult?.isSuccess == true) {
             val fragment = supportFragmentManager
               .findFragmentById(R.id.emailListFragment) as EmailListFragment?
