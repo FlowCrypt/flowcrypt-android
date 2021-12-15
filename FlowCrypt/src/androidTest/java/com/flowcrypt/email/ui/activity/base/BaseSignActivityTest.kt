@@ -30,7 +30,7 @@ abstract class BaseSignActivityTest : BaseTest() {
 
   protected fun setupAndClickSignInButton(signInAccountJson: String) {
     val intent = Intent()
-    intent.putExtra("googleSignInAccount", GoogleSignInAccount.zaa(signInAccountJson))
+    intent.putExtra("googleSignInAccount", GoogleSignInAccount.zab(signInAccountJson))
 
     val signInIntent = GoogleSignIn.getClient(
       getTargetContext(),
