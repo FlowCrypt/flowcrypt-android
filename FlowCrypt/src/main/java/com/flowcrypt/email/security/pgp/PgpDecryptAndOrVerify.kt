@@ -40,7 +40,7 @@ object PgpDecryptAndOrVerify {
   fun decrypt(
     srcInputStream: InputStream,
     destOutputStream: OutputStream,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): OpenPgpMetadata {
     srcInputStream.use { srcStream ->
@@ -50,7 +50,7 @@ object PgpDecryptAndOrVerify {
             .onInputStream(srcStream)
             .withOptions(
               ConsumerOptions()
-                .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
+                .addDecryptionKeys(secretKeys, protector)
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
             )
           decryptionStream.use { it.copyTo(outStream) }
@@ -64,8 +64,8 @@ object PgpDecryptAndOrVerify {
 
   fun decryptAndOrVerifyWithResult(
     srcInputStream: InputStream,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    publicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector,
     ignoreMdcErrors: Boolean = false
   ): DecryptionResult {
@@ -77,10 +77,10 @@ object PgpDecryptAndOrVerify {
             .onInputStream(srcStream)
             .withOptions(
               ConsumerOptions()
-                .addDecryptionKeys(pgpSecretKeyRingCollection, protector)
+                .addDecryptionKeys(secretKeys, protector)
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                 .setIgnoreMDCErrors(ignoreMdcErrors)
-                .addVerificationCerts(pgpPublicKeyRingCollection)
+                .addVerificationCerts(publicKeys)
             )
 
           decryptionStream.use { it.copyTo(outStream) }

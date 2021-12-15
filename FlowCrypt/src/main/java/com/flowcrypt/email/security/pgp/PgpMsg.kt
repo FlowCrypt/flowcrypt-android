@@ -211,18 +211,18 @@ object PgpMsg {
   suspend fun processMimeMessage(context: Context, inputStream: InputStream):
       ProcessedMimeMessageResult = withContext(Dispatchers.IO) {
     val keysStorage = KeysStorageImpl.getInstance(context)
-    val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
+    val accountSecretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
     val protector = keysStorage.getSecretKeyRingProtector()
     val msg = MimeMessage(Session.getInstance(Properties()), inputStream)
 
-    val keys = mutableListOf<PGPPublicKeyRing>()
+    val verificationPublicKeys = mutableListOf<PGPPublicKeyRing>()
     val pubKeyDao = FlowCryptRoomDatabase.getDatabase(context).pubKeyDao()
 
     for (address in msg.from) {
       if (address is InternetAddress) {
         val existingPubKeysInfo = pubKeyDao.getPublicKeysByRecipient(address.address.lowercase())
         for (existingPublicKeyEntity in existingPubKeysInfo) {
-          keys.addAll(
+          verificationPublicKeys.addAll(
             //ask Tom about this place. Do we need to catch exception here or we can throw it
             PgpKey.parseKeys(source = existingPublicKeyEntity.publicKey)
               .pgpKeyRingCollection.pgpPublicKeyRingCollection
@@ -233,37 +233,37 @@ object PgpMsg {
 
     return@withContext processMimeMessage(
       msg = msg,
-      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(keys),
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      verificationPublicKeys = PGPPublicKeyRingCollection(verificationPublicKeys),
+      secretKeys = accountSecretKeys,
       protector = protector
     )
   }
 
   fun processMimeMessage(
     inputStream: InputStream,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): ProcessedMimeMessageResult {
     return processMimeMessage(
       msg = MimeMessage(Session.getInstance(Properties()), inputStream),
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      secretKeys = secretKeys,
       protector = protector
     )
   }
 
   fun processMimeMessage(
     msg: MimeMessage,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf()),
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf()),
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): ProcessedMimeMessageResult {
     val extractedMimeContent = extractMimeContent(msg)
     val extractedMsgBlocks = extractMsgBlocks(extractedMimeContent)
     return processExtractedMsgBlocks(
-      extractedMsgBlocks,
-      pgpPublicKeyRingCollection,
-      pgpSecretKeyRingCollection,
-      protector
+      msgBlocks = extractedMsgBlocks,
+      verificationPublicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
+      protector = protector
     )
   }
 
@@ -800,14 +800,14 @@ object PgpMsg {
 
   private fun processExtractedMsgBlocks(
     msgBlocks: List<MsgBlock>,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): ProcessedMimeMessageResult {
     val sequentialProcessedBlocks = handleExtractedMsgBlocks(
       msgBlocks = msgBlocks,
-      pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      verificationPublicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
       protector = protector
     )
 
@@ -829,11 +829,7 @@ object PgpMsg {
       // So, at least meanwhile, not porting this:
       // block.content = isContentBlock(block.type)
       //     ? block.content.toUtfStr() : block.content.toRawBytesStr();
-      if (block.type in listOf(
-          MsgBlock.Type.SIGNED_MSG,
-          MsgBlock.Type.DECRYPTED_AND_OR_SIGNED_CONTENT
-        )
-      ) {
+      if (block.type in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
         val openPgpMetadata = when (block) {
           is DecryptedAndOrSignedContentMsgBlock -> {
             block.openPgpMetadata
@@ -873,9 +869,11 @@ object PgpMsg {
           if (verifiedSignatures.isEmpty()) {
             verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
           } else {
-            val bufferedKeysIds = verifiedSignatures.keys.map { it.keyId }
-            val iteratedKeysIds = openPgpMetadata.verifiedSignatures.keys.map { it.keyId }
-            if (bufferedKeysIds != iteratedKeysIds) {
+            val keyIdsOfAllVerifiedSignatures = verifiedSignatures.keys.map { it.keyId }
+            val keyIdsOfCurrentVerifiedSignatures = openPgpMetadata.verifiedSignatures.keys.map {
+              it.keyId
+            }
+            if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
               hasMixedSignatures = true
               verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
             }
@@ -921,27 +919,20 @@ object PgpMsg {
     )
   }
 
-  private fun canBeAddedToCombinedContent(block: MsgBlock): Boolean {
-    return when {
-      block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block) -> {
-        block.error == null
-      }
-
-      else -> false
-    }
-  }
+  private fun canBeAddedToCombinedContent(block: MsgBlock): Boolean =
+    (block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block)) && block.error == null
 
   private fun handleExtractedMsgBlocks(
     msgBlocks: List<MsgBlock>,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): MutableList<MsgBlock> {
     val sequentialProcessedBlocks = mutableListOf<MsgBlock>()
     for (msgBlock in msgBlocks) {
       when {
         msgBlock is SignedMsgBlock -> {
-          processSignedMsgBlock(msgBlock, pgpPublicKeyRingCollection)?.let {
+          processSignedMsgBlock(msgBlock, verificationPublicKeys)?.let {
             sequentialProcessedBlocks.add(it)
           }
         }
@@ -949,8 +940,8 @@ object PgpMsg {
         msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG -> {
           val decryptedContentMsgBlock = processEncryptedMsgBlock(
             msgBlock = msgBlock,
-            pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-            pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+            verificationPublicKeys = verificationPublicKeys,
+            secretKeys = secretKeys,
             protector = protector
           )
           sequentialProcessedBlocks.add(decryptedContentMsgBlock)
@@ -962,8 +953,8 @@ object PgpMsg {
           sequentialProcessedBlocks.add(
             processPublicKeyMsgBlock(
               msgBlock = msgBlock,
-              pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-              pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+              verificationPublicKeys = verificationPublicKeys,
+              secretKeys = secretKeys,
               protector = protector
             )
           )
@@ -1011,15 +1002,15 @@ object PgpMsg {
 
   private fun processPublicKeyMsgBlock(
     msgBlock: MsgBlock,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): MsgBlock {
     // encrypted public key attached
     val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = msgBlock.content?.toInputStream()!!,
-      pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      publicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
       protector = protector
     )
     return if (decryptionResult.content != null) {
@@ -1033,14 +1024,14 @@ object PgpMsg {
 
   private fun processEncryptedMsgBlock(
     msgBlock: MsgBlock,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
-    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    verificationPublicKeys: PGPPublicKeyRingCollection,
+    secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector
   ): DecryptedAndOrSignedContentMsgBlock {
     val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = msgBlock.content?.toInputStream()!!,
-      pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      publicKeys = verificationPublicKeys,
+      secretKeys = secretKeys,
       protector = protector
     )
 
@@ -1076,8 +1067,8 @@ object PgpMsg {
       if (PgpDecryptAndOrVerify.DecryptionErrorType.NO_MDC == decryptionResult.exception.decryptionErrorType) {
         val resultWithIgnoredMDCErrors = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
           srcInputStream = msgBlock.content?.toInputStream()!!,
-          pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
-          pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+          publicKeys = verificationPublicKeys,
+          secretKeys = secretKeys,
           protector = protector,
           ignoreMdcErrors = true
         )
@@ -1114,7 +1105,7 @@ object PgpMsg {
 
   private fun processSignedMsgBlock(
     msgBlock: SignedMsgBlock,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection
+    verificationPublicKeys: PGPPublicKeyRingCollection
   ): MsgBlock? {
     return when {
       msgBlock.signature != null -> {
@@ -1153,7 +1144,7 @@ object PgpMsg {
         return try {
           val clearTextVerificationResult = PgpSignature.verifyClearTextSignature(
             srcInputStream = requireNotNull(msgBlock.content?.toInputStream()),
-            pgpPublicKeyRingCollection = pgpPublicKeyRingCollection
+            publicKeys = verificationPublicKeys
           )
           clearTextVerificationResult.exception?.let { throw it }
           msgBlock.copy(content = clearTextVerificationResult.clearText)

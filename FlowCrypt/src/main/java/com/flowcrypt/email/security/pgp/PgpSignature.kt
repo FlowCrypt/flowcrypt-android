@@ -49,14 +49,14 @@ object PgpSignature {
 
   fun verifyClearTextSignature(
     srcInputStream: InputStream,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection
+    publicKeys: PGPPublicKeyRingCollection
   ): ClearTextVerificationResult {
     ByteArrayOutputStream().use { outStream ->
       return try {
         val verificationStream = PGPainless.verifyCleartextSignedMessage()
           .onInputStream(srcInputStream)
           .withStrategy(InMemoryMultiPassStrategy())
-          .withOptions(ConsumerOptions().addVerificationCerts(pgpPublicKeyRingCollection))
+          .withOptions(ConsumerOptions().addVerificationCerts(publicKeys))
           .verificationStream
 
         verificationStream.use { it.copyTo(outStream) }

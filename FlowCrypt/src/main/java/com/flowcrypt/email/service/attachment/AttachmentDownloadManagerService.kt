@@ -676,7 +676,7 @@ class AttachmentDownloadManagerService : Service() {
           val result = PgpDecryptAndOrVerify.decrypt(
             srcInputStream = inputStream,
             destOutputStream = decryptedFile.outputStream(),
-            pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+            secretKeys = pgpSecretKeyRingCollection,
             protector = protector
           )
 

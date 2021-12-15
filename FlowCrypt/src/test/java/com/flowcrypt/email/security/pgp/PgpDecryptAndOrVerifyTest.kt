@@ -82,7 +82,7 @@ class PgpDecryptAndOrVerifyTest {
       PgpDecryptAndOrVerify.decrypt(
         srcInputStream = ByteArrayInputStream(encryptedBytes),
         destOutputStream = outputStreamWithDecryptedData,
-        pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(randomKey)),
+        secretKeys = PGPSecretKeyRingCollection(listOf(randomKey)),
         protector = PasswordBasedSecretKeyRingProtector.forKey(
           randomKey,
           Passphrase.fromPassword("qwerty")
@@ -119,7 +119,7 @@ class PgpDecryptAndOrVerifyTest {
       PgpDecryptAndOrVerify.decrypt(
         srcInputStream = ByteArrayInputStream(encryptedBytes),
         destOutputStream = outputStreamWithDecryptedData,
-        pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),
+        secretKeys = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),
         protector = PasswordBasedSecretKeyRingProtector.forKey(
           receiverPGPSecretKeyRing,
           Passphrase.fromPassword(UUID.randomUUID().toString())
@@ -199,7 +199,7 @@ class PgpDecryptAndOrVerifyTest {
     PgpDecryptAndOrVerify.decrypt(
       srcInputStream = ByteArrayInputStream(encryptedBytes),
       destOutputStream = outputStreamWithDecryptedData,
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),
+      secretKeys = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),
       protector = allPredefinedKeysProtector
     )
 

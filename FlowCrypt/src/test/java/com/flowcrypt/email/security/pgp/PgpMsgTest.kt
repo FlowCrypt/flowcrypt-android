@@ -227,8 +227,8 @@ class PgpMsgTest {
     }
     val r = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = messageInfo.armored.byteInputStream(),
-      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(privateKeysWithWrongPassPhrases.map { it.keyRing }),
+      publicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(privateKeysWithWrongPassPhrases.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
@@ -244,8 +244,8 @@ class PgpMsgTest {
     val messageInfo = findMessage("decrypt - without a subject")
     val r = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = messageInfo.armored.byteInputStream(),
-      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
+      publicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
@@ -262,8 +262,8 @@ class PgpMsgTest {
     val wrongKey = listOf(PRIVATE_KEYS[1])
     val r = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       messageInfo.armored.byteInputStream(),
-      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(wrongKey.map { it.keyRing }),
+      publicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(wrongKey.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue("Message returned", r.content == null)
@@ -294,8 +294,8 @@ class PgpMsgTest {
     val messageInfo = findMessage(messageKey)
     val result = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       messageInfo.armored.byteInputStream(),
-      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
+      publicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
       protector = secretKeyRingProtector
     )
     if (result.content != null) {
@@ -395,7 +395,7 @@ class PgpMsgTest {
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.processMimeMessage(
       msg = MimeUtils.mimeTextToMimeMessage(mimeText),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
@@ -419,7 +419,7 @@ class PgpMsgTest {
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.processMimeMessage(
       msg = MimeUtils.mimeTextToMimeMessage(mimeText),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
@@ -436,14 +436,14 @@ class PgpMsgTest {
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val decryptResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = text.toInputStream(),
-      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      publicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = TestKeys.genRingProtector(keys)
     )
     assertEquals(true, decryptResult.isEncrypted)
     val result = PgpMsg.processMimeMessage(
       decryptResult.content?.toByteArray()?.inputStream()!!,
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = TestKeys.genRingProtector(keys)
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
@@ -460,8 +460,8 @@ class PgpMsgTest {
 
     val decryptResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       text.toInputStream(),
-      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(emptyList()),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      publicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = TestKeys.genRingProtector(keys)
     )
     assertEquals(true, decryptResult.isEncrypted)
@@ -474,7 +474,7 @@ class PgpMsgTest {
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.processMimeMessage(
       text.toInputStream(),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
@@ -506,7 +506,7 @@ class PgpMsgTest {
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase
     val result = PgpMsg.processMimeMessage(
       text.toInputStream(),
-      pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
+      secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     val textContent = loadResourceAsString(
