@@ -104,6 +104,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -388,13 +389,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          if (attachmentsRecyclerViewAdapter.currentList.isNotEmpty()) {
-            Toast.makeText(
-              context,
-              R.string.cannot_forward_encrypted_attachments,
-              Toast.LENGTH_LONG
-            ).show()
-          }
+          msgInfo?.atts =
+            attachmentsRecyclerViewAdapter.currentList.map {
+              it.copy(
+                isForwarded = true,
+                name = if (it.isEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
+                decryptWhenForward = it.isEncrypted()
+              )
+            }
         } else {
           msgInfo?.atts =
             attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }

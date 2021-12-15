@@ -49,6 +49,7 @@ data class AttachmentEntity(
   @ColumnInfo(name = "file_uri") val fileUri: String?,
   @ColumnInfo(name = "forwarded_folder") val forwardedFolder: String?,
   @ColumnInfo(name = "forwarded_uid", defaultValue = "-1") val forwardedUid: Long?,
+  @ColumnInfo(name = "decrypt_when_forward", defaultValue = "0") val decryptWhenForward: Boolean,
   val path: String
 ) {
 
@@ -66,7 +67,8 @@ data class AttachmentEntity(
       fwdUid = forwardedUid ?: -1,
       path = path,
       isForwarded = forwardedFolder?.isNotEmpty() == true && (forwardedUid != null && forwardedUid > 0),
-      isEncryptionAllowed = true
+      isEncryptionAllowed = true,
+      decryptWhenForward = decryptWhenForward
     )
   }
 
@@ -89,7 +91,8 @@ data class AttachmentEntity(
           fileUri = if (uri != null) uri.toString() else null,
           forwardedFolder = fwdFolder,
           forwardedUid = fwdUid,
-          path = path
+          path = path,
+          decryptWhenForward = decryptWhenForward
         )
       }
     }

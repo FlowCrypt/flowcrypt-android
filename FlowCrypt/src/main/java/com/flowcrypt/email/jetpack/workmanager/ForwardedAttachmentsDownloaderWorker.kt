@@ -27,7 +27,9 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -40,6 +42,8 @@ import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.File
 import java.io.InputStream
 import java.util.*
@@ -224,17 +228,21 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     -> InputStream?
   ): MessageState = withContext(Dispatchers.IO) {
     var msgState = MessageState.QUEUED
-    var pubKeys: List<String>? = null
+    val keysStorage = KeysStorageImpl.getInstance(applicationContext)
+    val secretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
+    val ringProtector = keysStorage.getSecretKeyRingProtector()
+
+    var publicKeys: List<String>? = null
 
     if (msgEntity.isEncrypted == true) {
       val senderEmail = EmailUtil.getFirstAddressString(msgEntity.from)
       val recipients = msgEntity.allRecipients.toMutableList()
-      pubKeys = mutableListOf()
-      pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients))
-      pubKeys.addAll(
+
+      publicKeys = mutableListOf()
+      publicKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients))
+      publicKeys.addAll(
         SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, account, senderEmail)
-          .map { it.publicKey }
-      )
+          .map { it.publicKey })
     }
 
     for (attachmentEntity in atts) {
@@ -257,7 +265,15 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
         val inputStream = action.invoke(attachmentEntity)
         val tempFile = File(fwdAttsCacheDir, UUID.randomUUID().toString())
         if (inputStream != null) {
-          downloadFile(msgEntity, pubKeys, tempFile, inputStream)
+          downloadFileAndProcess(
+            destFile = tempFile,
+            srcInputStream = inputStream,
+            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
+            shouldBeDecryptedBeforeProcess = attachmentEntity.decryptWhenForward,
+            publicKeys = publicKeys,
+            secretKeys = secretKeys,
+            protector = ringProtector
+          )
 
           if (msgAttsDir.exists()) {
             FileUtils.moveFile(tempFile, attFile)
@@ -288,18 +304,50 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     return@withContext msgState
   }
 
-  private suspend fun downloadFile(
-    msgEntity: MessageEntity, pubKeys: List<String>?,
-    destFile: File, srcInputStream: InputStream
-  ) =
-    withContext(Dispatchers.IO) {
-      if (msgEntity.isEncrypted == true) {
-        requireNotNull(pubKeys)
-        PgpEncryptAndOrSign.encryptAndOrSign(srcInputStream, destFile.outputStream(), pubKeys)
+  private suspend fun downloadFileAndProcess(
+    destFile: File,
+    srcInputStream: InputStream,
+    shouldBeEncrypted: Boolean,
+    shouldBeDecryptedBeforeProcess: Boolean,
+    publicKeys: List<String>?,
+    secretKeys: PGPSecretKeyRingCollection? = null,
+    protector: SecretKeyRingProtector? = null
+  ) = withContext(Dispatchers.IO) {
+    var tempFileForDecryptionPurposes: File? = null
+    val finalSrcInputStream = if (shouldBeDecryptedBeforeProcess) {
+      tempFileForDecryptionPurposes = File.createTempFile("tmp", null, destFile.parentFile)
+      tempFileForDecryptionPurposes.outputStream().use { middleDestFileOutputStream ->
+        PgpDecryptAndOrVerify.decrypt(
+          srcInputStream = srcInputStream,
+          destOutputStream = middleDestFileOutputStream,
+          secretKeys = requireNotNull(secretKeys),
+          protector = requireNotNull(protector)
+        )
+      }
+      tempFileForDecryptionPurposes.inputStream()
+    } else {
+      srcInputStream
+    }
+
+    finalSrcInputStream.use {
+      if (shouldBeEncrypted) {
+        requireNotNull(publicKeys)
+        PgpEncryptAndOrSign.encryptAndOrSign(
+          finalSrcInputStream,
+          destFile.outputStream(),
+          publicKeys
+        )
       } else {
-        FileUtils.copyInputStreamToFile(srcInputStream, destFile)
+        FileUtils.copyInputStreamToFile(finalSrcInputStream, destFile)
       }
     }
+
+    tempFileForDecryptionPurposes?.let {
+      if (!it.delete()) {
+        throw IllegalStateException("Can't delete temp file")
+      }
+    }
+  }
 
   companion object {
     private val TAG = ForwardedAttachmentsDownloaderWorker::class.java.simpleName

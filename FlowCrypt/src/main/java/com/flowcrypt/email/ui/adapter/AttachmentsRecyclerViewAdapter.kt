@@ -57,7 +57,7 @@ class AttachmentsRecyclerViewAdapter(private val listener: Listener) :
 
       itemView.setOnClickListener { view ->
         attachmentInfo.uri?.let { uri ->
-          if (uri.lastPathSegment?.endsWith(Constants.PGP_FILE_EXT) == true) {
+          if (uri.lastPathSegment?.endsWith("." + Constants.PGP_FILE_EXT) == true) {
             view.performClick()
           } else {
             val intentOpenFile = Intent(Intent.ACTION_VIEW, uri)

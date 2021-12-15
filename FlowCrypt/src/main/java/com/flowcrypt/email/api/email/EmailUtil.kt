@@ -677,14 +677,15 @@ class EmailUtil {
     ): Message {
       val session = Session.getInstance(Properties())
       val senderEmail = outgoingMsgInfo.from
-      val senderPgpKeyDetailsList =
-        SecurityUtils.getSenderPgpKeyDetailsList(context, accountEntity, senderEmail)
       var pubKeys: List<String>? = null
       var prvKeys: List<String>? = null
       var ringProtector: SecretKeyRingProtector? = null
 
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
+        val senderPgpKeyDetailsList =
+          SecurityUtils.getSenderPgpKeyDetailsList(context, accountEntity, senderEmail)
+
         pubKeys = mutableListOf()
         pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
         pubKeys.addAll(senderPgpKeyDetailsList.map { it.publicKey })
