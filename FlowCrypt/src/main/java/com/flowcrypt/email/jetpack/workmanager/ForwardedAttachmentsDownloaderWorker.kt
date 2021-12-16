@@ -314,37 +314,39 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     protector: SecretKeyRingProtector? = null
   ) = withContext(Dispatchers.IO) {
     var tempFileForDecryptionPurposes: File? = null
-    val finalSrcInputStream = if (shouldBeDecryptedBeforeProcess) {
-      tempFileForDecryptionPurposes = File.createTempFile("tmp", null, destFile.parentFile)
-      tempFileForDecryptionPurposes.outputStream().use { middleDestFileOutputStream ->
-        PgpDecryptAndOrVerify.decrypt(
-          srcInputStream = srcInputStream,
-          destOutputStream = middleDestFileOutputStream,
-          secretKeys = requireNotNull(secretKeys),
-          protector = requireNotNull(protector)
-        )
-      }
-      tempFileForDecryptionPurposes.inputStream()
-    } else {
-      srcInputStream
-    }
-
-    finalSrcInputStream.use {
-      if (shouldBeEncrypted) {
-        requireNotNull(publicKeys)
-        PgpEncryptAndOrSign.encryptAndOrSign(
-          finalSrcInputStream,
-          destFile.outputStream(),
-          publicKeys
-        )
+    try {
+      val finalSrcInputStream = if (shouldBeDecryptedBeforeProcess) {
+        tempFileForDecryptionPurposes = File.createTempFile("tmp", null, destFile.parentFile)
+        tempFileForDecryptionPurposes.outputStream().use { middleDestFileOutputStream ->
+          PgpDecryptAndOrVerify.decrypt(
+            srcInputStream = srcInputStream,
+            destOutputStream = middleDestFileOutputStream,
+            secretKeys = requireNotNull(secretKeys),
+            protector = requireNotNull(protector)
+          )
+        }
+        tempFileForDecryptionPurposes.inputStream()
       } else {
-        FileUtils.copyInputStreamToFile(finalSrcInputStream, destFile)
+        srcInputStream
       }
-    }
 
-    tempFileForDecryptionPurposes?.let {
-      if (!it.delete()) {
-        throw IllegalStateException("Can't delete temp file")
+      finalSrcInputStream.use {
+        if (shouldBeEncrypted) {
+          requireNotNull(publicKeys)
+          PgpEncryptAndOrSign.encryptAndOrSign(
+            finalSrcInputStream,
+            destFile.outputStream(),
+            publicKeys
+          )
+        } else {
+          FileUtils.copyInputStreamToFile(finalSrcInputStream, destFile)
+        }
+      }
+    } finally {
+      tempFileForDecryptionPurposes?.let {
+        if (it.exists() && !it.delete()) {
+          throw IllegalStateException("Can't delete temp file")
+        }
       }
     }
   }
