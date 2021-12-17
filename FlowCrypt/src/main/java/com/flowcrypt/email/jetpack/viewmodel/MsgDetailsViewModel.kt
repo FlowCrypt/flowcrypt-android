@@ -54,7 +54,6 @@ import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPMessage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -477,14 +476,8 @@ class MsgDetailsViewModel(
             Result.success(null)
           }
           if (result.status == Result.Status.SUCCESS) {
-            var snapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-            if (snapshot == null) {
-              //due to realization of [DiskLruCache] we need to do a little delay
-              // while [DiskLruCache] is updating internal data
-              delay(500)
-              snapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-            }
-
+            val snapshot =
+              MsgsCacheManager.getMsgSnapshotWithRetryStrategy(messageEntity.id.toString())
             return@withContext snapshot
               ?: throw java.lang.NullPointerException("Message not found in the local cache (GOOGLE API)")
           } else throw result.exception ?: java.lang.IllegalStateException(
@@ -562,14 +555,8 @@ class MsgDetailsViewModel(
               )
             )
 
-            var snapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-            if (snapshot == null) {
-              //due to realization of [DiskLruCache] we need to do a little delay
-              // while [DiskLruCache] is updating internal data
-              delay(500)
-              snapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-            }
-
+            val snapshot =
+              MsgsCacheManager.getMsgSnapshotWithRetryStrategy(messageEntity.id.toString())
             return@execute snapshot
               ?: throw java.lang.NullPointerException("Message not found in the local cache(IMAP)")
           }

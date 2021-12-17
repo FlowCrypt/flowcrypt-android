@@ -13,6 +13,9 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.ProgressOutputStream
 import com.flowcrypt.email.util.cache.DiskLruCache
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import okhttp3.internal.io.FileSystem
 import okio.buffer
 import java.io.File
@@ -68,6 +71,20 @@ object MsgsCacheManager {
   fun getMsgSnapshot(key: String): DiskLruCache.Snapshot? {
     return diskLruCache[key]
   }
+
+  /**
+   * Due to the realization of [DiskLruCache] we need to add a little delay
+   * before fetching [DiskLruCache.Snapshot]
+   */
+  suspend fun getMsgSnapshotWithRetryStrategy(key: String): DiskLruCache.Snapshot? =
+    withContext(Dispatchers.IO) {
+      var attemptsCount = 0
+      while (diskLruCache[key] == null && attemptsCount <= 50) {
+        delay(50)
+        attemptsCount++
+      }
+      return@withContext diskLruCache[key]
+    }
 
   fun isMsgExist(key: String): Boolean {
     val snapshot = diskLruCache[key] ?: return false
