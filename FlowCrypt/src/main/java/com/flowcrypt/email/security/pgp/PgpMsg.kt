@@ -98,7 +98,7 @@ object PgpMsg {
     "openpgp-encrypted-message.asc"
   )
 
-  private val ENCRYPTED_FILE_REGEX = Regex(
+  val ENCRYPTED_FILE_REGEX = Regex(
     pattern = "(\\.pgp\$)|(\\.gpg\$)|(\\.[a-zA-Z0-9]{3,4}\\.asc\$)",
     option = RegexOption.IGNORE_CASE
   )

@@ -140,7 +140,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         lastClickedAtt = attachmentInfo
         lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
 
-        if (SecurityUtils.isEncryptedData(attachmentInfo.name)) {
+        if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
           for (block in msgInfo?.msgBlocks ?: emptyList()) {
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
@@ -393,8 +393,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             attachmentsRecyclerViewAdapter.currentList.map {
               it.copy(
                 isForwarded = true,
-                name = if (it.isEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
-                decryptWhenForward = it.isEncrypted()
+                name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
+                decryptWhenForward = it.isPossiblyEncrypted()
               )
             }
         } else {

@@ -662,7 +662,7 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      if (!SecurityUtils.isEncryptedData(att.name)) {
+      if (!SecurityUtils.isPossiblyEncryptedData(att.name)) {
         return file
       }
 

@@ -10,7 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.security.SecurityUtils
-import org.apache.commons.io.FilenameUtils
+import com.flowcrypt.email.security.pgp.PgpMsg
 
 /**
  * Simple POJO which defines information about email attachments.
@@ -160,9 +160,8 @@ data class AttachmentInfo constructor(
   fun isHidden() =
     name.isNullOrEmpty() && type.lowercase() == "application/pgp-encrypted; name=\"\""
 
-  fun isEncrypted(): Boolean {
-    val fileExtension = FilenameUtils.getExtension(name)
-    return fileExtension.equals(Constants.PGP_FILE_EXT, true)
+  fun isPossiblyEncrypted(): Boolean {
+    return PgpMsg.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
   }
 
   companion object {
