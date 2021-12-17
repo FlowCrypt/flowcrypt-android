@@ -88,7 +88,7 @@ class Constants {
     const val PASSWORD_QUALITY_WEAK = "weak"
     const val PASSWORD_QUALITY_POOR = "poor"
 
-    const val PGP_FILE_EXT = ".pgp"
+    const val PGP_FILE_EXT = "pgp"
 
     val PASSWORD_WEAK_WORDS = arrayOf(
       "crypt",

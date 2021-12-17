@@ -160,22 +160,22 @@ class PgpDecryptAndOrVerifyTest {
   @Test
   fun testPatternToDetectEncryptedAtts() {
     //"(?i)(\\.pgp$)|(\\.gpg$)|(\\.[a-zA-Z0-9]{3,4}\\.asc$)"
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.pgp"))
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.PgP"))
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gpg"))
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("file.gPg"))
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.asc"))
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12.ASC"))
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12.asc"))
-    assertNotNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2.ASC"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filepgp"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filePgP"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegpg"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("filegPg"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12asc"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.fs12ASC"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.s12asc"))
-    assertNull(PgpDecryptAndOrVerify.DETECT_SEPARATE_ENCRYPTED_ATTACHMENTS_PATTERN.find("d.ft2ASC"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.pgp"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.PgP"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.gpg"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.gPg"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12.asc"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12.ASC"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.s12.asc"))
+    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.ft2.ASC"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filepgp"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filePgP"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filegpg"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filegPg"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12asc"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12ASC"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.s12asc"))
+    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.ft2ASC"))
   }
 
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {

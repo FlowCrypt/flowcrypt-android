@@ -10,6 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpMsg
 
 /**
  * Simple POJO which defines information about email attachments.
@@ -36,7 +37,8 @@ data class AttachmentInfo constructor(
   var isForwarded: Boolean = false,
   var isDecrypted: Boolean = false,
   var isEncryptionAllowed: Boolean = true,
-  var orderNumber: Int = 0
+  var orderNumber: Int = 0,
+  var decryptWhenForward: Boolean = false,
 ) : Parcelable {
 
   val uniqueStringId: String
@@ -69,7 +71,8 @@ data class AttachmentInfo constructor(
     source.readByte() != 0.toByte(),
     source.readByte() != 0.toByte(),
     source.readByte() != 0.toByte(),
-    source.readInt()
+    source.readInt(),
+    source.readByte() != 0.toByte(),
   )
 
   override fun describeContents(): Int {
@@ -95,6 +98,7 @@ data class AttachmentInfo constructor(
       writeByte(if (isDecrypted) 1.toByte() else 0.toByte())
       writeByte(if (isEncryptionAllowed) 1.toByte() else 0.toByte())
       writeInt(orderNumber)
+      writeByte(if (decryptWhenForward) 1.toByte() else 0.toByte())
     }
   }
 
@@ -155,6 +159,10 @@ data class AttachmentInfo constructor(
 
   fun isHidden() =
     name.isNullOrEmpty() && type.lowercase() == "application/pgp-encrypted; name=\"\""
+
+  fun isPossiblyEncrypted(): Boolean {
+    return PgpMsg.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
+  }
 
   companion object {
     const val DEPTH_SEPARATOR = "/"

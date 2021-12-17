@@ -10,6 +10,7 @@ import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -49,8 +50,13 @@ data class AttachmentEntity(
   @ColumnInfo(name = "file_uri") val fileUri: String?,
   @ColumnInfo(name = "forwarded_folder") val forwardedFolder: String?,
   @ColumnInfo(name = "forwarded_uid", defaultValue = "-1") val forwardedUid: Long?,
+  @ColumnInfo(name = "decrypt_when_forward", defaultValue = "0") val decryptWhenForward: Boolean,
   val path: String
 ) {
+
+  @Ignore
+  val isForwarded: Boolean =
+    forwardedFolder?.isNotEmpty() == true && (forwardedUid != null && forwardedUid > 0)
 
   fun toAttInfo(): AttachmentInfo {
     return AttachmentInfo(
@@ -65,8 +71,9 @@ data class AttachmentEntity(
       fwdFolder = forwardedFolder,
       fwdUid = forwardedUid ?: -1,
       path = path,
-      isForwarded = forwardedFolder?.isNotEmpty() == true && (forwardedUid != null && forwardedUid > 0),
-      isEncryptionAllowed = true
+      isForwarded = isForwarded,
+      isEncryptionAllowed = true,
+      decryptWhenForward = decryptWhenForward
     )
   }
 
@@ -89,7 +96,8 @@ data class AttachmentEntity(
           fileUri = if (uri != null) uri.toString() else null,
           forwardedFolder = fwdFolder,
           forwardedUid = fwdUid,
-          path = path
+          path = path,
+          decryptWhenForward = decryptWhenForward
         )
       }
     }

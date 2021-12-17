@@ -104,6 +104,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -139,7 +140,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         lastClickedAtt = attachmentInfo
         lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
 
-        if (SecurityUtils.isEncryptedData(attachmentInfo.name)) {
+        if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
           for (block in msgInfo?.msgBlocks ?: emptyList()) {
             if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
               val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
@@ -388,13 +389,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          if (attachmentsRecyclerViewAdapter.currentList.isNotEmpty()) {
-            Toast.makeText(
-              context,
-              R.string.cannot_forward_encrypted_attachments,
-              Toast.LENGTH_LONG
-            ).show()
-          }
+          msgInfo?.atts =
+            attachmentsRecyclerViewAdapter.currentList.map {
+              it.copy(
+                isForwarded = true,
+                name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
+                decryptWhenForward = it.isPossiblyEncrypted()
+              )
+            }
         } else {
           msgInfo?.atts =
             attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
