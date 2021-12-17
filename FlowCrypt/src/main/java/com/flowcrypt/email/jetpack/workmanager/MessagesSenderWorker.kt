@@ -20,6 +20,7 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -33,6 +34,10 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
+import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -51,8 +56,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -336,7 +344,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           val attachments = roomDatabase.attachmentDao()
             .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
-          val mimeMsg = createMimeMsg(sess, msgEntity, attachments)
+          val mimeMsg = createMimeMsg(sess, account, msgEntity, attachments)
 
           roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
           roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENDING.value))
@@ -416,7 +424,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     atts: List<AttachmentEntity>, sess: Session?, store: Store?
   ): Boolean =
     withContext(Dispatchers.IO) {
-      val mimeMsg = createMimeMsg(sess, msgEntity, atts)
+      val mimeMsg = createMimeMsg(sess, account, msgEntity, atts)
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
       when (account.accountType) {
@@ -509,12 +517,13 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
    */
   private suspend fun createMimeMsg(
     sess: Session?,
-    details: MessageEntity,
+    account: AccountEntity,
+    msgEntity: MessageEntity,
     atts: List<AttachmentEntity>
   ): MimeMessage =
     withContext(Dispatchers.IO) {
       val stream =
-        IOUtils.toInputStream(details.rawMessageWithoutAttachments, StandardCharsets.UTF_8)
+        IOUtils.toInputStream(msgEntity.rawMessageWithoutAttachments, StandardCharsets.UTF_8)
       val mimeMsg = MimeMessage(sess, stream)
 
       //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
@@ -522,9 +531,28 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
       if (mimeMsg.content is MimeMultipart && atts.isNotEmpty()) {
         val mimeMultipart = mimeMsg.content as MimeMultipart
+        val keysStorage = KeysStorageImpl.getInstance(applicationContext)
+        val secretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
+        val ringProtector = keysStorage.getSecretKeyRingProtector()
+
+        val publicKeys = mutableListOf<String>()
+        val senderEmail = EmailUtil.getFirstAddressString(msgEntity.from)
+        val recipients = msgEntity.allRecipients.toMutableList()
+        publicKeys.addAll(
+          SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients)
+        )
+        publicKeys.addAll(
+          SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, account, senderEmail)
+            .map { it.publicKey })
 
         for (att in atts) {
-          val attBodyPart = genBodyPartWithAtt(att)
+          val attBodyPart = genBodyPartWithAtt(
+            att = att,
+            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
+            publicKeys = publicKeys,
+            secretKeys = secretKeys,
+            ringProtector = ringProtector
+          )
           mimeMultipart.addBodyPart(attBodyPart)
         }
 
@@ -543,10 +571,29 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
    * @return Generated [MimeBodyPart] with the attachment.
    * @throws MessagingException
    */
-  private fun genBodyPartWithAtt(att: AttachmentEntity): BodyPart {
+  private fun genBodyPartWithAtt(
+    att: AttachmentEntity,
+    shouldBeEncrypted: Boolean,
+    publicKeys: List<String>?,
+    secretKeys: PGPSecretKeyRingCollection,
+    ringProtector: SecretKeyRingProtector
+  ): BodyPart {
     val attBodyPart = MimeBodyPart()
     val attInfo = att.toAttInfo()
-    attBodyPart.dataHandler = DataHandler(AttachmentInfoDataSource(applicationContext, attInfo))
+    attBodyPart.dataHandler = if (attInfo.isForwarded) {
+      DataHandler(
+        ForwardedAttachmentInfoDataSource(
+          applicationContext,
+          attInfo,
+          shouldBeEncrypted,
+          publicKeys,
+          secretKeys,
+          ringProtector
+        )
+      )
+    } else {
+      DataHandler(AttachmentInfoDataSource(applicationContext, attInfo))
+    }
     attBodyPart.fileName = attInfo.getSafeName()
     attBodyPart.contentID = attInfo.id
 
@@ -591,9 +638,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
   /**
    * The [DataSource] realization for a file which received from [Uri]
    */
-  private class AttachmentInfoDataSource(
+  private open class AttachmentInfoDataSource(
     private val context: Context,
-    private val att: AttachmentInfo
+    protected val att: AttachmentInfo
   ) : DataSource {
 
     override fun getInputStream(): InputStream? {
@@ -621,6 +668,39 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
     override fun getName(): String {
       return att.getSafeName()
+    }
+  }
+
+  private class ForwardedAttachmentInfoDataSource(
+    context: Context,
+    att: AttachmentInfo,
+    private val shouldBeEncrypted: Boolean,
+    private val publicKeys: List<String>? = null,
+    private val secretKeys: PGPSecretKeyRingCollection,
+    private val protector: SecretKeyRingProtector
+  ) : AttachmentInfoDataSource(context, att) {
+    override fun getInputStream(): InputStream? {
+      val inputStream = super.getInputStream() ?: return null
+      val srcInputStream = if (att.decryptWhenForward) PgpDecryptAndOrVerify.genDecryptionStream(
+        srcInputStream = inputStream,
+        secretKeys = secretKeys,
+        protector = protector
+      ) else inputStream
+
+      return if (shouldBeEncrypted) {
+        //here we use [ByteArrayOutputStream] as a temp destination of encrypted data.
+        //it should be improved in the future for better performance
+        val tempByteArrayOutputStream = ByteArrayOutputStream()
+        PgpEncryptAndOrSign.encryptAndOrSign(
+          srcInputStream = srcInputStream,
+          destOutputStream = tempByteArrayOutputStream,
+          pubKeys = requireNotNull(publicKeys)
+        )
+
+        return ByteArrayInputStream(tempByteArrayOutputStream.toByteArray())
+      } else {
+        srcInputStream
+      }
     }
   }
 

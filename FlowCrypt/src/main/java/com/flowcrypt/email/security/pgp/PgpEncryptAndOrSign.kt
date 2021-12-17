@@ -11,6 +11,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.encryption_signing.EncryptionOptions
+import org.pgpainless.encryption_signing.EncryptionStream
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -91,34 +92,50 @@ object PgpEncryptAndOrSign {
     doArmor: Boolean = false
   ) {
     srcInputStream.use { srcStream ->
-      destOutputStream.use { outStream ->
-        val encOpt = EncryptionOptions().apply {
-          pgpPublicKeyRingCollection.forEach {
-            addRecipient(it)
-          }
+      genEncryptionStream(
+        destOutputStream,
+        pgpPublicKeyRingCollection,
+        pgpSecretKeyRingCollection,
+        secretKeyRingProtector,
+        doArmor
+      ).use { encryptionStream ->
+        srcStream.copyTo(encryptionStream)
+      }
+    }
+  }
+
+  fun genEncryptionStream(
+    destOutputStream: OutputStream,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
+    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection?,
+    secretKeyRingProtector: SecretKeyRingProtector?,
+    doArmor: Boolean
+  ): EncryptionStream {
+    destOutputStream.use { outStream ->
+      val encOpt = EncryptionOptions().apply {
+        pgpPublicKeyRingCollection.forEach {
+          addRecipient(it)
+        }
+      }
+
+      val producerOptions: ProducerOptions =
+        if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
+          ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
+            pgpSecretKeyRingCollection.forEach {
+              addInlineSignature(
+                secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
+              )
+            }
+          })
+        } else {
+          ProducerOptions.encrypt(encOpt)
         }
 
-        val producerOptions: ProducerOptions =
-          if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
-            ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
-              pgpSecretKeyRingCollection.forEach {
-                addInlineSignature(
-                  secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
-                )
-              }
-            })
-          } else {
-            ProducerOptions.encrypt(encOpt)
-          }
-
-        PGPainless.encryptAndOrSign()
-          .onOutputStream(outStream)
-          .withOptions(
-            producerOptions.setAsciiArmor(doArmor)
-          ).use { encryptionStream ->
-            srcStream.copyTo(encryptionStream)
-          }
-      }
+      return PGPainless.encryptAndOrSign()
+        .onOutputStream(outStream)
+        .withOptions(
+          producerOptions.setAsciiArmor(doArmor)
+        )
     }
   }
 }

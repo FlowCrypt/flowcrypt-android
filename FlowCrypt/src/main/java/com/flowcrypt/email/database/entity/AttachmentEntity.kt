@@ -10,6 +10,7 @@ import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -53,6 +54,10 @@ data class AttachmentEntity(
   val path: String
 ) {
 
+  @Ignore
+  val isForwarded: Boolean =
+    forwardedFolder?.isNotEmpty() == true && (forwardedUid != null && forwardedUid > 0)
+
   fun toAttInfo(): AttachmentInfo {
     return AttachmentInfo(
       email = email,
@@ -66,7 +71,7 @@ data class AttachmentEntity(
       fwdFolder = forwardedFolder,
       fwdUid = forwardedUid ?: -1,
       path = path,
-      isForwarded = forwardedFolder?.isNotEmpty() == true && (forwardedUid != null && forwardedUid > 0),
+      isForwarded = isForwarded,
       isEncryptionAllowed = true,
       decryptWhenForward = decryptWhenForward
     )

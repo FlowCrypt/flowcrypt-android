@@ -14,6 +14,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
+import org.pgpainless.decryption_verification.DecryptionStream
 import org.pgpainless.decryption_verification.MissingKeyPassphraseStrategy
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
@@ -43,13 +44,11 @@ object PgpDecryptAndOrVerify {
     srcInputStream.use { srcStream ->
       destOutputStream.use { outStream ->
         try {
-          val decryptionStream = PGPainless.decryptAndOrVerify()
-            .onInputStream(srcStream)
-            .withOptions(
-              ConsumerOptions()
-                .addDecryptionKeys(secretKeys, protector)
-                .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
-            )
+          val decryptionStream = genDecryptionStream(
+            srcInputStream = srcStream,
+            secretKeys = secretKeys,
+            protector = protector
+          )
           decryptionStream.use { it.copyTo(outStream) }
           return decryptionStream.result
         } catch (e: Exception) {
@@ -70,15 +69,13 @@ object PgpDecryptAndOrVerify {
       val destOutputStream = ByteArrayOutputStream()
       destOutputStream.use { outStream ->
         try {
-          val decryptionStream = PGPainless.decryptAndOrVerify()
-            .onInputStream(srcStream)
-            .withOptions(
-              ConsumerOptions()
-                .addDecryptionKeys(secretKeys, protector)
-                .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
-                .setIgnoreMDCErrors(ignoreMdcErrors)
-                .addVerificationCerts(publicKeys)
-            )
+          val decryptionStream = genDecryptionStream(
+            srcInputStream = srcStream,
+            publicKeys = publicKeys,
+            secretKeys = secretKeys,
+            protector = protector,
+            ignoreMdcErrors = ignoreMdcErrors
+          )
 
           decryptionStream.use { it.copyTo(outStream) }
           return DecryptionResult(
@@ -92,6 +89,26 @@ object PgpDecryptAndOrVerify {
         }
       }
     }
+  }
+
+  fun genDecryptionStream(
+    srcInputStream: InputStream,
+    publicKeys: PGPPublicKeyRingCollection? = null,
+    secretKeys: PGPSecretKeyRingCollection,
+    protector: SecretKeyRingProtector,
+    ignoreMdcErrors: Boolean = false
+  ): DecryptionStream {
+    return PGPainless.decryptAndOrVerify()
+      .onInputStream(srcInputStream)
+      .withOptions(
+        ConsumerOptions()
+          .addDecryptionKeys(secretKeys, protector)
+          .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
+          .setIgnoreMDCErrors(ignoreMdcErrors)
+          .apply {
+            publicKeys?.let { addVerificationCerts(it) }
+          }
+      )
   }
 
   private fun processDecryptionException(e: Exception): DecryptionException {
