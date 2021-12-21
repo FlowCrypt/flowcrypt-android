@@ -31,7 +31,7 @@ class LoginViewModel(application: Application) : BaseAndroidViewModel(applicatio
   private val repository = FlowcryptApiRepository()
   val loginLiveData: MutableLiveData<Result<LoginResponse>> = MutableLiveData(Result.none())
 
-  fun login(account: String, uuid: String, tokenId: String) {
+  fun login(account: String, uuid: String, idToken: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
       loginLiveData.value = Result.loading(progressMsg = context.getString(R.string.loading))
@@ -39,7 +39,7 @@ class LoginViewModel(application: Application) : BaseAndroidViewModel(applicatio
         loginLiveData.value = repository.login(
           context = context,
           loginModel = LoginModel(account, uuid),
-          tokenId = tokenId
+          idToken = idToken
         )
       } catch (e: Exception) {
         loginLiveData.value = Result.exception(e)

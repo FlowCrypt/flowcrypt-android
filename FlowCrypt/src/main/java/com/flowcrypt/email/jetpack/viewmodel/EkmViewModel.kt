@@ -35,7 +35,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
   private val repository = FlowcryptApiRepository()
   val ekmLiveData: MutableLiveData<Result<EkmPrivateKeysResponse>> = MutableLiveData(Result.none())
 
-  fun fetchPrvKeys(orgRules: OrgRules, tokenId: String) {
+  fun fetchPrvKeys(orgRules: OrgRules, idToken: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
       ekmLiveData.value = Result.loading(progressMsg = context.getString(R.string.fetching_keys))
@@ -57,7 +57,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           context = context,
           ekmUrl = orgRules.keyManagerUrl
             ?: throw IllegalArgumentException("key_manager_url is empty"),
-          tokenId = tokenId
+          idToken = idToken
         )
 
         if (ekmPrivateResult.status != Result.Status.SUCCESS) {
