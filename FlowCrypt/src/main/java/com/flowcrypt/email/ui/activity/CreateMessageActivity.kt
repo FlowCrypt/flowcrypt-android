@@ -26,7 +26,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
-import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity

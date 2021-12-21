@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.base
+package com.flowcrypt.email.ui.activity.fragment
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -68,6 +68,7 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectRecipientsActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment

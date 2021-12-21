@@ -14,7 +14,7 @@
 
     <androidx.fragment.app.FragmentContainerView xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/createMessageFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
