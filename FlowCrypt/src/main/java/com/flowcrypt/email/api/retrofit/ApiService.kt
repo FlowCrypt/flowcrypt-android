@@ -16,11 +16,15 @@ import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
+import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
+import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
@@ -29,7 +33,9 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Streaming
@@ -143,7 +149,7 @@ interface ApiService {
    * @param body POJO model for requests
    */
   @POST(BuildConfig.API_URL + "account/login")
-  suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") tokenId: String):
+  suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") authorization: String):
       Response<LoginResponse>
 
   /**
@@ -200,7 +206,7 @@ interface ApiService {
   @GET
   suspend fun getPrivateKeysViaEkm(
     @Url ekmUrl: String,
-    @Header("Authorization") tokenId: String
+    @Header("Authorization") authorization: String
   ): Response<EkmPrivateKeysResponse>
 
   /**
@@ -214,4 +220,25 @@ interface ApiService {
    */
   @GET()
   suspend fun isAvailable(@Url url: String): Response<ResponseBody>
+
+  /**
+   * This method grabs a reply token before uploading a password protected message
+   */
+  @POST("https://fes.{domain}/api/v1/message/new-reply-token")
+  suspend fun getReplyTokenForPasswordProtectedMsg(
+    @Path("domain") domain: String,
+    @Header("Authorization") authorization: String
+  ): Response<MessageReplyTokenResponse>
+
+  /**
+   * This method uploads a password protected message to a web portal
+   */
+  @Multipart
+  @POST("https://fes.{domain}/api/v1/message")
+  suspend fun uploadPasswordProtectedMsgToWebPortal(
+    @Path("domain") domain: String,
+    @Header("Authorization") authorization: String,
+    @Part("details") details: RequestBody,
+    @Part content: MultipartBody.Part
+  ): Response<MessageUploadResponse>
 }
