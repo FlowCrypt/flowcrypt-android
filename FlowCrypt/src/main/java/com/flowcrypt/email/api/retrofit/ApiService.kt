@@ -149,7 +149,7 @@ interface ApiService {
    * @param body POJO model for requests
    */
   @POST(BuildConfig.API_URL + "account/login")
-  suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") idToken: String):
+  suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") authorization: String):
       Response<LoginResponse>
 
   /**
@@ -206,7 +206,7 @@ interface ApiService {
   @GET
   suspend fun getPrivateKeysViaEkm(
     @Url ekmUrl: String,
-    @Header("Authorization") idToken: String
+    @Header("Authorization") authorization: String
   ): Response<EkmPrivateKeysResponse>
 
   /**
@@ -227,7 +227,7 @@ interface ApiService {
   @POST("https://fes.{domain}/api/v1/message/new-reply-token")
   suspend fun getReplyTokenForPasswordProtectedMsg(
     @Path("domain") domain: String,
-    @Header("Authorization") idToken: String
+    @Header("Authorization") authorization: String
   ): Response<MessageReplyTokenResponse>
 
   /**
@@ -237,7 +237,7 @@ interface ApiService {
   @POST("https://fes.{domain}/api/v1/message")
   suspend fun uploadPasswordProtectedMsgToWebPortal(
     @Path("domain") domain: String,
-    @Header("Authorization") idToken: String,
+    @Header("Authorization") authorization: String,
     @Part("details") details: RequestBody,
     @Part content: MultipartBody.Part
   ): Response<MessageUploadResponse>
