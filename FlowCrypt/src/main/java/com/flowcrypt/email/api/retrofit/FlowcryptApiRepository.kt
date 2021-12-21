@@ -284,7 +284,7 @@ class FlowcryptApiRepository : ApiRepository {
 
         apiService.uploadPasswordProtectedMsgToWebPortal(
           domain = domain,
-          idToken = "Bearer $idToken",
+          authorization = "Bearer $idToken",
           details = details,
           content = content
         )
