@@ -106,7 +106,6 @@ import javax.mail.internet.InternetAddress
  * Time: 11:27
  * E-mail: DenBond7@gmail.com
  */
-//todo-denbond7 exlude from the base package
 class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   AdapterView.OnItemSelectedListener,
   View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {

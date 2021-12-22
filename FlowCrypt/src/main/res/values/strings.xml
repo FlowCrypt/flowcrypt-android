@@ -122,6 +122,7 @@
     <string name="import_their_public_key">Import their Public Key</string>
     <string name="copy_from_other_contact">Copy from other contact</string>
     <string name="template_remove_recipient">Remove %1$s</string>
+    <string name="protect_with_password">Protect with password</string>
     <string name="recipient_does_not_use_pgp">Recipient doesn\'t use PGP</string>
     <string name="reply">Reply</string>
     <string name="import_public_key">Import Public Key</string>
