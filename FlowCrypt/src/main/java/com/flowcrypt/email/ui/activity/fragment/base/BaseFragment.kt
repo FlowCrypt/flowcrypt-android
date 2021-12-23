@@ -26,6 +26,7 @@ import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.UIUtil
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -68,6 +69,13 @@ abstract class BaseFragment : Fragment() {
       (activity as AppCompatActivity).supportActionBar
     } else
       null
+
+  val appBarLayout: AppBarLayout?
+    get() = if (activity is BaseActivity) {
+      (activity as BaseActivity).appBarLayout
+    } else {
+      activity?.findViewById(R.id.appBarLayout)
+    }
 
   val baseActivity: BaseActivity
     get() = activity as BaseActivity

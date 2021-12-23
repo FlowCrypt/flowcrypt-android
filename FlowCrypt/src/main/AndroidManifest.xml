@@ -95,6 +95,7 @@
             android:name=".ui.activity.CreateMessageActivity"
             android:exported="true"
             android:screenOrientation="portrait">
+            <nav-graph android:value="@navigation/create_msg_graph" />
             <intent-filter>
                 <!--Handle the clicks on email links in a browser-->
                 <action android:name="android.intent.action.VIEW" />
