@@ -30,12 +30,14 @@ import android.widget.ArrayAdapter
 import android.widget.FilterQueryProvider
 import android.widget.FrameLayout
 import android.widget.ListView
+import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -128,12 +130,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private var binding: FragmentCreateMessageBinding? = null
-  private var recipientWithPubKeysTo: MutableList<RecipientWithPubKeys>? = null
-  private var recipientWithPubKeysCc: MutableList<RecipientWithPubKeys>? = null
-  private var recipientWithPubKeysBcc: MutableList<RecipientWithPubKeys>? = null
-  private val atts: MutableList<AttachmentInfo>?
+  private var recipientWithPubKeysTo: MutableList<RecipientWithPubKeys>? = mutableListOf()
+  private var recipientWithPubKeysCc: MutableList<RecipientWithPubKeys>? = mutableListOf()
+  private var recipientWithPubKeysBcc: MutableList<RecipientWithPubKeys>? = mutableListOf()
+  private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
-  private var fromAddrs: FromAddressesAdapter<String>? = null
+  private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
   private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
   private var extraActionInfo: ExtraActionInfo? = null
   private var messageType = MessageType.NEW
@@ -151,163 +153,13 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   override val contentView: View?
     get() = binding?.scrollView
 
-  /**
-   * Generate an outgoing message info from entered information by user.
-   *
-   * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
-   * contains information about an outgoing message.
-   */
-  private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
-    var msg = binding?.editTextEmailMessage?.text.toString()
-    if (messageType == MessageType.REPLY || messageType == MessageType.REPLY_ALL) {
-      if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
-        msg += EmailUtil.genReplyContent(args.incomingMessageInfo)
-      }
-    }
-
-    val attachments = atts?.minus(forwardedAtts.toSet())
-    attachments?.forEachIndexed { index, attachmentInfo -> attachmentInfo.path = index.toString() }
-
-    return OutgoingMessageInfo(
-      account = accountViewModel.activeAccountLiveData.value?.email ?: "",
-      subject = binding?.editTextEmailSubject?.text.toString(),
-      msg = msg,
-      toRecipients = binding?.editTextRecipientTo?.chipValues?.map { InternetAddress(it) }
-        ?: emptyList(),
-      ccRecipients = binding?.editTextRecipientCc?.chipValues?.map { InternetAddress(it) },
-      bccRecipients = binding?.editTextRecipientBcc?.chipValues?.map { InternetAddress(it) },
-      from = binding?.editTextFrom?.text.toString(),
-      atts = attachments,
-      forwardedAtts = forwardedAtts,
-      encryptionType = composeMsgViewModel.msgEncryptionType,
-      messageType = messageType,
-      replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
-      uid = EmailUtil.genOutboxUID(context)
-    )
-  }
-
-  /**
-   * Do a lot of checks to validate an outgoing message info.
-   *
-   * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
-   */
-  private val isDataCorrect: Boolean
-    get() {
-      binding?.editTextRecipientTo?.chipifyAllUnterminatedTokens()
-      binding?.editTextRecipientCc?.chipifyAllUnterminatedTokens()
-      binding?.editTextRecipientBcc?.chipifyAllUnterminatedTokens()
-      if (fromAddrs?.isEnabled(
-          binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
-        ) == false
-      ) {
-        showInfoSnackbar(binding?.editTextRecipientTo, getString(R.string.no_key_available))
-        return false
-      }
-      if (binding?.editTextRecipientTo?.text?.isEmpty() == true) {
-        showInfoSnackbar(
-          binding?.editTextRecipientTo, getString(
-            R.string.text_must_not_be_empty,
-            getString(R.string.prompt_recipients_to)
-          )
-        )
-        binding?.editTextRecipientTo?.requestFocus()
-        return false
-      }
-      if (hasInvalidEmail(
-          binding?.editTextRecipientTo,
-          binding?.editTextRecipientCc,
-          binding?.editTextRecipientBcc
-        )
-      ) {
-        return false
-      }
-      if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
-        if (binding?.editTextRecipientTo?.text?.isNotEmpty() == true
-          && recipientWithPubKeysTo?.isEmpty() == true
-        ) {
-          fetchDetailsAboutRecipients(RecipientEntity.Type.TO)
-          return false
-        }
-        if (binding?.editTextRecipientCc?.text?.isNotEmpty() == true
-          && recipientWithPubKeysCc?.isEmpty() == true
-        ) {
-          fetchDetailsAboutRecipients(RecipientEntity.Type.CC)
-          return false
-        }
-        if (binding?.editTextRecipientBcc?.text?.isNotEmpty() == true
-          && recipientWithPubKeysBcc?.isEmpty() == true
-        ) {
-          fetchDetailsAboutRecipients(RecipientEntity.Type.BCC)
-          return false
-        }
-        if (hasUnusableRecipient(
-            recipientWithPubKeysTo,
-            recipientWithPubKeysCc,
-            recipientWithPubKeysBcc
-          )
-        ) {
-          return false
-        }
-      }
-      if (binding?.editTextEmailSubject?.text?.isEmpty() == true) {
-        showInfoSnackbar(
-          binding?.editTextEmailSubject, getString(
-            R.string.text_must_not_be_empty,
-            getString(R.string.prompt_subject)
-          )
-        )
-        binding?.editTextEmailSubject?.requestFocus()
-        return false
-      }
-      if (atts?.isEmpty() == true && binding?.editTextEmailMessage?.text?.isEmpty() == true) {
-        showInfoSnackbar(
-          binding?.editTextEmailMessage,
-          getString(R.string.sending_message_must_not_be_empty)
-        )
-        binding?.editTextEmailMessage?.requestFocus()
-        return false
-      }
-      if (atts?.isEmpty() == true || !hasExternalStorageUris(this.atts)) {
-        return true
-      }
-      return false
-    }
-
-
-  /**
-   * Generate a forwarded attachments list.
-   *
-   * @return The generated list.
-   */
-  private val forwardedAtts: MutableList<AttachmentInfo>
-    get() {
-      val atts = mutableListOf<AttachmentInfo>()
-
-      this.atts?.let {
-        for (att in it) {
-          if (att.id != null && att.isForwarded) {
-            atts.add(att)
-          }
-        }
-      }
-
-      return atts
-    }
-
-  init {
-    recipientWithPubKeysTo = mutableListOf()
-    recipientWithPubKeysCc = mutableListOf()
-    recipientWithPubKeysBcc = mutableListOf()
-    atts = ArrayList()
-  }
-
   override fun onAttach(context: Context) {
     super.onAttach(context)
-    fromAddrs = FromAddressesAdapter(
+    fromAddressesAdapter = FromAddressesAdapter(
       context, android.R.layout.simple_list_item_1, android.R.id.text1, ArrayList()
     )
-    fromAddrs?.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-    fromAddrs?.setUseKeysInfo(composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED)
+    fromAddressesAdapter?.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+    fromAddressesAdapter?.setUseKeysInfo(composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED)
 
     initDraftCacheDir(context)
   }
@@ -344,12 +196,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   override fun onDestroy() {
     super.onDestroy()
     if (!isMsgSentToQueue) {
-      atts?.let {
-        for (att in it) {
-          att.uri?.let { uri ->
-            if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority, ignoreCase = true)) {
-              context?.contentResolver?.delete(uri, null, null)
-            }
+      for (att in attachments) {
+        att.uri?.let { uri ->
+          if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority, ignoreCase = true)) {
+            context?.contentResolver?.delete(uri, null, null)
           }
         }
       }
@@ -461,8 +311,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
                 ?: return
             val key = keyList.first()
-            if (atts?.none { it.name == key.name && it.encodedSize == key.encodedSize } == true) {
-              atts.add(key)
+            if (attachments.none { it.name == key.name && it.encodedSize == key.encodedSize }) {
+              attachments.add(key)
               showAtts()
             }
           }
@@ -510,7 +360,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
         if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
           UIUtil.hideSoftInput(context, view)
-          if (isDataCorrect) {
+          if (isDataCorrect()) {
             if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
               val keysStorage = KeysStorageImpl.getInstance(requireContext())
               val senderEmail = binding?.editTextFrom?.text.toString()
@@ -653,7 +503,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.imageButtonAliases -> if (fromAddrs?.count != 1 && fromAddrs?.count != 0) {
+      R.id.imageButtonAliases -> if (fromAddressesAdapter?.count != 1 && fromAddressesAdapter?.count != 0) {
         binding?.spinnerFrom?.performClick()
       }
 
@@ -688,8 +538,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     accountEntity?.email?.let { email ->
-      if (fromAddrs?.objects?.contains(email) == false) {
-        fromAddrs?.add(email)
+      if (fromAddressesAdapter?.objects?.contains(email) == false) {
+        fromAddressesAdapter?.add(email)
       }
     }
   }
@@ -712,14 +562,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             binding?.editTextRecipientBcc,
             false
           )
-          fromAddrs?.setUseKeysInfo(true)
+          fromAddressesAdapter?.setUseKeysInfo(true)
 
           val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
           val selectedItemPosition = binding?.spinnerFrom?.selectedItemPosition
           if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
             && binding?.spinnerFrom?.adapter?.count ?: 0 > selectedItemPosition
           ) {
-            val isItemEnabled = fromAddrs?.isEnabled(selectedItemPosition) ?: true
+            val isItemEnabled = fromAddressesAdapter?.isEnabled(selectedItemPosition) ?: true
             binding?.editTextFrom?.setTextColor(if (isItemEnabled) originalColor else colorGray)
           }
         }
@@ -732,7 +582,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           isUpdateToCompleted = true
           isUpdateCcCompleted = true
           isUpdateBccCompleted = true
-          fromAddrs?.setUseKeysInfo(false)
+          fromAddressesAdapter?.setUseKeysInfo(false)
           binding?.editTextFrom?.setTextColor(originalColor)
         }
       }
@@ -761,7 +611,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           this.folderType = FoldersManager.getFolderType(it)
         }
 
-        this.args.serviceInfo?.atts?.let { atts?.addAll(it) }
+        this.args.serviceInfo?.atts?.let { attachments.addAll(it) }
       }
     }
   }
@@ -816,7 +666,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               draftAtt
             )
             attachmentInfo.uri = uri
-            atts?.add(attachmentInfo)
+            attachments.add(attachmentInfo)
           }
         } catch (e: IOException) {
           e.printStackTrace()
@@ -937,7 +787,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           for (alias in aliases) {
             if (alias.equals(toAddress.address, ignoreCase = true)) {
               firstFoundedAlias = if (messageEncryptionType === MessageEncryptionType.ENCRYPTED
-                && fromAddrs?.hasPrvKey(alias) == true
+                && fromAddressesAdapter?.hasPrvKey(alias) == true
               ) {
                 alias
               } else {
@@ -952,7 +802,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
 
       if (firstFoundedAlias != null) {
-        val position = fromAddrs?.getPosition(firstFoundedAlias) ?: Spinner.INVALID_POSITION
+        val position =
+          fromAddressesAdapter?.getPosition(firstFoundedAlias) ?: Spinner.INVALID_POSITION
         if (position != Spinner.INVALID_POSITION) {
           binding?.spinnerFrom?.setSelection(position)
         }
@@ -963,14 +814,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private fun showFirstMatchedAliasWithPrvKey(aliases: List<String>) {
     var firstFoundedAliasWithPrvKey: String? = null
     for (alias in aliases) {
-      if (fromAddrs?.hasPrvKey(alias) == true) {
+      if (fromAddressesAdapter?.hasPrvKey(alias) == true) {
         firstFoundedAliasWithPrvKey = alias
         break
       }
     }
 
     if (firstFoundedAliasWithPrvKey != null) {
-      val position = fromAddrs?.getPosition(firstFoundedAliasWithPrvKey) ?: Spinner.INVALID_POSITION
+      val position =
+        fromAddressesAdapter?.getPosition(firstFoundedAliasWithPrvKey) ?: Spinner.INVALID_POSITION
       if (position != Spinner.INVALID_POSITION) {
         binding?.spinnerFrom?.setSelection(position)
       }
@@ -985,7 +837,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       sublist?.let {
         for (recipientWithPubKeys in it) {
           if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
-            showNoPgpFoundDialog(recipientWithPubKeys, true)
+            showNoPgpFoundDialog(recipientWithPubKeys)
             return true
           }
 
@@ -1118,7 +970,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     initChipsView(binding?.editTextRecipientBcc)
 
     binding?.spinnerFrom?.onItemSelectedListener = this
-    binding?.spinnerFrom?.adapter = fromAddrs
+    binding?.spinnerFrom?.adapter = fromAddressesAdapter
 
     originalColor = requireNotNull(binding?.editTextFrom?.currentTextColor)
 
@@ -1242,7 +1094,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     if (!CollectionUtils.isEmpty(originalMsgInfo.atts)) {
       for (att in originalMsgInfo.atts!!) {
         if (hasAbilityToAddAtt(att)) {
-          atts?.add(att)
+          attachments.add(att)
         } else {
           showInfoSnackbar(
             requireView(), getString(
@@ -1484,7 +1336,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    val existedAttsSize = (atts?.map { it.encodedSize.toInt() }?.sum() ?: 0)
+    val existedAttsSize = (attachments.map { it.encodedSize.toInt() }.sum())
     val newAttSize = newAttInfo?.encodedSize?.toInt() ?: 0
     return (existedAttsSize + newAttSize) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
@@ -1493,14 +1345,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   /**
    * Show a dialog where we can select different actions.
    *
-   * @param recipient            The [RecipientWithPubKeys] which will be used when we select the remove action.
-   * @param isRemoveActionEnabled true if we want to show the remove action, false otherwise.
+   * @param recipient The [RecipientWithPubKeys] which will be used when we select the remove action.
    */
-  private fun showNoPgpFoundDialog(
-    recipient: RecipientWithPubKeys,
-    isRemoveActionEnabled: Boolean
-  ) {
-    val dialogFragment = NoPgpFoundDialogFragment.newInstance(recipient, isRemoveActionEnabled)
+  private fun showNoPgpFoundDialog(recipient: RecipientWithPubKeys) {
+    val dialogFragment = NoPgpFoundDialogFragment.newInstance(recipient, true)
     dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
     dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
   }
@@ -1525,10 +1373,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    * Show attachments which were added.
    */
   private fun showAtts() {
-    if (atts?.isNotEmpty() == true) {
+    if (attachments.isNotEmpty()) {
       binding?.layoutAtts?.removeAllViews()
       val layoutInflater = LayoutInflater.from(context)
-      for (att in atts) {
+      for (att in attachments) {
         val rootView = layoutInflater.inflate(R.layout.attachment_item, binding?.layoutAtts, false)
 
         val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
@@ -1549,7 +1397,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           val imageButtonClearAtt = rootView.findViewById<View>(R.id.imageButtonClearAtt)
           imageButtonClearAtt.visibility = View.VISIBLE
           imageButtonClearAtt.setOnClickListener {
-            atts.remove(att)
+            attachments.remove(att)
             binding?.layoutAtts?.removeView(rootView)
 
             //Remove a temp file which was created by our app
@@ -1597,8 +1445,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         aliases.add(accountAlias.sendAsEmail)
       }
 
-      fromAddrs?.clear()
-      fromAddrs?.addAll(aliases)
+      fromAddressesAdapter?.clear()
+      fromAddressesAdapter?.addAll(aliases)
 
       updateFromAddressAdapter(KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings())
 
@@ -1617,7 +1465,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           }
         }
       } else {
-        fromAddrs?.count?.let { count: Int ->
+        fromAddressesAdapter?.count?.let { count: Int ->
           if (count in 0..1) {
             if (binding?.imageButtonAliases?.visibility == View.VISIBLE) {
               binding?.imageButtonAliases?.visibility = View.INVISIBLE
@@ -1642,7 +1490,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       .flatten()
       .map { mimeAddress -> mimeAddress.address }
 
-    fromAddrs?.let { adapter ->
+    fromAddressesAdapter?.let { adapter ->
       for (email in adapter.objects) {
         adapter.updateKeyAvailability(email, setOfUsers.contains(email))
       }
@@ -1650,100 +1498,69 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun setupRecipientsViewModel() {
-    handleUpdatingToRecipients()
-    handleUpdatingCcRecipients()
-    handleUpdatingBccRecipients()
+    handleUpdatingRecipients(
+      recipientsViewModel.recipientsToLiveData,
+      recipientWithPubKeysTo,
+      binding?.progressBarTo,
+      binding?.editTextRecipientTo
+    ) {
+      isUpdateToCompleted = it
+    }
+
+    handleUpdatingRecipients(
+      recipientsViewModel.recipientsCcLiveData,
+      recipientWithPubKeysCc,
+      binding?.progressBarCc,
+      binding?.editTextRecipientCc
+    ) {
+      isUpdateCcCompleted = it
+    }
+
+    handleUpdatingRecipients(
+      recipientsViewModel.recipientsBccLiveData,
+      recipientWithPubKeysBcc,
+      binding?.progressBarBcc,
+      binding?.editTextRecipientBcc
+    ) {
+      isUpdateBccCompleted = it
+    }
   }
 
-  private fun handleUpdatingToRecipients() {
-    recipientsViewModel.recipientsToLiveData.observe(viewLifecycleOwner, {
+  private fun handleUpdatingRecipients(
+    liveData: LiveData<Result<List<RecipientWithPubKeys>>>,
+    recipientWithPubKeys: MutableList<RecipientWithPubKeys>?,
+    progressBar: ProgressBar?,
+    nachoTextView: PgpContactsNachoTextView?,
+    updateState: (state: Boolean) -> Unit
+  ) {
+    liveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
+          updateState.invoke(false)
           baseActivity.countingIdlingResource.incrementSafely()
-          recipientWithPubKeysTo?.clear()
-          binding?.progressBarTo?.visible()
-          isUpdateToCompleted = false
+          recipientWithPubKeys?.clear()
+          progressBar?.visible()
         }
 
         Result.Status.SUCCESS -> {
-          isUpdateToCompleted = true
-          binding?.progressBarTo?.invisible()
-
-          recipientWithPubKeysTo = it.data?.toMutableList()
-          if (recipientWithPubKeysTo?.isNotEmpty() == true) {
-            updateChips(binding?.editTextRecipientTo, recipientWithPubKeysTo)
+          updateState.invoke(true)
+          progressBar?.invisible()
+          recipientWithPubKeys?.clear()
+          it.data?.let { list -> recipientWithPubKeys?.addAll(list) }
+          if (recipientWithPubKeys?.isNotEmpty() == true) {
+            updateChips(nachoTextView, recipientWithPubKeys)
           }
           baseActivity.countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          isUpdateToCompleted = true
-          binding?.progressBarTo?.invisible()
+          updateState.invoke(true)
+          progressBar?.invisible()
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
           baseActivity.countingIdlingResource.decrementSafely()
         }
-      }
-    })
-  }
 
-  private fun handleUpdatingCcRecipients() {
-    recipientsViewModel.recipientsCcLiveData.observe(viewLifecycleOwner, {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
-          recipientWithPubKeysCc?.clear()
-          binding?.progressBarCc?.visible()
-          isUpdateCcCompleted = false
-        }
-
-        Result.Status.SUCCESS -> {
-          isUpdateCcCompleted = true
-          binding?.progressBarCc?.invisible()
-          recipientWithPubKeysCc = it.data?.toMutableList()
-
-          if (recipientWithPubKeysCc?.isNotEmpty() == true) {
-            updateChips(binding?.editTextRecipientCc, recipientWithPubKeysCc)
-          }
-          baseActivity.countingIdlingResource.decrementSafely()
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          isUpdateCcCompleted = true
-          binding?.progressBarCc?.invisible()
-          showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          baseActivity.countingIdlingResource.decrementSafely()
-        }
-      }
-    })
-  }
-
-  private fun handleUpdatingBccRecipients() {
-    recipientsViewModel.recipientsBccLiveData.observe(viewLifecycleOwner, {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
-          recipientWithPubKeysBcc?.clear()
-          binding?.progressBarBcc?.visible()
-          isUpdateBccCompleted = false
-        }
-
-        Result.Status.SUCCESS -> {
-          isUpdateBccCompleted = true
-          binding?.progressBarBcc?.invisible()
-          recipientWithPubKeysBcc = it.data?.toMutableList()
-
-          if (recipientWithPubKeysBcc?.isNotEmpty() == true) {
-            updateChips(binding?.editTextRecipientBcc, recipientWithPubKeysBcc)
-          }
-          baseActivity.countingIdlingResource.decrementSafely()
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          isUpdateBccCompleted = true
-          binding?.progressBarBcc?.invisible()
-          showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          baseActivity.countingIdlingResource.decrementSafely()
-        }
+        Result.Status.NONE -> {}
       }
     })
   }
@@ -1775,7 +1592,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
           return
         }
-        attachmentInfo?.let { atts?.add(it) }
+        attachmentInfo?.let { attachments.add(it) }
         showAtts()
       } else {
         showInfoSnackbar(
@@ -1828,6 +1645,125 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       MessageType.REPLY_ALL -> supportActionBar?.setTitle(R.string.reply_all)
       MessageType.FORWARD -> supportActionBar?.setTitle(R.string.forward)
     }
+  }
+
+  /**
+   * Do a lot of checks to validate an outgoing message info.
+   *
+   * @return true if all information is correct, false otherwise.
+   */
+  private fun isDataCorrect(): Boolean {
+    binding?.editTextRecipientTo?.chipifyAllUnterminatedTokens()
+    binding?.editTextRecipientCc?.chipifyAllUnterminatedTokens()
+    binding?.editTextRecipientBcc?.chipifyAllUnterminatedTokens()
+    if (fromAddressesAdapter?.isEnabled(
+        binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
+      ) == false
+    ) {
+      showInfoSnackbar(binding?.editTextRecipientTo, getString(R.string.no_key_available))
+      return false
+    }
+    if (binding?.editTextRecipientTo?.text?.isEmpty() == true) {
+      showInfoSnackbar(
+        binding?.editTextRecipientTo, getString(
+          R.string.text_must_not_be_empty,
+          getString(R.string.prompt_recipients_to)
+        )
+      )
+      binding?.editTextRecipientTo?.requestFocus()
+      return false
+    }
+    if (hasInvalidEmail(
+        binding?.editTextRecipientTo,
+        binding?.editTextRecipientCc,
+        binding?.editTextRecipientBcc
+      )
+    ) {
+      return false
+    }
+    if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+      if (binding?.editTextRecipientTo?.text?.isNotEmpty() == true
+        && recipientWithPubKeysTo?.isEmpty() == true
+      ) {
+        fetchDetailsAboutRecipients(RecipientEntity.Type.TO)
+        return false
+      }
+      if (binding?.editTextRecipientCc?.text?.isNotEmpty() == true
+        && recipientWithPubKeysCc?.isEmpty() == true
+      ) {
+        fetchDetailsAboutRecipients(RecipientEntity.Type.CC)
+        return false
+      }
+      if (binding?.editTextRecipientBcc?.text?.isNotEmpty() == true
+        && recipientWithPubKeysBcc?.isEmpty() == true
+      ) {
+        fetchDetailsAboutRecipients(RecipientEntity.Type.BCC)
+        return false
+      }
+      if (hasUnusableRecipient(
+          recipientWithPubKeysTo,
+          recipientWithPubKeysCc,
+          recipientWithPubKeysBcc
+        )
+      ) {
+        return false
+      }
+    }
+    if (binding?.editTextEmailSubject?.text?.isEmpty() == true) {
+      showInfoSnackbar(
+        binding?.editTextEmailSubject, getString(
+          R.string.text_must_not_be_empty,
+          getString(R.string.prompt_subject)
+        )
+      )
+      binding?.editTextEmailSubject?.requestFocus()
+      return false
+    }
+    if (attachments.isEmpty() && binding?.editTextEmailMessage?.text?.isEmpty() == true) {
+      showInfoSnackbar(
+        binding?.editTextEmailMessage,
+        getString(R.string.sending_message_must_not_be_empty)
+      )
+      binding?.editTextEmailMessage?.requestFocus()
+      return false
+    }
+    if (attachments.isEmpty() || !hasExternalStorageUris(this.attachments)) {
+      return true
+    }
+    return false
+  }
+
+  private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
+    var msg = binding?.editTextEmailMessage?.text.toString()
+    if (messageType == MessageType.REPLY || messageType == MessageType.REPLY_ALL) {
+      if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
+        msg += EmailUtil.genReplyContent(args.incomingMessageInfo)
+      }
+    }
+
+    val attachments = attachments.minus(getForwardedAttachments().toSet())
+    attachments.forEachIndexed { index, attachmentInfo -> attachmentInfo.path = index.toString() }
+
+    return OutgoingMessageInfo(
+      account = accountViewModel.activeAccountLiveData.value?.email ?: "",
+      subject = binding?.editTextEmailSubject?.text.toString(),
+      msg = msg,
+      toRecipients = binding?.editTextRecipientTo?.chipValues?.map { InternetAddress(it) }
+        ?: emptyList(),
+      ccRecipients = binding?.editTextRecipientCc?.chipValues?.map { InternetAddress(it) },
+      bccRecipients = binding?.editTextRecipientBcc?.chipValues?.map { InternetAddress(it) },
+      from = binding?.editTextFrom?.text.toString(),
+      atts = attachments,
+      forwardedAtts = getForwardedAttachments(),
+      encryptionType = composeMsgViewModel.msgEncryptionType,
+      messageType = messageType,
+      replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
+      uid = EmailUtil.genOutboxUID(context)
+    )
+  }
+
+  private fun getForwardedAttachments(): List<AttachmentInfo> {
+    return attachments.filter { it.id != null && it.isForwarded }
   }
 
   companion object {
