@@ -1,0 +1,23 @@
+2 M1e C61c5e1f0
+N          00000000000002E2
+Date: Fri, 24 Dec 2021 17:05:16 +0200 (GMT+02:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <4421067.3.1640357836456@flowcrypt.test>
+Subject: Message with broken base64
+MIME-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_2_233404570.1640357836447"
+User-Agent: FlowCrypt_Android_1.2.5_dev_125__2021_12_24
+
+------=_Part_2_233404570.1640357836447
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
+
+V2UgaGF2ZSBhbiBhY3Rpdml0eSB3aGljaCBoYXMgYSBOYXZIb3N0RnJhZ21lbnQuIFRoZSBhY3Rpdml0eSByZWNlaXZlcyBjZXJ0YWluIHZhbHVlcyBpbiBpdHMgaW50ZW50LiBJIHdhbnQgdG8gcGFzcyB0aGlzIGRhdGEgdG8gdGhlIGZpcnN0IGZyYWdtZW50IGkuZSBzdGFydERlc3RpbmF0aW9uIG9mIHRoZSBuYXZpZ2F0==
+------=_Part_2_233404570.1640357836447--
+
+R61c5e1ac
+V2f1
+Gc8a5a208f0e1c5612004000073f46975
+
