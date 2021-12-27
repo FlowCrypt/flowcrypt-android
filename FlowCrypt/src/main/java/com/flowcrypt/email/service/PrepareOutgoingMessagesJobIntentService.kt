@@ -27,6 +27,7 @@ import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
@@ -247,7 +248,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       flags = MessageFlag.SEEN.value,
       isEncrypted = isEncrypted,
       state = msgStateValue,
-      attachmentsDirectory = attsCacheDir.name
+      attachmentsDirectory = attsCacheDir.name,
+      password = msgInfo.password?.let { KeyStoreCryptoManager.encrypt(String(it)).toByteArray() }
     )
   }
 
