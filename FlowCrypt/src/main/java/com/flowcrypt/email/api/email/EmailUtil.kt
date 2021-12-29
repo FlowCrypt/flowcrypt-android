@@ -475,42 +475,6 @@ class EmailUtil {
     }
 
     /**
-     * Get updated information about messages in the local database.
-     *
-     * @param folder          The folder which contains messages.
-     * @param loadedMsgsCount The count of already loaded messages.
-     * @param newMsgsCount    The count of new messages (offset value).
-     * @return A list of messages which already exist in the local database.
-     * @throws MessagingException for other failures.
-     */
-    fun getUpdatedMsgs(
-      folder: IMAPFolder,
-      loadedMsgsCount: Int,
-      newMsgsCount: Int
-    ): Array<Message> {
-      val end = folder.messageCount - newMsgsCount
-      var start = end - loadedMsgsCount + 1
-
-      if (end < 1) {
-        return arrayOf()
-      } else {
-        if (start < 1) {
-          start = 1
-        }
-
-        val msgs = folder.getMessages(start, end)
-
-        if (msgs.isNotEmpty()) {
-          val fetchProfile = FetchProfile()
-          fetchProfile.add(FetchProfile.Item.FLAGS)
-          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-          folder.fetch(msgs, fetchProfile)
-        }
-        return msgs
-      }
-    }
-
-    /**
      * Get updated information about messages in the local database using UIDs.
      *
      * @param folder The folder which contains messages.
@@ -755,25 +719,6 @@ class EmailUtil {
         }
 
         getMsgsEncryptionStates(folder, uidList)
-      }
-    }
-
-    /**
-     * Get only headers from the raw MIME
-     */
-    fun getHeadersFromRawMIME(rawMime: String?): String {
-      // we don't know if the message is \n or \r\n delimited
-      if (rawMime == null) {
-        return ""
-      }
-
-      val headersByDoubleNl = rawMime.trim().substringBefore("\n\n")
-      val headersByDoubleCrNl = rawMime.trim().substringBefore("\r\n\r\n")
-
-      return if (headersByDoubleCrNl.length < headersByDoubleNl.length) { // therefore we choose smaller result
-        headersByDoubleCrNl
-      } else {
-        headersByDoubleNl
       }
     }
 
@@ -1031,9 +976,7 @@ class EmailUtil {
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       msg.setContent(MimeMultipart().apply {
-        addBodyPart(MimeBodyPart().apply {
-          setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
-        })
+        addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
       })
       return msg
     }
@@ -1048,9 +991,7 @@ class EmailUtil {
       val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
       reply.setFrom(InternetAddress(info.from))
       reply.setContent(MimeMultipart().apply {
-        addBodyPart(MimeBodyPart().apply {
-          setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
-        })
+        addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
       })
       reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
       reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
@@ -1094,44 +1035,57 @@ class EmailUtil {
     ): Message {
       val replyToMessageEntity = info.replyToMsgEntity
         ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
-      var msg: MimeMessage
-      if (replyToMessageEntity.rawMessageWithoutAttachments.isNullOrEmpty()) {
+      val msg = if (replyToMessageEntity.rawMessageWithoutAttachments.isNullOrEmpty()) {
         val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
           ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
 
         val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
         val input = context.contentResolver?.openInputStream(uri)
           ?: throw IllegalArgumentException("InputStream not found")
-        msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+        FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
       } else {
-        val input = ByteArrayInputStream(
-          replyToMessageEntity.rawMessageWithoutAttachments.toByteArray()
-        )
+        val input =
+          ByteArrayInputStream(replyToMessageEntity.rawMessageWithoutAttachments.toByteArray())
         try {
-          msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+          FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
         } catch (e: Exception) {
           //added for compatibility to previous versions
-          msg = FlowCryptMimeMessage(session, input)
+          FlowCryptMimeMessage(session, input)
         }
       }
 
       return genReplyMessage(msg, info, pubKeys, prvKeys, protector)
     }
 
-    private fun prepareMsgContent(
-      info: OutgoingMessageInfo, pubKeys: List<String>? = null,
+    private fun prepareBodyPart(
+      info: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null
-    ): String {
+    ): BodyPart {
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
-        PgpEncryptAndOrSign.encryptAndOrSignMsg(
+        val encryptedContent = PgpEncryptAndOrSign.encryptAndOrSignMsg(
           msg = info.msg ?: "",
           pubKeys = pubKeys ?: emptyList(),
           prvKeys = prvKeys,
           secretKeyRingProtector = protector
         )
+
+        if (info.isPasswordProtected == true) {
+          MimeBodyPart().apply {
+            val dataSource = ByteArrayDataSource(encryptedContent, "application/pgp-encrypted")
+            dataHandler = DataHandler(dataSource)
+            fileName = "message.asc"
+          }
+        } else {
+          MimeBodyPart().apply {
+            setText(encryptedContent)
+          }
+        }
       } else {
-        info.msg ?: ""
+        MimeBodyPart().apply {
+          setText(info.msg ?: "")
+        }
       }
     }
 
