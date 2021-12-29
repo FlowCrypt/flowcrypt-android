@@ -105,8 +105,8 @@
     <string name="enter_new_pass_phrase">Введите новую ключевую фразу</string>
     <string name="enter_your_pass_phrase">Введите вашу ключевую фразу</string>
     <string name="loss_of_this_pass_phrase_cannot_be_recovered">Если вы забудете ключ-фразу, то её нельзя будет восстановить</string>
-    <string name="passphrase_must_be_non_empty">Ключ-фраза не может быть пустой</string>
-    <string name="see_choosing_secure_pass_phrases">Посмотрите как выбрать фразу-ключ</string>
+    <string name="passphrase_must_be_non_empty">Ключевая фраза не может быть пустой</string>
+    <string name="see_choosing_secure_pass_phrases">Посмотрите как выбрать ключевую фразу</string>
     <string name="set_pass_phrase">Установить ключевую фразу</string>
     <string name="checking_imap_settings">Проверка настроек IMAP &#8230;</string>
     <string name="checking_smtp_settings">Проверка настроек SMTP &#8230;</string>
@@ -158,7 +158,7 @@
     <string name="stored_pass_phrase_loading">Сохраненная ключевая фраза: загрузка &#8230;</string>
     <string name="sources">Источники</string>
     <string name="error_happened_during_creation">Извините, нам не удалось создать сообщение. Чтобы получить помощь, напишите %1$s Подробности: %2$s</string>
-    <string name="could_not_verify_response">К сожалению, нам не удалось проверить ответ. Попробуйте снова или напишите нам на на адрес %1$s</string>
+    <string name="could_not_verify_response">К сожалению, нам не удалось проверить ответ. Попробуйте снова или напишите нам на адрес %1$s</string>
     <string name="skip_remaining_backups">Пропустить оставшиеся резервные копии</string>
     <string name="simulate_app_crash">Имитация сбоя приложения</string>
     <string name="show_public_key">Показать открытый ключ</string>
