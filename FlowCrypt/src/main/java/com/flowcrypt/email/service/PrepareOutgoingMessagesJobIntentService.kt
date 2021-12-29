@@ -24,6 +24,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.PreparePasswordProtectedMsgWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -145,8 +146,16 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             msgEntity.email, msgEntity.folder, msgEntity.uid
           )
           insertedMsgEntity?.let {
-            roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
-            MessagesSenderWorker.enqueue(applicationContext)
+            if (outgoingMsgInfo.encryptionType == MessageEncryptionType.ENCRYPTED
+              && outgoingMsgInfo.isPasswordProtected == true
+            ) {
+              roomDatabase.msgDao()
+                .update(it.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
+              PreparePasswordProtectedMsgWorker.enqueue(applicationContext)
+            } else {
+              roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
+              MessagesSenderWorker.enqueue(applicationContext)
+            }
           }
         } else {
           ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)

@@ -19,11 +19,16 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.javamail.AttachmentInfoDataSource
+import com.flowcrypt.email.api.email.javamail.ForwardedAttachmentInfoDataSource
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -54,6 +59,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -1010,6 +1016,83 @@ class EmailUtil {
         JavaEmailConstants.EMAIL_PROVIDER_OUTLOOK,
         JavaEmailConstants.EMAIL_PROVIDER_LIVE,
       )
+    }
+
+    suspend fun createMimeMsg(
+      context: Context,
+      sess: Session?,
+      account: AccountEntity,
+      msgEntity: MessageEntity,
+      atts: List<AttachmentEntity>
+    ): MimeMessage = withContext(Dispatchers.IO) {
+      val mimeMsg = MimeMessage(sess, msgEntity.rawMessageWithoutAttachments?.toInputStream())
+
+      //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
+      mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
+
+      if (mimeMsg.content is MimeMultipart && atts.isNotEmpty()) {
+        val mimeMultipart = mimeMsg.content as MimeMultipart
+        val keysStorage = KeysStorageImpl.getInstance(context)
+        val secretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
+        val ringProtector = keysStorage.getSecretKeyRingProtector()
+
+        val publicKeys = mutableListOf<String>()
+        val senderEmail = getFirstAddressString(msgEntity.from)
+        val recipients = msgEntity.allRecipients.toMutableList()
+        publicKeys.addAll(
+          SecurityUtils.getRecipientsUsablePubKeys(context, recipients)
+        )
+        publicKeys.addAll(
+          SecurityUtils.getSenderPgpKeyDetailsList(context, account, senderEmail)
+            .map { it.publicKey })
+
+        for (att in atts) {
+          val attBodyPart = genBodyPartWithAtt(
+            context = context,
+            att = att,
+            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
+            publicKeys = publicKeys,
+            secretKeys = secretKeys,
+            ringProtector = ringProtector
+          )
+          mimeMultipart.addBodyPart(attBodyPart)
+        }
+
+        mimeMsg.setContent(mimeMultipart)
+        mimeMsg.saveChanges()
+      }
+
+      return@withContext mimeMsg
+    }
+
+    private fun genBodyPartWithAtt(
+      context: Context,
+      att: AttachmentEntity,
+      shouldBeEncrypted: Boolean,
+      publicKeys: List<String>?,
+      secretKeys: PGPSecretKeyRingCollection,
+      ringProtector: SecretKeyRingProtector
+    ): BodyPart {
+      val attBodyPart = MimeBodyPart()
+      val attInfo = att.toAttInfo()
+      attBodyPart.dataHandler = if (attInfo.isForwarded) {
+        DataHandler(
+          ForwardedAttachmentInfoDataSource(
+            context,
+            attInfo,
+            shouldBeEncrypted,
+            publicKeys,
+            secretKeys,
+            ringProtector
+          )
+        )
+      } else {
+        DataHandler(AttachmentInfoDataSource(context, attInfo))
+      }
+      attBodyPart.fileName = attInfo.getSafeName()
+      attBodyPart.contentID = attInfo.id
+
+      return attBodyPart
     }
 
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
