@@ -152,14 +152,20 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               account = msgEntity.email,
               label = JavaEmailConstants.FOLDER_OUTBOX,
               uid = msgEntity.uid
-            )
+            ).map {
+              it.copy(
+                forwardedFolder = "Outbox",
+                forwardedUid = Long.MAX_VALUE,
+                decryptWhenForward = true
+              )
+            }
 
             //create MimeMessage from content + attachments
             val mimeMsgWithAttachments = EmailUtil.createMimeMsg(
               context = applicationContext,
               sess = Session.getDefaultInstance(Properties()),
               account = account,
-              msgEntity = msgEntity,
+              msgEntity = msgEntity.copy(isEncrypted = false),
               atts = attachments
             )
 
@@ -278,7 +284,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
                 if (e.cause is SSLException || e.cause is SocketException) {
                   MessageState.NEW_PASSWORD_PROTECTED
                 } else {
-                  MessageState.ERROR_SENDING_FAILED
+                  MessageState.ERROR_PASSWORD_PROTECTED
                 }
               }
 
@@ -286,7 +292,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
                 when (e.cause) {
                   is FileNotFoundException -> MessageState.ERROR_CACHE_PROBLEM
 
-                  else -> MessageState.ERROR_SENDING_FAILED
+                  else -> MessageState.ERROR_PASSWORD_PROTECTED
                 }
               }
             }
@@ -313,6 +319,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     multipart.addBodyPart(MimeBodyPart().apply {
       setText(applicationContext.getString(R.string.password_protected_msg_promo, fromAddress, url))
     }, 0)
+    //todo-denbond7 need to add HTML version
     mimeMsgWithoutAttachments.saveChanges()
 
     val out = ByteArrayOutputStream()

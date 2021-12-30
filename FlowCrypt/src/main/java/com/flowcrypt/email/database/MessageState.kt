@@ -42,7 +42,8 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   QUEUED_MAKE_COPY_IN_SENT_FOLDER(20),
   PENDING_DELETING_PERMANENTLY(21),
   PENDING_EMPTY_TRASH(22),
-  NEW_PASSWORD_PROTECTED(23);
+  NEW_PASSWORD_PROTECTED(23),
+  ERROR_PASSWORD_PROTECTED(24);
 
   override fun describeContents(): Int {
     return 0
