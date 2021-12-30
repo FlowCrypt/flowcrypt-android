@@ -29,7 +29,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.jetpack.workmanager.base.BasePrepareMsgWorker
+import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -70,7 +70,7 @@ import javax.net.ssl.SSLException
  * E-mail: DenBond7@gmail.com
  */
 class MessagesSenderWorker(context: Context, params: WorkerParameters) :
-  BasePrepareMsgWorker(context, params) {
+  BaseMsgWorker(context, params) {
 
   override suspend fun doWork(): Result =
     withContext(Dispatchers.IO) {

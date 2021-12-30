@@ -18,7 +18,7 @@ import com.flowcrypt.email.jetpack.workmanager.BaseWorker
  *         Time: 4:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BasePrepareMsgWorker(context: Context, params: WorkerParameters) :
+abstract class BaseMsgWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {
 
   protected suspend fun markMsgsWithAuthFailureState(

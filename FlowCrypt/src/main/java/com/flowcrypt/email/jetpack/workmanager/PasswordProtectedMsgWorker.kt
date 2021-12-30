@@ -23,7 +23,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.jetpack.workmanager.base.BasePrepareMsgWorker
+import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -66,8 +66,8 @@ import javax.net.ssl.SSLException
  *         Time: 9:30 AM
  *         E-mail: DenBond7@gmail.com
  */
-class PreparePasswordProtectedMsgWorker(context: Context, params: WorkerParameters) :
-  BasePrepareMsgWorker(context, params) {
+class PasswordProtectedMsgWorker(context: Context, params: WorkerParameters) :
+  BaseMsgWorker(context, params) {
   override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
     LogsUtil.d(TAG, "doWork")
 
@@ -360,8 +360,8 @@ class PreparePasswordProtectedMsgWorker(context: Context, params: WorkerParamete
   }
 
   companion object {
-    private val TAG = PreparePasswordProtectedMsgWorker::class.java.simpleName
-    val NAME = PreparePasswordProtectedMsgWorker::class.java.simpleName
+    private val TAG = PasswordProtectedMsgWorker::class.java.simpleName
+    val NAME = PasswordProtectedMsgWorker::class.java.simpleName
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -373,7 +373,7 @@ class PreparePasswordProtectedMsgWorker(context: Context, params: WorkerParamete
         .enqueueUniqueWork(
           NAME,
           ExistingWorkPolicy.REPLACE,
-          OneTimeWorkRequestBuilder<PreparePasswordProtectedMsgWorker>()
+          OneTimeWorkRequestBuilder<PasswordProtectedMsgWorker>()
             .setConstraints(constraints)
             .build()
         )
