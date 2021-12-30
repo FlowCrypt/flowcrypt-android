@@ -144,8 +144,20 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
           val msgState = getNewMsgState(account, msgEntity, msgAttsDir, atts, store)
 
-          val updateResult =
-            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = msgState.value))
+          val updateResult = roomDatabase.msgDao().updateSuspend(
+            msgEntity.copy(
+              state = if (
+                msgState == MessageState.QUEUED
+                && msgEntity.isEncrypted == true
+                && msgEntity.isPasswordProtected
+              ) {
+                MessageState.NEW_PASSWORD_PROTECTED.value
+              } else {
+                msgState.value
+              }
+            )
+          )
+
           if (updateResult > 0) {
             if (msgState != MessageState.QUEUED) {
               val failedOutgoingMsgsCount = roomDatabase.msgDao()
@@ -158,7 +170,11 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
               }
             }
 
-            MessagesSenderWorker.enqueue(applicationContext)
+            if (msgEntity.isEncrypted == true && msgEntity.isPasswordProtected) {
+              HandlePasswordProtectedMsgWorker.enqueue(applicationContext)
+            } else {
+              MessagesSenderWorker.enqueue(applicationContext)
+            }
           }
         } catch (e: Exception) {
           e.printStackTrace()

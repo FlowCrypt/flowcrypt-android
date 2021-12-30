@@ -145,8 +145,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
         lastMsgUID = msgEntity.uid
 
         try {
-          val isPasswordProtectedMsg = msgEntity.password?.isNotEmpty() ?: false
-          if (isPasswordProtectedMsg && msgEntity.isEncrypted == true) {
+          if (msgEntity.isEncrypted == true && msgEntity.isPasswordProtected) {
             //get msg attachments(including forwarded that can be encrypted)
             val attachments = roomDatabase.attachmentDao().getAttachmentsSuspend(
               account = msgEntity.email,

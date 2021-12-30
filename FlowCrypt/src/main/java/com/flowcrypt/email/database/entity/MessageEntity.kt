@@ -106,6 +106,9 @@ data class MessageEntity(
   @Ignore
   val uidAsHEX: String = uid.toHex()
 
+  @Ignore
+  val isPasswordProtected = password?.isNotEmpty() ?: false
+
   /**
    * Generate a list of the all recipients.
    *
