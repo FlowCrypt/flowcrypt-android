@@ -119,38 +119,36 @@ object PgpEncryptAndOrSign {
     doArmor: Boolean,
     passphrase: Passphrase? = null
   ): EncryptionStream {
-    destOutputStream.use { outStream ->
-      val encOpt = EncryptionOptions().apply {
-        if (passphrase != null) {
-          addPassphrase(passphrase)
-        } else {
-          pgpPublicKeyRingCollection.forEach {
-            addRecipient(it)
-          }
-        }
-      }
-
-      val producerOptions: ProducerOptions = if (passphrase != null) {
-        ProducerOptions.encrypt(encOpt)
+    val encOpt = EncryptionOptions().apply {
+      if (passphrase != null) {
+        addPassphrase(passphrase)
       } else {
-        if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
-          ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
-            pgpSecretKeyRingCollection.forEach {
-              addInlineSignature(
-                secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
-              )
-            }
-          })
-        } else {
-          ProducerOptions.encrypt(encOpt)
+        pgpPublicKeyRingCollection.forEach {
+          addRecipient(it)
         }
       }
-
-      producerOptions.isAsciiArmor = doArmor
-
-      return PGPainless.encryptAndOrSign()
-        .onOutputStream(outStream)
-        .withOptions(producerOptions)
     }
+
+    val producerOptions: ProducerOptions = if (passphrase != null) {
+      ProducerOptions.encrypt(encOpt)
+    } else {
+      if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
+        ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
+          pgpSecretKeyRingCollection.forEach {
+            addInlineSignature(
+              secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
+            )
+          }
+        })
+      } else {
+        ProducerOptions.encrypt(encOpt)
+      }
+    }
+
+    producerOptions.isAsciiArmor = doArmor
+
+    return PGPainless.encryptAndOrSign()
+      .onOutputStream(destOutputStream)
+      .withOptions(producerOptions)
   }
 }
