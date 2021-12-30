@@ -66,7 +66,7 @@ import javax.net.ssl.SSLException
  *         Time: 9:30 AM
  *         E-mail: DenBond7@gmail.com
  */
-class PasswordProtectedMsgWorker(context: Context, params: WorkerParameters) :
+class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameters) :
   BaseMsgWorker(context, params) {
   override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
     LogsUtil.d(TAG, "doWork")
@@ -360,8 +360,8 @@ class PasswordProtectedMsgWorker(context: Context, params: WorkerParameters) :
   }
 
   companion object {
-    private val TAG = PasswordProtectedMsgWorker::class.java.simpleName
-    val NAME = PasswordProtectedMsgWorker::class.java.simpleName
+    private val TAG = HandlePasswordProtectedMsgWorker::class.java.simpleName
+    val NAME = HandlePasswordProtectedMsgWorker::class.java.simpleName
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -373,7 +373,7 @@ class PasswordProtectedMsgWorker(context: Context, params: WorkerParameters) :
         .enqueueUniqueWork(
           NAME,
           ExistingWorkPolicy.REPLACE,
-          OneTimeWorkRequestBuilder<PasswordProtectedMsgWorker>()
+          OneTimeWorkRequestBuilder<HandlePasswordProtectedMsgWorker>()
             .setConstraints(constraints)
             .build()
         )
