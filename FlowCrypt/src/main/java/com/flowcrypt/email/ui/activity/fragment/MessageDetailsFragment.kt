@@ -644,7 +644,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
       actionBarTitle = getString(R.string.outgoing)
       actionBarSubTitle = when (messageEntity.msgState) {
-        MessageState.NEW, MessageState.NEW_FORWARDED -> getString(R.string.preparing)
+        MessageState.NEW,
+        MessageState.NEW_FORWARDED,
+        MessageState.NEW_PASSWORD_PROTECTED -> getString(R.string.preparing)
 
         MessageState.QUEUED, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER -> getString(R.string.queued)
 

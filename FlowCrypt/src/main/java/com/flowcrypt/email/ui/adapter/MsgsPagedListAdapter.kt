@@ -319,7 +319,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     var stateTextColor = ContextCompat.getColor(context, R.color.red)
 
     when (messageState) {
-      MessageState.NEW, MessageState.NEW_FORWARDED -> {
+      MessageState.NEW, MessageState.NEW_FORWARDED, MessageState.NEW_PASSWORD_PROTECTED -> {
         state = context.getString(R.string.preparing)
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }
