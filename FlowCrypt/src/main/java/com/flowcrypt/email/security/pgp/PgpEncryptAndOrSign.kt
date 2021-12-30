@@ -93,11 +93,11 @@ object PgpEncryptAndOrSign {
   ) {
     srcInputStream.use { srcStream ->
       genEncryptionStream(
-        destOutputStream,
-        pgpPublicKeyRingCollection,
-        pgpSecretKeyRingCollection,
-        secretKeyRingProtector,
-        doArmor
+        destOutputStream = destOutputStream,
+        pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
+        pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+        secretKeyRingProtector = secretKeyRingProtector,
+        doArmor = doArmor
       ).use { encryptionStream ->
         srcStream.copyTo(encryptionStream)
       }
@@ -111,31 +111,29 @@ object PgpEncryptAndOrSign {
     secretKeyRingProtector: SecretKeyRingProtector?,
     doArmor: Boolean
   ): EncryptionStream {
-    destOutputStream.use { outStream ->
-      val encOpt = EncryptionOptions().apply {
-        pgpPublicKeyRingCollection.forEach {
-          addRecipient(it)
-        }
+    val encOpt = EncryptionOptions().apply {
+      pgpPublicKeyRingCollection.forEach {
+        addRecipient(it)
+      }
+    }
+
+    val producerOptions: ProducerOptions =
+      if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
+        ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
+          pgpSecretKeyRingCollection.forEach {
+            addInlineSignature(
+              secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
+            )
+          }
+        })
+      } else {
+        ProducerOptions.encrypt(encOpt)
       }
 
-      val producerOptions: ProducerOptions =
-        if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
-          ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
-            pgpSecretKeyRingCollection.forEach {
-              addInlineSignature(
-                secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
-              )
-            }
-          })
-        } else {
-          ProducerOptions.encrypt(encOpt)
-        }
+    producerOptions.isAsciiArmor = doArmor
 
-      return PGPainless.encryptAndOrSign()
-        .onOutputStream(outStream)
-        .withOptions(
-          producerOptions.setAsciiArmor(doArmor)
-        )
-    }
+    return PGPainless.encryptAndOrSign()
+      .onOutputStream(destOutputStream)
+      .withOptions(producerOptions)
   }
 }
