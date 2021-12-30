@@ -21,6 +21,9 @@ import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.javax.mail.internet.getAddresses
+import com.flowcrypt.email.extensions.javax.mail.internet.getFromAddress
+import com.flowcrypt.email.extensions.javax.mail.internet.getMatchingRecipients
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
@@ -30,7 +33,6 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
-import com.flowcrypt.email.util.exception.CopyNotSavedInSentFolderException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.UserRecoverableAuthException
@@ -86,7 +88,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
       )
 
       if (passwordProtectedCandidates.isNotEmpty()) {
-        prepareAndUploadMsgsToFES(account)
+        prepareAndUploadPasswordProtectedMsgsToFES(account)
       }
 
       return@withContext rescheduleIfActiveAccountWasChanged(account)
@@ -107,7 +109,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     }
   }
 
-  private suspend fun prepareAndUploadMsgsToFES(account: AccountEntity) =
+  private suspend fun prepareAndUploadPasswordProtectedMsgsToFES(account: AccountEntity) =
     withContext(Dispatchers.IO) {
       val apiRepository = FlowcryptApiRepository()
       val keysStorage = KeysStorageImpl.getInstance(applicationContext)
@@ -145,12 +147,14 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
         try {
           val isPasswordProtectedMsg = msgEntity.password?.isNotEmpty() ?: false
           if (isPasswordProtectedMsg && msgEntity.isEncrypted == true) {
+            //get msg attachments(including forwarded that can be encrypted)
             val attachments = roomDatabase.attachmentDao().getAttachmentsSuspend(
               account = msgEntity.email,
               label = JavaEmailConstants.FOLDER_OUTBOX,
               uid = msgEntity.uid
             )
 
+            //create MimeMessage from content + attachments
             val mimeMsgWithAttachments = EmailUtil.createMimeMsg(
               context = applicationContext,
               sess = Session.getDefaultInstance(Properties()),
@@ -159,18 +163,46 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               atts = attachments
             )
 
-            val fromAddress = (mimeMsgWithAttachments.from.first() as InternetAddress).address
-            val domain = EmailUtil.getDomain(fromAddress)
+            //get recipients that will be used to create password-encrypted msg
+            val toCandidates = mimeMsgWithAttachments.getMatchingRecipients(
+              type = Message.RecipientType.TO,
+              list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
+                context = applicationContext,
+                emails = mimeMsgWithAttachments.getAddresses(Message.RecipientType.TO)
+              )
+            )
 
-            val toCandidates = mimeMsgWithAttachments.getRecipients(Message.RecipientType.TO)
+            val ccCandidates = mimeMsgWithAttachments.getMatchingRecipients(
+              type = Message.RecipientType.CC,
+              list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
+                context = applicationContext,
+                emails = mimeMsgWithAttachments.getAddresses(Message.RecipientType.CC)
+              )
+            )
+
+            val bccCandidates = mimeMsgWithAttachments.getMatchingRecipients(
+              type = Message.RecipientType.BCC,
+              list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
+                context = applicationContext,
+                emails = mimeMsgWithAttachments.getAddresses(Message.RecipientType.BCC)
+              )
+            )
+
             if (toCandidates.isNotEmpty()) {
+              //start of creating and uploading a password-protected msg to FES
+              val fromAddress = mimeMsgWithAttachments.getFromAddress()
+              val domain = EmailUtil.getDomain(fromAddress)
               val idToken = getGoogleIdToken()
               val replyToken = fetchReplyToken(apiRepository, domain, idToken)
               val messageUploadRequest = MessageUploadRequest(
                 associateReplyToken = replyToken,
                 from = fromAddress,
-                to = toCandidates.map { it.toString() }
+                to = toCandidates.map { (it as InternetAddress).address },
+                cc = ccCandidates.map { (it as InternetAddress).address },
+                bcc = bccCandidates.map { (it as InternetAddress).address }
               )
+
+              //prepare bodyWithReplyToken
               val replyInfo = Base64.getEncoder().encodeToString(
                 GsonBuilder().create().toJson(messageUploadRequest).toByteArray()
               )
@@ -185,18 +217,20 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
               // construct a regular plain mime message using bodyWithReplyToken + attachments
               mimeMsgWithAttachments.setRecipients(Message.RecipientType.TO, toCandidates)
-              mimeMsgWithAttachments.setRecipients(Message.RecipientType.CC, emptyArray())
-              mimeMsgWithAttachments.setRecipients(Message.RecipientType.BCC, emptyArray())
+              mimeMsgWithAttachments.setRecipients(Message.RecipientType.CC, ccCandidates)
+              mimeMsgWithAttachments.setRecipients(Message.RecipientType.BCC, bccCandidates)
               val multipart = mimeMsgWithAttachments.content as Multipart
               //need to remove 'encrypted.asc' from the existing MIME
               multipart.removeBodyPart(0)
               multipart.addBodyPart(MimeBodyPart().apply { setText(bodyWithReplyToken) }, 0)
               mimeMsgWithAttachments.saveChanges()
 
+              //prepare raw MIME
               val rawMimeMsg = String(ByteArrayOutputStream().apply {
                 mimeMsgWithAttachments.writeTo(this)
               }.toByteArray())
 
+              //encrypt the raw MIME message ONLY FOR THE MESSAGE PASSWORD
               val pwdEncryptedWithAttachments = PgpEncryptAndOrSign.encryptAndOrSignMsg(
                 msg = rawMimeMsg,
                 pubKeys = emptyList(),
@@ -206,6 +240,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
                 )
               )
 
+              //upload resulting data to FES
               val fesUrl = uploadMsgToFESAndReturnUrl(
                 apiRepository,
                 domain,
@@ -217,6 +252,8 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               updateExistingMimeMsgWithUrl(msgEntity, fesUrl)
 
               MessagesSenderWorker.enqueue(applicationContext)
+            } else {
+              //ask Tom about that
             }
           }
         } catch (e: Exception) {
@@ -225,25 +262,25 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
           if (!GeneralUtil.isConnected(applicationContext)) {
             if (msgEntity.msgState !== MessageState.SENT) {
-              roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+              roomDatabase.msgDao().updateSuspend(
+                msgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value)
+              )
             }
 
             throw e
           } else {
             val newMsgState = when (e) {
               is MailConnectException -> {
-                MessageState.QUEUED
+                MessageState.NEW_PASSWORD_PROTECTED
               }
 
               is MessagingException -> {
                 if (e.cause is SSLException || e.cause is SocketException) {
-                  MessageState.QUEUED
+                  MessageState.NEW_PASSWORD_PROTECTED
                 } else {
                   MessageState.ERROR_SENDING_FAILED
                 }
               }
-
-              is CopyNotSavedInSentFolderException -> MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER
 
               else -> {
                 when (e.cause) {
