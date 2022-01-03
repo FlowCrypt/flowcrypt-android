@@ -65,7 +65,7 @@
         Обновите свои записи и отправьте мне новое зашифрованное сообщение. \n\nСпасибо</string>
     <string name="please_select_key">Пожалуйста, выберите ключ</string>
     <string name="search">Поиск</string>
-    <string name="key_successfully_copied">Ключ успешно скопированы</string>
+    <string name="key_successfully_copied">Ключ успешно скопирован</string>
     <string name="password_quality_perfect">идеальное</string>
     <string name="yes">да</string>
     <string name="no">нет</string>
@@ -235,7 +235,7 @@
     <string name="recipient_detail">Подробности о получателе</string>
     <string name="you_trying_replace_pub_key_with_older_version">Вы пытаетесь заменить открытый ключ на более старую версию</string>
     <string name="cannot_be_used_for_encryption">Предупреждение: нельзя использовать для шифрования</string>
-    <string name="warning_about_manual_import">Импортирование вручную открытых ключей, полученных по электронной почте, вручную может быть опасным. Свяжитесь с отправителем, чтобы убедиться, что отпечаток ключа совпадает.</string>
+    <string name="warning_about_manual_import">Импортирование вручную открытых ключей, полученных по электронной почте, может быть опасным. Свяжитесь с отправителем, чтобы убедиться, что отпечаток ключа совпадает.</string>
     <string name="manually_importing_public_keys_can_be_dangerous">Импортирование вручную открытых ключей вручную может быть опасным</string>
     <string name="key_has_already_been_added">Этот ключ уже добавлен</string>
     <string name="passphrase_type_undefined">Тип ключевой фразы не определен</string>
@@ -361,7 +361,7 @@
     <string name="reply_all_encrypted">Ответить всем\nзашифрованным сообщением</string>
     <string name="reply_all">Ответить всем</string>
     <string name="reply">Ответить</string>
-    <string name="reply_encrypted">Ответить\\nзашифрованным сообщением</string>
+    <string name="reply_encrypted">Ответить\nзашифрованным сообщением</string>
     <string name="retry">Повторить попытку</string>
     <string name="save_to_file">Сохранить в файл</string>
     <string name="search_by_key_id_or_email">Поиск по идентификатору ключа или электронной почте</string>
@@ -443,7 +443,7 @@
     <string name="processing_please_wait">Обработка, пожалуйста подождите&#8230;</string>
     <string name="public_key_details">Подробная информация об открытом ключе</string>
     <string name="template_message_part_public_key_owner">Открытый ключ для %1$s</string>
-    <string name="public_key_below_is_safe_to_share">Можно делиться открытыми ключами безопасно</string>
+    <string name="public_key_below_is_safe_to_share">Открытыми ключами можно безопасно делиться</string>
     <string name="password_quality_reasonable">разумный</string>
     <string name="receive_notifications_for">Получать уведомления для:</string>
     <string name="recipient_already_exist">Получатель %1$s уже существует</string>
@@ -466,7 +466,7 @@
     <string name="preparing">Подготовка&#8230;</string>
     <string name="decrypt_error_please_write_me">Напишите нам по адресу %1$s, чтобы мы могли исправить это для вас.</string>
     <string name="setup_app">Пожалуйста, настройте приложение, прежде чем использовать эту опцию</string>
-    <string name="select_stronger_pass_phrase">Пожалуйста, выберите более надежную ключевую фразу. Лучше всего использовать сочетание 4 или 5 необычных слов.</string>
+    <string name="select_stronger_pass_phrase">Пожалуйста, выберите более надежную ключевую фразу. Лучше всего использовать сочетание из 4 или 5 необычных слов.</string>
     <string name="reconnect_your_account">Пожалуйста, повторно подключите свою учетную запись, чтобы продолжить использование %1$s\nс\n%2$s</string>
     <string name="provide_passphrase_to_decrypt_file">Пожалуйста, укажите ключевую фразу для расшифровки этого файла</string>
     <string name="failed_load_message_from_email_server">Не удалось загрузить сообщение с почтового сервера</string>
