@@ -150,7 +150,8 @@ data class MessageEntity(
     parcel.readString(),
     parcel.readString(),
     parcel.readString(),
-    parcel.readString()
+    parcel.readString(),
+    parcel.createByteArray()
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -175,6 +176,7 @@ data class MessageEntity(
     parcel.writeString(replyTo)
     parcel.writeString(threadId)
     parcel.writeString(historyId)
+    parcel.writeByteArray(password)
   }
 
   override fun describeContents(): Int {
