@@ -200,7 +200,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val failedOutgoingMsgsCount =
         roomDatabase.msgDao().getFailedOutgoingMsgsCount(accountEntity.email)
       if (failedOutgoingMsgsCount > 0) {
-        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(
+        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsgs(
           accountEntity,
           failedOutgoingMsgsCount
         )

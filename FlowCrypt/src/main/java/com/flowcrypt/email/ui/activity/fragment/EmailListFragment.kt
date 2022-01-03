@@ -46,6 +46,7 @@ import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
+import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
@@ -189,13 +190,19 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     when (requestCode) {
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
         TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
-          val newMsgState = when (activeMsgEntity?.msgState) {
+          val oldState = activeMsgEntity?.msgState
+          val newMsgState = when (oldState) {
             MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
+            MessageState.ERROR_PASSWORD_PROTECTED -> MessageState.NEW_PASSWORD_PROTECTED
 
             else -> MessageState.QUEUED
           }
           msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
-          MessagesSenderWorker.enqueue(requireContext())
+          if (oldState == MessageState.ERROR_PASSWORD_PROTECTED) {
+            HandlePasswordProtectedMsgWorker.enqueue(requireContext())
+          } else {
+            MessagesSenderWorker.enqueue(requireContext())
+          }
         }
       }
 
@@ -355,7 +362,8 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         MessageState.ERROR_DURING_CREATION,
         MessageState.ERROR_SENDING_FAILED,
         MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
-        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> handleOutgoingMsgWhichHasSomeError(
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
+        MessageState.ERROR_PASSWORD_PROTECTED -> handleOutgoingMsgWhichHasSomeError(
           msgEntity
         )
         else -> {
@@ -485,7 +493,9 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         }
       }
 
-      MessageState.ERROR_SENDING_FAILED, MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> {
+      MessageState.ERROR_SENDING_FAILED,
+      MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
+      MessageState.ERROR_PASSWORD_PROTECTED -> {
         val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
           dialogTitle = "",
           dialogMsg = getString(R.string.message_failed_to_send, message),

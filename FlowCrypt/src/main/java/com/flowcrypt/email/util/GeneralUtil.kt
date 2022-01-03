@@ -34,7 +34,9 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -441,5 +443,17 @@ class GeneralUtil {
 
       return@withContext mapOfRecipients.filter { entry -> return@filter !entry.value }.keys.toList()
     }
+
+    suspend fun notifyUserAboutProblemWithOutgoingMsgs(context: Context, account: AccountEntity) =
+      withContext(Dispatchers.IO) {
+        val failedOutgoingMsgsCount = FlowCryptRoomDatabase.getDatabase(context).msgDao()
+          .getFailedOutgoingMsgsCountSuspend(account.email) ?: 0
+        if (failedOutgoingMsgsCount > 0) {
+          ErrorNotificationManager(context).notifyUserAboutProblemWithOutgoingMsgs(
+            account,
+            failedOutgoingMsgsCount
+          )
+        }
+      }
   }
 }

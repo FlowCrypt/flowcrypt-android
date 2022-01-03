@@ -660,7 +660,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
         MessageState.ERROR_SENDING_FAILED,
         MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
-        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> getString(R.string.an_error_has_occurred)
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
+        MessageState.ERROR_PASSWORD_PROTECTED -> getString(R.string.an_error_has_occurred)
 
         else -> null
       }

@@ -31,7 +31,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
   override val groupName: String = GROUP_NAME_ERRORS
   override val groupId: Int = NOTIFICATIONS_GROUP_ERROR
 
-  fun notifyUserAboutProblemWithOutgoingMsg(account: AccountEntity, messageCount: Int) {
+  fun notifyUserAboutProblemWithOutgoingMsgs(account: AccountEntity, messageCount: Int) {
     val intent = Intent(context, EmailManagerActivity::class.java).apply {
       action = EmailManagerActivity.ACTION_OPEN_OUTBOX_FOLDER
     }

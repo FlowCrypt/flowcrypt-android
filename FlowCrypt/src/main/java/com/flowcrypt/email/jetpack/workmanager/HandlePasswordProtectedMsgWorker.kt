@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.jetpack.workmanager
 
-import android.accounts.AuthenticatorException
 import android.content.Context
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -35,9 +34,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.gson.GsonBuilder
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +49,6 @@ import java.io.InputStream
 import java.net.SocketException
 import java.util.Base64
 import java.util.Properties
-import javax.mail.AuthenticationFailedException
 import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Multipart
@@ -61,6 +57,7 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.net.ssl.SSLException
+import kotlin.random.Random
 
 /**
  * @author Denis Bondarenko
@@ -94,15 +91,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
       return@withContext rescheduleIfActiveAccountWasChanged(account)
     } catch (e: Exception) {
       e.printStackTrace()
-      when (e) {
-        is UserRecoverableAuthException,
-        is UserRecoverableAuthIOException,
-        is AuthenticatorException,
-        is AuthenticationFailedException -> {
-          markMsgsWithAuthFailureState(roomDatabase, MessageState.NEW_PASSWORD_PROTECTED)
-        }
-      }
-
       return@withContext Result.failure()
     } finally {
       LogsUtil.d(TAG, "work was finished")
@@ -154,7 +142,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             ).map {
               it.copy(
                 forwardedFolder = "Outbox",
-                forwardedUid = Long.MAX_VALUE,
+                forwardedUid = Random.nextLong(),
                 decryptWhenForward = true
               )
             }
@@ -255,12 +243,16 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               )
 
               updateExistingMimeMsgWithUrl(msgEntity, fesUrl)
-
-              MessagesSenderWorker.enqueue(applicationContext)
             } else {
               //ask Tom about that
+              roomDatabase.msgDao()
+                .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
             }
+          } else {
+            roomDatabase.msgDao()
+              .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
           }
+          MessagesSenderWorker.enqueue(applicationContext)
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
@@ -298,6 +290,10 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             roomDatabase.msgDao()
               .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
+
+            if (newMsgState == MessageState.ERROR_PASSWORD_PROTECTED) {
+              GeneralUtil.notifyUserAboutProblemWithOutgoingMsgs(applicationContext, account)
+            }
           }
 
           delay(5000)
@@ -347,8 +343,10 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
       msg = pwdEncryptedWithAttachments
     )
 
-    if (messageUploadResponseResult.status != com.flowcrypt.email.api.retrofit.response.base.Result.Status.SUCCESS) {
-      throw IllegalStateException("status != SUCCESS")
+    if (messageUploadResponseResult.status
+      != com.flowcrypt.email.api.retrofit.response.base.Result.Status.SUCCESS
+    ) {
+      throw IllegalStateException("Uploading a password-protected message to a web portal failed")
     }
     return@withContext requireNotNull(messageUploadResponseResult.data?.url)
   }
@@ -378,7 +376,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     )
     val silentSignIn = googleSignInClient.silentSignIn()
     if (!silentSignIn.isSuccessful) {
-      throw IllegalStateException("silentSignIn.isSuccessful == false")
+      throw IllegalStateException("Could not receive idToken")
     }
     return@withContext requireNotNull(silentSignIn.result.idToken)
   }
@@ -395,8 +393,10 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
         idToken = idToken
       )
 
-    if (messageReplyTokenResponseResult.status != com.flowcrypt.email.api.retrofit.response.base.Result.Status.SUCCESS) {
-      throw IllegalStateException("status != SUCCESS")
+    if (messageReplyTokenResponseResult.status
+      != com.flowcrypt.email.api.retrofit.response.base.Result.Status.SUCCESS
+    ) {
+      throw IllegalStateException("Could not receive a reply token from FES")
     }
 
     return@withContext requireNotNull(messageReplyTokenResponseResult.data?.replyToken)

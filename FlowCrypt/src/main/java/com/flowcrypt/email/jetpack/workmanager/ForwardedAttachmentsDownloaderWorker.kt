@@ -26,7 +26,6 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -160,14 +159,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
           if (updateResult > 0) {
             if (msgState != MessageState.QUEUED) {
-              val failedOutgoingMsgsCount = roomDatabase.msgDao()
-                .getFailedOutgoingMsgsCountSuspend(account.email) ?: 0
-              if (failedOutgoingMsgsCount > 0) {
-                ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(
-                  account,
-                  failedOutgoingMsgsCount
-                )
-              }
+              GeneralUtil.notifyUserAboutProblemWithOutgoingMsgs(applicationContext, account)
             }
 
             if (msgEntity.isEncrypted == true && msgEntity.isPasswordProtected) {
