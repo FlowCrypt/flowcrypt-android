@@ -1158,6 +1158,8 @@ class EmailUtil {
           MimeBodyPart().apply {
             val dataSource = ByteArrayDataSource(encryptedContent, "application/pgp-encrypted")
             dataHandler = DataHandler(dataSource)
+            description = "OpenPGP encrypted message"
+            disposition = Part.INLINE
             fileName = "message.asc"
           }
         } else {
