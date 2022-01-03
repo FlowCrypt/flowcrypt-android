@@ -34,8 +34,7 @@ data class OutgoingMessageInfo constructor(
   val messageType: MessageType,
   val replyToMsgEntity: MessageEntity? = null,
   val uid: Long = 0,
-  //todo-denbond7 change me to CharArray? = null
-  val password: CharArray? = "qwerty1234".toCharArray()
+  val password: CharArray? = null
 ) : Parcelable {
 
   val isPasswordProtected = password?.isNotEmpty()

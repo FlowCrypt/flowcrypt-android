@@ -244,14 +244,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           fetchDetailsAboutRecipients(RecipientEntity.Type.BCC)
           return false
         }
-        /*if (hasUnusableRecipient(
+        if (hasUnusableRecipient(
             recipientWithPubKeysTo,
             recipientWithPubKeysCc,
             recipientWithPubKeysBcc
           )
         ) {
           return false
-        }*/
+        }
       }
       if (editTextEmailSubject?.text?.isEmpty() == true) {
         showInfoSnackbar(
