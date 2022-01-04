@@ -28,7 +28,7 @@ fun MimeMessage.getFromAddress(): String {
 
 fun MimeMessage.getMatchingRecipients(
   type: Message.RecipientType,
-  list: List<String>
+  list: Iterable<String>
 ): Array<Address> {
   return getRecipients(type)?.filter {
     (it as? InternetAddress)?.address?.lowercase() in list

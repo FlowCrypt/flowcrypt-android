@@ -11,7 +11,6 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.key.protection.SecretKeyRingProtector
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
@@ -47,7 +46,7 @@ class ForwardedAttachmentInfoDataSource(
         pubKeys = requireNotNull(publicKeys)
       )
 
-      return ByteArrayInputStream(tempByteArrayOutputStream.toByteArray())
+      tempByteArrayOutputStream.toByteArray().inputStream()
     } else {
       srcInputStream
     }

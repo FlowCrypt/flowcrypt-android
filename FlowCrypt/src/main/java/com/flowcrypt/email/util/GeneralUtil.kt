@@ -441,7 +441,7 @@ class GeneralUtil {
         }
       }
 
-      return@withContext mapOfRecipients.filter { entry -> return@filter !entry.value }.keys.toList()
+      return@withContext mapOfRecipients.filter { entry -> !entry.value }.keys.toList()
     }
 
     suspend fun notifyUserAboutProblemWithOutgoingMsgs(context: Context, account: AccountEntity) =

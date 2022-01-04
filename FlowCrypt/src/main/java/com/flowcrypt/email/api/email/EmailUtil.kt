@@ -61,7 +61,6 @@ import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.key.protection.SecretKeyRingProtector
-import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -1127,8 +1126,7 @@ class EmailUtil {
           ?: throw IllegalArgumentException("InputStream not found")
         FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
       } else {
-        val input =
-          ByteArrayInputStream(replyToMessageEntity.rawMessageWithoutAttachments.toByteArray())
+        val input = replyToMessageEntity.rawMessageWithoutAttachments.toInputStream()
         try {
           FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
         } catch (e: Exception) {

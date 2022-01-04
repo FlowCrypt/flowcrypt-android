@@ -11,7 +11,6 @@ import android.text.TextUtils
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import javax.activation.DataSource
@@ -29,8 +28,7 @@ open class AttachmentInfoDataSource(private val context: Context, val att: Attac
 
   override fun getInputStream(): InputStream? {
     val inputStream: InputStream? = if (att.uri == null) {
-      val rawData = att.rawData ?: return null
-      ByteArrayInputStream(rawData)
+      att.rawData?.inputStream()
     } else {
       att.uri?.let { context.contentResolver.openInputStream(it) }
     }

@@ -38,7 +38,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.gson.GsonBuilder
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -111,24 +110,8 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
           msgStates = listOf(MessageState.NEW_PASSWORD_PROTECTED.value)
         )
 
-        if (list.isEmpty()) {
-          break
-        }
-
-        val iterator = list.iterator()
-        var msgEntity: MessageEntity? = null
-
-        while (iterator.hasNext()) {
-          val tempMsgDetails = iterator.next()
-          if (tempMsgDetails.uid > lastMsgUID) {
-            msgEntity = tempMsgDetails
-            break
-          }
-        }
-
-        if (msgEntity == null) {
-          msgEntity = list[0]
-        }
+        if (list.isEmpty()) break
+        val msgEntity = list.firstOrNull { it.uid > lastMsgUID } ?: list[0]
 
         lastMsgUID = msgEntity.uid
 
@@ -295,8 +278,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               GeneralUtil.notifyUserAboutProblemWithOutgoingMsgs(applicationContext, account)
             }
           }
-
-          delay(5000)
         }
       }
     }
@@ -351,9 +332,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     return@withContext requireNotNull(messageUploadResponseResult.data?.url)
   }
 
-  private fun genInfoDiv(replyInfo: String?) =
-    "<div style=\"display: none\" class=\"cryptup_reply\" cryptup-data=\"$replyInfo\"></div>"
-
   private suspend fun getDecryptedContentFromMessage(
     mimeMsgWithAttachments: MimeMessage,
     accountSecretKeys: PGPSecretKeyRingCollection,
@@ -405,6 +383,9 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   companion object {
     private val TAG = HandlePasswordProtectedMsgWorker::class.java.simpleName
     val NAME = HandlePasswordProtectedMsgWorker::class.java.simpleName
+
+    private fun genInfoDiv(replyInfo: String?) =
+      "<div style=\"display: none\" class=\"cryptup_reply\" cryptup-data=\"$replyInfo\"></div>"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
