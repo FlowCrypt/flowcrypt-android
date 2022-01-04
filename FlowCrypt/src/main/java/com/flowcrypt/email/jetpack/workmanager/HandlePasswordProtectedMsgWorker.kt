@@ -49,7 +49,6 @@ import java.io.InputStream
 import java.net.SocketException
 import java.util.Base64
 import java.util.Properties
-import javax.mail.Address
 import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Multipart
@@ -131,66 +130,61 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val bccCandidates =
               getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.BCC)
 
-            if (toCandidates.isNotEmpty()) {
-              //start of creating and uploading a password-protected msg to FES
-              val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
-              val domain = EmailUtil.getDomain(fromAddress)
-              val idToken = getGoogleIdToken()
-              val replyToken = fetchReplyToken(apiRepository, domain, idToken)
-              val messageUploadRequest = MessageUploadRequest(
-                associateReplyToken = replyToken,
-                from = fromAddress,
-                to = toCandidates.map { (it as InternetAddress).address },
-                cc = ccCandidates.map { (it as InternetAddress).address },
-                bcc = bccCandidates.map { (it as InternetAddress).address }
-              )
-
-              //prepare bodyWithReplyToken
-              val replyInfo = Base64.getEncoder().encodeToString(
-                GsonBuilder().create().toJson(messageUploadRequest).toByteArray()
-              )
-
-              val infoDiv = genInfoDiv(replyInfo)
-              val originalText = getDecryptedContentFromMessage(
-                plainMimeMsgWithAttachments,
-                accountSecretKeys,
-                keysStorage
-              )
-              val bodyWithReplyToken = originalText + "\n\n" + infoDiv
-
-              val rawMimeMsg = createRawPlainMimeMsgWithAttachments(
-                plainMimeMsgWithAttachments,
-                toCandidates,
-                ccCandidates,
-                bccCandidates,
-                bodyWithReplyToken
-              )
-
-              //encrypt the raw MIME message ONLY FOR THE MESSAGE PASSWORD
-              val pwdEncryptedWithAttachments = PgpEncryptAndOrSign.encryptAndOrSignMsg(
-                msg = rawMimeMsg,
-                pubKeys = emptyList(),
-                prvKeys = emptyList(),
-                passphrase = Passphrase.fromPassword(
-                  KeyStoreCryptoManager.decryptSuspend(String(requireNotNull(msgEntity.password)))
-                )
-              )
-
-              //upload resulting data to FES
-              val fesUrl = uploadMsgToFESAndReturnUrl(
-                apiRepository,
-                domain,
-                idToken,
-                messageUploadRequest,
-                pwdEncryptedWithAttachments
-              )
-
-              updateExistingMimeMsgWithUrl(msgEntity, fesUrl)
-            } else {
-              //ask Tom about that
-              roomDatabase.msgDao()
-                .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+            if (toCandidates.isEmpty() && ccCandidates.isEmpty() && bccCandidates.isEmpty()) {
+              throw IllegalStateException("Wrong password-protected implementation")
             }
+
+            //start of creating and uploading a password-protected msg to FES
+            val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
+            val domain = EmailUtil.getDomain(fromAddress)
+            val idToken = getGoogleIdToken()
+            val replyToken = fetchReplyToken(apiRepository, domain, idToken)
+            val messageUploadRequest = MessageUploadRequest(
+              associateReplyToken = replyToken,
+              from = fromAddress,
+              to = toCandidates.map { (it as InternetAddress).address },
+              cc = ccCandidates.map { (it as InternetAddress).address },
+              bcc = bccCandidates.map { (it as InternetAddress).address }
+            )
+
+            //prepare bodyWithReplyToken
+            val replyInfo = Base64.getEncoder().encodeToString(
+              GsonBuilder().create().toJson(messageUploadRequest).toByteArray()
+            )
+
+            val infoDiv = genInfoDiv(replyInfo)
+            val originalText = getDecryptedContentFromMessage(
+              mimeMsgWithAttachments = plainMimeMsgWithAttachments,
+              accountSecretKeys = accountSecretKeys,
+              keysStorage = keysStorage
+            )
+            val bodyWithReplyToken = originalText + "\n\n" + infoDiv
+
+            val rawMimeMsg = createRawPlainMimeMsgWithAttachments(
+              plainMimeMsgWithAttachments = plainMimeMsgWithAttachments,
+              bodyWithReplyToken = bodyWithReplyToken
+            )
+
+            //encrypt the raw MIME message ONLY FOR THE MESSAGE PASSWORD
+            val pwdEncryptedWithAttachments = PgpEncryptAndOrSign.encryptAndOrSignMsg(
+              msg = rawMimeMsg,
+              pubKeys = emptyList(),
+              prvKeys = emptyList(),
+              passphrase = Passphrase.fromPassword(
+                KeyStoreCryptoManager.decryptSuspend(String(requireNotNull(msgEntity.password)))
+              )
+            )
+
+            //upload resulting data to FES
+            val fesUrl = uploadMsgToFESAndReturnUrl(
+              apiRepository = apiRepository,
+              domain = domain,
+              idToken = idToken,
+              messageUploadRequest = messageUploadRequest,
+              pwdEncryptedWithAttachments = pwdEncryptedWithAttachments
+            )
+
+            updateExistingMimeMsgWithUrl(msgEntity, fesUrl)
           } else {
             roomDatabase.msgDao()
               .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
@@ -252,15 +246,9 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
   private fun createRawPlainMimeMsgWithAttachments(
     plainMimeMsgWithAttachments: MimeMessage,
-    toCandidates: Array<Address>,
-    ccCandidates: Array<Address>,
-    bccCandidates: Array<Address>,
     bodyWithReplyToken: String
   ): String {
     // construct a regular plain mime message using bodyWithReplyToken + attachments
-    plainMimeMsgWithAttachments.setRecipients(Message.RecipientType.TO, toCandidates)
-    plainMimeMsgWithAttachments.setRecipients(Message.RecipientType.CC, ccCandidates)
-    plainMimeMsgWithAttachments.setRecipients(Message.RecipientType.BCC, bccCandidates)
     val multipart = plainMimeMsgWithAttachments.content as Multipart
     //need to remove 'encrypted.asc' from the existing MIME
     multipart.removeBodyPart(0)

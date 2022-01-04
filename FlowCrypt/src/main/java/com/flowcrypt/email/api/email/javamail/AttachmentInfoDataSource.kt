@@ -27,13 +27,9 @@ open class AttachmentInfoDataSource(private val context: Context, val att: Attac
   DataSource {
 
   override fun getInputStream(): InputStream? {
-    val inputStream: InputStream? = if (att.uri == null) {
-      att.rawData?.inputStream()
-    } else {
-      att.uri?.let { context.contentResolver.openInputStream(it) }
-    }
-
-    return if (inputStream == null) null else BufferedInputStream(inputStream)
+    return att.uri?.let { uri ->
+      context.contentResolver.openInputStream(uri)?.let { stream -> BufferedInputStream(stream) }
+    } ?: att.rawData?.inputStream()
   }
 
   override fun getOutputStream(): OutputStream? = null
