@@ -120,12 +120,9 @@ object PgpEncryptAndOrSign {
     passphrase: Passphrase? = null
   ): EncryptionStream {
     val encOpt = EncryptionOptions().apply {
-      if (passphrase != null) {
-        addPassphrase(passphrase)
-      } else {
-        pgpPublicKeyRingCollection.forEach {
-          addRecipient(it)
-        }
+      passphrase?.let { addPassphrase(passphrase) }
+      pgpPublicKeyRingCollection.forEach {
+        addRecipient(it)
       }
     }
 

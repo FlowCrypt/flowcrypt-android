@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.javax.mail.internet.getAddresses
 import com.flowcrypt.email.extensions.javax.mail.internet.getFromAddress
@@ -48,6 +49,7 @@ import java.io.InputStream
 import java.net.SocketException
 import java.util.Base64
 import java.util.Properties
+import javax.mail.Address
 import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Multipart
@@ -118,55 +120,20 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
         try {
           if (msgEntity.isEncrypted == true && msgEntity.isPasswordProtected) {
             //get msg attachments(including forwarded that can be encrypted)
-            val attachments = roomDatabase.attachmentDao().getAttachmentsSuspend(
-              account = msgEntity.email,
-              label = JavaEmailConstants.FOLDER_OUTBOX,
-              uid = msgEntity.uid
-            ).map {
-              it.copy(
-                forwardedFolder = "Outbox",
-                forwardedUid = Random.nextLong(),
-                decryptWhenForward = true
-              )
-            }
+            val attachments = getAttachments(msgEntity)
 
             //create MimeMessage from content + attachments
-            val mimeMsgWithAttachments = EmailUtil.createMimeMsg(
-              context = applicationContext,
-              sess = Session.getDefaultInstance(Properties()),
-              account = account,
-              msgEntity = msgEntity.copy(isEncrypted = false),
-              atts = attachments
-            )
+            val plainMimeMsgWithAttachments = getMimeMessage(account, msgEntity, attachments)
 
             //get recipients that will be used to create password-encrypted msg
-            val toCandidates = mimeMsgWithAttachments.getMatchingRecipients(
-              type = Message.RecipientType.TO,
-              list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
-                context = applicationContext,
-                emails = mimeMsgWithAttachments.getAddresses(Message.RecipientType.TO)
-              )
-            )
-
-            val ccCandidates = mimeMsgWithAttachments.getMatchingRecipients(
-              type = Message.RecipientType.CC,
-              list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
-                context = applicationContext,
-                emails = mimeMsgWithAttachments.getAddresses(Message.RecipientType.CC)
-              )
-            )
-
-            val bccCandidates = mimeMsgWithAttachments.getMatchingRecipients(
-              type = Message.RecipientType.BCC,
-              list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
-                context = applicationContext,
-                emails = mimeMsgWithAttachments.getAddresses(Message.RecipientType.BCC)
-              )
-            )
+            val toCandidates = getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.TO)
+            val ccCandidates = getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.CC)
+            val bccCandidates =
+              getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.BCC)
 
             if (toCandidates.isNotEmpty()) {
               //start of creating and uploading a password-protected msg to FES
-              val fromAddress = mimeMsgWithAttachments.getFromAddress()
+              val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
               val domain = EmailUtil.getDomain(fromAddress)
               val idToken = getGoogleIdToken()
               val replyToken = fetchReplyToken(apiRepository, domain, idToken)
@@ -185,26 +152,19 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
               val infoDiv = genInfoDiv(replyInfo)
               val originalText = getDecryptedContentFromMessage(
-                mimeMsgWithAttachments,
+                plainMimeMsgWithAttachments,
                 accountSecretKeys,
                 keysStorage
               )
               val bodyWithReplyToken = originalText + "\n\n" + infoDiv
 
-              // construct a regular plain mime message using bodyWithReplyToken + attachments
-              mimeMsgWithAttachments.setRecipients(Message.RecipientType.TO, toCandidates)
-              mimeMsgWithAttachments.setRecipients(Message.RecipientType.CC, ccCandidates)
-              mimeMsgWithAttachments.setRecipients(Message.RecipientType.BCC, bccCandidates)
-              val multipart = mimeMsgWithAttachments.content as Multipart
-              //need to remove 'encrypted.asc' from the existing MIME
-              multipart.removeBodyPart(0)
-              multipart.addBodyPart(MimeBodyPart().apply { setText(bodyWithReplyToken) }, 0)
-              mimeMsgWithAttachments.saveChanges()
-
-              //prepare raw MIME
-              val rawMimeMsg = String(ByteArrayOutputStream().apply {
-                mimeMsgWithAttachments.writeTo(this)
-              }.toByteArray())
+              val rawMimeMsg = createRawPlainMimeMsgWithAttachments(
+                plainMimeMsgWithAttachments,
+                toCandidates,
+                ccCandidates,
+                bccCandidates,
+                bodyWithReplyToken
+              )
 
               //encrypt the raw MIME message ONLY FOR THE MESSAGE PASSWORD
               val pwdEncryptedWithAttachments = PgpEncryptAndOrSign.encryptAndOrSignMsg(
@@ -238,49 +198,119 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
           MessagesSenderWorker.enqueue(applicationContext)
         } catch (e: Exception) {
           e.printStackTrace()
-          ExceptionUtil.handleError(e)
-
-          if (!GeneralUtil.isConnected(applicationContext)) {
-            if (msgEntity.msgState !== MessageState.SENT) {
-              roomDatabase.msgDao().updateSuspend(
-                msgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value)
-              )
-            }
-
-            throw e
-          } else {
-            val newMsgState = when (e) {
-              is MailConnectException -> {
-                MessageState.NEW_PASSWORD_PROTECTED
-              }
-
-              is MessagingException -> {
-                if (e.cause is SSLException || e.cause is SocketException) {
-                  MessageState.NEW_PASSWORD_PROTECTED
-                } else {
-                  MessageState.ERROR_PASSWORD_PROTECTED
-                }
-              }
-
-              else -> {
-                when (e.cause) {
-                  is FileNotFoundException -> MessageState.ERROR_CACHE_PROBLEM
-
-                  else -> MessageState.ERROR_PASSWORD_PROTECTED
-                }
-              }
-            }
-
-            roomDatabase.msgDao()
-              .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
-
-            if (newMsgState == MessageState.ERROR_PASSWORD_PROTECTED) {
-              GeneralUtil.notifyUserAboutProblemWithOutgoingMsgs(applicationContext, account)
-            }
-          }
+          handleExceptionsForMessage(e, msgEntity, account)
         }
       }
     }
+
+  private suspend fun handleExceptionsForMessage(
+    e: Exception,
+    msgEntity: MessageEntity,
+    account: AccountEntity
+  ) = withContext(Dispatchers.IO) {
+    ExceptionUtil.handleError(e)
+
+    if (!GeneralUtil.isConnected(applicationContext)) {
+      if (msgEntity.msgState !== MessageState.SENT) {
+        roomDatabase.msgDao().updateSuspend(
+          msgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value)
+        )
+      }
+
+      throw e
+    } else {
+      val newMsgState = when (e) {
+        is MailConnectException -> {
+          MessageState.NEW_PASSWORD_PROTECTED
+        }
+
+        is MessagingException -> {
+          if (e.cause is SSLException || e.cause is SocketException) {
+            MessageState.NEW_PASSWORD_PROTECTED
+          } else {
+            MessageState.ERROR_PASSWORD_PROTECTED
+          }
+        }
+
+        else -> {
+          when (e.cause) {
+            is FileNotFoundException -> MessageState.ERROR_CACHE_PROBLEM
+
+            else -> MessageState.ERROR_PASSWORD_PROTECTED
+          }
+        }
+      }
+
+      roomDatabase.msgDao()
+        .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
+
+      if (newMsgState == MessageState.ERROR_PASSWORD_PROTECTED) {
+        GeneralUtil.notifyUserAboutProblemWithOutgoingMsgs(applicationContext, account)
+      }
+    }
+  }
+
+  private fun createRawPlainMimeMsgWithAttachments(
+    plainMimeMsgWithAttachments: MimeMessage,
+    toCandidates: Array<Address>,
+    ccCandidates: Array<Address>,
+    bccCandidates: Array<Address>,
+    bodyWithReplyToken: String
+  ): String {
+    // construct a regular plain mime message using bodyWithReplyToken + attachments
+    plainMimeMsgWithAttachments.setRecipients(Message.RecipientType.TO, toCandidates)
+    plainMimeMsgWithAttachments.setRecipients(Message.RecipientType.CC, ccCandidates)
+    plainMimeMsgWithAttachments.setRecipients(Message.RecipientType.BCC, bccCandidates)
+    val multipart = plainMimeMsgWithAttachments.content as Multipart
+    //need to remove 'encrypted.asc' from the existing MIME
+    multipart.removeBodyPart(0)
+    multipart.addBodyPart(MimeBodyPart().apply { setText(bodyWithReplyToken) }, 0)
+    plainMimeMsgWithAttachments.saveChanges()
+
+    //prepare raw MIME
+    val rawMimeMsg = String(ByteArrayOutputStream().apply {
+      plainMimeMsgWithAttachments.writeTo(this)
+    }.toByteArray())
+    return rawMimeMsg
+  }
+
+  private suspend fun getMimeMessage(
+    account: AccountEntity,
+    msgEntity: MessageEntity,
+    attachments: List<AttachmentEntity>
+  ) = EmailUtil.createMimeMsg(
+    context = applicationContext,
+    sess = Session.getDefaultInstance(Properties()),
+    account = account,
+    msgEntity = msgEntity.copy(isEncrypted = false),
+    atts = attachments
+  )
+
+  private suspend fun getAttachments(msgEntity: MessageEntity) =
+    roomDatabase.attachmentDao().getAttachmentsSuspend(
+      account = msgEntity.email,
+      label = JavaEmailConstants.FOLDER_OUTBOX,
+      uid = msgEntity.uid
+    ).map {
+      it.copy(
+        forwardedFolder = "Outbox",
+        forwardedUid = Random.nextLong(),
+        decryptWhenForward = true
+      )
+    }
+
+  private suspend fun getRecipients(
+    mimeMsgWithAttachments: MimeMessage,
+    type: Message.RecipientType
+  ) = withContext(Dispatchers.IO) {
+    mimeMsgWithAttachments.getMatchingRecipients(
+      type = type,
+      list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
+        context = applicationContext,
+        emails = mimeMsgWithAttachments.getAddresses(type)
+      )
+    )
+  }
 
   private suspend fun updateExistingMimeMsgWithUrl(
     msgEntity: MessageEntity,
