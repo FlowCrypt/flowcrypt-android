@@ -4,18 +4,18 @@
   -->
 
 <resources>
-    <string name="preferences_key_messages_notification_filter">preferences_key_messages_notification_filter</string>
-    <string name="preferences_key_manage_notifications">preferences_key_manage_notifications</string>
-    <string name="preferences_key_security_change_pass_phrase">preferences_key_security_change_pass_phrase</string>
-    <string name="pref_key_backups">pref_key_backups</string>
+    <string name="preferences_key_messages_notification_filter" translatable="false">preferences_key_messages_notification_filter</string>
+    <string name="preferences_key_manage_notifications" translatable="false">preferences_key_manage_notifications</string>
+    <string name="preferences_key_security_change_pass_phrase" translatable="false">preferences_key_security_change_pass_phrase</string>
+    <string name="pref_key_backups" translatable="false">pref_key_backups</string>
     <string name="pref_key_server_settings" translatable="false">pref_key_server_settings</string>
-    <string name="pref_key_attester">pref_key_attester</string>
-    <string name="pref_key_legal">pref_key_legal</string>
-    <string name="pref_key_notification">pref_key_notification</string>
-    <string name="pref_key_security">pref_key_security</string>
-    <string name="pref_key_keys">pref_key_keys</string>
-    <string name="pref_key_experimental">pref_key_experimental</string>
-    <string name="pref_key_contacts">pref_key_contacts</string>
+    <string name="pref_key_attester" translatable="false">pref_key_attester</string>
+    <string name="pref_key_legal" translatable="false">pref_key_legal</string>
+    <string name="pref_key_notification" translatable="false">pref_key_notification</string>
+    <string name="pref_key_security" translatable="false">pref_key_security</string>
+    <string name="pref_key_keys" translatable="false">pref_key_keys</string>
+    <string name="pref_key_experimental" translatable="false">pref_key_experimental</string>
+    <string name="pref_key_contacts" translatable="false">pref_key_contacts</string>
 
     <string name="pref_title_allow_anonymous_crash_reports">Allow anonymous crash reports</string>
 </resources>

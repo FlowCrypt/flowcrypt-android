@@ -4,8 +4,8 @@
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">FlowCrypt</string>
-    <string name="support_email">human@flowcrypt.com</string>
+    <string name="app_name" translatable="false">FlowCrypt</string>
+    <string name="support_email" translatable="false">human@flowcrypt.com</string>
 
     <string name="compose">Compose</string>
     <string name="prompt_recipients_to">Add recipients (To)</string>
@@ -56,7 +56,7 @@
     <string name="backups">Backups</string>
     <string name="contacts">Contacts</string>
     <string name="keys">Keys</string>
-    <string name="attester">Attester</string>
+    <string name="attester" translatable="false">Attester</string>
     <string name="legal">Legal</string>
     <string name="help">Help</string>
     <string name="licence">Licence</string>
@@ -140,7 +140,7 @@
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
-    <string name="template_reply_subject">%1$s: %2$s</string>
+    <string name="template_reply_subject" translatable="false">%1$s: %2$s</string>
     <string name="other_email_provider">Other email provider</string>
     <string name="account_info">Account info</string>
     <string name="e_mail">E-mail</string>
@@ -198,7 +198,7 @@
     <string name="please_select_key">Please select a key</string>
     <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
     <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
-    <string name="progress_message">%1$d%% %2$s</string>
+    <string name="progress_message" translatable="false">%1$d%% %2$s</string>
     <plurals name="you_have_backups_that_was_not_imported">
         <item quantity="one">You have one key that was not imported.</item>
         <item quantity="other">There are key backups that were not imported.</item>
