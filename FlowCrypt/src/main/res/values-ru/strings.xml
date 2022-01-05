@@ -14,7 +14,7 @@
     <string name="help">Поддержка</string>
     <string name="the_key_already_added">Такой ключ уже добавлен</string>
     <string name="help_feedback_or_question">Помощь, вопросы, обратная связь</string>
-    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Спасибо, что изпользуете FlowCrypt! Мы здесь, чтобы помочь вам.</string>
+    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Спасибо, что используете FlowCrypt! Мы здесь, чтобы помочь вам.</string>
     <string name="your_message">Ваше сообщение</string>
     <string name="email">Email</string>
     <string name="edit">Редактировать</string>
@@ -217,7 +217,7 @@
     <string name="signed">подписано</string>
     <string name="not_encrypted">не зашифровано</string>
     <string name="bad_signature">неверная подпись</string>
-    <string name="can_not_verify_signature">не верифицирована подпись</string>
+    <string name="can_not_verify_signature">подпись не верифицирована</string>
     <string name="verifying_signature">проверка подписи&#8230;</string>
     <string name="pgp_details_badge">Значок с информацией о PGP</string>
     <string name="pub_keys">Открытые ключи</string>
@@ -321,7 +321,7 @@
     <string name="template_message_part_public_key_fingerprint"><![CDATA[(Отпечаток: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
     <string name="template_fingerprint"><![CDATA[Отпечаток: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
     <string name="password_quality_subtext">(время взлома:</string>
-    <string name="there_are_no_backups_on_this_account"><b>Резервные копии отсутствуют</b>\n\n Если Вы потеряете свое устройство или оно перестанет работать, Вашы зашифрованные сообщения станут нечитаемые.</string>
+    <string name="there_are_no_backups_on_this_account"><b>Резервные копии отсутствуют</b>\n\n Если Вы потеряете свое устройство или оно перестанет работать, Вашы зашифрованные сообщения станут нечитаемыми.</string>
     <string name="active_passphrase_session">Активная сессия ключевой фразы</string>
     <string name="add_public_keys_of_your_contacts">Добавьте открытые ключи Ваших контактов, чтобы отправлять им зашифрованные сообщения.</string>
     <string name="pref_title_allow_anonymous_crash_reports">Разрешить анонимные отчеты о сбоях</string>
