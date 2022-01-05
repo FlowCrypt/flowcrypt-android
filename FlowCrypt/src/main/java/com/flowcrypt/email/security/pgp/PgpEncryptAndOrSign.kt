@@ -126,10 +126,8 @@ object PgpEncryptAndOrSign {
       }
     }
 
-    val producerOptions: ProducerOptions = if (passphrase != null) {
-      ProducerOptions.encrypt(encOpt)
-    } else {
-      if (pgpSecretKeyRingCollection?.keyRings?.hasNext() == true) {
+    val producerOptions: ProducerOptions =
+      if (passphrase == null && pgpSecretKeyRingCollection?.any() == true) {
         ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
           pgpSecretKeyRingCollection.forEach {
             addInlineSignature(
@@ -140,7 +138,6 @@ object PgpEncryptAndOrSign {
       } else {
         ProducerOptions.encrypt(encOpt)
       }
-    }
 
     producerOptions.isAsciiArmor = doArmor
 
