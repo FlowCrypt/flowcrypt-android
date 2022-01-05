@@ -342,11 +342,9 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
       msg = pwdEncryptedWithAttachments
     )
 
-    if (messageUploadResponseResult.status
-      != com.flowcrypt.email.api.retrofit.response.base.Result.Status.SUCCESS
-    ) {
-      throw IllegalStateException("Uploading a password-protected message to a web portal failed")
-    }
+    com.flowcrypt.email.api.retrofit.response.base.Result.throwExceptionIfNotSuccess(
+      messageUploadResponseResult
+    )
     return@withContext requireNotNull(messageUploadResponseResult.data?.url)
   }
 
@@ -389,11 +387,9 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
         idToken = idToken
       )
 
-    if (messageReplyTokenResponseResult.status
-      != com.flowcrypt.email.api.retrofit.response.base.Result.Status.SUCCESS
-    ) {
-      throw IllegalStateException("Could not receive a reply token from FES")
-    }
+    com.flowcrypt.email.api.retrofit.response.base.Result.throwExceptionIfNotSuccess(
+      messageReplyTokenResponseResult
+    )
 
     return@withContext requireNotNull(messageReplyTokenResponseResult.data?.replyToken)
   }
