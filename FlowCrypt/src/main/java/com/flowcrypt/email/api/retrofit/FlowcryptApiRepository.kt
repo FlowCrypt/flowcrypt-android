@@ -148,7 +148,7 @@ class FlowcryptApiRepository : ApiRepository {
           // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
           val firstMatchingKey = pgpPublicKeyRingCollection?.firstOrNull {
             KeyRingInfo(it)
-              .getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS)
+              .getEncryptionSubkeys(EncryptionPurpose.ANY)
               .isNotEmpty()
           }
           firstMatchingKey?.armor()?.let { armoredPubKey ->

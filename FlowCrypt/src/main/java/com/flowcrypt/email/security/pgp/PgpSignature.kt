@@ -53,11 +53,13 @@ object PgpSignature {
   ): ClearTextVerificationResult {
     ByteArrayOutputStream().use { outStream ->
       return try {
-        val verificationStream = PGPainless.verifyCleartextSignedMessage()
+        val verificationStream = PGPainless.decryptAndOrVerify()
           .onInputStream(srcInputStream)
-          .withStrategy(InMemoryMultiPassStrategy())
-          .withOptions(ConsumerOptions().addVerificationCerts(publicKeys))
-          .verificationStream
+          .withOptions(
+            ConsumerOptions()
+              .addVerificationCerts(publicKeys)
+              .setMultiPassStrategy(InMemoryMultiPassStrategy())
+          )
 
         verificationStream.use { it.copyTo(outStream) }
         ClearTextVerificationResult(

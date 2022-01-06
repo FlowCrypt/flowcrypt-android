@@ -17,7 +17,7 @@ import org.pgpainless.key.info.KeyRingInfo
 fun KeyRingInfo.usableForEncryption(): Boolean {
   return !publicKey.hasRevocation()
       && !isExpired()
-      && getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).isNotEmpty()
+      && getEncryptionSubkeys(EncryptionPurpose.ANY).isNotEmpty()
       && primaryUserId?.isNotEmpty() == true
 }
 
