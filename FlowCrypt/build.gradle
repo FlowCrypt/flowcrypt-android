@@ -387,7 +387,7 @@ dependencies {
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:18.0.1'
-    implementation 'com.google.android.gms:play-services-auth:20.0.0'
+    implementation 'com.google.android.gms:play-services-auth:20.0.1'
 
     //https://mvnrepository.com/artifact/com.google.android.material/material
     implementation 'com.google.android.material:material:1.4.0'
