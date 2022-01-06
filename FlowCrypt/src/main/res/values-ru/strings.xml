@@ -419,7 +419,7 @@
     <string name="passphrase_purged_from_memory">Ключевая фраза удалена из памяти</string>
     <string name="pass_phrase_changed">Ключевая фраза успешно изменена</string>
     <string name="please_login_again_to_continue">Пожалуйста, войдите снова, чтобы продолжить</string>
-    <string name="password_quality_poor">плохая(ключевая фраза)</string>
+    <string name="password_quality_poor">плохая</string>
     <string name="public_">Открытый</string>
     <string name="private_">Закрытый</string>
     <string name="processing_please_wait">Обработка, пожалуйста, подождите&#8230;</string>
