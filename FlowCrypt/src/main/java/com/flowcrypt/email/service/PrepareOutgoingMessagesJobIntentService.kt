@@ -23,10 +23,12 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
@@ -144,8 +146,16 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             msgEntity.email, msgEntity.folder, msgEntity.uid
           )
           insertedMsgEntity?.let {
-            roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
-            MessagesSenderWorker.enqueue(applicationContext)
+            if (outgoingMsgInfo.encryptionType == MessageEncryptionType.ENCRYPTED
+              && outgoingMsgInfo.isPasswordProtected == true
+            ) {
+              roomDatabase.msgDao()
+                .update(it.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
+              HandlePasswordProtectedMsgWorker.enqueue(applicationContext)
+            } else {
+              roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
+              MessagesSenderWorker.enqueue(applicationContext)
+            }
           }
         } else {
           ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
@@ -190,7 +200,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val failedOutgoingMsgsCount =
         roomDatabase.msgDao().getFailedOutgoingMsgsCount(accountEntity.email)
       if (failedOutgoingMsgsCount > 0) {
-        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(
+        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsgs(
           accountEntity,
           failedOutgoingMsgsCount
         )
@@ -247,7 +257,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       flags = MessageFlag.SEEN.value,
       isEncrypted = isEncrypted,
       state = msgStateValue,
-      attachmentsDirectory = attsCacheDir.name
+      attachmentsDirectory = attsCacheDir.name,
+      password = msgInfo.password?.let { KeyStoreCryptoManager.encrypt(String(it)).toByteArray() }
     )
   }
 

@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.base
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 
@@ -37,6 +38,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(),
       val isOutbox =
         JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
       if (currentFolder != null && isOutbox) {
+        HandlePasswordProtectedMsgWorker.enqueue(applicationContext)
         ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
         MessagesSenderWorker.enqueue(applicationContext)
       } else {

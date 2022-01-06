@@ -319,7 +319,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     var stateTextColor = ContextCompat.getColor(context, R.color.red)
 
     when (messageState) {
-      MessageState.NEW, MessageState.NEW_FORWARDED -> {
+      MessageState.NEW, MessageState.NEW_FORWARDED, MessageState.NEW_PASSWORD_PROTECTED -> {
         state = context.getString(R.string.preparing)
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }
@@ -341,7 +341,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       MessageState.ERROR_SENDING_FAILED,
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
       MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
-      MessageState.AUTH_FAILURE -> {
+      MessageState.AUTH_FAILURE,
+      MessageState.ERROR_PASSWORD_PROTECTED -> {
         stateTextColor = ContextCompat.getColor(context, R.color.red)
 
         when (messageState) {
@@ -366,6 +367,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
           MessageState.AUTH_FAILURE ->
             state = context.getString(R.string.can_not_send_due_to_auth_failure)
+
+          MessageState.ERROR_PASSWORD_PROTECTED ->
+            state = context.getString(R.string.can_not_send_password_protected)
 
           else -> {
           }

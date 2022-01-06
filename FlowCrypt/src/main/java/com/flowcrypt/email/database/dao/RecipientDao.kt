@@ -53,6 +53,10 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients WHERE email IN (:emails)")
   fun getRecipientsWithPubKeysByEmails(emails: Collection<String>): List<RecipientWithPubKeys>
 
+  @Transaction
+  @Query("SELECT * FROM recipients WHERE email IN (:emails)")
+  suspend fun getRecipientsWithPubKeysByEmailsSuspend(emails: Collection<String>): List<RecipientWithPubKeys>
+
   @Query("SELECT * FROM recipients WHERE email LIKE :searchPattern ORDER BY last_use DESC")
   fun getFilteredCursor(searchPattern: String): Cursor?
 

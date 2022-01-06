@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.response.base
 
+import com.flowcrypt.email.util.exception.ApiException
 import java.io.Serializable
 
 /**
@@ -76,6 +77,16 @@ data class Result<out T>(
         progressMsg = progressMsg,
         progress = progress
       )
+    }
+
+    fun <T : ApiResponse> throwExceptionIfNotSuccess(result: Result<T>) {
+      when (result.status) {
+        Status.EXCEPTION -> result.exception?.let { throw it }
+        Status.ERROR -> result.data?.apiError?.let { throw ApiException(it) }
+        else -> {
+          //do nothing
+        }
+      }
     }
   }
 }

@@ -31,7 +31,6 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import java.util.ArrayList
-import java.util.Locale
 import java.util.Properties
 import javax.mail.Flags
 import javax.mail.Message
@@ -82,7 +81,8 @@ data class MessageEntity(
   @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
   @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
-  @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null
+  @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
+  @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
 ) : Parcelable {
 
   @Ignore
@@ -105,6 +105,9 @@ data class MessageEntity(
 
   @Ignore
   val uidAsHEX: String = uid.toHex()
+
+  @Ignore
+  val isPasswordProtected = password?.isNotEmpty() ?: false
 
   /**
    * Generate a list of the all recipients.
@@ -147,7 +150,8 @@ data class MessageEntity(
     parcel.readString(),
     parcel.readString(),
     parcel.readString(),
-    parcel.readString()
+    parcel.readString(),
+    parcel.createByteArray()
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -172,6 +176,7 @@ data class MessageEntity(
     parcel.writeString(replyTo)
     parcel.writeString(threadId)
     parcel.writeString(historyId)
+    parcel.writeByteArray(password)
   }
 
   override fun describeContents(): Int {
@@ -180,6 +185,81 @@ data class MessageEntity(
 
   fun isOutboxMsg(): Boolean {
     return JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as MessageEntity
+
+    if (id != other.id) return false
+    if (email != other.email) return false
+    if (folder != other.folder) return false
+    if (uid != other.uid) return false
+    if (receivedDate != other.receivedDate) return false
+    if (sentDate != other.sentDate) return false
+    if (fromAddress != other.fromAddress) return false
+    if (toAddress != other.toAddress) return false
+    if (ccAddress != other.ccAddress) return false
+    if (subject != other.subject) return false
+    if (flags != other.flags) return false
+    if (rawMessageWithoutAttachments != other.rawMessageWithoutAttachments) return false
+    if (hasAttachments != other.hasAttachments) return false
+    if (isEncrypted != other.isEncrypted) return false
+    if (isNew != other.isNew) return false
+    if (state != other.state) return false
+    if (attachmentsDirectory != other.attachmentsDirectory) return false
+    if (errorMsg != other.errorMsg) return false
+    if (replyTo != other.replyTo) return false
+    if (threadId != other.threadId) return false
+    if (historyId != other.historyId) return false
+    if (password != null) {
+      if (other.password == null) return false
+      if (!password.contentEquals(other.password)) return false
+    } else if (other.password != null) return false
+    if (from != other.from) return false
+    if (replyToAddress != other.replyToAddress) return false
+    if (to != other.to) return false
+    if (cc != other.cc) return false
+    if (msgState != other.msgState) return false
+    if (isSeen != other.isSeen) return false
+    if (uidAsHEX != other.uidAsHEX) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = id?.hashCode() ?: 0
+    result = 31 * result + email.hashCode()
+    result = 31 * result + folder.hashCode()
+    result = 31 * result + uid.hashCode()
+    result = 31 * result + (receivedDate?.hashCode() ?: 0)
+    result = 31 * result + (sentDate?.hashCode() ?: 0)
+    result = 31 * result + (fromAddress?.hashCode() ?: 0)
+    result = 31 * result + (toAddress?.hashCode() ?: 0)
+    result = 31 * result + (ccAddress?.hashCode() ?: 0)
+    result = 31 * result + (subject?.hashCode() ?: 0)
+    result = 31 * result + (flags?.hashCode() ?: 0)
+    result = 31 * result + (rawMessageWithoutAttachments?.hashCode() ?: 0)
+    result = 31 * result + (hasAttachments?.hashCode() ?: 0)
+    result = 31 * result + (isEncrypted?.hashCode() ?: 0)
+    result = 31 * result + (isNew?.hashCode() ?: 0)
+    result = 31 * result + (state ?: 0)
+    result = 31 * result + (attachmentsDirectory?.hashCode() ?: 0)
+    result = 31 * result + (errorMsg?.hashCode() ?: 0)
+    result = 31 * result + (replyTo?.hashCode() ?: 0)
+    result = 31 * result + (threadId?.hashCode() ?: 0)
+    result = 31 * result + (historyId?.hashCode() ?: 0)
+    result = 31 * result + (password?.contentHashCode() ?: 0)
+    result = 31 * result + from.hashCode()
+    result = 31 * result + replyToAddress.hashCode()
+    result = 31 * result + to.hashCode()
+    result = 31 * result + cc.hashCode()
+    result = 31 * result + msgState.hashCode()
+    result = 31 * result + isSeen.hashCode()
+    result = 31 * result + uidAsHEX.hashCode()
+    return result
   }
 
   companion object CREATOR : Parcelable.Creator<MessageEntity> {
@@ -226,7 +306,7 @@ data class MessageEntity(
             val isMsgEncrypted: Boolean? = if (areAllMsgsEncrypted) {
               true
             } else {
-              msgsEncryptionStates.get(folder.getUID(msg))
+              msgsEncryptionStates[folder.getUID(msg)]
             }
 
             isMsgEncrypted?.let {
@@ -344,7 +424,7 @@ data class MessageEntity(
         toAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)),
         ccAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)),
         subject = msg.subject,
-        flags = msg.flags.toString().toUpperCase(Locale.getDefault()),
+        flags = msg.flags.toString().uppercase(),
         hasAttachments = hasAttachments?.let { hasAttachments } ?: EmailUtil.hasAtt(msg),
         isNew = if (!msg.flags.contains(Flags.Flag.SEEN)) {
           isNew

@@ -556,4 +556,6 @@
     <string name="verifying_signature">verifying signature&#8230;</string>
     <string name="not_signed">not signed</string>
     <string name="mixed_signed">mixed signed</string>
+    <string name="password_protected_msg_promo">%1$s has sent you a password-encrypted email. Follow this link to open it: %2$s</string>
+    <string name="can_not_send_password_protected">Can\'t send message: password-protected</string>
 </resources>
