@@ -49,6 +49,7 @@ import java.io.InputStream
 import java.net.SocketException
 import java.util.Base64
 import java.util.Properties
+import javax.mail.Address
 import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Multipart
@@ -139,17 +140,20 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val domain = EmailUtil.getDomain(fromAddress)
             val idToken = getGoogleIdToken()
             val replyToken = fetchReplyToken(apiRepository, domain, idToken)
-            val messageUploadRequest = MessageUploadRequest(
-              associateReplyToken = replyToken,
-              from = fromAddress,
-              to = toCandidates.map { (it as InternetAddress).address },
-              cc = ccCandidates.map { (it as InternetAddress).address },
-              bcc = bccCandidates.map { (it as InternetAddress).address }
+            val replyInfoData = ReplyInfoData(
+              sender = fromAddress,
+              recipient = (toCandidates + ccCandidates + bccCandidates)
+                .mapNotNull { (it as? InternetAddress)?.address }
+                .filterNot {
+                  it.equals(fromAddress, true)
+                },
+              subject = plainMimeMsgWithAttachments.subject,
+              token = replyToken
             )
 
             //prepare bodyWithReplyToken
             val replyInfo = Base64.getEncoder().encodeToString(
-              GsonBuilder().create().toJson(messageUploadRequest).toByteArray()
+              GsonBuilder().create().toJson(replyInfoData).toByteArray()
             )
 
             val infoDiv = genInfoDiv(replyInfo)
@@ -180,7 +184,13 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               apiRepository = apiRepository,
               domain = domain,
               idToken = idToken,
-              messageUploadRequest = messageUploadRequest,
+              messageUploadRequest = genMessageUploadRequest(
+                replyToken,
+                fromAddress,
+                toCandidates,
+                ccCandidates,
+                bccCandidates
+              ),
               pwdEncryptedWithAttachments = pwdEncryptedWithAttachments
             )
 
@@ -196,6 +206,20 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
         }
       }
     }
+
+  private fun genMessageUploadRequest(
+    replyToken: String,
+    fromAddress: String,
+    toCandidates: Array<Address>,
+    ccCandidates: Array<Address>,
+    bccCandidates: Array<Address>
+  ) = MessageUploadRequest(
+    associateReplyToken = replyToken,
+    from = fromAddress,
+    to = toCandidates.map { (it as InternetAddress).address },
+    cc = ccCandidates.map { (it as InternetAddress).address },
+    bcc = bccCandidates.map { (it as InternetAddress).address }
+  )
 
   private suspend fun handleExceptionsForMessage(
     e: Exception,
@@ -393,6 +417,13 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
     return@withContext requireNotNull(messageReplyTokenResponseResult.data?.replyToken)
   }
+
+  private data class ReplyInfoData(
+    val sender: String,
+    val recipient: List<String>,
+    val subject: String,
+    val token: String,
+  )
 
   companion object {
     private val TAG = HandlePasswordProtectedMsgWorker::class.java.simpleName
