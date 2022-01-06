@@ -14,7 +14,7 @@
     <string name="help">Поддержка</string>
     <string name="the_key_already_added">Такой ключ уже добавлен</string>
     <string name="help_feedback_or_question">Помощь, вопросы, обратная связь</string>
-    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Спасибо, что используете FlowCrypt! Мы здесь, чтобы помочь вам.</string>
+    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Спасибо, что используете FlowCrypt! Мы здесь, чтобы помочь Вам.</string>
     <string name="your_message">Ваше сообщение</string>
     <string name="email">Email</string>
     <string name="edit">Редактировать</string>
@@ -142,7 +142,7 @@
     <string name="keys_have_different_pass_phrase">Ключи имеют разную ключевую фразу</string>
     <string name="source_has_wrong_pgp_structure">Предоставленное вами содержимое не похоже на действительный %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Содержимое Вашего файла не похоже на действительный %1$s ключ PGP.</string>
-    <string name="clipboard_has_wrong_structure">Содержимое Вашего буфера не похоже на действительный %1$s ключ PGP.</string>
+    <string name="clipboard_has_wrong_structure">Содержимое Вашего буфера обмена не похоже на действительный %1$s ключ PGP.</string>
     <string name="attachment_not_found">Вложение не найдено</string>
     <string name="cannot_save_attachment_without_permission">Вложение нельзя сохранить без разрешения на запись во внешнее хранилище</string>
     <string name="sync">Синхронизация</string>
@@ -205,7 +205,7 @@
     <string name="or">или</string>
     <string name="navigation_drawer_open">Открыть панель навигации</string>
     <string name="only_partially_signed">подписано только частично</string>
-    <string name="warning_one_of_recipients_has_revoked_pub_key">Один или несколько Ваших получателей отозвали открытые ключи (отмечены красным).\n\nПопросите их прислать вам новый открытый ключ. Если это корпоративная установка, обратитесь к системному администратору.</string>
+    <string name="warning_one_of_recipients_has_revoked_pub_key">Один или несколько Ваших получателей отозвали открытые ключи (отмечены красным).\n\nПопросите их прислать Вам новый открытый ключ. Если это корпоративная установка, обратитесь к системному администратору.</string>
     <string name="warning_one_of_recipients_has_expired_pub_key">У одного или нескольких Ваших получателей истек срок действия открытых ключей (отмечен оранжевым).\n\nПопросите их прислать вам обновленный открытый ключ. Если это корпоративная установка, обратитесь к системному администратору.</string>
     <string name="partially_encrypted_private_key_error_msg">Один из предоставленных закрытых ключей - это частично зашифрованный закрытый ключ (некоторые пакеты зашифрованы, некоторые нет). Такие ключи не поддерживаются. Пожалуйста, импортируйте только полностью зашифрованные ключи с одной и той же парольной фразой для всех секретных пакетов.</string>
     <string name="not_signed">не подписано</string>
@@ -371,7 +371,7 @@
     <string name="this_message_will_not_be_encrypted">Это сообщение не будет зашифровано</string>
     <string name="key_sha1_warning_msg">Этот ключ OpenPGP не поддерживается. Подробности: подходящие подписи для ключа не найдены. Это может быть из-за того, что отсутствуют внутренние подписи, или подписи сделаны неправильно, или он может использовать устаревшие алгоритмы, которые больше не являются безопасными и больше не поддерживаются (например, SHA-1).</string>
     <string name="backup_as_email_hint">Это создаст резервную копию закрытых ключей в Вашем почтовом ящике.  Степень безопасности зависит от силы Вашего пароля, который должен быть очень длинным, и трудноугадываемым. Лучший вариант для большинства пользователей.</string>
-    <string name="backup_as_download_hint">Это сохранит Ваши ключи в виде файла. Очень безопасный вариант, если Ваше устройство зашифровано или если Вы можете хранить этот файл в безопасности. Если Вы потеряете и телефон, и файл, ваше зашифрованное электронное письмо станет нечитаемым, поэтому вам необходимо сохранить этот файл в надежном месте.</string>
+    <string name="backup_as_download_hint">Это сохранит Ваши ключи в виде файла. Очень безопасный вариант, если Ваше устройство зашифровано или если Вы можете хранить этот файл в безопасности. Если Вы потеряете и телефон, и файл, Ваше зашифрованное электронное письмо станет нечитаемым, поэтому Вам необходимо сохранить этот файл в надежном месте.</string>
     <string name="forward">Переслать</string>
     <string name="fix">исправить</string>
     <string name="template_fingerprint_2">Отпечаток %1$d: %2$s</string>
@@ -419,7 +419,7 @@
     <string name="passphrase_purged_from_memory">Ключевая фраза удалена из памяти</string>
     <string name="pass_phrase_changed">Ключевая фраза успешно изменена</string>
     <string name="please_login_again_to_continue">Пожалуйста, войдите снова, чтобы продолжить</string>
-    <string name="password_quality_poor">плохое</string>
+    <string name="password_quality_poor">плохая(ключевая фраза)</string>
     <string name="public_">Открытый</string>
     <string name="private_">Закрытый</string>
     <string name="processing_please_wait">Обработка, пожалуйста, подождите&#8230;</string>
