@@ -40,5 +40,5 @@ ext {
     glideVersion = '4.12.0'
     junitVersion = '4.13.2'
     /*https://mvnrepository.com/search?q=org.bouncycastle*/
-    bouncycastleVersion = '1.69'
+    bouncycastleVersion = '1.70'
 }
