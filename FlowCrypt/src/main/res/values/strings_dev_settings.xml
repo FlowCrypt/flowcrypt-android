@@ -18,7 +18,8 @@
     <string name="pref_title_general" translatable="false">General</string>
     <string name="pref_title_http" translatable="false">Http</string>
     <string name="pref_title_build_config_info" translatable="false">Build config info</string>
-    <string name="toast_message_press_force_stop_to_apply_changes">Please press "Force stop" to apply changes</string>
+    <string name="crash_the_app" translatable="false">Crash the App</string>
+    <string name="toast_message_press_force_stop_to_apply_changes" translatable="false">Please press "Force stop" to apply changes</string>
     <string name="pref_title_write_api_logs_to_file" translatable="false">Write API logs to a file</string>
     <string name="pref_title_enable_acra" translatable="false" tools:ignore="UnusedResources">Enable ACRA(App Crash Reports)</string>
     <string name="pref_title_imap_debug" translatable="false">IMAP debug</string>

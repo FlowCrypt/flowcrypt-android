@@ -464,4 +464,9 @@
     <string name="legal">Юридическая информация</string>
     <string name="experimental">Экспериментальные</string>
     <string name="loading_labels">Загрузка ярлыков</string>
+    <string name="silent">Беззвучный</string>
+    <string name="mixed_signed">разные подписи</string>
+    <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, которое защищено паролем. Вы можете открыт его используя эту ссылку: %2$s</string>
+    <string name="hint">Подсказка</string>
+    <string name="can_not_send_password_protected">Сбой при отправке: защищено паролем</string>
 </resources>

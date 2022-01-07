@@ -42,7 +42,7 @@
                 android:gravity="center"
                 android:textColor="@android:color/black"
                 android:textSize="@dimen/default_text_size_medium"
-                tools:text="@string/no_backups_found" />
+                tools:text="No backups found on this account" />
 
             <ImageButton
                 android:id="@+id/imageButtonHint"
@@ -153,7 +153,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/rGPassphraseType"
-            tools:text="@string/load_account" />
+            tools:text="Load Account" />
 
         <Button
             android:id="@+id/buttonSkipRemainingBackups"
