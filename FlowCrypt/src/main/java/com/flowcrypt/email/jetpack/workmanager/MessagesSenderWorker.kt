@@ -7,8 +7,6 @@ package com.flowcrypt.email.jetpack.workmanager
 
 import android.accounts.AuthenticatorException
 import android.content.Context
-import android.net.Uri
-import android.text.TextUtils
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -17,15 +15,12 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -34,10 +29,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
-import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
+import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -55,34 +47,19 @@ import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.IOUtils
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import org.pgpainless.key.protection.SecretKeyRingProtector
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.net.SocketException
-import java.nio.charset.StandardCharsets
 import java.util.*
-import javax.activation.DataHandler
-import javax.activation.DataSource
 import javax.mail.AuthenticationFailedException
-import javax.mail.BodyPart
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.Store
-import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimeMultipart
 import javax.net.ssl.SSLException
 
 /**
@@ -93,7 +70,7 @@ import javax.net.ssl.SSLException
  * E-mail: DenBond7@gmail.com
  */
 class MessagesSenderWorker(context: Context, params: WorkerParameters) :
-  BaseWorker(context, params) {
+  BaseMsgWorker(context, params) {
 
   override suspend fun doWork(): Result =
     withContext(Dispatchers.IO) {
@@ -157,7 +134,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
         e.printStackTrace()
         when (e) {
           is UserRecoverableAuthException, is UserRecoverableAuthIOException, is AuthenticatorException, is AuthenticationFailedException -> {
-            markMsgsWithAuthFailureState(roomDatabase)
+            markMsgsWithAuthFailureState(roomDatabase, MessageState.QUEUED)
           }
 
           else -> {
@@ -179,16 +156,6 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
         LogsUtil.d(TAG, "work was finished")
       }
     }
-
-  private suspend fun markMsgsWithAuthFailureState(roomDatabase: FlowCryptRoomDatabase) {
-    val account = roomDatabase.accountDao().getActiveAccountSuspend()
-    roomDatabase.msgDao().changeMsgsStateSuspend(
-      account = account?.email,
-      label = JavaEmailConstants.FOLDER_OUTBOX,
-      oldValue = MessageState.QUEUED.value,
-      newValues = MessageState.AUTH_FAILURE.value
-    )
-  }
 
   private fun genForegroundInfo(account: AccountEntity): ForegroundInfo {
     val title = applicationContext.getString(R.string.sending_email)
@@ -344,7 +311,8 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           val attachments = roomDatabase.attachmentDao()
             .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
-          val mimeMsg = createMimeMsg(sess, account, msgEntity, attachments)
+          val mimeMsg =
+            EmailUtil.createMimeMsg(applicationContext, sess, account, msgEntity, attachments)
 
           roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
           roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENDING.value))
@@ -424,7 +392,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     atts: List<AttachmentEntity>, sess: Session?, store: Store?
   ): Boolean =
     withContext(Dispatchers.IO) {
-      val mimeMsg = createMimeMsg(sess, account, msgEntity, atts)
+      val mimeMsg = EmailUtil.createMimeMsg(applicationContext, sess, account, msgEntity, atts)
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
       when (account.accountType) {
@@ -509,98 +477,6 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     }
 
   /**
-   * Create [MimeMessage] from the given [GeneralMessageDetails].
-   *
-   * @param sess    Will be used to create [MimeMessage]
-   * @throws IOException
-   * @throws MessagingException
-   */
-  private suspend fun createMimeMsg(
-    sess: Session?,
-    account: AccountEntity,
-    msgEntity: MessageEntity,
-    atts: List<AttachmentEntity>
-  ): MimeMessage =
-    withContext(Dispatchers.IO) {
-      val stream =
-        IOUtils.toInputStream(msgEntity.rawMessageWithoutAttachments, StandardCharsets.UTF_8)
-      val mimeMsg = MimeMessage(sess, stream)
-
-      //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
-      mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
-
-      if (mimeMsg.content is MimeMultipart && atts.isNotEmpty()) {
-        val mimeMultipart = mimeMsg.content as MimeMultipart
-        val keysStorage = KeysStorageImpl.getInstance(applicationContext)
-        val secretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
-        val ringProtector = keysStorage.getSecretKeyRingProtector()
-
-        val publicKeys = mutableListOf<String>()
-        val senderEmail = EmailUtil.getFirstAddressString(msgEntity.from)
-        val recipients = msgEntity.allRecipients.toMutableList()
-        publicKeys.addAll(
-          SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients)
-        )
-        publicKeys.addAll(
-          SecurityUtils.getSenderPgpKeyDetailsList(applicationContext, account, senderEmail)
-            .map { it.publicKey })
-
-        for (att in atts) {
-          val attBodyPart = genBodyPartWithAtt(
-            att = att,
-            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
-            publicKeys = publicKeys,
-            secretKeys = secretKeys,
-            ringProtector = ringProtector
-          )
-          mimeMultipart.addBodyPart(attBodyPart)
-        }
-
-        mimeMsg.setContent(mimeMultipart)
-        mimeMsg.saveChanges()
-      }
-
-      return@withContext mimeMsg
-    }
-
-  /**
-   * Generate a [BodyPart] with an attachment.
-   *
-   * @param att     The [AttachmentInfo] object, which contains general information about the
-   * attachment.
-   * @return Generated [MimeBodyPart] with the attachment.
-   * @throws MessagingException
-   */
-  private fun genBodyPartWithAtt(
-    att: AttachmentEntity,
-    shouldBeEncrypted: Boolean,
-    publicKeys: List<String>?,
-    secretKeys: PGPSecretKeyRingCollection,
-    ringProtector: SecretKeyRingProtector
-  ): BodyPart {
-    val attBodyPart = MimeBodyPart()
-    val attInfo = att.toAttInfo()
-    attBodyPart.dataHandler = if (attInfo.isForwarded) {
-      DataHandler(
-        ForwardedAttachmentInfoDataSource(
-          applicationContext,
-          attInfo,
-          shouldBeEncrypted,
-          publicKeys,
-          secretKeys,
-          ringProtector
-        )
-      )
-    } else {
-      DataHandler(AttachmentInfoDataSource(applicationContext, attInfo))
-    }
-    attBodyPart.fileName = attInfo.getSafeName()
-    attBodyPart.contentID = attInfo.id
-
-    return attBodyPart
-  }
-
-  /**
    * Save a copy of the sent message to the account SENT folder.
    *
    * @param account The object which contains information about an email account.
@@ -634,75 +510,6 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
             + account.email.substring(account.email.indexOf("@") + 1)
       )
     }
-
-  /**
-   * The [DataSource] realization for a file which received from [Uri]
-   */
-  private open class AttachmentInfoDataSource(
-    private val context: Context,
-    protected val att: AttachmentInfo
-  ) : DataSource {
-
-    override fun getInputStream(): InputStream? {
-      val inputStream: InputStream? = if (att.uri == null) {
-        val rawData = att.rawData ?: return null
-        ByteArrayInputStream(rawData)
-      } else {
-        att.uri?.let { context.contentResolver.openInputStream(it) }
-      }
-
-      return if (inputStream == null) null else BufferedInputStream(inputStream)
-    }
-
-    override fun getOutputStream(): OutputStream? {
-      return null
-    }
-
-    /**
-     * If a content type is unknown we return "application/octet-stream".
-     * http://www.rfc-editor.org/rfc/rfc2046.txt (section 4.5.1.  Octet-Stream Subtype)
-     */
-    override fun getContentType(): String {
-      return if (TextUtils.isEmpty(att.type)) Constants.MIME_TYPE_BINARY_DATA else att.type
-    }
-
-    override fun getName(): String {
-      return att.getSafeName()
-    }
-  }
-
-  private class ForwardedAttachmentInfoDataSource(
-    context: Context,
-    att: AttachmentInfo,
-    private val shouldBeEncrypted: Boolean,
-    private val publicKeys: List<String>? = null,
-    private val secretKeys: PGPSecretKeyRingCollection,
-    private val protector: SecretKeyRingProtector
-  ) : AttachmentInfoDataSource(context, att) {
-    override fun getInputStream(): InputStream? {
-      val inputStream = super.getInputStream() ?: return null
-      val srcInputStream = if (att.decryptWhenForward) PgpDecryptAndOrVerify.genDecryptionStream(
-        srcInputStream = inputStream,
-        secretKeys = secretKeys,
-        protector = protector
-      ) else inputStream
-
-      return if (shouldBeEncrypted) {
-        //here we use [ByteArrayOutputStream] as a temp destination of encrypted data.
-        //it should be improved in the future for better performance
-        val tempByteArrayOutputStream = ByteArrayOutputStream()
-        PgpEncryptAndOrSign.encryptAndOrSign(
-          srcInputStream = srcInputStream,
-          destOutputStream = tempByteArrayOutputStream,
-          pubKeys = requireNotNull(publicKeys)
-        )
-
-        return ByteArrayInputStream(tempByteArrayOutputStream.toByteArray())
-      } else {
-        srcInputStream
-      }
-    }
-  }
 
   companion object {
     private val TAG = MessagesSenderWorker::class.java.simpleName

@@ -6,13 +6,17 @@
 package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
+import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
+import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
+import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
@@ -24,10 +28,14 @@ import com.flowcrypt.email.api.wkd.WkdClient
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.pgpainless.algorithm.EncryptionPurpose
 import org.pgpainless.key.info.KeyRingInfo
@@ -49,14 +57,14 @@ class FlowcryptApiRepository : ApiRepository {
   override suspend fun login(
     context: Context,
     loginModel: LoginModel,
-    tokenId: String
+    idToken: String
   ): Result<LoginResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       getResult(
         context = context,
         expectedResultClass = LoginResponse::class.java
-      ) { apiService.postLogin(loginModel, "Bearer $tokenId") }
+      ) { apiService.postLogin(loginModel, "Bearer $idToken") }
     }
 
   override suspend fun getDomainOrgRules(
@@ -140,7 +148,7 @@ class FlowcryptApiRepository : ApiRepository {
           // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
           val firstMatchingKey = pgpPublicKeyRingCollection?.firstOrNull {
             KeyRingInfo(it)
-              .getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS)
+              .getEncryptionSubkeys(EncryptionPurpose.ANY)
               .isNotEmpty()
           }
           firstMatchingKey?.armor()?.let { armoredPubKey ->
@@ -205,7 +213,7 @@ class FlowcryptApiRepository : ApiRepository {
   override suspend fun getPrivateKeysViaEkm(
     context: Context,
     ekmUrl: String,
-    tokenId: String
+    idToken: String
   ): Result<EkmPrivateKeysResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
@@ -213,7 +221,7 @@ class FlowcryptApiRepository : ApiRepository {
       getResult(
         context = context,
         expectedResultClass = EkmPrivateKeysResponse::class.java
-      ) { apiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $tokenId") }
+      ) { apiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $idToken") }
     }
 
   override suspend fun checkFes(context: Context, domain: String): Result<FesServerResponse> =
@@ -237,5 +245,49 @@ class FlowcryptApiRepository : ApiRepository {
         context = context,
         expectedResultClass = FesServerResponse::class.java
       ) { apiService.checkFes(domain) }
+    }
+
+  override suspend fun getReplyTokenForPasswordProtectedMsg(
+    context: Context,
+    domain: String,
+    idToken: String
+  ): Result<MessageReplyTokenResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult(
+        context = context,
+        expectedResultClass = MessageReplyTokenResponse::class.java
+      ) { apiService.getReplyTokenForPasswordProtectedMsg(domain, "Bearer $idToken") }
+    }
+
+  override suspend fun uploadPasswordProtectedMsgToWebPortal(
+    context: Context,
+    domain: String,
+    idToken: String,
+    messageUploadRequest: MessageUploadRequest,
+    msg: String
+  ): Result<MessageUploadResponse> =
+    withContext(Dispatchers.IO) {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult(
+        context = context,
+        expectedResultClass = MessageUploadResponse::class.java
+      ) {
+        val details = GsonBuilder().create().toJson(messageUploadRequest)
+          .toRequestBody(Constants.MIME_TYPE_JSON.toMediaTypeOrNull())
+
+        val content = MultipartBody.Part.createFormData(
+          "content",
+          "content",
+          msg.toByteArray().toRequestBody(Constants.MIME_TYPE_BINARY_DATA.toMediaTypeOrNull())
+        )
+
+        apiService.uploadPasswordProtectedMsgToWebPortal(
+          domain = domain,
+          authorization = "Bearer $idToken",
+          details = details,
+          content = content
+        )
+      }
     }
 }

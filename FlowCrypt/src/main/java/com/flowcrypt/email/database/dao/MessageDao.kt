@@ -157,7 +157,8 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND.value,
       MessageState.ERROR_SENDING_FAILED.value,
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-      MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value
+      MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
+      MessageState.ERROR_PASSWORD_PROTECTED.value
     )
   ): Int
 
@@ -172,8 +173,8 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND.value,
       MessageState.ERROR_SENDING_FAILED.value,
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-      MessageState
-        .ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value
+      MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
+      MessageState.ERROR_PASSWORD_PROTECTED.value
     )
   ): Int?
 
@@ -365,9 +366,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       val msgEntity =
         getMsgSuspend(account = email, folder = label, uid = uid) ?: return@withContext
       val modifiedMsgEntity = if (flags.contains(Flags.Flag.SEEN)) {
-        msgEntity.copy(flags = flags.toString().toUpperCase(Locale.getDefault()), isNew = false)
+        msgEntity.copy(flags = flags.toString().uppercase(Locale.getDefault()), isNew = false)
       } else {
-        msgEntity.copy(flags = flags.toString().toUpperCase(Locale.getDefault()))
+        msgEntity.copy(flags = flags.toString().uppercase(Locale.getDefault()))
       }
       updateSuspend(modifiedMsgEntity)
     }
@@ -452,9 +453,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       val flags = flagsMap[msgEntity.uid]
       flags?.let {
         val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
-          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()), isNew = false)
+          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()), isNew = false)
         } else {
-          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
+          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()))
         }
         modifiedMsgEntities.add(modifiedMsgEntity)
       }
@@ -474,9 +475,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       val flags = flagsMap[msgEntity.uid]
       flags?.let {
         val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
-          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()), isNew = false)
+          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()), isNew = false)
         } else {
-          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
+          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()))
         }
         modifiedMsgEntities.add(modifiedMsgEntity)
       }

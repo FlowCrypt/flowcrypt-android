@@ -387,7 +387,7 @@ dependencies {
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:18.0.1'
-    implementation 'com.google.android.gms:play-services-auth:20.0.0'
+    implementation 'com.google.android.gms:play-services-auth:20.0.1'
 
     //https://mvnrepository.com/artifact/com.google.android.material/material
     implementation 'com.google.android.material:material:1.4.0'
@@ -395,7 +395,7 @@ dependencies {
     //https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.8.9'
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-    implementation 'com.google.api-client:google-api-client-android:1.32.2'
+    implementation 'com.google.api-client:google-api-client-android:1.33.0'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
     implementation 'com.google.apis:google-api-services-gmail:v1-rev20211108-1.32.1'
 
@@ -417,15 +417,15 @@ dependencies {
     implementation 'com.nulab-inc:zxcvbn:1.5.2'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'ja.burhanrashid52:photoeditor:1.1.1'
-    implementation 'net.openid:appauth:0.11.0'
+    implementation 'net.openid:appauth:0.11.1'
     implementation 'org.bitbucket.b_c:jose4j:0.7.9'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20211018.2'
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
 
-    implementation ('org.pgpainless:pgpainless-core:0.2.19') {
+    implementation ('org.pgpainless:pgpainless-core:1.0.0') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }

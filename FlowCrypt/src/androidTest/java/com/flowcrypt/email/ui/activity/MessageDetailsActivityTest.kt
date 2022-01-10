@@ -780,6 +780,16 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     )
   }
 
+  @Test
+  fun testMessageWithBrokenBase64() {
+    baseCheck(
+      getMsgInfo(
+        "messages/info/message_with_broken_base64.json",
+        "messages/mime/message_with_broken_base64.txt"
+      )
+    )
+  }
+
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 

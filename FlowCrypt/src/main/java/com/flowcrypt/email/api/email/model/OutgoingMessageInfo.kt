@@ -33,8 +33,11 @@ data class OutgoingMessageInfo constructor(
   val encryptionType: MessageEncryptionType,
   val messageType: MessageType,
   val replyToMsgEntity: MessageEntity? = null,
-  val uid: Long = 0
+  val uid: Long = 0,
+  val password: CharArray? = null
 ) : Parcelable {
+
+  val isPasswordProtected = password?.isNotEmpty()
 
   /**
    * Generate a list of the all recipients.
@@ -63,7 +66,8 @@ data class OutgoingMessageInfo constructor(
     parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
     parcel.readParcelable<MessageType>(MessageType::class.java.classLoader)!!,
     parcel.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader),
-    parcel.readLong()
+    parcel.readLong(),
+    parcel.createCharArray()
   )
 
   override fun describeContents(): Int {
@@ -85,7 +89,53 @@ data class OutgoingMessageInfo constructor(
       writeParcelable(messageType, flags)
       writeParcelable(replyToMsgEntity, flags)
       writeLong(uid)
+      writeCharArray(password)
     }
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as OutgoingMessageInfo
+
+    if (account != other.account) return false
+    if (subject != other.subject) return false
+    if (msg != other.msg) return false
+    if (toRecipients != other.toRecipients) return false
+    if (ccRecipients != other.ccRecipients) return false
+    if (bccRecipients != other.bccRecipients) return false
+    if (from != other.from) return false
+    if (atts != other.atts) return false
+    if (forwardedAtts != other.forwardedAtts) return false
+    if (encryptionType != other.encryptionType) return false
+    if (messageType != other.messageType) return false
+    if (replyToMsgEntity != other.replyToMsgEntity) return false
+    if (uid != other.uid) return false
+    if (password != null) {
+      if (other.password == null) return false
+      if (!password.contentEquals(other.password)) return false
+    } else if (other.password != null) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = account.hashCode()
+    result = 31 * result + subject.hashCode()
+    result = 31 * result + (msg?.hashCode() ?: 0)
+    result = 31 * result + toRecipients.hashCode()
+    result = 31 * result + (ccRecipients?.hashCode() ?: 0)
+    result = 31 * result + (bccRecipients?.hashCode() ?: 0)
+    result = 31 * result + from.hashCode()
+    result = 31 * result + (atts?.hashCode() ?: 0)
+    result = 31 * result + (forwardedAtts?.hashCode() ?: 0)
+    result = 31 * result + encryptionType.hashCode()
+    result = 31 * result + messageType.hashCode()
+    result = 31 * result + (replyToMsgEntity?.hashCode() ?: 0)
+    result = 31 * result + uid.hashCode()
+    result = 31 * result + (password?.contentHashCode() ?: 0)
+    return result
   }
 
   companion object {

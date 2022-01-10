@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit
 class FlowCryptApplication : Application(), Configuration.Provider {
   override fun onCreate() {
     super.onCreate()
+    setupGlobalSettingsForJavaMail()
     enableDeprecatedSHA1ForPGPainlessPolicy()
     setupKeysStorage()
     initPerInstallationSharedPrefs()
@@ -57,6 +58,11 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     IMAPStoreManager.init(this)
     SyncInboxWorker.enqueuePeriodic(this)
     enqueueMsgsCacheCleanerWorker()
+  }
+
+  private fun setupGlobalSettingsForJavaMail() {
+    //based on https://github.com/FlowCrypt/flowcrypt-android/issues/1553
+    System.setProperty("mail.mime.base64.ignoreerrors", "true")
   }
 
   override fun attachBaseContext(base: Context) {
@@ -165,7 +171,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     ) ?: "unknown"
 
     ACRA.errorReporter.putCustomData(
-      key = Constants.PREF_KEY_INSTALL_VERSION.toUpperCase(Locale.getDefault()),
+      key = Constants.PREF_KEY_INSTALL_VERSION.uppercase(Locale.getDefault()),
       value = installVersion
     )
   }

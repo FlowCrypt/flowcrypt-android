@@ -9,10 +9,13 @@ import android.content.Context
 import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
+import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
+import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
+import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
@@ -34,12 +37,12 @@ interface ApiRepository : BaseApiRepository {
   /**
    * @param context Interface to global information about an application environment.
    * @param loginModel An instance of [LoginModel].
-   * @param tokenId OIDC token.
+   * @param idToken OIDC token.
    */
   suspend fun login(
     context: Context,
     loginModel: LoginModel,
-    tokenId: String
+    idToken: String
   ): Result<LoginResponse>
 
   /**
@@ -121,10 +124,10 @@ interface ApiRepository : BaseApiRepository {
    *
    * @param context Interface to global information about an application environment.
    * @param ekmUrl key_manager_url from [OrgRules].
-   * @param tokenId OIDC token.
+   * @param idToken OIDC token.
    */
   suspend fun getPrivateKeysViaEkm(
-    context: Context, ekmUrl: String, tokenId: String
+    context: Context, ekmUrl: String, idToken: String
   ): Result<EkmPrivateKeysResponse>
 
   /**
@@ -134,4 +137,34 @@ interface ApiRepository : BaseApiRepository {
    * @param domain A company domain.
    */
   suspend fun checkFes(context: Context, domain: String): Result<FesServerResponse>
+
+  /**
+   * Grab a reply token before uploading a password protected message
+   *
+   * @param context Interface to global information about an application environment.
+   * @param domain A company domain.
+   * @param domain OIDC token.
+   */
+  suspend fun getReplyTokenForPasswordProtectedMsg(
+    context: Context,
+    domain: String,
+    idToken: String
+  ): Result<MessageReplyTokenResponse>
+
+  /**
+   * Upload a password protected message to a web portal
+   *
+   * @param context Interface to global information about an application environment.
+   * @param domain A company domain.
+   * @param idToken OIDC token.
+   * @param messageUploadRequest an instance of [MessageUploadRequest]
+   * @param msg an encrypted message that will be sent
+   */
+  suspend fun uploadPasswordProtectedMsgToWebPortal(
+    context: Context,
+    domain: String,
+    idToken: String,
+    messageUploadRequest: MessageUploadRequest,
+    msg: String
+  ): Result<MessageUploadResponse>
 }

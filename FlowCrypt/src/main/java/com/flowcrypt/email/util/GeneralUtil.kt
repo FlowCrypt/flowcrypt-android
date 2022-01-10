@@ -33,6 +33,10 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -411,5 +415,45 @@ class GeneralUtil {
     fun generateFesUrl(domain: String): String {
       return "https://fes.$domain/api/v1/client-configuration?domain=$domain"
     }
+
+    /**
+     * Get recipients without usable public keys;
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param emails      A list which contains recipients
+     */
+    suspend fun getRecipientsWithoutUsablePubKeys(
+      context: Context,
+      emails: List<String>
+    ): List<String> = withContext(Dispatchers.IO) {
+      val mapOfRecipients = mutableMapOf(*emails.map { Pair(it, false) }.toTypedArray())
+      val recipientsWithPubKeys = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
+        .getRecipientsWithPubKeysByEmailsSuspend(emails)
+
+      for (recipientWithPubKeys in recipientsWithPubKeys) {
+        for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
+          val pgpKeyDetailsList = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+          for (pgpKeyDetails in pgpKeyDetailsList) {
+            if (!pgpKeyDetails.isExpired && !pgpKeyDetails.isRevoked) {
+              mapOfRecipients[recipientWithPubKeys.recipient.email] = true
+            }
+          }
+        }
+      }
+
+      return@withContext mapOfRecipients.filter { entry -> !entry.value }.keys.toList()
+    }
+
+    suspend fun notifyUserAboutProblemWithOutgoingMsgs(context: Context, account: AccountEntity) =
+      withContext(Dispatchers.IO) {
+        val failedOutgoingMsgsCount = FlowCryptRoomDatabase.getDatabase(context).msgDao()
+          .getFailedOutgoingMsgsCountSuspend(account.email) ?: 0
+        if (failedOutgoingMsgsCount > 0) {
+          ErrorNotificationManager(context).notifyUserAboutProblemWithOutgoingMsgs(
+            account,
+            failedOutgoingMsgsCount
+          )
+        }
+      }
   }
 }

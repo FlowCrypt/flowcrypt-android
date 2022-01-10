@@ -4,8 +4,8 @@
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">FlowCrypt</string>
-    <string name="support_email">human@flowcrypt.com</string>
+    <string name="app_name" translatable="false">FlowCrypt</string>
+    <string name="support_email" translatable="false">human@flowcrypt.com</string>
 
     <string name="compose">Compose</string>
     <string name="prompt_recipients_to">Add recipients (To)</string>
@@ -39,8 +39,6 @@
         <item quantity="other">We found backups of %1$d keys</item>
     </plurals>
     <string name="enter_your_pass_phrase">Enter your pass phrase</string>
-    <string name="load_account">Load Account</string>
-    <string name="no_backups_found">No backups found on this account</string>
     <string name="passphrase_must_be_non_empty">Pass phrase cannot be empty</string>
     <string name="your_message_must_be_non_empty">Message should not be empty</string>
     <string name="password_is_incorrect">Incorrect pass phrase, please try again</string>
@@ -56,7 +54,7 @@
     <string name="backups">Backups</string>
     <string name="contacts">Contacts</string>
     <string name="keys">Keys</string>
-    <string name="attester">Attester</string>
+    <string name="attester" translatable="false">Attester</string>
     <string name="legal">Legal</string>
     <string name="help">Help</string>
     <string name="licence">Licence</string>
@@ -141,10 +139,10 @@
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
-    <string name="template_reply_subject">%1$s: %2$s</string>
+    <string name="template_reply_subject" translatable="false">%1$s: %2$s</string>
     <string name="other_email_provider">Other email provider</string>
     <string name="account_info">Account info</string>
-    <string name="e_mail">E-mail</string>
+    <string name="e_mail" translatable="false">E-mail</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="incoming_mail_settings">Incoming mail settings</string>
@@ -158,16 +156,15 @@
     <string name="smtp_username">SMTP Username</string>
     <string name="smtp_password">SMTP Password</string>
     <string name="try_to_connect">Connect</string>
-    <string name="template_imap_server">imap.%1$s</string>
-    <string name="template_smtp_server">smtp.%1$s</string>
+    <string name="template_imap_server" translatable="false">imap.%1$s</string>
+    <string name="template_smtp_server" translatable="false">smtp.%1$s</string>
     <string name="none">None</string>
-    <string name="ssl_tls">SSL/TLS</string>
-    <string name="startls">STARTLS</string>
+    <string name="ssl_tls" translatable="false">SSL/TLS</string>
+    <string name="startls" translatable="false">STARTLS</string>
     <string name="template_email_already_added">The email \"%1$s\" already added!</string>
     <string name="expand_an_account_managment">Expand an account management</string>
     <string name="add_account">Add account</string>
     <string name="skip_remaining_backups">Skip remaining backups</string>
-    <string name="crash_the_app">Crash the App</string>
     <string name="experimental">Experimental</string>
     <string name="experimental_settings">Experimental Settings</string>
     <string name="simulate_app_crash">Simulate app crash</string>
@@ -199,7 +196,7 @@
     <string name="please_select_key">Please select a key</string>
     <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
     <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
-    <string name="progress_message">%1$d%% %2$s</string>
+    <string name="progress_message" translatable="false">%1$d%% %2$s</string>
     <plurals name="you_have_backups_that_was_not_imported">
         <item quantity="one">You have one key that was not imported.</item>
         <item quantity="other">There are key backups that were not imported.</item>
@@ -362,7 +359,7 @@
     <string name="template_modified">Modified: %1$s</string>
     <string name="template_algorithm">Algorithm: %1$s</string>
     <string name="template_algorithm_bits">Bits: %1$s</string>
-    <string name="template_curve">Curve: %1$s</string>
+    <string name="template_curve" translatable="false">Curve: %1$s</string>
     <string name="template_user">User %1$d: %2$s</string>
     <string name="template_fingerprint_2">Fingerprint %1$d: %2$s</string>
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
@@ -557,4 +554,6 @@
     <string name="verifying_signature">verifying signature&#8230;</string>
     <string name="not_signed">not signed</string>
     <string name="mixed_signed">mixed signed</string>
+    <string name="password_protected_msg_promo">%1$s has sent you a password-encrypted email. Follow this link to open it: %2$s</string>
+    <string name="can_not_send_password_protected">Can\'t send message: password-protected</string>
 </resources>

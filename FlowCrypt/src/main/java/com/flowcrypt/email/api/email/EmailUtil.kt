@@ -19,11 +19,16 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.javamail.AttachmentInfoDataSource
+import com.flowcrypt.email.api.email.javamail.ForwardedAttachmentInfoDataSource
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -54,8 +59,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.key.protection.SecretKeyRingProtector
-import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -475,42 +480,6 @@ class EmailUtil {
     }
 
     /**
-     * Get updated information about messages in the local database.
-     *
-     * @param folder          The folder which contains messages.
-     * @param loadedMsgsCount The count of already loaded messages.
-     * @param newMsgsCount    The count of new messages (offset value).
-     * @return A list of messages which already exist in the local database.
-     * @throws MessagingException for other failures.
-     */
-    fun getUpdatedMsgs(
-      folder: IMAPFolder,
-      loadedMsgsCount: Int,
-      newMsgsCount: Int
-    ): Array<Message> {
-      val end = folder.messageCount - newMsgsCount
-      var start = end - loadedMsgsCount + 1
-
-      if (end < 1) {
-        return arrayOf()
-      } else {
-        if (start < 1) {
-          start = 1
-        }
-
-        val msgs = folder.getMessages(start, end)
-
-        if (msgs.isNotEmpty()) {
-          val fetchProfile = FetchProfile()
-          fetchProfile.add(FetchProfile.Item.FLAGS)
-          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-          folder.fetch(msgs, fetchProfile)
-        }
-        return msgs
-      }
-    }
-
-    /**
      * Get updated information about messages in the local database using UIDs.
      *
      * @param folder The folder which contains messages.
@@ -755,25 +724,6 @@ class EmailUtil {
         }
 
         getMsgsEncryptionStates(folder, uidList)
-      }
-    }
-
-    /**
-     * Get only headers from the raw MIME
-     */
-    fun getHeadersFromRawMIME(rawMime: String?): String {
-      // we don't know if the message is \n or \r\n delimited
-      if (rawMime == null) {
-        return ""
-      }
-
-      val headersByDoubleNl = rawMime.trim().substringBefore("\n\n")
-      val headersByDoubleCrNl = rawMime.trim().substringBefore("\r\n\r\n")
-
-      return if (headersByDoubleCrNl.length < headersByDoubleNl.length) { // therefore we choose smaller result
-        headersByDoubleCrNl
-      } else {
-        headersByDoubleNl
       }
     }
 
@@ -1031,9 +981,7 @@ class EmailUtil {
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       msg.setContent(MimeMultipart().apply {
-        addBodyPart(MimeBodyPart().apply {
-          setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
-        })
+        addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
       })
       return msg
     }
@@ -1048,9 +996,7 @@ class EmailUtil {
       val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
       reply.setFrom(InternetAddress(info.from))
       reply.setContent(MimeMultipart().apply {
-        addBodyPart(MimeBodyPart().apply {
-          setText(prepareMsgContent(info, pubKeys, prvKeys, protector))
-        })
+        addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
       })
       reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
       reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
@@ -1069,6 +1015,83 @@ class EmailUtil {
         JavaEmailConstants.EMAIL_PROVIDER_OUTLOOK,
         JavaEmailConstants.EMAIL_PROVIDER_LIVE,
       )
+    }
+
+    suspend fun createMimeMsg(
+      context: Context,
+      sess: Session?,
+      account: AccountEntity,
+      msgEntity: MessageEntity,
+      atts: List<AttachmentEntity>
+    ): MimeMessage = withContext(Dispatchers.IO) {
+      val mimeMsg = MimeMessage(sess, msgEntity.rawMessageWithoutAttachments?.toInputStream())
+
+      //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
+      mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
+
+      if (mimeMsg.content is MimeMultipart && atts.isNotEmpty()) {
+        val mimeMultipart = mimeMsg.content as MimeMultipart
+        val keysStorage = KeysStorageImpl.getInstance(context)
+        val secretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
+        val ringProtector = keysStorage.getSecretKeyRingProtector()
+
+        val publicKeys = mutableListOf<String>()
+        val senderEmail = getFirstAddressString(msgEntity.from)
+        val recipients = msgEntity.allRecipients.toMutableList()
+        publicKeys.addAll(
+          SecurityUtils.getRecipientsUsablePubKeys(context, recipients)
+        )
+        publicKeys.addAll(
+          SecurityUtils.getSenderPgpKeyDetailsList(context, account, senderEmail)
+            .map { it.publicKey })
+
+        for (att in atts) {
+          val attBodyPart = genBodyPartWithAtt(
+            context = context,
+            att = att,
+            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
+            publicKeys = publicKeys,
+            secretKeys = secretKeys,
+            ringProtector = ringProtector
+          )
+          mimeMultipart.addBodyPart(attBodyPart)
+        }
+
+        mimeMsg.setContent(mimeMultipart)
+        mimeMsg.saveChanges()
+      }
+
+      return@withContext mimeMsg
+    }
+
+    private fun genBodyPartWithAtt(
+      context: Context,
+      att: AttachmentEntity,
+      shouldBeEncrypted: Boolean,
+      publicKeys: List<String>?,
+      secretKeys: PGPSecretKeyRingCollection,
+      ringProtector: SecretKeyRingProtector
+    ): BodyPart {
+      val attBodyPart = MimeBodyPart()
+      val attInfo = att.toAttInfo()
+      attBodyPart.dataHandler = if (attInfo.isForwarded) {
+        DataHandler(
+          ForwardedAttachmentInfoDataSource(
+            context,
+            attInfo,
+            shouldBeEncrypted,
+            publicKeys,
+            secretKeys,
+            ringProtector
+          )
+        )
+      } else {
+        DataHandler(AttachmentInfoDataSource(context, attInfo))
+      }
+      attBodyPart.fileName = attInfo.getSafeName()
+      attBodyPart.contentID = attInfo.id
+
+      return attBodyPart
     }
 
     private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
@@ -1094,44 +1117,58 @@ class EmailUtil {
     ): Message {
       val replyToMessageEntity = info.replyToMsgEntity
         ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
-      var msg: MimeMessage
-      if (replyToMessageEntity.rawMessageWithoutAttachments.isNullOrEmpty()) {
+      val msg = if (replyToMessageEntity.rawMessageWithoutAttachments.isNullOrEmpty()) {
         val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
           ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
 
         val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
         val input = context.contentResolver?.openInputStream(uri)
           ?: throw IllegalArgumentException("InputStream not found")
-        msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+        FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
       } else {
-        val input = ByteArrayInputStream(
-          replyToMessageEntity.rawMessageWithoutAttachments.toByteArray()
-        )
+        val input = replyToMessageEntity.rawMessageWithoutAttachments.toInputStream()
         try {
-          msg = FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
+          FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
         } catch (e: Exception) {
           //added for compatibility to previous versions
-          msg = FlowCryptMimeMessage(session, input)
+          FlowCryptMimeMessage(session, input)
         }
       }
 
       return genReplyMessage(msg, info, pubKeys, prvKeys, protector)
     }
 
-    private fun prepareMsgContent(
-      info: OutgoingMessageInfo, pubKeys: List<String>? = null,
+    private fun prepareBodyPart(
+      info: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null
-    ): String {
+    ): BodyPart {
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
-        PgpEncryptAndOrSign.encryptAndOrSignMsg(
+        val encryptedContent = PgpEncryptAndOrSign.encryptAndOrSignMsg(
           msg = info.msg ?: "",
           pubKeys = pubKeys ?: emptyList(),
           prvKeys = prvKeys,
           secretKeyRingProtector = protector
         )
+
+        if (info.isPasswordProtected == true) {
+          MimeBodyPart().apply {
+            val dataSource = ByteArrayDataSource(encryptedContent, "application/pgp-encrypted")
+            dataHandler = DataHandler(dataSource)
+            description = "OpenPGP encrypted message"
+            disposition = Part.INLINE
+            fileName = "message.asc"
+          }
+        } else {
+          MimeBodyPart().apply {
+            setText(encryptedContent)
+          }
+        }
       } else {
-        info.msg ?: ""
+        MimeBodyPart().apply {
+          setText(info.msg ?: "")
+        }
       }
     }
 

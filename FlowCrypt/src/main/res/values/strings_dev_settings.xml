@@ -6,27 +6,28 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Preference keys -->
-    <string name="preferences_key_build_config_info">pref_key_build_config_info</string>
-    <string name="preferences_key_is_write_logs_to_file_enabled">preferences_key_is_write_logs_to_file_enabled</string>
-    <string name="preferences_key_is_acra_enable" tools:ignore="UnusedResources">preferences_key_is_acra_enable</string>
-    <string name="preferences_key_is_mail_debug_enabled">preferences_key_is_mail_debug_enabled</string>
-    <string name="pref_key_is_http_log_enabled">pref_key_is_http_log_enabled</string>
-    <string name="pref_key_http_log_level">pref_key_http_log_level</string>
-    <string name="pref_key_is_acra_enabled">pref_key_is_acra_enabled</string>
+    <string name="preferences_key_build_config_info" translatable="false">pref_key_build_config_info</string>
+    <string name="preferences_key_is_write_logs_to_file_enabled" translatable="false">preferences_key_is_write_logs_to_file_enabled</string>
+    <string name="preferences_key_is_acra_enable" translatable="false" tools:ignore="UnusedResources">preferences_key_is_acra_enable</string>
+    <string name="preferences_key_is_mail_debug_enabled" translatable="false">preferences_key_is_mail_debug_enabled</string>
+    <string name="pref_key_is_http_log_enabled" translatable="false">pref_key_is_http_log_enabled</string>
+    <string name="pref_key_http_log_level" translatable="false">pref_key_http_log_level</string>
+    <string name="pref_key_is_acra_enabled" translatable="false">pref_key_is_acra_enabled</string>
 
     <!-- Strings related to Settings -->
-    <string name="pref_title_general">General</string>
-    <string name="pref_title_http">Http</string>
-    <string name="pref_title_build_config_info">Build config info</string>
-    <string name="toast_message_press_force_stop_to_apply_changes">Please press "Force stop" to apply changes</string>
-    <string name="pref_title_write_api_logs_to_file">Write API logs to a file</string>
-    <string name="pref_title_enable_acra" tools:ignore="UnusedResources">Enable ACRA(App Crash Reports)</string>
-    <string name="pref_title_imap_debug">IMAP debug</string>
-    <string name="action_dev_settings">Dev Settings</string>
-    <string name="pref_title_http_logs">Http logs</string>
-    <string name="pref_title_http_log_level">A level of HTTP logs</string>
-    <string name="pref_title_java_mail">JavaMail</string>
+    <string name="pref_title_general" translatable="false">General</string>
+    <string name="pref_title_http" translatable="false">Http</string>
+    <string name="pref_title_build_config_info" translatable="false">Build config info</string>
+    <string name="crash_the_app" translatable="false">Crash the App</string>
+    <string name="toast_message_press_force_stop_to_apply_changes" translatable="false">Please press "Force stop" to apply changes</string>
+    <string name="pref_title_write_api_logs_to_file" translatable="false">Write API logs to a file</string>
+    <string name="pref_title_enable_acra" translatable="false" tools:ignore="UnusedResources">Enable ACRA(App Crash Reports)</string>
+    <string name="pref_title_imap_debug" translatable="false">IMAP debug</string>
+    <string name="action_dev_settings" translatable="false">Dev Settings</string>
+    <string name="pref_title_http_logs" translatable="false">Http logs</string>
+    <string name="pref_title_http_log_level" translatable="false">A level of HTTP logs</string>
+    <string name="pref_title_java_mail" translatable="false">JavaMail</string>
     <string name="pref_summary_enabled">Enabled</string>
     <string name="pref_summary_disabled">Disabled</string>
-    <string name="pref_title_acra">Application Crash Reports</string>
+    <string name="pref_title_acra" translatable="false">Application Crash Reports</string>
 </resources>

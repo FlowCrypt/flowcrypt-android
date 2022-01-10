@@ -38,6 +38,7 @@ class Constants {
      * The MIME type of PGP keys.
      */
     const val MIME_TYPE_PGP_KEY = "application/pgp-keys"
+    const val MIME_TYPE_JSON = "application/json"
     const val MIME_TYPE_BINARY_DATA = "application/octet-stream"
     const val MIME_TYPE_RFC822 = "message/rfc822"
 

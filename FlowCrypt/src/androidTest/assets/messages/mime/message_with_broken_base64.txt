@@ -1,0 +1,25 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id yJWaC/DhxWE0BAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Fri, 24 Dec 2021 15:06:24 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 2BB612235ED
+	for <default@flowcrypt.test>; Fri, 24 Dec 2021 15:06:24 +0000 (UTC)
+Date: Fri, 24 Dec 2021 17:05:16 +0200 (GMT+02:00)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <4421067.3.1640357836456@flowcrypt.test>
+Subject: Message with broken base64
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_2_233404570.1640357836447"
+
+------=_Part_2_233404570.1640357836447
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
+
+V2UgaGF2ZSBhbiBhY3Rpdml0eSB3aGljaCBoYXMgYSBOYXZIb3N0RnJhZ21lbnQuIFRoZSBhY3Rpdml0eSByZWNlaXZlcyBjZXJ0YWluIHZhbHVlcyBpbiBpdHMgaW50ZW50LiBJIHdhbnQgdG8gcGFzcyB0aGlzIGRhdGEgdG8gdGhlIGZpcnN0IGZyYWdtZW50IGkuZSBzdGFydERlc3RpbmF0aW9uIG9mIHRoZSBuYXZpZ2F0==
+------=_Part_2_233404570.1640357836447--
