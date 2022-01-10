@@ -134,9 +134,9 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
           val atts = roomDatabase.attachmentDao().getAttachmentsSuspend(
             account.email,
             JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid
-          )
+          ).filter { it.isForwarded }
 
-          if (CollectionUtils.isEmpty(atts)) {
+          if (atts.isEmpty()) {
             roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
             continue
           }
