@@ -9,7 +9,6 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -19,19 +18,12 @@ import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentProvidePasswordToProtectMsgBinding
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.CheckPassphraseBehaviour
 
-/**
- * @author Denis Bondarenko
- * Date: 01.08.2017
- * Time: 10:04
- * E-mail: DenBond7@gmail.com
- */
 class ProvidePasswordToProtectMsgDialogFragment : BaseDialogFragment(), CheckPassphraseBehaviour {
   private var binding: FragmentProvidePasswordToProtectMsgBinding? = null
   private val args by navArgs<ProvidePasswordToProtectMsgDialogFragmentArgs>()
@@ -59,11 +51,7 @@ class ProvidePasswordToProtectMsgDialogFragment : BaseDialogFragment(), CheckPas
     )
 
     binding?.eTPassphrase?.addTextChangedListener { editable ->
-      val passphrase = editable.toString()
-      passwordStrengthViewModel.check(passphrase)
-      if (TextUtils.isEmpty(editable)) {
-        binding?.tVPassphraseQuality?.setText(R.string.passphrase_must_be_non_empty)
-      }
+      passwordStrengthViewModel.check(editable.toString())
     }
 
     binding?.eTPassphrase?.setOnEditorActionListener { v, actionId, _ ->

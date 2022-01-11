@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.security.pgp.PgpPwd
+import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuring
 
 interface CheckPassphraseBehaviour {
   val currentContext: Context?
@@ -46,11 +47,15 @@ interface CheckPassphraseBehaviour {
           }
 
           Result.Status.EXCEPTION -> {
-            currentContext?.let { context ->
-              context.toast(
-                it.exception?.message ?: it.exception?.javaClass?.simpleName
-                ?: context.getString(R.string.unknown_error), Toast.LENGTH_LONG
-              )
+            if (it.exception is IllegalTextForStrengthMeasuring) {
+              textViewPassphraseQuality?.text = it.exception.message
+            } else {
+              currentContext?.let { context ->
+                context.toast(
+                  it.exception?.message ?: it.exception?.javaClass?.simpleName
+                  ?: context.getString(R.string.unknown_error), Toast.LENGTH_LONG
+                )
+              }
             }
           }
           else -> {

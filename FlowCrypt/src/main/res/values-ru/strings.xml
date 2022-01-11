@@ -474,4 +474,5 @@
     <string name="set_password">set password</string>
     <string name="warning_about_password_usage">Do not use your Pass Phrase (that you chose during FlowCrypt Setup). Use some other password that you can share with others.\n\nYou are responsible for sharing this password with recipients (use other medium to share the password - not email).</string>
     <string name="web_portal_password_added">Web portal password added</string>
+    <string name="type_text_to_start_measuring">Please type text to start measuring</string>
 </resources>

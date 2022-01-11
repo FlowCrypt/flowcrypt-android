@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.content.Context
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -100,11 +99,7 @@ class CheckPassphraseStrengthFragment : BaseFragment(), CheckPassphraseBehaviour
     }
 
     binding?.eTPassphrase?.addTextChangedListener { editable ->
-      val passphrase = editable.toString()
-      passwordStrengthViewModel.check(passphrase)
-      if (TextUtils.isEmpty(editable)) {
-        binding?.tVPassphraseQuality?.setText(R.string.passphrase_must_be_non_empty)
-      }
+       passwordStrengthViewModel.check(editable.toString())
     }
 
     binding?.eTPassphrase?.setOnEditorActionListener { v, actionId, _ ->
