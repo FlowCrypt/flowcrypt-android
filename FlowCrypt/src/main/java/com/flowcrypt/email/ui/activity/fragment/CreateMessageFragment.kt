@@ -58,6 +58,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
@@ -967,6 +968,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     binding?.editTextEmailSubject?.onFocusChangeListener = this
     binding?.editTextEmailMessage?.onFocusChangeListener = this
     binding?.iBShowQuotedText?.setOnClickListener(this)
+    binding?.btnSetWebPortalPassword?.setOnClickListener {
+      navController?.navigate(
+        CreateMessageFragmentDirections
+          .actionCreateMessageFragmentToProvidePasswordToProtectMsgDialogFragment("")
+      )
+    }
   }
 
   private fun showContent() {
@@ -1616,8 +1623,32 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
-        binding?.btnPasswordProtected?.visibleOrGone(
+        binding?.btnSetWebPortalPassword?.visibleOrGone(
           recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() })
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.webPortalPasswordStateFlow.collect { webPortalPassword ->
+        binding?.btnSetWebPortalPassword?.apply {
+          if (webPortalPassword.isEmpty()) {
+            setCompoundDrawablesWithIntrinsicBounds(
+              R.drawable.ic_password_not_protected_white_24,
+              0,
+              0,
+              0
+            )
+            setText(R.string.tap_to_protect_with_web_portal_password)
+          } else {
+            setCompoundDrawablesWithIntrinsicBounds(
+              R.drawable.ic_password_protected_white_24,
+              0,
+              0,
+              0
+            )
+            setText(R.string.web_portal_password_added)
+          }
+        }
       }
     }
   }

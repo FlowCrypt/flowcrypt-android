@@ -216,7 +216,7 @@
             </FrameLayout>
 
             <Button
-                android:id="@+id/btnPasswordProtected"
+                android:id="@+id/btnSetWebPortalPassword"
                 style="@style/AppWidget.Button"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/default_button_height_small"

@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -286,21 +287,23 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
       Constants.PASSWORD_QUALITY_POOR -> getString(R.string.password_quality_poor)
       Constants.PASSWORD_QUALITY_WEAK -> getString(R.string.password_quality_weak)
       else -> word?.word
-    }?.toUpperCase(Locale.getDefault())
+    }?.uppercase(Locale.getDefault())
   }
 
   private fun initPasswordStrengthViewModel() {
-    passwordStrengthViewModel.pwdStrengthResultLiveData.observe(this) {
-      when (it.status) {
-        Result.Status.SUCCESS -> {
-          pwdStrengthResult = it.data
-          updateStrengthViews()
-        }
+    lifecycleScope.launchWhenStarted {
+      passwordStrengthViewModel.pwdStrengthResultStateFlow.collect {
+        when (it.status) {
+          Result.Status.SUCCESS -> {
+            pwdStrengthResult = it.data
+            updateStrengthViews()
+          }
 
-        Result.Status.EXCEPTION -> {
-          val msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-          ?: getString(R.string.unknown_error)
-          Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+          Result.Status.EXCEPTION -> {
+            val msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+            ?: getString(R.string.unknown_error)
+            Toast.makeText(this@BasePassPhraseManagerActivity, msg, Toast.LENGTH_LONG).show()
+          }
         }
       }
     }

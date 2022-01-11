@@ -6,7 +6,6 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.Constants
@@ -14,7 +13,12 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.nulabinc.zxcvbn.Zxcvbn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
@@ -29,14 +33,21 @@ class PasswordStrengthViewModel(application: Application) : BaseAndroidViewModel
   private val zxcvbn: Zxcvbn = Zxcvbn()
   private val controlledRunnerForZxcvbn = ControlledRunner<Result<PgpPwd.PwdStrengthResult?>>()
 
-  val pwdStrengthResultLiveData: MutableLiveData<Result<PgpPwd.PwdStrengthResult?>> =
-    MutableLiveData()
+  private val pwdStrengthResultMutableStateFlow: MutableStateFlow<Result<PgpPwd.PwdStrengthResult?>> =
+    MutableStateFlow(Result.none())
+  val pwdStrengthResultStateFlow: StateFlow<Result<PgpPwd.PwdStrengthResult?>> =
+    pwdStrengthResultMutableStateFlow.asStateFlow()
 
-  fun check(passphrase: String) {
+  fun check(passphrase: CharSequence) {
     viewModelScope.launch {
-      pwdStrengthResultLiveData.value = Result.loading()
-      val measure = zxcvbn.measure(passphrase, arrayListOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
-      pwdStrengthResultLiveData.value = controlledRunnerForZxcvbn.cancelPreviousThenRun {
+      pwdStrengthResultMutableStateFlow.value = Result.loading()
+      pwdStrengthResultMutableStateFlow.value = controlledRunnerForZxcvbn.cancelPreviousThenRun {
+        val measure = withContext(Dispatchers.IO) {
+          zxcvbn.measure(
+            passphrase,
+            arrayListOf(*Constants.PASSWORD_WEAK_WORDS)
+          ).guesses
+        }
         return@cancelPreviousThenRun Result.success(PgpPwd.estimateStrength(measure.toBigDecimal()))
       }
     }

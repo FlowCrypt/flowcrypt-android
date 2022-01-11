@@ -34,6 +34,11 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val messageEncryptionTypeStateFlow: StateFlow<MessageEncryptionType> =
     messageEncryptionTypeMutableStateFlow.asStateFlow()
 
+  private val webPortalPasswordMutableStateFlow: MutableStateFlow<CharSequence> =
+    MutableStateFlow("")
+  val webPortalPasswordStateFlow: StateFlow<CharSequence> =
+    webPortalPasswordMutableStateFlow.asStateFlow()
+
   //session cache for recipients
   private val recipientsTo = mutableMapOf<String, Recipient>()
   private val recipientsCc = mutableMapOf<String, Recipient>()
@@ -73,6 +78,10 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
   fun switchMessageEncryptionType(messageEncryptionType: MessageEncryptionType) {
     messageEncryptionTypeMutableStateFlow.value = messageEncryptionType
+  }
+
+  fun setWebPortalPassword(webPortalPassword: CharSequence) {
+    webPortalPasswordMutableStateFlow.value = webPortalPassword
   }
 
   fun replaceRecipients(recipientType: Message.RecipientType, list: List<RecipientWithPubKeys>) {

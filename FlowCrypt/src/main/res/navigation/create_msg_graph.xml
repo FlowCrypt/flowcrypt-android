@@ -31,5 +31,18 @@
         <argument
             android:name="messageType"
             app:argType="com.flowcrypt.email.model.MessageType" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_providePasswordToProtectMsgDialogFragment"
+            app:destination="@id/providePasswordToProtectMsgDialogFragment" />
     </fragment>
+
+    <dialog
+        android:id="@+id/providePasswordToProtectMsgDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ProvidePasswordToProtectMsgDialogFragment"
+        tools:layout="@layout/fragment_provide_password_to_protect_msg">
+        <argument
+            android:name="defaultPassword"
+            android:defaultValue=""
+            app:argType="string" />
+    </dialog>
 </navigation>
