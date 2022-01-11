@@ -15,11 +15,15 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentProvidePasswordToProtectMsgBinding
 import com.flowcrypt.email.extensions.hideKeyboard
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.CheckPassphraseBehaviour
@@ -77,6 +81,19 @@ class ProvidePasswordToProtectMsgDialogFragment : BaseDialogFragment(), CheckPas
   }
 
   private fun checkAndMoveOn() {
-    toast("Not yet implemented")
+    if (binding?.eTPassphrase?.text?.isEmpty() == true) {
+      toast(getString(R.string.password_cannot_be_empty))
+    } else {
+      navController?.navigateUp()
+      setFragmentResult(
+        REQUEST_KEY_PASSWORD,
+        bundleOf(KEY_PASSWORD to (binding?.eTPassphrase?.text ?: ""))
+      )
+    }
+  }
+
+  companion object {
+    const val REQUEST_KEY_PASSWORD = "REQUEST_KEY_PASSWORD"
+    const val KEY_PASSWORD = "KEY_PASSWORD"
   }
 }

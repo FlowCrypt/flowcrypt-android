@@ -33,8 +33,12 @@ import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.isVisible
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
@@ -65,7 +69,6 @@ import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
-import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
@@ -79,6 +82,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ProvidePasswordToProtectMsgDialogFragment
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientAdapter
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
@@ -166,6 +170,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
     setupComposeMsgViewModel()
+    subscribeToSetWebPortalPassword()
     initExtras(activity?.intent)
   }
 
@@ -262,6 +267,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               Message.RecipientType.BCC
             )
           }
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
+          binding?.btnSetWebPortalPassword?.callOnClick()
         }
       }
 
@@ -833,8 +842,16 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     for (recipient in composeMsgViewModel.recipientWithPubKeys) {
       val recipientWithPubKeys = recipient.recipientWithPubKeys
       if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
-        showNoPgpFoundDialog(recipientWithPubKeys)
-        return true
+        //if (EmailUtil.getDomain(binding?.editTextFrom?.text.toString()) == "flowcrypt.com") {
+        if (true) {
+          if (composeMsgViewModel.webPortalPasswordStateFlow.value.isEmpty()) {
+            showNoPgpFoundDialog(recipientWithPubKeys)
+            return true
+          } else continue
+        } else {
+          showNoPgpFoundDialog(recipientWithPubKeys)
+          return true
+        }
       }
 
       if (!recipientWithPubKeys.hasNotExpiredPubKey()) {
@@ -971,7 +988,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     binding?.btnSetWebPortalPassword?.setOnClickListener {
       navController?.navigate(
         CreateMessageFragmentDirections
-          .actionCreateMessageFragmentToProvidePasswordToProtectMsgDialogFragment("")
+          .actionCreateMessageFragmentToProvidePasswordToProtectMsgDialogFragment(
+            composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
+          )
       )
     }
   }
@@ -1341,7 +1360,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    * @param recipient The [RecipientWithPubKeys] which will be used when we select the remove action.
    */
   private fun showNoPgpFoundDialog(recipient: RecipientWithPubKeys) {
-    val dialogFragment = NoPgpFoundDialogFragment.newInstance(recipient, true)
+    val dialogFragment = NoPgpFoundDialogFragment.newInstance(
+      RecipientWithPubKeys = recipient,
+      isRemoveActionEnabled = true,
+      //isProtectingWithPasswordEnabled = EmailUtil.getDomain(binding?.editTextFrom?.text.toString()) == "flowcrypt.com"
+      isProtectingWithPasswordEnabled = true
+    )
     dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
     dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
   }
@@ -1623,8 +1647,16 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
-        binding?.btnSetWebPortalPassword?.visibleOrGone(
-          recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() })
+        val hasRecipientsWithoutPgp =
+          recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() }
+        if (hasRecipientsWithoutPgp) {
+          if (binding?.btnSetWebPortalPassword?.visibility == View.GONE) {
+            composeMsgViewModel.setWebPortalPassword()
+          }
+          binding?.btnSetWebPortalPassword?.visible()
+        } else {
+          binding?.btnSetWebPortalPassword?.gone()
+        }
       }
     }
 
@@ -1639,6 +1671,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               0
             )
             setText(R.string.tap_to_protect_with_web_portal_password)
+            background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+              ContextCompat.getColor(context, R.color.orange), BlendModeCompat.MODULATE
+            )
           } else {
             setCompoundDrawablesWithIntrinsicBounds(
               R.drawable.ic_password_protected_white_24,
@@ -1647,6 +1682,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               0
             )
             setText(R.string.web_portal_password_added)
+            background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+              ContextCompat.getColor(context, R.color.colorPrimary), BlendModeCompat.MODULATE
+            )
           }
         }
       }
@@ -1775,12 +1813,26 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       encryptionType = composeMsgViewModel.msgEncryptionType,
       messageType = messageType,
       replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
-      uid = EmailUtil.genOutboxUID(context)
+      uid = EmailUtil.genOutboxUID(context),
+      //password = if (EmailUtil.getDomain(binding?.editTextFrom?.text.toString()) == "flowcrypt.com") {
+      password = if (true) {
+        binding?.editTextFrom?.text?.toString()?.toCharArray()
+      } else null
     )
   }
 
   private fun getForwardedAttachments(): List<AttachmentInfo> {
     return attachments.filter { it.id != null && it.isForwarded }
+  }
+
+  private fun subscribeToSetWebPortalPassword() {
+    setFragmentResultListener(
+      ProvidePasswordToProtectMsgDialogFragment.REQUEST_KEY_PASSWORD
+    ) { _, bundle ->
+      val password =
+        bundle.getCharSequence(ProvidePasswordToProtectMsgDialogFragment.KEY_PASSWORD) ?: ""
+      composeMsgViewModel.setWebPortalPassword(password)
+    }
   }
 
   companion object {

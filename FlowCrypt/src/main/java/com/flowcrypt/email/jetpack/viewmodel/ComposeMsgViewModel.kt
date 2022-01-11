@@ -80,7 +80,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     messageEncryptionTypeMutableStateFlow.value = messageEncryptionType
   }
 
-  fun setWebPortalPassword(webPortalPassword: CharSequence) {
+  fun setWebPortalPassword(webPortalPassword: CharSequence = "") {
     webPortalPasswordMutableStateFlow.value = webPortalPassword
   }
 
