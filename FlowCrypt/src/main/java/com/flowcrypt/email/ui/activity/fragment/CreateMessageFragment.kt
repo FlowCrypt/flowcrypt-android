@@ -13,7 +13,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.text.TextUtils
 import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
@@ -65,6 +64,7 @@ import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
@@ -94,13 +94,13 @@ import com.hootsuite.nachos.NachoTextView
 import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator
-import kotlinx.coroutines.flow.collect
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import java.io.File
 import java.io.IOException
 import java.util.regex.Pattern
+import javax.mail.Message
 import javax.mail.internet.InternetAddress
 
 /**
@@ -130,9 +130,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private var binding: FragmentCreateMessageBinding? = null
-  private var recipientWithPubKeysTo: MutableList<RecipientWithPubKeys>? = mutableListOf()
-  private var recipientWithPubKeysCc: MutableList<RecipientWithPubKeys>? = mutableListOf()
-  private var recipientWithPubKeysBcc: MutableList<RecipientWithPubKeys>? = mutableListOf()
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
@@ -251,17 +248,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             removeRecipientWithPubKey(
               recipientWithPubKeys,
               binding?.editTextRecipientTo,
-              recipientWithPubKeysTo
+              Message.RecipientType.TO
             )
             removeRecipientWithPubKey(
               recipientWithPubKeys,
               binding?.editTextRecipientCc,
-              recipientWithPubKeysCc
+              Message.RecipientType.CC
             )
             removeRecipientWithPubKey(
               recipientWithPubKeys,
               binding?.editTextRecipientBcc,
-              recipientWithPubKeysBcc
+              Message.RecipientType.BCC
             )
           }
         }
@@ -286,9 +283,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               )
 
               updateRecipients()
-              updateChips(binding?.editTextRecipientTo, recipientWithPubKeysTo)
-              updateChips(binding?.editTextRecipientCc, recipientWithPubKeysCc)
-              updateChips(binding?.editTextRecipientBcc, recipientWithPubKeysBcc)
+              updateChips(binding?.editTextRecipientTo,
+                composeMsgViewModel.recipientWithPubKeysTo.map { it.recipientWithPubKeys })
+              updateChips(
+                binding?.editTextRecipientCc,
+                composeMsgViewModel.recipientWithPubKeysCc.map { it.recipientWithPubKeys })
+              updateChips(
+                binding?.editTextRecipientBcc,
+                composeMsgViewModel.recipientWithPubKeysBcc.map { it.recipientWithPubKeys })
 
               Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
             }
@@ -447,20 +449,20 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   override fun onFocusChange(v: View, hasFocus: Boolean) {
     when (v.id) {
       R.id.editTextRecipientTo -> runUpdateActionForRecipients(
-        recipientWithPubKeysTo, RecipientEntity.Type.TO, hasFocus
+        Message.RecipientType.TO, hasFocus, (v as TextView).text.isEmpty()
       )
 
       R.id.editTextRecipientCc -> runUpdateActionForRecipients(
-        recipientWithPubKeysCc, RecipientEntity.Type.CC, hasFocus
+        Message.RecipientType.CC, hasFocus, (v as TextView).text.isEmpty()
       )
 
       R.id.editTextRecipientBcc -> runUpdateActionForRecipients(
-        recipientWithPubKeysBcc, RecipientEntity.Type.BCC, hasFocus
+        Message.RecipientType.BCC, hasFocus, (v as TextView).text.isEmpty()
       )
 
       R.id.editTextEmailSubject, R.id.editTextEmailMessage -> if (hasFocus) {
         var isExpandButtonNeeded = false
-        if (TextUtils.isEmpty(binding?.editTextRecipientCc!!.text)) {
+        if (binding?.editTextRecipientCc?.text?.isEmpty() == true) {
           binding?.layoutCc?.gone()
           isExpandButtonNeeded = true
         }
@@ -471,7 +473,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         }
 
         if (isExpandButtonNeeded) {
-          binding?.imageButtonAdditionalRecipientsVisibility?.gone()
+          binding?.imageButtonAdditionalRecipientsVisibility?.visible()
           val layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT
           )
@@ -576,9 +578,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
         MessageEncryptionType.STANDARD -> {
           emailMassageHint = getString(R.string.prompt_compose_standard_email)
-          recipientWithPubKeysTo?.clear()
-          recipientWithPubKeysCc?.clear()
-          recipientWithPubKeysBcc?.clear()
           isUpdateToCompleted = true
           isUpdateCcCompleted = true
           isUpdateBccCompleted = true
@@ -687,7 +686,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private fun updateRecipients() {
     binding?.editTextRecipientTo?.chipAndTokenValues?.let {
       recipientsViewModel.fetchAndUpdateInfoAboutRecipients(
-        RecipientEntity.Type.TO,
+        Message.RecipientType.TO,
         it
       )
     }
@@ -695,71 +694,68 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     if (binding?.layoutCc?.isVisible == true) {
       binding?.editTextRecipientCc?.chipAndTokenValues?.let {
         recipientsViewModel.fetchAndUpdateInfoAboutRecipients(
-          RecipientEntity.Type.CC,
+          Message.RecipientType.CC,
           it
         )
       }
     } else {
       binding?.editTextRecipientCc?.setText(null as CharSequence?)
-      recipientWithPubKeysCc?.clear()
+      composeMsgViewModel.replaceRecipients(Message.RecipientType.CC, emptyList())
     }
 
     if (binding?.layoutBcc?.isVisible == true) {
       binding?.editTextRecipientBcc?.chipAndTokenValues?.let {
         recipientsViewModel.fetchAndUpdateInfoAboutRecipients(
-          RecipientEntity.Type.BCC,
+          Message.RecipientType.BCC,
           it
         )
       }
     } else {
       binding?.editTextRecipientBcc?.setText(null as CharSequence?)
-      recipientWithPubKeysBcc?.clear()
+      composeMsgViewModel.replaceRecipients(Message.RecipientType.BCC, emptyList())
     }
   }
 
   /**
    * Run an action to update information about some [RecipientWithPubKeys]s.
    *
-   * @param recipients Old [RecipientWithPubKeys]s
    * @param type        A type of recipients
    * @param hasFocus    A value which indicates the view focus.
    * @return A modified recipients list.
    */
   private fun runUpdateActionForRecipients(
-    recipients: MutableList<RecipientWithPubKeys>?,
-    type: RecipientEntity.Type,
-    hasFocus: Boolean
-  ): List<RecipientWithPubKeys>? {
+    type: Message.RecipientType,
+    hasFocus: Boolean,
+    isEmpty: Boolean
+  ) {
     if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
-      if (hasFocus) {
-        recipients?.clear()
-      } else {
-        if (isAdded) {
-          fetchDetailsAboutRecipients(type)
-        }
+      if (!hasFocus && isAdded) {
+        fetchDetailsAboutRecipients(type)
       }
     }
 
-    return recipients
+    if (isEmpty) {
+      composeMsgViewModel.replaceRecipients(type, emptyList())
+    }
   }
 
-  private fun fetchDetailsAboutRecipients(type: RecipientEntity.Type) {
+  private fun fetchDetailsAboutRecipients(type: Message.RecipientType) {
     when (type) {
-      RecipientEntity.Type.TO -> {
+      Message.RecipientType.TO -> {
         binding?.editTextRecipientTo?.chipAndTokenValues?.let {
-          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(RecipientEntity.Type.TO, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(Message.RecipientType.TO, it)
         }
       }
 
-      RecipientEntity.Type.CC -> {
+      Message.RecipientType.CC -> {
         binding?.editTextRecipientCc?.chipAndTokenValues?.let {
-          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(RecipientEntity.Type.CC, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(Message.RecipientType.CC, it)
         }
       }
 
-      RecipientEntity.Type.BCC -> {
+      Message.RecipientType.BCC -> {
         binding?.editTextRecipientBcc?.chipAndTokenValues?.let {
-          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(RecipientEntity.Type.BCC, it)
+          recipientsViewModel.fetchAndUpdateInfoAboutRecipients(Message.RecipientType.BCC, it)
         }
       }
     }
@@ -832,30 +828,27 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   /**
    * Check that all recipients are usable.
    */
-  private fun hasUnusableRecipient(vararg list: List<RecipientWithPubKeys>?): Boolean {
-    for (sublist in list) {
-      sublist?.let {
-        for (recipientWithPubKeys in it) {
-          if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
-            showNoPgpFoundDialog(recipientWithPubKeys)
-            return true
-          }
+  private fun hasUnusableRecipient(): Boolean {
+    for (recipient in composeMsgViewModel.recipientWithPubKeys) {
+      val recipientWithPubKeys = recipient.recipientWithPubKeys
+      if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
+        showNoPgpFoundDialog(recipientWithPubKeys)
+        return true
+      }
 
-          if (!recipientWithPubKeys.hasNotExpiredPubKey()) {
-            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_expired_pub_key))
-            return true
-          }
+      if (!recipientWithPubKeys.hasNotExpiredPubKey()) {
+        showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_expired_pub_key))
+        return true
+      }
 
-          if (!recipientWithPubKeys.hasNotRevokedPubKey()) {
-            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_revoked_pub_key))
-            return true
-          }
+      if (!recipientWithPubKeys.hasNotRevokedPubKey()) {
+        showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_revoked_pub_key))
+        return true
+      }
 
-          if (!recipientWithPubKeys.hasUsablePubKey()) {
-            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_not_usable_pub_key))
-            return true
-          }
-        }
+      if (!recipientWithPubKeys.hasUsablePubKey()) {
+        showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_not_usable_pub_key))
+        return true
       }
     }
 
@@ -933,11 +926,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    *
    * @param recipientWithPubKeys     The [RecipientWithPubKeys] which will be removed.
    * @param pgpContactsNachoTextView The [NachoTextView] which contains the delete candidate.
-   * @param list                     The list which contains the delete candidate.
    */
   private fun removeRecipientWithPubKey(
     recipientWithPubKeys: RecipientWithPubKeys, pgpContactsNachoTextView: PgpContactsNachoTextView?,
-    list: MutableList<RecipientWithPubKeys>?
+    recipientType: Message.RecipientType
   ) {
     val chipTokenizer = pgpContactsNachoTextView?.chipTokenizer
     pgpContactsNachoTextView?.allChips?.let {
@@ -952,13 +944,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
     }
 
-    val iterator = list?.iterator()
-    while (iterator?.hasNext() == true) {
-      val next = iterator.next()
-      if (next.recipient.email.equals(recipientWithPubKeys.recipient.email, ignoreCase = true)) {
-        iterator.remove()
-      }
-    }
+    composeMsgViewModel.removeRecipient(recipientType, recipientWithPubKeys)
   }
 
   /**
@@ -1500,7 +1486,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private fun setupRecipientsViewModel() {
     handleUpdatingRecipients(
       recipientsViewModel.recipientsToLiveData,
-      recipientWithPubKeysTo,
+      Message.RecipientType.TO,
       binding?.progressBarTo,
       binding?.editTextRecipientTo
     ) {
@@ -1509,7 +1495,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     handleUpdatingRecipients(
       recipientsViewModel.recipientsCcLiveData,
-      recipientWithPubKeysCc,
+      Message.RecipientType.CC,
       binding?.progressBarCc,
       binding?.editTextRecipientCc
     ) {
@@ -1518,7 +1504,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     handleUpdatingRecipients(
       recipientsViewModel.recipientsBccLiveData,
-      recipientWithPubKeysBcc,
+      Message.RecipientType.BCC,
       binding?.progressBarBcc,
       binding?.editTextRecipientBcc
     ) {
@@ -1528,7 +1514,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun handleUpdatingRecipients(
     liveData: LiveData<Result<List<RecipientWithPubKeys>>>,
-    recipientWithPubKeys: MutableList<RecipientWithPubKeys>?,
+    recipientType: Message.RecipientType,
     progressBar: ProgressBar?,
     nachoTextView: PgpContactsNachoTextView?,
     updateState: (state: Boolean) -> Unit
@@ -1538,17 +1524,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         Result.Status.LOADING -> {
           updateState.invoke(false)
           baseActivity.countingIdlingResource.incrementSafely()
-          recipientWithPubKeys?.clear()
           progressBar?.visible()
         }
 
         Result.Status.SUCCESS -> {
           updateState.invoke(true)
           progressBar?.invisible()
-          recipientWithPubKeys?.clear()
-          it.data?.let { list -> recipientWithPubKeys?.addAll(list) }
-          if (recipientWithPubKeys?.isNotEmpty() == true) {
-            updateChips(nachoTextView, recipientWithPubKeys)
+          it.data?.let { list ->
+            composeMsgViewModel.replaceRecipients(recipientType, list)
+            updateChips(nachoTextView, list)
           }
           baseActivity.countingIdlingResource.decrementSafely()
         }
@@ -1629,6 +1613,13 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         onMsgEncryptionTypeChange(it)
       }
     }
+
+    lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.recipientsStateFlow.collect { recipients ->
+        binding?.btnPasswordProtected?.visibleOrGone(
+          recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() })
+      }
+    }
   }
 
   private fun initNonEncryptedHintView() {
@@ -1683,29 +1674,24 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     }
     if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
       if (binding?.editTextRecipientTo?.text?.isNotEmpty() == true
-        && recipientWithPubKeysTo?.isEmpty() == true
+        && composeMsgViewModel.recipientWithPubKeysTo.isEmpty()
       ) {
-        fetchDetailsAboutRecipients(RecipientEntity.Type.TO)
+        fetchDetailsAboutRecipients(Message.RecipientType.TO)
         return false
       }
       if (binding?.editTextRecipientCc?.text?.isNotEmpty() == true
-        && recipientWithPubKeysCc?.isEmpty() == true
+        && composeMsgViewModel.recipientWithPubKeysCc.isEmpty()
       ) {
-        fetchDetailsAboutRecipients(RecipientEntity.Type.CC)
+        fetchDetailsAboutRecipients(Message.RecipientType.CC)
         return false
       }
       if (binding?.editTextRecipientBcc?.text?.isNotEmpty() == true
-        && recipientWithPubKeysBcc?.isEmpty() == true
+        && composeMsgViewModel.recipientWithPubKeysBcc.isEmpty()
       ) {
-        fetchDetailsAboutRecipients(RecipientEntity.Type.BCC)
+        fetchDetailsAboutRecipients(Message.RecipientType.BCC)
         return false
       }
-      if (hasUnusableRecipient(
-          recipientWithPubKeysTo,
-          recipientWithPubKeysCc,
-          recipientWithPubKeysBcc
-        )
-      ) {
+      if (hasUnusableRecipient()) {
         return false
       }
     }
