@@ -842,15 +842,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     for (recipient in composeMsgViewModel.recipientWithPubKeys) {
       val recipientWithPubKeys = recipient.recipientWithPubKeys
       if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
-        //if (EmailUtil.getDomain(binding?.editTextFrom?.text.toString()) == "flowcrypt.com") {
-        if (true) {
+        return if (isPasswordProtectedFunctionalityEnabled()) {
           if (composeMsgViewModel.webPortalPasswordStateFlow.value.isEmpty()) {
             showNoPgpFoundDialog(recipientWithPubKeys)
-            return true
+            true
           } else continue
         } else {
           showNoPgpFoundDialog(recipientWithPubKeys)
-          return true
+          true
         }
       }
 
@@ -1363,8 +1362,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     val dialogFragment = NoPgpFoundDialogFragment.newInstance(
       RecipientWithPubKeys = recipient,
       isRemoveActionEnabled = true,
-      //isProtectingWithPasswordEnabled = EmailUtil.getDomain(binding?.editTextFrom?.text.toString()) == "flowcrypt.com"
-      isProtectingWithPasswordEnabled = true
+      isProtectingWithPasswordEnabled = isPasswordProtectedFunctionalityEnabled()
     )
     dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
     dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
@@ -1647,44 +1645,48 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
-        val hasRecipientsWithoutPgp =
-          recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() }
-        if (hasRecipientsWithoutPgp) {
-          if (binding?.btnSetWebPortalPassword?.visibility == View.GONE) {
-            composeMsgViewModel.setWebPortalPassword()
+        if (isPasswordProtectedFunctionalityEnabled()) {
+          val hasRecipientsWithoutPgp =
+            recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() }
+          if (hasRecipientsWithoutPgp) {
+            if (binding?.btnSetWebPortalPassword?.visibility == View.GONE) {
+              composeMsgViewModel.setWebPortalPassword()
+            }
+            binding?.btnSetWebPortalPassword?.visible()
+          } else {
+            binding?.btnSetWebPortalPassword?.gone()
           }
-          binding?.btnSetWebPortalPassword?.visible()
-        } else {
-          binding?.btnSetWebPortalPassword?.gone()
         }
       }
     }
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.webPortalPasswordStateFlow.collect { webPortalPassword ->
-        binding?.btnSetWebPortalPassword?.apply {
-          if (webPortalPassword.isEmpty()) {
-            setCompoundDrawablesWithIntrinsicBounds(
-              R.drawable.ic_password_not_protected_white_24,
-              0,
-              0,
-              0
-            )
-            setText(R.string.tap_to_protect_with_web_portal_password)
-            background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-              ContextCompat.getColor(context, R.color.orange), BlendModeCompat.MODULATE
-            )
-          } else {
-            setCompoundDrawablesWithIntrinsicBounds(
-              R.drawable.ic_password_protected_white_24,
-              0,
-              0,
-              0
-            )
-            setText(R.string.web_portal_password_added)
-            background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-              ContextCompat.getColor(context, R.color.colorPrimary), BlendModeCompat.MODULATE
-            )
+        if (isPasswordProtectedFunctionalityEnabled()) {
+          binding?.btnSetWebPortalPassword?.apply {
+            if (webPortalPassword.isEmpty()) {
+              setCompoundDrawablesWithIntrinsicBounds(
+                R.drawable.ic_password_not_protected_white_24,
+                0,
+                0,
+                0
+              )
+              setText(R.string.tap_to_protect_with_web_portal_password)
+              background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                ContextCompat.getColor(context, R.color.orange), BlendModeCompat.MODULATE
+              )
+            } else {
+              setCompoundDrawablesWithIntrinsicBounds(
+                R.drawable.ic_password_protected_white_24,
+                0,
+                0,
+                0
+              )
+              setText(R.string.web_portal_password_added)
+              background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                ContextCompat.getColor(context, R.color.colorPrimary), BlendModeCompat.MODULATE
+              )
+            }
           }
         }
       }
@@ -1814,11 +1816,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       messageType = messageType,
       replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
       uid = EmailUtil.genOutboxUID(context),
-      //password = if (EmailUtil.getDomain(binding?.editTextFrom?.text.toString()) == "flowcrypt.com") {
-      password = if (true) {
+      password = if (isPasswordProtectedFunctionalityEnabled()) {
         binding?.editTextFrom?.text?.toString()?.toCharArray()
       } else null
     )
+  }
+
+  private fun isPasswordProtectedFunctionalityEnabled(): Boolean {
+    val account = accountViewModel.activeAccountLiveData.value?.email ?: return false
+    return EmailUtil.getDomain(account) == "flowcrypt.com"
   }
 
   private fun getForwardedAttachments(): List<AttachmentInfo> {
