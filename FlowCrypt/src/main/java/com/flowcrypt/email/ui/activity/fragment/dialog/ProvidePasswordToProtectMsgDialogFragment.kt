@@ -7,44 +7,23 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 
 import android.app.AlertDialog
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResult
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentProvidePasswordToProtectMsgBinding
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
-import com.flowcrypt.email.ui.activity.fragment.base.CheckPassphraseBehaviour
 
-class ProvidePasswordToProtectMsgDialogFragment : BaseDialogFragment(), CheckPassphraseBehaviour {
+class ProvidePasswordToProtectMsgDialogFragment : BaseDialogFragment() {
   private var binding: FragmentProvidePasswordToProtectMsgBinding? = null
   private val args by navArgs<ProvidePasswordToProtectMsgDialogFragmentArgs>()
-  override val currentContext: Context?
-    get() = context
-  override val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
-  override val buttonUsePassphrase: Button?
-    get() = binding?.btSetPassphrase
-  override val progressBarPassphraseQuality: ProgressBar?
-    get() = binding?.pBarPassphraseQuality
-  override val textViewPassphraseQuality: TextView?
-    get() = binding?.tVPassphraseQuality
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    initPasswordStrengthViewModel(this)
-  }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = AlertDialog.Builder(activity)
@@ -55,7 +34,7 @@ class ProvidePasswordToProtectMsgDialogFragment : BaseDialogFragment(), CheckPas
     )
 
     binding?.eTPassphrase?.addTextChangedListener { editable ->
-      passwordStrengthViewModel.check(editable.toString())
+      //check typed password will be added a bit later(soon)
     }
 
     binding?.eTPassphrase?.setOnEditorActionListener { v, actionId, _ ->
