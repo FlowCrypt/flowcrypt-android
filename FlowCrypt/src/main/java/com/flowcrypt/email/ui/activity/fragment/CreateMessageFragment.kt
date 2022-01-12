@@ -514,7 +514,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.imageButtonAliases -> if (fromAddressesAdapter?.count != 1 && fromAddressesAdapter?.count != 0) {
+      R.id.imageButtonAliases -> if (fromAddressesAdapter?.count ?: 0 > 1) {
         binding?.spinnerFrom?.performClick()
       }
 
