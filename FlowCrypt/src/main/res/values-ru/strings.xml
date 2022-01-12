@@ -469,11 +469,12 @@
     <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, которое защищено паролем. Вы можете открыт его используя эту ссылку: %2$s</string>
     <string name="hint">Подсказка</string>
     <string name="can_not_send_password_protected">Сбой при отправке: защищено паролем</string>
-    <string name="password_protection_usage_explanation">The recipients will receive a link to read your message on a web portal, where they will need to enter this password.\n\nThey will have access to this message for 3 days.</string>
-    <string name="enter_web_portal_password">Enter web portal password</string>
-    <string name="set_password">set password</string>
-    <string name="warning_about_password_usage">Do not use your Pass Phrase (that you chose during FlowCrypt Setup). Use some other password that you can share with others.\n\nYou are responsible for sharing this password with recipients (use other medium to share the password - not email).</string>
-    <string name="web_portal_password_added">Web portal password added</string>
-    <string name="type_text_to_start_measuring">Please type text to start measuring</string>
-    <string name="password_cannot_be_empty">Password cannot be empty</string>
+    <string name="enter_web_portal_password">Введите web-пароль</string>
+    <string name="set_password">Установить пароль</string>
+    <string name="web_portal_password_added">Web-пароль добавлен</string>
+    <string name="type_text_to_start_measuring">Пожалуйста, введите текст чтобы начать измерение</string>
+    <string name="password_cannot_be_empty">Пароль не может быть пустым</string>
+    <string name="tap_to_protect_with_web_portal_password">Нажмите, чтобы защитить web-паролем</string>
+    <string name="password_protection_usage_explanation">Получатели получат ссылку, используя которую смогут прочесть Ваше сообщение на web-портале. Для этого им нужно будет ввести этот пароль. Они будут иметь доступ к данному сообщению на протяжении 3 дней.</string>
+    <string name="warning_about_password_usage">Не используйте Вашу парольную фразу(которую вы используете во время настройки FlowCrypt). Используйте какой-то другой пароль, которым можно поделиться с другими. На Вас лежит ответственность за распространение этого пароля между получателями(не используйте почту чтобы поделится этим паролем)</string>
 </resources>
