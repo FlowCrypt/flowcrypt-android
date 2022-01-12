@@ -140,7 +140,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
   private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
   private var extraActionInfo: ExtraActionInfo? = null
-  private var messageType = MessageType.NEW
   private var nonEncryptedHintView: View? = null
 
   private var isUpdateToCompleted = true
@@ -1085,7 +1084,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     binding?.iBShowQuotedText?.visible()
     binding?.iBShowQuotedText?.let { registerForContextMenu(it) }
 
-    when (messageType) {
+    when (args.messageType) {
       MessageType.REPLY -> updateViewsIfReplyMode()
 
       MessageType.REPLY_ALL -> updateViewsIfReplyAllMode()
@@ -1267,7 +1266,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun prepareReplySubject(subject: String): String {
-    val prefix = when (messageType) {
+    val prefix = when (args.messageType) {
       MessageType.REPLY, MessageType.REPLY_ALL -> "Re"
       MessageType.FORWARD -> "Fwd"
       else -> return subject
@@ -1792,7 +1791,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
     var msg = binding?.editTextEmailMessage?.text.toString()
-    if (messageType == MessageType.REPLY || messageType == MessageType.REPLY_ALL) {
+    if (args.messageType == MessageType.REPLY || args.messageType == MessageType.REPLY_ALL) {
       if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
         msg += EmailUtil.genReplyContent(args.incomingMessageInfo)
       }
@@ -1813,7 +1812,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       atts = attachments,
       forwardedAtts = getForwardedAttachments(),
       encryptionType = composeMsgViewModel.msgEncryptionType,
-      messageType = messageType,
+      messageType = args.messageType,
       replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
       uid = EmailUtil.genOutboxUID(context),
       password = if (isPasswordProtectedFunctionalityEnabled()) {

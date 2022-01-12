@@ -14,7 +14,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
-import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuring
+import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuringException
 import com.nulabinc.zxcvbn.Zxcvbn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +46,7 @@ class PasswordStrengthViewModel(application: Application) : BaseAndroidViewModel
       val context: Context = getApplication()
       if (passphrase.isEmpty()) {
         pwdStrengthResultMutableStateFlow.value = Result.exception(
-          IllegalTextForStrengthMeasuring(context.getString(R.string.type_text_to_start_measuring))
+          IllegalTextForStrengthMeasuringException(context.getString(R.string.type_text_to_start_measuring))
         )
         return@launch
       }

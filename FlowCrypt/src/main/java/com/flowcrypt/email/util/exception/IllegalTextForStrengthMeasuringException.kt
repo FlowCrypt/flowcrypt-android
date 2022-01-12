@@ -5,4 +5,4 @@
 
 package com.flowcrypt.email.util.exception
 
-class IllegalTextForStrengthMeasuring(message: String) : IllegalArgumentException(message)
+class IllegalTextForStrengthMeasuringException(message: String) : IllegalArgumentException(message)
