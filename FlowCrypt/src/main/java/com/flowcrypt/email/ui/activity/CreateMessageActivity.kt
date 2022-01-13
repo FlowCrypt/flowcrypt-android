@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.View
 import android.widget.Toast
 import androidx.navigation.fragment.NavHostFragment
@@ -42,11 +41,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(),
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     (supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as? NavHostFragment)
-      ?.navController?.setGraph(R.navigation.create_msg_graph, intent.extras?.apply {
-        if (!containsKey("messageType")) {
-          putParcelable("messageType", MessageType.NEW)
-        }
-      })
+      ?.navController?.setGraph(R.navigation.create_msg_graph, intent.extras)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -78,13 +73,13 @@ class CreateMessageActivity : BaseBackStackSyncActivity(),
     fun generateIntent(
       context: Context?,
       msgInfo: IncomingMessageInfo?,
-      messageType: MessageType?,
+      @MessageType messageType: Int,
       msgEncryptionType: MessageEncryptionType?,
       serviceInfo: ServiceInfo? = null
     ): Intent {
       val intent = Intent(context, CreateMessageActivity::class.java)
       intent.putExtra("incomingMessageInfo", msgInfo)
-      intent.putExtra("messageType", messageType as Parcelable)
+      intent.putExtra("messageType", messageType)
       intent.putExtra("encryptedByDefault", msgEncryptionType == MessageEncryptionType.ENCRYPTED)
       intent.putExtra("serviceInfo", serviceInfo)
       return intent

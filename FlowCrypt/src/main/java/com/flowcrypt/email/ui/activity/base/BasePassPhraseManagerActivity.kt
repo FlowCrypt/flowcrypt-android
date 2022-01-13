@@ -28,11 +28,14 @@ import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuringException
 import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.io.IOException
@@ -294,15 +297,23 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     lifecycleScope.launchWhenStarted {
       passwordStrengthViewModel.pwdStrengthResultStateFlow.collect {
         when (it.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource.incrementSafely()
+          }
+
           Result.Status.SUCCESS -> {
             pwdStrengthResult = it.data
             updateStrengthViews()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
-            val msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-            ?: getString(R.string.unknown_error)
-            Toast.makeText(this@BasePassPhraseManagerActivity, msg, Toast.LENGTH_LONG).show()
+            if (it.exception !is IllegalTextForStrengthMeasuringException) {
+              val msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error)
+              Toast.makeText(this@BasePassPhraseManagerActivity, msg, Toast.LENGTH_LONG).show()
+            }
+            countingIdlingResource.decrementSafely()
           }
         }
       }

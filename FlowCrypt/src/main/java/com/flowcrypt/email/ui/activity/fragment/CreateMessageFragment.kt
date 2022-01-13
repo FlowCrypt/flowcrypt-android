@@ -1090,9 +1090,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       MessageType.REPLY_ALL -> updateViewsIfReplyAllMode()
 
       MessageType.FORWARD -> updateViewsIfFwdMode()
-
-      else -> {
-      }
     }
 
     updateRecipients()

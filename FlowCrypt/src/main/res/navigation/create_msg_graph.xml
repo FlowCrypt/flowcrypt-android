@@ -30,7 +30,8 @@
             app:nullable="true" />
         <argument
             android:name="messageType"
-            app:argType="com.flowcrypt.email.model.MessageType" />
+            android:defaultValue="0"
+            app:argType="integer" />
         <action
             android:id="@+id/action_createMessageFragment_to_providePasswordToProtectMsgDialogFragment"
             app:destination="@id/providePasswordToProtectMsgDialogFragment" />
