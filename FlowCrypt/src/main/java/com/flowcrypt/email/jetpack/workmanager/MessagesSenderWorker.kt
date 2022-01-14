@@ -6,13 +6,16 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.accounts.AuthenticatorException
+import android.app.ForegroundServiceStartNotAllowedException
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.Constants
@@ -102,8 +105,20 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           )
         )
 
-        if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
-          setForeground(genForegroundInfo(account))
+        if (queuedMsgs.isNotEmpty() || sentButNotSavedMsgs.isNotEmpty()) {
+          try {
+            setForeground(genForegroundInfo(account))
+          } catch (e: IllegalStateException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+              if (e is ForegroundServiceStartNotAllowedException) {
+                //see for details https://developer.android.com/topic/libraries/architecture/workmanager/how-to/define-work#coroutineworker
+                LogsUtil.d(
+                  TAG, "It seems the app started this worker while running in the background." +
+                      " We can't show a notification in that case."
+                )
+              }
+            }
+          }
 
           if (account.useAPI) {
             when (account.accountType) {
@@ -528,6 +543,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           if (forceSending) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
           OneTimeWorkRequestBuilder<MessagesSenderWorker>()
             .setConstraints(constraints)
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
         )
     }
