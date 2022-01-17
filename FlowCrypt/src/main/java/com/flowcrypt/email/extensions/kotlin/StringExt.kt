@@ -162,7 +162,3 @@ fun String.stripTrailing(ch: Char): String {
 fun String.isValidEmail(): Boolean {
   return BetterInternetAddress.isValidEmail(this)
 }
-
-fun String.isValidLocalhostEmail(): Boolean {
-  return BetterInternetAddress.isValidLocalhostEmail(this)
-}

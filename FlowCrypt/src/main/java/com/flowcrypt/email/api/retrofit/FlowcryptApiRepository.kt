@@ -26,7 +26,6 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.flowcrypt.email.api.wkd.WkdClient
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
-import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
@@ -140,7 +139,7 @@ class FlowcryptApiRepository : ApiRepository {
         }
       }
 
-      if (identData.isValidEmail() || identData.isValidLocalhostEmail()) {
+      if (identData.isValidEmail()) {
         val wkdResult = getResult(requestCode = requestCode) {
           val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, identData)
 
