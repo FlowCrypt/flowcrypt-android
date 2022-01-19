@@ -51,8 +51,8 @@ class SearchBackupsInEmailFragmentTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
-    .around(RetryRule.DEFAULT)
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 

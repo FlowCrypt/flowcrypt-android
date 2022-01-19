@@ -15,8 +15,6 @@ import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
@@ -24,7 +22,6 @@ import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert
 import org.junit.Test
-import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
@@ -32,8 +29,6 @@ import org.junit.runner.RunWith
  *         Time: 10:11 AM
  *         E-mail: DenBond7@gmail.com
  */
-@MediumTest
-@RunWith(AndroidJUnit4::class)
 abstract class BaseCreateOrImportKeyActivityTest : BaseTest() {
 
   @Test

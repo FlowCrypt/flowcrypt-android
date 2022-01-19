@@ -105,10 +105,10 @@ class ImportPgpContactActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(mockWebServerRule)
     .around(addAccountToDatabaseRule)
-    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 

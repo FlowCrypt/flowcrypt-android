@@ -46,8 +46,8 @@ class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTes
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
-    .around(RetryRule.DEFAULT)
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 

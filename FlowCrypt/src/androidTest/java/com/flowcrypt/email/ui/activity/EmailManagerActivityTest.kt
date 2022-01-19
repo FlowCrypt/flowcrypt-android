@@ -67,11 +67,11 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(AddAccountToDatabaseRule(userWithoutLetters))
     .around(AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
     .around(AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, LOCAL_FOLDERS))
-    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
