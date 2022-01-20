@@ -31,7 +31,7 @@ data class OutgoingMessageInfo constructor(
   val atts: List<AttachmentInfo>? = null,
   val forwardedAtts: List<AttachmentInfo>? = null,
   val encryptionType: MessageEncryptionType,
-  val messageType: MessageType,
+  @MessageType val messageType: Int,
   val replyToMsgEntity: MessageEntity? = null,
   val uid: Long = 0,
   val password: CharArray? = null
@@ -64,7 +64,7 @@ data class OutgoingMessageInfo constructor(
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
-    parcel.readParcelable<MessageType>(MessageType::class.java.classLoader)!!,
+    parcel.readInt(),
     parcel.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader),
     parcel.readLong(),
     parcel.createCharArray()
@@ -86,7 +86,7 @@ data class OutgoingMessageInfo constructor(
       writeValue(atts)
       writeValue(forwardedAtts)
       writeParcelable(encryptionType, flags)
-      writeParcelable(messageType, flags)
+      writeInt(messageType)
       writeParcelable(replyToMsgEntity, flags)
       writeLong(uid)
       writeCharArray(password)

@@ -10,7 +10,6 @@ import android.content.Context
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
-import com.flowcrypt.email.extensions.kotlin.isValidLocalhostEmail
 import com.flowcrypt.email.util.BetterInternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,12 +32,12 @@ object WkdClient {
   suspend fun lookupEmail(context: Context, email: String): PGPPublicKeyRingCollection? =
     withContext(Dispatchers.IO) {
       val pgpPublicKeyRingCollection = rawLookupEmail(context, email)
-      val lowerCaseEmail = email.toLowerCase(Locale.ROOT)
+      val lowerCaseEmail = email.lowercase()
       val matchingKeys = pgpPublicKeyRingCollection?.keyRings?.asSequence()?.filter {
         for (userId in it.publicKey.userIDs) {
           try {
             val parsed = BetterInternetAddress(userId)
-            if (parsed.emailAddress.toLowerCase(Locale.ROOT) == lowerCaseEmail) return@filter true
+            if (parsed.emailAddress.lowercase() == lowerCaseEmail) return@filter true
           } catch (ex: Exception) {
             ex.printStackTrace()
           }
@@ -55,13 +54,13 @@ object WkdClient {
     email: String,
     wkdPort: Int? = null
   ): PGPPublicKeyRingCollection? = withContext(Dispatchers.IO) {
-    if (!email.isValidEmail() && !email.isValidLocalhostEmail()) {
+    if (!email.isValidEmail()) {
       throw IllegalArgumentException("Invalid email address")
     }
 
     val parts = email.split('@')
-    val user = parts[0].toLowerCase(Locale.ROOT)
-    val directDomain = parts[1].toLowerCase(Locale.ROOT)
+    val user = parts[0].lowercase(Locale.ROOT)
+    val directDomain = parts[1].lowercase(Locale.ROOT)
 
     val advancedDomainPrefix = if (directDomain == "localhost") "" else "openpgpkey."
     val hu = ZBase32().encodeAsString(DigestUtils.sha1(user.toByteArray()))

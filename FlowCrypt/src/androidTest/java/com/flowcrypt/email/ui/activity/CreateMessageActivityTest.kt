@@ -30,6 +30,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -103,11 +104,11 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
     .around(temporaryFolderRule)
-    .around(RetryRule.DEFAULT)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
@@ -728,7 +729,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   private fun deleteAtt(att: File) {
     onView(
       allOf(
-        withId(R.id.imageButtonClearAtt), ViewMatchers.withParent(
+        withId(R.id.imageButtonClearAtt), withParent(
           allOf(withId(R.id.actionButtons), hasSibling(withText(att.name)))
         )
       )

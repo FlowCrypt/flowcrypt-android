@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.content.Intent
-import android.os.Parcelable
 import android.text.TextUtils
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.replaceText
@@ -88,21 +86,20 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SignInActivity>(
-    intent = Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
-      putExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMsgInfo)
-      putExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE, MessageType.REPLY as Parcelable)
-      putExtra(
-        CreateMessageActivity.EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE,
-        MessageEncryptionType.STANDARD as Parcelable
-      )
-      putExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO, serviceInfo)
-    })
+    intent = CreateMessageActivity.generateIntent(
+      getTargetContext(),
+      msgInfo = incomingMsgInfo,
+      messageType = MessageType.REPLY,
+      msgEncryptionType = MessageEncryptionType.STANDARD,
+      serviceInfo = serviceInfo
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
-    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 

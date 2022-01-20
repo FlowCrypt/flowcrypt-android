@@ -41,11 +41,6 @@ data class RecipientEntity(
     parcel.readLong()
   )
 
-  //todo-denbond7 need to think about this class.
-  enum class Type {
-    TO, CC, BCC
-  }
-
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeValue(id)
     parcel.writeString(email)

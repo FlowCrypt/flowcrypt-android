@@ -24,12 +24,15 @@ import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentCheckPassphraseStrengthBinding
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
@@ -37,6 +40,7 @@ import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuringException
 import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.nio.charset.StandardCharsets
@@ -155,20 +159,31 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
   }
 
   private fun initPasswordStrengthViewModel() {
-    passwordStrengthViewModel.pwdStrengthResultLiveData.observe(viewLifecycleOwner) {
-      when (it.status) {
-        Result.Status.SUCCESS -> {
-          pwdStrengthResult = it.data
-          updateStrengthViews()
-        }
+    lifecycleScope.launchWhenStarted {
+      passwordStrengthViewModel.pwdStrengthResultStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
+          }
 
-        Result.Status.EXCEPTION -> {
-          toast(
-            it.exception?.message ?: it.exception?.javaClass?.simpleName
-            ?: getString(R.string.unknown_error), Toast.LENGTH_LONG
-          )
-        }
-        else -> {
+          Result.Status.SUCCESS -> {
+            pwdStrengthResult = it.data
+            updateStrengthViews()
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+
+          Result.Status.EXCEPTION -> {
+            if (it.exception !is IllegalTextForStrengthMeasuringException) {
+              toast(
+                it.exception?.message ?: it.exception?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error), Toast.LENGTH_LONG
+              )
+            }
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+
+          else -> {
+          }
         }
       }
     }
@@ -257,6 +272,6 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
       Constants.PASSWORD_QUALITY_POOR -> getString(R.string.password_quality_poor)
       Constants.PASSWORD_QUALITY_WEAK -> getString(R.string.password_quality_weak)
       else -> word?.word
-    }?.toUpperCase(Locale.getDefault())
+    }?.uppercase(Locale.getDefault())
   }
 }

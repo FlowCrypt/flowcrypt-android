@@ -120,6 +120,7 @@
     <string name="import_their_public_key">Import their Public Key</string>
     <string name="copy_from_other_contact">Copy from other contact</string>
     <string name="template_remove_recipient">Remove %1$s</string>
+    <string name="protect_with_password">Protect with password</string>
     <string name="recipient_does_not_use_pgp">Recipient doesn\'t use PGP</string>
     <string name="reply">Reply</string>
     <string name="import_public_key">Import Public Key</string>
@@ -555,4 +556,12 @@
     <string name="mixed_signed">mixed signed</string>
     <string name="password_protected_msg_promo">%1$s has sent you a password-encrypted email. Follow this link to open it: %2$s</string>
     <string name="can_not_send_password_protected">Can\'t send message: password-protected</string>
+    <string name="tap_to_protect_with_web_portal_password">Tap to protect with web portal Password</string>
+    <string name="password_protection_usage_explanation">The recipients will receive a link to read your message on a web portal, where they will need to enter this password.\n\nThey will have access to this message for 3 days.</string>
+    <string name="enter_web_portal_password">Enter web portal password</string>
+    <string name="set_password">set password</string>
+    <string name="warning_about_password_usage">Do not use your Pass Phrase (that you chose during FlowCrypt Setup). Use some other password that you can share with others.\n\nYou are responsible for sharing this password with recipients (use other medium to share the password - not email).</string>
+    <string name="web_portal_password_added">Web portal password added</string>
+    <string name="type_text_to_start_measuring">Please type text to start measuring</string>
+    <string name="password_cannot_be_empty">Password cannot be empty</string>
 </resources>

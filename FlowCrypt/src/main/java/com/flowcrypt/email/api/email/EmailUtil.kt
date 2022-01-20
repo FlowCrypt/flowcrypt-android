@@ -673,6 +673,8 @@ class EmailUtil {
         MessageType.REPLY, MessageType.REPLY_ALL -> {
           prepareReplyMsg(context, session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
         }
+
+        else -> throw IllegalStateException("Unsupported message type")
       }
     }
 

@@ -31,4 +31,11 @@
         android:orderInCategory="2002"
         android:title="@string/include_public_key"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionSwitchType"
+        android:icon="@drawable/ic_switch_white_24dp"
+        android:orderInCategory="100"
+        android:title="@string/switch_to_standard_email"
+        app:showAsAction="ifRoom" />
 </menu>

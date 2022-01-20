@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
+import javax.mail.Message
 
 /**
  * This is used in the message compose/reply view when recipient public keys need to be retrieved,
@@ -80,7 +81,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     return roomDatabase.recipientDao().getRecipientsWithPubKeysByEmailsLD(recipientEntity.email)
   }
 
-  fun fetchAndUpdateInfoAboutRecipients(type: RecipientEntity.Type, emails: List<String>) {
+  fun fetchAndUpdateInfoAboutRecipients(type: Message.RecipientType, emails: List<String>) {
     viewModelScope.launch {
       if (emails.isEmpty()) {
         return@launch
@@ -248,19 +249,19 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   }
 
   private fun setResultForRemoteContactsLiveData(
-    type: RecipientEntity.Type,
+    type: Message.RecipientType,
     result: Result<List<RecipientWithPubKeys>>
   ) {
     when (type) {
-      RecipientEntity.Type.TO -> {
+      Message.RecipientType.TO -> {
         recipientsToLiveData.value = result
       }
 
-      RecipientEntity.Type.CC -> {
+      Message.RecipientType.CC -> {
         recipientsCcLiveData.value = result
       }
 
-      RecipientEntity.Type.BCC -> {
+      Message.RecipientType.BCC -> {
         recipientsBccLiveData.value = result
       }
     }

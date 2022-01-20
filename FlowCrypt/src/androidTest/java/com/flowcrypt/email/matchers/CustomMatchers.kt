@@ -7,6 +7,7 @@ package com.flowcrypt.email.matchers
 
 import android.view.View
 import android.widget.ListView
+import androidx.annotation.DrawableRes
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Root
 import androidx.test.espresso.matcher.BoundedMatcher
@@ -114,6 +115,13 @@ class CustomMatchers {
 
     fun isToast(): BaseMatcher<Root?> {
       return ToastMatcher()
+    }
+
+    fun withTextViewDrawable(
+      @DrawableRes resourceId: Int,
+      @TextViewDrawableMatcher.DrawablePosition drawablePosition: Int
+    ): Matcher<View> {
+      return TextViewDrawableMatcher(resourceId, drawablePosition)
     }
   }
 }

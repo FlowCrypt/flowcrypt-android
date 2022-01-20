@@ -39,13 +39,13 @@ class SettingsActivityEnterpriseTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(
       AddAccountToDatabaseRule(
         AccountDaoManager.getAccountDao("enterprise_account_no_prv_backup.json")
       )
     )
-    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
