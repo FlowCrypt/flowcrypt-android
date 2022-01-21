@@ -109,7 +109,7 @@
         <item name="android:background">@drawable/bg_bottom_line_gray</item>
     </style>
 
-    <style name="AppWidget.TextInputLayout.PgpBlock"></style>
+    <style name="AppWidget.TextInputLayout.PgpBlock" />
 
     <style name="AppWidget.TextInputLayout.PgpBlock.Error">
         <item name="android:background">@drawable/bg_message_part_pgp_message_error</item>
@@ -133,5 +133,13 @@
 
     <style name="AppWidget.Switch" parent="AppTheme">
         <item name="colorAccent">@color/colorPrimaryLight</item>
+    </style>
+
+    <style name="AppWidget.CheckedTextView" tools:ignore="UnusedResources" />
+
+    <style name="AppWidget.CheckedTextView.Password">
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/orange</item>
+        <item name="drawableStartCompat">?android:attr/listChoiceIndicatorMultiple</item>
     </style>
 </resources>

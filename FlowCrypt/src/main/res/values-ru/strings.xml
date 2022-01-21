@@ -478,4 +478,11 @@
     <string name="password_protection_usage_explanation">Получатели получат ссылку, используя которую смогут прочесть Ваше сообщение на web-портале. Для этого им нужно будет ввести этот пароль. Они будут иметь доступ к данному сообщению на протяжении 3 дней.</string>
     <string name="warning_about_password_usage">Не используйте Вашу ключевую фразу(которую вы используете во время настройки FlowCrypt). Используйте какой-то другой пароль, которым можно поделиться с другими. На Вас лежит ответственность за распространение этого пароля между получателями(не используйте почту, чтобы поделится этим паролем)</string>
     <string name="protect_with_password">Защитить паролем</string>
+    <string name="web_portal_password">Web-пароль</string>
+    <string name="password_should_fit_the_following_requirements">Пароль должен соответствовать следующим требованиям:</string>
+    <string name="one_uppercase">один символ в верхнем регистре</string>
+    <string name="one_lowercase">один символ в нижнем регистре</string>
+    <string name="one_number">одна цифра</string>
+    <string name="one_special_character_eg">Один из специальных символов: &amp;"#-'_%-@,;:!*()</string>
+    <string name="min_8_characters_length">Минимум 8 символов</string>
 </resources>

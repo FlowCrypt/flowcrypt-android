@@ -564,4 +564,11 @@
     <string name="web_portal_password_added">Web portal password added</string>
     <string name="type_text_to_start_measuring">Please type text to start measuring</string>
     <string name="password_cannot_be_empty">Password cannot be empty</string>
+    <string name="web_portal_password">Web portal password</string>
+    <string name="password_should_fit_the_following_requirements">Password should fit the following requirements:</string>
+    <string name="one_uppercase">one uppercase</string>
+    <string name="one_lowercase">one lowercase</string>
+    <string name="one_number">one number</string>
+    <string name="one_special_character_eg">one special character eg &amp;"#-'_%-@,;:!*()</string>
+    <string name="min_8_characters_length">min 8 characters length</string>
 </resources>
