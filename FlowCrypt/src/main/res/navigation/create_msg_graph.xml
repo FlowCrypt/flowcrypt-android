@@ -46,4 +46,53 @@
             android:defaultValue=""
             app:argType="string" />
     </fragment>
+
+    <dialog
+        android:id="@+id/infoDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment"
+        android:label="InfoDialogFragment">
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="dialogTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="dialogMsg"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="buttonTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="isCancelable"
+            android:defaultValue="true"
+            app:argType="boolean" />
+        <argument
+            android:name="useNavigationUp"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="hasHtml"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="useWebViewToRender"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="useLinkify"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </dialog>
+
+    <action
+        android:id="@+id/action_global_infoDialogFragment"
+        app:destination="@id/infoDialogFragment" />
 </navigation>

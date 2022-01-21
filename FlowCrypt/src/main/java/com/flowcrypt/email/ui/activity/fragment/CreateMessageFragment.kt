@@ -101,6 +101,7 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.IOException
 import java.util.regex.Pattern
@@ -1774,6 +1775,34 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
       if (hasUnusableRecipient()) {
         return false
+      }
+
+      if (isPasswordProtectedFunctionalityEnabled()) {
+        val password = composeMsgViewModel.webPortalPasswordStateFlow.value
+        if (KeysStorageImpl.getInstance(requireContext())
+            .hasPassphrase(Passphrase(password.toString().toCharArray()))
+        ) {
+          navController?.navigate(
+            CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
+              dialogTitle = getString(R.string.warning),
+              dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
+            )
+          )
+          return false
+        }
+
+        if (binding?.editTextEmailSubject?.text.toString() == password.toString()) {
+          navController?.navigate(
+            CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
+              dialogTitle = getString(R.string.warning),
+              dialogMsg = getString(
+                R.string.warning_use_subject_as_password,
+                getString(R.string.app_name)
+              )
+            )
+          )
+          return false
+        }
       }
     }
     if (binding?.editTextEmailSubject?.text?.isEmpty() == true) {

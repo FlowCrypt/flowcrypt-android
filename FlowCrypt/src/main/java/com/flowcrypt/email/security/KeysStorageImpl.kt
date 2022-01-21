@@ -229,6 +229,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return passPhraseMap.values.any { it.passphrase.isEmpty }
   }
 
+  override fun hasPassphrase(passphrase: Passphrase): Boolean {
+    return passPhraseMap.values.any { it.passphrase == passphrase }
+  }
+
   override fun getFingerprintsWithEmptyPassphrase(): List<String> {
     return passPhraseMap.filter { it.value.passphrase.isEmpty }.map { it.key }
   }
