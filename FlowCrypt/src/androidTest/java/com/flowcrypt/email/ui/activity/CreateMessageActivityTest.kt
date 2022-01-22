@@ -69,9 +69,9 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.junit.Assert
 import org.junit.BeforeClass
@@ -123,7 +123,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
     onView(withId(R.id.editTextRecipientTo))
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -146,7 +146,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click(), typeText("subject"), clearText())
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -175,7 +175,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT))
     onView(withId(R.id.editTextEmailMessage))
       .perform(scrollTo())
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -250,14 +250,14 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
       .perform(scrollTo())
-      .check(matches(withText(not(isEmptyString()))))
+      .check(matches(withText(not(`is`(emptyString())))))
     onView(withId(R.id.layoutTo))
       .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo())
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
   }
 
   @Test
@@ -715,7 +715,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
 
   private fun checkIsDisplayedEncryptedAttributes() {
     onView(withId(R.id.underToolbarTextTextView))
-      .check(doesNotExist())
+      .check(matches(not(isDisplayed())))
     onView(withId(R.id.appBarLayout))
       .check(
         matches(

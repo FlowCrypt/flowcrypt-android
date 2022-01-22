@@ -1788,29 +1788,30 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
       if (isPasswordProtectedFunctionalityEnabled()) {
         val password = composeMsgViewModel.webPortalPasswordStateFlow.value
-        if (KeysStorageImpl.getInstance(requireContext())
-            .hasPassphrase(Passphrase(password.toString().toCharArray()))
-        ) {
-          navController?.navigate(
-            CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
-              dialogTitle = getString(R.string.warning),
-              dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
-            )
-          )
-          return false
-        }
-
-        if (binding?.editTextEmailSubject?.text.toString() == password.toString()) {
-          navController?.navigate(
-            CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
-              dialogTitle = getString(R.string.warning),
-              dialogMsg = getString(
-                R.string.warning_use_subject_as_password,
-                getString(R.string.app_name)
+        if (password.isNotEmpty()) {
+          val keysStorage = KeysStorageImpl.getInstance(requireContext())
+          if (keysStorage.hasPassphrase(Passphrase(password.toString().toCharArray()))) {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
+                dialogTitle = getString(R.string.warning),
+                dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
               )
             )
-          )
-          return false
+            return false
+          }
+
+          if (binding?.editTextEmailSubject?.text.toString() == password.toString()) {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
+                dialogTitle = getString(R.string.warning),
+                dialogMsg = getString(
+                  R.string.warning_use_subject_as_password,
+                  getString(R.string.app_name)
+                )
+              )
+            )
+            return false
+          }
         }
       }
     }
