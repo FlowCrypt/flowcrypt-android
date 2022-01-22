@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.ui.activity
 
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -113,7 +113,7 @@ class CreateMessageFragmentPasswordProtectedTest : BaseCreateMessageActivityTest
   fun testHideWebPortalPasswordButtonWhenUseStandardMsgType() {
     testShowWebPortalPasswordButton()
 
-    Espresso.openActionBarOverflowOrOptionsMenu(getTargetContext())
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.switch_to_standard_email))
       .check(matches(isDisplayed()))
       .perform(click())

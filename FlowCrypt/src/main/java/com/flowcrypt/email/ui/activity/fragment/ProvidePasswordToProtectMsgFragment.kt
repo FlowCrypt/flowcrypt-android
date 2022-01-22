@@ -101,6 +101,9 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
   private fun updateStrengthViews(list: List<WebPortalPasswordStrengthViewModel.RequirementItem>) {
     list.forEach {
       when (it.requirement) {
+        WebPortalPasswordStrengthViewModel.Requirement.MIN_LENGTH -> {
+          updateRequirementItem(binding?.checkedTVMinLength, it)
+        }
         WebPortalPasswordStrengthViewModel.Requirement.ONE_LOWERCASE -> {
           updateRequirementItem(binding?.checkedTVOneLowercase, it)
         }
@@ -112,9 +115,6 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
         }
         WebPortalPasswordStrengthViewModel.Requirement.ONE_SPECIAL_CHARACTER -> {
           updateRequirementItem(binding?.checkedTVOneSpecialCharacter, it)
-        }
-        WebPortalPasswordStrengthViewModel.Requirement.MIN_LENGTH -> {
-          updateRequirementItem(binding?.checkedTVMinLength, it)
         }
       }
     }

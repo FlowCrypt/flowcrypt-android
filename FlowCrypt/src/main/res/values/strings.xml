@@ -566,11 +566,11 @@
     <string name="password_cannot_be_empty">Password cannot be empty</string>
     <string name="web_portal_password">Web portal password</string>
     <string name="password_should_fit_the_following_requirements">Password should fit the following requirements:</string>
+    <string name="min_8_characters_length">min 8 characters length</string>
     <string name="one_uppercase">one uppercase</string>
     <string name="one_lowercase">one lowercase</string>
     <string name="one_number">one number</string>
     <string name="one_special_character_eg">one special character eg &amp;"#-'_%-@,;:!*()</string>
-    <string name="min_8_characters_length">min 8 characters length</string>
     <string name="warning_use_subject_as_password">Please do not include the password in the email subject. Sharing password over email undermines password based encryption.\n\nYou can ask the recipient to also install %1$s, messages between %1$s users don\'t need a password.</string>
     <string name="warning_use_private_key_pass_phrase_as_password">Please do not use your private key pass phrase as a password for this message.\n\nYou should come up with some other unique password that you can share with a recipient.</string>
 </resources>

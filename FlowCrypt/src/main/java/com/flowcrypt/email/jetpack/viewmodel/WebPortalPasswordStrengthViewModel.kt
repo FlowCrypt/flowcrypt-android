@@ -55,10 +55,10 @@ class WebPortalPasswordStrengthViewModel(application: Application) :
   )
 
   enum class Requirement constructor(val regex: Regex) {
+    MIN_LENGTH(".{8,}".toRegex(RegexOption.MULTILINE)),
     ONE_UPPERCASE("\\p{Lu}".toRegex(RegexOption.MULTILINE)),
     ONE_LOWERCASE("\\p{Ll}".toRegex(RegexOption.MULTILINE)),
     ONE_NUMBER("\\d".toRegex(RegexOption.MULTILINE)),
-    ONE_SPECIAL_CHARACTER("[&\"#-'_%-/@,;:!*()]".toRegex(RegexOption.MULTILINE)),
-    MIN_LENGTH(".{8,}".toRegex(RegexOption.MULTILINE));
+    ONE_SPECIAL_CHARACTER("[&\"#-'_%-/@,;:!*()]".toRegex(RegexOption.MULTILINE));
   }
 }
