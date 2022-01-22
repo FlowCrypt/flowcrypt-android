@@ -140,6 +140,6 @@
     <style name="AppWidget.CheckedTextView.Password">
         <item name="android:gravity">center</item>
         <item name="android:textColor">@color/orange</item>
-        <item name="drawableStartCompat">?android:attr/listChoiceIndicatorMultiple</item>
+        <item name="drawableStartCompat">@drawable/selector_list_item_condition</item>
     </style>
 </resources>

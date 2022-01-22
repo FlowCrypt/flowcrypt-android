@@ -70,6 +70,12 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
     }
 
     binding?.eTPassphrase?.setText(args.defaultPassword)
+
+    binding?.pBarPassphraseQuality?.progressDrawable?.colorFilter =
+      BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+        UIUtil.getColor(requireContext(), R.color.colorPrimary),
+        BlendModeCompat.SRC_IN
+      )
   }
 
   private fun checkAndMoveOn() {
@@ -96,10 +102,10 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
     list.forEach {
       when (it.requirement) {
         WebPortalPasswordStrengthViewModel.Requirement.ONE_LOWERCASE -> {
-          updateRequirementItem(binding?.checkedTVOneUppercase, it)
+          updateRequirementItem(binding?.checkedTVOneLowercase, it)
         }
         WebPortalPasswordStrengthViewModel.Requirement.ONE_UPPERCASE -> {
-          updateRequirementItem(binding?.checkedTVOneLowercase, it)
+          updateRequirementItem(binding?.checkedTVOneUppercase, it)
         }
         WebPortalPasswordStrengthViewModel.Requirement.ONE_NUMBER -> {
           updateRequirementItem(binding?.checkedTVOneNumber, it)
@@ -120,6 +126,11 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
           requireContext(), if (isEnabled) R.color.colorPrimary else R.color.silver
         ), BlendModeCompat.MODULATE
       )
+    }
+
+    binding?.pBarPassphraseQuality?.apply {
+      val progress = list.count { it.isMatching }
+      this.progress = progress
     }
   }
 
