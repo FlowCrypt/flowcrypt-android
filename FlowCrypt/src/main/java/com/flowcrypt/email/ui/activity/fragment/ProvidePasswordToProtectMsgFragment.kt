@@ -65,7 +65,7 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
       }
     }
 
-    binding?.btSetPassphrase?.setOnClickListener {
+    binding?.btSetPassword?.setOnClickListener {
       checkAndMoveOn()
     }
 
@@ -119,7 +119,7 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
       }
     }
 
-    binding?.btSetPassphrase?.apply {
+    binding?.btSetPassword?.apply {
       isEnabled = list.all { it.isMatching }
       background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
         UIUtil.getColor(

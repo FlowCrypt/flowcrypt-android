@@ -59,7 +59,7 @@ class ProvidePasswordToProtectMsgFragmentTest : BaseTest() {
 
   @Test
   fun testPasswordStrength() {
-    onView(withId(R.id.btSetPassphrase))
+    onView(withId(R.id.btSetPassword))
       .check(matches(not(isEnabled())))
 
     //type one uppercase
@@ -108,7 +108,7 @@ class ProvidePasswordToProtectMsgFragmentTest : BaseTest() {
     checkConditionItemState(R.id.checkedTVMinLength, true)
 
     //check that button is enabled
-    onView(withId(R.id.btSetPassphrase))
+    onView(withId(R.id.btSetPassword))
       .check(matches(isEnabled()))
   }
 
