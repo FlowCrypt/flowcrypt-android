@@ -137,6 +137,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
   data class Recipient(
     val recipientType: Message.RecipientType,
-    val recipientWithPubKeys: RecipientWithPubKeys
+    val recipientWithPubKeys: RecipientWithPubKeys,
+    val creationTime: Long = System.currentTimeMillis()
   )
 }

@@ -181,8 +181,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    updateActionBarTitle()
     initNonEncryptedHintView()
+    updateActionBar()
     initViews()
     setupComposeMsgViewModel()
     setupAccountAliasesViewModel()
@@ -193,6 +193,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       updateRecipients()
     }
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    appBarLayout?.removeView(nonEncryptedHintView)
   }
 
   override fun onDestroy() {
@@ -1622,12 +1627,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             appBarLayout?.setBackgroundColor(
               UIUtil.getColor(requireContext(), R.color.colorPrimary)
             )
-            appBarLayout?.removeView(nonEncryptedHintView)
+            nonEncryptedHintView?.gone()
           }
 
           MessageEncryptionType.STANDARD -> {
             appBarLayout?.setBackgroundColor(UIUtil.getColor(requireContext(), R.color.red))
-            appBarLayout?.addView(nonEncryptedHintView)
+            nonEncryptedHintView?.visible()
+            binding?.btnSetWebPortalPassword?.gone()
+            composeMsgViewModel.setWebPortalPassword()
           }
         }
 
@@ -1711,13 +1718,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     textView?.setText(R.string.this_message_will_not_be_encrypted)
   }
 
-  private fun updateActionBarTitle() {
+  private fun updateActionBar() {
     when (args.messageType) {
       MessageType.NEW -> supportActionBar?.setTitle(R.string.compose)
       MessageType.REPLY -> supportActionBar?.setTitle(R.string.reply)
       MessageType.REPLY_ALL -> supportActionBar?.setTitle(R.string.reply_all)
       MessageType.FORWARD -> supportActionBar?.setTitle(R.string.forward)
     }
+
+    appBarLayout?.addView(nonEncryptedHintView)
   }
 
   /**
