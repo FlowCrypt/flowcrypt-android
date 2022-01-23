@@ -12,7 +12,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.SpannableStringBuilder
 import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
@@ -69,6 +68,7 @@ import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
@@ -82,13 +82,11 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.ProvidePasswordToProtectMsgDialogFragment
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientAdapter
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
-import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -98,10 +96,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.hootsuite.nachos.NachoTextView
 import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler
+import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.IOException
 import java.util.regex.Pattern
@@ -168,7 +168,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    setupComposeMsgViewModel()
     subscribeToSetWebPortalPassword()
     initExtras(activity?.intent)
   }
@@ -182,9 +181,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    updateActionBarTitle()
     initNonEncryptedHintView()
+    updateActionBar()
     initViews()
+    setupComposeMsgViewModel()
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
@@ -193,6 +193,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       updateRecipients()
     }
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    appBarLayout?.removeView(nonEncryptedHintView)
   }
 
   override fun onDestroy() {
@@ -882,9 +887,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     list: List<RecipientWithPubKeys>?
   ) {
     view ?: return
-    val builder = SpannableStringBuilder(view.text)
-
-    val pgpContactChipSpans = builder.getSpans(0, view.length(), PGPContactChipSpan::class.java)
+    val pgpContactChipSpans = view.text.getSpans(0, view.length(), PGPContactChipSpan::class.java)
 
     if (pgpContactChipSpans.isNotEmpty()) {
       for (recipientWithPubKeys in list ?: emptyList()) {
@@ -917,7 +920,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       ' ', ChipTerminatorHandler
         .BEHAVIOR_CHIPIFY_TO_TERMINATOR
     )
-    pgpContactsNachoTextView?.chipTokenizer = SingleCharacterSpanChipTokenizer(
+    pgpContactsNachoTextView?.chipTokenizer = SpanChipTokenizer(
       requireContext(),
       CustomChipSpanChipCreator(requireContext()), PGPContactChipSpan::class.java
     )
@@ -986,7 +989,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     binding?.btnSetWebPortalPassword?.setOnClickListener {
       navController?.navigate(
         CreateMessageFragmentDirections
-          .actionCreateMessageFragmentToProvidePasswordToProtectMsgDialogFragment(
+          .actionCreateMessageFragmentToProvidePasswordToProtectMsgFragment(
             composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
           )
       )
@@ -1557,7 +1560,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           progressBar?.invisible()
           it.data?.let { list ->
             composeMsgViewModel.replaceRecipients(recipientType, list)
-            updateChips(nachoTextView, list)
           }
           baseActivity.countingIdlingResource.decrementSafely()
         }
@@ -1625,12 +1627,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             appBarLayout?.setBackgroundColor(
               UIUtil.getColor(requireContext(), R.color.colorPrimary)
             )
-            appBarLayout?.removeView(nonEncryptedHintView)
+            nonEncryptedHintView?.gone()
           }
 
           MessageEncryptionType.STANDARD -> {
             appBarLayout?.setBackgroundColor(UIUtil.getColor(requireContext(), R.color.red))
-            appBarLayout?.addView(nonEncryptedHintView)
+            nonEncryptedHintView?.visible()
+            binding?.btnSetWebPortalPassword?.gone()
+            composeMsgViewModel.setWebPortalPassword()
           }
         }
 
@@ -1645,14 +1649,32 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           val hasRecipientsWithoutPgp =
             recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() }
           if (hasRecipientsWithoutPgp) {
-            if (binding?.btnSetWebPortalPassword?.visibility == View.GONE) {
-              composeMsgViewModel.setWebPortalPassword()
-            }
             binding?.btnSetWebPortalPassword?.visible()
           } else {
             binding?.btnSetWebPortalPassword?.gone()
+            composeMsgViewModel.setWebPortalPassword()
           }
         }
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
+        updateChips(binding?.editTextRecipientTo, recipients.map { it.recipientWithPubKeys })
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.recipientsCcStateFlow.collect { recipients ->
+        binding?.layoutCc?.visibleOrGone(recipients.isNotEmpty())
+        updateChips(binding?.editTextRecipientCc, recipients.map { it.recipientWithPubKeys })
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.recipientsBccStateFlow.collect { recipients ->
+        binding?.layoutBcc?.visibleOrGone(recipients.isNotEmpty())
+        updateChips(binding?.editTextRecipientBcc, recipients.map { it.recipientWithPubKeys })
       }
     }
 
@@ -1696,13 +1718,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     textView?.setText(R.string.this_message_will_not_be_encrypted)
   }
 
-  private fun updateActionBarTitle() {
+  private fun updateActionBar() {
     when (args.messageType) {
       MessageType.NEW -> supportActionBar?.setTitle(R.string.compose)
       MessageType.REPLY -> supportActionBar?.setTitle(R.string.reply)
       MessageType.REPLY_ALL -> supportActionBar?.setTitle(R.string.reply_all)
       MessageType.FORWARD -> supportActionBar?.setTitle(R.string.forward)
     }
+
+    appBarLayout?.addView(nonEncryptedHintView)
   }
 
   /**
@@ -1760,6 +1784,35 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
       if (hasUnusableRecipient()) {
         return false
+      }
+
+      if (isPasswordProtectedFunctionalityEnabled()) {
+        val password = composeMsgViewModel.webPortalPasswordStateFlow.value
+        if (password.isNotEmpty()) {
+          val keysStorage = KeysStorageImpl.getInstance(requireContext())
+          if (keysStorage.hasPassphrase(Passphrase(password.toString().toCharArray()))) {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
+                dialogTitle = getString(R.string.warning),
+                dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
+              )
+            )
+            return false
+          }
+
+          if (binding?.editTextEmailSubject?.text.toString() == password.toString()) {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
+                dialogTitle = getString(R.string.warning),
+                dialogMsg = getString(
+                  R.string.warning_use_subject_as_password,
+                  getString(R.string.app_name)
+                )
+              )
+            )
+            return false
+          }
+        }
       }
     }
     if (binding?.editTextEmailSubject?.text?.isEmpty() == true) {
@@ -1829,10 +1882,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun subscribeToSetWebPortalPassword() {
     setFragmentResultListener(
-      ProvidePasswordToProtectMsgDialogFragment.REQUEST_KEY_PASSWORD
+      ProvidePasswordToProtectMsgFragment.REQUEST_KEY_PASSWORD
     ) { _, bundle ->
       val password =
-        bundle.getCharSequence(ProvidePasswordToProtectMsgDialogFragment.KEY_PASSWORD) ?: ""
+        bundle.getCharSequence(ProvidePasswordToProtectMsgFragment.KEY_PASSWORD) ?: ""
       composeMsgViewModel.setWebPortalPassword(password)
     }
   }

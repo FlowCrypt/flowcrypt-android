@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -104,6 +105,19 @@ class CreateMessageFragmentPasswordProtectedTest : BaseCreateMessageActivityTest
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
+    onView(withId(R.id.btnSetWebPortalPassword))
+      .check(matches(not(isDisplayed())))
+  }
+
+  @Test
+  fun testHideWebPortalPasswordButtonWhenUseStandardMsgType() {
+    testShowWebPortalPasswordButton()
+
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.switch_to_standard_email))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
     onView(withId(R.id.btnSetWebPortalPassword))
       .check(matches(not(isDisplayed())))
   }

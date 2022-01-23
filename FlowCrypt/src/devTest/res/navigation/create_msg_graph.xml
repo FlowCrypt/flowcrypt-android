@@ -41,6 +41,11 @@
         android:id="@+id/providePasswordToProtectMsgFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragment"
         tools:layout="@layout/fragment_provide_password_to_protect_msg">
+
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/compose/web-portal-password" />
+
         <argument
             android:name="defaultPassword"
             android:defaultValue=""
