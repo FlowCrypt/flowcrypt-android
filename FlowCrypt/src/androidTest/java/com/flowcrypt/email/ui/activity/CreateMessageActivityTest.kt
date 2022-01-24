@@ -713,6 +713,26 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       )
   }
 
+  @Test
+  fun testWebPortalPasswordButtonIsHidden() {
+    activeActivityRule?.launch(intent)
+    registerAllIdlingResources()
+
+    onView(withId(R.id.editTextRecipientTo))
+      .perform(
+        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        closeSoftKeyboard()
+      )
+
+    //need to leave focus from 'To' field. move the focus to the next view
+    onView(withId(R.id.editTextEmailSubject))
+      .perform(scrollTo(), click())
+
+    //because account.useFES == false btnSetWebPortalPassword should not be visible
+    onView(withId(R.id.btnSetWebPortalPassword))
+      .check(matches(not(isDisplayed())))
+  }
+
   private fun checkIsDisplayedEncryptedAttributes() {
     onView(withId(R.id.underToolbarTextTextView))
       .check(matches(not(isDisplayed())))

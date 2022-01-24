@@ -22,11 +22,13 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextViewDrawable
 import com.flowcrypt.email.matchers.TextViewDrawableMatcher
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
+import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -46,6 +48,9 @@ import org.junit.runner.RunWith
 class CreateMessageFragmentPasswordProtectedTest : BaseCreateMessageActivityTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val temporaryFolderRule = TemporaryFolder()
+
+  override val addAccountToDatabaseRule: AddAccountToDatabaseRule
+    get() = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(useFES = true))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
