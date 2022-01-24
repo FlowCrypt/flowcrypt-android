@@ -1872,8 +1872,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun isPasswordProtectedFunctionalityEnabled(): Boolean {
-    val account = accountViewModel.activeAccountLiveData.value?.email ?: return false
-    return EmailUtil.getDomain(account) in listOf("flowcrypt.com", "flowcrypt.test")
+    return accountViewModel.activeAccountLiveData.value?.useFES ?: return false
   }
 
   private fun getForwardedAttachments(): List<AttachmentInfo> {

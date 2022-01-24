@@ -21,7 +21,6 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -74,57 +73,61 @@ data class AccountEntity constructor(
     name = "client_configuration",
     defaultValue = "NULL"
   ) val clientConfiguration: OrgRules? = null,
-  @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false
+  @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false,
+  @ColumnInfo(name = "use_fes", defaultValue = "0") val useFES: Boolean = false
 ) : Parcelable {
 
   @Ignore
   val account: Account = Account(
     this.email, accountType
-      ?: this.email.substring(this.email.indexOf('@') + 1).toLowerCase(Locale.US)
+      ?: this.email.substring(this.email.indexOf('@') + 1).lowercase()
   )
 
   val useOAuth2: Boolean
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
 
   constructor(
-    googleSignInAccount: GoogleSignInAccount, uuid: String? = null, orgRules: OrgRules? = null
-  ) :
-      this(
-        email = googleSignInAccount.email!!.toLowerCase(Locale.US),
-        accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.US),
-        displayName = googleSignInAccount.displayName,
-        givenName = googleSignInAccount.givenName,
-        familyName = googleSignInAccount.familyName,
-        photoUrl = googleSignInAccount.photoUrl?.toString(),
-        isEnabled = true,
-        isActive = false,
-        username = googleSignInAccount.email!!,
-        password = "",
-        imapServer = GmailConstants.GMAIL_IMAP_SERVER,
-        imapPort = GmailConstants.GMAIL_IMAP_PORT,
-        imapUseSslTls = true,
-        imapUseStarttls = false,
-        imapAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
-        smtpServer = GmailConstants.GMAIL_SMTP_SERVER,
-        smtpPort = GmailConstants.GMAIL_SMTP_PORT,
-        smtpUseSslTls = true,
-        smtpUseStarttls = false,
-        smtpAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
-        smtpUseCustomSign = false,
-        smtpUsername = null,
-        smtpPassword = null,
-        contactsLoaded = false,
-        showOnlyEncrypted = false,
-        uuid = uuid,
-        clientConfiguration = orgRules,
-        useAPI = FlavorSettings.isGMailAPIEnabled()
-      )
+    googleSignInAccount: GoogleSignInAccount,
+    uuid: String? = null,
+    orgRules: OrgRules? = null,
+    useFES: Boolean
+  ) : this(
+    email = googleSignInAccount.email!!.lowercase(),
+    accountType = googleSignInAccount.account?.type?.lowercase(),
+    displayName = googleSignInAccount.displayName,
+    givenName = googleSignInAccount.givenName,
+    familyName = googleSignInAccount.familyName,
+    photoUrl = googleSignInAccount.photoUrl?.toString(),
+    isEnabled = true,
+    isActive = false,
+    username = googleSignInAccount.email!!,
+    password = "",
+    imapServer = GmailConstants.GMAIL_IMAP_SERVER,
+    imapPort = GmailConstants.GMAIL_IMAP_PORT,
+    imapUseSslTls = true,
+    imapUseStarttls = false,
+    imapAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
+    smtpServer = GmailConstants.GMAIL_SMTP_SERVER,
+    smtpPort = GmailConstants.GMAIL_SMTP_PORT,
+    smtpUseSslTls = true,
+    smtpUseStarttls = false,
+    smtpAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
+    smtpUseCustomSign = false,
+    smtpUsername = null,
+    smtpPassword = null,
+    contactsLoaded = false,
+    showOnlyEncrypted = false,
+    uuid = uuid,
+    clientConfiguration = orgRules,
+    useAPI = FlavorSettings.isGMailAPIEnabled(),
+    useFES = useFES
+  )
 
   constructor(authCredentials: AuthCredentials, uuid: String? = null, orgRules: OrgRules? = null) :
       this(
-        email = authCredentials.email.toLowerCase(Locale.US),
-        accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1)
-          .toLowerCase(Locale.getDefault()),
+        email = authCredentials.email.lowercase(),
+        accountType =
+        authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).lowercase(),
         displayName = authCredentials.displayName,
         givenName = null,
         familyName = null,
@@ -133,12 +136,12 @@ data class AccountEntity constructor(
         isActive = false,
         username = authCredentials.username,
         password = authCredentials.password,
-        imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
+        imapServer = authCredentials.imapServer.lowercase(),
         imapPort = authCredentials.imapPort,
         imapUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
         imapUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
         imapAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
-        smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
+        smtpServer = authCredentials.smtpServer.lowercase(),
         smtpPort = authCredentials.smtpPort,
         smtpUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
         smtpUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
@@ -150,7 +153,8 @@ data class AccountEntity constructor(
         showOnlyEncrypted = false,
         uuid = uuid,
         clientConfiguration = orgRules,
-        useAPI = false
+        useAPI = false,
+        useFES = false
       )
 
   constructor(email: String) :
@@ -214,6 +218,7 @@ data class AccountEntity constructor(
     source.readValue(Boolean::class.java.classLoader) as Boolean?,
     source.readString(),
     source.readParcelable(OrgRules::class.java.classLoader),
+    source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean
   )
 
@@ -281,6 +286,7 @@ data class AccountEntity constructor(
     writeString(uuid)
     writeParcelable(clientConfiguration, flags)
     writeValue(useAPI)
+    writeValue(useFES)
   }
 
   companion object {
