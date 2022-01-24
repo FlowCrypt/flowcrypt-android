@@ -39,7 +39,8 @@ class MigrationTest {
     FlowCryptRoomDatabase.MIGRATION_25_26,
     FlowCryptRoomDatabase.MIGRATION_26_27,
     FlowCryptRoomDatabase.MIGRATION_27_28,
-    FlowCryptRoomDatabase.MIGRATION_28_29
+    FlowCryptRoomDatabase.MIGRATION_28_29,
+    FlowCryptRoomDatabase.MIGRATION_29_30
   )
 
   @get:Rule

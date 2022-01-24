@@ -193,7 +193,14 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   override fun getTempAccount(): AccountEntity? {
-    return googleSignInAccount?.let { AccountEntity(it, uuid, orgRules) }
+    return googleSignInAccount?.let {
+      AccountEntity(
+        googleSignInAccount = it,
+        uuid = uuid,
+        orgRules = orgRules,
+        useFES = fesUrl?.isNotEmpty() == true
+      )
+    }
   }
 
   override fun returnResultOk() {
