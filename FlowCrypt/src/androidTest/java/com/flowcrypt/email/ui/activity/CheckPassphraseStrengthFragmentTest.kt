@@ -33,7 +33,6 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -58,10 +57,10 @@ class CheckPassphraseStrengthFragmentTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
-    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
@@ -105,7 +104,7 @@ class CheckPassphraseStrengthFragmentTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(replaceText(passPhrases[i]))
       onView(withId(R.id.tVPassphraseQuality))
-        .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].toUpperCase(Locale.getDefault())))))
+        .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].uppercase()))))
       onView(withId(R.id.eTPassphrase))
         .check(matches(isDisplayed()))
         .perform(clearText())

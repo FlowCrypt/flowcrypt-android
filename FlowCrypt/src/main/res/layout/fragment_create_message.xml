@@ -3,7 +3,7 @@
   ~ Contributors: DenBond7
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -21,14 +21,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:visibility="visible" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ScrollView
         android:id="@+id/scrollView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:id="@+id/layoutForm"
@@ -210,6 +215,19 @@
 
             </FrameLayout>
 
+            <Button
+                android:id="@+id/btnSetWebPortalPassword"
+                style="@style/AppWidget.Button"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/default_button_height_small"
+                android:layout_gravity="center"
+                android:drawableStart="@drawable/ic_password_not_protected_white_24"
+                android:drawablePadding="@dimen/default_margin_small"
+                android:text="@string/tap_to_protect_with_web_portal_password"
+                android:textAllCaps="false"
+                android:theme="@style/AppWidget.Button.Orange"
+                android:visibility="gone" />
+
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:layout_width="match_parent"
@@ -272,6 +290,17 @@
         layout="@layout/sync_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
-</FrameLayout>
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="scrollView"
+        tools:visibility="visible" />
+</androidx.constraintlayout.widget.ConstraintLayout>

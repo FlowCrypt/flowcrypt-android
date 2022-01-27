@@ -469,4 +469,22 @@
     <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, которое защищено паролем. Вы можете открыт его используя эту ссылку: %2$s</string>
     <string name="hint">Подсказка</string>
     <string name="can_not_send_password_protected">Сбой при отправке: защищено паролем</string>
+    <string name="enter_web_portal_password">Введите web-пароль</string>
+    <string name="set_password">Установить пароль</string>
+    <string name="web_portal_password_added">Web-пароль добавлен</string>
+    <string name="type_text_to_start_measuring">Пожалуйста, введите текст чтобы начать измерение</string>
+    <string name="password_cannot_be_empty">Пароль не может быть пустым</string>
+    <string name="tap_to_protect_with_web_portal_password">Нажмите, чтобы защитить web-паролем</string>
+    <string name="password_protection_usage_explanation">Получатели получат ссылку, используя которую смогут прочесть Ваше сообщение на web-портале. Для этого им нужно будет ввести этот пароль. Они будут иметь доступ к данному сообщению на протяжении 180 дней.</string>
+    <string name="warning_about_password_usage">Не используйте Вашу ключевую фразу(которую вы используете во время настройки FlowCrypt). Используйте какой-то другой пароль, которым можно поделиться с другими. На Вас лежит ответственность за распространение этого пароля между получателями(не используйте почту, чтобы поделится этим паролем)</string>
+    <string name="protect_with_password">Защитить паролем</string>
+    <string name="web_portal_password">Web-пароль</string>
+    <string name="password_should_fit_the_following_requirements">Пароль должен соответствовать следующим требованиям:</string>
+    <string name="min_8_characters_length">минимум 8 символов</string>
+    <string name="one_uppercase">один символ в верхнем регистре</string>
+    <string name="one_lowercase">один символ в нижнем регистре</string>
+    <string name="one_number">одна цифра</string>
+    <string name="one_special_character_eg">один из специальных символов: &amp;"#-'_%-@,;:!*()</string>
+    <string name="warning_use_subject_as_password">Пожалуйста, не прописывайте пароль в тему сообщения. Передача пароля по электронной почте далает бессмысленным шифрование на основе пароля.\n\nВы можете попросить получателя также установить %1$s, сообщения между пользователями %1$s не нуждаются в пароле.</string>
+    <string name="warning_use_private_key_pass_phrase_as_password">Пожалуйста, не используйте Вашу ключевую фразу в качестве пароля для даного сообщения.\n\nВы должны придумать какой-нибудь другой уникальный пароль, которым Вы можете поделиться с получателем.</string>
 </resources>

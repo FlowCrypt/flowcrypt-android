@@ -30,14 +30,28 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   private var recipientWithPubKeys: RecipientWithPubKeys? = null
   private var dialogItems: MutableList<DialogItem> = mutableListOf()
   private var isRemoveActionEnabled: Boolean = false
+  private var isProtectingWithPasswordEnabled: Boolean = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     this.recipientWithPubKeys = arguments?.getParcelable(EXTRA_KEY_PGP_CONTACT)
     this.isRemoveActionEnabled = arguments?.getBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED) ?: false
+    this.isProtectingWithPasswordEnabled = arguments?.getBoolean(
+      EXTRA_KEY_IS_PROTECTING_WITH_PASSWORD_ENABLED
+    ) ?: false
 
     dialogItems = ArrayList()
+
+    if (isProtectingWithPasswordEnabled) {
+      dialogItems.add(
+        DialogItem(
+          iconResourceId = R.drawable.ic_password_protected_gray_48,
+          title = getString(R.string.protect_with_password),
+          id = RESULT_CODE_PROTECT_WITH_PASSWORD
+        )
+      )
+    }
 
     dialogItems.add(
       DialogItem(
@@ -99,10 +113,11 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   }
 
   companion object {
-    const val RESULT_CODE_SWITCH_TO_STANDARD_EMAIL = 10
-    const val RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY = 11
-    const val RESULT_CODE_COPY_FROM_OTHER_CONTACT = 12
-    const val RESULT_CODE_REMOVE_CONTACT = 13
+    const val RESULT_CODE_PROTECT_WITH_PASSWORD = 10
+    const val RESULT_CODE_SWITCH_TO_STANDARD_EMAIL = 11
+    const val RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY = 12
+    const val RESULT_CODE_COPY_FROM_OTHER_CONTACT = 13
+    const val RESULT_CODE_REMOVE_CONTACT = 14
 
     val EXTRA_KEY_PGP_CONTACT =
       GeneralUtil.generateUniqueExtraKey(
@@ -116,13 +131,24 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
         NoPgpFoundDialogFragment::class.java
       )
 
+    private val EXTRA_KEY_IS_PROTECTING_WITH_PASSWORD_ENABLED =
+      GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_IS_PROTECTING_WITH_PASSWORD_ENABLED",
+        NoPgpFoundDialogFragment::class.java
+      )
+
     fun newInstance(
       RecipientWithPubKeys: RecipientWithPubKeys,
-      isRemoveActionEnabled: Boolean
+      isRemoveActionEnabled: Boolean,
+      isProtectingWithPasswordEnabled: Boolean = false
     ): NoPgpFoundDialogFragment {
       val args = Bundle()
       args.putParcelable(EXTRA_KEY_PGP_CONTACT, RecipientWithPubKeys)
       args.putBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED, isRemoveActionEnabled)
+      args.putBoolean(
+        EXTRA_KEY_IS_PROTECTING_WITH_PASSWORD_ENABLED,
+        isProtectingWithPasswordEnabled
+      )
       val noPgpFoundDialogFragment = NoPgpFoundDialogFragment()
       noPgpFoundDialogFragment.arguments = args
       return noPgpFoundDialogFragment

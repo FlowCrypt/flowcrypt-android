@@ -22,7 +22,6 @@ import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
@@ -40,7 +39,6 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
-import org.junit.runner.RunWith
 import java.io.InputStream
 import java.util.*
 import javax.mail.Session
@@ -54,7 +52,6 @@ import javax.mail.internet.MimeMessage
  * Time: 16:37
  * E-mail: DenBond7@gmail.com
  */
-@RunWith(AndroidJUnit4::class)
 abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
   private var countingIdlingResource: IdlingResource? = null

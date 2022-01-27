@@ -18,6 +18,7 @@
     <dimen name="default_four_dip">4dp</dimen>
 
     <dimen name="default_button_height">64dp</dimen>
+    <dimen name="default_button_height_small">48dp</dimen>
     <dimen name="default_button_width">320dp</dimen>
     <dimen name="default_height_for_click">64dp</dimen>
 

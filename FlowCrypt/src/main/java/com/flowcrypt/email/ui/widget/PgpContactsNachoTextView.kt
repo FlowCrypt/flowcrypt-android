@@ -148,12 +148,12 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) :
     if (chipTokenizer != null) {
       val stringBuilder = StringBuilder()
 
-      val chips = Arrays.asList(*chipTokenizer!!.findAllChips(start, end, editable))
+      val chips = listOf(*chipTokenizer!!.findAllChips(start, end, editable))
       for (i in chips.indices) {
         val chip = chips[i]
         stringBuilder.append(chip.text)
         if (i != chips.size - 1) {
-          stringBuilder.append(SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE)
+          stringBuilder.append(CHIP_SEPARATOR_WHITESPACE)
         }
       }
 
@@ -289,5 +289,9 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) :
     private fun getLineForOffset(offset: Int): Int {
       return layout.getLineForOffset(offset)
     }
+  }
+
+  companion object {
+    const val CHIP_SEPARATOR_WHITESPACE = ' '
   }
 }

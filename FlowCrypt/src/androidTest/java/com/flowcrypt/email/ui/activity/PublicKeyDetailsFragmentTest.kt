@@ -81,7 +81,8 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(AddAccountToDatabaseRule())
     .around(
       AddRecipientsToDatabaseRule(
@@ -93,7 +94,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
         )
       )
     )
-    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 

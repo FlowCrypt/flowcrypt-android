@@ -48,9 +48,9 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(AddAccountToDatabaseRule())
-    .around(RetryRule.DEFAULT)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 

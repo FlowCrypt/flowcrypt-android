@@ -54,10 +54,10 @@ class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule(passphraseType = KeyEntity.PassphraseType.RAM))
-    .around(RetryRule.DEFAULT)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 

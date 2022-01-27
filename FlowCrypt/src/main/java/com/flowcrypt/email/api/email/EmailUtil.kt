@@ -673,6 +673,8 @@ class EmailUtil {
         MessageType.REPLY, MessageType.REPLY_ALL -> {
           prepareReplyMsg(context, session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
         }
+
+        else -> throw IllegalStateException("Unsupported message type")
       }
     }
 
@@ -682,7 +684,7 @@ class EmailUtil {
      * @param context Interface to global information about an application environment.
      * @return The next [UID] value for the outgoing message.
      */
-    fun genOutboxUID(context: Context?): Long {
+    fun genOutboxUID(context: Context): Long {
       var lastUid = SharedPreferencesHelper.getLong(
         PreferenceManager.getDefaultSharedPreferences(context),
         Constants.PREF_KEY_LAST_OUTBOX_UID, 0

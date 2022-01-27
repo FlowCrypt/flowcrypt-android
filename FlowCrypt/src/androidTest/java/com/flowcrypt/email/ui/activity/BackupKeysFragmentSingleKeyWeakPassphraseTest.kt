@@ -42,7 +42,8 @@ class BackupKeysFragmentSingleKeyWeakPassphraseTest : BaseBackupKeysFragmentTest
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(
       AddPrivateKeyToDatabaseRule(
@@ -52,7 +53,6 @@ class BackupKeysFragmentSingleKeyWeakPassphraseTest : BaseBackupKeysFragmentTest
         sourceType = KeyImportDetails.SourceType.EMAIL
       )
     )
-    .around(RetryRule.DEFAULT)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 

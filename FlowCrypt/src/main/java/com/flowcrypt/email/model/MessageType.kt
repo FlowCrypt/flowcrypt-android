@@ -5,8 +5,11 @@
 
 package com.flowcrypt.email.model
 
-import android.os.Parcel
-import android.os.Parcelable
+import androidx.annotation.IntDef
+import com.flowcrypt.email.model.MessageType.Companion.FORWARD
+import com.flowcrypt.email.model.MessageType.Companion.NEW
+import com.flowcrypt.email.model.MessageType.Companion.REPLY
+import com.flowcrypt.email.model.MessageType.Companion.REPLY_ALL
 
 /**
  * The message types.
@@ -16,22 +19,13 @@ import android.os.Parcelable
  * Time: 12:55
  * E-mail: DenBond7@gmail.com
  */
-enum class MessageType : Parcelable {
-  NEW, REPLY, REPLY_ALL, FORWARD;
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    dest.writeInt(ordinal)
-  }
-
+@Retention(AnnotationRetention.SOURCE)
+@IntDef(NEW, REPLY, REPLY_ALL, FORWARD)
+annotation class MessageType {
   companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<MessageType> = object : Parcelable.Creator<MessageType> {
-      override fun createFromParcel(source: Parcel): MessageType = values()[source.readInt()]
-      override fun newArray(size: Int): Array<MessageType?> = arrayOfNulls(size)
-    }
+    const val NEW = 0
+    const val REPLY = 1
+    const val REPLY_ALL = 2
+    const val FORWARD = 3
   }
 }

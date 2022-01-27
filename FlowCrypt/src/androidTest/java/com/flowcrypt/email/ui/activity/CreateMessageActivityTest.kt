@@ -30,6 +30,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -68,9 +69,9 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.junit.Assert
 import org.junit.BeforeClass
@@ -103,11 +104,11 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(ClearAppSettingsRule())
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
     .around(temporaryFolderRule)
-    .around(RetryRule.DEFAULT)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
@@ -122,7 +123,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
     onView(withId(R.id.editTextRecipientTo))
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -145,7 +146,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click(), typeText("subject"), clearText())
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -174,7 +175,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT))
     onView(withId(R.id.editTextEmailMessage))
       .perform(scrollTo())
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -249,14 +250,14 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
       .perform(scrollTo())
-      .check(matches(withText(not(isEmptyString()))))
+      .check(matches(withText(not(`is`(emptyString())))))
     onView(withId(R.id.layoutTo))
       .perform(scrollTo())
     onView(withId(R.id.editTextRecipientTo))
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo())
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
   }
 
   @Test
@@ -712,9 +713,29 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
       )
   }
 
+  @Test
+  fun testWebPortalPasswordButtonIsHidden() {
+    activeActivityRule?.launch(intent)
+    registerAllIdlingResources()
+
+    onView(withId(R.id.editTextRecipientTo))
+      .perform(
+        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        closeSoftKeyboard()
+      )
+
+    //need to leave focus from 'To' field. move the focus to the next view
+    onView(withId(R.id.editTextEmailSubject))
+      .perform(scrollTo(), click())
+
+    //because account.useFES == false btnSetWebPortalPassword should not be visible
+    onView(withId(R.id.btnSetWebPortalPassword))
+      .check(matches(not(isDisplayed())))
+  }
+
   private fun checkIsDisplayedEncryptedAttributes() {
     onView(withId(R.id.underToolbarTextTextView))
-      .check(doesNotExist())
+      .check(matches(not(isDisplayed())))
     onView(withId(R.id.appBarLayout))
       .check(
         matches(
@@ -728,7 +749,7 @@ class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
   private fun deleteAtt(att: File) {
     onView(
       allOf(
-        withId(R.id.imageButtonClearAtt), ViewMatchers.withParent(
+        withId(R.id.imageButtonClearAtt), withParent(
           allOf(withId(R.id.actionButtons), hasSibling(withText(att.name)))
         )
       )

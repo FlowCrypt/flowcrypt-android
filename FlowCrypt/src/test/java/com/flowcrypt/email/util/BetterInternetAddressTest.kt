@@ -106,7 +106,7 @@ class BetterInternetAddressTest {
     for (email in validEmails) {
       assertTrue(
         "valid localhost email '$email' detected as invalid",
-        BetterInternetAddress.isValidLocalhostEmail(email)
+        BetterInternetAddress.isValidEmail(email)
       )
       // doesn't work
       // val parsedEmail = BetterInternetAddress(email)
@@ -120,7 +120,7 @@ class BetterInternetAddressTest {
     for (email in invalidEmails) {
       assertFalse(
         "invalid localhost email '$email' detected as valid",
-        BetterInternetAddress.isValidLocalhostEmail(email)
+        BetterInternetAddress.isValidEmail(email)
       )
     }
   }
