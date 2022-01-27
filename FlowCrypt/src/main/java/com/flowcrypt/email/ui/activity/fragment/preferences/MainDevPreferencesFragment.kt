@@ -33,7 +33,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -46,7 +46,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
     setPreferencesFromResource(R.xml.dev_preferences, rootKey)
   }
 
-  override fun onDisplayPreferenceDialog(preference: Preference?) {
+  override fun onDisplayPreferenceDialog(preference: Preference) {
     if (preference is BuildConfInfoPreference) {
       val dialogFragment = BuildConfigInfoPreferencesFragment.newInstance(preference.getKey())
       dialogFragment.setTargetFragment(this, 0)

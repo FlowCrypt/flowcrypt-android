@@ -46,10 +46,10 @@ class BuildConfigInfoPreferencesFragment : PreferenceDialogFragmentCompat() {
     msg = formatter.toString()
   }
 
-  override fun onPrepareDialogBuilder(builder: AlertDialog.Builder?) {
+  override fun onPrepareDialogBuilder(builder: AlertDialog.Builder) {
     super.onPrepareDialogBuilder(builder)
-    builder?.setMessage(msg)
-    builder?.setNegativeButton(null, null)
+    builder.setMessage(msg)
+    builder.setNegativeButton(null, null)
   }
 
   override fun onDialogClosed(positiveResult: Boolean) {

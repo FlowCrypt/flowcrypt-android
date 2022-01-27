@@ -45,8 +45,8 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
     (activity as AppCompatActivity?)?.supportActionBar?.title = getString(R.string.notifications)
   }
 
-  override fun onPreferenceClick(preference: Preference?): Boolean {
-    return when (preference?.key) {
+  override fun onPreferenceClick(preference: Preference): Boolean {
+    return when (preference.key) {
       Constants.PREF_KEY_MANAGE_NOTIFICATIONS -> {
         val intent = Intent()
         intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
@@ -59,8 +59,8 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
     }
   }
 
-  override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
-    return when (preference?.key) {
+  override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
+    return when (preference.key) {
       Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER -> {
         val pref = preference as ListPreference
         preference.setSummary(generateSummary(newValue.toString(), pref.entryValues, pref.entries))
