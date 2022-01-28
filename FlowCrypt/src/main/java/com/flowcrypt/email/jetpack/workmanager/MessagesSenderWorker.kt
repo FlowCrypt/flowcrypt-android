@@ -107,7 +107,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
         if (queuedMsgs.isNotEmpty() || sentButNotSavedMsgs.isNotEmpty()) {
           try {
-            setForeground(genForegroundInfo(account))
+            setForeground(genForegroundInfoInternal(account.email, false))
           } catch (e: IllegalStateException) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
               if (e is ForegroundServiceStartNotAllowedException) {
@@ -172,19 +172,36 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
       }
     }
 
-  private fun genForegroundInfo(account: AccountEntity): ForegroundInfo {
-    val title = applicationContext.getString(R.string.sending_email)
+  override suspend fun getForegroundInfo(): ForegroundInfo {
+    /*we should add implementation of this method if we use
+    setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST).
+    Android 11 and less uses it to show a notification*/
+    return genForegroundInfoInternal()
+  }
+
+  private fun genForegroundInfoInternal(
+    email: String? = null,
+    isDefault: Boolean = true
+  ): ForegroundInfo {
     val notification = NotificationCompat.Builder(
       applicationContext,
       NotificationChannelManager.CHANNEL_ID_SYNC
     )
-      .setContentTitle(title)
-      .setTicker(title)
-      .setSmallIcon(R.drawable.ic_sending_email_grey_24dp)
-      .setOngoing(true)
-      .setSubText(account.email)
       .setProgress(0, 0, true)
-      .build()
+      .setOngoing(true)
+      .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+      .apply {
+        val title =
+          applicationContext.getString(if (isDefault) R.string.preparing else R.string.sending_email)
+        setContentTitle(title)
+        if (isDefault) {
+          setSmallIcon(android.R.drawable.stat_notify_sync)
+        } else {
+          setTicker(title)
+          setSmallIcon(R.drawable.ic_sending_email_grey_24dp)
+          setSubText(email)
+        }
+      }.build()
 
     return ForegroundInfo(NOTIFICATION_ID, notification)
   }
@@ -528,7 +545,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
   companion object {
     private val TAG = MessagesSenderWorker::class.java.simpleName
-    private const val NOTIFICATION_ID = -10000
+    private const val NOTIFICATION_ID = R.id.notification_id_sending_msgs_worker
     val NAME = MessagesSenderWorker::class.java.simpleName
 
     fun enqueue(context: Context, forceSending: Boolean = false) {
