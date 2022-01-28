@@ -37,4 +37,5 @@
     <item name="notification_id_has_failed_outgoing_msgs" type="id" />
     <item name="notification_id_auth_failure" type="id" />
     <item name="notification_id_passphrase_service" type="id" />
+    <item name="notification_id_sending_msgs_worker" type="id" />
 </resources>
