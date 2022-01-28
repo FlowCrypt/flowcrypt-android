@@ -191,11 +191,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
       .setOngoing(true)
       .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
       .apply {
-        val title =
-          applicationContext.getString(if (isDefault) R.string.preparing else R.string.sending_email)
+        val title = applicationContext.getString(
+          if (isDefault) R.string.synchronization else R.string.sending_email
+        )
         setContentTitle(title)
         if (isDefault) {
-          setSmallIcon(android.R.drawable.stat_notify_sync)
+          setSmallIcon(R.drawable.ic_synchronization_grey_24dp)
         } else {
           setTicker(title)
           setSmallIcon(R.drawable.ic_sending_email_grey_24dp)
@@ -560,7 +561,16 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           if (forceSending) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
           OneTimeWorkRequestBuilder<MessagesSenderWorker>()
             .setConstraints(constraints)
-            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .apply {
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                /*we have to use it due to
+                 https://developer.android.com/guide/components/foreground-services#background-start-restrictions
+                 We don't use it by default to prevent displaying a notification every time
+                 when this job will be started. We should try to show a notification only if we have
+                 at least one outgoing message that is actively sending*/
+                setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+              }
+            }
             .build()
         )
     }
