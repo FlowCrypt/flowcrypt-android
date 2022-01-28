@@ -120,7 +120,7 @@ class PgpKeyTest {
   @Test
   fun testReadInvalidPrivateKey() {
     assertThrows(PGPException::class.java) {
-      val encryptedKeyText = loadResourceAsString("keys/issue-1669-malformed.private.gpg-key")
+      val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
       val decryptedKeyText = PgpKey.decryptKey(encryptedKeyText, Passphrase.fromPassword("123"))
       // should not reach here
       val actual = PgpKey.parseKeys(decryptedKeyText)
