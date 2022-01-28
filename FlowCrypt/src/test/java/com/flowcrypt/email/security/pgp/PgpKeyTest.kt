@@ -10,9 +10,11 @@ import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.TestUtil
+import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -113,5 +115,16 @@ class PgpKeyTest {
     val keyText = loadResourceAsString("keys/issue-1358.public.gpg-key")
     val actual = PgpKey.parseKeys(keyText)
     assertEquals(1, actual.getAllKeys().size)
+  }
+
+  @Test
+  fun testReadInvalidPrivateKey() {
+    assertThrows(PGPException::class.java) {
+      val encryptedKeyText = loadResourceAsString("keys/issue-1669-malformed.private.gpg-key")
+      val decryptedKeyText = PgpKey.decryptKey(encryptedKeyText, Passphrase.fromPassword("123"))
+      // should not reach here
+      val actual = PgpKey.parseKeys(decryptedKeyText)
+      assertEquals(1, actual.getAllKeys().size)
+    }
   }
 }
