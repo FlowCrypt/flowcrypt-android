@@ -5,10 +5,13 @@
 
 package com.flowcrypt.email.service
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.model.KeysStorage
@@ -18,7 +21,6 @@ import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
@@ -38,26 +40,13 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
   override fun onCreate() {
     super.onCreate()
     keysStorage = KeysStorageImpl.getInstance(applicationContext)
-    runAsForeground()
     runChecking()
   }
 
-  private fun runAsForeground() {
-    val pendingIntent: PendingIntent =
-      Intent(this, EmailManagerActivity::class.java).let { notificationIntent ->
-        PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
-      }
-
-    val notification: Notification = Notification.Builder(
-      this,
-      NotificationChannelManager.CHANNEL_ID_SILENT
-    )
-      .setContentTitle(getString(R.string.active_passphrase_session))
-      .setSmallIcon(R.drawable.ic_baseline_password_24dp)
-      .setContentIntent(pendingIntent)
-      .build()
-
-    startForeground(R.id.notification_id_passphrase_service, notification)
+  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    val superStartedState = super.onStartCommand(intent, flags, startId)
+    startForeground(R.id.notification_id_passphrase_service, prepareNotification())
+    return superStartedState
   }
 
   private fun runChecking() {
@@ -79,6 +68,22 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
     }.flowOn(Dispatchers.Default)
   }
 
+  private fun prepareNotification(): Notification {
+    return NotificationCompat.Builder(this, NotificationChannelManager.CHANNEL_ID_SILENT)
+      .setContentTitle(getString(R.string.active_passphrase_session))
+      .setSmallIcon(R.drawable.ic_baseline_password_24dp)
+      .setContentIntent(
+        PendingIntent.getActivity(
+          this,
+          0,
+          Intent(this, EmailManagerActivity::class.java),
+          PendingIntent.FLAG_IMMUTABLE
+        )
+      )
+      .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+      .build()
+  }
+
   companion object {
     /**
      * We will run checking every minute.
@@ -92,7 +97,17 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
      */
     fun start(context: Context) {
       val startEmailServiceIntent = Intent(context, PassPhrasesInRAMService::class.java)
-      context.startForegroundService(startEmailServiceIntent)
+      try {
+        context.startForegroundService(startEmailServiceIntent)
+      } catch (e: Exception) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          if (e is ForegroundServiceStartNotAllowedException) {
+            /*Because this service should be restarted by the system we can skip this exception.
+             It seems this service was started manually after the app crash via the trigger.*/
+            e.printStackTrace()
+          }
+        } else throw e
+      }
     }
 
     /**

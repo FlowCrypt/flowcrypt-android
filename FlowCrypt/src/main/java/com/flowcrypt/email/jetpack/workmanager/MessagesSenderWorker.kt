@@ -6,13 +6,16 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.accounts.AuthenticatorException
+import android.app.ForegroundServiceStartNotAllowedException
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.Constants
@@ -102,8 +105,20 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           )
         )
 
-        if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
-          setForeground(genForegroundInfo(account))
+        if (queuedMsgs.isNotEmpty() || sentButNotSavedMsgs.isNotEmpty()) {
+          try {
+            setForeground(genForegroundInfoInternal(account.email, false))
+          } catch (e: IllegalStateException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+              if (e is ForegroundServiceStartNotAllowedException) {
+                //see for details https://developer.android.com/topic/libraries/architecture/workmanager/how-to/define-work#coroutineworker
+                LogsUtil.d(
+                  TAG, "It seems the app started this worker while running in the background." +
+                      " We can't show a notification in that case."
+                )
+              }
+            }
+          }
 
           if (account.useAPI) {
             when (account.accountType) {
@@ -157,19 +172,37 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
       }
     }
 
-  private fun genForegroundInfo(account: AccountEntity): ForegroundInfo {
-    val title = applicationContext.getString(R.string.sending_email)
+  override suspend fun getForegroundInfo(): ForegroundInfo {
+    /*we should add implementation of this method if we use
+    setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST).
+    Android 11 and less uses it to show a notification*/
+    return genForegroundInfoInternal()
+  }
+
+  private fun genForegroundInfoInternal(
+    email: String? = null,
+    isDefault: Boolean = true
+  ): ForegroundInfo {
     val notification = NotificationCompat.Builder(
       applicationContext,
       NotificationChannelManager.CHANNEL_ID_SYNC
     )
-      .setContentTitle(title)
-      .setTicker(title)
-      .setSmallIcon(R.drawable.ic_sending_email_grey_24dp)
-      .setOngoing(true)
-      .setSubText(account.email)
       .setProgress(0, 0, true)
-      .build()
+      .setOngoing(true)
+      .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+      .apply {
+        val title = applicationContext.getString(
+          if (isDefault) R.string.synchronization else R.string.sending_email
+        )
+        setContentTitle(title)
+        if (isDefault) {
+          setSmallIcon(R.drawable.ic_synchronization_grey_24dp)
+        } else {
+          setTicker(title)
+          setSmallIcon(R.drawable.ic_sending_email_grey_24dp)
+          setSubText(email)
+        }
+      }.build()
 
     return ForegroundInfo(NOTIFICATION_ID, notification)
   }
@@ -513,7 +546,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
   companion object {
     private val TAG = MessagesSenderWorker::class.java.simpleName
-    private const val NOTIFICATION_ID = -10000
+    private const val NOTIFICATION_ID = R.id.notification_id_sending_msgs_worker
     val NAME = MessagesSenderWorker::class.java.simpleName
 
     fun enqueue(context: Context, forceSending: Boolean = false) {
@@ -528,6 +561,16 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           if (forceSending) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
           OneTimeWorkRequestBuilder<MessagesSenderWorker>()
             .setConstraints(constraints)
+            .apply {
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                /*we have to use it due to
+                 https://developer.android.com/guide/components/foreground-services#background-start-restrictions
+                 We don't use it by default to prevent displaying a notification every time
+                 when this job will be started. We should try to show a notification only if we have
+                 at least one outgoing message that is actively sending*/
+                setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+              }
+            }
             .build()
         )
     }
