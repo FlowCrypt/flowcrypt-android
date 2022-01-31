@@ -32,7 +32,7 @@ class ExperimentalSettingsFragment : BasePreferenceFragment() {
     setPreferencesFromResource(R.xml.preferences_experimental_settings, rootKey)
 
     if (GeneralUtil.isDebugBuild()) {
-      val preference = Preference(context)
+      val preference = Preference(requireContext())
       preference.setTitle(R.string.action_dev_settings)
       preference.isIconSpaceReserved = false
       preference.setOnPreferenceClickListener {

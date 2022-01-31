@@ -1864,7 +1864,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       encryptionType = composeMsgViewModel.msgEncryptionType,
       messageType = args.messageType,
       replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
-      uid = EmailUtil.genOutboxUID(context),
+      uid = EmailUtil.genOutboxUID(requireContext()),
       password = if (isPasswordProtectedFunctionalityEnabled()) {
         composeMsgViewModel.webPortalPasswordStateFlow.value.toString().toCharArray()
       } else null
