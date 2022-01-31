@@ -130,7 +130,7 @@ android {
         dev {
             versionNameSuffix "_dev"
             minSdkVersion rootProject.ext.minSdkVersion
-            resConfigs "en", "xxhdpi"
+            resConfigs 'en', 'xxhdpi'
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
@@ -213,17 +213,21 @@ android {
         freeCompilerArgs = ['-Xjvm-default=enable']
     }
 
-    lintOptions {
-        warningsAsErrors true
+    packagingOptions {
+        resources {
+            excludes += [
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE.md',
+                    'META-INF/NOTICE.md',
+                    'META-INF/*.SF',
+                    'META-INF/*.DSA',
+                    'META-INF/*.RSA'
+            ]
+        }
     }
 
-    packagingOptions {
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/LICENSE.md'
-        exclude 'META-INF/NOTICE.md'
-        exclude 'META-INF/*.SF'
-        exclude 'META-INF/*.DSA'
-        exclude 'META-INF/*.RSA'
+    lint {
+        warningsAsErrors true
     }
 
     testOptions {
@@ -425,7 +429,7 @@ dependencies {
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
 
-    implementation ('org.pgpainless:pgpainless-core:1.0.1') {
+    implementation('org.pgpainless:pgpainless-core:1.0.1') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }
