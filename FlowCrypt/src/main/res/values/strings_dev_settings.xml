@@ -13,6 +13,7 @@
     <string name="pref_key_is_http_log_enabled" translatable="false">pref_key_is_http_log_enabled</string>
     <string name="pref_key_http_log_level" translatable="false">pref_key_http_log_level</string>
     <string name="pref_key_is_acra_enabled" translatable="false">pref_key_is_acra_enabled</string>
+    <string name="pref_key_is_detect_memory_leak_enabled" translatable="false">pref_key_is_detect_memory_leak_enabled</string>
 
     <!-- Strings related to Settings -->
     <string name="pref_title_general" translatable="false">General</string>
@@ -30,4 +31,5 @@
     <string name="pref_summary_enabled">Enabled</string>
     <string name="pref_summary_disabled">Disabled</string>
     <string name="pref_title_acra" translatable="false">Application Crash Reports</string>
+    <string name="pref_title_leak_canary" translatable="false">LeakCanary</string>
 </resources>

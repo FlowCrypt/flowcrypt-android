@@ -51,6 +51,7 @@ class Constants {
     const val PREF_KEY_IS_MAIL_DEBUG_ENABLED = "preferences_key_is_mail_debug_enabled"
     const val PREF_KEY_IS_HTTP_LOG_ENABLED = "pref_key_is_http_log_enabled"
     const val PREF_KEY_HTTP_LOG_LEVEL = "pref_key_http_log_level"
+    const val PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED = "pref_key_is_detect_memory_leak_enabled"
 
     const val PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS = "preferences_key_temp_last_auth_credentials"
 

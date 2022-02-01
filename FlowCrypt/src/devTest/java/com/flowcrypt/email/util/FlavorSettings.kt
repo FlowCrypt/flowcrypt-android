@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util
 
-import com.flowcrypt.email.api.email.JavaEmailConstants
+import android.content.Context
 import java.util.Properties
 
 /**
@@ -18,4 +18,5 @@ object FlavorSettings : EnvironmentSettings {
   override fun sslTrustedDomains(): List<String> = emptyList()
   override fun getFlavorPropertiesForSession() = Properties()
   override fun isGMailAPIEnabled(): Boolean = false
+  override fun configure(context: Context) {}
 }
