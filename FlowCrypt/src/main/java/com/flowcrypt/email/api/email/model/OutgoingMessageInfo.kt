@@ -27,7 +27,7 @@ data class OutgoingMessageInfo constructor(
   val toRecipients: List<InternetAddress>,
   val ccRecipients: List<InternetAddress>? = null,
   val bccRecipients: List<InternetAddress>? = null,
-  val from: String,
+  val from: InternetAddress,
   val atts: List<AttachmentInfo>? = null,
   val forwardedAtts: List<AttachmentInfo>? = null,
   val encryptionType: MessageEncryptionType,
@@ -60,7 +60,7 @@ data class OutgoingMessageInfo constructor(
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>,
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-    parcel.readString()!!,
+    parcel.readSerializable() as InternetAddress,
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
@@ -82,7 +82,7 @@ data class OutgoingMessageInfo constructor(
       writeValue(toRecipients)
       writeValue(ccRecipients)
       writeValue(bccRecipients)
-      writeString(from)
+      writeSerializable(from)
       writeValue(atts)
       writeValue(forwardedAtts)
       writeParcelable(encryptionType, flags)
@@ -138,15 +138,8 @@ data class OutgoingMessageInfo constructor(
     return result
   }
 
-  companion object {
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<OutgoingMessageInfo> =
-      object : Parcelable.Creator<OutgoingMessageInfo> {
-        override fun createFromParcel(source: Parcel): OutgoingMessageInfo =
-          OutgoingMessageInfo(source)
-
-        override fun newArray(size: Int): Array<OutgoingMessageInfo?> = arrayOfNulls(size)
-      }
+  companion object CREATOR : Parcelable.Creator<OutgoingMessageInfo> {
+    override fun createFromParcel(parcel: Parcel) = OutgoingMessageInfo(parcel)
+    override fun newArray(size: Int): Array<OutgoingMessageInfo?> = arrayOfNulls(size)
   }
 }

@@ -21,8 +21,8 @@ fun MimeMessage.getAddresses(type: Message.RecipientType): List<String> {
     ?.mapNotNull { (it as? InternetAddress)?.address?.lowercase() } ?: emptyList()
 }
 
-fun MimeMessage.getFromAddress(): String {
-  return (from.first() as? InternetAddress)?.address?.lowercase()
+fun MimeMessage.getFromAddress(): InternetAddress {
+  return (from.first() as? InternetAddress)
     ?: throw IllegalStateException("'from' address is undefined")
 }
 

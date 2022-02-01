@@ -15,6 +15,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
+import androidx.preference.SwitchPreference
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 
@@ -44,6 +46,8 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.dev_preferences, rootKey)
+    findPreference<SwitchPreference>(Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED)?.isVisible =
+      BuildConfig.FLAVOR == "dev"
   }
 
   override fun onDisplayPreferenceDialog(preference: Preference) {
@@ -70,7 +74,8 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
     when (key) {
       Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED,
       Constants.PREF_KEY_IS_ACRA_ENABLED,
-      Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED -> showApplicationDetailsSettingsActivity()
+      Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED,
+      Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED -> showApplicationDetailsSettingsActivity()
     }
   }
 

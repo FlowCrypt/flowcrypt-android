@@ -645,7 +645,7 @@ class EmailUtil {
       outgoingMsgInfo: OutgoingMessageInfo
     ): Message {
       val session = Session.getInstance(Properties())
-      val senderEmail = outgoingMsgInfo.from
+      val senderEmail = outgoingMsgInfo.from.address
       var pubKeys: List<String>? = null
       var prvKeys: List<String>? = null
       var ringProtector: SecretKeyRingProtector? = null
@@ -978,7 +978,7 @@ class EmailUtil {
     ): MimeMessage {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
-      msg.setFrom(InternetAddress(info.from))
+      msg.setFrom(info.from)
       msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
@@ -996,7 +996,7 @@ class EmailUtil {
       protector: SecretKeyRingProtector? = null
     ): Message {
       val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
-      reply.setFrom(InternetAddress(info.from))
+      reply.setFrom(info.from)
       reply.setContent(MimeMultipart().apply {
         addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
       })

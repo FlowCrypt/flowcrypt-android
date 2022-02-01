@@ -139,15 +139,15 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             //start of creating and uploading a password-protected msg to FES
             val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
-            val domain = EmailUtil.getDomain(fromAddress)
+            val domain = EmailUtil.getDomain(fromAddress.address)
             val idToken = getGoogleIdToken()
             val replyToken = fetchReplyToken(apiRepository, domain, idToken)
             val replyInfoData = ReplyInfoData(
-              sender = fromAddress,
+              sender = fromAddress.address,
               recipient = (toCandidates + ccCandidates + bccCandidates)
                 .mapNotNull { (it as? InternetAddress)?.address }
                 .filterNot {
-                  it.equals(fromAddress, true)
+                  it.equals(fromAddress.address, true)
                 },
               subject = plainMimeMsgWithAttachments.subject,
               token = replyToken
@@ -211,16 +211,16 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
   private fun genMessageUploadRequest(
     replyToken: String,
-    fromAddress: String,
+    fromAddress: Address,
     toCandidates: Array<Address>,
     ccCandidates: Array<Address>,
     bccCandidates: Array<Address>
   ) = MessageUploadRequest(
     associateReplyToken = replyToken,
-    from = fromAddress,
-    to = toCandidates.map { (it as InternetAddress).address },
-    cc = ccCandidates.map { (it as InternetAddress).address },
-    bcc = bccCandidates.map { (it as InternetAddress).address }
+    from = (fromAddress as InternetAddress).toString(),
+    to = toCandidates.map { (it as InternetAddress).toString() },
+    cc = ccCandidates.map { (it as InternetAddress).toString() },
+    bcc = bccCandidates.map { (it as InternetAddress).toString() }
   )
 
   private suspend fun handleExceptionsForMessage(

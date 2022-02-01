@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util
 
+import android.content.Context
 import java.util.Properties
 
 /**
@@ -17,4 +18,5 @@ interface EnvironmentSettings {
   fun sslTrustedDomains(): List<String>
   fun getFlavorPropertiesForSession(): Properties
   fun isGMailAPIEnabled(): Boolean
+  fun configure(context: Context)
 }
