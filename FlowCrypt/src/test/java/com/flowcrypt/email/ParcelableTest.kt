@@ -64,7 +64,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
           InternetAddress("bcc@test.com"),
           InternetAddress("bcc1@test.com")
         ),
-        from = "from@test.com",
+        from = InternetAddress("from@test.com"),
         atts = null,
         forwardedAtts = listOf(),
         encryptionType = MessageEncryptionType.STANDARD,

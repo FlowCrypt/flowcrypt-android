@@ -22,6 +22,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.replaceWithCachedRecipients
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
@@ -44,7 +45,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.util.ArrayList
 import java.util.UUID
 import javax.mail.Message
 
@@ -76,12 +76,12 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     LogsUtil.d(TAG, "onHandleWork")
 
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    val outgoingMsgInfo =
+    val originalOutgoingMsgInfo =
       intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
         ?: return
-    val accountEntity =
-      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.lowercase())
-        ?: return
+    val outgoingMsgInfo = originalOutgoingMsgInfo.replaceWithCachedRecipients(applicationContext)
+    val accountEntity = roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.lowercase())
+      ?: return
 
     val uid = outgoingMsgInfo.uid
     val email = accountEntity.email
@@ -271,7 +271,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     var pubKeys: List<String>? = null
 
     if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-      val senderEmail = outgoingMsgInfo.from
+      val senderEmail = outgoingMsgInfo.from.address
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
       pubKeys = mutableListOf()
       pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(applicationContext, recipients))

@@ -12,6 +12,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko
@@ -50,6 +51,10 @@ data class RecipientEntity(
 
   override fun describeContents(): Int {
     return 0
+  }
+
+  fun toInternetAddress(): InternetAddress {
+    return InternetAddress(email, name)
   }
 
   companion object CREATOR : Parcelable.Creator<RecipientEntity> {
