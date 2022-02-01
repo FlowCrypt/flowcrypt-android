@@ -45,6 +45,9 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients WHERE email = :email")
   fun getRecipientByEmail(email: String): RecipientEntity?
 
+  @Query("SELECT * FROM recipients WHERE email IN (:emails)")
+  fun getRecipientsByEmails(emails: Collection<String>): List<RecipientEntity>
+
   @Transaction
   @Query("SELECT * FROM recipients WHERE email = :email")
   fun getRecipientsWithPubKeysByEmailsLD(email: String): LiveData<RecipientWithPubKeys?>

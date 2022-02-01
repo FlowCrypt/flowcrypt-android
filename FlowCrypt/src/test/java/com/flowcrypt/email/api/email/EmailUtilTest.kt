@@ -63,7 +63,7 @@ class EmailUtilTest {
       toRecipients = toRecipients,
       ccRecipients = ccRecipients,
       bccRecipients = bccRecipients,
-      from = accountEntity.email,
+      from = InternetAddress(accountEntity.email),
       encryptionType = MessageEncryptionType.STANDARD,
       messageType = MessageType.NEW,
       uid = 1000
@@ -126,7 +126,7 @@ class EmailUtilTest {
       subject = "subject that will be overridden",
       msg = replyText,
       toRecipients = replyToMIME.from.toList().map { it as InternetAddress },
-      from = accountEntity.email,
+      from = InternetAddress(accountEntity.email),
       encryptionType = MessageEncryptionType.STANDARD,
       messageType = MessageType.REPLY,
       uid = 1000
