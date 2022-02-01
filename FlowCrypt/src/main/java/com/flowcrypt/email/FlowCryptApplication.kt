@@ -22,6 +22,7 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.CacheManager
+import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import org.acra.ACRA
@@ -58,6 +59,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     IMAPStoreManager.init(this)
     SyncInboxWorker.enqueuePeriodic(this)
     enqueueMsgsCacheCleanerWorker()
+    FlavorSettings.configure(this)
   }
 
   private fun setupGlobalSettingsForJavaMail() {
