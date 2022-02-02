@@ -43,7 +43,7 @@ object PgpPwd {
    */
   fun checkForWeakPassphrase(passphrase: Passphrase) {
     val measure = Zxcvbn().measure(
-      passphrase.asString,
+      passphrase.asString ?: "",
       listOf(*Constants.PASSWORD_WEAK_WORDS)
     ).guesses
     val passwordStrength = estimateStrength(measure)
