@@ -10,17 +10,20 @@ import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.TestUtil
-import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import kotlin.jvm.Throws
 
 class PgpKeyTest {
   companion object {
@@ -119,12 +122,23 @@ class PgpKeyTest {
 
   @Test
   fun testReadCorruptedPrivateKey() {
-    assertThrows(PGPException::class.java) {
-      val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
-      val decryptedKeyText = PgpKey.decryptKey(encryptedKeyText, Passphrase.fromPassword("123"))
-      // should not reach here
-      val actual = PgpKey.parseKeys(decryptedKeyText)
-      assertEquals(1, actual.getAllKeys().size)
+    val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
+    val passphrase = Passphrase.fromPassword("123")
+    assertThrows(KeyIntegrityException::class.java) {
+      checkSecretKeyIntegrity(encryptedKeyText, passphrase)
+    }
+  }
+
+  @Throws(KeyIntegrityException::class)
+  private fun checkSecretKeyIntegrity(armored: String, passphrase: Passphrase) {
+    val collection = PGPainless.readKeyRing().keyRingCollection(armored, false)
+    val secretKeyRings = collection.pgpSecretKeyRingCollection
+    if (secretKeyRings.size() == 0) throw KeyIntegrityException()
+    for (keyRing in secretKeyRings) {
+      val protector = SecretKeyRingProtector.unlockEachKeyWith(passphrase, keyRing)
+      for (key in keyRing.secretKeys) {
+        UnlockSecretKey.unlockSecretKey(key, protector)
+      }
     }
   }
 }
