@@ -13,8 +13,10 @@ import com.flowcrypt.email.util.TestUtil
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
@@ -113,5 +115,14 @@ class PgpKeyTest {
     val keyText = loadResourceAsString("keys/issue-1358.public.gpg-key")
     val actual = PgpKey.parseKeys(keyText)
     assertEquals(1, actual.getAllKeys().size)
+  }
+
+  @Test
+  fun testReadCorruptedPrivateKey() {
+    val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
+    val passphrase = Passphrase.fromPassword("123")
+    assertThrows(KeyIntegrityException::class.java) {
+      PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
+    }
   }
 }
