@@ -33,6 +33,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import org.apache.commons.io.IOUtils
+import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.util.Passphrase
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -286,7 +287,18 @@ class CheckKeysActivity : BaseActivity(), View.OnClickListener,
 
                 } else {
                   if (resultKeys.size == 1) {
-                    showInfoSnackbar(rootView, resultKeys.first().e?.message)
+                    when (resultKeys.first().e) {
+                      is KeyIntegrityException -> {
+                        showInfoDialogFragment(
+                          dialogMsg = getString(
+                            R.string.warning_when_import_invalid_prv_key,
+                            getString(R.string.support_email)
+                          )
+                        )
+                      }
+
+                      else -> showInfoSnackbar(rootView, resultKeys.first().e?.message)
+                    }
                   } else {
                     showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
                   }

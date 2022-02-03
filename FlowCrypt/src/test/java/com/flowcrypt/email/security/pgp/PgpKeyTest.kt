@@ -125,5 +125,4 @@ class PgpKeyTest {
       PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
     }
   }
-
 }

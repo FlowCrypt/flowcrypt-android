@@ -17,6 +17,7 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.exception.KeyIntegrityException
@@ -25,7 +26,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.util.Passphrase
 import java.io.InputStream
-import kotlin.jvm.Throws
 
 @Suppress("unused")
 object PgpKey {
@@ -120,6 +120,14 @@ object PgpKey {
     val collection = PGPainless.readKeyRing().keyRingCollection(armored, false)
     val secretKeyRings = collection.pgpSecretKeyRingCollection
     if (secretKeyRings.size() == 0) throw KeyIntegrityException()
+    checkSecretKeyIntegrity(secretKeyRings, passphrase)
+  }
+
+  @Throws(KeyIntegrityException::class)
+  fun checkSecretKeyIntegrity(
+    secretKeyRings: PGPSecretKeyRingCollection,
+    passphrase: Passphrase
+  ) {
     for (keyRing in secretKeyRings) {
       val protector = SecretKeyRingProtector.unlockEachKeyWith(passphrase, keyRing)
       for (key in keyRing.secretKeys) {

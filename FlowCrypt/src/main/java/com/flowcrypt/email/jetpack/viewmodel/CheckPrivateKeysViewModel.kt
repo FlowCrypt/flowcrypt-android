@@ -20,6 +20,7 @@ import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.util.Passphrase
 
 /**
@@ -52,7 +53,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
       val resultList = mutableListOf<CheckResult>()
       for (keyDetails in keys) {
         val copy = keyDetails.copy()
-        var e: Exception? = null
+        var e: Throwable? = null
         if (copy.isPrivate) {
           if (copy.passphraseType == null) {
             e = IllegalArgumentException(context.getString(R.string.passphrase_type_undefined))
@@ -66,15 +67,22 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
               } else {
                 try {
                   PgpKey.decryptKey(prvKey, passphrase)
+                  //https://github.com/FlowCrypt/flowcrypt-android/issues/1669
+                  PgpKey.checkSecretKeyIntegrity(prvKey, passphrase)
                   copy.tempPassphrase = passphrase.chars
-                } catch (ex: Exception) {
+                } catch (ex: Throwable) {
                   //to prevent leak sensitive info we skip printing stack trace for release builds
                   if (GeneralUtil.isDebugBuild()) {
                     ex.printStackTrace()
                   }
-                  e = WrongPassPhraseException(
-                    message = context.getString(R.string.password_is_incorrect), cause = ex
-                  )
+
+                  e = when (ex) {
+                    is KeyIntegrityException -> ex
+
+                    else -> WrongPassPhraseException(
+                      message = context.getString(R.string.password_is_incorrect), cause = ex
+                    )
+                  }
                 }
               }
             }
@@ -96,6 +104,6 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
 
   data class CheckResult(
     val pgpKeyDetails: PgpKeyDetails,
-    val passphrase: String, val e: Exception? = null
+    val passphrase: String, val e: Throwable? = null
   )
 }
