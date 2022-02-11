@@ -18,9 +18,9 @@ import com.google.gson.annotations.SerializedName
  */
 data class DecryptErrorMsgBlock(
   @Expose override val content: String?,
-  @Expose override val complete: Boolean,
   @SerializedName("decryptErr") @Expose val decryptErr: DecryptError?,
-  @Expose override val error: MsgBlockError? = null
+  @Expose override val error: MsgBlockError? = null,
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
 
   @Expose
@@ -28,9 +28,9 @@ data class DecryptErrorMsgBlock(
 
   constructor(source: Parcel) : this(
     source.readString(),
-    1 == source.readInt(),
     source.readParcelable<DecryptError>(DecryptError::class.java.classLoader),
     source.readParcelable(MsgBlockError::class.java.classLoader),
+    1 == source.readInt()
   )
 
   override fun describeContents(): Int {
@@ -40,9 +40,9 @@ data class DecryptErrorMsgBlock(
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeParcelable(type, flags)
     parcel.writeString(content)
-    parcel.writeByte(if (complete) 1 else 0)
     parcel.writeParcelable(decryptErr, flags)
     parcel.writeParcelable(error, flags)
+    parcel.writeInt(if (isOpenPGPMimeSigned) 1 else 0)
   }
 
   companion object CREATOR : Parcelable.Creator<DecryptErrorMsgBlock> {

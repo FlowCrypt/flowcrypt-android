@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.security.pgp
 
-import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
@@ -182,7 +181,7 @@ object PgpKey {
 
   // Restored here some previous code. Not sure if PGPainless can help with this.
   fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {
-    val normalizedArmored = PgpArmor.normalize(armored, MsgBlock.Type.UNKNOWN)
+    val normalizedArmored = ""//PgpArmor.normalize(armored, MsgBlock.Type.UNKNOWN)
     val keys = parseKeys(normalizedArmored, false).getAllKeys().toMutableList()
 
     // Prevent key bloat by removing all non-self certifications

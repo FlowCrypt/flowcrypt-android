@@ -36,6 +36,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.javax.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -59,7 +60,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.InputStream
-import java.util.*
+import java.util.Collections
+import java.util.LinkedList
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -211,7 +213,7 @@ class MsgDetailsViewModel(
                   text = processedMimeMessageResult.text,
                   //subject = parseDecryptedMsgResult.subject,
                   msgBlocks = processedMimeMessageResult.blocks,
-                  encryptionType = if (processedMimeMessageResult.verificationResult.isEncrypted) {
+                  encryptionType = if (processedMimeMessageResult.verificationResult.hasEncryptedParts) {
                     MessageEncryptionType.ENCRYPTED
                   } else {
                     MessageEncryptionType.STANDARD
@@ -521,7 +523,7 @@ class MsgDetailsViewModel(
 
             msgSize = originalMsg.size
 
-            if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART) && !originalMsg.isOpenPGPMimeSigned()) {
               val rawHeaders = TextUtils.join("\n", Collections.list(originalMsg.allHeaderLines))
               if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
               val customMsg = CustomMimeMessage(connection.session, rawHeaders)

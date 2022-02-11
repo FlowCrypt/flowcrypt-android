@@ -16,8 +16,8 @@ import com.google.gson.annotations.Expose
  *         E-mail: DenBond7@gmail.com
  */
 data class VerificationResult(
-  @Expose val isEncrypted: Boolean,
-  @Expose val isSigned: Boolean,
+  @Expose val hasEncryptedParts: Boolean,
+  @Expose val hasSignedParts: Boolean,
   @Expose val hasMixedSignatures: Boolean,
   @Expose val isPartialSigned: Boolean,
   @Expose val hasUnverifiedSignatures: Boolean,
@@ -33,8 +33,8 @@ data class VerificationResult(
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeByte(if (isEncrypted) 1 else 0)
-    parcel.writeByte(if (isSigned) 1 else 0)
+    parcel.writeByte(if (hasEncryptedParts) 1 else 0)
+    parcel.writeByte(if (hasSignedParts) 1 else 0)
     parcel.writeByte(if (hasMixedSignatures) 1 else 0)
     parcel.writeByte(if (isPartialSigned) 1 else 0)
     parcel.writeByte(if (hasUnverifiedSignatures) 1 else 0)

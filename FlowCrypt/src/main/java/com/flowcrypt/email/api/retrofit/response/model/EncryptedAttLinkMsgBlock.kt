@@ -12,7 +12,8 @@ import com.google.gson.annotations.Expose
 
 data class EncryptedAttLinkMsgBlock(
   @Expose override val attMeta: AttMeta,
-  @Expose override val error: MsgBlockError? = null
+  @Expose override val error: MsgBlockError? = null,
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : AttMsgBlock {
 
   @Expose
@@ -21,17 +22,16 @@ data class EncryptedAttLinkMsgBlock(
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.ENCRYPTED_ATT_LINK
 
-  @Expose
-  override val complete: Boolean = true
-
   constructor(source: Parcel) : this(
     source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    1 == source.readInt()
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeParcelable(attMeta, flags)
     parcel.writeParcelable(error, flags)
+    parcel.writeInt(if (isOpenPGPMimeSigned) 1 else 0)
   }
 
   override fun describeContents(): Int {

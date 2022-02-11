@@ -69,6 +69,7 @@ class JavaEmailConstants {
     const val OAUTH2 = "oauth2:"
 
     const val MIME_TYPE_MULTIPART = "multipart/*"
+    const val MIME_TYPE_MULTIPART_ALTERNATIVE = "multipart/alternative"
     const val MIME_TYPE_TEXT_PLAIN = "text/plain"
     const val MIME_TYPE_TEXT_HTML = "text/html"
 

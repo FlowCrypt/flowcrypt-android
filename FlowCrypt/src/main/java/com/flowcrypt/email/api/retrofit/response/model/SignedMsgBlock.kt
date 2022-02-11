@@ -15,62 +15,32 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata
  * Message block which represents content with a signature.
  */
 data class SignedMsgBlock(
-  @Expose val signedType: Type,
   @Expose override val content: String?,
-  @Expose override val complete: Boolean,
-  @Expose val signature: String?,
-  @Expose override val error: MsgBlockError? = null
+  @Expose val signature: String? = null,
+  @Expose override val error: MsgBlockError? = null,
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
 
   var openPgpMetadata: OpenPgpMetadata? = null
 
   @Expose
-  override val type: MsgBlock.Type = when (signedType) {
-    Type.SIGNED_MSG -> MsgBlock.Type.SIGNED_MSG
-    Type.SIGNED_TEXT -> MsgBlock.Type.SIGNED_TEXT
-    Type.SIGNED_HTML -> MsgBlock.Type.SIGNED_HTML
-  }
+  override val type: MsgBlock.Type = MsgBlock.Type.SIGNED_CONTENT
 
   constructor(source: Parcel) : this(
-    source.readParcelable<Type>(Type::class.java.classLoader)
-      ?: throw IllegalArgumentException("Undefined type"),
     source.readString(),
-    1 == source.readInt(),
     source.readString(),
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    1 == source.readInt()
   )
 
   override fun describeContents() = 0
 
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeParcelable(type, flags)
-    writeParcelable(signedType, flags)
     writeString(content)
-    writeInt(if (complete) 1 else 0)
     writeString(signature)
     writeParcelable(error, flags)
-  }
-
-  enum class Type : Parcelable {
-    SIGNED_MSG,
-    SIGNED_TEXT,
-    SIGNED_HTML;
-
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
-
-    companion object {
-      @JvmField
-      val CREATOR: Parcelable.Creator<Type> = object : Parcelable.Creator<Type> {
-        override fun createFromParcel(source: Parcel): Type = values()[source.readInt()]
-        override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
-      }
-    }
+    writeInt(if (isOpenPGPMimeSigned) 1 else 0)
   }
 
   companion object CREATOR : Parcelable.Creator<MsgBlock> {

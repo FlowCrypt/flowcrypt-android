@@ -429,7 +429,7 @@ dependencies {
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
 
-    implementation('org.pgpainless:pgpainless-core:1.0.2') {
+    implementation('org.pgpainless:pgpainless-core:1.0.3') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }

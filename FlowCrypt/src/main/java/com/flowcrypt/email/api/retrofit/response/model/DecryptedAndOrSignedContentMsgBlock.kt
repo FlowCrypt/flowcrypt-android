@@ -18,13 +18,11 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata
  */
 data class DecryptedAndOrSignedContentMsgBlock(
   @Expose override val error: MsgBlockError? = null,
-  @Expose val blocks: List<MsgBlock> = listOf()
+  @Expose val blocks: List<MsgBlock> = listOf(),
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
   @Expose
   override val content: String? = null
-
-  @Expose
-  override val complete: Boolean = true
 
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.DECRYPTED_AND_OR_SIGNED_CONTENT
@@ -33,12 +31,14 @@ data class DecryptedAndOrSignedContentMsgBlock(
 
   constructor(parcel: Parcel) : this(
     parcel.readParcelable(MsgBlockError::class.java.classLoader),
-    mutableListOf<MsgBlock>().apply { parcel.readTypedList(this, GenericMsgBlock.CREATOR) }
+    mutableListOf<MsgBlock>().apply { parcel.readTypedList(this, GenericMsgBlock.CREATOR) },
+    1 == parcel.readInt()
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeParcelable(error, flags)
     parcel.writeList(blocks)
+    parcel.writeInt(if (isOpenPGPMimeSigned) 1 else 0)
   }
 
   override fun describeContents(): Int {

@@ -14,13 +14,11 @@ import com.google.gson.annotations.Expose
 data class PlainAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val attMeta: AttMeta,
-  @Expose override val error: MsgBlockError? = null
+  @Expose override val error: MsgBlockError? = null,
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : AttMsgBlock {
 
   var fileUri: Uri? = null
-
-  @Expose
-  override val complete: Boolean = true
 
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PLAIN_ATT
@@ -28,7 +26,8 @@ data class PlainAttMsgBlock(
   constructor(source: Parcel) : this(
     source.readString(),
     source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    1 == source.readInt()
   ) {
     fileUri = source.readParcelable(Uri::class.java.classLoader)
   }
@@ -44,6 +43,7 @@ data class PlainAttMsgBlock(
       writeParcelable(attMeta, flags)
       writeParcelable(error, flags)
       writeParcelable(fileUri, flags)
+      writeInt(if (isOpenPGPMimeSigned) 1 else 0)
     }
 
   companion object CREATOR : Parcelable.Creator<PlainAttMsgBlock> {

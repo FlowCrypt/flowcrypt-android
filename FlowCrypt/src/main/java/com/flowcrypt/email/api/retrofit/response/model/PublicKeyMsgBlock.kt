@@ -23,9 +23,9 @@ import com.google.gson.annotations.Expose
  */
 data class PublicKeyMsgBlock constructor(
   @Expose override val content: String?,
-  @Expose override val complete: Boolean,
-  @Expose val keyDetails: PgpKeyDetails?,
-  @Expose override val error: MsgBlockError? = null
+  @Expose val keyDetails: PgpKeyDetails? = null,
+  @Expose override val error: MsgBlockError? = null,
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
@@ -34,9 +34,9 @@ data class PublicKeyMsgBlock constructor(
 
   constructor(parcel: Parcel) : this(
     parcel.readString(),
-    parcel.readByte() != 0.toByte(),
     parcel.readParcelable(PgpKeyDetails::class.java.classLoader),
     parcel.readParcelable(MsgBlockError::class.java.classLoader),
+    1 == parcel.readInt()
   ) {
     existingRecipientWithPubKeys =
       parcel.readParcelable(RecipientWithPubKeys::class.java.classLoader)
@@ -46,10 +46,10 @@ data class PublicKeyMsgBlock constructor(
     with(parcel) {
       writeParcelable(type, flags)
       writeString(content)
-      writeInt((if (complete) 1 else 0))
       writeParcelable(keyDetails, flags)
       writeParcelable(error, flags)
       writeParcelable(existingRecipientWithPubKeys, flags)
+      writeInt(if (isOpenPGPMimeSigned) 1 else 0)
     }
 
   override fun describeContents(): Int = 0

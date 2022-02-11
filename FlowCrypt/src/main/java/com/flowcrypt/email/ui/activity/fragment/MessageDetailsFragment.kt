@@ -107,10 +107,8 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
-import java.util.*
 import javax.mail.AuthenticationFailedException
 import javax.mail.internet.InternetAddress
-import kotlin.collections.ArrayList
 
 /**
  * This fragment describe msgEntity of some message.
@@ -484,7 +482,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED))
       }
 
-      if (verificationResult.isSigned) {
+      if (verificationResult.hasSignedParts) {
         val badge = when {
           verificationResult.hasBadSignatures -> {
             PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.BAD_SIGNATURE)
@@ -1024,7 +1022,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * @return The generated view.
    */
   private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
-    if (!block.complete && block.error?.errorMsg?.isNotEmpty() == true) {
+    if (block.error?.errorMsg?.isNotEmpty() == true) {
       return getView(
         clipLargeText(block.content),
         getString(R.string.msg_contains_not_valid_pub_key, block.error.errorMsg),
@@ -1341,13 +1339,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun observeFreshMsgLiveData() {
-    msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner, {
+    msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner) {
       it?.let { messageEntity -> updateActionBar(messageEntity) }
-    })
+    }
   }
 
   private fun observerIncomingMessageInfoLiveData() {
-    msgDetailsViewModel.incomingMessageInfoLiveData.observe(viewLifecycleOwner, {
+    msgDetailsViewModel.incomingMessageInfoLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress()
@@ -1420,11 +1418,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           baseActivity.countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
   }
 
   private fun observeAttsLiveData() {
-    msgDetailsViewModel.attsLiveData.observe(viewLifecycleOwner, { list ->
+    msgDetailsViewModel.attsLiveData.observe(viewLifecycleOwner) { list ->
       val attachmentInfoList = list.map {
         if (args.localFolder.searchQuery.isNullOrEmpty()) {
           it.toAttInfo()
@@ -1437,11 +1435,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
         msgDetailsViewModel.fetchAttachments()
       }
-    })
+    }
   }
 
   private fun observerMsgStatesLiveData() {
-    msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, { newState ->
+    msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) { newState ->
       var finishActivity = true
       val syncActivity = activity as? BaseSyncActivity
       syncActivity?.let {
@@ -1465,15 +1463,15 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       if (finishActivity) {
         activity?.finish()
       }
-    })
+    }
   }
 
   private fun observerPassphraseNeededLiveData() {
-    msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner, { fingerprintList ->
+    msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
         showNeedPassphraseDialog(fingerprintList, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
       }
-    })
+    }
   }
 
   private fun downloadAttachment() {

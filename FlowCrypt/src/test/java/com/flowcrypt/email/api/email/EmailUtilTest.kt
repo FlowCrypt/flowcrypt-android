@@ -109,8 +109,8 @@ class EmailUtilTest {
       text = replyToText,
       encryptionType = MessageEncryptionType.STANDARD,
       verificationResult = VerificationResult(
-        isEncrypted = false,
-        isSigned = false,
+        hasEncryptedParts = false,
+        hasSignedParts = false,
         hasMixedSignatures = false,
         isPartialSigned = false,
         hasUnverifiedSignatures = false,

@@ -9,8 +9,8 @@ import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpMsg
 
 /**
  * Simple POJO which defines information about email attachments.
@@ -161,7 +161,7 @@ data class AttachmentInfo constructor(
     name.isNullOrEmpty() && type.lowercase() == "application/pgp-encrypted; name=\"\""
 
   fun isPossiblyEncrypted(): Boolean {
-    return PgpMsg.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
+    return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
   }
 
   companion object {

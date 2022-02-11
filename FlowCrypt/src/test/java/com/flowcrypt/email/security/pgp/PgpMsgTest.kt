@@ -9,7 +9,7 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
-import com.flowcrypt.email.core.msg.MsgBlockParser
+import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
@@ -354,7 +354,7 @@ class PgpMsgTest {
     val session = Session.getInstance(Properties())
     val mimeMessage = MimeMessage(session, inputMsg.inputStream())
     val mimeContent = PgpMsg.extractMimeContent(mimeMessage)
-    val processed = PgpMsg.extractMsgBlocks(mimeContent)
+    val processed = PgpMsg.extractMsgBlocksFromPart(mimeContent)
 
     assertEquals(expectedBlocks.size(), processed.size)
 
@@ -399,7 +399,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -423,7 +423,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -478,7 +478,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(2, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -490,14 +490,14 @@ class PgpMsgTest {
   //@Ignore("ask Ivan to check")
   fun testExtractClearTextFromMsgSignedMessagePreserveNewlines() {
     val text = loadResourceAsString("other/signed-message-preserve-newlines.txt")
-    val blocks = MsgBlockParser.detectBlocks(text).blocks
+    val blocks = RawBlockParser.detectBlocks(text).blocks
     val clearText = PgpSignature.extractClearText(text)
     assertEquals(
       "Standard message\n\nsigned inline\n\nshould easily verify\nThis is email footer",
       clearText
     )
     assertEquals(1, blocks.size)
-    assertEquals(MsgBlock.Type.SIGNED_MSG, blocks[0].type)
+    assertEquals(MsgBlock.Type.SIGNED_CONTENT, blocks[0].type)
   }
 
   @Test
@@ -513,7 +513,7 @@ class PgpMsgTest {
       "other/plain-google-security-alert-20210416-084836-UTC-text-content.txt"
     )
     assertEquals(textContent, result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)

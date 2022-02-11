@@ -14,7 +14,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class MsgBlockParserTest {
+class RawBlockParserTest {
   @Test
   fun testNoStringIndexOutOfBoundsExceptionInParser() {
     checkForSinglePlaintextBlock("-----BEGIN FOO-----\n")
@@ -246,7 +246,7 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
     val input = "Hello, these should get replaced:\n$prv\n\nAnd this one too:\n\n$pub"
     assertEquals(input, input.normalize())
 
-    val blocks = MsgBlockParser.detectBlocks(input).blocks
+    val blocks = RawBlockParser.detectBlocks(input).blocks
 
     assertEquals(4, blocks.size)
 
@@ -278,7 +278,7 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
 
   private fun checkForSinglePlaintextBlock(input: String) {
     assertEquals(input, input.normalize())
-    val blocks = MsgBlockParser.detectBlocks(input).blocks
+    val blocks = RawBlockParser.detectBlocks(input).blocks
     assertEquals(1, blocks.size)
     assertTrue(blocks[0] is GenericMsgBlock)
     val expectedBlock = GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, input.trimEnd(), true)

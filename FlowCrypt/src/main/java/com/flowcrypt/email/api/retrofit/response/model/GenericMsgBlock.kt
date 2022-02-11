@@ -23,15 +23,15 @@ import com.google.gson.annotations.Expose
 data class GenericMsgBlock(
   @Expose override val type: MsgBlock.Type = MsgBlock.Type.UNKNOWN,
   @Expose override val content: String?,
-  @Expose override val complete: Boolean,
-  @Expose override val error: MsgBlockError? = null
+  @Expose override val error: MsgBlockError? = null,
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
 
   constructor(type: MsgBlock.Type, source: Parcel) : this(
     type,
     source.readString(),
-    1 == source.readInt(),
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    1 == source.readInt()
   )
 
   override fun describeContents() = 0
@@ -39,8 +39,8 @@ data class GenericMsgBlock(
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeParcelable(type, flags)
     writeString(content)
-    writeInt(if (complete) 1 else 0)
     writeParcelable(error, flags)
+    writeInt(if (isOpenPGPMimeSigned) 1 else 0)
   }
 
   companion object CREATOR : Parcelable.Creator<MsgBlock> {
