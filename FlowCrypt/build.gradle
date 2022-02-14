@@ -356,7 +356,7 @@ dependencies {
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
     testImplementation 'org.robolectric:robolectric:4.7.3'
-    testImplementation 'io.github.classgraph:classgraph:4.8.138'
+    testImplementation 'io.github.classgraph:classgraph:4.8.139'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
