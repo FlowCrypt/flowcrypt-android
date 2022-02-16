@@ -5,13 +5,8 @@
 
 package com.flowcrypt.email.core.msg
 
-import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.extensions.kotlin.normalize
-import com.flowcrypt.email.security.pgp.PgpKey
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RawBlockParserTest {
@@ -246,42 +241,56 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
     val input = "Hello, these should get replaced:\n$prv\n\nAnd this one too:\n\n$pub"
     assertEquals(input, input.normalize())
 
-    val blocks = RawBlockParser.detectBlocks(input).blocks
+    val blocks = RawBlockParser.detectBlocks(input).toList()
 
     assertEquals(4, blocks.size)
 
-    assertTrue(blocks[0] is GenericMsgBlock)
     assertEquals(
-      GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, "Hello, these should get replaced:", true),
-      blocks[0] as GenericMsgBlock
+      RawBlockParser.RawBlock(
+        RawBlockParser.RawBlockType.PLAIN_TEXT,
+        "Hello, these should get replaced:".toByteArray(),
+        false
+      ),
+      blocks[0]
     )
 
-    assertTrue(blocks[1] is GenericMsgBlock)
     assertEquals(
-      GenericMsgBlock(MsgBlock.Type.PRIVATE_KEY, prv, true),
-      blocks[1] as GenericMsgBlock
+      RawBlockParser.RawBlock(
+        RawBlockParser.RawBlockType.PGP_PRIVATE_KEY,
+        prv.trimEnd().toByteArray(),
+        false
+      ),
+      blocks[1]
     )
 
-    assertTrue(blocks[2] is GenericMsgBlock)
     assertEquals(
-      GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, "And this one too:", true),
-      blocks[2] as GenericMsgBlock
+      RawBlockParser.RawBlock(
+        RawBlockParser.RawBlockType.PLAIN_TEXT,
+        "And this one too:".trimEnd().toByteArray(),
+        false
+      ),
+      blocks[2]
     )
 
-    val pgpKeyDetails = PgpKey.parseKeys(pub).pgpKeyDetailsList.firstOrNull()
-    assertTrue(blocks[3] is PublicKeyMsgBlock)
     assertEquals(
-      PublicKeyMsgBlock(pub, true, pgpKeyDetails),
-      blocks[3] as PublicKeyMsgBlock
+      RawBlockParser.RawBlock(
+        RawBlockParser.RawBlockType.PGP_PUBLIC_KEY,
+        pub.trimEnd().toByteArray(),
+        false
+      ),
+      blocks[3]
     )
   }
 
   private fun checkForSinglePlaintextBlock(input: String) {
     assertEquals(input, input.normalize())
-    val blocks = RawBlockParser.detectBlocks(input).blocks
+    val blocks = RawBlockParser.detectBlocks(input)
     assertEquals(1, blocks.size)
-    assertTrue(blocks[0] is GenericMsgBlock)
-    val expectedBlock = GenericMsgBlock(MsgBlock.Type.PLAIN_TEXT, input.trimEnd(), true)
-    assertEquals(expectedBlock, blocks[0] as GenericMsgBlock)
+    val expectedBlock = RawBlockParser.RawBlock(
+      RawBlockParser.RawBlockType.PLAIN_TEXT,
+      input.trimEnd().toByteArray(),
+      false
+    )
+    assertEquals(expectedBlock, blocks.first())
   }
 }
