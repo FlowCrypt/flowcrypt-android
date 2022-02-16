@@ -356,7 +356,7 @@ dependencies {
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
     testImplementation 'org.robolectric:robolectric:4.7.3'
-    testImplementation 'io.github.classgraph:classgraph:4.8.138'
+    testImplementation 'io.github.classgraph:classgraph:4.8.139'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
@@ -375,8 +375,8 @@ dependencies {
     implementation "androidx.test.espresso:espresso-idling-resource:${rootProject.ext.espressoVersion}"
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${rootProject.ext.lifecycleVersion}"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.0"
-    implementation "androidx.lifecycle:lifecycle-process:2.4.0"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.1"
+    implementation "androidx.lifecycle:lifecycle-process:2.4.1"
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
@@ -397,7 +397,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.5.0'
 
     //https://mvnrepository.com/artifact/com.google.code.gson/gson
-    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.google.code.gson:gson:2.9.0'
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
     implementation 'com.google.api-client:google-api-client-android:1.33.2'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
@@ -422,14 +422,14 @@ dependencies {
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'ja.burhanrashid52:photoeditor:1.1.1'
     implementation 'net.openid:appauth:0.11.1'
-    implementation 'org.bitbucket.b_c:jose4j:0.7.9'
+    implementation 'org.bitbucket.b_c:jose4j:0.7.10'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20211018.2'
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
 
-    implementation('org.pgpainless:pgpainless-core:1.0.3') {
+    implementation('org.pgpainless:pgpainless-core:1.1.0') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
         exclude group: 'org.bouncycastle'
     }

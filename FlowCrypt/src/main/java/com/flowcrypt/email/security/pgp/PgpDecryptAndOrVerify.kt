@@ -139,16 +139,26 @@ object PgpDecryptAndOrVerify {
 
       is DecryptionException -> e
 
-      else -> when {
-        e is IOException && e.message.equals("crc check failed in armored message.", true) -> {
-          DecryptionException(DecryptionErrorType.FORMAT, e)
-        }
+      else -> {
+        val exception = e.cause ?: e
 
-        e is IOException && e.message?.startsWith("unexpected packet in stream", true) == true -> {
-          DecryptionException(DecryptionErrorType.FORMAT, e)
-        }
+        when {
+          exception is IOException && exception.message.equals(
+            "crc check failed in armored message.",
+            true
+          ) -> {
+            DecryptionException(DecryptionErrorType.FORMAT, e)
+          }
 
-        else -> DecryptionException(DecryptionErrorType.OTHER, e)
+          exception is IOException && exception.message?.startsWith(
+            "unexpected packet in stream",
+            true
+          ) == true -> {
+            DecryptionException(DecryptionErrorType.FORMAT, e)
+          }
+
+          else -> DecryptionException(DecryptionErrorType.OTHER, e)
+        }
       }
     }
   }
