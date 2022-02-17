@@ -104,9 +104,14 @@ object RawBlockParser {
           )
         )
       }
-    } else when (part.baseContentType()) {
-      "text/rfc822-headers" -> emptyList() //we skip this type of content
-      "text/html" -> listOf(
+    } else when {
+      "text/rfc822-headers" == part.baseContentType() ||
+          ("application/pgp-encrypted" == part.baseContentType() && part.description == "PGP/MIME version identification")
+      -> {
+        emptyList() //we skip this type of content
+      }
+
+      "text/html" == part.baseContentType() -> listOf(
         RawBlock(
           RawBlockType.HTML_TEXT,
           part.inputStream.readBytes(),

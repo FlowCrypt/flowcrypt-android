@@ -781,6 +781,57 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
   }
 
   @Test
+  fun testSignatureVerificationDetachedSignatureJustContent() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_detached_only_signed.json",
+      "messages/mime/signature_verification_detached_only_signed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationDetachedSignatureContentAndPublicKey() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_detached_only_signed_public_key.json",
+      "messages/mime/signature_verification_detached_only_signed_public_key.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationDetachedSignatureContentAndPublicKeyAndAttachment() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_detached_only_signed_public_key_attachment.json",
+      "messages/mime/signature_verification_detached_only_signed_public_key_attachment.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+  }
+
+  @Test
   fun testMessageWithBrokenBase64() {
     baseCheck(
       getMsgInfo(
@@ -883,6 +934,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     onView(withId(R.id.imageButtonReplyAll))
       .check(matches(isDisplayed()))
     onView(withId(R.id.layoutReplyButton))
+      .perform(scrollTo())
       .check(matches(isDisplayed()))
     onView(withId(R.id.layoutReplyAllButton))
       .check(matches(isDisplayed()))
