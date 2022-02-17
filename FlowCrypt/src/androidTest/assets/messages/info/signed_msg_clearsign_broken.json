@@ -2,18 +2,17 @@
   "encryptionType": "STANDARD",
   "msgBlocks": [
     {
-      "complete": true,
       "content": "\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\n\u003chead\u003e\n    \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\"/\u003e\n    \u003cstyle\u003e\n      body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n      body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n      body pre { white-space: pre-wrap !important; }\n      body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n    \u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\u003c/body\u003e\n\u003c/html\u003e",
+      "isOpenPGPMimeSigned": false,
       "type": "plainHtml"
     },
     {
-      "complete": true,
-      "content": "-----BEGIN PGP SIGNED MESSAGE-----\r\nHash: SHA512\r\n\r\nSome important text that is signed\r\n-----BEGIN PGP SIGNATURE-----\r\nVersion: PGPainless\r\n\r\niHUEARYKAAYFAmFm9GEAIQkQwyCJzWr41s4WIQTBZCjWAcs5N4nPYdTDIInNavjW\r\nVMWbrRaCiEghT5b3tpYn6jzVDenjxwg\u003d\r\n\u003dvdIK\r\n-----END PGP SIGNATURE-----",
+      "content": "-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA512\n\nSome important text that is signed\n-----BEGIN PGP SIGNATURE-----\nVersion: PGPainless\n\niHUEARYKAAYFAmFm9GEAIQkQwyCJzWr41s4WIQTBZCjWAcs5N4nPYdTDIInNavjW\nVMWbrRaCiEghT5b3tpYn6jzVDenjxwg\u003d\n\u003dvdIK\n-----END PGP SIGNATURE-----",
       "error": {
         "errorMsg": "[IOException]: crc check failed in armored message."
       },
-      "signedType": "SIGNED_MSG",
-      "type": "signedMsg"
+      "isOpenPGPMimeSigned": false,
+      "type": "signedContent"
     }
   ],
   "msgEntity": {
@@ -31,6 +30,7 @@
     "id": 326,
     "isEncrypted": false,
     "isNew": false,
+    "isPasswordProtected": false,
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1634138720000,
@@ -51,13 +51,13 @@
     "uid": 27,
     "uidAsHEX": "1b"
   },
+  "text": "",
   "verificationResult": {
-    "isEncrypted": false,
-    "isSigned": false,
+    "hasBadSignatures": false,
+    "hasEncryptedParts": false,
     "hasMixedSignatures": false,
-    "isPartialSigned": false,
+    "hasSignedParts": false,
     "hasUnverifiedSignatures": false,
-    "hasBadSignatures": false
-  },
-  "text": ""
+    "isPartialSigned": false
+  }
 }
