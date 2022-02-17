@@ -785,8 +785,9 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_detached_only_signed.json",
-      "messages/mime/signature_verification_detached_only_signed.txt"
+      path = "messages/info/signature_verification_detached_only_signed.json",
+      mimeMsgPath = "messages/mime/signature_verification_detached_only_signed.txt",
+      useCrLfForMime = true
     )
     baseCheck(msgInfo)
 
@@ -802,8 +803,9 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_detached_only_signed_public_key.json",
-      "messages/mime/signature_verification_detached_only_signed_public_key.txt"
+      path = "messages/info/signature_verification_detached_only_signed_public_key.json",
+      mimeMsgPath = "messages/mime/signature_verification_detached_only_signed_public_key.txt",
+      useCrLfForMime = true
     )
     baseCheck(msgInfo)
 
@@ -819,8 +821,9 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_detached_only_signed_public_key_attachment.json",
-      "messages/mime/signature_verification_detached_only_signed_public_key_attachment.txt"
+      path = "messages/info/signature_verification_detached_only_signed_public_key_attachment.json",
+      mimeMsgPath = "messages/mime/signature_verification_detached_only_signed_public_key_attachment.txt",
+      useCrLfForMime = true
     )
     baseCheck(msgInfo)
 
