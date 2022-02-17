@@ -98,11 +98,11 @@ object PgpArmor {
   // note: using RawBlockParser.RawBlockType.UNKNOWN instead of "key" in Typescript
   @JvmStatic
   fun normalize(armored: String, blockType: RawBlockParser.RawBlockType): String {
-    /*if (blockType != RawBlockParser.RawBlockType.UNKNOWN
-      && !RawBlockParser.RawBlockType.REPLACEABLE_BLOCK_TYPES.contains(blockType)
+    if (blockType != RawBlockParser.RawBlockType.UNKNOWN
+      && !RawBlockParser.REPLACEABLE_BLOCK_TYPES.contains(blockType)
     ) {
       throw IllegalArgumentException("Can't normalize block of type '$blockType'")
-    }*/
+    }
 
     var result = armored.normalize()
 

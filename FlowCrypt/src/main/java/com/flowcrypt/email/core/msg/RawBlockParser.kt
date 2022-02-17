@@ -27,6 +27,13 @@ object RawBlockParser {
     option = RegexOption.IGNORE_CASE
   )
 
+  val REPLACEABLE_BLOCK_TYPES = setOf(
+    RawBlockType.PGP_PUBLIC_KEY,
+    RawBlockType.PGP_PRIVATE_KEY,
+    RawBlockType.PGP_CLEARSIGN_MSG,
+    RawBlockType.PGP_MSG
+  )
+
   private const val ARMOR_HEADER_MAX_LENGTH = 50
   private val PRIVATE_KEY_REGEX = Regex(
     pattern = "(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(key|asc)\$",

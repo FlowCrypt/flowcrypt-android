@@ -33,7 +33,6 @@ import com.flowcrypt.email.extensions.kotlin.escapeHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.unescapeHtml
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
@@ -84,10 +83,6 @@ object PgpMsg {
   private const val FC_INNER_TEXT_TYPE_ATTR = "data-fc-inner-text-type"
   private const val FC_FROM_IMAGE_ATTR = "data-fc-is-from-image"
 
-  private val PUBLIC_KEY_REGEX_3 = Regex(
-    pattern = "^(0x)?[A-Fa-f0-9]{16,40}\\.asc\\.pgp$",
-    option = RegexOption.IGNORE_CASE
-  )
   private val CID_CORRECTION_REGEX_1 = Regex(">$")
   private val CID_CORRECTION_REGEX_2 = Regex("^<")
   private val IMG_SRC_WITH_CID_REGEX = Regex("src=\"cid:([^\"]+)\"")
@@ -342,9 +337,16 @@ object PgpMsg {
           if (GeneralUtil.isDebugBuild()) {
             e.printStackTrace()
           }
-
           //here we should handle an error that relates to the current Part
           //and add a block to be able to show an error later
+          blocks.add(
+            GenericMsgBlock(
+              MsgBlock.Type.UNKNOWN,
+              null,
+              MsgBlockError(e.javaClass.simpleName + ": " + e.message),
+              isOpenPGPMimeSigned
+            )
+          )
         }
       }
     }
@@ -412,6 +414,9 @@ object PgpMsg {
               isOpenPGPMimeSigned = rawBlock.isOpenPGPMimeSigned
             )
           )
+        }
+        else -> {
+          //skip for now
         }
       }
     }
@@ -678,14 +683,12 @@ object PgpMsg {
 
   fun stripPublicKeys(decryptedContent: String, foundPublicKeys: MutableList<String>): String {
     val normalizedTextAndBlocks = RawBlockParser.detectBlocks(decryptedContent)
-    //var result = normalizedTextAndBlocks.normalized
-    /*for (block in normalizedTextAndBlocks.blocks) {
-      if (block.type == MsgBlock.Type.PUBLIC_KEY && block.content != null) {
-        val content = block.content!!
-        foundPublicKeys.add(content)
-        result = result.replace(content, "")
+    for (block in normalizedTextAndBlocks) {
+      if (block.type == RawBlockParser.RawBlockType.PGP_PUBLIC_KEY && block.content.isNotEmpty()) {
+        val content = block.content
+        foundPublicKeys.add(String(content))
       }
-    }*/
+    }
     return decryptedContent
   }
 
@@ -820,69 +823,6 @@ object PgpMsg {
 
   private fun canBeAddedToCombinedContent(block: MsgBlock): Boolean =
     (block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block)) && block.error == null
-
-  private fun handleExtractedMsgBlocks(
-    msgBlocks: List<MsgBlock>,
-    verificationPublicKeys: PGPPublicKeyRingCollection,
-    secretKeys: PGPSecretKeyRingCollection,
-    protector: SecretKeyRingProtector
-  ): MutableList<MsgBlock> {
-    val sequentialProcessedBlocks = mutableListOf<MsgBlock>()
-    for (msgBlock in msgBlocks) {
-      when {
-        msgBlock.type == MsgBlock.Type.ENCRYPTED_MSG -> {
-          /*val decryptedContentMsgBlock = processEncryptedMsgBlock(
-            msgBlock = msgBlock,
-            verificationPublicKeys = verificationPublicKeys,
-            secretKeys = secretKeys,
-            protector = protector
-          )
-          sequentialProcessedBlocks.add(decryptedContentMsgBlock)*/
-        }
-
-        msgBlock.type == MsgBlock.Type.PUBLIC_KEY -> {
-          msgBlock.content?.let { source ->
-            try {
-              val keyRings = PgpKey.parseAndNormalizeKeyRings(source)
-              if (keyRings.isNotEmpty()) {
-                sequentialProcessedBlocks.addAll(keyRings.map {
-                  MsgBlockFactory.fromContent(
-                    MsgBlock.Type.PUBLIC_KEY,
-                    it.armor(null),
-                    isOpenPGPMimeSigned = false
-                  )
-                })
-              } else {
-                sequentialProcessedBlocks.add(
-                  PublicKeyMsgBlock(
-                    content = source,
-                    keyDetails = null,
-                    error = MsgBlockError("empty KeyRing"),
-                    isOpenPGPMimeSigned = false
-                  )
-                )
-              }
-            } catch (ex: Exception) {
-              ex.printStackTrace()
-              sequentialProcessedBlocks.add(
-                PublicKeyMsgBlock(
-                  content = source,
-                  keyDetails = null,
-                  error = MsgBlockError(ex.javaClass.simpleName + ": " + ex.message),
-                  isOpenPGPMimeSigned = false
-                )
-              )
-            }
-          }
-        }
-
-        else -> {
-          sequentialProcessedBlocks.add(msgBlock)
-        }
-      }
-    }
-    return sequentialProcessedBlocks
-  }
 
   private fun processPgpPublicKeyRawBlock(
     rawBlock: RawBlockParser.RawBlock
