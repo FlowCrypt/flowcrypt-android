@@ -42,8 +42,8 @@ data class EncryptedAttMsgBlock(
       writeString(content)
       writeParcelable(attMeta, flags)
       writeParcelable(error, flags)
-      writeParcelable(fileUri, flags)
       writeInt(if (isOpenPGPMimeSigned) 1 else 0)
+      writeParcelable(fileUri, flags)
     }
 
   companion object CREATOR : Parcelable.Creator<EncryptedAttMsgBlock> {

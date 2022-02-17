@@ -48,8 +48,8 @@ data class PublicKeyMsgBlock constructor(
       writeString(content)
       writeParcelable(keyDetails, flags)
       writeParcelable(error, flags)
-      writeParcelable(existingRecipientWithPubKeys, flags)
       writeInt(if (isOpenPGPMimeSigned) 1 else 0)
+      writeParcelable(existingRecipientWithPubKeys, flags)
     }
 
   override fun describeContents(): Int = 0

@@ -98,6 +98,7 @@ object RawBlockParser {
         )
       }
     } else when (part.baseContentType()) {
+      "text/rfc822-headers" -> emptyList() //we skip this type of content
       "text/html" -> listOf(
         RawBlock(
           RawBlockType.HTML_TEXT,
