@@ -1,0 +1,91 @@
+2 M1e C620e1b0d
+N          0000000000000E01
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id Yuh1BQ0bDmJWBgAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Thu, 17 Feb 2022 09:53:17 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 12EF822A2C
+	for <default@flowcrypt.test>; Thu, 17 Feb 2022 09:53:17 +0000 (UTC)
+Message-ID: <46444d4f-7de7-ba21-4c1a-9425240935f8@flowcrypt.test>
+Date: Thu, 17 Feb 2022 11:53:16 +0200
+Mime-Version: 1.0
+Content-Language: en-US
+To: default@flowcrypt.test
+From: Denys <denbond7@flowcrypt.test>
+Subject: NOT encrypted + signed(detached) + public key
+Autocrypt: addr=denbond7@flowcrypt.test; keydata=
+ xjMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZceAWUq/N
+ F2RlbmJvbmQ3QGZsb3djcnlwdC50ZXN0wngEExYKACAFAmCLnFgCGwMFFgIDAQAECwkIBwUV
+ CgkICwIeAQIZAQAKCRDDIInNavjWzm3JAQCgFgCEyD58iEa/Rw/DYNoQNoZC1lhw1bxBiOcI
+ btkdBgEAsDFZu3TBavOMKI7KW+vfMBHtRVbkMNpvunaAldoabgPOOARgi5xYEgorBgEEAZdV
+ AQUBAQdAB1/Mrq5JGYim4KqGTSK4OESQUwPgK56q0yrkiU9WgyYDAQgHwnUEGBYKAB0FAmCL
+ nFgCGwwFFgIDAQAECwkIBwUVCgkICwIeAQAKCRDDIInNavjWzjMgAQCU+R1fItqdY6lt9jXU
+ qipmXuqVaEFPwNA8YJ1rIwDwVQEAyUc8162KWzA2iQB5akwLwNr/pLDDtOWwhLUkrBb3mAc=
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------chrtd7EqgP4Fh03MyBfSGtS4"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------chrtd7EqgP4Fh03MyBfSGtS4
+Content-Type: multipart/mixed; boundary="------------j03O76hcVZ8gqZnN5amJtWWf";
+ protected-headers="v1"
+From: Denys <denbond7@flowcrypt.test>
+To: default@flowcrypt.test
+Message-ID: <46444d4f-7de7-ba21-4c1a-9425240935f8@flowcrypt.test>
+Subject: NOT encrypted + signed(detached) + public key
+
+--------------j03O76hcVZ8gqZnN5amJtWWf
+Content-Type: multipart/mixed; boundary="------------cYP1XRBmv0zCxms3fDpI5Xqq"
+
+--------------cYP1XRBmv0zCxms3fDpI5Xqq
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
+
+Tk9UIGVuY3J5cHRlZCArIHNpZ25lZChkZXRhY2hlZCkgKyBwdWJsaWMga2V5DQoNCg==
+--------------cYP1XRBmv0zCxms3fDpI5Xqq
+Content-Type: application/pgp-keys; name="OpenPGP_0xC32089CD6AF8D6CE.asc"
+Content-Disposition: attachment; filename="OpenPGP_0xC32089CD6AF8D6CE.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xjMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZ
+ceAWUq/NF2RlbmJvbmQ3QGZsb3djcnlwdC50ZXN0wngEExYKACAFAmCLnFgCGwMF
+FgIDAQAECwkIBwUVCgkICwIeAQIZAQAKCRDDIInNavjWzm3JAQCgFgCEyD58iEa/
+Rw/DYNoQNoZC1lhw1bxBiOcIbtkdBgEAsDFZu3TBavOMKI7KW+vfMBHtRVbkMNpv
+unaAldoabgPOOARgi5xYEgorBgEEAZdVAQUBAQdAB1/Mrq5JGYim4KqGTSK4OESQ
+UwPgK56q0yrkiU9WgyYDAQgHwnUEGBYKAB0FAmCLnFgCGwwFFgIDAQAECwkIBwUV
+CgkICwIeAQAKCRDDIInNavjWzjMgAQCU+R1fItqdY6lt9jXUqipmXuqVaEFPwNA8
+YJ1rIwDwVQEAyUc8162KWzA2iQB5akwLwNr/pLDDtOWwhLUkrBb3mAc=3D
+=3DyJxA
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------cYP1XRBmv0zCxms3fDpI5Xqq--
+
+--------------j03O76hcVZ8gqZnN5amJtWWf--
+
+--------------chrtd7EqgP4Fh03MyBfSGtS4
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wnsEABYIACMWIQTBZCjWAcs5N4nPYdTDIInNavjWzgUCYg4bDAUDAAAAAAAKCRDDIInNavjWzqcL
+AQD4dpiZqtqHtLFGgjQNBtFWQbI6AMkW+4e+8XwG3U91jAEA1un53wGLXknEud/Lkpo9lrf2rIne
+3EPy13Qc3YmcUgU=
+=NX8c
+-----END PGP SIGNATURE-----
+
+--------------chrtd7EqgP4Fh03MyBfSGtS4--
+
+
+R620e1b0d
+Ve54
+Gd9e686050d1b0e625606000073f46975
+
