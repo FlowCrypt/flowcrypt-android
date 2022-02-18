@@ -72,9 +72,46 @@ object PgpSignature {
     }
   }
 
+  fun verifyDetachedSignature(
+    srcInputStream: InputStream,
+    signatureInputStream: InputStream,
+    publicKeys: PGPPublicKeyRingCollection
+  ): DetachedSignatureVerificationResult {
+    ByteArrayOutputStream().use { outStream ->
+      return try {
+        val verificationStream = PGPainless.decryptAndOrVerify()
+          .onInputStream(srcInputStream)
+          .withOptions(
+            ConsumerOptions()
+              .addVerificationOfDetachedSignatures(signatureInputStream)
+              .addVerificationCerts(publicKeys)
+              .setMultiPassStrategy(InMemoryMultiPassStrategy())
+          )
+
+        verificationStream.use { it.copyTo(outStream) }
+        DetachedSignatureVerificationResult(
+          openPgpMetadata = verificationStream.result
+        )
+      } catch (e: Exception) {
+        e.printStackTrace()
+        DetachedSignatureVerificationResult(exception = e)
+      }
+    }
+  }
+
   data class ClearTextVerificationResult(
-    val openPgpMetadata: OpenPgpMetadata? = null,
+    override val openPgpMetadata: OpenPgpMetadata? = null,
+    override val exception: Exception? = null,
     val clearText: String? = null,
-    val exception: Exception? = null
-  )
+  ) : VerificationResult
+
+  data class DetachedSignatureVerificationResult(
+    override val openPgpMetadata: OpenPgpMetadata? = null,
+    override val exception: Exception? = null
+  ) : VerificationResult
+
+  interface VerificationResult {
+    val openPgpMetadata: OpenPgpMetadata?
+    val exception: Exception?
+  }
 }

@@ -6,7 +6,7 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.countOfMatchesZeroOneOrMore
 import com.flowcrypt.email.extensions.kotlin.isWhiteSpace
 import com.flowcrypt.email.extensions.kotlin.normalize
@@ -35,43 +35,44 @@ object PgpArmor {
   )
 
   @JvmStatic
-  val ARMOR_HEADER_DICT: Map<MsgBlock.Type, CryptoArmorStringHeaderDefinition> = mapOf(
-    MsgBlock.Type.UNKNOWN to CryptoArmorStringHeaderDefinition(
-      begin = "-----BEGIN",
-      end = "-----END",
-      replace = false
-    ),
-    MsgBlock.Type.PUBLIC_KEY to CryptoArmorStringHeaderDefinition(
-      begin = "-----BEGIN PGP PUBLIC KEY BLOCK-----",
-      end = "-----END PGP PUBLIC KEY BLOCK-----",
-      replace = true
-    ),
-    MsgBlock.Type.PRIVATE_KEY to CryptoArmorStringHeaderDefinition(
-      begin = "-----BEGIN PGP PRIVATE KEY BLOCK-----",
-      end = "-----END PGP PRIVATE KEY BLOCK-----",
-      replace = true
-    ),
-    MsgBlock.Type.CERTIFICATE to CryptoArmorStringHeaderDefinition(
-      begin = "-----BEGIN CERTIFICATE-----",
-      end = "-----END CERTIFICATE-----",
-      replace = true
-    ),
-    MsgBlock.Type.SIGNED_MSG to CryptoArmorStringHeaderDefinition(
-      begin = "-----BEGIN PGP SIGNED MESSAGE-----",
-      middle = "-----BEGIN PGP SIGNATURE-----",
-      end = "-----END PGP SIGNATURE-----",
-      replace = true
-    ),
-    MsgBlock.Type.SIGNATURE to CryptoArmorStringHeaderDefinition(
-      begin = "-----BEGIN PGP SIGNATURE-----",
-      end = "-----END PGP SIGNATURE-----",
-      replace = false
-    ),
-    MsgBlock.Type.ENCRYPTED_MSG to CryptoArmorStringHeaderDefinition(
-      begin = "-----BEGIN PGP MESSAGE-----",
-      end = "-----END PGP MESSAGE-----",
-      replace = true
-    )
+  val ARMOR_HEADER_DICT: Map<RawBlockParser.RawBlockType, CryptoArmorStringHeaderDefinition> =
+    mapOf(
+      RawBlockParser.RawBlockType.UNKNOWN to CryptoArmorStringHeaderDefinition(
+        begin = "-----BEGIN",
+        end = "-----END",
+        replace = false
+      ),
+      RawBlockParser.RawBlockType.PGP_PUBLIC_KEY to CryptoArmorStringHeaderDefinition(
+        begin = "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+        end = "-----END PGP PUBLIC KEY BLOCK-----",
+        replace = true
+      ),
+      RawBlockParser.RawBlockType.PGP_PRIVATE_KEY to CryptoArmorStringHeaderDefinition(
+        begin = "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+        end = "-----END PGP PRIVATE KEY BLOCK-----",
+        replace = true
+      ),
+      RawBlockParser.RawBlockType.CERTIFICATE to CryptoArmorStringHeaderDefinition(
+        begin = "-----BEGIN CERTIFICATE-----",
+        end = "-----END CERTIFICATE-----",
+        replace = true
+      ),
+      RawBlockParser.RawBlockType.PGP_CLEARSIGN_MSG to CryptoArmorStringHeaderDefinition(
+        begin = "-----BEGIN PGP SIGNED MESSAGE-----",
+        middle = "-----BEGIN PGP SIGNATURE-----",
+        end = "-----END PGP SIGNATURE-----",
+        replace = true
+      ),
+      RawBlockParser.RawBlockType.SIGNATURE to CryptoArmorStringHeaderDefinition(
+        begin = "-----BEGIN PGP SIGNATURE-----",
+        end = "-----END PGP SIGNATURE-----",
+        replace = false
+      ),
+      RawBlockParser.RawBlockType.PGP_MSG to CryptoArmorStringHeaderDefinition(
+        begin = "-----BEGIN PGP MESSAGE-----",
+        end = "-----END PGP MESSAGE-----",
+        replace = true
+      )
   )
 
   @JvmStatic
@@ -86,7 +87,7 @@ object PgpArmor {
   }
 
   @JvmStatic
-  val ARMOR_HEADER_UNKNOWN = ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!
+  val ARMOR_HEADER_UNKNOWN = ARMOR_HEADER_DICT[RawBlockParser.RawBlockType.UNKNOWN]
 
   @JvmStatic
   val FLOWCRYPT_HEADERS = listOf(
@@ -94,11 +95,11 @@ object PgpArmor {
     Pair("Comment", "Seamlessly send and receive encrypted email")
   )
 
-  // note: using MsgBlock.Type.UNKNOWN instead of "key" in Typescript
+  // note: using RawBlockParser.RawBlockType.UNKNOWN instead of "key" in Typescript
   @JvmStatic
-  fun normalize(armored: String, blockType: MsgBlock.Type): String {
-    if (blockType != MsgBlock.Type.UNKNOWN
-      && !MsgBlock.Type.REPLACEABLE_BLOCK_TYPES.contains(blockType)
+  fun normalize(armored: String, blockType: RawBlockParser.RawBlockType): String {
+    if (blockType != RawBlockParser.RawBlockType.UNKNOWN
+      && !RawBlockParser.REPLACEABLE_BLOCK_TYPES.contains(blockType)
     ) {
       throw IllegalArgumentException("Can't normalize block of type '$blockType'")
     }
@@ -146,8 +147,10 @@ object PgpArmor {
 
   @JvmStatic
   private val normalizeBlockTypeList1 = arrayOf(
-    MsgBlock.Type.PUBLIC_KEY, MsgBlock.Type.PRIVATE_KEY,
-    MsgBlock.Type.ENCRYPTED_MSG, MsgBlock.Type.UNKNOWN
+    RawBlockParser.RawBlockType.PGP_PUBLIC_KEY,
+    RawBlockParser.RawBlockType.PGP_PRIVATE_KEY,
+    RawBlockParser.RawBlockType.PGP_MSG,
+    RawBlockParser.RawBlockType.UNKNOWN
   )
 
   @JvmStatic
@@ -208,7 +211,7 @@ object PgpArmor {
     var ch: Int
     while (input.read().also { ch = it } >= 0) {
       output.write(ch)
-      if (ch == '\r'.toInt() || ch == '\n'.toInt()) {
+      if (ch == '\r'.code || ch == '\n'.code) {
         lookAhead = readPassedEOL(output, ch, input)
         break
       }
@@ -228,7 +231,7 @@ object PgpArmor {
     var ch = lookAhead
     do {
       output.write(ch)
-      if (ch == '\r'.toInt() || ch == '\n'.toInt()) {
+      if (ch == '\r'.code || ch == '\n'.code) {
         lookAhead = readPassedEOL(output, ch, input)
         break
       }
@@ -243,7 +246,7 @@ object PgpArmor {
   @JvmStatic
   private fun readPassedEOL(output: ByteArrayOutputStream, lastCh: Int, input: InputStream): Int {
     var lookAhead: Int = input.read()
-    if (lastCh == '\r'.toInt() && lookAhead == '\n'.toInt()) {
+    if (lastCh == '\r'.code && lookAhead == '\n'.code) {
       output.write(lookAhead)
       lookAhead = input.read()
     }
@@ -263,7 +266,7 @@ object PgpArmor {
 
   @JvmStatic
   fun clip(text: String): String? {
-    val unknown = ARMOR_HEADER_DICT[MsgBlock.Type.UNKNOWN]!!
+    val unknown = ARMOR_HEADER_DICT[RawBlockParser.RawBlockType.UNKNOWN]!!
     if (text.contains(unknown.begin) && text.contains(unknown.end)) {
       val match = blockRegex.find(text)
       if (match != null) return text.substring(match.range)

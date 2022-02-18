@@ -30,6 +30,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -40,7 +41,7 @@ import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
 import java.io.InputStream
-import java.util.*
+import java.util.Properties
 import javax.mail.Session
 import javax.mail.internet.MimeMessage
 
@@ -239,7 +240,8 @@ abstract class BaseTest : BaseActivityTestImplementation {
   fun getMsgInfo(
     path: String,
     mimeMsgPath: String,
-    vararg atts: AttachmentInfo?
+    vararg atts: AttachmentInfo?,
+    useCrLfForMime: Boolean = false,
   ): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.msgEntity?.let {
@@ -254,7 +256,12 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
       roomDatabase.attachmentDao().insert(attEntities)
 
-      addMsgToCache(uri.toString(), getContext().assets.open(mimeMsgPath))
+      val assetsMimeMsgSource = String(getContext().assets.open(mimeMsgPath).readBytes())
+      val finalMimeMsgSource =
+        //https://stackoverflow.com/questions/55475483/regex-to-find-and-fix-lf-lineendings-to-crlf
+        if (useCrLfForMime) assetsMimeMsgSource.replace("((?<!\\r)\\n|\\r(?!\\n))".toRegex(), "\r\n") else assetsMimeMsgSource
+
+      addMsgToCache(uri.toString(), finalMimeMsgSource.toInputStream())
     }
     return incomingMsgInfo
   }

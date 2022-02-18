@@ -9,12 +9,12 @@ package com.flowcrypt.email.security
 
 import android.content.Context
 import com.flowcrypt.email.R
+import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
@@ -181,7 +181,7 @@ class SecurityUtils {
      * If yes - it can mean the file is encrypted
      */
     fun isPossiblyEncryptedData(fileName: String?): Boolean {
-      return PgpMsg.ENCRYPTED_FILE_REGEX.containsMatchIn(fileName ?: "")
+      return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(fileName ?: "")
     }
   }
 }

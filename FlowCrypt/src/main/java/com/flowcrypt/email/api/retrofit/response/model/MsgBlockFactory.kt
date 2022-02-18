@@ -15,9 +15,7 @@ object MsgBlockFactory {
     MsgBlock.Type.PUBLIC_KEY,
     MsgBlock.Type.DECRYPT_ERROR,
     MsgBlock.Type.DECRYPTED_ATT,
-    MsgBlock.Type.ENCRYPTED_ATT,
-    MsgBlock.Type.SIGNED_HTML,
-    MsgBlock.Type.SIGNED_TEXT
+    MsgBlock.Type.ENCRYPTED_ATT
   )
 
   fun fromParcel(type: MsgBlock.Type, source: Parcel): MsgBlock {
@@ -26,9 +24,7 @@ object MsgBlockFactory {
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(source)
       MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(source)
       MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(source)
-      MsgBlock.Type.SIGNED_TEXT, MsgBlock.Type.SIGNED_HTML, MsgBlock.Type.SIGNED_MSG -> {
-        SignedMsgBlock(source)
-      }
+      MsgBlock.Type.SIGNED_CONTENT -> SignedMsgBlock(source)
       else -> GenericMsgBlock(type, source)
     }
   }
@@ -36,44 +32,58 @@ object MsgBlockFactory {
   fun fromContent(
     type: MsgBlock.Type,
     content: String?,
-    missingEnd: Boolean = false,
-    signature: String? = null
+    signature: String? = null,
+    isOpenPGPMimeSigned: Boolean
   ): MsgBlock {
-    val complete = !missingEnd
     return when (type) {
-      MsgBlock.Type.PUBLIC_KEY -> {
-        if (content.isNullOrEmpty()) {
-          PublicKeyMsgBlock(content, complete, null, MsgBlockError("empty source"))
-        } else {
-          try {
-            val keyDetails = PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
-            PublicKeyMsgBlock(content, true, keyDetails)
-          } catch (e: Exception) {
-            e.printStackTrace()
-            PublicKeyMsgBlock(
-              content = content,
-              complete = false,
-              keyDetails = null,
-              error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message)
-            )
-          }
+      MsgBlock.Type.PUBLIC_KEY -> if (content.isNullOrEmpty()) {
+        PublicKeyMsgBlock(
+          content = content,
+          keyDetails = null,
+          error = MsgBlockError("empty source"),
+          isOpenPGPMimeSigned = isOpenPGPMimeSigned
+        )
+      } else {
+        try {
+          val keyDetails = PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
+          PublicKeyMsgBlock(
+            content = content,
+            keyDetails = keyDetails,
+            isOpenPGPMimeSigned = isOpenPGPMimeSigned
+          )
+        } catch (e: Exception) {
+          e.printStackTrace()
+          PublicKeyMsgBlock(
+            content = content,
+            keyDetails = null,
+            error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message),
+            isOpenPGPMimeSigned = isOpenPGPMimeSigned
+          )
         }
       }
-      MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(content, complete, null)
-      MsgBlock.Type.SIGNED_MSG -> {
-        SignedMsgBlock(SignedMsgBlock.Type.SIGNED_MSG, content, complete, signature)
-      }
-      MsgBlock.Type.SIGNED_TEXT -> {
-        SignedMsgBlock(SignedMsgBlock.Type.SIGNED_TEXT, content, complete, signature)
-      }
-      MsgBlock.Type.SIGNED_HTML -> {
-        SignedMsgBlock(SignedMsgBlock.Type.SIGNED_HTML, content, complete, signature)
-      }
-      else -> GenericMsgBlock(type, content, complete)
+      MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(
+        content = content,
+        decryptErr = null,
+        isOpenPGPMimeSigned = isOpenPGPMimeSigned
+      )
+      MsgBlock.Type.SIGNED_CONTENT -> SignedMsgBlock(
+        content = content,
+        signature = signature,
+        isOpenPGPMimeSigned = isOpenPGPMimeSigned
+      )
+      else -> GenericMsgBlock(
+        type = type,
+        content = content,
+        isOpenPGPMimeSigned = isOpenPGPMimeSigned
+      )
     }
   }
 
-  fun fromAttachment(type: MsgBlock.Type, attachment: MimePart): MsgBlock {
+  fun fromAttachment(
+    type: MsgBlock.Type,
+    attachment: MimePart,
+    isOpenPGPMimeSigned: Boolean
+  ): MsgBlock {
     try {
       val attContent = attachment.content
       val data = attachment.inputStream.readBytes()
@@ -86,9 +96,22 @@ object MsgBlockFactory {
       )
       val content = if (attContent is String) attachment.content as String else null
       return when (type) {
-        MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(null, true, attMeta, null)
-        MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(content, attMeta)
-        MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(content, attMeta)
+        MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(
+          content = null,
+          attMeta = attMeta,
+          decryptErr = null,
+          isOpenPGPMimeSigned = isOpenPGPMimeSigned
+        )
+        MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(
+          content = content,
+          attMeta = attMeta,
+          isOpenPGPMimeSigned = isOpenPGPMimeSigned
+        )
+        MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(
+          content = content,
+          attMeta = attMeta,
+          isOpenPGPMimeSigned = isOpenPGPMimeSigned
+        )
         else ->
           throw IllegalArgumentException("Can't create block of type ${type.name} from attachment")
       }
@@ -97,8 +120,8 @@ object MsgBlockFactory {
       return GenericMsgBlock(
         type = type,
         content = null,
-        complete = false,
-        error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message)
+        error = MsgBlockError("[" + e.javaClass.simpleName + "]: " + e.message),
+        isOpenPGPMimeSigned = isOpenPGPMimeSigned
       )
     }
   }

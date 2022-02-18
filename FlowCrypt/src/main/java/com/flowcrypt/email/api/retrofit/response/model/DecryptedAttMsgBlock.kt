@@ -8,10 +8,6 @@ package com.flowcrypt.email.api.retrofit.response.model
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.Constants
-import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -23,10 +19,10 @@ import com.google.gson.annotations.SerializedName
  */
 data class DecryptedAttMsgBlock(
   @Expose override val content: String?,
-  @Expose override val complete: Boolean,
   @Expose override val attMeta: AttMeta,
   @SerializedName("decryptErr") @Expose val decryptErr: DecryptError?,
-  @Expose override val error: MsgBlockError? = null
+  @Expose override val error: MsgBlockError? = null,
+  @Expose override val isOpenPGPMimeSigned: Boolean
 ) : AttMsgBlock {
 
   var fileUri: Uri? = null
@@ -36,10 +32,10 @@ data class DecryptedAttMsgBlock(
 
   constructor(source: Parcel) : this(
     source.readString(),
-    1 == source.readInt(),
     source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
     source.readParcelable<DecryptError>(DecryptError::class.java.classLoader),
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader)
+    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    1 == source.readInt()
   ) {
     fileUri = source.readParcelable(Uri::class.java.classLoader)
   }
@@ -52,23 +48,12 @@ data class DecryptedAttMsgBlock(
     with(dest) {
       writeParcelable(type, flags)
       writeString(content)
-      writeInt((if (complete) 1 else 0))
       writeParcelable(attMeta, flags)
       writeParcelable(decryptErr, flags)
       writeParcelable(error, flags)
+      writeInt(if (isOpenPGPMimeSigned) 1 else 0)
       writeParcelable(fileUri, flags)
     }
-
-  fun toAttachmentInfo(): AttachmentInfo {
-    return AttachmentInfo(
-      rawData = attMeta.data,
-      type = attMeta.type ?: Constants.MIME_TYPE_BINARY_DATA,
-      name = FileAndDirectoryUtils.normalizeFileName(attMeta.name),
-      encodedSize = attMeta.length,
-      id = EmailUtil.generateContentId(),
-      isDecrypted = true
-    )
-  }
 
   companion object CREATOR : Parcelable.Creator<DecryptedAttMsgBlock> {
     override fun createFromParcel(parcel: Parcel): DecryptedAttMsgBlock {

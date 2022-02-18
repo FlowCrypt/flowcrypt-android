@@ -12,8 +12,8 @@ import com.google.gson.annotations.SerializedName
 interface MsgBlock : Parcelable {
   val type: Type
   val content: String?
-  val complete: Boolean
   val error: MsgBlockError?
+  val isOpenPGPMimeSigned: Boolean
 
   enum class Type : Parcelable {
     UNKNOWN,
@@ -30,8 +30,8 @@ interface MsgBlock : Parcelable {
     @SerializedName("publicKey")
     PUBLIC_KEY,
 
-    @SerializedName("signedMsg")
-    SIGNED_MSG,
+    @SerializedName("signedContent")
+    SIGNED_CONTENT,
 
     @SerializedName("encryptedMsgLink")
     ENCRYPTED_MSG_LINK,
@@ -69,12 +69,6 @@ interface MsgBlock : Parcelable {
     @SerializedName("signature")
     SIGNATURE,
 
-    @SerializedName("signedText")
-    SIGNED_TEXT,
-
-    @SerializedName("signedHtml")
-    SIGNED_HTML,
-
     @SerializedName("verifiedMsg")
     VERIFIED_MSG,
 
@@ -100,16 +94,12 @@ interface MsgBlock : Parcelable {
 
       val KEY_BLOCK_TYPES = setOf(PUBLIC_KEY, PRIVATE_KEY)
 
-      val REPLACEABLE_BLOCK_TYPES = setOf(
-        PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG, ENCRYPTED_MSG_LINK
-      )
-
       val WELL_KNOWN_BLOCK_TYPES = setOf(
-        PUBLIC_KEY, PRIVATE_KEY, SIGNED_MSG, ENCRYPTED_MSG
+        PUBLIC_KEY, PRIVATE_KEY, SIGNED_CONTENT, ENCRYPTED_MSG
       )
 
       val SIGNED_BLOCK_TYPES = setOf(
-        SIGNED_TEXT, SIGNED_HTML, SIGNED_MSG, DECRYPTED_AND_OR_SIGNED_CONTENT
+        SIGNED_CONTENT, DECRYPTED_AND_OR_SIGNED_CONTENT
       )
 
       val CONTENT_BLOCK_TYPES = setOf(
@@ -117,7 +107,7 @@ interface MsgBlock : Parcelable {
         PLAIN_HTML,
         DECRYPTED_TEXT,
         DECRYPTED_HTML,
-        SIGNED_MSG,
+        SIGNED_CONTENT,
         VERIFIED_MSG,
         DECRYPTED_AND_OR_SIGNED_CONTENT
       )

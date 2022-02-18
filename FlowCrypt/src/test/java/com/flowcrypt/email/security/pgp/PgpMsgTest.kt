@@ -6,10 +6,10 @@
 
 package com.flowcrypt.email.security.pgp
 
+import com.flowcrypt.email.api.retrofit.response.model.DecryptedAndOrSignedContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
-import com.flowcrypt.email.core.msg.MsgBlockParser
+import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.normalizeEol
 import com.flowcrypt.email.extensions.kotlin.removeUtf8Bom
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
@@ -22,9 +22,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnprotectedKeysProtector
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -315,6 +317,7 @@ class PgpMsgTest {
   // -------------------------------------------------------------------------------------------
 
   @Test
+  @Ignore("Should be reworked after switching to a new logic that uses RawBlockParser")
   fun multipleComplexMessagesTest() {
     val testFiles = listOf(
       "decrypt - [enigmail] basic html-0.json",
@@ -339,6 +342,7 @@ class PgpMsgTest {
 
   // Use this one for debugging
   @Test
+  @Ignore("Should be reworked after switching to a new logic that uses RawBlockParser")
   fun singleComplexMessageTest() {
     val testFile = "verify - Kraken - urldecode signature-0.json"
     checkComplexMessage(testFile)
@@ -353,30 +357,35 @@ class PgpMsgTest {
     val expectedBlocks = out["blocks"].asJsonArray
     val session = Session.getInstance(Properties())
     val mimeMessage = MimeMessage(session, inputMsg.inputStream())
-    val mimeContent = PgpMsg.extractMimeContent(mimeMessage)
-    val processed = PgpMsg.extractMsgBlocks(mimeContent)
+    val extractedBlocks = PgpMsg.extractMsgBlocksFromPart(
+      mimeMessage,
+      PGPPublicKeyRingCollection(emptyList()),
+      PGPSecretKeyRingCollection(emptyList()),
+      UnprotectedKeysProtector()
+    ).toList()
 
-    assertEquals(expectedBlocks.size(), processed.size)
+    assertEquals(expectedBlocks.size(), extractedBlocks.size)
 
-    for (i in processed.indices) {
+    for (i in extractedBlocks.indices) {
       println("Checking block #$i of the '$fileName'")
 
       val expectedBlock = expectedBlocks[i].asJsonObject
       val expectedBlockType = MsgBlock.Type.ofSerializedName(expectedBlock["type"].asString)
-      val expectedContent = expectedBlock["content"].asString.normalizeEol()
-      val expectedComplete = expectedBlock["complete"].asBoolean
-      val actualBlock = processed[i]
-      val actualContent = (actualBlock.content ?: "").normalizeEol().removeUtf8Bom()
+      val expectedContent =
+        if (expectedBlockType == MsgBlock.Type.DECRYPTED_AND_OR_SIGNED_CONTENT) {
+          expectedBlock["blocks"].asJsonArray.first().asJsonObject["content"].asString.normalizeEol()
+        } else {
+          expectedBlock["content"].asString.normalizeEol()
+        }
+      val actualBlock = extractedBlocks[i]
+      val actualContent = if (actualBlock is DecryptedAndOrSignedContentMsgBlock) {
+        (actualBlock.blocks.first().content ?: "").normalizeEol().removeUtf8Bom()
+      } else {
+        (actualBlock.content ?: "").normalizeEol().removeUtf8Bom()
+      }
 
       assertEquals(expectedBlockType, actualBlock.type)
-      assertEquals(expectedComplete, actualBlock.complete)
       assertEquals(expectedContent, actualContent)
-
-      if (actualBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
-        val expectedSignature = expectedBlock["signature"].asString.normalizeEol()
-        val actualSignature = ((actualBlock as SignedMsgBlock).signature ?: "").normalizeEol()
-        assertEquals(expectedSignature, actualSignature)
-      }
     }
   }
 
@@ -399,7 +408,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -423,7 +432,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals(TEXT_SPECIAL_CHARS, result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -478,7 +487,7 @@ class PgpMsgTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(2, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
@@ -487,17 +496,16 @@ class PgpMsgTest {
   }
 
   @Test
-  //@Ignore("ask Ivan to check")
   fun testExtractClearTextFromMsgSignedMessagePreserveNewlines() {
     val text = loadResourceAsString("other/signed-message-preserve-newlines.txt")
-    val blocks = MsgBlockParser.detectBlocks(text).blocks
+    val blocks = RawBlockParser.detectBlocks(text).toList()
     val clearText = PgpSignature.extractClearText(text)
     assertEquals(
       "Standard message\n\nsigned inline\n\nshould easily verify\nThis is email footer",
       clearText
     )
     assertEquals(1, blocks.size)
-    assertEquals(MsgBlock.Type.SIGNED_MSG, blocks[0].type)
+    assertEquals(RawBlockParser.RawBlockType.PGP_CLEARSIGN_MSG, blocks[0].type)
   }
 
   @Test
@@ -513,7 +521,7 @@ class PgpMsgTest {
       "other/plain-google-security-alert-20210416-084836-UTC-text-content.txt"
     )
     assertEquals(textContent, result.text)
-    assertEquals(false, result.verificationResult.isEncrypted)
+    assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)

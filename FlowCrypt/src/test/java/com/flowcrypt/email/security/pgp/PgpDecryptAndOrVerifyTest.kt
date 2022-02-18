@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
+import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.createFileWithRandomData
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.apache.commons.io.FileUtils
@@ -160,22 +161,22 @@ class PgpDecryptAndOrVerifyTest {
   @Test
   fun testPatternToDetectEncryptedAtts() {
     //"(?i)(\\.pgp$)|(\\.gpg$)|(\\.[a-zA-Z0-9]{3,4}\\.asc$)"
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.pgp"))
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.PgP"))
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.gpg"))
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("file.gPg"))
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12.asc"))
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12.ASC"))
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.s12.asc"))
-    assertNotNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.ft2.ASC"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filepgp"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filePgP"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filegpg"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("filegPg"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12asc"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.fs12ASC"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.s12asc"))
-    assertNull(PgpMsg.ENCRYPTED_FILE_REGEX.find("d.ft2ASC"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("file.pgp"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("file.PgP"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("file.gpg"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("file.gPg"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.fs12.asc"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.fs12.ASC"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.s12.asc"))
+    assertNotNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.ft2.ASC"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("filepgp"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("filePgP"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("filegpg"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("filegPg"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.fs12asc"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.fs12ASC"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.s12asc"))
+    assertNull(RawBlockParser.ENCRYPTED_FILE_REGEX.find("d.ft2ASC"))
   }
 
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {

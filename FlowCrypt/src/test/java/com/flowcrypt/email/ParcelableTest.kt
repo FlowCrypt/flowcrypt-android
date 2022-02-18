@@ -48,7 +48,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     fixture.customise(MsgBlockGenerationCustomization())
     fixture.customise().sameInstance(
       GenericMsgBlock::class.java,
-      GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false)
+      GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", null, false)
     )
     fixture.customise().sameInstance(OpenPgpMetadata::class.java, null)
     //todo-denbond7 improve that
@@ -87,7 +87,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     )
     fixture.customise().sameInstance(
       DecryptedAndOrSignedContentMsgBlock::class.java,
-      DecryptedAndOrSignedContentMsgBlock(error = null, blocks = emptyList())
+      DecryptedAndOrSignedContentMsgBlock(error = null, blocks = emptyList(), false)
     )
     objectInstance = currentClass.kotlin.objectInstance ?: fixture.create(currentClass)
   }

@@ -1,0 +1,57 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id kZaVAc2PAmLnBAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Tue, 08 Feb 2022 15:44:13 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 04129540A18
+	for <default@flowcrypt.test>; Tue,  8 Feb 2022 15:44:13 +0000 (UTC)
+To: default@flowcrypt.test
+From: Den <denbond7@flowcrypt.test>
+Subject: NOT encrypted + signed(detached)
+Autocrypt: addr=denbond7@flowcrypt.test; keydata=
+ mDMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZceAWUq+0
+ F2RlbmJvbmQ3QGZsb3djcnlwdC50ZXN0iHgEExYKACAFAmCLnFgCGwMFFgIDAQAECwkIBwUV
+ CgkICwIeAQIZAQAKCRDDIInNavjWzm3JAQCgFgCEyD58iEa/Rw/DYNoQNoZC1lhw1bxBiOcI
+ btkdBgEAsDFZu3TBavOMKI7KW+vfMBHtRVbkMNpvunaAldoabgO4OARgi5xYEgorBgEEAZdV
+ AQUBAQdAB1/Mrq5JGYim4KqGTSK4OESQUwPgK56q0yrkiU9WgyYDAQgHiHUEGBYKAB0FAmCL
+ nFgCGwwFFgIDAQAECwkIBwUVCgkICwIeAQAKCRDDIInNavjWzjMgAQCU+R1fItqdY6lt9jXU
+ qipmXuqVaEFPwNA8YJ1rIwDwVQEAyUc8162KWzA2iQB5akwLwNr/pLDDtOWwhLUkrBb3mAc=
+Message-ID: <3fe297ba-3e53-7073-ee00-d0e516831264@flowcrypt.test>
+Date: Tue, 8 Feb 2022 17:44:10 +0200
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="4S1LR18a3JU2YiTxqubmlY1fr2BkmX171"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--4S1LR18a3JU2YiTxqubmlY1fr2BkmX171
+Content-Type: multipart/mixed; boundary="OSR6TONWKJD9dgyc2XH5AQPNnAs7pdg1t"
+
+--OSR6TONWKJD9dgyc2XH5AQPNnAs7pdg1t
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+
+NOT encrypted + signed(detached)
+
+
+
+--OSR6TONWKJD9dgyc2XH5AQPNnAs7pdg1t--
+
+--4S1LR18a3JU2YiTxqubmlY1fr2BkmX171
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTBZCjWAcs5N4nPYdTDIInNavjWzgUCYgKPzAAKCRDDIInNavjW
+zmdoAP0TdFt1OWqosHhXxt2hNYqZQMc6bgQRpJNL029nRyzkPAD/SoYJ4T+aYEhw
+11qrbXloqkr0G3QaA6/zk31RPMI/bgI=
+=o5Ze
+-----END PGP SIGNATURE-----
+
+--4S1LR18a3JU2YiTxqubmlY1fr2BkmX171--
