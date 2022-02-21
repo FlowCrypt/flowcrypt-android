@@ -24,10 +24,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CompoundButton
-import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ListView
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
@@ -58,6 +55,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -121,17 +119,18 @@ import javax.mail.internet.InternetAddress
  */
 class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickListener {
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.layoutContent)
+    get() = binding?.layoutContent
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
   private val args by navArgs<MessageDetailsFragmentArgs>()
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
   private val pgpSignatureHandlerViewModel: PgpSignatureHandlerViewModel by viewModels()
+  private var binding: FragmentMessageDetailsBinding? = null
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.Listener {
@@ -172,27 +171,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       }
     })
 
-  private var textViewSenderAddress: TextView? = null
-  private var textViewDate: TextView? = null
-  private var textViewSubject: TextView? = null
-  private var tVTo: TextView? = null
-  private var viewFooterOfHeader: View? = null
-  private var layoutMsgParts: ViewGroup? = null
-  private var layoutContent: View? = null
-  private var imageBtnReplyAll: ImageButton? = null
-  private var imageBtnMoreOptions: View? = null
-  private var iBShowDetails: View? = null
-  private var layoutReplyButton: View? = null
-  private var layoutFwdButton: View? = null
-  private var layoutReplyBtns: View? = null
-  private var emailWebView: EmailWebView? = null
-  private var layoutActionProgress: View? = null
-  private var textViewActionProgress: TextView? = null
-  private var progressBarActionProgress: ProgressBar? = null
-  private var rVAttachments: RecyclerView? = null
-  private var rVMsgDetails: RecyclerView? = null
-  private var rVPgpBadges: RecyclerView? = null
-
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
@@ -215,9 +193,15 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     updateActionsVisibility(args.localFolder, null)
   }
 
+  override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentMessageDetailsBinding.inflate(inflater, container, false)
+    return binding?.root
+  }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews(view)
     updateViews()
 
     setupLabelsViewModel()
@@ -368,12 +352,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         popup.setOnMenuItemClickListener {
           when (it.itemId) {
             R.id.menuActionReply -> {
-              layoutReplyButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.layoutReplyButton?.let { view -> onClick(view) }
               true
             }
 
             R.id.menuActionForward -> {
-              layoutFwdButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.layoutFwdButton?.let { view -> onClick(view) }
               true
             }
             else -> {
@@ -440,13 +424,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
-    imageBtnReplyAll?.visibility = View.VISIBLE
-    imageBtnMoreOptions?.visibility = View.VISIBLE
+    binding?.imageButtonReplyAll?.visibility = View.VISIBLE
+    binding?.imageButtonMoreOptions?.visibility = View.VISIBLE
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
 
-    msgInfo.inlineSubject?.let { textViewSubject?.text = it }
+    msgInfo.inlineSubject?.let { binding?.textViewSubject?.text = it }
 
     updateMsgBody()
     showContent()
@@ -454,15 +438,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun setActionProgress(progress: Int, message: String? = null) {
     if (progress > 0) {
-      progressBarActionProgress?.progress = progress
+      binding?.progressBarActionProgress?.progress = progress
     }
 
     if (progress != 100) {
-      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
-      textViewActionProgress?.visibility = View.VISIBLE
+      binding?.textViewActionProgress?.text =
+        getString(R.string.progress_message, progress, message)
+      binding?.textViewActionProgress?.visibility = View.VISIBLE
     } else {
-      textViewActionProgress?.text = null
-      layoutActionProgress?.visibility = View.GONE
+      binding?.textViewActionProgress?.text = null
+      binding?.layoutActionProgress?.visibility = View.GONE
     }
   }
 
@@ -674,41 +659,18 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     supportActionBar?.subtitle = actionBarSubTitle
   }
 
-  private fun initViews(view: View) {
-    layoutActionProgress = view.findViewById(R.id.layoutActionProgress)
-    textViewActionProgress = view.findViewById(R.id.textViewActionProgress)
-    progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
-
-    textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress)
-    textViewDate = view.findViewById(R.id.textViewDate)
-    textViewSubject = view.findViewById(R.id.textViewSubject)
-    tVTo = view.findViewById(R.id.tVTo)
-    viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader)
-    layoutMsgParts = view.findViewById(R.id.layoutMessageParts)
-    layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons)
-    emailWebView = view.findViewById(R.id.emailWebView)
-
-    layoutContent = view.findViewById(R.id.layoutContent)
-    imageBtnReplyAll = view.findViewById(R.id.imageButtonReplyAll)
-    imageBtnReplyAll?.setOnClickListener(this)
-    imageBtnMoreOptions = view.findViewById(R.id.imageButtonMoreOptions)
-    imageBtnMoreOptions?.setOnClickListener(this)
-    iBShowDetails = view.findViewById(R.id.iBShowDetails)
-
-    rVAttachments = view.findViewById(R.id.rVAttachments)
-    rVMsgDetails = view.findViewById(R.id.rVMsgDetails)
-    rVPgpBadges = view.findViewById(R.id.rVPgpBadges)
-  }
-
   private fun updateViews() {
-    iBShowDetails?.setOnClickListener {
-      rVMsgDetails?.visibleOrGone(!(rVMsgDetails?.isVisible ?: false))
-      textViewDate?.visibleOrGone(!(rVMsgDetails?.isVisible ?: false))
+    binding?.imageButtonReplyAll?.setOnClickListener(this)
+    binding?.imageButtonMoreOptions?.setOnClickListener(this)
+
+    binding?.iBShowDetails?.setOnClickListener {
+      binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
+      binding?.textViewDate?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
     }
 
     updateMsgDetails()
 
-    rVAttachments?.apply {
+    binding?.rVAttachments?.apply {
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
         MarginItemDecoration(
@@ -723,16 +685,17 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         args.messageEntity.subject
 
     if (folderType === FoldersManager.FolderType.SENT) {
-      textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
     } else {
-      textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.from)
+      binding?.textViewSenderAddress?.text =
+        EmailUtil.getFirstAddressString(args.messageEntity.from)
     }
-    textViewSubject?.text = subject
+    binding?.textViewSubject?.text = subject
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-      textViewDate?.text =
+      binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
     } else {
-      textViewDate?.text =
+      binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate ?: 0)
     }
 
@@ -740,7 +703,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun updateMsgDetails() {
-    rVMsgDetails?.apply {
+    binding?.rVMsgDetails?.apply {
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
         VerticalSpaceMarginItemDecoration(
@@ -752,7 +715,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       adapter = msgDetailsAdapter
     }
 
-    rVPgpBadges?.apply {
+    binding?.rVPgpBadges?.apply {
       layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
       addItemDecoration(
         MarginItemDecoration(
@@ -762,7 +725,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       adapter = pgpBadgeListAdapter
     }
 
-    tVTo?.text = prepareToText()
+    binding?.tVTo?.text = prepareToText()
 
     val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
       add(
@@ -863,8 +826,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun updateMsgView() {
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
-    emailWebView?.loadUrl("about:blank")
-    layoutMsgParts?.removeAllViews()
+    binding?.emailWebView?.loadUrl("about:blank")
+    binding?.layoutMessageParts?.removeAllViews()
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
@@ -881,22 +844,27 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         MsgBlock.Type.DECRYPTED_TEXT -> {
           msgEncryptType = MessageEncryptionType.ENCRYPTED
-          layoutMsgParts?.addView(genDecryptedTextPart(block, layoutInflater))
+          binding?.layoutMessageParts?.addView(genDecryptedTextPart(block, layoutInflater))
         }
 
         MsgBlock.Type.PLAIN_TEXT -> {
-          layoutMsgParts?.addView(genTextPart(block, layoutInflater))
+          binding?.layoutMessageParts?.addView(genTextPart(block, layoutInflater))
           if (isFirstMsgPartText) {
-            viewFooterOfHeader?.visibility = View.VISIBLE
+            binding?.layoutFooterOfHeader?.visibility = View.VISIBLE
           }
         }
 
         MsgBlock.Type.PUBLIC_KEY ->
-          layoutMsgParts?.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
+          binding?.layoutMessageParts?.addView(
+            genPublicKeyPart(
+              block as PublicKeyMsgBlock,
+              layoutInflater
+            )
+          )
 
         MsgBlock.Type.DECRYPT_ERROR -> {
           msgEncryptType = MessageEncryptionType.ENCRYPTED
-          layoutMsgParts?.addView(
+          binding?.layoutMessageParts?.addView(
             genDecryptErrorPart(
               block as DecryptErrorMsgBlock,
               layoutInflater
@@ -932,27 +900,27 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     block: @JvmSuppressWildcards MsgBlock,
     layoutInflater: LayoutInflater
   ) {
-    layoutMsgParts?.addView(
+    binding?.layoutMessageParts?.addView(
       genDefPart(
         block, layoutInflater,
-        R.layout.message_part_other, layoutMsgParts
+        R.layout.message_part_other, binding?.layoutMessageParts
       )
     )
   }
 
   private fun setupWebView(block: MsgBlock) {
-    emailWebView?.configure()
+    binding?.emailWebView?.configure()
 
     val text = clipLargeText(block.content) ?: ""
 
-    emailWebView?.loadDataWithBaseURL(
+    binding?.emailWebView?.loadDataWithBaseURL(
       null,
       text,
       "text/html",
       StandardCharsets.UTF_8.displayName(),
       null
     )
-    emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
+    binding?.emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
         setActionProgress(100, null)
         updateReplyButtons()
@@ -975,42 +943,39 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * Update the reply buttons layout depending on the [MessageEncryptionType]
    */
   private fun updateReplyButtons() {
-    if (layoutReplyBtns != null) {
-      val imageViewReply = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewReply)
-      val imageViewReplyAll = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewReplyAll)
-      val imageViewFwd = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewFwd)
+    if (binding?.layoutReplyButtons != null) {
+      val imageViewReply = binding?.layoutReplyButtons?.imageViewReply
+      val imageViewReplyAll = binding?.layoutReplyButtons?.imageViewReplyAll
+      val imageViewFwd = binding?.layoutReplyButtons?.imageViewFwd
 
-      val textViewReply = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewReply)
-      val textViewReplyAll = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewReplyAll)
-      val textViewFwd = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewFwd)
+      val textViewReply = binding?.layoutReplyButtons?.textViewReply
+      val textViewReplyAll = binding?.layoutReplyButtons?.textViewReplyAll
+      val textViewFwd = binding?.layoutReplyButtons?.textViewFwd
 
       if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-        imageViewReply.setImageResource(R.mipmap.ic_reply_green)
-        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green)
-        imageBtnReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
-        imageViewFwd.setImageResource(R.mipmap.ic_forward_green)
+        imageViewReply?.setImageResource(R.mipmap.ic_reply_green)
+        imageViewReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
+        binding?.imageButtonReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
+        imageViewFwd?.setImageResource(R.mipmap.ic_forward_green)
 
-        textViewReply.setText(R.string.reply_encrypted)
-        textViewReplyAll.setText(R.string.reply_all_encrypted)
-        textViewFwd.setText(R.string.forward_encrypted)
+        textViewReply?.setText(R.string.reply_encrypted)
+        textViewReplyAll?.setText(R.string.reply_all_encrypted)
+        textViewFwd?.setText(R.string.forward_encrypted)
       } else {
-        imageViewReply.setImageResource(R.mipmap.ic_reply_red)
-        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red)
-        imageBtnReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
-        imageViewFwd.setImageResource(R.mipmap.ic_forward_red)
+        imageViewReply?.setImageResource(R.mipmap.ic_reply_red)
+        imageViewReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
+        binding?.imageButtonReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
+        imageViewFwd?.setImageResource(R.mipmap.ic_forward_red)
 
-        textViewReply.setText(R.string.reply)
-        textViewReplyAll.setText(R.string.reply_all)
-        textViewFwd.setText(R.string.forward)
+        textViewReply?.setText(R.string.reply)
+        textViewReplyAll?.setText(R.string.reply_all)
+        textViewFwd?.setText(R.string.forward)
       }
 
-      layoutReplyButton = layoutReplyBtns?.findViewById(R.id.layoutReplyButton)
-      layoutReplyButton?.setOnClickListener(this)
-      layoutFwdButton = layoutReplyBtns?.findViewById(R.id.layoutFwdButton)
-      layoutFwdButton?.setOnClickListener(this)
-      layoutReplyBtns?.findViewById<View>(R.id.layoutReplyAllButton)?.setOnClickListener(this)
-
-      layoutReplyBtns?.visibility = View.VISIBLE
+      binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.root?.visibility = View.VISIBLE
     }
   }
 
@@ -1031,8 +996,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       )
     }
 
-    val pubKeyView =
-      inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup
+    val pubKeyView = inflater.inflate(
+      R.layout.message_part_public_key,
+      binding?.layoutMessageParts,
+      false
+    ) as ViewGroup
     val textViewPgpPublicKey = pubKeyView.findViewById<TextView>(R.id.textViewPgpPublicKey)
     val switchShowPublicKey = pubKeyView.findViewById<CompoundButton>(R.id.switchShowPublicKey)
 
@@ -1150,11 +1118,21 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun genTextPart(block: MsgBlock, layoutInflater: LayoutInflater): View {
-    return genDefPart(block, layoutInflater, R.layout.message_part_text, layoutMsgParts)
+    return genDefPart(
+      block,
+      layoutInflater,
+      R.layout.message_part_text,
+      binding?.layoutMessageParts
+    )
   }
 
   private fun genDecryptedTextPart(block: MsgBlock, layoutInflater: LayoutInflater): View {
-    return genDefPart(block, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts)
+    return genDefPart(
+      block,
+      layoutInflater,
+      R.layout.message_part_pgp_message,
+      binding?.layoutMessageParts
+    )
   }
 
   private fun genDecryptErrorPart(
@@ -1230,7 +1208,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   ): View {
     val viewGroup = layoutInflater.inflate(
       R.layout.message_part_pgp_message_error,
-      layoutMsgParts, false
+      binding?.layoutMessageParts, false
     ) as ViewGroup
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
     ExceptionUtil.handleError(ManualHandledException(errorMsg))
@@ -1256,7 +1234,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    */
   private fun generateMissingPrivateKeyLayout(pgpMsg: String?, inflater: LayoutInflater): View {
     val viewGroup = inflater.inflate(
-      R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false
+      R.layout.message_part_pgp_message_missing_private_key, binding?.layoutMessageParts, false
     ) as ViewGroup
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey?.setOnClickListener {
