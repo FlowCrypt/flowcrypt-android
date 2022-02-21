@@ -52,6 +52,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -1476,10 +1477,18 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
-      if (attInfo.rawData?.isNotEmpty() == true) {
-        downloadInlinedAtt(attInfo)
+      if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+        if (attInfo.rawData?.isNotEmpty() == true) {
+          //downloadInlinedAtt
+        } else {
+          //show downloading att dialog
+        }
       } else {
-        context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+        if (attInfo.rawData?.isNotEmpty() == true) {
+          downloadInlinedAtt(attInfo)
+        } else {
+          context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+        }
       }
     }
   }
