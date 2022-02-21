@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/msg_details_graph"
+    app:startDestination="@id/messageDetailsFragment">
+
+    <fragment
+        android:id="@+id/messageDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
+        android:label="MessageDetailsFragment"
+        tools:layout="@layout/fragment_message_details">
+        <argument
+            android:name="messageEntity"
+            app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
+        <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+    </fragment>
+</navigation>
