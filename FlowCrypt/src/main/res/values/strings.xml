@@ -575,4 +575,5 @@
     <string name="warning_use_private_key_pass_phrase_as_password">Please do not use your private key pass phrase as a password for this message.\n\nYou should come up with some other unique password that you can share with a recipient.</string>
     <string name="synchronization">Syncing&#8230;</string>
     <string name="warning_when_import_invalid_prv_key">Key is invalid, you could not import such a key.\n\nIf this happens again, please write us at %1$s</string>
+    <string name="downloading">Downloading&#8230;</string>
 </resources>

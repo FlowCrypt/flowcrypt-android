@@ -61,6 +61,7 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -1459,7 +1460,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         if (attInfo.rawData?.isNotEmpty() == true) {
           //downloadInlinedAtt
         } else {
-          //show downloading att dialog
+          navController?.navigate(
+            MessageDetailsFragmentDirections
+              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(attInfo)
+          )
         }
       } else {
         if (attInfo.rawData?.isNotEmpty() == true) {
