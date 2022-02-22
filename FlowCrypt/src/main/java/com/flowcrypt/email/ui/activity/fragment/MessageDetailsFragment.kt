@@ -8,8 +8,10 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.Manifest
 import android.accounts.AuthenticatorException
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -32,6 +34,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -85,6 +88,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -134,7 +138,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var binding: FragmentMessageDetailsBinding? = null
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
-    object : AttachmentsRecyclerViewAdapter.Listener {
+    object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
         lastClickedAtt = attachmentInfo
         lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
@@ -170,6 +174,35 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           )
         }
       }
+
+      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
+        if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+            previewAttachment(
+              attachmentInfo = attachmentInfo,
+              useEnterpriseBehaviour = true
+            )
+          }
+        }
+      }
+
+      override fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo) {
+        if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+            previewAttachment(
+              attachmentInfo = attachmentInfo,
+              useEnterpriseBehaviour = true
+            )
+          } else {
+            navController?.navigate(
+              MessageDetailsFragmentDirections
+                .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+                  REQUEST_CODE_PREVIEW_ATTACHMENT, attachmentInfo
+                )
+            )
+          }
+        }
+      }
     })
 
   private var msgInfo: IncomingMessageInfo? = null
@@ -191,6 +224,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
+    subscribeToDownloadAttachmentViaDialog()
     updateActionsVisibility(args.localFolder, null)
   }
 
@@ -415,6 +449,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
       else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    attachmentsRecyclerViewAdapter.isPreviewEnabled =
+      account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
   }
 
   /**
@@ -1457,12 +1497,15 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
       if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
-        if (attInfo.rawData?.isNotEmpty() == true) {
-          //downloadInlinedAtt
+        if (attInfo.uri != null || attInfo.rawData?.isNotEmpty() == true) {
+          previewAttachment(attInfo, true)
         } else {
           navController?.navigate(
             MessageDetailsFragmentDirections
-              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(attInfo)
+              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+                REQUEST_CODE_SAVE_ATTACHMENT,
+                attInfo
+              )
           )
         }
       } else {
@@ -1475,22 +1518,42 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
   }
 
-  private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
-    val tempDir = CacheManager.getCurrentMsgTempDir()
-    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
-    val file = if (fileName.isNullOrEmpty()) {
-      File.createTempFile("tmp", null, tempDir)
+  private fun previewAttachment(
+    attachmentInfo: AttachmentInfo,
+    useEnterpriseBehaviour: Boolean = false
+  ) {
+    val intent = if (attachmentInfo.uri != null) {
+      GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
-      val fileCandidate = File(tempDir, fileName)
-      if (fileCandidate.exists()) {
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(tempDir, fileName)
-      } else {
-        fileCandidate
+      val (_, uri) = useFileProviderToGenerateUri(attachmentInfo)
+      GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+    }
+
+    if (useEnterpriseBehaviour) {
+      try {
+        //ask Tom about receiving package as a parameter
+        startActivity(Intent(intent).setPackage("com.airwatch.contentlocker"))
+      } catch (e: ActivityNotFoundException) {
+        //We don't have the required app. Try to open with other applications
+        try {
+          startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+          toast(getString(R.string.no_apps_that_can_handle_intent))
+        }
+      }
+    } else {
+      try {
+        startActivity(intent)
+      } catch (e: ActivityNotFoundException) {
+        toast(getString(R.string.no_apps_that_can_handle_intent))
       }
     }
-    FileUtils.writeByteArrayToFile(file, attInfo.rawData)
+  }
+
+  private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
+    val (file, uri) = useFileProviderToGenerateUri(attInfo)
     context?.let {
-      attInfo.uri = FileProvider.getUriForFile(it, Constants.FILE_PROVIDER_AUTHORITY, file)
+      attInfo.uri = uri
       it.startService(
         AttachmentDownloadManagerService.newIntent(
           context,
@@ -1503,10 +1566,59 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     ExceptionUtil.handleError(e)
   }
 
-  private fun messageNotAvailableInFolder(showToast: Boolean = true) {
-    msgDetailsViewModel.deleteMsg()
-    if (showToast) {
-      toast(R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG)
+  private fun useFileProviderToGenerateUri(attInfo: AttachmentInfo): Pair<File, Uri> {
+    val tempDir = CacheManager.getCurrentMsgTempDir()
+    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
+    val file = if (fileName.isNullOrEmpty()) {
+      File.createTempFile("tmp", null, tempDir)
+    } else {
+      val fileCandidate = File(tempDir, fileName)
+      if (!fileCandidate.exists()) {
+        FileUtils.writeByteArrayToFile(fileCandidate, attInfo.rawData)
+      }
+      fileCandidate
+    }
+    val uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
+    return Pair(file, uri)
+  }
+
+  private fun subscribeToDownloadAttachmentViaDialog() {
+    setFragmentResultListener(DownloadAttachmentDialogFragment.REQUEST_KEY_ATTACHMENT_DATA) { _, bundle ->
+      val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
+      val attachmentInfo =
+        bundle.getParcelable<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
+      val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
+      attachmentInfo?.rawData = data
+
+      for (att in attachmentsRecyclerViewAdapter.currentList) {
+        if (attachmentInfo == att) {
+          att.rawData = data
+          att.name = if (SecurityUtils.isPossiblyEncryptedData(att.name)) {
+            FilenameUtils.getBaseName(att.name)
+          } else {
+            att.name
+          }
+          attachmentsRecyclerViewAdapter.notifyItemRangeChanged(
+            0,
+            attachmentsRecyclerViewAdapter.currentList.size
+          )
+          break
+        }
+      }
+
+      when (requestCode) {
+        REQUEST_CODE_PREVIEW_ATTACHMENT -> {
+          attachmentInfo?.let {
+            previewAttachment(
+              attachmentInfo = it,
+              useEnterpriseBehaviour =
+              account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
+            )
+          }
+        }
+
+        REQUEST_CODE_SAVE_ATTACHMENT -> {}
+      }
     }
   }
 
@@ -1518,5 +1630,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
+
+    private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
+    private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
   }
 }

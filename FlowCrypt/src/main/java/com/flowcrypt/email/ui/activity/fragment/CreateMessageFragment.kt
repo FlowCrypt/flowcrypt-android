@@ -1405,6 +1405,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         }
 
         val imageButtonDownloadAtt = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
+        rootView.findViewById<View>(R.id.imageButtonPreviewAtt)?.visibility = View.GONE
 
         if (!att.isProtected) {
           imageButtonDownloadAtt.visibility = View.GONE

@@ -21,9 +21,11 @@
 
     <TextView
         android:id="@+id/textViewAttachmentName"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_small"
+        android:ellipsize="middle"
+        android:maxLines="1"
         app:layout_constraintEnd_toStartOf="@+id/textViewLeftTime"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
@@ -35,6 +37,7 @@
         android:id="@+id/textViewLeftTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_small"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"

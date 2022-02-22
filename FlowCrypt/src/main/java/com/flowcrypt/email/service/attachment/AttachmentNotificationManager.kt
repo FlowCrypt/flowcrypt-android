@@ -95,13 +95,8 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param uri     The [Uri] of the downloaded attachment.
    */
   fun downloadCompleted(context: Context, attInfo: AttachmentInfo, uri: Uri) {
-    val intent = Intent(Intent.ACTION_VIEW, uri)
-    intent.action = Intent.ACTION_VIEW
-    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
+    val intent = GeneralUtil.genViewAttachmentIntent(uri, attInfo)
     val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-
     val builder = genDefBuilder(context, attInfo)
 
     builder.setProgress(0, 0, false)
