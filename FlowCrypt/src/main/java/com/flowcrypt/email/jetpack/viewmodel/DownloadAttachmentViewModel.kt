@@ -156,6 +156,9 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
         return@withContext inputStream.readBytes()
       }
 
+      downloadAttachmentMutableStateFlow.value =
+        Result.loading(progressMsg = context.getString(R.string.decrypting))
+
       inputStream.use {
         val byteArrayOutputStream = ByteArrayOutputStream()
         val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()

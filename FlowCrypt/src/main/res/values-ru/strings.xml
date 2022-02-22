@@ -490,4 +490,6 @@
     <string name="synchronization">Синхронизация&#8230;</string>
     <string name="warning_when_import_invalid_prv_key">Найден недействительный ключ. Импорт невозможен.\n\nЕсли это случится еще раз, пожалуйста, напишите нам на %1$s</string>
     <string name="downloading">Скачивание&#8230;</string>
+    <string name="decrypting">Расшифровка&#8230;</string>
+    <string name="error_occurred_during_downloading_att">Произошла ошибка при загрузке.\n\nДетали ошибки:  %1$s</string>
 </resources>

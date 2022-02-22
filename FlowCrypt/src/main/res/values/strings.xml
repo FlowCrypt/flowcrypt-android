@@ -576,4 +576,6 @@
     <string name="synchronization">Syncing&#8230;</string>
     <string name="warning_when_import_invalid_prv_key">Key is invalid, you could not import such a key.\n\nIf this happens again, please write us at %1$s</string>
     <string name="downloading">Downloading&#8230;</string>
+    <string name="decrypting">Decrypting&#8230;</string>
+    <string name="error_occurred_during_downloading_att">An error occurred during downloading.\n\nDetails:  %1$s</string>
 </resources>

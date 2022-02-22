@@ -10,7 +10,7 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/textViewDownloading"
+        android:id="@+id/textViewStatus"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/downloading"
@@ -28,7 +28,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDownloading"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
         tools:text="attachment.txt" />
 
     <TextView
@@ -40,7 +40,7 @@
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/textViewAttachmentName"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDownloading"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
         tools:text="01:12" />
 
     <ProgressBar
