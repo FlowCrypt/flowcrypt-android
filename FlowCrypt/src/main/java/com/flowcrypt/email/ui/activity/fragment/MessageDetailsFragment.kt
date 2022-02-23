@@ -1496,10 +1496,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
-      if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
-        if (attInfo.uri != null || attInfo.rawData?.isNotEmpty() == true) {
-          previewAttachment(attInfo, true)
-        } else {
+      if (attInfo.rawData?.isNotEmpty() == true) {
+        downloadInlinedAtt(attInfo)
+      } else {
+        if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
           navController?.navigate(
             MessageDetailsFragmentDirections
               .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
@@ -1507,10 +1507,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
                 attInfo
               )
           )
-        }
-      } else {
-        if (attInfo.rawData?.isNotEmpty() == true) {
-          downloadInlinedAtt(attInfo)
         } else {
           context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
         }
@@ -1617,7 +1613,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           }
         }
 
-        REQUEST_CODE_SAVE_ATTACHMENT -> {}
+        REQUEST_CODE_SAVE_ATTACHMENT -> {
+          downloadAttachment()
+        }
       }
     }
   }
