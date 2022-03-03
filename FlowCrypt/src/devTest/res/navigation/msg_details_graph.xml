@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/msg_details_graph"
+    app:startDestination="@id/messageDetailsFragment">
+
+    <fragment
+        android:id="@+id/messageDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
+        android:label="MessageDetailsFragment"
+        tools:layout="@layout/fragment_message_details">
+
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/msg/details" />
+
+        <argument
+            android:name="messageEntity"
+            app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
+        <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+        <action
+            android:id="@+id/action_messageDetailsFragment_to_downloadAttachmentDialogFragment"
+            app:destination="@id/downloadAttachmentDialogFragment" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/downloadAttachmentDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment"
+        android:label="DownloadAttachmentDialogFragment"
+        tools:layout="@layout/fragment_download_attachment">
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="attachmentInfo"
+            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
+    </dialog>
+</navigation>
