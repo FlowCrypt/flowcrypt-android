@@ -263,6 +263,9 @@
         <argument
             android:name="localFolder"
             app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+        <action
+            android:id="@+id/action_messageDetailsFragment_to_downloadAttachmentDialogFragment"
+            app:destination="@id/downloadAttachmentDialogFragment" />
     </fragment>
 
     <fragment
@@ -465,6 +468,20 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment"
         android:label="ImportAllPubKeysFromSourceDialogFragment"
         tools:layout="@layout/fragment_import_all_pub_keys_from_source" />
+
+    <dialog
+        android:id="@+id/downloadAttachmentDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment"
+        android:label="DownloadAttachmentDialogFragment"
+        tools:layout="@layout/fragment_download_attachment">
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="attachmentInfo"
+            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
+    </dialog>
 
     <action
         android:id="@+id/action_global_twoWayDialogFragment"
