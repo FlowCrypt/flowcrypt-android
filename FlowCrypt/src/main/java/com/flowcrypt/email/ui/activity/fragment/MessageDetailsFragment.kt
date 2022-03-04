@@ -40,6 +40,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.MsgDetailsGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -1530,12 +1531,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         //ask Tom about receiving package as a parameter
         startActivity(Intent(intent).setPackage("com.airwatch.contentlocker"))
       } catch (e: ActivityNotFoundException) {
-        //We don't have the required app. Try to open with other applications
-        try {
-          startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-          toast(getString(R.string.no_apps_that_can_handle_intent))
-        }
+        //We don't have the required app
+        navController?.navigate(
+          MsgDetailsGraphDirections.actionGlobalInfoDialogFragment(
+            requestCode = 0,
+            dialogTitle = "",
+            dialogMsg = getString(R.string.warning_don_not_have_content_app)
+          )
+        )
       }
     } else {
       try {
