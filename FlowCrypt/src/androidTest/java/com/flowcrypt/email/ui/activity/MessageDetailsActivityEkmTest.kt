@@ -14,6 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
@@ -24,6 +25,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -40,11 +42,16 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class MessageDetailsActivityEkmTest : BaseMessageDetailsActivityTest() {
+  private val simpleAttInfo = TestGeneralUtil.getObjectFromJson(
+    "messages/attachments/simple_att.json",
+    AttachmentInfo::class.java
+  )
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
       flags = listOf(
         OrgRules.DomainRule.NO_PRV_CREATE,
-        OrgRules.DomainRule.NO_PRV_BACKUP
+        OrgRules.DomainRule.NO_PRV_BACKUP,
+        OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
@@ -85,5 +92,17 @@ class MessageDetailsActivityEkmTest : BaseMessageDetailsActivityTest() {
       .check(matches(not(isDisplayed())))
     onView(withId(R.id.buttonSendOwnPublicKey))
       .check(matches(withText(R.string.inform_sender)))
+  }
+
+  @Test
+  fun testVisibilityOfPreviewAttachmentButton() {
+    baseCheckWithAtt(
+      getMsgInfo(
+        "messages/info/standard_msg_info_plaintext_with_one_att.json",
+        "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo
+      ), simpleAttInfo
+    )
+    onView(withId(R.id.imageButtonPreviewAtt))
+      .check(matches(isDisplayed()))
   }
 }

@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.text.format.DateUtils
-import android.text.format.Formatter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
@@ -33,16 +32,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
-import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
@@ -54,14 +50,12 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
-import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
@@ -888,91 +882,6 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
 
     checkWebViewText(incomingMsgInfo.text)
     matchReplyButtons(details)
-  }
-
-  private fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, att: AttachmentInfo?) {
-    assertThat(incomingMsgInfo, notNullValue())
-
-    val msgEntity = incomingMsgInfo!!.msgEntity
-    launchActivity(msgEntity)
-    matchHeader(incomingMsgInfo)
-
-    checkWebViewText(incomingMsgInfo.text)
-    onView(withId(R.id.layoutAtt))
-      .check(matches(isDisplayed()))
-    matchAtt(att)
-    matchReplyButtons(msgEntity)
-  }
-
-  private fun matchHeader(incomingMsgInfo: IncomingMessageInfo?) {
-    val msgEntity = incomingMsgInfo?.msgEntity
-    requireNotNull(msgEntity)
-
-    onView(withId(R.id.textViewSenderAddress))
-      .check(matches(withText(EmailUtil.getFirstAddressString(msgEntity.from))))
-    onView(withId(R.id.textViewDate))
-      .check(
-        matches(
-          withText(
-            DateTimeUtil.formatSameDayTime(
-              getTargetContext(),
-              msgEntity.receivedDate
-            )
-          )
-        )
-      )
-    onView(withId(R.id.textViewSubject))
-      .check(matches(anyOf(withText(msgEntity.subject), withText(incomingMsgInfo.inlineSubject))))
-  }
-
-  private fun matchAtt(att: AttachmentInfo?) {
-    requireNotNull(att)
-    onView(withId(R.id.textViewAttachmentName))
-      .check(matches(withText(att.name)))
-    onView(withId(R.id.textViewAttSize))
-      .check(matches(withText(Formatter.formatFileSize(getContext(), att.encodedSize))))
-  }
-
-  private fun matchReplyButtons(msgEntity: MessageEntity) {
-    onView(withId(R.id.imageButtonReplyAll))
-      .check(matches(isDisplayed()))
-    onView(withId(R.id.layoutReplyButton))
-      .perform(scrollTo())
-      .check(matches(isDisplayed()))
-    onView(withId(R.id.layoutReplyAllButton))
-      .check(matches(isDisplayed()))
-    onView(withId(R.id.layoutFwdButton))
-      .check(matches(isDisplayed()))
-
-    if (msgEntity.isEncrypted == true) {
-      onView(withId(R.id.textViewReply))
-        .check(matches(withText(getResString(R.string.reply_encrypted))))
-      onView(withId(R.id.textViewReplyAll))
-        .check(matches(withText(getResString(R.string.reply_all_encrypted))))
-      onView(withId(R.id.textViewFwd))
-        .check(matches(withText(getResString(R.string.forward_encrypted))))
-
-      onView(withId(R.id.imageViewReply))
-        .check(matches(withDrawable(R.mipmap.ic_reply_green)))
-      onView(withId(R.id.imageViewReplyAll))
-        .check(matches(withDrawable(R.mipmap.ic_reply_all_green)))
-      onView(withId(R.id.imageViewFwd))
-        .check(matches(withDrawable(R.mipmap.ic_forward_green)))
-    } else {
-      onView(withId(R.id.textViewReply))
-        .check(matches(withText(getResString(R.string.reply))))
-      onView(withId(R.id.textViewReplyAll))
-        .check(matches(withText(getResString(R.string.reply_all))))
-      onView(withId(R.id.textViewFwd))
-        .check(matches(withText(getResString(R.string.forward))))
-
-      onView(withId(R.id.imageViewReply))
-        .check(matches(withDrawable(R.mipmap.ic_reply_red)))
-      onView(withId(R.id.imageViewReplyAll))
-        .check(matches(withDrawable(R.mipmap.ic_reply_all_red)))
-      onView(withId(R.id.imageViewFwd))
-        .check(matches(withDrawable(R.mipmap.ic_forward_red)))
-    }
   }
 
   private fun testTopReplyAction(title: String) {
