@@ -244,6 +244,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     setupMsgDetailsViewModel()
   }
 
+  override fun onDestroy() {
+    super.onDestroy()
+    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+  }
+
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
