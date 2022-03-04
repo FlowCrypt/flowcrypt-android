@@ -13,4 +13,4 @@ import android.app.Application
  *         Time: 9:25 PM
  *         E-mail: DenBond7@gmail.com
  */
-class PgpSignatureHandlerViewModel(application: Application) : AccountViewModel(application)
+class PublicKeyFetcherViewModel(application: Application) : AccountViewModel(application)

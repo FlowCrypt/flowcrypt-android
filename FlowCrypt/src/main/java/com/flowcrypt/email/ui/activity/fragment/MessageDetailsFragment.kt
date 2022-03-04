@@ -69,7 +69,7 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
-import com.flowcrypt.email.jetpack.viewmodel.PgpSignatureHandlerViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PublicKeyFetcherViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -130,7 +130,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
-  private val pgpSignatureHandlerViewModel: PgpSignatureHandlerViewModel by viewModels()
+  private val publicKeyFetcherViewModel: PublicKeyFetcherViewModel by viewModels()
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.Listener {
