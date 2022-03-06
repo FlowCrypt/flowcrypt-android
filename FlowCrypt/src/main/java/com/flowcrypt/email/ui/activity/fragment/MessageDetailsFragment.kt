@@ -36,6 +36,7 @@ import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -69,7 +70,6 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
-import com.flowcrypt.email.jetpack.viewmodel.PublicKeyFetcherViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -130,8 +130,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
-  private val publicKeyFetcherViewModel: PublicKeyFetcherViewModel by viewModels()
-
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.Listener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
@@ -221,6 +219,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     setupLabelsViewModel()
     setupMsgDetailsViewModel()
+    setupRecipientsViewModel()
+    collectReVerifySignaturesStateFlow()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -489,7 +489,19 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           }
 
           verificationResult.hasUnverifiedSignatures -> {
-            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
+            if (recipientsViewModel.recipientsFromLiveData.value?.data != null) {
+              PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
+            } else {
+              val fromAddresses = msgInfo?.getFrom()
+              if (fromAddresses?.isNotEmpty() == true) {
+                recipientsViewModel.fetchAndUpdateInfoAboutRecipients(
+                  RecipientsViewModel.FROM,
+                  fromAddresses.map { it.address.lowercase() })
+                PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.VERIFYING_SIGNATURE)
+              } else {
+                PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
+              }
+            }
           }
 
           verificationResult.isPartialSigned -> {
@@ -1338,6 +1350,49 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     observerPassphraseNeededLiveData()
   }
 
+  private fun setupRecipientsViewModel() {
+    recipientsViewModel.recipientsFromLiveData.observe(viewLifecycleOwner) {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+        }
+
+        Result.Status.SUCCESS -> {
+          val list = it.data
+          val missedFingerprints =
+            msgInfo?.verificationResult?.keyIdOfSigningKeys ?: emptyList()
+          if (list?.isNotEmpty() == true) {
+            var isVerificationNeeded = false
+            for (recipientWithPubKeys in list) {
+              for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
+                if (publicKeyEntity.pgpKeyDetails?.primaryKeyId in missedFingerprints) {
+                  isVerificationNeeded = true
+                }
+              }
+            }
+
+            if (isVerificationNeeded) {
+              msgDetailsViewModel.reVerifySignatures()
+            } else {
+              updatePgpBadges()
+            }
+          } else {
+            updatePgpBadges()
+          }
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.EXCEPTION -> {
+          updatePgpBadges()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        else -> {
+        }
+      }
+    }
+  }
+
   private fun observeFreshMsgLiveData() {
     msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner) {
       it?.let { messageEntity -> updateActionBar(messageEntity) }
@@ -1470,6 +1525,35 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
         showNeedPassphraseDialog(fingerprintList, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
+      }
+    }
+  }
+
+  private fun collectReVerifySignaturesStateFlow() {
+    lifecycleScope.launchWhenStarted {
+      msgDetailsViewModel.reVerifySignaturesStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
+          }
+
+          Result.Status.SUCCESS -> {
+            val verificationResult = it.data
+            if (verificationResult != null) {
+              msgInfo = msgInfo?.copy(verificationResult = verificationResult)
+            }
+            updatePgpBadges()
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+
+          Result.Status.EXCEPTION, Result.Status.ERROR -> {
+            updatePgpBadges()
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+
+          else -> {
+          }
+        }
       }
     }
   }

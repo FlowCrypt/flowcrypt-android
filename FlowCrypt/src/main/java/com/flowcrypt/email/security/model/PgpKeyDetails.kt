@@ -39,6 +39,7 @@ data class PgpKeyDetails constructor(
   @Expose val lastModified: Long? = null,
   @Expose val expiration: Long? = null,
   @Expose val algo: Algo,
+  @Expose val primaryKeyId: Long,
   var tempPassphrase: CharArray? = null,
   var passphraseType: KeyEntity.PassphraseType? = null
 ) : Parcelable {
@@ -71,6 +72,7 @@ data class PgpKeyDetails constructor(
     source.readValue(Long::class.java.classLoader) as Long?,
     source.readValue(Long::class.java.classLoader) as Long?,
     source.readParcelable<Algo>(Algo::class.java.classLoader) ?: throw NullPointerException(),
+    source.readLong(),
     source.createCharArray(),
     source.readParcelable<KeyEntity.PassphraseType>(
       KeyEntity.PassphraseType::class.java.classLoader
@@ -92,6 +94,7 @@ data class PgpKeyDetails constructor(
     writeValue(lastModified)
     writeValue(expiration)
     writeParcelable(algo, flags)
+    writeLong(primaryKeyId)
     writeCharArray(tempPassphrase)
     writeParcelable(passphraseType, flags)
   }
@@ -177,6 +180,7 @@ data class PgpKeyDetails constructor(
     if (lastModified != other.lastModified) return false
     if (expiration != other.expiration) return false
     if (algo != other.algo) return false
+    if (primaryKeyId != other.primaryKeyId) return false
     if (tempPassphrase != null) {
       if (other.tempPassphrase == null) return false
       if (!tempPassphrase.contentEquals(other.tempPassphrase)) return false
@@ -198,6 +202,7 @@ data class PgpKeyDetails constructor(
     result = 31 * result + (lastModified?.hashCode() ?: 0)
     result = 31 * result + (expiration?.hashCode() ?: 0)
     result = 31 * result + algo.hashCode()
+    result = 31 * result + primaryKeyId.hashCode()
     result = 31 * result + (tempPassphrase?.contentHashCode() ?: 0)
     result = 31 * result + (passphraseType?.hashCode() ?: 0)
     return result

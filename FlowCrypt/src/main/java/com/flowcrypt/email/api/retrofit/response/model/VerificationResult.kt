@@ -20,15 +20,23 @@ data class VerificationResult(
   @Expose val hasSignedParts: Boolean,
   @Expose val hasMixedSignatures: Boolean,
   @Expose val isPartialSigned: Boolean,
-  @Expose val hasUnverifiedSignatures: Boolean,
+  @Expose val keyIdOfSigningKeys: List<Long>,
   @Expose val hasBadSignatures: Boolean,
 ) : Parcelable {
+
+  val hasUnverifiedSignatures: Boolean = keyIdOfSigningKeys.isNotEmpty()
+
   constructor(parcel: Parcel) : this(
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
-    parcel.readByte() != 0.toByte(),
+    mutableListOf<Long>().apply {
+      parcel.readList(
+        this as List<*>,
+        Long::class.java.classLoader
+      )
+    },
     parcel.readByte() != 0.toByte()
   )
 
@@ -37,7 +45,7 @@ data class VerificationResult(
     parcel.writeByte(if (hasSignedParts) 1 else 0)
     parcel.writeByte(if (hasMixedSignatures) 1 else 0)
     parcel.writeByte(if (isPartialSigned) 1 else 0)
-    parcel.writeByte(if (hasUnverifiedSignatures) 1 else 0)
+    parcel.writeList(keyIdOfSigningKeys)
     parcel.writeByte(if (hasBadSignatures) 1 else 0)
   }
 

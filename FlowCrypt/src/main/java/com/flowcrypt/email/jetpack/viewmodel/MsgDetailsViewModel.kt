@@ -31,6 +31,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -49,12 +50,16 @@ import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.cache.DiskLruCache
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPMessage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -262,6 +267,13 @@ class MsgDetailsViewModel(
     uid = messageEntity.uid
   )
 
+  private val controlledRunnerForSignaturesReverification =
+    ControlledRunner<Result<VerificationResult>>()
+  private val reVerifySignaturesMutableStateFlow: MutableStateFlow<Result<VerificationResult>> =
+    MutableStateFlow(Result.none())
+  val reVerifySignaturesStateFlow: StateFlow<Result<VerificationResult>> =
+    reVerifySignaturesMutableStateFlow.asStateFlow()
+
   init {
     afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
       afterKeysStorageUpdatedMsgLiveData.value = it
@@ -367,6 +379,29 @@ class MsgDetailsViewModel(
       }
     }
   }
+
+  fun reVerifySignatures() {
+    viewModelScope.launch {
+      reVerifySignaturesMutableStateFlow.value = Result.loading()
+      reVerifySignaturesMutableStateFlow.value =
+        controlledRunnerForSignaturesReverification.cancelPreviousThenRun {
+          return@cancelPreviousThenRun reVerifySignaturesInternal()
+        }
+    }
+  }
+
+  private suspend fun reVerifySignaturesInternal(): Result<VerificationResult> =
+    withContext(Dispatchers.IO) {
+      try {
+        val existedMsgSnapshot =
+          requireNotNull(MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString()))
+        val verificationResult =
+          requireNotNull(processingMsgSnapshot(existedMsgSnapshot).data?.verificationResult)
+        return@withContext Result.success(verificationResult)
+      } catch (e: Exception) {
+        return@withContext Result.exception(e)
+      }
+    }
 
   private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot):
       Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
