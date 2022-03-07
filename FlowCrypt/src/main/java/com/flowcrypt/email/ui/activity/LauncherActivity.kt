@@ -21,6 +21,8 @@ import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.util.CacheManager
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.SharedPreferencesHelper
 
 /**
@@ -50,6 +52,7 @@ class LauncherActivity : BaseActivity() {
     ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
     MessagesSenderWorker.enqueue(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
+    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

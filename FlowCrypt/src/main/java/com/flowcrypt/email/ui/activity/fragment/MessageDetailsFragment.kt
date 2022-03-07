@@ -8,8 +8,10 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.Manifest
 import android.accounts.AuthenticatorException
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -24,10 +26,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CompoundButton
-import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ListView
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
@@ -35,12 +34,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.MsgDetailsGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -53,16 +54,19 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -85,6 +89,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
@@ -120,18 +125,20 @@ import javax.mail.internet.InternetAddress
  */
 class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickListener {
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.layoutContent)
+    get() = binding?.layoutContent
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
   private val args by navArgs<MessageDetailsFragmentArgs>()
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
+  private var binding: FragmentMessageDetailsBinding? = null
+
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
-    object : AttachmentsRecyclerViewAdapter.Listener {
+    object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
         lastClickedAtt = attachmentInfo
         lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
@@ -167,28 +174,36 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           )
         }
       }
-    })
 
-  private var textViewSenderAddress: TextView? = null
-  private var textViewDate: TextView? = null
-  private var textViewSubject: TextView? = null
-  private var tVTo: TextView? = null
-  private var viewFooterOfHeader: View? = null
-  private var layoutMsgParts: ViewGroup? = null
-  private var layoutContent: View? = null
-  private var imageBtnReplyAll: ImageButton? = null
-  private var imageBtnMoreOptions: View? = null
-  private var iBShowDetails: View? = null
-  private var layoutReplyButton: View? = null
-  private var layoutFwdButton: View? = null
-  private var layoutReplyBtns: View? = null
-  private var emailWebView: EmailWebView? = null
-  private var layoutActionProgress: View? = null
-  private var textViewActionProgress: TextView? = null
-  private var progressBarActionProgress: ProgressBar? = null
-  private var rVAttachments: RecyclerView? = null
-  private var rVMsgDetails: RecyclerView? = null
-  private var rVPgpBadges: RecyclerView? = null
+      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
+        if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+            previewAttachment(
+              attachmentInfo = attachmentInfo,
+              useEnterpriseBehaviour = true
+            )
+          }
+        }
+      }
+
+      override fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo) {
+        if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+            previewAttachment(
+              attachmentInfo = attachmentInfo,
+              useEnterpriseBehaviour = true
+            )
+          } else {
+            navController?.navigate(
+              MessageDetailsFragmentDirections
+                .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+                  REQUEST_CODE_PREVIEW_ATTACHMENT, attachmentInfo
+                )
+            )
+          }
+        }
+      }
+    })
 
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
@@ -209,18 +224,30 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
+    subscribeToDownloadAttachmentViaDialog()
     updateActionsVisibility(args.localFolder, null)
+  }
+
+  override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentMessageDetailsBinding.inflate(inflater, container, false)
+    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews(view)
     updateViews()
 
     setupLabelsViewModel()
     setupMsgDetailsViewModel()
     setupRecipientsViewModel()
     collectReVerifySignaturesStateFlow()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -367,12 +394,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         popup.setOnMenuItemClickListener {
           when (it.itemId) {
             R.id.menuActionReply -> {
-              layoutReplyButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.layoutReplyButton?.let { view -> onClick(view) }
               true
             }
 
             R.id.menuActionForward -> {
-              layoutFwdButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.layoutFwdButton?.let { view -> onClick(view) }
               true
             }
             else -> {
@@ -431,6 +458,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
   }
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    attachmentsRecyclerViewAdapter.isPreviewEnabled =
+      account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
+  }
+
   /**
    * Show an incoming message info.
    *
@@ -439,13 +472,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
-    imageBtnReplyAll?.visibility = View.VISIBLE
-    imageBtnMoreOptions?.visibility = View.VISIBLE
+    binding?.imageButtonReplyAll?.visibility = View.VISIBLE
+    binding?.imageButtonMoreOptions?.visibility = View.VISIBLE
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
 
-    msgInfo.inlineSubject?.let { textViewSubject?.text = it }
+    msgInfo.inlineSubject?.let { binding?.textViewSubject?.text = it }
 
     updateMsgBody()
     showContent()
@@ -453,15 +486,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun setActionProgress(progress: Int, message: String? = null) {
     if (progress > 0) {
-      progressBarActionProgress?.progress = progress
+      binding?.progressBarActionProgress?.progress = progress
     }
 
     if (progress != 100) {
-      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
-      textViewActionProgress?.visibility = View.VISIBLE
+      binding?.textViewActionProgress?.text =
+        getString(R.string.progress_message, progress, message)
+      binding?.textViewActionProgress?.visibility = View.VISIBLE
     } else {
-      textViewActionProgress?.text = null
-      layoutActionProgress?.visibility = View.GONE
+      binding?.textViewActionProgress?.text = null
+      binding?.layoutActionProgress?.visibility = View.GONE
     }
   }
 
@@ -685,41 +719,18 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     supportActionBar?.subtitle = actionBarSubTitle
   }
 
-  private fun initViews(view: View) {
-    layoutActionProgress = view.findViewById(R.id.layoutActionProgress)
-    textViewActionProgress = view.findViewById(R.id.textViewActionProgress)
-    progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
-
-    textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress)
-    textViewDate = view.findViewById(R.id.textViewDate)
-    textViewSubject = view.findViewById(R.id.textViewSubject)
-    tVTo = view.findViewById(R.id.tVTo)
-    viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader)
-    layoutMsgParts = view.findViewById(R.id.layoutMessageParts)
-    layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons)
-    emailWebView = view.findViewById(R.id.emailWebView)
-
-    layoutContent = view.findViewById(R.id.layoutContent)
-    imageBtnReplyAll = view.findViewById(R.id.imageButtonReplyAll)
-    imageBtnReplyAll?.setOnClickListener(this)
-    imageBtnMoreOptions = view.findViewById(R.id.imageButtonMoreOptions)
-    imageBtnMoreOptions?.setOnClickListener(this)
-    iBShowDetails = view.findViewById(R.id.iBShowDetails)
-
-    rVAttachments = view.findViewById(R.id.rVAttachments)
-    rVMsgDetails = view.findViewById(R.id.rVMsgDetails)
-    rVPgpBadges = view.findViewById(R.id.rVPgpBadges)
-  }
-
   private fun updateViews() {
-    iBShowDetails?.setOnClickListener {
-      rVMsgDetails?.visibleOrGone(!(rVMsgDetails?.isVisible ?: false))
-      textViewDate?.visibleOrGone(!(rVMsgDetails?.isVisible ?: false))
+    binding?.imageButtonReplyAll?.setOnClickListener(this)
+    binding?.imageButtonMoreOptions?.setOnClickListener(this)
+
+    binding?.iBShowDetails?.setOnClickListener {
+      binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
+      binding?.textViewDate?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
     }
 
     updateMsgDetails()
 
-    rVAttachments?.apply {
+    binding?.rVAttachments?.apply {
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
         MarginItemDecoration(
@@ -734,16 +745,17 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         args.messageEntity.subject
 
     if (folderType === FoldersManager.FolderType.SENT) {
-      textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
     } else {
-      textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.from)
+      binding?.textViewSenderAddress?.text =
+        EmailUtil.getFirstAddressString(args.messageEntity.from)
     }
-    textViewSubject?.text = subject
+    binding?.textViewSubject?.text = subject
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-      textViewDate?.text =
+      binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
     } else {
-      textViewDate?.text =
+      binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate ?: 0)
     }
 
@@ -751,7 +763,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun updateMsgDetails() {
-    rVMsgDetails?.apply {
+    binding?.rVMsgDetails?.apply {
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
         VerticalSpaceMarginItemDecoration(
@@ -763,7 +775,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       adapter = msgDetailsAdapter
     }
 
-    rVPgpBadges?.apply {
+    binding?.rVPgpBadges?.apply {
       layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
       addItemDecoration(
         MarginItemDecoration(
@@ -773,7 +785,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       adapter = pgpBadgeListAdapter
     }
 
-    tVTo?.text = prepareToText()
+    binding?.tVTo?.text = prepareToText()
 
     val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
       add(
@@ -874,8 +886,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun updateMsgView() {
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
-    emailWebView?.loadUrl("about:blank")
-    layoutMsgParts?.removeAllViews()
+    binding?.emailWebView?.loadUrl("about:blank")
+    binding?.layoutMessageParts?.removeAllViews()
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
@@ -892,22 +904,27 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         MsgBlock.Type.DECRYPTED_TEXT -> {
           msgEncryptType = MessageEncryptionType.ENCRYPTED
-          layoutMsgParts?.addView(genDecryptedTextPart(block, layoutInflater))
+          binding?.layoutMessageParts?.addView(genDecryptedTextPart(block, layoutInflater))
         }
 
         MsgBlock.Type.PLAIN_TEXT -> {
-          layoutMsgParts?.addView(genTextPart(block, layoutInflater))
+          binding?.layoutMessageParts?.addView(genTextPart(block, layoutInflater))
           if (isFirstMsgPartText) {
-            viewFooterOfHeader?.visibility = View.VISIBLE
+            binding?.layoutFooterOfHeader?.visibility = View.VISIBLE
           }
         }
 
         MsgBlock.Type.PUBLIC_KEY ->
-          layoutMsgParts?.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
+          binding?.layoutMessageParts?.addView(
+            genPublicKeyPart(
+              block as PublicKeyMsgBlock,
+              layoutInflater
+            )
+          )
 
         MsgBlock.Type.DECRYPT_ERROR -> {
           msgEncryptType = MessageEncryptionType.ENCRYPTED
-          layoutMsgParts?.addView(
+          binding?.layoutMessageParts?.addView(
             genDecryptErrorPart(
               block as DecryptErrorMsgBlock,
               layoutInflater
@@ -943,27 +960,27 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     block: @JvmSuppressWildcards MsgBlock,
     layoutInflater: LayoutInflater
   ) {
-    layoutMsgParts?.addView(
+    binding?.layoutMessageParts?.addView(
       genDefPart(
         block, layoutInflater,
-        R.layout.message_part_other, layoutMsgParts
+        R.layout.message_part_other, binding?.layoutMessageParts
       )
     )
   }
 
   private fun setupWebView(block: MsgBlock) {
-    emailWebView?.configure()
+    binding?.emailWebView?.configure()
 
     val text = clipLargeText(block.content) ?: ""
 
-    emailWebView?.loadDataWithBaseURL(
+    binding?.emailWebView?.loadDataWithBaseURL(
       null,
       text,
       "text/html",
       StandardCharsets.UTF_8.displayName(),
       null
     )
-    emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
+    binding?.emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
         setActionProgress(100, null)
         updateReplyButtons()
@@ -986,42 +1003,39 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    * Update the reply buttons layout depending on the [MessageEncryptionType]
    */
   private fun updateReplyButtons() {
-    if (layoutReplyBtns != null) {
-      val imageViewReply = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewReply)
-      val imageViewReplyAll = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewReplyAll)
-      val imageViewFwd = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewFwd)
+    if (binding?.layoutReplyButtons != null) {
+      val imageViewReply = binding?.layoutReplyButtons?.imageViewReply
+      val imageViewReplyAll = binding?.layoutReplyButtons?.imageViewReplyAll
+      val imageViewFwd = binding?.layoutReplyButtons?.imageViewFwd
 
-      val textViewReply = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewReply)
-      val textViewReplyAll = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewReplyAll)
-      val textViewFwd = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewFwd)
+      val textViewReply = binding?.layoutReplyButtons?.textViewReply
+      val textViewReplyAll = binding?.layoutReplyButtons?.textViewReplyAll
+      val textViewFwd = binding?.layoutReplyButtons?.textViewFwd
 
       if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-        imageViewReply.setImageResource(R.mipmap.ic_reply_green)
-        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green)
-        imageBtnReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
-        imageViewFwd.setImageResource(R.mipmap.ic_forward_green)
+        imageViewReply?.setImageResource(R.mipmap.ic_reply_green)
+        imageViewReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
+        binding?.imageButtonReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
+        imageViewFwd?.setImageResource(R.mipmap.ic_forward_green)
 
-        textViewReply.setText(R.string.reply_encrypted)
-        textViewReplyAll.setText(R.string.reply_all_encrypted)
-        textViewFwd.setText(R.string.forward_encrypted)
+        textViewReply?.setText(R.string.reply_encrypted)
+        textViewReplyAll?.setText(R.string.reply_all_encrypted)
+        textViewFwd?.setText(R.string.forward_encrypted)
       } else {
-        imageViewReply.setImageResource(R.mipmap.ic_reply_red)
-        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red)
-        imageBtnReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
-        imageViewFwd.setImageResource(R.mipmap.ic_forward_red)
+        imageViewReply?.setImageResource(R.mipmap.ic_reply_red)
+        imageViewReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
+        binding?.imageButtonReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
+        imageViewFwd?.setImageResource(R.mipmap.ic_forward_red)
 
-        textViewReply.setText(R.string.reply)
-        textViewReplyAll.setText(R.string.reply_all)
-        textViewFwd.setText(R.string.forward)
+        textViewReply?.setText(R.string.reply)
+        textViewReplyAll?.setText(R.string.reply_all)
+        textViewFwd?.setText(R.string.forward)
       }
 
-      layoutReplyButton = layoutReplyBtns?.findViewById(R.id.layoutReplyButton)
-      layoutReplyButton?.setOnClickListener(this)
-      layoutFwdButton = layoutReplyBtns?.findViewById(R.id.layoutFwdButton)
-      layoutFwdButton?.setOnClickListener(this)
-      layoutReplyBtns?.findViewById<View>(R.id.layoutReplyAllButton)?.setOnClickListener(this)
-
-      layoutReplyBtns?.visibility = View.VISIBLE
+      binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.root?.visibility = View.VISIBLE
     }
   }
 
@@ -1042,8 +1056,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       )
     }
 
-    val pubKeyView =
-      inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup
+    val pubKeyView = inflater.inflate(
+      R.layout.message_part_public_key,
+      binding?.layoutMessageParts,
+      false
+    ) as ViewGroup
     val textViewPgpPublicKey = pubKeyView.findViewById<TextView>(R.id.textViewPgpPublicKey)
     val switchShowPublicKey = pubKeyView.findViewById<CompoundButton>(R.id.switchShowPublicKey)
 
@@ -1161,11 +1178,21 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun genTextPart(block: MsgBlock, layoutInflater: LayoutInflater): View {
-    return genDefPart(block, layoutInflater, R.layout.message_part_text, layoutMsgParts)
+    return genDefPart(
+      block,
+      layoutInflater,
+      R.layout.message_part_text,
+      binding?.layoutMessageParts
+    )
   }
 
   private fun genDecryptedTextPart(block: MsgBlock, layoutInflater: LayoutInflater): View {
-    return genDefPart(block, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts)
+    return genDefPart(
+      block,
+      layoutInflater,
+      R.layout.message_part_pgp_message,
+      binding?.layoutMessageParts
+    )
   }
 
   private fun genDecryptErrorPart(
@@ -1241,7 +1268,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   ): View {
     val viewGroup = layoutInflater.inflate(
       R.layout.message_part_pgp_message_error,
-      layoutMsgParts, false
+      binding?.layoutMessageParts, false
     ) as ViewGroup
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
     ExceptionUtil.handleError(ManualHandledException(errorMsg))
@@ -1267,7 +1294,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
    */
   private fun generateMissingPrivateKeyLayout(pgpMsg: String?, inflater: LayoutInflater): View {
     val viewGroup = inflater.inflate(
-      R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false
+      R.layout.message_part_pgp_message_missing_private_key, binding?.layoutMessageParts, false
     ) as ViewGroup
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey?.setOnClickListener {
@@ -1563,27 +1590,59 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       if (attInfo.rawData?.isNotEmpty() == true) {
         downloadInlinedAtt(attInfo)
       } else {
-        context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+        if (account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+          navController?.navigate(
+            MessageDetailsFragmentDirections
+              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+                REQUEST_CODE_SAVE_ATTACHMENT,
+                attInfo
+              )
+          )
+        } else {
+          context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+        }
+      }
+    }
+  }
+
+  private fun previewAttachment(
+    attachmentInfo: AttachmentInfo,
+    useEnterpriseBehaviour: Boolean = false
+  ) {
+    val intent = if (attachmentInfo.uri != null) {
+      GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
+    } else {
+      val (_, uri) = useFileProviderToGenerateUri(attachmentInfo)
+      GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+    }
+
+    if (useEnterpriseBehaviour) {
+      try {
+        //ask Tom about receiving package as a parameter
+        startActivity(Intent(intent).setPackage("com.airwatch.contentlocker"))
+      } catch (e: ActivityNotFoundException) {
+        //We don't have the required app
+        navController?.navigate(
+          MsgDetailsGraphDirections.actionGlobalInfoDialogFragment(
+            requestCode = 0,
+            dialogTitle = "",
+            dialogMsg = getString(R.string.warning_don_not_have_content_app)
+          )
+        )
+      }
+    } else {
+      try {
+        startActivity(intent)
+      } catch (e: ActivityNotFoundException) {
+        toast(getString(R.string.no_apps_that_can_handle_intent))
       }
     }
   }
 
   private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
-    val tempDir = CacheManager.getCurrentMsgTempDir()
-    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
-    val file = if (fileName.isNullOrEmpty()) {
-      File.createTempFile("tmp", null, tempDir)
-    } else {
-      val fileCandidate = File(tempDir, fileName)
-      if (fileCandidate.exists()) {
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(tempDir, fileName)
-      } else {
-        fileCandidate
-      }
-    }
-    FileUtils.writeByteArrayToFile(file, attInfo.rawData)
+    val (file, uri) = useFileProviderToGenerateUri(attInfo)
     context?.let {
-      attInfo.uri = FileProvider.getUriForFile(it, Constants.FILE_PROVIDER_AUTHORITY, file)
+      attInfo.uri = uri
       it.startService(
         AttachmentDownloadManagerService.newIntent(
           context,
@@ -1596,10 +1655,61 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     ExceptionUtil.handleError(e)
   }
 
-  private fun messageNotAvailableInFolder(showToast: Boolean = true) {
-    msgDetailsViewModel.deleteMsg()
-    if (showToast) {
-      toast(R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG)
+  private fun useFileProviderToGenerateUri(attInfo: AttachmentInfo): Pair<File, Uri> {
+    val tempDir = CacheManager.getCurrentMsgTempDir()
+    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
+    val file = if (fileName.isNullOrEmpty()) {
+      File.createTempFile("tmp", null, tempDir)
+    } else {
+      val fileCandidate = File(tempDir, fileName)
+      if (!fileCandidate.exists()) {
+        FileUtils.writeByteArrayToFile(fileCandidate, attInfo.rawData)
+      }
+      fileCandidate
+    }
+    val uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
+    return Pair(file, uri)
+  }
+
+  private fun subscribeToDownloadAttachmentViaDialog() {
+    setFragmentResultListener(DownloadAttachmentDialogFragment.REQUEST_KEY_ATTACHMENT_DATA) { _, bundle ->
+      val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
+      val attachmentInfo =
+        bundle.getParcelable<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
+      val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
+      attachmentInfo?.rawData = data
+
+      for (att in attachmentsRecyclerViewAdapter.currentList) {
+        if (attachmentInfo == att) {
+          att.rawData = data
+          att.name = if (SecurityUtils.isPossiblyEncryptedData(att.name)) {
+            FilenameUtils.getBaseName(att.name)
+          } else {
+            att.name
+          }
+          attachmentsRecyclerViewAdapter.notifyItemRangeChanged(
+            0,
+            attachmentsRecyclerViewAdapter.currentList.size
+          )
+          break
+        }
+      }
+
+      when (requestCode) {
+        REQUEST_CODE_PREVIEW_ATTACHMENT -> {
+          attachmentInfo?.let {
+            previewAttachment(
+              attachmentInfo = it,
+              useEnterpriseBehaviour =
+              account?.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
+            )
+          }
+        }
+
+        REQUEST_CODE_SAVE_ATTACHMENT -> {
+          downloadAttachment()
+        }
+      }
     }
   }
 
@@ -1611,5 +1721,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
+
+    private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
+    private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
   }
 }

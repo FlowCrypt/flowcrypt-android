@@ -9,11 +9,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.navigation.fragment.NavHostFragment
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
-import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
 import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
@@ -35,14 +35,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (savedInstanceState == null) {
-      val fragment = MessageDetailsFragment().apply {
-        arguments = intent.extras
-      }
-      supportFragmentManager.beginTransaction()
-        .add(R.id.fragmentContainerView, fragment)
-        .commit()
-    }
+    (supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as? NavHostFragment)
+      ?.navController?.setGraph(R.navigation.msg_details_graph, intent.extras)
   }
 
   companion object {

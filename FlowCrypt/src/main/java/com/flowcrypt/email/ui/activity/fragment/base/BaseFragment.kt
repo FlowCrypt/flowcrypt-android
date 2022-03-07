@@ -86,11 +86,6 @@ abstract class BaseFragment : Fragment() {
     lifecycle.addObserver(connectionLifecycleObserver)
   }
 
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
-    initAccountViewModel()
-  }
-
   override fun onCreateView(
     inflater: LayoutInflater,
     container: ViewGroup?,
@@ -99,6 +94,11 @@ abstract class BaseFragment : Fragment() {
     return if (contentResourceId > 0) {
       inflater.inflate(contentResourceId, container, false)
     } else super.onCreateView(inflater, container, savedInstanceState)
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    initAccountViewModel()
   }
 
   override fun onDetach() {
