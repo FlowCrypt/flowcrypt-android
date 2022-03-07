@@ -1385,20 +1385,20 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         }
 
         Result.Status.SUCCESS -> {
-          val list = it.data
-          val missedFingerprints =
+          val recipientsWithPubKeys = it.data
+          val keyIdOfSigningKeys =
             msgInfo?.verificationResult?.keyIdOfSigningKeys ?: emptyList()
-          if (list?.isNotEmpty() == true) {
-            var isVerificationNeeded = false
-            for (recipientWithPubKeys in list) {
+          if (recipientsWithPubKeys?.isNotEmpty() == true) {
+            var isReVerificationNeeded = false
+            for (recipientWithPubKeys in recipientsWithPubKeys) {
               for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
-                if (publicKeyEntity.pgpKeyDetails?.primaryKeyId in missedFingerprints) {
-                  isVerificationNeeded = true
+                if (publicKeyEntity.pgpKeyDetails?.primaryKeyId in keyIdOfSigningKeys) {
+                  isReVerificationNeeded = true
                 }
               }
             }
 
-            if (isVerificationNeeded) {
+            if (isReVerificationNeeded) {
               msgDetailsViewModel.reVerifySignatures()
             } else {
               updatePgpBadges()
