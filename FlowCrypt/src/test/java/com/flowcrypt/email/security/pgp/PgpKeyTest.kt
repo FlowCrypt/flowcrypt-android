@@ -62,7 +62,8 @@ class PgpKeyTest {
       ),
       created = 1543592161000L,
       lastModified = 1543592161000L,
-      algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null)
+      algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
+      primaryKeyId = 4193120410270338832
     )
     val actual = PgpKey.parseKeys(TestKeys.KEYS["rsa1"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
@@ -92,7 +93,8 @@ class PgpKeyTest {
       created = 1594847701000L,
       lastModified = 1594847701000L,
       expiration = 1594847702000L,
-      algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null)
+      algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
+      primaryKeyId = -4691725871015490871
     )
     val actual = PgpKey.parseKeys(TestKeys.KEYS["expired"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
