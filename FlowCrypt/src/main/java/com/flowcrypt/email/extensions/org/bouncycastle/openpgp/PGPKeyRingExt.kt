@@ -83,7 +83,8 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
     created = keyRingInfo.creationDate.time,
     lastModified = keyRingInfo.lastModified?.time,
     expiration = keyRingInfo.primaryKeyExpirationDate?.time,
-    algo = algo
+    algo = algo,
+    primaryKeyId = keyRingInfo.keyId
   )
 }
 

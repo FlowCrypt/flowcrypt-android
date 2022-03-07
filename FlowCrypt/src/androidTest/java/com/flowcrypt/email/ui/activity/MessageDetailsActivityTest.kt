@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.text.format.DateUtils
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
@@ -20,8 +19,6 @@ import androidx.test.espresso.contrib.RecyclerViewActions.scrollToHolder
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.matcher.BoundedMatcher
-import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
@@ -38,9 +35,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -53,8 +48,6 @@ import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Description
-import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
@@ -101,7 +94,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
 
   @Test
   fun testReplyButton() {
-    testStandardMsgPlaintext()
+    testStandardMsgPlaintextInternal()
     onView(withId(R.id.layoutReplyButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
@@ -115,7 +108,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
 
   @Test
   fun testReplyAllButton() {
-    testStandardMsgPlaintext()
+    testStandardMsgPlaintextInternal()
     onView(withId(R.id.layoutReplyAllButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
@@ -124,7 +117,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
 
   @Test
   fun testFwdButton() {
-    testStandardMsgPlaintext()
+    testStandardMsgPlaintextInternal()
     onView(withId(R.id.layoutFwdButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
@@ -138,14 +131,7 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
 
   @Test
   fun testStandardMsgPlaintext() {
-    baseCheck(
-      getMsgInfo(
-        "messages/info/standard_msg_info_plaintext.json",
-        "messages/mime/standard_msg_info_plaintext.txt"
-      )
-    )
-    onView(withId(R.id.tVTo))
-      .check(matches(withText(getResString(R.string.to_receiver, getResString(R.string.me)))))
+    testStandardMsgPlaintextInternal()
   }
 
   @Test
@@ -836,96 +822,5 @@ class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
         "messages/mime/message_with_broken_base64.txt"
       )
     )
-  }
-
-  private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
-    assertThat(incomingMsgInfo, notNullValue())
-
-    val details = incomingMsgInfo!!.msgEntity
-
-    launchActivity(details)
-    matchHeader(incomingMsgInfo)
-
-    val block = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
-    val errorMsg = getResString(R.string.decrypt_error_current_key_cannot_open_message)
-
-    onView(withId(R.id.textViewErrorMessage))
-      .check(matches(withText(errorMsg)))
-
-    testSwitch(block.content ?: "")
-    matchReplyButtons(details)
-  }
-
-  private fun testSwitch(content: String) {
-    onView(withId(R.id.textViewOrigPgpMsg))
-      .check(matches(not(isDisplayed())))
-    onView(withId(R.id.switchShowOrigMsg))
-      .check(matches(not(isChecked())))
-      .perform(scrollTo(), click())
-    onView(withId(R.id.textViewOrigPgpMsg))
-      .check(matches(isDisplayed()))
-    onView(withId(R.id.textViewOrigPgpMsg))
-      .check(matches(withText(content)))
-    onView(withId(R.id.switchShowOrigMsg))
-      .check(matches(isChecked()))
-      .perform(scrollTo(), click())
-    onView(withId(R.id.textViewOrigPgpMsg))
-      .check(matches(not(isDisplayed())))
-  }
-
-  private fun baseCheck(incomingMsgInfo: IncomingMessageInfo?) {
-    assertThat(incomingMsgInfo, notNullValue())
-
-    val details = incomingMsgInfo!!.msgEntity
-    launchActivity(details)
-    matchHeader(incomingMsgInfo)
-
-    checkWebViewText(incomingMsgInfo.text)
-    matchReplyButtons(details)
-  }
-
-  private fun testTopReplyAction(title: String) {
-    testStandardMsgPlaintext()
-
-    onView(withId(R.id.imageButtonMoreOptions))
-      .check(matches(isDisplayed()))
-      .perform(scrollTo(), click())
-
-    onView(withText(title))
-      .inRoot(RootMatchers.isPlatformPopup())
-      .perform(click())
-
-    intended(hasComponent(CreateMessageActivity::class.java.name))
-
-    onView(withId(R.id.toolbar))
-      .check(matches(CustomMatchers.withToolBarText(title)))
-  }
-
-  private fun withHeaderInfo(header: MsgDetailsRecyclerViewAdapter.Header):
-      Matcher<RecyclerView.ViewHolder> {
-    return object : BoundedMatcher<RecyclerView.ViewHolder,
-        MsgDetailsRecyclerViewAdapter.ViewHolder>(
-      MsgDetailsRecyclerViewAdapter.ViewHolder::class.java
-    ) {
-      override fun matchesSafely(holder: MsgDetailsRecyclerViewAdapter.ViewHolder): Boolean {
-        return holder.tVHeaderName.text.toString() == header.name
-            && holder.tVHeaderValue.text.toString() == header.value
-      }
-
-      override fun describeTo(description: Description) {
-        description.appendText("with: $header")
-      }
-    }
-  }
-
-  private fun testPgpBadges(badgeCount: Int, vararg badgeTypes: PgpBadgeListAdapter.PgpBadge.Type) {
-    onView(withId(R.id.rVPgpBadges))
-      .check(matches(withRecyclerViewItemCount(badgeCount)))
-
-
-    for (badgeType in badgeTypes) {
-      onView(withId(R.id.rVPgpBadges))
-        .perform(scrollToHolder(withPgpBadge(PgpBadgeListAdapter.PgpBadge(badgeType))))
-    }
   }
 }

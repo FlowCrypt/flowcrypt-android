@@ -113,7 +113,7 @@ class EmailUtilTest {
         hasSignedParts = false,
         hasMixedSignatures = false,
         isPartialSigned = false,
-        hasUnverifiedSignatures = false,
+        keyIdOfSigningKeys = emptyList(),
         hasBadSignatures = false
       )
     )

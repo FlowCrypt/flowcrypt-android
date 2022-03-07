@@ -1548,7 +1548,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     nachoTextView: PgpContactsNachoTextView?,
     updateState: (state: Boolean) -> Unit
   ) {
-    liveData.observe(viewLifecycleOwner, {
+    liveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           updateState.invoke(false)
@@ -1574,7 +1574,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
         Result.Status.NONE -> {}
       }
-    })
+    }
   }
 
   /**

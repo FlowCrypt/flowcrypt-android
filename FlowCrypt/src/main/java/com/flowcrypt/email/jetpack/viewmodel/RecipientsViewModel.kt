@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.util.*
+import java.util.Locale
 import javax.mail.Message
 
 /**
@@ -71,6 +71,8 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   val recipientsToLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
   val recipientsCcLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
   val recipientsBccLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
+  val recipientsFromLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> =
+    MutableLiveData()
 
   private val lookUpPubKeysMutableStateFlow: MutableStateFlow<Result<PubResponse?>> =
     MutableStateFlow(Result.loading())
@@ -264,6 +266,10 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       Message.RecipientType.BCC -> {
         recipientsBccLiveData.value = result
       }
+
+      FROM -> {
+        recipientsFromLiveData.value = result
+      }
     }
   }
 
@@ -377,5 +383,11 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
 
     return uniqueMapOfFetchedPubKeys
+  }
+
+  class FROM : Message.RecipientType("From")
+
+  companion object {
+    val FROM = FROM()
   }
 }

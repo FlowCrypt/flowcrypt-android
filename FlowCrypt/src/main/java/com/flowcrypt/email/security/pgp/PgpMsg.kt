@@ -698,11 +698,11 @@ object PgpMsg {
     val resultBlocks = mutableListOf<MsgBlock>()
 
     var hasMixedSignatures = false
-    var hasUnverifiedSignatures = false
     var hasBadSignatures = false
     var signedBlockCount = 0
     var isPartialSigned = false
     val verifiedSignatures = mutableMapOf<SubkeyIdentifier, PGPSignature>()
+    val keyIdOfSigningKeys = mutableListOf<Long>()
 
     for (block in msgBlocks) {
       // We don't need Base64 correction here, fromAttachment() does this for us
@@ -741,11 +741,11 @@ object PgpMsg {
               it.validationException.underlyingException != null
             }
 
-            hasUnverifiedSignatures = invalidSignatureFailures.any {
+            keyIdOfSigningKeys.addAll(invalidSignatureFailures.filter {
               it.validationException.message?.startsWith(
                 "Missing verification certificate", true
               ) ?: false
-            }
+            }.mapNotNull { it.signatureVerification.signature.keyID })
           }
 
           if (verifiedSignatures.isEmpty()) {
@@ -800,7 +800,7 @@ object PgpMsg {
         hasSignedParts = signedBlockCount > 0,
         hasMixedSignatures = hasMixedSignatures,
         isPartialSigned = isPartialSigned,
-        hasUnverifiedSignatures = hasUnverifiedSignatures,
+        keyIdOfSigningKeys = keyIdOfSigningKeys,
         hasBadSignatures = hasBadSignatures
       )
     )
