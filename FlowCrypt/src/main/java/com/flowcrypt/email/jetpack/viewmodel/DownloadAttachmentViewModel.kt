@@ -74,11 +74,10 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
           }
         }
 
-        val email =
-          attachmentInfo.email ?: return@withContext Result.success(byteArrayOf())
-        val account = getAccountEntityWithDecryptedInfoSuspend(
-          roomDatabase.accountDao().getAccount(email)
-        ) ?: return@withContext Result.success(byteArrayOf())
+        val email = requireNotNull(attachmentInfo.email)
+        val account = requireNotNull(
+          getAccountEntityWithDecryptedInfoSuspend(roomDatabase.accountDao().getAccount(email))
+        )
 
         if (account.useAPI) {
           when (account.accountType) {
