@@ -1386,8 +1386,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         Result.Status.SUCCESS -> {
           val recipientsWithPubKeys = it.data
-          val keyIdOfSigningKeys =
-            msgInfo?.verificationResult?.keyIdOfSigningKeys ?: emptyList()
+          val keyIdOfSigningKeys = msgInfo?.verificationResult?.keyIdOfSigningKeys ?: emptyList()
           if (recipientsWithPubKeys?.isNotEmpty() == true) {
             var isReVerificationNeeded = false
             for (recipientWithPubKeys in recipientsWithPubKeys) {
