@@ -14,7 +14,7 @@
     android:clickable="true"
     android:focusable="true">
 
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/actionButtons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -23,10 +23,23 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
+            android:id="@+id/imageButtonPreviewAtt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/default_twice_dip"
+            android:layout_marginEnd="@dimen/default_twice_dip"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/download"
+            app:srcCompat="@drawable/ic_baseline_preview_grey_32dp" />
+
+        <ImageButton
             android:id="@+id/imageButtonDownloadAtt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginStart="@dimen/default_twice_dip"
+            android:layout_marginEnd="@dimen/default_twice_dip"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/download"
             app:srcCompat="@mipmap/ic_file_download" />
@@ -36,12 +49,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginStart="@dimen/default_twice_dip"
+            android:layout_marginEnd="@dimen/default_twice_dip"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/download"
             android:visibility="gone"
-            app:srcCompat="@mipmap/ic_clear" />
+            app:srcCompat="@mipmap/ic_clear"
+            tools:visibility="visible" />
 
-    </FrameLayout>
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/imageViewAttIcon"

@@ -489,4 +489,9 @@
     <string name="warning_use_private_key_pass_phrase_as_password">Пожалуйста, не используйте Вашу ключевую фразу в качестве пароля для даного сообщения.\n\nВы должны придумать какой-нибудь другой уникальный пароль, которым Вы можете поделиться с получателем.</string>
     <string name="synchronization">Синхронизация&#8230;</string>
     <string name="warning_when_import_invalid_prv_key">Найден недействительный ключ. Импорт невозможен.\n\nЕсли это случится еще раз, пожалуйста, напишите нам на %1$s</string>
+    <string name="downloading">Скачивание&#8230;</string>
+    <string name="decrypting">Расшифровка&#8230;</string>
+    <string name="error_occurred_during_downloading_att">Произошла ошибка при загрузке.\n\nДетали ошибки:  %1$s</string>
+    <string name="no_apps_that_can_handle_intent">Извините, у Вас нет приложений, которые могут открыть этот файл</string>
+    <string name="warning_don_not_have_content_app">Просмотр вложения невозможен. Ваша организация требует использовать Content для просмотра вложений, но приложение Content не установлено.\n\nПожалуйста, обратитесь в службу поддержки.</string>
 </resources>

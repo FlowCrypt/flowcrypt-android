@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.content.Intent
 import android.text.format.Formatter
 import android.view.LayoutInflater
 import android.view.View
@@ -14,9 +13,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.extensions.visibleOrGone
 
 /**
  * @author Denis Bondarenko
@@ -24,7 +23,10 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  *         Time: 11:17 AM
  *         E-mail: DenBond7@gmail.com
  */
-class AttachmentsRecyclerViewAdapter(private val listener: Listener) :
+class AttachmentsRecyclerViewAdapter(
+  private val attachmentActionListener: AttachmentActionListener,
+  var isPreviewEnabled: Boolean = false
+) :
   ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -33,15 +35,21 @@ class AttachmentsRecyclerViewAdapter(private val listener: Listener) :
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    getItem(position)?.let { holder.bindPost(it, listener) }
+    getItem(position)?.let { holder.bindPost(it, attachmentActionListener) }
   }
 
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val textViewAttName: TextView = itemView.findViewById(R.id.textViewAttachmentName)
     private val textViewAttSize: TextView = itemView.findViewById(R.id.textViewAttSize)
-    private val bDownloadAtt: View = itemView.findViewById(R.id.imageButtonDownloadAtt)
+    private val imageButtonDownloadAtt: View = itemView.findViewById(R.id.imageButtonDownloadAtt)
+    private val imageButtonPreviewAtt: View = itemView.findViewById(R.id.imageButtonPreviewAtt)
 
-    fun bindPost(attachmentInfo: AttachmentInfo, listener: Listener) {
+    fun bindPost(
+      attachmentInfo: AttachmentInfo,
+      attachmentActionListener: AttachmentActionListener
+    ) {
+      imageButtonPreviewAtt.visibleOrGone(isPreviewEnabled)
+
       if (attachmentInfo.isDecrypted) {
         itemView.setBackgroundResource(R.drawable.bg_att_decrypted)
       } else {
@@ -51,24 +59,16 @@ class AttachmentsRecyclerViewAdapter(private val listener: Listener) :
       textViewAttName.text = attachmentInfo.getSafeName()
       textViewAttSize.text = Formatter.formatFileSize(itemView.context, attachmentInfo.encodedSize)
 
-      bDownloadAtt.setOnClickListener {
-        listener.onDownloadClick(attachmentInfo)
+      imageButtonDownloadAtt.setOnClickListener {
+        attachmentActionListener.onDownloadClick(attachmentInfo)
       }
 
-      itemView.setOnClickListener { view ->
-        attachmentInfo.uri?.let { uri ->
-          if (uri.lastPathSegment?.endsWith("." + Constants.PGP_FILE_EXT) == true) {
-            view.performClick()
-          } else {
-            val intentOpenFile = Intent(Intent.ACTION_VIEW, uri)
-            intentOpenFile.action = Intent.ACTION_VIEW
-            intentOpenFile.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            if (intentOpenFile.resolveActivity(view.context.packageManager) != null) {
-              view.context.startActivity(intentOpenFile)
-            }
-          }
-        }
+      imageButtonPreviewAtt.setOnClickListener {
+        attachmentActionListener.onAttachmentPreviewClick(attachmentInfo)
+      }
+
+      itemView.setOnClickListener {
+        attachmentActionListener.onAttachmentClick(attachmentInfo)
       }
     }
   }
@@ -83,7 +83,9 @@ class AttachmentsRecyclerViewAdapter(private val listener: Listener) :
       oldItem == newItem
   }
 
-  interface Listener {
+  interface AttachmentActionListener {
     fun onDownloadClick(attachmentInfo: AttachmentInfo)
+    fun onAttachmentClick(attachmentInfo: AttachmentInfo)
+    fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo)
   }
 }

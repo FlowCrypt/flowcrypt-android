@@ -32,6 +32,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -45,7 +46,8 @@ import retrofit2.Retrofit
 import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
@@ -455,5 +457,12 @@ class GeneralUtil {
           )
         }
       }
+
+    fun genViewAttachmentIntent(uri: Uri, attachmentInfo: AttachmentInfo) =
+      Intent()
+        .setAction(Intent.ACTION_VIEW)
+        .setDataAndType(uri, Intent.normalizeMimeType(attachmentInfo.type))
+        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
   }
 }

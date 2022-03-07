@@ -238,7 +238,8 @@ data class OrgRules constructor(
     USE_LEGACY_ATTESTER_SUBMIT,
     DEFAULT_REMEMBER_PASS_PHRASE,
     HIDE_ARMOR_META,
-    FORBID_STORING_PASS_PHRASE;
+    FORBID_STORING_PASS_PHRASE,
+    RESTRICT_ANDROID_ATTACHMENT_HANDLING;
 
     companion object CREATOR : Parcelable.Creator<DomainRule> {
       override fun createFromParcel(parcel: Parcel): DomainRule = values()[parcel.readInt()]

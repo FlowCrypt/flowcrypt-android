@@ -575,4 +575,9 @@
     <string name="warning_use_private_key_pass_phrase_as_password">Please do not use your private key pass phrase as a password for this message.\n\nYou should come up with some other unique password that you can share with a recipient.</string>
     <string name="synchronization">Syncing&#8230;</string>
     <string name="warning_when_import_invalid_prv_key">Key is invalid, you could not import such a key.\n\nIf this happens again, please write us at %1$s</string>
+    <string name="downloading">Downloading&#8230;</string>
+    <string name="decrypting">Decrypting&#8230;</string>
+    <string name="error_occurred_during_downloading_att">An error occurred during downloading.\n\nDetails:  %1$s</string>
+    <string name="no_apps_that_can_handle_intent">Sorry, you don\'t have an application that can open this file</string>
+    <string name="warning_don_not_have_content_app">Cannot view attachment. Your organization requires the use of Content app to view attachments, but the Content app is missing.\n\nPlease ask your Help Desk.</string>
 </resources>

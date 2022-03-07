@@ -93,15 +93,20 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param context Interface to global information about an application environment.
    * @param attInfo [AttachmentInfo] object which contains a detail information about an attachment.
    * @param uri     The [Uri] of the downloaded attachment.
+   * @param canBeOpened     A flag that indicates can we open an attachment after downloading.
    */
-  fun downloadCompleted(context: Context, attInfo: AttachmentInfo, uri: Uri) {
-    val intent = Intent(Intent.ACTION_VIEW, uri)
-    intent.action = Intent.ACTION_VIEW
-    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
+  fun downloadCompleted(
+    context: Context,
+    attInfo: AttachmentInfo,
+    uri: Uri,
+    canBeOpened: Boolean = true
+  ) {
+    val intent = if (canBeOpened) {
+      GeneralUtil.genViewAttachmentIntent(uri, attInfo)
+    } else {
+      Intent()
+    }
     val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-
     val builder = genDefBuilder(context, attInfo)
 
     builder.setProgress(0, 0, false)
