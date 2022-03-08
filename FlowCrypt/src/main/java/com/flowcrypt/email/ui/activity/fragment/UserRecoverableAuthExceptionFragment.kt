@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -28,7 +29,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
-import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -159,12 +159,9 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
     view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
-      startActivity(
-        HtmlViewFromAssetsRawActivity.newIntent(
-          requireContext(),
-          getString(R.string.security),
-          "html/security.htm"
-        )
+      NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
+        title = getString(R.string.security),
+        resourceIdAsString = "html/security.htm"
       )
     }
 
@@ -174,7 +171,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
   }
 
   private fun setupOAuth2AuthCredentialsViewModel() {
-    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, {
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
@@ -212,7 +209,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
         else -> {
         }
       }
-    })
+    }
 
     oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, {
       when (it.status) {

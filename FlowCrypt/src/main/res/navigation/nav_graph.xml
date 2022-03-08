@@ -348,6 +348,19 @@
             app:destination="@id/importAllPubKeysFromSourceDialogFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/htmlViewFromAssetsRawFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.HtmlViewFromAssetsRawFragment"
+        android:label="HtmlViewFromAssetsRawFragment"
+        tools:layout="@layout/fragment_html_view_from_assets_raw">
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="resourceIdAsString"
+            app:argType="string" />
+    </fragment>
+
     <dialog
         android:id="@+id/twoWayDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment"
@@ -504,4 +517,7 @@
     <action
         android:id="@+id/action_global_findKeysInClipboardDialogFragment"
         app:destination="@id/findKeysInClipboardDialogFragment" />
+    <action
+        android:id="@+id/action_global_htmlViewFromAssetsRawFragment"
+        app:destination="@id/htmlViewFromAssetsRawFragment" />
 </navigation>

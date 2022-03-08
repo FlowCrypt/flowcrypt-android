@@ -15,6 +15,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
@@ -42,7 +43,6 @@ import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
-import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -234,10 +234,10 @@ class MainSignInFragment : BaseSingInFragment() {
     }
 
     view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
-      startActivity(
-        HtmlViewFromAssetsRawActivity.newIntent(
-          requireContext(), getString(R.string.security),
-          "html/security.htm"
+      navController?.navigate(
+        NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
+          title = getString(R.string.security),
+          resourceIdAsString = "html/security.htm"
         )
       )
     }
@@ -452,7 +452,7 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun initCheckFesServerViewModel() {
-    checkFesServerViewModel.checkFesServerLiveData.observe(viewLifecycleOwner, {
+    checkFesServerViewModel.checkFesServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
@@ -525,8 +525,9 @@ class MainSignInFragment : BaseSingInFragment() {
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun continueBasedOnFlavorSettings() {
@@ -553,7 +554,7 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun initLoginViewModel() {
-    loginViewModel.loginLiveData.observe(viewLifecycleOwner, {
+    loginViewModel.loginLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
@@ -587,11 +588,11 @@ class MainSignInFragment : BaseSingInFragment() {
           baseActivity.countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
   }
 
   private fun initDomainOrgRulesViewModel() {
-    domainOrgRulesViewModel.domainOrgRulesLiveData.observe(viewLifecycleOwner, {
+    domainOrgRulesViewModel.domainOrgRulesLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
@@ -619,11 +620,11 @@ class MainSignInFragment : BaseSingInFragment() {
           baseActivity.countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
   }
 
   private fun initEkmViewModel() {
-    ekmViewModel.ekmLiveData.observe(viewLifecycleOwner, {
+    ekmViewModel.ekmLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
@@ -671,11 +672,11 @@ class MainSignInFragment : BaseSingInFragment() {
           baseActivity.countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
   }
 
   private fun initProtectPrivateKeysLiveData() {
-    privateKeysViewModel.protectPrivateKeysLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.protectPrivateKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
@@ -704,7 +705,7 @@ class MainSignInFragment : BaseSingInFragment() {
           baseActivity.countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
   }
 
   private fun showDialogWithRetryButton(it: Result<ApiResponse>, resultCode: Int) {
