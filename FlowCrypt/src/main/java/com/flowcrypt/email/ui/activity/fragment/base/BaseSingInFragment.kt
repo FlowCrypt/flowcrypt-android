@@ -23,7 +23,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
 
@@ -153,7 +153,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
       }
 
       val intent = Intent()
-      intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, it)
+      intent.putExtra(MainActivity.KEY_EXTRA_NEW_ACCOUNT, it)
       activity?.setResult(Activity.RESULT_OK, intent)
       activity?.finish()
     }

@@ -602,8 +602,8 @@ class EmailManagerActivity : BaseEmailListActivity(),
       LayoutInflater.from(this).inflate(R.layout.add_account, accountManagementLayout, false)
     addNewAccountView.setOnClickListener {
       startActivityForResult(
-        Intent(this, SignInActivity::class.java)
-          .apply { action = SignInActivity.ACTION_ADD_ONE_MORE_ACCOUNT },
+        Intent(this, MainActivity::class.java)
+          .apply { action = MainActivity.ACTION_ADD_ONE_MORE_ACCOUNT },
         REQUEST_CODE_ADD_NEW_ACCOUNT
       )
       drawerLayout?.closeDrawer(GravityCompat.START)

@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 
 
 /**
@@ -174,8 +174,8 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
   }
 
   private fun genBundleToAddNewAccount(response: AccountAuthenticatorResponse?): Bundle {
-    val intent = Intent(context, SignInActivity::class.java).apply {
-      action = SignInActivity.ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS
+    val intent = Intent(context, MainActivity::class.java).apply {
+      action = MainActivity.ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS
       putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
     }
 

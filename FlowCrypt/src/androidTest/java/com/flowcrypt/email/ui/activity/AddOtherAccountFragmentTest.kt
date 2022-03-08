@@ -71,7 +71,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AddOtherAccountFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/sign-in/other"
     )

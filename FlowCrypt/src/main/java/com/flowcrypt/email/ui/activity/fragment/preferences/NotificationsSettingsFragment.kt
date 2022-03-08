@@ -17,7 +17,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.util.SharedPreferencesHelper
 
@@ -92,7 +92,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
 
       initPreferences(isEncryptedModeEnabled == true)
     } else {
-      val intent = Intent(context, SignInActivity::class.java)
+      val intent = Intent(context, MainActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
       startActivity(intent)
       requireActivity().finish()

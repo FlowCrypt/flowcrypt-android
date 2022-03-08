@@ -31,7 +31,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.service.IdleService
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -244,7 +244,7 @@ abstract class BaseActivity : AppCompatActivity() {
         if (newActiveAccount == null) {
           roomDatabase.recipientDao().deleteAll()
           stopService(Intent(applicationContext, IdleService::class.java))
-          val intent = Intent(applicationContext, SignInActivity::class.java)
+          val intent = Intent(applicationContext, MainActivity::class.java)
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
           startActivity(intent)
           finish()

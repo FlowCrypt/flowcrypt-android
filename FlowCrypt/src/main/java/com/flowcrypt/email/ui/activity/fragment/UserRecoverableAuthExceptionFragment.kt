@@ -29,7 +29,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -37,7 +37,7 @@ import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationService
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -193,7 +193,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
                   PendingIntent.getActivity(
                     requireContext(), 0, Intent(
                       requireContext(),
-                      SignInActivity::class.java
+                      MainActivity::class.java
                     ), PendingIntent.FLAG_IMMUTABLE
                   )
                 )

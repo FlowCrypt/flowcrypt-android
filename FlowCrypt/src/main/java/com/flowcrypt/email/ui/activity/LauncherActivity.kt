@@ -57,7 +57,7 @@ class LauncherActivity : BaseActivity() {
       IdleService.start(this)
       EmailManagerActivity.runEmailManagerActivity(this)
     } else {
-      startActivity(Intent(this, SignInActivity::class.java))
+      startActivity(Intent(this, MainActivity::class.java))
     }
     startActivity(Intent(this, MainActivity::class.java))
     finish()

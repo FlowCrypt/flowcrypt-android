@@ -44,7 +44,7 @@ import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -59,9 +59,8 @@ import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
-import java.util.*
+import java.util.Locale
 import javax.mail.AuthenticationFailedException
-import kotlin.collections.ArrayList
 
 /**
  * @author Denis Bondarenko
@@ -480,7 +479,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   }
 
   private fun setupOAuth2AuthCredentialsViewModel() {
-    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_account_details))
@@ -526,7 +525,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           )
         }
       }
-    })
+    }
 
     oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
@@ -548,7 +547,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
                   PendingIntent.getActivity(
                     requireContext(),
                     0,
-                    Intent(requireContext(), SignInActivity::class.java),
+                    Intent(requireContext(), MainActivity::class.java),
                     PendingIntent.FLAG_IMMUTABLE
                   )
                 )

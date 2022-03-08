@@ -29,7 +29,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -54,7 +54,7 @@ import java.net.HttpURLConnection
 @RunWith(AndroidJUnit4::class)
 class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>()
+  override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
   @get:Rule
   val ruleChain: TestRule = RuleChain

@@ -34,7 +34,6 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -62,9 +61,9 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class SignInActivityEnterpriseTest : BaseSignActivityTest() {
+class MainActivityEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/sign-in/gmail"
     )

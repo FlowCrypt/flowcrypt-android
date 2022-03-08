@@ -15,7 +15,7 @@
          to be able to run tests-->
         <activity
             android:exported="false"
-            android:name=".ui.activity.SignInActivity"
+            android:name=".ui.activity.MainActivity"
             android:screenOrientation="portrait"
             tools:node="replace">
             <nav-graph android:value="@navigation/sing_in_graph" />

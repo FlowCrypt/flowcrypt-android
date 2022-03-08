@@ -43,7 +43,7 @@ import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -66,7 +66,6 @@ import com.sun.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
-import java.util.*
 import javax.net.ssl.SSLException
 
 /**
@@ -208,7 +207,7 @@ class MainSignInFragment : BaseSingInFragment() {
       roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email))
 
       val intent = Intent()
-      intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, it)
+      intent.putExtra(MainActivity.KEY_EXTRA_NEW_ACCOUNT, it)
       activity?.setResult(Activity.RESULT_OK, intent)
       activity?.finish()
     }
