@@ -33,6 +33,7 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
   private var binding: FragmentRecheckProvidedPassphraseBinding? = null
 
   override val contentResourceId: Int = R.layout.fragment_recheck_provided_passphrase
+  override val isToolbarVisible: Boolean = false
 
   override fun onAttach(context: Context) {
     super.onAttach(context)

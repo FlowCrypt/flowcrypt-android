@@ -41,6 +41,8 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   override val statusView: View?
     get() = view?.findViewById(R.id.status)
 
+  override val isToolbarVisible: Boolean = false
+
   override val contentResourceId: Int = R.layout.fragment_authorize_search_private_key_backups
 
   override fun onCreate(savedInstanceState: Bundle?) {

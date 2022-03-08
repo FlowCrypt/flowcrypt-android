@@ -61,6 +61,7 @@ class CheckPassphraseStrengthFragment : BaseFragment() {
   private var pwdStrengthResult: PgpPwd.PwdStrengthResult? = null
 
   override val contentResourceId: Int = R.layout.fragment_check_passphrase_strength
+  override val isToolbarVisible: Boolean = false
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
