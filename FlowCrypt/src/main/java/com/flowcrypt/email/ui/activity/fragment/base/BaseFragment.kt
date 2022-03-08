@@ -19,6 +19,7 @@ import androidx.fragment.app.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
@@ -37,7 +38,7 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseFragment : Fragment() {
+abstract class BaseFragment : Fragment(), UiUxSettings {
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
 
@@ -98,6 +99,7 @@ abstract class BaseFragment : Fragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    appBarLayout?.visibleOrGone(isToolbarVisible)
     initAccountViewModel()
   }
 

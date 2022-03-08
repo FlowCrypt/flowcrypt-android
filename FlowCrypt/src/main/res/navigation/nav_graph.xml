@@ -7,7 +7,58 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/mainSettingsFragment">
+    app:startDestination="@id/mainSignInFragment">
+
+    <fragment
+        android:id="@+id/mainSignInFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.MainSignInFragment"
+        android:label="MainSignInFragment"
+        tools:layout="@layout/fragment_main_sign_in">
+        <action
+            android:id="@+id/action_mainSignInFragment_to_addOtherAccountFragment"
+            app:destination="@id/addOtherAccountFragment" />
+        <action
+            android:id="@+id/action_mainSignInFragment_to_authorizeAndSearchBackupsFragment"
+            app:destination="@id/authorizeAndSearchBackupsFragment" />
+        <action
+            android:id="@+id/action_mainSignInFragment_to_checkPassphraseStrengthFragment"
+            app:destination="@id/checkPassphraseStrengthFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addOtherAccountFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment"
+        android:label="AddOtherAccountFragment"
+        tools:layout="@layout/fragment_add_other_account">
+        <action
+            android:id="@+id/action_addOtherAccountFragment_to_authorizeAndSearchBackupsFragment"
+            app:destination="@id/authorizeAndSearchBackupsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/authorizeAndSearchBackupsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.AuthorizeAndSearchBackupsFragment"
+        android:label="AuthorizeAndSearchBackupsFragment"
+        tools:layout="@layout/fragment_authorize_search_private_key_backups">
+        <argument
+            android:name="account"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/userRecoverableAuthExceptionFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment"
+        android:label="UserRecoverableAuthExceptionFragment"
+        tools:layout="@layout/fragment_user_recoverable_auth_exception">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="flowcrypt://email.flowcrypt.com/sign-in/recover_auth" />
+        <argument
+            android:name="recoverableIntent"
+            android:defaultValue="@null"
+            app:argType="android.content.Intent"
+            app:nullable="true" />
+    </fragment>
 
     <fragment
         android:id="@+id/mainSettingsFragment"

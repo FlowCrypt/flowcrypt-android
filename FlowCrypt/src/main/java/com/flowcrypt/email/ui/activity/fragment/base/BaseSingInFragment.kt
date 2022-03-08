@@ -41,6 +41,9 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
 
   abstract fun getTempAccount(): AccountEntity?
 
+  override val isToolbarVisible: Boolean
+    get() = false
+
   protected fun initSavePrivateKeysLiveData() {
     privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, {
       it?.let {
