@@ -14,4 +14,7 @@ package com.flowcrypt.email.ui.activity.fragment.base
 interface UiUxSettings {
   val isToolbarVisible: Boolean
     get() = true
+
+  val isDisplayHomeAsUpEnabled: Boolean
+    get() = true
 }

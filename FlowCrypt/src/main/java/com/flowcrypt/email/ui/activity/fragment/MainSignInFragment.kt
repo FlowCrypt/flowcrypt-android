@@ -92,6 +92,8 @@ class MainSignInFragment : BaseSingInFragment() {
     get() = view?.findViewById(R.id.layoutContent)
   override val statusView: View?
     get() = view?.findViewById(R.id.status)
+  override val isDisplayHomeAsUpEnabled: Boolean
+    get() = false
 
   override val contentResourceId: Int = R.layout.fragment_main_sign_in
 

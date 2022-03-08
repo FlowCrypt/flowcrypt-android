@@ -45,7 +45,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
     get() = false
 
   protected fun initSavePrivateKeysLiveData() {
-    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -86,7 +86,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
           }
         }
       }
-    })
+    }
   }
 
   protected fun initAddNewAccountLiveData() {

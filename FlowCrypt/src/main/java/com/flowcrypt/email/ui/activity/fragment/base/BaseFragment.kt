@@ -100,6 +100,7 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     appBarLayout?.visibleOrGone(isToolbarVisible)
+    supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
     initAccountViewModel()
   }
 

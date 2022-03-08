@@ -16,6 +16,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
 import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.work.WorkManager
 import com.flowcrypt.email.R
@@ -134,11 +135,8 @@ abstract class BaseActivity : AppCompatActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
-      android.R.id.home -> if (isDisplayHomeAsUpEnabled) {
-        finish()
-        true
-      } else {
-        super.onOptionsItemSelected(item)
+      android.R.id.home -> {
+        findNavController(R.id.fragmentContainerView).navigateUp()
       }
 
       R.id.menuActionHelp -> {
@@ -270,6 +268,5 @@ abstract class BaseActivity : AppCompatActivity() {
   private fun setupToolbar() {
     toolbar = findViewById(R.id.toolbar)
     toolbar?.let { setSupportActionBar(it) }
-    supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
   }
 }
