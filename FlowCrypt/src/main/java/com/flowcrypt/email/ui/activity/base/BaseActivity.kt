@@ -52,7 +52,6 @@ abstract class BaseActivity : AppCompatActivity() {
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val tag: String = javaClass.simpleName
   protected var activeAccount: AccountEntity? = null
-  protected var isAccountInfoReceived = false
   protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
 
   val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(
@@ -257,11 +256,10 @@ abstract class BaseActivity : AppCompatActivity() {
   }
 
   private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(this, {
+    accountViewModel.activeAccountLiveData.observe(this) {
       activeAccount = it
-      isAccountInfoReceived = true
       onAccountInfoRefreshed(activeAccount)
-    })
+    }
   }
 
   private fun initScreenViews() {
@@ -271,7 +269,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
   private fun setupToolbar() {
     toolbar = findViewById(R.id.toolbar)
-    toolbar?.let { setSupportActionBar(it) }
+    //toolbar?.let { setSupportActionBar(it) }
     supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
   }
 }
