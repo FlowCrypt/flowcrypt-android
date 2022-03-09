@@ -87,7 +87,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
         unlockedKeys.clear()
         if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
           sourceType = KeyImportDetails.SourceType.EMAIL
-          startActivityForResult(
+          /*startActivityForResult(
             CheckKeysActivity.newIntent(
               context = this,
               privateKeys = ArrayList(privateKeysFromEmailBackups),
@@ -96,7 +96,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
               negativeBtnTitle = getString(R.string.choose_another_key),
               skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
             ), REQUEST_CODE_CHECK_PRIVATE_KEYS
-          )
+          )*/
         }
       }
 
@@ -116,7 +116,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
 
         when (resultCode) {
           Activity.RESULT_OK -> {
-            val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
+            /*val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
               CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS
             )
 
@@ -133,13 +133,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
               } else {
                 handleSuccessSubmit()
               }
-            }
+            }*/
           }
 
-          CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+          /*CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
             setResult(CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS, data)
             finish()
-          }
+          }*/
         }
       }
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -206,7 +206,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
           keyDetailsList.size, fileName, keyDetailsList.size
         )
         val posBtnTitle = getString(R.string.continue_)
-        val intent = CheckKeysActivity.newIntent(
+        /*val intent = CheckKeysActivity.newIntent(
           context = this,
           privateKeys = ArrayList(keyDetailsList),
           sourceType = sourceType,
@@ -217,7 +217,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
           isExtraImportOpt = true,
           skipImportedKeys = intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)
         )
-        startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
+        startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)*/
       }
 
       KeyImportDetails.SourceType.CLIPBOARD -> {
@@ -226,7 +226,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
           R.plurals.loaded_private_keys_from_clipboard,
           keyDetailsList.size, keyDetailsList.size
         )
-        val clipboardIntent = CheckKeysActivity.newIntent(
+        /*val clipboardIntent = CheckKeysActivity.newIntent(
           context = this,
           privateKeys = ArrayList(keyDetailsList),
           sourceType = sourceType,
@@ -242,7 +242,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
         startActivityForResult(
           clipboardIntent,
           REQUEST_CODE_CHECK_PRIVATE_KEYS
-        )
+        )*/
       }
 
       else -> {

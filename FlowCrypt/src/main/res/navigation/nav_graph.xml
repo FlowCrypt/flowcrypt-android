@@ -23,6 +23,9 @@
         <action
             android:id="@+id/action_mainSignInFragment_to_checkPassphraseStrengthFragment"
             app:destination="@id/checkPassphraseStrengthFragment" />
+        <action
+            android:id="@+id/action_mainSignInFragment_to_checkKeysFragment"
+            app:destination="@id/checkKeysFragment" />
     </fragment>
 
     <fragment
@@ -33,6 +36,9 @@
         <action
             android:id="@+id/action_addOtherAccountFragment_to_authorizeAndSearchBackupsFragment"
             app:destination="@id/authorizeAndSearchBackupsFragment" />
+        <action
+            android:id="@+id/action_addOtherAccountFragment_to_checkKeysFragment"
+            app:destination="@id/checkKeysFragment" />
     </fragment>
 
     <fragment
@@ -359,6 +365,45 @@
         <argument
             android:name="resourceIdAsString"
             app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/checkKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment"
+        android:label="CheckKeysFragment"
+        tools:layout="@layout/fragment_check_keys">
+        <argument
+            android:name="privateKeys"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails[]" />
+        <argument
+            android:name="sourceType"
+            app:argType="com.flowcrypt.email.model.KeyImportDetails$SourceType" />
+        <argument
+            android:name="subTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="initSubTitlePlurals"
+            app:argType="reference" />
+        <argument
+            android:name="positiveBtnTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="negativeBtnTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="isExtraImportOpt"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="skipImportedKeys"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
 
     <dialog

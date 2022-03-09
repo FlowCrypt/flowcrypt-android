@@ -40,9 +40,9 @@ import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
@@ -115,6 +115,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
     subscribeToCheckAccountSettings()
     subscribeToAuthorizeAndSearchBackups()
+    subscribeToCheckPrivateKeys()
 
     setupOAuth2AuthCredentialsViewModel()
     initAddNewAccountLiveData()
@@ -135,16 +136,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           navController?.navigateUp()
         }
 
-        CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> handleResultFromCheckKeysActivity(
+        /*CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> handleResultFromCheckKeysActivity(
           resultCode,
           data
-        )
+        )*/
       }
-
-      REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL -> handleResultFromCheckKeysActivity(
-        resultCode,
-        data
-      )
 
       REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
         when (resultCode) {
@@ -443,21 +439,16 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
                 showContent()
               }
             } else {
-              val subTitle = resources.getQuantityString(
-                R.plurals.found_backup_of_your_account_key,
-                keyDetailsList?.size ?: 0,
-                keyDetailsList?.size ?: 0
+              navController?.navigate(
+                AddOtherAccountFragmentDirections
+                  .actionAddOtherAccountFragmentToCheckKeysFragment(
+                    privateKeys = (keyDetailsList ?: ArrayList()).toTypedArray(),
+                    sourceType = KeyImportDetails.SourceType.EMAIL,
+                    positiveBtnTitle = getString(R.string.continue_),
+                    negativeBtnTitle = getString(R.string.use_another_account),
+                    initSubTitlePlurals = R.plurals.found_backup_of_your_account_key
+                  )
               )
-
-              val intent = CheckKeysActivity.newIntent(
-                context = requireContext(),
-                privateKeys = keyDetailsList ?: ArrayList(),
-                sourceType = KeyImportDetails.SourceType.EMAIL,
-                subTitle = subTitle,
-                positiveBtnTitle = getString(R.string.continue_),
-                negativeBtnTitle = getString(R.string.use_another_account)
-              )
-              startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
             }
           }
 
@@ -475,6 +466,41 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           }
         }
       }
+    }
+  }
+
+  private fun subscribeToCheckPrivateKeys() {
+    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+      val keys =
+        bundle.getParcelableArrayList<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+      @CheckKeysFragment.CheckingState val checkingState: Int =
+        bundle.getInt(CheckKeysFragment.KEY_STATE)
+
+      when (checkingState) {
+        CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
+          if (keys.isNullOrEmpty()) {
+            showContent()
+            showInfoSnackbar(msgText = getString(R.string.error_no_keys))
+          } else {
+            importCandidates.clear()
+            importCandidates.addAll(keys)
+
+            getTempAccount()?.let { accountViewModel.addNewAccount(it) }
+          }
+        }
+
+        CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
+          toast(R.string.key_already_imported_finishing_setup, Toast.LENGTH_SHORT)
+          if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+        }
+
+        CheckKeysFragment.CheckingState.CANCELED -> showContent()
+
+        CheckKeysFragment.CheckingState.NEGATIVE -> {
+          navController?.navigateUp()
+        }
+      }
+
     }
   }
 
@@ -527,7 +553,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       }
     }
 
-    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, {
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
@@ -548,7 +574,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
                     requireContext(),
                     0,
                     Intent(requireContext(), MainActivity::class.java),
-                    PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_MUTABLE
                   )
                 )
             }
@@ -565,7 +591,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           )
         }
       }
-    })
+    }
   }
 
   /**
@@ -791,40 +817,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     }
   }
 
-  private fun handleResultFromCheckKeysActivity(resultCode: Int, data: Intent?) {
-    when (resultCode) {
-      Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
-        val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
-          CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS
-        )
-
-        if (keys.isNullOrEmpty()) {
-          showContent()
-          showInfoSnackbar(msgText = getString(R.string.error_no_keys))
-        } else {
-          importCandidates.clear()
-          importCandidates.addAll(keys)
-
-          getTempAccount()?.let { accountViewModel.addNewAccount(it) }
-        }
-      }
-
-      CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
-        Toast.makeText(
-          requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast
-            .LENGTH_SHORT
-        ).show()
-        if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-      }
-
-      Activity.RESULT_CANCELED -> showContent()
-
-      CheckKeysActivity.RESULT_NEGATIVE -> {
-        navController?.navigateUp()
-      }
-    }
-  }
-
   private fun applyRecommendSettings(): Boolean {
     val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
       editTextEmail?.text.toString(), editTextPassword?.text.toString()
@@ -856,7 +848,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   companion object {
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
-    private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
     private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
 

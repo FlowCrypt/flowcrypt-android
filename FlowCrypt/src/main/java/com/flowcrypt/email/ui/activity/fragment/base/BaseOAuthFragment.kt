@@ -67,7 +67,10 @@ abstract class BaseOAuthFragment : BaseFragment() {
       } else {
         showInfoDialog(
           dialogTitle = getString(R.string.oauth_error),
-          dialogMsg = getString(R.string.could_not_verify_response),
+          dialogMsg = getString(
+            R.string.could_not_verify_response,
+            getString(R.string.support_email)
+          ),
           useLinkify = true
         )
       }

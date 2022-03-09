@@ -89,7 +89,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   }
 
   protected fun initAddNewAccountLiveData() {
-    accountViewModel.addNewAccountLiveData.observe(viewLifecycleOwner, {
+    accountViewModel.addNewAccountLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(getString(R.string.processing))
@@ -124,15 +124,15 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
           showInfoDialog(dialogMsg = msg)
         }
       }
-    })
+    }
   }
 
   private fun initAllAccountsLiveData() {
     //here we receive only value and unsubscribe
-    accountViewModel.pureAccountsLiveData.observeOnce(this, {
+    accountViewModel.pureAccountsLiveData.observeOnce(this) {
       existedAccounts.clear()
       existedAccounts.addAll(it)
-    })
+    }
   }
 
   protected open fun runEmailManagerActivity() {

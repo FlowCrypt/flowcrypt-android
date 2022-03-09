@@ -32,6 +32,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CheckFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DomainOrgRulesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
@@ -41,7 +42,6 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
-import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
@@ -108,6 +108,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
     subscribeToCheckAccountSettings()
     subscribeToAuthorizeAndSearchBackups()
+    subscribeToCheckPrivateKeys()
     observeOnResultLiveData()
 
     initAddNewAccountLiveData()
@@ -137,12 +138,8 @@ class MainSignInFragment : BaseSingInFragment() {
         }
 
         CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> {
-          handleResultFromCheckKeysActivity(resultCode, data)
+          //handleResultFromCheckKeysActivity(resultCode, data)
         }
-      }
-
-      REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> {
-        handleResultFromCheckKeysActivity(resultCode, data)
       }
 
       REQUEST_CODE_RETRY_LOGIN -> {
@@ -405,6 +402,44 @@ class MainSignInFragment : BaseSingInFragment() {
     }
   }
 
+  private fun subscribeToCheckPrivateKeys() {
+    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+      val keys =
+        bundle.getParcelableArrayList<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+      @CheckKeysFragment.CheckingState val checkingState: Int =
+        bundle.getInt(CheckKeysFragment.KEY_STATE)
+
+      when (checkingState) {
+        CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
+          if (keys.isNullOrEmpty()) {
+            showInfoSnackbar(msgText = getString(R.string.error_no_keys))
+          } else {
+            importCandidates.clear()
+            importCandidates.addAll(keys)
+
+            if (getTempAccount() == null) {
+              ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
+              toast(R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT)
+            } else {
+              getTempAccount()?.let {
+                accountViewModel.addNewAccount(it)
+              }
+            }
+          }
+        }
+
+        CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
+          toast(R.string.key_already_imported_finishing_setup, Toast.LENGTH_SHORT)
+          if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+        }
+
+        CheckKeysFragment.CheckingState.CANCELED, CheckKeysFragment.CheckingState.NEGATIVE -> {
+          showContent()
+        }
+      }
+    }
+  }
+
   private fun observeOnResultLiveData() {
     getNavigationResult<kotlin.Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
       if (it.isSuccess) {
@@ -427,22 +462,16 @@ class MainSignInFragment : BaseSingInFragment() {
         startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
       }
     } else {
-      val subTitle = resources.getQuantityString(
-        R.plurals.found_backup_of_your_account_key,
-        keyDetailsList.size,
-        keyDetailsList.size
+      navController?.navigate(
+        MainSignInFragmentDirections
+          .actionMainSignInFragmentToCheckKeysFragment(
+            privateKeys = keyDetailsList.toTypedArray(),
+            sourceType = KeyImportDetails.SourceType.EMAIL,
+            positiveBtnTitle = getString(R.string.continue_),
+            negativeBtnTitle = getString(R.string.use_another_account),
+            initSubTitlePlurals = R.plurals.found_backup_of_your_account_key
+          )
       )
-      val positiveBtnTitle = getString(R.string.continue_)
-      val negativeBtnTitle = getString(R.string.use_another_account)
-      val intent = CheckKeysActivity.newIntent(
-        context = requireContext(),
-        privateKeys = keyDetailsList,
-        sourceType = KeyImportDetails.SourceType.EMAIL,
-        subTitle = subTitle,
-        positiveBtnTitle = positiveBtnTitle,
-        negativeBtnTitle = negativeBtnTitle
-      )
-      startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
     }
   }
 
@@ -589,6 +618,7 @@ class MainSignInFragment : BaseSingInFragment() {
           loginViewModel.loginLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
+        else -> {}
       }
     }
   }
@@ -621,6 +651,8 @@ class MainSignInFragment : BaseSingInFragment() {
           domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
+
+        else -> {}
       }
     }
   }
@@ -673,6 +705,8 @@ class MainSignInFragment : BaseSingInFragment() {
           ekmViewModel.ekmLiveData.value = Result.none()
           baseActivity.countingIdlingResource.decrementSafely()
         }
+
+        else -> {}
       }
     }
   }
@@ -706,6 +740,8 @@ class MainSignInFragment : BaseSingInFragment() {
           )
           baseActivity.countingIdlingResource.decrementSafely()
         }
+
+        else -> {}
       }
     }
   }
@@ -734,56 +770,10 @@ class MainSignInFragment : BaseSingInFragment() {
     )
   }
 
-  private fun handleResultFromCheckKeysActivity(resultCode: Int, data: Intent?) {
-    when (resultCode) {
-      Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
-        val keys: List<PgpKeyDetails>? = data?.getParcelableArrayListExtra(
-          CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS
-        )
-
-        if (keys.isNullOrEmpty()) {
-          showInfoSnackbar(msgText = getString(R.string.error_no_keys))
-        } else {
-          importCandidates.clear()
-          importCandidates.addAll(keys)
-
-          if (getTempAccount() == null) {
-            ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
-            Toast.makeText(
-              requireContext(),
-              R.string.error_occurred_try_again_later,
-              Toast.LENGTH_SHORT
-            ).show()
-            return
-          } else {
-            getTempAccount()?.let {
-              accountViewModel.addNewAccount(it)
-            }
-          }
-        }
-      }
-
-      CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
-        Toast.makeText(
-          requireContext(),
-          getString(R.string.key_already_imported_finishing_setup),
-          Toast.LENGTH_SHORT
-        ).show()
-        if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-      }
-
-      Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
-        this.googleSignInAccount = null
-        showContent()
-      }
-    }
-  }
-
   companion object {
     private const val REQUEST_CODE_SIGN_IN = 100
     private const val REQUEST_CODE_RESOLVE_SIGN_IN_ERROR = 101
     private const val REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102
-    private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 103
     private const val REQUEST_CODE_RETRY_LOGIN = 104
     private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106

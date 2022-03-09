@@ -107,10 +107,10 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           finish()
         }
 
-        CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+        /*CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
           setResult(RESULT_CODE_HANDLE_RESOLVED_KEYS, data)
           finish()
-        }
+        }*/
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
