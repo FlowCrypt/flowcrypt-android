@@ -73,7 +73,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupCheckEmailSettingsViewModel() {
-    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner, {
+    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -96,11 +96,11 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
           }
         }
       }
-    })
+    }
   }
 
   private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()
@@ -116,7 +116,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
           navController?.navigateUp()
         }
       }
-    })
+    }
   }
 
   companion object {

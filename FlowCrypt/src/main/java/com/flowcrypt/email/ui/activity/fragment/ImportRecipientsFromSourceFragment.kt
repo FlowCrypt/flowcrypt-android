@@ -19,8 +19,8 @@ import com.flowcrypt.email.databinding.FragmentImportRecipientsFromSourceBinding
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment
 
 /**
@@ -35,12 +35,6 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
   override val isPrivateKeyMode: Boolean = false
   override val contentResourceId: Int = R.layout.fragment_import_recipients_from_source
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    subscribeToFetchPubKeysViaLookUp()
-    subscribeToCheckClipboard()
-  }
-
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
   ): View? {
@@ -52,6 +46,7 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = getString(R.string.add_contact)
     initViews()
+    subscribeToFetchPubKeysViaLookUp()
   }
 
   override fun handleSelectedFile(uri: Uri) {
@@ -59,6 +54,17 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
       ImportRecipientsFromSourceFragmentDirections
         .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(uri = uri)
     )
+  }
+
+  override fun handleClipboard(pgpKeysAsString: String?) {
+    navController?.navigate(
+      ImportRecipientsFromSourceFragmentDirections
+        .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pgpKeysAsString)
+    )
+  }
+
+  override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
+
   }
 
   private fun initViews() {
@@ -103,16 +109,6 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
   private fun subscribeToFetchPubKeysViaLookUp() {
     setFragmentResultListener(LookUpPubKeysDialogFragment.REQUEST_KEY_PUB_KEYS) { _, bundle ->
       val pubKeysAsString = bundle.getString(LookUpPubKeysDialogFragment.KEY_PUB_KEYS)
-      navController?.navigate(
-        ImportRecipientsFromSourceFragmentDirections
-          .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pubKeysAsString)
-      )
-    }
-  }
-
-  private fun subscribeToCheckClipboard() {
-    setFragmentResultListener(FindKeysInClipboardDialogFragment.REQUEST_KEY_CLIPBOARD_RESULT) { _, bundle ->
-      val pubKeysAsString = bundle.getString(FindKeysInClipboardDialogFragment.KEY_CLIPBOARD_TEXT)
       navController?.navigate(
         ImportRecipientsFromSourceFragmentDirections
           .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pubKeysAsString)

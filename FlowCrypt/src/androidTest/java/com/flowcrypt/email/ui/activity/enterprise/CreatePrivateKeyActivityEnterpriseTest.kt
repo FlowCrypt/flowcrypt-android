@@ -28,7 +28,6 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.CreatePrivateKeyActivity
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
 import com.flowcrypt.email.util.AccountDaoManager

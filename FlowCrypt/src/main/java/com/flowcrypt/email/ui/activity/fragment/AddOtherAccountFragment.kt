@@ -10,6 +10,7 @@ import android.accounts.AccountManager
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
@@ -43,7 +44,6 @@ import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -116,6 +116,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     subscribeToCheckAccountSettings()
     subscribeToAuthorizeAndSearchBackups()
     subscribeToCheckPrivateKeys()
+    subscribeCreateOrImportPrivateKeyDuringSetup()
 
     setupOAuth2AuthCredentialsViewModel()
     initAddNewAccountLiveData()
@@ -132,9 +133,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
 
-        CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
+        /*CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           navController?.navigateUp()
-        }
+        }*/
 
         /*CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> handleResultFromCheckKeysActivity(
           resultCode,
@@ -432,9 +433,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             if (keyDetailsList?.isEmpty() == true) {
               authCreds?.let { authCredentials ->
                 val account = AccountEntity(authCredentials)
-                startActivityForResult(
-                  CreateOrImportKeyActivity.newIntent(requireContext(), account, true),
-                  REQUEST_CODE_ADD_NEW_ACCOUNT
+                navController?.navigate(
+                  AddOtherAccountFragmentDirections
+                    .actionAddOtherAccountFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
+                      accountEntity = account, isShowAnotherAccountBtnEnabled = true
+                    )
                 )
                 showContent()
               }
@@ -473,20 +476,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
         bundle.getParcelableArrayList<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
-      @CheckKeysFragment.CheckingState val checkingState: Int =
-        bundle.getInt(CheckKeysFragment.KEY_STATE)
-
-      when (checkingState) {
+      when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
-          if (keys.isNullOrEmpty()) {
-            showContent()
-            showInfoSnackbar(msgText = getString(R.string.error_no_keys))
-          } else {
-            importCandidates.clear()
-            importCandidates.addAll(keys)
-
-            getTempAccount()?.let { accountViewModel.addNewAccount(it) }
-          }
+          handleUnlockedKeys(keys)
         }
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
@@ -500,7 +492,14 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           navController?.navigateUp()
         }
       }
+    }
+  }
 
+  private fun subscribeCreateOrImportPrivateKeyDuringSetup() {
+    setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
+      val keys =
+        bundle.getParcelableArrayList<PgpKeyDetails>(CreateOrImportPrivateKeyDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+      handleUnlockedKeys(keys)
     }
   }
 
@@ -550,6 +549,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             ?: "Couldn't fetch token"
           )
         }
+        else -> {}
       }
     }
 
@@ -574,7 +574,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
                     requireContext(),
                     0,
                     Intent(requireContext(), MainActivity::class.java),
-                    PendingIntent.FLAG_MUTABLE
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
                   )
                 )
             }
@@ -590,6 +590,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             ?: getString(R.string.could_not_load_oauth_server_configuration)
           )
         }
+        else -> {}
       }
     }
   }
@@ -843,6 +844,18 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
         }
       })
+    }
+  }
+
+  private fun handleUnlockedKeys(keys: java.util.ArrayList<PgpKeyDetails>?) {
+    if (keys.isNullOrEmpty()) {
+      showContent()
+      showInfoSnackbar(msgText = getString(R.string.error_no_keys))
+    } else {
+      importCandidates.clear()
+      importCandidates.addAll(keys)
+
+      getTempAccount()?.let { accountViewModel.addNewAccount(it) }
     }
   }
 

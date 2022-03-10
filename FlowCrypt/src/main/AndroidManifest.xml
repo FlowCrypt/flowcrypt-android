@@ -126,11 +126,6 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.CreateOrImportKeyActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.ImportPrivateKeyActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

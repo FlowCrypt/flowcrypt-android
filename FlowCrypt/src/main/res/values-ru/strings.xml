@@ -494,4 +494,5 @@
     <string name="error_occurred_during_downloading_att">Произошла ошибка при загрузке.\n\nДетали ошибки:  %1$s</string>
     <string name="no_apps_that_can_handle_intent">Извините, у Вас нет приложений, которые могут открыть этот файл</string>
     <string name="warning_don_not_have_content_app">Просмотр вложения невозможен. Ваша организация требует использовать Content для просмотра вложений, но приложение Content не установлено.\n\nПожалуйста, обратитесь в службу поддержки.</string>
+    <string name="import_keys">Импортировать ключи</string>
 </resources>

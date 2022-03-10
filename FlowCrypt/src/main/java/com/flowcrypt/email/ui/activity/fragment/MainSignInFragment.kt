@@ -42,7 +42,6 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
-import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -132,14 +131,14 @@ class MainSignInFragment : BaseSingInFragment() {
       REQUEST_CODE_CREATE_OR_IMPORT_KEY -> when (resultCode) {
         Activity.RESULT_OK -> if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
 
-        Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
+        /*Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           this.googleSignInAccount = null
           showContent()
-        }
+        }*/
 
-        CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> {
+        /*CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> {
           //handleResultFromCheckKeysActivity(resultCode, data)
-        }
+        }*/
       }
 
       REQUEST_CODE_RETRY_LOGIN -> {
@@ -302,8 +301,15 @@ class MainSignInFragment : BaseSingInFragment() {
           requireContext().startService(
             Intent(requireContext(), CheckClipboardToFindKeyService::class.java)
           )
-          val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
-          startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
+          /*val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
+          startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)*/
+
+          navController?.navigate(
+            MainSignInFragmentDirections
+              .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
+                accountEntity = it, isShowAnotherAccountBtnEnabled = true
+              )
+          )
         } else {
           navController?.navigate(
             MainSignInFragmentDirections.actionMainSignInFragmentToAuthorizeAndSearchBackupsFragment(
@@ -458,8 +464,15 @@ class MainSignInFragment : BaseSingInFragment() {
             CheckClipboardToFindKeyService::class.java
           )
         )
-        val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
-        startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
+        /*val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
+        startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)*/
+
+        navController?.navigate(
+          MainSignInFragmentDirections
+            .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
+              accountEntity = it, isShowAnotherAccountBtnEnabled = true
+            )
+        )
       }
     } else {
       navController?.navigate(

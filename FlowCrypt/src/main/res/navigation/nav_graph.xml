@@ -26,6 +26,9 @@
         <action
             android:id="@+id/action_mainSignInFragment_to_checkKeysFragment"
             app:destination="@id/checkKeysFragment" />
+        <action
+            android:id="@+id/action_mainSignInFragment_to_createOrImportPrivateKeyDuringSetupFragment"
+            app:destination="@id/createOrImportPrivateKeyDuringSetupFragment" />
     </fragment>
 
     <fragment
@@ -39,6 +42,9 @@
         <action
             android:id="@+id/action_addOtherAccountFragment_to_checkKeysFragment"
             app:destination="@id/checkKeysFragment" />
+        <action
+            android:id="@+id/action_addOtherAccountFragment_to_createOrImportPrivateKeyDuringSetupFragment"
+            app:destination="@id/createOrImportPrivateKeyDuringSetupFragment" />
     </fragment>
 
     <fragment
@@ -64,6 +70,36 @@
             android:defaultValue="@null"
             app:argType="android.content.Intent"
             app:nullable="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createOrImportPrivateKeyDuringSetupFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment"
+        android:label="CreateOrImportKeyFragment"
+        tools:layout="@layout/fragment_create_or_import_private_key_during_setup">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="isShowAnotherAccountBtnEnabled"
+            android:defaultValue="true"
+            app:argType="boolean" />
+        <action
+            android:id="@+id/action_createOrImportPrivateKeyDuringSetupFragment_to_importPrivateKeysDuringSetupFragment"
+            app:destination="@id/importPrivateKeysDuringSetupFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/importPrivateKeysDuringSetupFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ImportPrivateKeysDuringSetupFragment"
+        android:label="ImportPrivateKeysDuringSetupFragment"
+        tools:layout="@layout/fragment_import_private_keys_during_setup">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <action
+            android:id="@+id/action_importPrivateKeysDuringSetupFragment_to_checkKeysFragment"
+            app:destination="@id/checkKeysFragment" />
     </fragment>
 
     <fragment
@@ -547,6 +583,27 @@
             app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
     </dialog>
 
+    <dialog
+        android:id="@+id/parsePgpKeysFromSourceDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment"
+        android:label="ParsePgpKeysFromSourceDialogFragment"
+        tools:layout="@layout/fragment_parse_pgp_keys_from_source">
+        <argument
+            android:name="source"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="uri"
+            android:defaultValue="@null"
+            app:argType="android.net.Uri"
+            app:nullable="true" />
+        <argument
+            android:name="filterType"
+            android:defaultValue="0L"
+            app:argType="long" />
+    </dialog>
+
     <action
         android:id="@+id/action_global_twoWayDialogFragment"
         app:destination="@id/twoWayDialogFragment" />
@@ -565,4 +622,7 @@
     <action
         android:id="@+id/action_global_htmlViewFromAssetsRawFragment"
         app:destination="@id/htmlViewFromAssetsRawFragment" />
+    <action
+        android:id="@+id/action_global_parsePgpKeysFromSourceDialogFragment"
+        app:destination="@id/parsePgpKeysFromSourceDialogFragment" />
 </navigation>
