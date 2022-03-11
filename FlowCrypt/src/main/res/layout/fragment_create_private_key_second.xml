@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/textViewSecondPasswordCheckTitle"
+            style="@style/ScreenHeading"
+            android:text="@string/set_up_flow_crypt"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/layoutPasswordHintSecond"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/layout_height_sub_header"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="@dimen/default_margin_content_big"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/repeat_passphrase_hint"
+            android:textColor="@android:color/black"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
+            app:layout_constraintTop_toBottomOf="@+id/textViewSecondPasswordCheckTitle" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutKeyPasswordSecond"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_password_layout"
+            android:hint="@string/repeat_pass_phrase"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
+            app:layout_constraintTop_toBottomOf="@+id/layoutPasswordHintSecond"
+            app:passwordToggleContentDescription="description"
+            app:passwordToggleEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextKeyPasswordSecond"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:ems="10"
+                android:inputType="textPassword" />
+
+            <ProgressBar
+                android:id="@+id/progressBarPasswordQualitys"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/default_margin_content_small"
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/textViewPasswordQualityInfos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_small"
+                android:gravity="center"
+                android:visibility="invisible" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/buttonConfirmPassPhrases"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/default_margin_content_big"
+            android:text="@string/confirm_pass_phrase"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
+            app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPasswordSecond" />
+
+        <Button
+            android:id="@+id/buttonUseAnotherPassPhrase"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/margin_between_buttons"
+            android:text="@string/use_another_pass_phrase"
+            android:theme="@style/AppWidget.Button.SilverWithWhiteText"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
+            app:layout_constraintTop_toBottomOf="@+id/buttonConfirmPassPhrases" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineLeftSecond"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/padding_guideline_setup_screen" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineRightSecond"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

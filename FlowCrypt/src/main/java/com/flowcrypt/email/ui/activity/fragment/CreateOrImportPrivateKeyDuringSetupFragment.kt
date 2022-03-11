@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -23,7 +21,6 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.CreatePrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_CREATED_KEY
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_RESOLVED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.USE_ANOTHER_ACCOUNT
@@ -44,18 +41,6 @@ class CreateOrImportPrivateKeyDuringSetupFragment : BaseFragment() {
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_CREATE_KEY_ACTIVITY -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          returnResult(HANDLE_CREATED_KEY)
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
   ): View? {
@@ -68,6 +53,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment : BaseFragment() {
     super.onViewCreated(view, savedInstanceState)
     initViews()
     subscribeToCheckPrivateKeysFromImport()
+    subscribeToCreatePrivateKey()
   }
 
   private fun initViews() {
@@ -84,9 +70,11 @@ class CreateOrImportPrivateKeyDuringSetupFragment : BaseFragment() {
       binding?.buttonCreateNewKey?.gone()
     } else {
       binding?.buttonCreateNewKey?.setOnClickListener {
-        startActivityForResult(
-          CreatePrivateKeyActivity.newIntent(requireContext(), args.accountEntity),
-          REQUEST_CODE_CREATE_KEY_ACTIVITY
+        navController?.navigate(
+          CreateOrImportPrivateKeyDuringSetupFragmentDirections
+            .actionCreateOrImportPrivateKeyDuringSetupFragmentToCreatePrivateKeyFirstFragment(
+              args.accountEntity
+            )
         )
       }
     }
@@ -129,6 +117,18 @@ class CreateOrImportPrivateKeyDuringSetupFragment : BaseFragment() {
     }
   }
 
+  private fun subscribeToCreatePrivateKey() {
+    setFragmentResultListener(CreatePrivateKeyFirstFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
+      val pgpKeyDetails =
+        bundle.getParcelable<PgpKeyDetails>(CreatePrivateKeyFirstFragment.KEY_CREATED_KEY)
+      setFragmentResult(
+        REQUEST_KEY_CREATE_KEY,
+        bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
+      )
+      navController?.navigateUp()
+    }
+  }
+
   companion object {
     val KEY_STATE = GeneralUtil.generateUniqueExtraKey(
       "KEY_STATE", CreateOrImportPrivateKeyDuringSetupFragment::class.java
@@ -143,6 +143,12 @@ class CreateOrImportPrivateKeyDuringSetupFragment : BaseFragment() {
       "KEY_UNLOCKED_PRIVATE_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
     )
 
-    private const val REQUEST_CODE_CREATE_KEY_ACTIVITY = 12
+    val REQUEST_KEY_CREATE_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSED_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
+    )
+
+    val KEY_CREATED_KEY = GeneralUtil.generateUniqueExtraKey(
+      "KEY_PARSED_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
+    )
   }
 }

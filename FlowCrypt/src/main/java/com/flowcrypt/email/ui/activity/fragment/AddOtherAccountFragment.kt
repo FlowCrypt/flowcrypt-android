@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.accounts.Account
 import android.accounts.AccountManager
-import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
@@ -117,6 +116,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     subscribeToAuthorizeAndSearchBackups()
     subscribeToCheckPrivateKeys()
     subscribeCreateOrImportPrivateKeyDuringSetup()
+    subscribeToCreatePrivateKey()
 
     setupOAuth2AuthCredentialsViewModel()
     initAddNewAccountLiveData()
@@ -130,19 +130,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
-        Activity.RESULT_OK -> if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-
-        /*CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
-          navController?.navigateUp()
-        }*/
-
-        /*CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> handleResultFromCheckKeysActivity(
-          resultCode,
-          data
-        )*/
-      }
-
       REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
@@ -188,7 +175,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     super.runEmailManagerActivity()
   }
 
-  override fun getTempAccount(): AccountEntity? {
+  override fun getTempAccount(): AccountEntity {
     val authCreds = generateAuthCreds()
     return AccountEntity(
       if (authCreds.useOAuth2) {
@@ -831,7 +818,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   }
 
   private fun storeAccountInfoToAccountManager() {
-    getTempAccount()?.let { accountEntity ->
+    getTempAccount().let { accountEntity ->
       val accountManager = AccountManager.get(requireContext())
       val account = Account(
         accountEntity.email.lowercase(Locale.US),
@@ -847,20 +834,30 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     }
   }
 
-  private fun handleUnlockedKeys(keys: java.util.ArrayList<PgpKeyDetails>?) {
+  private fun handleUnlockedKeys(keys: List<PgpKeyDetails>?) {
     if (keys.isNullOrEmpty()) {
       showContent()
       showInfoSnackbar(msgText = getString(R.string.error_no_keys))
     } else {
       importCandidates.clear()
       importCandidates.addAll(keys)
+      accountViewModel.addNewAccount(getTempAccount())
+    }
+  }
 
-      getTempAccount()?.let { accountViewModel.addNewAccount(it) }
+  private fun subscribeToCreatePrivateKey() {
+    setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
+      val pgpKeyDetails =
+        bundle.getParcelable<PgpKeyDetails>(CreateOrImportPrivateKeyDuringSetupFragment.KEY_CREATED_KEY)
+      pgpKeyDetails?.let {
+        importCandidates.clear()
+        importCandidates.add(it)
+        accountViewModel.addNewAccount(getTempAccount())
+      }
     }
   }
 
   companion object {
-    private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
     private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
 

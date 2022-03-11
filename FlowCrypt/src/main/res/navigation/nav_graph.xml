@@ -87,6 +87,38 @@
         <action
             android:id="@+id/action_createOrImportPrivateKeyDuringSetupFragment_to_importPrivateKeysDuringSetupFragment"
             app:destination="@id/importPrivateKeysDuringSetupFragment" />
+        <action
+            android:id="@+id/action_createOrImportPrivateKeyDuringSetupFragment_to_createPrivateKeyFirstFragment"
+            app:destination="@id/createPrivateKeyFirstFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPrivateKeyFirstFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeyFirstFragment"
+        android:label="CreatePrivateKeyFragment"
+        tools:layout="@layout/fragment_create_private_key_first">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <action
+            android:id="@+id/action_createPrivateKeyFirstFragment_to_createPrivateKeySecondFragment"
+            app:destination="@id/createPrivateKeySecondFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPrivateKeySecondFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeySecondFragment"
+        android:label="CreatePrivateKeySecondFragment"
+        tools:layout="@layout/fragment_create_private_key_second">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="passphrase"
+            app:argType="integer[]" />
+        <action
+            android:id="@+id/action_createPrivateKeySecondFragment_to_createPrivateKeyDialogFragment"
+            app:destination="@id/createPrivateKeyDialogFragment" />
     </fragment>
 
     <fragment
@@ -602,6 +634,19 @@
             android:name="filterType"
             android:defaultValue="0L"
             app:argType="long" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/createPrivateKeyDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeyDialogFragment"
+        android:label="CreatePrivateKeyDialogFragment"
+        tools:layout="@layout/fragment_create_private_key_dialog">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
     </dialog>
 
     <action
