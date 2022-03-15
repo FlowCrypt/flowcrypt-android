@@ -1866,10 +1866,20 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       messageType = args.messageType,
       replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
       uid = EmailUtil.genOutboxUID(requireContext()),
-      password = if (isPasswordProtectedFunctionalityEnabled()) {
-        composeMsgViewModel.webPortalPasswordStateFlow.value.toString().toCharArray()
-      } else null
+      password = usePasswordIfNeeded()
     )
+  }
+
+  private fun usePasswordIfNeeded(): CharArray? {
+    return if (isPasswordProtectedFunctionalityEnabled()) {
+      for (recipient in composeMsgViewModel.recipientWithPubKeys) {
+        val recipientWithPubKeys = recipient.recipientWithPubKeys
+        if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
+          return composeMsgViewModel.webPortalPasswordStateFlow.value.toString().toCharArray()
+        }
+      }
+      null
+    } else null
   }
 
   private fun isPasswordProtectedFunctionalityEnabled(): Boolean {
