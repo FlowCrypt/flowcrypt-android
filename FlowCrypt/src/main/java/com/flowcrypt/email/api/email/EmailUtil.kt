@@ -1038,7 +1038,7 @@ class EmailUtil {
         val ringProtector = keysStorage.getSecretKeyRingProtector()
 
         val publicKeys = mutableListOf<String>()
-        val senderEmail = getFirstAddressString(msgEntity.from)
+        val senderEmail = msgEntity.from.first().address
         val recipients = msgEntity.allRecipients.toMutableList()
         publicKeys.addAll(
           SecurityUtils.getRecipientsUsablePubKeys(context, recipients)
