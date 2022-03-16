@@ -6,79 +6,82 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
-import android.content.Intent
-import androidx.core.app.JobIntentService
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.RecipientDao
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.jobscheduler.JobIdManager
-import com.flowcrypt.email.model.EmailAndNamePair
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 
 /**
- * This service does update a name of some email entry or creates a new email entry if it not
- * exists.
- *
+ * This service updates a name of some email entry or creates a new email entry if it not exist.
  *
  * Used a next logic:
- *
  *  *  if email in db:
- *
  *  * if db_row.name is null and bool(name) == true:
  * "save that person's name into the existing DB record"
  *
  *  *  else:
  * "save that email, name pair into DB like so: new RecipientEntity(email, name);"
  *
- *
  * @author DenBond7
  * Date: 22.05.2017
  * Time: 22:25
  * E-mail: DenBond7@gmail.com
  */
-class EmailAndNameWorker : JobIntentService() {
-  private var recipientDao: RecipientDao = FlowCryptRoomDatabase.getDatabase(this).recipientDao()
+class EmailAndNameWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
+  private var recipientDao: RecipientDao = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
 
-  override fun onHandleWork(intent: Intent) {
-    val pairs =
-      intent.getParcelableArrayListExtra<EmailAndNamePair>(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)
-        ?: return
+  override suspend fun doWork(): Result {
+    val emails = inputData.getStringArray(EXTRA_KEY_EMAILS) ?: return Result.failure()
+    val names = inputData.getStringArray(EXTRA_KEY_NAMES) ?: return Result.failure()
 
-    for (pair in pairs) {
-      val email = pair.email?.lowercase() ?: continue
+    if (emails.size != names.size) return Result.failure()
+
+    for (i in emails.indices) {
+      val email = emails[i].lowercase()
+      val name = names[i]
       val recipientEntity = recipientDao.getRecipientByEmail(email)
       if (recipientEntity != null) {
         if (recipientEntity.name.isNullOrEmpty()) {
-          recipientDao.update(recipientEntity.copy(name = pair.name))
+          recipientDao.updateSuspend(recipientEntity.copy(name = name))
         }
       } else {
-        recipientDao.insert(RecipientEntity(email = email, name = pair.name))
+        recipientDao.insertSuspend(RecipientEntity(email = email, name = name))
       }
     }
+
+    return Result.success()
   }
 
   companion object {
-    private const val EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME =
-      BuildConfig.APPLICATION_ID + ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME"
+    const val EXTRA_KEY_EMAILS = BuildConfig.APPLICATION_ID + ".EXTRA_KEY_EMAILS"
+    const val EXTRA_KEY_NAMES = BuildConfig.APPLICATION_ID + ".EXTRA_KEY_NAMES"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPDATE_EMAIL_AND_NAME"
 
-    /**
-     * Enqueue a new task for [EmailAndNameWorker].
-     *
-     * @param context           Interface to global information about an application environment.
-     * @param emailAndNamePairs A list of EmailAndNamePair objects.
-     */
-    fun enqueueWork(context: Context, emailAndNamePairs: ArrayList<EmailAndNamePair>?) {
-      if (emailAndNamePairs != null && emailAndNamePairs.isNotEmpty()) {
-        val intent = Intent(context, EmailAndNameWorker::class.java)
-        intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs)
+    fun enqueue(context: Context, emailAndNamePairs: Collection<Pair<String, String?>>) {
+      val emails = emailAndNamePairs.map { it.first }
+      val names = emailAndNamePairs.map { it.second }
 
-        enqueueWork(
-          context,
-          EmailAndNameWorker::class.java,
-          JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE,
-          intent
+      WorkManager
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          GROUP_UNIQUE_TAG,
+          ExistingWorkPolicy.APPEND,
+          OneTimeWorkRequestBuilder<EmailAndNameWorker>()
+            .addTag(BaseSyncWorker.TAG_SYNC)
+            .setInputData(
+              workDataOf(
+                EXTRA_KEY_EMAILS to emails.toTypedArray(),
+                EXTRA_KEY_NAMES to names.toTypedArray()
+              )
+            )
+            .build()
         )
-      }
     }
   }
 }

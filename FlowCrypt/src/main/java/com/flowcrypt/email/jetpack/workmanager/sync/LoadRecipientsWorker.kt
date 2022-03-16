@@ -21,12 +21,11 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.model.EmailAndNamePair
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.Properties
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
@@ -152,7 +151,7 @@ class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
   }
 
   private suspend fun updateContacts(msgs: Array<Message>) = withContext(Dispatchers.IO) {
-    val emailAndNamePairs = mutableListOf<EmailAndNamePair>()
+    val emailAndNamePairs = mutableListOf<Pair<String, String>>()
     for (msg in msgs) {
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.TO))
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.CC))
@@ -176,22 +175,23 @@ class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
     }
 
     for (emailAndNamePair in emailAndNamePairs) {
-      if (recipientsInDatabase.contains(emailAndNamePair.email)) {
-        val recipientEntity = recipientsByEmailMap[emailAndNamePair.email]
+      if (recipientsInDatabase.contains(emailAndNamePair.first)) {
+        val recipientEntity = recipientsByEmailMap[emailAndNamePair.first]
         if (recipientEntity?.email.isNullOrEmpty()) {
-          if (!recipientsToUpdate.contains(emailAndNamePair.email)) {
-            emailAndNamePair.email?.let {
-              recipientsToUpdate.add(it)
-            }
-            recipientEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
+          if (!recipientsToUpdate.contains(emailAndNamePair.first)) {
+            recipientsToUpdate.add(emailAndNamePair.first)
+            recipientEntity?.copy(name = emailAndNamePair.second)?.let { updateCandidates.add(it) }
           }
         }
       } else {
-        if (!recipientsToCreate.contains(emailAndNamePair.email)) {
-          emailAndNamePair.email?.let {
-            recipientsToCreate.add(it)
-            newCandidates.add(RecipientEntity(email = it, name = emailAndNamePair.name))
-          }
+        if (!recipientsToCreate.contains(emailAndNamePair.first)) {
+          recipientsToCreate.add(emailAndNamePair.first)
+          newCandidates.add(
+            RecipientEntity(
+              email = emailAndNamePair.first,
+              name = emailAndNamePair.second
+            )
+          )
         }
       }
     }
@@ -201,30 +201,26 @@ class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
   }
 
   /**
-   * Generate an array of [EmailAndNamePair] objects from the input message.
+   * Generate an array of [Pair] objects from the input message.
    * This information will be retrieved from "to", "cc" or "bcc" headers.
    *
    * @param msg           The input [Message].
    * @param recipientType The input [Message.RecipientType].
-   * @return An array of EmailAndNamePair objects, which contains information about emails and names.
+   * @return An array of [Pair] objects, which contains information about emails and names.
    */
   private suspend fun parseRecipients(
     msg: Message?,
     recipientType: Message.RecipientType?
-  ): List<EmailAndNamePair> = withContext(Dispatchers.IO) {
+  ): List<Pair<String, String>> = withContext(Dispatchers.IO) {
     if (msg != null && recipientType != null) {
       try {
         val header = msg.getHeader(recipientType.toString()) ?: return@withContext emptyList()
         if (header.isNotEmpty()) {
           if (!TextUtils.isEmpty(header[0])) {
             val addresses = InternetAddress.parse(header[0])
-            val emailAndNamePairs = mutableListOf<EmailAndNamePair>()
+            val emailAndNamePairs = mutableListOf<Pair<String, String>>()
             for (address in addresses) {
-              emailAndNamePairs.add(
-                EmailAndNamePair(
-                  address.address.lowercase(), address.personal
-                )
-              )
+              emailAndNamePairs.add(Pair(address.address.lowercase(), address.personal))
             }
 
             return@withContext emailAndNamePairs
