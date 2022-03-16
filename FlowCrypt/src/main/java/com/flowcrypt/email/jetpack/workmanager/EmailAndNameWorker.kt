@@ -1,9 +1,9 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
-package com.flowcrypt.email.service
+package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
 import android.content.Intent

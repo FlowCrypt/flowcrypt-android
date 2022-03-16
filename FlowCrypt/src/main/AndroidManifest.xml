@@ -226,7 +226,7 @@
             android:exported="false" />
 
         <service
-            android:name=".service.EmailAndNameWorker"
+            android:name=".jetpack.workmanager.EmailAndNameWorker"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
