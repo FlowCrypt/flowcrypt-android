@@ -34,7 +34,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.model.EmailAndNamePair
-import com.flowcrypt.email.service.EmailAndNameUpdaterService
+import com.flowcrypt.email.service.EmailAndNameWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -51,7 +51,8 @@ import java.io.File
 import java.io.IOException
 import java.math.BigInteger
 import java.net.HttpURLConnection
-import java.util.*
+import java.util.Arrays
+import java.util.Properties
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
@@ -60,7 +61,6 @@ import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
 import javax.mail.internet.InternetAddress
-import kotlin.collections.ArrayList
 
 
 /**
@@ -582,7 +582,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           emailAndNamePairs.addAll(getEmailAndNamePairs(message))
         }
 
-        EmailAndNameUpdaterService.enqueueWork(getApplication(), emailAndNamePairs)
+        EmailAndNameWorker.enqueueWork(getApplication(), emailAndNamePairs)
       }
     } catch (e: MessagingException) {
       e.printStackTrace()

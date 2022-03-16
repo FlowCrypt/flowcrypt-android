@@ -14,7 +14,6 @@ import com.flowcrypt.email.database.dao.RecipientDao
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.EmailAndNamePair
-import java.util.ArrayList
 
 /**
  * This service does update a name of some email entry or creates a new email entry if it not
@@ -37,7 +36,7 @@ import java.util.ArrayList
  * Time: 22:25
  * E-mail: DenBond7@gmail.com
  */
-class EmailAndNameUpdaterService : JobIntentService() {
+class EmailAndNameWorker : JobIntentService() {
   private var recipientDao: RecipientDao = FlowCryptRoomDatabase.getDatabase(this).recipientDao()
 
   override fun onHandleWork(intent: Intent) {
@@ -63,19 +62,19 @@ class EmailAndNameUpdaterService : JobIntentService() {
       BuildConfig.APPLICATION_ID + ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME"
 
     /**
-     * Enqueue a new task for [EmailAndNameUpdaterService].
+     * Enqueue a new task for [EmailAndNameWorker].
      *
      * @param context           Interface to global information about an application environment.
      * @param emailAndNamePairs A list of EmailAndNamePair objects.
      */
     fun enqueueWork(context: Context, emailAndNamePairs: ArrayList<EmailAndNamePair>?) {
       if (emailAndNamePairs != null && emailAndNamePairs.isNotEmpty()) {
-        val intent = Intent(context, EmailAndNameUpdaterService::class.java)
+        val intent = Intent(context, EmailAndNameWorker::class.java)
         intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs)
 
         enqueueWork(
           context,
-          EmailAndNameUpdaterService::class.java,
+          EmailAndNameWorker::class.java,
           JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE,
           intent
         )
