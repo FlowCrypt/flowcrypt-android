@@ -14,6 +14,7 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.IMAPStoreConnection
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.RecipientEntity
@@ -124,6 +125,40 @@ class SendMsgTest {
       encryptionType = MessageEncryptionType.STANDARD,
       messageType = MessageType.NEW,
       uid = EmailUtil.genOutboxUID(context)
+    )
+
+    processOutgoingMessageInfo(outgoingMessageInfo)
+
+    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
+    runBlocking {
+      val result = worker.doWork()
+      assertThat(result, `is`(ListenableWorker.Result.success()))
+      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+        assertTrue((mimeMessage.content as MimeMultipart).getBodyPart(0).content == outgoingMessageInfo.msg)
+      }
+    }
+  }
+
+  @Test
+  fun testSendStandardMsgWithAtt() {
+    val outgoingMessageInfo = OutgoingMessageInfo(
+      account = addAccountToDatabaseRule.account.email,
+      subject = "Standard Message",
+      msg = "Standard Message",
+      toRecipients = listOf(InternetAddress(recipientPgpKeyDetails.getUserIdsAsSingleString())),
+      from = InternetAddress(addAccountToDatabaseRule.account.email),
+      encryptionType = MessageEncryptionType.STANDARD,
+      messageType = MessageType.NEW,
+      uid = EmailUtil.genOutboxUID(context),
+      atts = listOf(AttachmentInfo().apply {
+        val content = "Some text"
+        name = "test.txt"
+        encodedSize = content.length.toLong()
+        rawData = content.toByteArray()
+        type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
+        email = addAccountToDatabaseRule.account.email
+        id = EmailUtil.generateContentId()
+      })
     )
 
     processOutgoingMessageInfo(outgoingMessageInfo)
