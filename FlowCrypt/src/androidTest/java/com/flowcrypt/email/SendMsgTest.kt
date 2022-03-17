@@ -30,23 +30,29 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.util.Passphrase
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.Multipart
@@ -138,7 +144,10 @@ class SendMsgTest {
       val result = worker.doWork()
       assertThat(result, `is`(ListenableWorker.Result.success()))
       checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
-        assertTrue((mimeMessage.content as MimeMultipart).getBodyPart(0).content == outgoingMessageInfo.msg)
+        assertEquals(
+          outgoingMessageInfo.msg,
+          (mimeMessage.content as MimeMultipart).getBodyPart(0).content
+        )
       }
     }
 
@@ -177,7 +186,10 @@ class SendMsgTest {
       val result = worker.doWork()
       assertThat(result, `is`(ListenableWorker.Result.success()))
       checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
-        assertTrue((mimeMessage.content as MimeMultipart).getBodyPart(0).content == outgoingMessageInfo.msg)
+        assertEquals(
+          outgoingMessageInfo.msg,
+          (mimeMessage.content as MimeMultipart).getBodyPart(0).content
+        )
       }
     }
 
@@ -241,6 +253,54 @@ class SendMsgTest {
         assertEquals(forwardedAtt.name, attachmentPart.fileName)
         assertEquals(forwardedAtt.encodedSize, attachmentPart.size.toLong())
         assertEquals(forwardedAtt.type, attachmentPart.contentType)
+      }
+    }
+
+    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+  }
+
+  @Test
+  fun testSendEncryptedMsg() {
+    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+
+    val outgoingMessageInfo = OutgoingMessageInfo(
+      account = addAccountToDatabaseRule.account.email,
+      subject = "Encrypted Message",
+      msg = "Encrypted Message",
+      toRecipients = listOf(InternetAddress(recipientPgpKeyDetails.getUserIdsAsSingleString())),
+      from = InternetAddress(addAccountToDatabaseRule.account.email),
+      encryptionType = MessageEncryptionType.ENCRYPTED,
+      messageType = MessageType.NEW,
+      uid = EmailUtil.genOutboxUID(context)
+    )
+
+    processOutgoingMessageInfo(outgoingMessageInfo)
+
+    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
+    runBlocking {
+      val result = worker.doWork()
+      assertThat(result, `is`(ListenableWorker.Result.success()))
+      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+        val encryptedContent =
+          (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
+        val buffer = ByteArrayOutputStream()
+
+        val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
+          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
+        )
+
+        PgpDecryptAndOrVerify.decrypt(
+          srcInputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
+          destOutputStream = buffer,
+          secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
+          protector = PasswordBasedSecretKeyRingProtector.forKey(
+            pgpSecretKeyRing,
+            Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
+          )
+        )
+
+        assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
       }
     }
 
