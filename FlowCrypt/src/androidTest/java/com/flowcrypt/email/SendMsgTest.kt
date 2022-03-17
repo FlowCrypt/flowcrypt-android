@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -53,6 +54,7 @@ import javax.mail.Part
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
+import javax.mail.internet.MimePart
 
 /**
  * @author Denis Bondarenko
@@ -116,6 +118,8 @@ class SendMsgTest {
 
   @Test
   fun testSendStandardMsg() {
+    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Standard Message",
@@ -137,10 +141,15 @@ class SendMsgTest {
         assertTrue((mimeMessage.content as MimeMultipart).getBodyPart(0).content == outgoingMessageInfo.msg)
       }
     }
+
+    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendStandardMsgWithAtt() {
+    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Standard Message",
@@ -171,6 +180,72 @@ class SendMsgTest {
         assertTrue((mimeMessage.content as MimeMultipart).getBodyPart(0).content == outgoingMessageInfo.msg)
       }
     }
+
+    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+  }
+
+  @Test
+  fun testSendStandardMsgWithForwardedAtt() {
+    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+
+    val forwardedAtt = AttachmentInfo().apply {
+      email = addAccountToDatabaseRule.account.email
+      folder = "INBOX"
+      encodedSize = 950
+      fwdUid = 0
+      id = "\u003c481555a2-157f-4801-9e8a-c249b07d9990@flowcrypt\u003e"
+      isDecrypted = false
+      isEncryptionAllowed = true
+      isForwarded = true
+      isProtected = false
+      name = "flowcrypt-backup-defaultflowcrypttest.key"
+      orderNumber = 0
+      path = "0/1"
+      type =
+        "text/plain; charset\u003dus-ascii; \r\n\tname\u003dflowcrypt-backup-defaultflowcrypttest.key"
+      uid = 1
+    }
+
+    val outgoingMessageInfo = OutgoingMessageInfo(
+      account = addAccountToDatabaseRule.account.email,
+      subject = "Fwd: Your FlowCrypt Backup",
+      msg = "Some forwarded text",
+      toRecipients = listOf(InternetAddress(recipientPgpKeyDetails.getUserIdsAsSingleString())),
+      from = InternetAddress(addAccountToDatabaseRule.account.email),
+      encryptionType = MessageEncryptionType.STANDARD,
+      messageType = MessageType.FORWARD,
+      uid = EmailUtil.genOutboxUID(context),
+      forwardedAtts = listOf(forwardedAtt)
+    )
+
+    processOutgoingMessageInfo(outgoingMessageInfo)
+
+    val forwardedAttachmentsDownloaderWorker =
+      TestListenableWorkerBuilder<ForwardedAttachmentsDownloaderWorker>(context).build()
+    val messagesSenderWorker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
+    runBlocking {
+      val forwardedAttachmentsDownloaderWorkerResult = forwardedAttachmentsDownloaderWorker.doWork()
+      assertThat(
+        forwardedAttachmentsDownloaderWorkerResult,
+        `is`(ListenableWorker.Result.success())
+      )
+      val messagesSenderWorkerResult = messagesSenderWorker.doWork()
+      assertThat(messagesSenderWorkerResult, `is`(ListenableWorker.Result.success()))
+      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+        val multipart = mimeMessage.content as MimeMultipart
+        assertEquals(outgoingMessageInfo.msg, multipart.getBodyPart(0).content)
+
+        val attachmentPart = multipart.getBodyPart(1) as MimePart
+        assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
+        assertEquals(forwardedAtt.name, attachmentPart.fileName)
+        assertEquals(forwardedAtt.encodedSize, attachmentPart.size.toLong())
+        assertEquals(forwardedAtt.type, attachmentPart.contentType)
+      }
+    }
+
+    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   private suspend fun checkExistingMsgOnServer(
@@ -236,5 +311,18 @@ class SendMsgTest {
       e.printStackTrace()
       return@withContext 0
     }
+  }
+
+  private suspend fun countOfMsgsOnServer(folderName: String): Int = withContext(Dispatchers.IO) {
+    var count = 0
+    val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
+    connection.store.use { store ->
+      connection.executeIMAPAction {
+        store.getFolder(folderName).use { folder ->
+          count = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }.messageCount
+        }
+      }
+    }
+    return@withContext count
   }
 }
