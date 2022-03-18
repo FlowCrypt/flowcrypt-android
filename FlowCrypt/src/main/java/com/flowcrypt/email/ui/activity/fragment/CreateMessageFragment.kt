@@ -634,7 +634,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     if (draftCacheDir.exists()) {
       if (!draftCacheDir.mkdir()) {
-        Log.e(TAG, "Create cache directory " + draftCacheDir.name + " filed!")
+        Log.e(TAG, "Create cache directory " + draftCacheDir.name + " failed!")
       }
     }
   }
@@ -686,7 +686,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           ExceptionUtil.handleError(e)
 
           if (!draftAtt.delete()) {
-            Log.e(TAG, "Delete " + draftAtt.name + " filed!")
+            Log.e(TAG, "Delete " + draftAtt.name + " failed!")
           }
         }
 

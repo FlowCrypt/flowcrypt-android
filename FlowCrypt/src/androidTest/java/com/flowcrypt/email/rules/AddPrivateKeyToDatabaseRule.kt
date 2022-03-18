@@ -29,9 +29,12 @@ class AddPrivateKeyToDatabaseRule(
   val sourceType: KeyImportDetails.SourceType,
   val passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
 ) : BaseRule() {
-
-  lateinit var pgpKeyDetails: PgpKeyDetails
+  var pgpKeyDetails: PgpKeyDetails
     private set
+
+  init {
+    pgpKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).pgpKeyDetailsList.first()
+  }
 
   constructor(
     keyPath: String = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
@@ -47,7 +50,6 @@ class AddPrivateKeyToDatabaseRule(
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        pgpKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).pgpKeyDetailsList.first()
         PrivateKeysManager.saveKeyToDatabase(
           accountEntity = accountEntity,
           pgpKeyDetails = pgpKeyDetails,
