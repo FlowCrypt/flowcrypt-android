@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
  *         E-mail: DenBond7@gmail.com
  */
 open class AccountViewModel(application: Application) : RoomBasicViewModel(application) {
-  val addNewAccountLiveData = MutableLiveData<Result<Boolean?>>()
+  val addNewAccountLiveData = MutableLiveData<Result<AccountEntity?>>()
   val updateAuthCredentialsLiveData = MutableLiveData<Result<Boolean?>>()
 
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> =
@@ -70,23 +70,24 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
     viewModelScope.launch {
       addNewAccountLiveData.value = Result.loading()
       try {
-        val existedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
+        val existingAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
 
-        if (existedAccount == null) {
+        if (existingAccount == null) {
           roomDatabase.accountDao().addAccountSuspend(accountEntity)
         } else {
           roomDatabase.accountDao().updateAccountSuspend(
             accountEntity.copy(
-              id = existedAccount.id,
-              uuid = existedAccount.uuid,
-              clientConfiguration = existedAccount.clientConfiguration
+              id = existingAccount.id,
+              uuid = existingAccount.uuid,
+              clientConfiguration = existingAccount.clientConfiguration
             )
           )
         }
 
         LoadRecipientsWorker.enqueue(getApplication())
 
-        addNewAccountLiveData.value = Result.success(true)
+        addNewAccountLiveData.value =
+          Result.success(roomDatabase.accountDao().getAccountSuspend(accountEntity.email))
       } catch (e: Exception) {
         e.printStackTrace()
         addNewAccountLiveData.value = Result.exception(e)
@@ -110,6 +111,12 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
         e.printStackTrace()
         updateAuthCredentialsLiveData.value = Result.exception(e)
       }
+    }
+  }
+
+  fun deleteAccount(accountEntity: AccountEntity?) {
+    viewModelScope.launch {
+      accountEntity?.let { roomDatabase.accountDao().deleteSuspend(it) }
     }
   }
 

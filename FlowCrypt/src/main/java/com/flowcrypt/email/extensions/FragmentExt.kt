@@ -161,8 +161,12 @@ fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
   }
 }
 
-fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(e: Throwable?) {
-  val msg = e?.message ?: e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
+fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
+  e: Throwable?,
+  msgDetails: String? = null
+) {
+  val msg =
+    e?.message ?: e?.javaClass?.simpleName ?: msgDetails ?: getString(R.string.unknown_error)
 
   navController?.navigate(
     NavGraphDirections.actionGlobalInfoDialogFragment(

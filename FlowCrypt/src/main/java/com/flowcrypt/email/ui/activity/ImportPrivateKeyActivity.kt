@@ -370,8 +370,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
               ) {
                 privateKeysViewModel.encryptAndSaveKeysToDatabase(
                   tempAccount,
-                  e.keys,
-                  KeyImportDetails.SourceType.EMAIL
+                  e.keys
+                  //, KeyImportDetails.SourceType.EMAIL
                 )
               }
             } else {
@@ -443,7 +443,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(),
     privateKeysViewModel.encryptAndSaveKeysToDatabase(
       tempAccount,
       unlockedKeys,
-      sourceType,
+      //sourceType,
       intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false)
     )
   }

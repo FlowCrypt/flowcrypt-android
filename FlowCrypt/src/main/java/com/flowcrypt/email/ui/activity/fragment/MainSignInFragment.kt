@@ -112,7 +112,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
     initAddNewAccountLiveData()
     initEnterpriseViewModels()
-    initSavePrivateKeysLiveData()
+    initPrivateKeysViewModel()
     initProtectPrivateKeysLiveData()
   }
 
@@ -129,7 +129,7 @@ class MainSignInFragment : BaseSingInFragment() {
       }
 
       REQUEST_CODE_CREATE_OR_IMPORT_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+        Activity.RESULT_OK -> if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
 
         /*Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           this.googleSignInAccount = null
@@ -198,6 +198,24 @@ class MainSignInFragment : BaseSingInFragment() {
         useFES = fesUrl?.isNotEmpty() == true
       )
     }
+  }
+
+  override fun onAccountAdded(accountEntity: AccountEntity) {
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(
+      accountEntity,
+      importCandidates
+    )
+  }
+
+  override fun onSetupCompleted(accountEntity: AccountEntity, keys: List<PgpKeyDetails>) {
+    if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+  }
+
+  override fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
+    accountEntity: AccountEntity,
+    pgpKeyDetails: PgpKeyDetails
+  ) {
+    TODO("Not yet implemented")
   }
 
   override fun returnResultOk() {
@@ -291,7 +309,7 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
-    val existedAccount = existedAccounts.firstOrNull {
+    val existedAccount = existingAccounts.firstOrNull {
       it.email.equals(googleSignInAccount?.email, ignoreCase = true)
     }
 
@@ -436,7 +454,7 @@ class MainSignInFragment : BaseSingInFragment() {
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
           toast(R.string.key_already_imported_finishing_setup, Toast.LENGTH_SHORT)
-          if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+          if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
         }
 
         CheckKeysFragment.CheckingState.CANCELED, CheckKeysFragment.CheckingState.NEGATIVE -> {

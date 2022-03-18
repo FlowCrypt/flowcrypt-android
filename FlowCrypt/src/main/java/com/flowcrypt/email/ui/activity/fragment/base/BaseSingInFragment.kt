@@ -18,7 +18,6 @@ import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
@@ -36,14 +35,20 @@ import com.google.android.material.snackbar.Snackbar
 abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  protected val existedAccounts = mutableListOf<AccountEntity>()
+  protected val existingAccounts = mutableListOf<AccountEntity>()
   protected val importCandidates = mutableListOf<PgpKeyDetails>()
 
   abstract fun getTempAccount(): AccountEntity?
+  abstract fun onAccountAdded(accountEntity: AccountEntity)
+  abstract fun onSetupCompleted(accountEntity: AccountEntity, keys: List<PgpKeyDetails>)
+  abstract fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
+    accountEntity: AccountEntity,
+    pgpKeyDetails: PgpKeyDetails
+  )
 
   override val isToolbarVisible: Boolean = false
 
-  protected fun initSavePrivateKeysLiveData() {
+  protected fun initPrivateKeysViewModel() {
     privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
@@ -53,7 +58,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
           }
 
           Result.Status.SUCCESS -> {
-            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+            it.data?.let { pair -> onSetupCompleted(pair.first, pair.second) }
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
@@ -69,8 +74,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                   getTempAccount()?.let { accountEntity ->
                     privateKeysViewModel.encryptAndSaveKeysToDatabase(
                       accountEntity,
-                      e.keys,
-                      KeyImportDetails.SourceType.EMAIL
+                      e.keys
                     )
                   }
                 }
@@ -83,6 +87,39 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
             }
             baseActivity.countingIdlingResource.decrementSafely()
           }
+          else -> {}
+        }
+      }
+    }
+    privateKeysViewModel.additionalActionsAfterPrivateKeyCreationLiveData.observe(viewLifecycleOwner) {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            baseActivity.countingIdlingResource.incrementSafely()
+            showProgress(getString(R.string.processing))
+          }
+
+          Result.Status.SUCCESS -> {
+            it.data?.let { pair ->
+              onAdditionalActionsAfterPrivateKeyCreationCompleted(
+                pair.first,
+                pair.second
+              )
+            }
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            //need to test it
+            showContent()
+            val e = it.exception
+            showInfoSnackbar(
+              msgText = e?.message ?: e?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error)
+            )
+            baseActivity.countingIdlingResource.decrementSafely()
+          }
+          else -> {}
         }
       }
     }
@@ -96,20 +133,14 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
         }
 
         Result.Status.SUCCESS -> {
-          if (it.data == true) {
+          if (it.data != null) {
             //clear LiveData value to prevent duplicate running
-            accountViewModel.addNewAccountLiveData.value = Result.success(null)
+            accountViewModel.addNewAccountLiveData.value = Result.none()
             context?.let { context ->
               WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
             }
 
-            getTempAccount()?.let { accountEntity ->
-              privateKeysViewModel.encryptAndSaveKeysToDatabase(
-                accountEntity,
-                importCandidates,
-                KeyImportDetails.SourceType.EMAIL
-              )
-            }
+            onAccountAdded(it.data)
           }
         }
 
@@ -123,6 +154,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
 
           showInfoDialog(dialogMsg = msg)
         }
+        else -> {}
       }
     }
   }
@@ -130,8 +162,8 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   private fun initAllAccountsLiveData() {
     //here we receive only value and unsubscribe
     accountViewModel.pureAccountsLiveData.observeOnce(this) {
-      existedAccounts.clear()
-      existedAccounts.addAll(it)
+      existingAccounts.clear()
+      existingAccounts.addAll(it)
     }
   }
 

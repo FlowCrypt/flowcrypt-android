@@ -12,6 +12,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.model.KeyImportDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import javax.mail.internet.AddressException
@@ -41,7 +42,8 @@ data class PgpKeyDetails constructor(
   @Expose val algo: Algo,
   @Expose val primaryKeyId: Long,
   var tempPassphrase: CharArray? = null,
-  var passphraseType: KeyEntity.PassphraseType? = null
+  var passphraseType: KeyEntity.PassphraseType? = null,
+  var importSourceType: KeyImportDetails.SourceType? = null
 ) : Parcelable {
   val fingerprint: String
     get() = ids.first().fingerprint
@@ -76,6 +78,9 @@ data class PgpKeyDetails constructor(
     source.createCharArray(),
     source.readParcelable<KeyEntity.PassphraseType>(
       KeyEntity.PassphraseType::class.java.classLoader
+    ),
+    source.readParcelable<KeyImportDetails.SourceType>(
+      KeyImportDetails.SourceType::class.java.classLoader
     )
   )
 
@@ -97,6 +102,7 @@ data class PgpKeyDetails constructor(
     writeLong(primaryKeyId)
     writeCharArray(tempPassphrase)
     writeParcelable(passphraseType, flags)
+    writeParcelable(importSourceType, flags)
   }
 
   fun getUserIdsAsSingleString(): String {

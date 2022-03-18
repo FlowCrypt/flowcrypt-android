@@ -125,7 +125,15 @@ class ImportPrivateKeysDuringSetupFragment : BaseImportKeyFragment() {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           setFragmentResult(
             REQUEST_KEY_PRIVATE_KEYS,
-            bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys)
+            bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys?.map {
+              it.copy(
+                importSourceType = if (activeUri != null) {
+                  KeyImportDetails.SourceType.FILE
+                } else {
+                  KeyImportDetails.SourceType.CLIPBOARD
+                }
+              )
+            })
           )
           navController?.navigateUp()
         }

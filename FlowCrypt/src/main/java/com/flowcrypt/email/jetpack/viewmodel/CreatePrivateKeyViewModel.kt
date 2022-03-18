@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +53,11 @@ class CreatePrivateKeyViewModel(application: Application) : RoomBasicViewModel(a
                     ?: accountEntity.email, accountEntity.email
                 ), passphrase
               ).toPgpKeyDetails()
-                .copy(passphraseType = passphraseType, tempPassphrase = passphrase.toCharArray())
+                .copy(
+                  passphraseType = passphraseType,
+                  tempPassphrase = passphrase.toCharArray(),
+                  importSourceType = KeyImportDetails.SourceType.NEW
+                )
 
               Result.success(pgpKeyDetails)
             } catch (e: Exception) {

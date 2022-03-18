@@ -25,6 +25,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
@@ -38,7 +39,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
@@ -116,11 +117,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     subscribeToAuthorizeAndSearchBackups()
     subscribeToCheckPrivateKeys()
     subscribeCreateOrImportPrivateKeyDuringSetup()
-    subscribeToCreatePrivateKey()
 
     setupOAuth2AuthCredentialsViewModel()
     initAddNewAccountLiveData()
-    initSavePrivateKeysLiveData()
+    initPrivateKeysViewModel()
   }
 
   override fun onPause() {
@@ -184,6 +184,36 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         authCreds
       }
     )
+  }
+
+  override fun onAccountAdded(accountEntity: AccountEntity) {
+    //we should be sure we save keys with the same source type
+    if (importCandidates.mapNotNull { it.importSourceType }.toSet().size == 1) {
+      privateKeysViewModel.encryptAndSaveKeysToDatabase(
+        accountEntity,
+        importCandidates
+      )
+    } else {
+      //remove account and show error
+      accountViewModel.deleteAccount(accountEntity)
+      navController?.navigate(
+        NavGraphDirections.actionGlobalInfoDialogFragment(
+          dialogTitle = getString(R.string.error),
+          dialogMsg = getString(R.string.import_keys_from_different_sources)
+        )
+      )
+    }
+  }
+
+  override fun onSetupCompleted(accountEntity: AccountEntity, keys: List<PgpKeyDetails>) {
+    if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+  }
+
+  override fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
+    accountEntity: AccountEntity,
+    pgpKeyDetails: PgpKeyDetails
+  ) {
+    handleUnlockedKeys(listOf(pgpKeyDetails))
   }
 
   override fun returnResultOk() {
@@ -444,10 +474,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             showContent()
-            showInfoDialog(
-              dialogMsg = result.exception?.message
-                ?: result.exception?.javaClass?.simpleName
-                ?: getString(R.string.could_not_load_private_keys)
+            showInfoDialogWithExceptionDetails(
+              result.exception,
+              getString(R.string.could_not_load_private_keys)
             )
           }
 
@@ -470,7 +499,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
           toast(R.string.key_already_imported_finishing_setup, Toast.LENGTH_SHORT)
-          if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+          if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
         }
 
         CheckKeysFragment.CheckingState.CANCELED -> showContent()
@@ -484,9 +513,22 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   private fun subscribeCreateOrImportPrivateKeyDuringSetup() {
     setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
-      val keys =
-        bundle.getParcelableArrayList<PgpKeyDetails>(CreateOrImportPrivateKeyDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+      val keys = bundle.getParcelableArrayList<PgpKeyDetails>(
+        CreateOrImportPrivateKeyDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS
+      )
       handleUnlockedKeys(keys)
+    }
+
+    setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
+      val pgpKeyDetails = bundle.getParcelable<PgpKeyDetails>(
+        CreateOrImportPrivateKeyDuringSetupFragment.KEY_CREATED_KEY
+      )
+      pgpKeyDetails?.let {
+        privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
+          getTempAccount(),
+          pgpKeyDetails
+        )
+      }
     }
   }
 
@@ -502,11 +544,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             authCreds = authCredentials
             oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
 
-            val existedAccount = existedAccounts.firstOrNull { account ->
+            val existingAccount = existingAccounts.firstOrNull { account ->
               account.email.equals(authCredentials.email, ignoreCase = true)
             }
 
-            if (existedAccount == null) {
+            if (existingAccount == null) {
               val account = AccountEntity(authCredentials).copy(
                 password = authCredentials.peekPassword(),
                 smtpPassword = authCredentials.peekSmtpPassword()
@@ -521,7 +563,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             } else {
               showContent()
               showInfoSnackbar(
-                msgText = getString(R.string.template_email_already_added, existedAccount.email),
+                msgText = getString(R.string.template_email_already_added, existingAccount.email),
                 duration = Snackbar.LENGTH_LONG
               )
             }
@@ -531,9 +573,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
           showContent()
-          showInfoDialog(
-            dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-            ?: "Couldn't fetch token"
+          showInfoDialogWithExceptionDetails(
+            it.exception,
+            "Couldn't fetch token"
           )
         }
         else -> {}
@@ -572,9 +614,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
           oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
           buttonSignInWithOutlook?.isEnabled = true
           showContent()
-          showInfoDialog(
-            dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-            ?: getString(R.string.could_not_load_oauth_server_configuration)
+          showInfoDialogWithExceptionDetails(
+            it.exception,
+            getString(R.string.could_not_load_oauth_server_configuration)
           )
         }
         else -> {}
@@ -842,18 +884,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       importCandidates.clear()
       importCandidates.addAll(keys)
       accountViewModel.addNewAccount(getTempAccount())
-    }
-  }
-
-  private fun subscribeToCreatePrivateKey() {
-    setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
-      val pgpKeyDetails =
-        bundle.getParcelable<PgpKeyDetails>(CreateOrImportPrivateKeyDuringSetupFragment.KEY_CREATED_KEY)
-      pgpKeyDetails?.let {
-        importCandidates.clear()
-        importCandidates.add(it)
-        accountViewModel.addNewAccount(getTempAccount())
-      }
     }
   }
 
