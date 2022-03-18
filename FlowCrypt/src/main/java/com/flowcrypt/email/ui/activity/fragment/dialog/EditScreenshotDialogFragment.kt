@@ -10,19 +10,20 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.RadioGroup
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.DialogFragment
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
+import com.flowcrypt.email.databinding.FragmentScreenshotEditorBinding
+import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import ja.burhanrashid52.photoeditor.OnSaveBitmap
 import ja.burhanrashid52.photoeditor.PhotoEditor
-import ja.burhanrashid52.photoeditor.PhotoEditorView
 
 /**
  * It's a dialog which helps edit the given screenshot
@@ -32,122 +33,82 @@ import ja.burhanrashid52.photoeditor.PhotoEditorView
  *         Time: 5:03 PM
  *         E-mail: DenBond7@gmail.com
  */
-class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
-  RadioGroup.OnCheckedChangeListener {
+class EditScreenshotDialogFragment : BaseDialogFragment() {
+  private var binding: FragmentScreenshotEditorBinding? = null
+  private val args by navArgs<EditScreenshotDialogFragmentArgs>()
   private lateinit var photoEditor: PhotoEditor
   private lateinit var bitmap: Bitmap
-  private lateinit var photoEditorView: PhotoEditorView
-  internal var callback: OnScreenshotChangeListener? = null
-
-  fun setOnScreenshotChangeListener(callback: OnScreenshotChangeListener) {
-    this.callback = callback
-  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val bitmapByteArray = arguments?.getByteArray(KEY_BITMAP_BYTES) ?: byteArrayOf()
-    bitmapByteArray.let {
-      bitmap = BitmapFactory.decodeByteArray(bitmapByteArray, 0, bitmapByteArray.size)
-    }
+    bitmap = BitmapFactory.decodeByteArray(
+      args.screenshot.byteArray, 0, args.screenshot.byteArray.size
+    )
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialog = AlertDialog.Builder(requireContext())
-
-    val view = LayoutInflater.from(context).inflate(
-      R.layout.fragment_screenshot_editor,
-      if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false
+    binding = FragmentScreenshotEditorBinding.inflate(
+      LayoutInflater.from(context),
+      if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null,
+      false
     )
 
-    initViews(view)
+    initViews()
 
-    dialog.setView(view)
-
-    photoEditor = PhotoEditor.Builder(context, photoEditorView).build()
-    photoEditor.setBrushDrawingMode(true)
-    photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
-    photoEditor.setOpacity(100)
-
-    return dialog.create()
-  }
-
-  private fun initViews(view: View) {
-    photoEditorView = view.findViewById(R.id.photoEditorView)
-    photoEditorView.source.setImageBitmap(bitmap)
-
-    view.findViewById<View>(R.id.imageButtonUndo)?.setOnClickListener(this)
-    view.findViewById<View>(R.id.imageButtonSave)?.setOnClickListener(this)
-    view.findViewById<View>(R.id.imageButtonCancel)?.setOnClickListener(this)
-
-    val radioGroup = view.findViewById<RadioGroup>(R.id.radioGroupColors)
-    radioGroup?.setOnCheckedChangeListener(this)
-  }
-
-  override fun onClick(v: View?) {
-    when (v?.id) {
-      R.id.imageButtonUndo -> {
-        photoEditor.undo()
-      }
-
-      R.id.imageButtonSave -> {
-        photoEditor.saveAsBitmap(object : OnSaveBitmap {
-          override fun onBitmapReady(saveBitmap: Bitmap?) {
-            callback?.onScreenshotChanged(UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100))
-            dismiss()
-          }
-
-          override fun onFailure(e: Exception?) {
-            Toast.makeText(
-              context, e?.message ?: e?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT
-            ).show()
-          }
-        })
-      }
-
-      R.id.imageButtonCancel -> {
-        dismiss()
-      }
+    val builder = AlertDialog.Builder(requireContext()).apply {
+      setView(binding?.root)
     }
+    return builder.create()
   }
 
-  override fun onCheckedChanged(group: RadioGroup?, checkedId: Int) {
-    when (group?.id) {
-      R.id.radioGroupColors -> {
-        when (checkedId) {
-          R.id.radioButtonFullColor -> {
-            photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
-            photoEditor.setOpacity(100)
-          }
+  private fun initViews() {
+    binding?.imageButtonUndo?.setOnClickListener { photoEditor.undo() }
+    binding?.imageButtonCancel?.setOnClickListener { navController?.navigateUp() }
+    binding?.imageButtonSave?.setOnClickListener {
+      photoEditor.saveAsBitmap(object : OnSaveBitmap {
+        override fun onBitmapReady(saveBitmap: Bitmap?) {
+          navController?.navigateUp()
+          setFragmentResult(
+            REQUEST_KEY_EDIT_SCREENSHOT,
+            bundleOf(KEY_SCREENSHOT to UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100))
+          )
+        }
 
-          R.id.radioButtonLightColor -> {
-            photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.yellow)
-            photoEditor.setOpacity(50)
-          }
+        override fun onFailure(e: Exception?) {
+          toast(e?.message ?: e?.javaClass?.simpleName ?: getString(R.string.unknown_error))
+        }
+      })
+    }
+
+    binding?.radioGroupColors?.setOnCheckedChangeListener { _, checkedId ->
+      when (checkedId) {
+        R.id.radioButtonFullColor -> {
+          photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
+          photoEditor.setOpacity(100)
+        }
+
+        R.id.radioButtonLightColor -> {
+          photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.yellow)
+          photoEditor.setOpacity(50)
         }
       }
     }
-  }
 
-  interface OnScreenshotChangeListener {
-    fun onScreenshotChanged(byteArray: ByteArray?)
+    binding?.photoEditorView?.source?.setImageBitmap(bitmap)
+
+    photoEditor = PhotoEditor.Builder(context, binding?.photoEditorView).build()
+    photoEditor.setBrushDrawingMode(true)
+    photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
+    photoEditor.setOpacity(100)
   }
 
   companion object {
-    private val KEY_BITMAP_BYTES =
-      GeneralUtil.generateUniqueExtraKey(
-        "KEY_BITMAP_BYTES",
-        EditScreenshotDialogFragment::class.java
-      )
+    val REQUEST_KEY_EDIT_SCREENSHOT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_EDIT_SCREENSHOT", EditScreenshotDialogFragment::class.java
+    )
 
-    fun newInstance(bitmapByteArray: ByteArray?): EditScreenshotDialogFragment {
-      val fragment = EditScreenshotDialogFragment()
-
-      val args = Bundle()
-      args.putByteArray(KEY_BITMAP_BYTES, bitmapByteArray)
-      fragment.arguments = args
-
-      return fragment
-    }
+    val KEY_SCREENSHOT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_SCREENSHOT", EditScreenshotDialogFragment::class.java
+    )
   }
 }

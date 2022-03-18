@@ -27,7 +27,7 @@ abstract class BaseSettingsActivity : BaseBackStackActivity() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuActionHelp -> {
-        FeedbackActivity.show(this)
+        //FeedbackActivity.show(this)
         true
       }
 

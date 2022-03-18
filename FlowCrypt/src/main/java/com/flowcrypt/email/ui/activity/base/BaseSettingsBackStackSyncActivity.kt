@@ -9,7 +9,6 @@ import android.view.Menu
 import android.view.MenuItem
 import com.flowcrypt.email.R
 import com.flowcrypt.email.service.IdleService
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 
 /**
  * A base settings activity which uses back stack and [IdleService]
@@ -29,7 +28,7 @@ abstract class BaseSettingsBackStackSyncActivity : BaseBackStackSyncActivity() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuActionHelp -> {
-        FeedbackActivity.show(this)
+        //FeedbackActivity.show(this)
         true
       }
 

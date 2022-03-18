@@ -63,7 +63,6 @@ import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
@@ -343,7 +342,9 @@ class EmailManagerActivity : BaseEmailListActivity(),
 
       R.id.navMenuActionSettings -> startActivity(Intent(this, SettingsActivity::class.java))
 
-      R.id.navMenuActionReportProblem -> FeedbackActivity.show(this)
+      R.id.navMenuActionReportProblem -> {
+        //FeedbackActivity.show(this)
+      }
 
       Menu.NONE -> {
         val newLocalFolder = foldersManager?.getFolderByAlias(item.title.toString())

@@ -32,7 +32,6 @@ import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
@@ -166,7 +165,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
     }
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
-      FeedbackActivity.show(requireActivity())
+      //FeedbackActivity.show(requireActivity())
     }
   }
 

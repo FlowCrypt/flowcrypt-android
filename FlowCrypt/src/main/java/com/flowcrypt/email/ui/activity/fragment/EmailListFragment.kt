@@ -54,7 +54,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
@@ -209,7 +208,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       REQUEST_CODE_ERROR_DURING_CREATION -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
-            FeedbackActivity.show(requireActivity())
+            //FeedbackActivity.show(requireActivity())
           }
 
           TwoWayDialogFragment.RESULT_CANCELED -> {

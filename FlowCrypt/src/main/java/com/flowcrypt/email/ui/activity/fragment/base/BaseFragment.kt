@@ -23,10 +23,8 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
-import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 
@@ -113,31 +111,6 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
 
   }
 
-  /**
-   * This method handles a success result of some loader.
-   *
-   * @param loaderId The loader id.
-   * @param result   The object which contains information about the loader results
-   */
-  open fun onSuccess(loaderId: Int, result: Any?) {
-
-  }
-
-  /**
-   * This method handles a failure result of some loader. This method contains a base
-   * realization of the failure behavior.
-   *
-   * @param loaderId The loader id.
-   * @param e        The exception which happened when loader does it work.
-   */
-  open fun onError(loaderId: Int, e: Exception?) {
-    e?.message?.let {
-      if (view != null) {
-        UIUtil.showInfoSnackbar(requireView(), it)
-      }
-    }
-  }
-
   fun setSupportActionBarTitle(title: String) {
     supportActionBar?.title = title
   }
@@ -217,19 +190,6 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
       connectionLifecycleObserver.connectionLiveData.value ?: false
     } else {
       context.hasActiveConnection()
-    }
-  }
-
-  //todo-denbond7 remove me after improved PreviewImportRecipientWithPubKeysFragment
-  protected fun handleLoaderResult(loaderId: Int, loaderResult: LoaderResult?) {
-    if (loaderResult != null) {
-      when {
-        loaderResult.result != null -> onSuccess(loaderId, loaderResult.result)
-        loaderResult.exception != null -> onError(loaderId, loaderResult.exception)
-        else -> UIUtil.showInfoSnackbar(requireView(), getString(R.string.unknown_error))
-      }
-    } else {
-      UIUtil.showInfoSnackbar(requireView(), getString(R.string.error_loader_result_is_empty))
     }
   }
 

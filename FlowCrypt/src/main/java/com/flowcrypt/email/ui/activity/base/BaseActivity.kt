@@ -33,7 +33,6 @@ import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.google.android.material.appbar.AppBarLayout
@@ -140,7 +139,7 @@ abstract class BaseActivity : AppCompatActivity() {
       }
 
       R.id.menuActionHelp -> {
-        FeedbackActivity.show(this)
+        //FeedbackActivity.show(this)
         true
       }
 

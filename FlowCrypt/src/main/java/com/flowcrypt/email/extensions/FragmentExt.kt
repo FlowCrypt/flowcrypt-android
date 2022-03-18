@@ -14,9 +14,11 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.util.UIUtil
 
 /**
  * @author Denis Bondarenko
@@ -174,4 +176,15 @@ fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
       dialogMsg = msg
     )
   )
+}
+
+fun androidx.fragment.app.Fragment.showFeedbackFragment() {
+  val screenShotByteArray = UIUtil.getScreenShotByteArray(requireActivity())
+  screenShotByteArray?.let {
+    navController?.navigate(
+      NavGraphDirections.actionGlobalFeedbackFragment(
+        FeedbackFragment.Screenshot(it)
+      )
+    )
+  }
 }

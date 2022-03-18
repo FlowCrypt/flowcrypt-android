@@ -30,6 +30,7 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -45,7 +46,6 @@ import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -259,7 +259,7 @@ class MainSignInFragment : BaseSingInFragment() {
     }
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
-      FeedbackActivity.show(requireActivity())
+      showFeedbackFragment()
     }
   }
 

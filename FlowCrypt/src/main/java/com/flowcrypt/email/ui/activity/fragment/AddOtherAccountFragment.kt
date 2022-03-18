@@ -47,7 +47,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -321,7 +320,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     }
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
-      FeedbackActivity.show(requireActivity())
+      //FeedbackActivity.show(requireActivity())
     }
 
     buttonSignInWithOutlook = view.findViewById(R.id.buttonSignInWithOutlook)
