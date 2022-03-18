@@ -106,7 +106,7 @@ object ProcessingOutgoingMessageInfoHelper {
         if (hasAtts) {
           if (!msgAttsCacheDir.exists()) {
             if (!msgAttsCacheDir.mkdir()) {
-              throw IOException("Create cache directory for outgoing attachments filed!")
+              throw IOException("Create cache directory for outgoing attachments failed!")
             }
           }
 
@@ -188,7 +188,7 @@ object ProcessingOutgoingMessageInfoHelper {
     val attsCacheDir = File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
     if (!attsCacheDir.exists()) {
       if (!attsCacheDir.mkdirs()) {
-        throw IllegalStateException("Create cache directory " + attsCacheDir.name + " filed!")
+        throw IllegalStateException("Create cache directory " + attsCacheDir.name + " failed!")
       }
     }
     return attsCacheDir
@@ -224,15 +224,18 @@ object ProcessingOutgoingMessageInfoHelper {
 
     val hasAtts = msgInfo.atts?.isNotEmpty() == true || msgInfo.forwardedAtts?.isNotEmpty() == true
     val isEncrypted = msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
-    val msgStateValue =
-      if (msgInfo.messageType == MessageType.FORWARD) MessageState.NEW_FORWARDED.value else MessageState.NEW.value
+    val msgState = if (msgInfo.messageType == MessageType.FORWARD) {
+      MessageState.NEW_FORWARDED
+    } else {
+      MessageState.NEW
+    }
 
     return messageEntity.copy(
       hasAttachments = hasAtts,
       rawMessageWithoutAttachments = rawMsg,
       flags = MessageFlag.SEEN.value,
       isEncrypted = isEncrypted,
-      state = msgStateValue,
+      state = msgState.value,
       attachmentsDirectory = attsCacheDir.name,
       password = msgInfo.password?.let { KeyStoreCryptoManager.encrypt(String(it)).toByteArray() }
     )

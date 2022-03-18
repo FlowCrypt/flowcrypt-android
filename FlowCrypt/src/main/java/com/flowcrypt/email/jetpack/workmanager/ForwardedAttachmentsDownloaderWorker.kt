@@ -39,7 +39,7 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.util.*
+import java.util.UUID
 import javax.mail.Folder
 import javax.mail.Store
 
@@ -66,13 +66,13 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       try {
         if (!attCacheDir.exists()) {
           if (!attCacheDir.mkdirs()) {
-            throw IllegalStateException("Create cache directory " + attCacheDir.name + " filed!")
+            throw IllegalStateException("Create cache directory " + attCacheDir.name + " failed!")
           }
         }
 
         if (!fwdAttsCacheDir.exists()) {
           if (!fwdAttsCacheDir.mkdirs()) {
-            throw IllegalStateException("Create cache directory " + fwdAttsCacheDir.name + " filed!")
+            throw IllegalStateException("Create cache directory " + fwdAttsCacheDir.name + " failed!")
           }
         }
 
