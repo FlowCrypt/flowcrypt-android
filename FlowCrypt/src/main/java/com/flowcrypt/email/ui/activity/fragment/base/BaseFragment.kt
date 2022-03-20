@@ -16,15 +16,18 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
+import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 
@@ -42,6 +45,11 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
 
   protected var account: AccountEntity? = null
   protected var isAccountInfoReceived = false
+
+  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(
+    GeneralUtil.genIdlingResourcesName(this::class.java),
+    GeneralUtil.isDebugBuild()
+  )
 
   /**
    * Get the content view resources id. This method must return an resources id of a layout
@@ -105,6 +113,11 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
   override fun onDetach() {
     super.onDetach()
     lifecycle.removeObserver(connectionLifecycleObserver)
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    countingIdlingResource.shutdown()
   }
 
   open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -222,10 +235,10 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
 
 
   private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, {
+    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner) {
       account = it
       isAccountInfoReceived = true
       onAccountInfoRefreshed(account)
-    })
+    }
   }
 }

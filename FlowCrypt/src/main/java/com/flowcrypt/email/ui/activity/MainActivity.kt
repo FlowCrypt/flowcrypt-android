@@ -9,17 +9,38 @@ import android.accounts.AccountManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
-import android.view.View
+import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.GravityCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
+import androidx.navigation.NavGraph
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
+import androidx.navigation.ui.navigateUp
+import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.databinding.ActivityMainBinding
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
-import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
+import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.GeneralUtil
+import kotlinx.coroutines.launch
 
 /**
  * @author Denis Bondarenko
@@ -27,19 +48,21 @@ import com.flowcrypt.email.util.GeneralUtil
  * Time: 11:13 AM
  * E-mail: DenBond7@gmail.com
  */
-class MainActivity : BaseActivity() {
+class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedListener {
+  private lateinit var navController: NavController
+  private lateinit var binding: ActivityMainBinding
+  private lateinit var appBarConfiguration: AppBarConfiguration
+
+  private var isNavigationArrowDisplayed: Boolean = false
+  private var navigationViewManager: NavigationViewManager? = null
+
   private val launcherViewModel: LauncherViewModel by viewModels()
+  private val accountViewModel: AccountViewModel by viewModels()
+  private val actionsViewModel: ActionsViewModel by viewModels()
+  private val labelsViewModel: LabelsViewModel by viewModels()
+
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
-
-  override val rootView: View
-    get() = findViewById(R.id.fragmentContainerView)
-
-  override val isDisplayHomeAsUpEnabled: Boolean
-    get() = false
-
-  override val contentViewResourceId: Int
-    get() = R.layout.activity_main
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen().apply {
@@ -47,22 +70,29 @@ class MainActivity : BaseActivity() {
         launcherViewModel.isLoadingStateFlow.value
       }
     }
-
     super.onCreate(savedInstanceState)
 
-    accountAuthenticatorResponse =
-      intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
-    accountAuthenticatorResponse?.onRequestContinued()
+    initViews()
+    handleAccountAuthenticatorResponse()
+    initAccountViewModel()
+    setupLabelsViewModel()
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    when (item.itemId) {
-      android.R.id.home -> {
+    return when (item.itemId) {
+      android.R.id.home -> if (isNavigationArrowDisplayed) {
         onBackPressed()
-        return true
+        true
+      } else {
+        super.onOptionsItemSelected(item)
       }
+
+      else -> super.onOptionsItemSelected(item)
     }
-    return super.onOptionsItemSelected(item)
+  }
+
+  override fun onSupportNavigateUp(): Boolean {
+    return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
   }
 
   override fun finish() {
@@ -89,6 +119,134 @@ class MainActivity : BaseActivity() {
     }
     val oAuthFragment = fragment as? BaseOAuthFragment
     oAuthFragment?.handleOAuth2Intent(intent)
+  }
+
+  override fun onDestinationChanged(
+    controller: NavController,
+    destination: NavDestination,
+    arguments: Bundle?
+  ) {
+
+  }
+
+  private fun initViews() {
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    setSupportActionBar(binding.toolbar)
+
+    navController = (supportFragmentManager.findFragmentById(R.id.fragmentContainerView)
+        as NavHostFragment).navController
+    navController.addOnDestinationChangedListener(this)
+
+    setupAppBarConfiguration()
+    setupNavigationView()
+    setupDrawerLayout()
+  }
+
+  private fun setupAppBarConfiguration() {
+    val topLevelDestinationIds = mutableSetOf(R.id.emailListFragment)
+    findStartDest(navController.graph)?.id?.let { topLevelDestinationIds.add(it) }
+    appBarConfiguration = AppBarConfiguration(topLevelDestinationIds, binding.drawerLayout)
+    NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
+
+    navController.addOnDestinationChangedListener { _, destination, _ ->
+      isNavigationArrowDisplayed = destination.id !in topLevelDestinationIds
+    }
+  }
+
+  private fun setupNavigationView() {
+    navigationViewManager = NavigationViewManager(
+      activity = this,
+      navHeaderActionsListener = object : NavigationViewManager.NavHeaderActionsListener {
+        override fun onAccountsMenuExpanded(isExpanded: Boolean) {
+          binding.navigationView.menu.setGroupVisible(0, isExpanded)
+        }
+
+        override fun onAddAccountClick() {
+          binding.drawerLayout.closeDrawer(GravityCompat.START)
+          //open main sign in
+        }
+
+        override fun onSwitchAccountClick(accountEntity: AccountEntity) {
+          lifecycleScope.launch {
+            val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@MainActivity)
+            WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
+            roomDatabase.accountDao().switchAccountSuspend(accountEntity)
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+          }
+        }
+      })
+    navigationViewManager?.accountManagementLayout?.let { binding.navigationView.addHeaderView(it) }
+  }
+
+  private fun setupDrawerLayout() {
+    //
+  }
+
+  private fun findStartDest(graph: NavGraph): NavDestination? {
+    var startDestination: NavDestination? = graph
+    while (startDestination is NavGraph) {
+      val parent = startDestination
+      startDestination = parent.findNode(parent.startDestination)
+    }
+    return startDestination
+  }
+
+  private fun handleAccountAuthenticatorResponse() {
+    accountAuthenticatorResponse =
+      intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
+    accountAuthenticatorResponse?.onRequestContinued()
+  }
+
+  private fun initAccountViewModel() {
+    accountViewModel.activeAccountLiveData.observe(this) { accountEntity ->
+      accountEntity?.let {
+        actionsViewModel.checkAndAddActionsToQueue(accountEntity)
+        invalidateOptionsMenu()
+        binding.navigationView.getHeaderView(0)?.let { headerView ->
+          navigationViewManager?.initUserProfileView(this@MainActivity, headerView, accountEntity)
+        }
+      }
+    }
+
+    accountViewModel.nonActiveAccountsLiveData.observe(this) {
+      navigationViewManager?.genAccountsLayout(this@MainActivity, it)
+    }
+  }
+
+  private fun setupLabelsViewModel() {
+    labelsViewModel.foldersManagerLiveData.observe(this) {
+      val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels)
+      mailLabels?.subMenu?.clear()
+
+      it?.getSortedNames()?.forEach { name ->
+        mailLabels?.subMenu?.add(name)
+        if (JavaEmailConstants.FOLDER_OUTBOX == name) {
+          addOutboxLabel(it, mailLabels, name)
+        }
+      }
+
+      for (localFolder in it?.customLabels ?: emptyList()) {
+        mailLabels?.subMenu?.add(localFolder.folderAlias)
+      }
+    }
+  }
+
+  private fun addOutboxLabel(foldersManager: FoldersManager, mailLabels: MenuItem?, label: String) {
+    val menuItem = mailLabels?.subMenu?.getItem(mailLabels.subMenu.size() - 1) ?: return
+
+    if (foldersManager.getFolderByAlias(label)?.msgCount ?: 0 > 0) {
+      val folder = foldersManager.getFolderByAlias(label) ?: return
+      val view = layoutInflater.inflate(
+        R.layout.navigation_view_item_with_amount, binding.navigationView, false
+      )
+      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
+      textViewMsgsCount.text = folder.msgCount.toString()
+      menuItem.actionView = view
+    } else {
+      menuItem.actionView = null
+    }
   }
 
   companion object {

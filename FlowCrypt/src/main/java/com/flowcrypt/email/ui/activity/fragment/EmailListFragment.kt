@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.accounts.AuthenticatorException
-import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
@@ -19,8 +18,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
@@ -40,6 +38,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.databinding.FragmentEmailListBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialog
@@ -81,30 +80,29 @@ import javax.mail.AuthenticationFailedException
 class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
 
+  private var binding: FragmentEmailListBinding? = null
+
   override val emptyView: View?
-    get() = view?.findViewById(R.id.empty)
+    get() = binding?.empty?.root
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.rVMsgs)
+    get() = binding?.rVMsgs
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val msgsViewModel: MessagesViewModel by viewModels()
 
-  private var recyclerViewMsgs: RecyclerView? = null
   private var footerProgressView: View? = null
-  private var swipeRefreshLayout: SwipeRefreshLayout? = null
-  private var textViewActionProgress: TextView? = null
-  private var progressBarActionProgress: ProgressBar? = null
   private var tracker: SelectionTracker<Long>? = null
   private var keyProvider: CustomStableIdKeyProvider? = null
   private var actionMode: ActionMode? = null
   private var activeMsgEntity: MessageEntity? = null
+  private var foldersManager: FoldersManager? = null
+  private var currentFolder: LocalFolder? = null
 
   private lateinit var adapter: MsgsPagedListAdapter
-  private var listener: OnManageEmailsListener? = null
   private var keepSelectionInMemory = false
 
   override val contentResourceId: Int = R.layout.fragment_email_list
@@ -112,7 +110,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   private val isOutboxFolder: Boolean
     get() {
       return JavaEmailConstants.FOLDER_OUTBOX.equals(
-        listener?.currentFolder?.fullName,
+        currentFolder?.fullName,
         ignoreCase = true
       )
     }
@@ -137,32 +135,27 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     }
   }
 
-  override fun onAttach(context: Context) {
-    super.onAttach(context)
-
-    if (context is OnManageEmailsListener) {
-      this.listener = context
-    } else
-      throw IllegalArgumentException(
-        context.toString() + " must implement " +
-            OnManageEmailsListener::class.java.simpleName
-      )
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter(this)
     setupConnectionNotifier()
   }
 
+  override fun onCreateView(
+    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+  ): View? {
+    binding = FragmentEmailListBinding.inflate(inflater, container, false)
+    return binding?.root
+  }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews(view)
+    initViews()
     setupMsgsViewModel()
     setupLabelsViewModel()
 
-    listener?.currentFolder?.searchQuery?.let {
-      swipeRefreshLayout?.isEnabled = false
+    currentFolder?.searchQuery?.let {
+      binding?.sRL?.isEnabled = false
     }
   }
 
@@ -188,7 +181,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
-        TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+        TwoWayDialogFragment.RESULT_OK -> currentFolder?.let {
           val oldState = activeMsgEntity?.msgState
           val newMsgState = when (oldState) {
             MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
@@ -207,7 +200,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
       REQUEST_CODE_ERROR_DURING_CREATION -> {
         when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+          TwoWayDialogFragment.RESULT_OK -> currentFolder?.let {
             //FeedbackActivity.show(requireActivity())
           }
 
@@ -219,7 +212,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
       REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE -> {
         when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+          TwoWayDialogFragment.RESULT_OK -> currentFolder?.let {
             activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
           }
         }
@@ -228,7 +221,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
-            listener?.currentFolder?.let { localFolder ->
+            currentFolder?.let { localFolder ->
               val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
               if (ids.isNotEmpty()) {
                 msgsViewModel.changeMsgsState(
@@ -251,17 +244,15 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   override fun onRefresh() {
     snackBar?.dismiss()
 
-    val localFolder = listener?.currentFolder
-
-    if (localFolder == null) {
-      swipeRefreshLayout?.isRefreshing = false
+    if (currentFolder == null) {
+      binding?.sRL?.isRefreshing = false
       labelsViewModel.loadLabels()
       return
     }
 
-    val isEmpty = TextUtils.isEmpty(localFolder.fullName)
+    val isEmpty = TextUtils.isEmpty(currentFolder?.fullName)
     if (isEmpty || isOutboxFolder) {
-      swipeRefreshLayout?.isRefreshing = false
+      binding?.sRL?.isRefreshing = false
 
       if (isOutboxFolder) {
         context?.let { MessagesSenderWorker.enqueue(it) }
@@ -271,7 +262,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         if (adapter.itemCount > 0) {
           refreshMsgs()
         } else {
-          swipeRefreshLayout?.isRefreshing = false
+          binding?.sRL?.isRefreshing = false
 
           if (adapter.itemCount == 0) {
             showProgress()
@@ -280,7 +271,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           loadNextMsgs()
         }
       } else {
-        swipeRefreshLayout?.isRefreshing = false
+        binding?.sRL?.isRefreshing = false
 
         if (adapter.itemCount == 0) {
           showStatus(msg = getString(R.string.no_connection))
@@ -295,35 +286,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     }
   }
 
-  fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
-    keepSelectionInMemory = false
-    actionMode?.finish()
-    tracker?.clearSelection()
-
-    val newFolder = listener?.currentFolder
-    adapter.currentFolder = newFolder
-    adapter.submitList(null)
-
-    newFolder?.searchQuery?.let {
-      swipeRefreshLayout?.isEnabled = false
-    }
-
-    val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
-    val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
-    var isForceClearCacheNeeded = false
-    if ((isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) || forceClearCache) {
-      isForceClearCacheNeeded = true
-    }
-
-    newFolder?.let {
-      msgsViewModel.switchFolder(
-        newFolder = it.copy(),
-        forceClearFolderCache = isForceClearCacheNeeded,
-        deleteAllMsgs = deleteAllMsgs
-      )
-    } ?: labelsViewModel.loadLabels()
-  }
-
   /**
    * Set a progress of the some action.
    *
@@ -331,15 +293,17 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
    * @param message  The user friendly message.
    */
   fun setActionProgress(progress: Int, message: String? = null) {
-    progressBarActionProgress?.progress = progress
-    progressBarActionProgress?.visibility = if (progress == 100) View.GONE else View.VISIBLE
+    binding?.progressBarActionProgress?.progress = progress
+    binding?.progressBarActionProgress?.visibility =
+      if (progress == 100) View.GONE else View.VISIBLE
 
     if (progress != 100) {
-      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
-      textViewActionProgress?.visibility = View.VISIBLE
+      binding?.textViewActionProgress?.text =
+        getString(R.string.progress_message, progress, message)
+      binding?.textViewActionProgress?.visibility = View.VISIBLE
     } else {
-      textViewActionProgress?.text = null
-      textViewActionProgress?.visibility = View.GONE
+      binding?.textViewActionProgress?.text = null
+      binding?.textViewActionProgress?.visibility = View.GONE
       adapter.changeProgress(false)
     }
   }
@@ -351,7 +315,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     }
 
     val isOutbox =
-      JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
+      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)
     val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
     if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
       when (msgEntity.msgState) {
@@ -383,7 +347,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             startActivityForResult(
               MessageDetailsActivity.getIntent(
                 context,
-                listener?.currentFolder, msgEntity
+                currentFolder, msgEntity
               ), REQUEST_CODE_SHOW_MESSAGE_DETAILS
             )
           }
@@ -546,7 +510,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
    * Try to load a new messages from an IMAP server.
    */
   private fun refreshMsgs() {
-    listener?.currentFolder?.let {
+    currentFolder?.let {
       msgsViewModel.refreshMsgs(it)
     }
   }
@@ -555,8 +519,6 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
    * Try to load a next messages from an IMAP server.
    */
   private fun loadNextMsgs() {
-    val localFolder = listener?.currentFolder
-
     if (isOutboxFolder) {
       return
     }
@@ -564,7 +526,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     if (GeneralUtil.isConnected(context)) {
       footerProgressView?.visibility = View.VISIBLE
 
-      if (localFolder == null) {
+      if (currentFolder == null) {
         labelsViewModel.loadLabels()
       } else {
         adapter.changeProgress(true)
@@ -584,30 +546,24 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
     }
   }
 
-  private fun initViews(view: View) {
-    textViewActionProgress = view.findViewById(R.id.textViewActionProgress)
-    progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
-
-    recyclerViewMsgs = view.findViewById(R.id.rVMsgs)
+  private fun initViews() {
     setupRecyclerView()
 
     footerProgressView = LayoutInflater.from(context)
-      .inflate(R.layout.list_view_progress_footer, recyclerViewMsgs, false)
+      .inflate(R.layout.list_view_progress_footer, binding?.rVMsgs, false)
     footerProgressView?.visibility = View.GONE
-
-    swipeRefreshLayout = view.findViewById(R.id.sRL)
-    swipeRefreshLayout?.setColorSchemeResources(
+    binding?.sRL?.setColorSchemeResources(
       R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary
     )
-    swipeRefreshLayout?.setOnRefreshListener(this)
+    binding?.sRL?.setOnRefreshListener(this)
   }
 
   private fun setupRecyclerView() {
     val layoutManager = LinearLayoutManager(context)
-    recyclerViewMsgs?.layoutManager = layoutManager
-    recyclerViewMsgs?.setHasFixedSize(true)
-    recyclerViewMsgs?.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
-    recyclerViewMsgs?.adapter = adapter
+    binding?.rVMsgs?.layoutManager = layoutManager
+    binding?.rVMsgs?.setHasFixedSize(true)
+    binding?.rVMsgs?.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
+    binding?.rVMsgs?.adapter = adapter
     setupItemTouchHelper()
     setupSelectionTracker()
     setupBottomOverScroll()
@@ -615,8 +571,8 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
   private fun setupSelectionTracker() {
     adapter.tracker = null
-    if (listener?.currentFolder?.searchQuery == null) {
-      recyclerViewMsgs?.let { recyclerView ->
+    if (currentFolder?.searchQuery == null) {
+      binding?.rVMsgs?.let { recyclerView ->
         keyProvider = CustomStableIdKeyProvider(recyclerView)
 
         keyProvider?.let {
@@ -670,7 +626,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         val position = viewHolder.adapterPosition
         if (position != RecyclerView.NO_POSITION) {
           val item = adapter.getItemId(position)
-          listener?.currentFolder?.let {
+          currentFolder?.let {
             msgsViewModel.changeMsgsState(
               listOf(item), it, MessageState
                 .PENDING_ARCHIVING, false
@@ -683,7 +639,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             btnName = getString(R.string.undo),
             duration = Snackbar.LENGTH_LONG
           ) {
-            listener?.currentFolder?.let {
+            currentFolder?.let {
               msgsViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
               //we should force archiving action because we can have other messages in the pending archiving states
               msgsViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
@@ -759,11 +715,11 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       }
     })
 
-    itemTouchHelper.attachToRecyclerView(recyclerViewMsgs)
+    itemTouchHelper.attachToRecyclerView(binding?.rVMsgs)
   }
 
   private fun setupBottomOverScroll() {
-    recyclerViewMsgs?.let { recyclerView ->
+    binding?.rVMsgs?.let { recyclerView ->
       val overScrollAdapter = object : RecyclerViewOverScrollDecorAdapter(recyclerView) {
         /**
          * we disable OverScroll checking for top
@@ -812,7 +768,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
         val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
         var result = false
-        listener?.currentFolder?.let {
+        currentFolder?.let {
           result = when (item?.itemId) {
             R.id.menuActionArchiveMessage -> {
               msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_ARCHIVING)
@@ -859,7 +815,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
       override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
         mode?.menuInflater?.inflate(R.menu.message_list_context_menu, menu)
-        swipeRefreshLayout?.isEnabled = false
+        binding?.sRL?.isEnabled = false
         return true
       }
 
@@ -885,8 +841,8 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       }
 
       override fun onDestroyActionMode(mode: ActionMode?) {
-        if (listener?.currentFolder?.searchQuery == null) {
-          swipeRefreshLayout?.isEnabled = true
+        if (currentFolder?.searchQuery == null) {
+          binding?.sRL?.isEnabled = true
         }
 
         if (!keepSelectionInMemory) {
@@ -914,14 +870,14 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       actionMode?.invalidate()
     }
 
-    msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
+    msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           if (it.progress == null) {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
           }
 
-          if (recyclerViewMsgs?.adapter?.itemCount == 0) {
+          if (binding?.rVMsgs?.adapter?.itemCount == 0) {
             showProgress()
           }
 
@@ -970,7 +926,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
         Result.Status.SUCCESS -> {
           setActionProgress(100)
           showContent()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -991,16 +947,16 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
                 ?: getString(R.string.can_not_connect_to_the_server)
             )
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
 
-    msgsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, {
+    msgsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) {
       val activity = activity as? BaseSyncActivity ?: return@observe
       with(activity) {
         when (it) {
@@ -1018,17 +974,17 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           }
         }
       }
-    })
+    }
 
-    msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner, { result ->
+    msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner) { result ->
       when (result.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
-          swipeRefreshLayout?.isRefreshing = true
+          countingIdlingResource.incrementSafely()
+          binding?.sRL?.isRefreshing = true
         }
 
         else -> {
-          swipeRefreshLayout?.isRefreshing = false
+          binding?.sRL?.isRefreshing = false
 
           if (result.status == Result.Status.EXCEPTION) {
             when (result.exception) {
@@ -1054,23 +1010,23 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
             }
           }
 
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel.loadLabelsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
+    labelsViewModel.loadLabelsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           setActionProgress(0, getString(R.string.loading_labels))
         }
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -1081,20 +1037,38 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           } else {
             showStatus(msg = it.exception?.message)
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
       }
-    })
+    }
+
+    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner) {
+      val differentAccount = foldersManager?.account != it.account
+      foldersManager = it
+
+      if (differentAccount || currentFolder == null) {
+        currentFolder = foldersManager?.folderInbox
+        if (currentFolder == null) {
+          currentFolder = foldersManager?.findInboxFolder()
+        }
+
+        onFolderChanged()
+      } else {
+        foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { folder ->
+          currentFolder = folder
+        }
+      }
+    }
   }
 
   private fun isArchiveActionEnabled(): Boolean {
     var isEnabled = false
 
-    when (FoldersManager.getFolderType(listener?.currentFolder)) {
+    when (FoldersManager.getFolderType(currentFolder)) {
       //archive action is enabled only in INBOX folder for GMAIL. While we don't support GMail
       // labels we can't use the archive action in other folders.
       FoldersManager.FolderType.INBOX -> {
@@ -1112,7 +1086,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   }
 
   private fun isChangeSeenStateActionEnabled(): Boolean {
-    return when (FoldersManager.getFolderType(listener?.currentFolder)) {
+    return when (FoldersManager.getFolderType(currentFolder)) {
       FoldersManager.FolderType.OUTBOX -> {
         false
       }
@@ -1124,9 +1098,38 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   }
 
   private fun setupConnectionNotifier() {
-    connectionLifecycleObserver.connectionLiveData.observe(this, {
+    connectionLifecycleObserver.connectionLiveData.observe(this) {
       //do nothing yet
-    })
+    }
+  }
+
+  private fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
+    keepSelectionInMemory = false
+    actionMode?.finish()
+    tracker?.clearSelection()
+
+    val newFolder = currentFolder
+    adapter.currentFolder = newFolder
+    adapter.submitList(null)
+
+    newFolder?.searchQuery?.let {
+      binding?.sRL?.isEnabled = false
+    }
+
+    val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
+    val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
+    var isForceClearCacheNeeded = false
+    if ((isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) || forceClearCache) {
+      isForceClearCacheNeeded = true
+    }
+
+    newFolder?.let {
+      msgsViewModel.switchFolder(
+        newFolder = it.copy(),
+        forceClearFolderCache = isForceClearCacheNeeded,
+        deleteAllMsgs = deleteAllMsgs
+      )
+    } ?: labelsViewModel.loadLabels()
   }
 
   interface OnManageEmailsListener {

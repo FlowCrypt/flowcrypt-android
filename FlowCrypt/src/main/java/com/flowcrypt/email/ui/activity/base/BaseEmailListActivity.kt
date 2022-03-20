@@ -31,7 +31,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(),
     val emailListFragment = supportFragmentManager
       .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    emailListFragment?.onFolderChanged(forceClearCache)
+    //emailListFragment?.onFolderChanged(forceClearCache)
     updateActionProgressState(100, null)
 
     if (currentFolder != null) {

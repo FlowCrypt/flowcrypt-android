@@ -150,7 +150,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
         }
       }
     }
-    view.findViewById<View>(R.id.buttonLogout)?.setOnClickListener { baseActivity.logout() }
+    //view.findViewById<View>(R.id.buttonLogout)?.setOnClickListener { baseActivity.logout() }
     view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)
     }

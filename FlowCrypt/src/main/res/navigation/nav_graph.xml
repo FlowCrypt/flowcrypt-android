@@ -7,7 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/mainSignInFragment">
+    app:startDestination="@id/emailListFragment">
 
     <fragment
         android:id="@+id/mainSignInFragment"
@@ -486,6 +486,12 @@
             android:id="@+id/action_feedbackFragment_to_editScreenshotDialogFragment"
             app:destination="@id/editScreenshotDialogFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/emailListFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.EmailListFragment"
+        android:label="@string/connection"
+        tools:layout="@layout/fragment_email_list" />
 
     <dialog
         android:id="@+id/twoWayDialogFragment"
