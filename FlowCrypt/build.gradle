@@ -423,7 +423,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'ja.burhanrashid52:photoeditor:1.1.1'
     implementation 'net.openid:appauth:0.11.1'
-    implementation 'org.bitbucket.b_c:jose4j:0.7.10'
+    implementation 'org.bitbucket.b_c:jose4j:0.7.11'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20211018.2'
     implementation 'org.jsoup:jsoup:1.14.3'
