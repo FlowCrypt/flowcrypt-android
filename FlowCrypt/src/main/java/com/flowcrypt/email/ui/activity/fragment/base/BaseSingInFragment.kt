@@ -9,11 +9,13 @@ import android.app.Activity
 import android.content.Intent
 import androidx.fragment.app.viewModels
 import androidx.work.WorkManager
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -21,7 +23,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
@@ -53,13 +54,13 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             showProgress(getString(R.string.processing))
           }
 
           Result.Status.SUCCESS -> {
             it.data?.let { pair -> onSetupCompleted(pair.first, pair.second) }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -85,7 +86,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                 ?: getString(R.string.unknown_error)
               )
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
           else -> {}
         }
@@ -95,7 +96,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             showProgress(getString(R.string.processing))
           }
 
@@ -106,7 +107,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                 pair.second
               )
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -117,7 +118,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
               msgText = e?.message ?: e?.javaClass?.simpleName
               ?: getString(R.string.unknown_error)
             )
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
           else -> {}
         }
@@ -170,8 +171,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected open fun runEmailManagerActivity() {
     IdleService.start(requireContext())
     getTempAccount()?.let { roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email)) }
-    EmailManagerActivity.runEmailManagerActivity(requireContext())
-    activity?.finish()
+    navController?.navigate(NavGraphDirections.actionGlobalToEmailListFragment())
   }
 
   /**

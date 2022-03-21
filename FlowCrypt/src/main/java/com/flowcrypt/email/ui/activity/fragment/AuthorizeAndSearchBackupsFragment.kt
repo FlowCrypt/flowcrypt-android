@@ -77,13 +77,13 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             showProgress(it.progressMsg)
           }
 
           Result.Status.SUCCESS -> {
             loadPrivateKeysViewModel.fetchAvailableKeys(args.account)
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           else -> {
@@ -91,7 +91,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
               REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
               bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
             )
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
             navController?.navigateUp()
           }
         }
@@ -103,7 +103,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
     loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           showProgress(it.progressMsg)
         }
 
@@ -112,7 +112,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
             REQUEST_KEY_SEARCH_BACKUPS,
             bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it)
           )
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
           navController?.navigateUp()
         }
       }

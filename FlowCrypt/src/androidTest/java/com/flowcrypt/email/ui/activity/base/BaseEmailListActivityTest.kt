@@ -17,7 +17,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 

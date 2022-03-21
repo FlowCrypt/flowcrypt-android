@@ -517,7 +517,7 @@ class MainSignInFragment : BaseSingInFragment() {
     checkFesServerViewModel.checkFesServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           showProgress(progressMsg = it.progressMsg)
         }
 
@@ -537,13 +537,13 @@ class MainSignInFragment : BaseSingInFragment() {
           }
 
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR -> {
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -585,7 +585,7 @@ class MainSignInFragment : BaseSingInFragment() {
           }
 
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
         else -> {}
       }
@@ -619,7 +619,7 @@ class MainSignInFragment : BaseSingInFragment() {
     loginViewModel.loginLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           showProgress(progressMsg = it.progressMsg)
         }
 
@@ -641,13 +641,13 @@ class MainSignInFragment : BaseSingInFragment() {
           }
 
           loginViewModel.loginLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_LOGIN)
           loginViewModel.loginLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
         else -> {}
       }
@@ -658,7 +658,7 @@ class MainSignInFragment : BaseSingInFragment() {
     domainOrgRulesViewModel.domainOrgRulesLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           showProgress(progressMsg = it.progressMsg)
         }
 
@@ -674,13 +674,13 @@ class MainSignInFragment : BaseSingInFragment() {
             askUserToReLogin()
           }
           domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES)
           domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {}
@@ -692,7 +692,7 @@ class MainSignInFragment : BaseSingInFragment() {
     ekmViewModel.ekmLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           showProgress(progressMsg = it.progressMsg)
         }
 
@@ -708,7 +708,7 @@ class MainSignInFragment : BaseSingInFragment() {
               )
           )
           ekmViewModel.ekmLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -734,7 +734,7 @@ class MainSignInFragment : BaseSingInFragment() {
             }
           }
           ekmViewModel.ekmLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {}
@@ -746,7 +746,7 @@ class MainSignInFragment : BaseSingInFragment() {
     privateKeysViewModel.protectPrivateKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           showProgress(getString(R.string.processing))
         }
 
@@ -759,7 +759,7 @@ class MainSignInFragment : BaseSingInFragment() {
           getTempAccount()?.let { account ->
             accountViewModel.addNewAccount(account)
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -769,7 +769,7 @@ class MainSignInFragment : BaseSingInFragment() {
             dialogMsg = it.exceptionMsg,
             isCancelable = true
           )
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {}

@@ -72,22 +72,6 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.EmailManagerActivity"
-            android:exported="false"
-            android:label="@string/loading"
-            android:launchMode="singleTask"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme" />
-
-        <activity
-            android:name=".ui.activity.MessageDetailsActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.activity.EmailManagerActivity"
-            android:screenOrientation="portrait">
-            <nav-graph android:value="@navigation/msg_details_graph" />
-        </activity>
-
-        <activity
             android:name=".ui.activity.CreateMessageActivity"
             android:exported="true"
             android:screenOrientation="portrait">

@@ -41,7 +41,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.MsgDetailsGraphDirections
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -84,7 +84,6 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -984,7 +983,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       override fun onPageFinished() {
         setActionProgress(100, null)
         updateReplyButtons()
-        (activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
+        //(activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
       }
     })
   }
@@ -1381,7 +1380,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     recipientsViewModel.recipientsFromLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -1405,12 +1404,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           } else {
             updatePgpBadges()
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           updatePgpBadges()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {
@@ -1434,7 +1433,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           val value = it.progress?.toInt() ?: 0
 
           if (value == 0) {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
           }
 
           when (it.resultCode) {
@@ -1453,7 +1452,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           it.data?.let { incomingMsgInfo ->
             showIncomingMsgInfo(incomingMsgInfo)
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -1491,12 +1490,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               )
             }
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {
           setActionProgress(100)
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
       }
     }
@@ -1560,7 +1559,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       msgDetailsViewModel.reVerifySignaturesStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -1569,12 +1568,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               msgInfo = msgInfo?.copy(verificationResult = verificationResult)
             }
             updatePgpBadges()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
             updatePgpBadges()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           else -> {
@@ -1622,7 +1621,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       } catch (e: ActivityNotFoundException) {
         //We don't have the required app
         navController?.navigate(
-          MsgDetailsGraphDirections.actionGlobalInfoDialogFragment(
+          NavGraphDirections.actionGlobalInfoDialogFragment(
             requestCode = 0,
             dialogTitle = "",
             dialogMsg = getString(R.string.warning_don_not_have_content_app)

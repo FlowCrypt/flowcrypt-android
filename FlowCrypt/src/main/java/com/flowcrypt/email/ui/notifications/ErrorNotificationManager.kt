@@ -17,7 +17,6 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 
 /**
  * It's a manager which helps to show errors notifications with a high priority.
@@ -32,9 +31,9 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
   override val groupId: Int = NOTIFICATIONS_GROUP_ERROR
 
   fun notifyUserAboutProblemWithOutgoingMsgs(account: AccountEntity, messageCount: Int) {
-    val intent = Intent(context, EmailManagerActivity::class.java).apply {
+    val intent = Intent()/*Intent(context, EmailManagerActivity::class.java).apply {
       action = EmailManagerActivity.ACTION_OPEN_OUTBOX_FOLDER
-    }
+    }*/
 
     val pendingIntent =
       PendingIntent.getActivity(

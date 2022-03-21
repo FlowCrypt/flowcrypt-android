@@ -41,13 +41,13 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentEmailListBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -344,12 +344,14 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
               TwoWayDialogFragment::class.java.simpleName
             )
           } else {
-            startActivityForResult(
-              MessageDetailsActivity.getIntent(
-                context,
-                currentFolder, msgEntity
-              ), REQUEST_CODE_SHOW_MESSAGE_DETAILS
-            )
+            currentFolder?.let { localFolder ->
+              navController?.navigate(
+                EmailListFragmentDirections.actionEmailListFragmentToMessageDetailsFragment(
+                  messageEntity = msgEntity,
+                  localFolder = localFolder
+                )
+              )
+            }
           }
         }
       }

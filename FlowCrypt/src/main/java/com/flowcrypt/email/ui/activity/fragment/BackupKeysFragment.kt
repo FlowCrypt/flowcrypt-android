@@ -182,7 +182,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             showProgress(getString(R.string.processing))
             areBackupsSavingNow = true
           }
@@ -197,7 +197,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
               showContent()
               showInfoSnackbar(binding?.root, getString(R.string.error_occurred_please_try_again))
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -215,7 +215,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
               )
             }
             privateKeysViewModel.saveBackupAsFileLiveData.value = Result.none()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           else -> {
@@ -229,7 +229,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     backupsViewModel.postBackupLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           isPrivateKeySendingNow = true
           showProgress(getString(R.string.processing))
         }
@@ -238,7 +238,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           isPrivateKeySendingNow = false
           toast(R.string.backed_up_successfully)
           navController?.popBackStack(R.id.mainSettingsFragment, false)
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -250,7 +250,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           }
 
           backupsViewModel.postBackupLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {

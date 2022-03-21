@@ -7,6 +7,7 @@ package com.flowcrypt.email.extensions
 
 import android.widget.Toast
 import androidx.annotation.IdRes
+import androidx.appcompat.app.ActionBar
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -14,6 +15,7 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
@@ -26,6 +28,12 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 4:16 PM
  *         E-mail: DenBond7@gmail.com
  */
+
+val androidx.fragment.app.Fragment.mainActivity: MainActivity?
+  get() = activity as? MainActivity
+
+val androidx.fragment.app.Fragment.actionBar: ActionBar?
+  get() = mainActivity?.supportActionBar
 
 val androidx.fragment.app.Fragment.navController: NavController?
   get() = activity?.let {

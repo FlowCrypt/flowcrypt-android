@@ -28,7 +28,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -93,7 +92,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
                     MessageState.QUEUED.value
                   )
                   MessagesSenderWorker.enqueue(context)
-                  EmailManagerActivity.runEmailManagerActivity(context)
+                  //EmailManagerActivity.runEmailManagerActivity(context)
                 }
 
                 activity?.finish()
@@ -242,7 +241,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
               )
             }
 
-            context?.let { context -> EmailManagerActivity.runEmailManagerActivity(context) }
+            context?.let { context -> }//EmailManagerActivity.runEmailManagerActivity(context)
             activity?.finish()
           }
         }

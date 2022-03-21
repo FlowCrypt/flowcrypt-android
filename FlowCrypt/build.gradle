@@ -377,6 +377,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${rootProject.ext.lifecycleVersion}"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.1"
     implementation "androidx.lifecycle:lifecycle-process:2.4.1"
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-alpha01")
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
@@ -390,6 +391,7 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:${rootProject.ext.navVersion}"
     implementation "androidx.navigation:navigation-runtime-ktx:${rootProject.ext.navVersion}"
     implementation("androidx.navigation:navigation-dynamic-features-fragment:${rootProject.ext.navVersion}")
+
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:18.0.1'

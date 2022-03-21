@@ -4,8 +4,5 @@
   -->
 
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layoutContent"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <!--Don't define any views here-->
-</androidx.constraintlayout.widget.ConstraintLayout>
+    android:layout_height="match_parent" />

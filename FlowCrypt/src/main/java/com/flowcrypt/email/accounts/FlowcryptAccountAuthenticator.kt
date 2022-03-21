@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 
 
@@ -194,13 +193,13 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
       val isRemovalAllowed = bundle.getBoolean(AccountManager.KEY_BOOLEAN_RESULT, false)
       if (isRemovalAllowed) {
         return Bundle().apply {
-          putParcelable(
+          /*putParcelable(
             AccountManager.KEY_INTENT,
             Intent(context, EmailManagerActivity::class.java).apply {
               action = EmailManagerActivity.ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS
               putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
               putExtra(EmailManagerActivity.KEY_ACCOUNT, account)
-            })
+            })*/
         }
       }
     }

@@ -9,6 +9,7 @@ import android.app.Application
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.service.FeedbackJobIntentService
@@ -28,8 +29,8 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class LauncherViewModel(application: Application) : AccountViewModel(application) {
-  private val isLoadingMutableStateFlow = MutableStateFlow(true)
-  val isLoadingStateFlow = isLoadingMutableStateFlow.asStateFlow()
+  private val isInitLoadingCompletedMutableStateFlow = MutableStateFlow<InitData?>(null)
+  val isInitLoadingCompletedStateFlow = isInitLoadingCompletedMutableStateFlow.asStateFlow()
 
   init {
     viewModelScope.launch {
@@ -43,7 +44,10 @@ class LauncherViewModel(application: Application) : AccountViewModel(application
       FeedbackJobIntentService.enqueueWork(application)
       FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
 
-      isLoadingMutableStateFlow.value = false
+      isInitLoadingCompletedMutableStateFlow.value =
+        InitData(roomDatabase.accountDao().getActiveAccountSuspend())
     }
   }
+
+  data class InitData(val accountEntity: AccountEntity?)
 }

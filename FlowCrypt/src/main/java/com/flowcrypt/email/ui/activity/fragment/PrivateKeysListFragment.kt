@@ -171,7 +171,7 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress()
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -182,13 +182,13 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
           } else {
             showContent()
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           showContent()
           toast(it.exception?.message, Toast.LENGTH_SHORT)
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
       }
     })

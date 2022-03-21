@@ -80,7 +80,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             if (sRL?.isRefreshing != true || attesterKeyAdapter.itemCount == 0) {
               sRL?.isRefreshing = false
               showProgress()
@@ -97,12 +97,12 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
                 showEmptyView()
               }
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR -> {
             sRL?.isRefreshing = false
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -121,7 +121,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
               accountPublicKeyServersViewModel.refreshData()
             }
 
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
       }

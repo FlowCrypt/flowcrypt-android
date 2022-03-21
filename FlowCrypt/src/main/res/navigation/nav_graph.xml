@@ -7,7 +7,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/emailListFragment">
+    app:startDestination="@id/splashFragment">
+
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.SplashFragment"
+        tools:layout="@layout/fragment_splash" />
 
     <fragment
         android:id="@+id/mainSignInFragment"
@@ -491,7 +496,11 @@
         android:id="@+id/emailListFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.EmailListFragment"
         android:label="@string/connection"
-        tools:layout="@layout/fragment_email_list" />
+        tools:layout="@layout/fragment_email_list">
+        <action
+            android:id="@+id/action_emailListFragment_to_messageDetailsFragment"
+            app:destination="@id/messageDetailsFragment" />
+    </fragment>
 
     <dialog
         android:id="@+id/twoWayDialogFragment"
@@ -702,4 +711,16 @@
     <action
         android:id="@+id/action_global_feedbackFragment"
         app:destination="@id/feedbackFragment" />
+    <action
+        android:id="@+id/action_global_to_mainSignInFragment"
+        app:destination="@id/mainSignInFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@+id/nav_graph"
+        app:popUpToInclusive="true" />
+    <action
+        android:id="@+id/action_global_to_emailListFragment"
+        app:destination="@id/emailListFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@+id/nav_graph"
+        app:popUpToInclusive="true" />
 </navigation>

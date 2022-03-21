@@ -51,7 +51,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import org.pgpainless.util.Passphrase
 import java.io.FileNotFoundException
-import java.util.*
+import java.util.Date
 
 /**
  * This [Fragment] helps to show details about the given key.
@@ -311,7 +311,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           showProgress()
         }
 
@@ -324,12 +324,12 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
             matchPassphrase(it.data)
           }
           showContent()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
       }
     })
@@ -350,13 +350,13 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
           parentFragmentManager.popBackStack()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -365,7 +365,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
             ?: "Couldn't delete a key with fingerprint =" +
             " {${pgpKeyDetailsViewModel.getPgpKeyDetails()?.fingerprint ?: ""}}"
           )
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
       }
@@ -376,7 +376,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner, { it ->
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -420,7 +420,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           binding?.tVPassPhraseVerification?.text = verificationMsg
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -429,7 +429,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_check_pass_phrase)
           )
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
       }
     })

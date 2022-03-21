@@ -58,13 +58,13 @@ abstract class BasePassphraseStrengthFragment : BaseFragment() {
       passwordStrengthViewModel.pwdStrengthResultStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
             pwdStrengthResult = it.data
             updateStrengthViews()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -74,7 +74,7 @@ abstract class BasePassphraseStrengthFragment : BaseFragment() {
                 ?: getString(R.string.unknown_error), Toast.LENGTH_LONG
               )
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           else -> {

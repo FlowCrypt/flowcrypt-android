@@ -35,7 +35,6 @@ import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -439,7 +438,7 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
                 MessagesSenderWorker.enqueue(context, true)
                 InboxIdleSyncWorker.enqueue(context)
                 toast(text = getString(R.string.server_settings_updated))
-                EmailManagerActivity.runEmailManagerActivity(context)
+                //EmailManagerActivity.runEmailManagerActivity(context)
               }
               activity?.finish()
             }

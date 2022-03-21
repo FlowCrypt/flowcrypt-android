@@ -71,7 +71,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
   fun registerCountingIdlingResource() {
     activityScenario?.onActivity { activity ->
       val baseActivity = (activity as? BaseActivity) ?: return@onActivity
-      countingIdlingResource = baseActivity.countingIdlingResource
+      countingIdlingResource = countingIdlingResource
       countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
   }

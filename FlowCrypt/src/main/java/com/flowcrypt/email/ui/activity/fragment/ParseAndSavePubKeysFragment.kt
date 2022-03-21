@@ -31,7 +31,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment
 import com.flowcrypt.email.ui.adapter.ImportOrUpdatePubKeysRecyclerViewAdapter
-import kotlinx.coroutines.flow.collect
 
 /**
  * @author Denis Bondarenko
@@ -111,7 +110,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             showProgress()
           }
 
@@ -124,7 +123,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
               pubKeysAdapter.submitList(pgpKeyDetailsList)
               showContent()
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -132,7 +131,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
               getString(R.string.source_has_wrong_pgp_structure, getString(R.string.public_))
             )
             showInfoDialogWithExceptionDetails(it.exception)
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           else -> {

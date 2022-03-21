@@ -84,9 +84,6 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
       activity?.findViewById(R.id.appBarLayout)
     }
 
-  val baseActivity: BaseActivity
-    get() = activity as BaseActivity
-
   override fun onAttach(context: Context) {
     super.onAttach(context)
     connectionLifecycleObserver = ConnectionLifecycleObserver(context)

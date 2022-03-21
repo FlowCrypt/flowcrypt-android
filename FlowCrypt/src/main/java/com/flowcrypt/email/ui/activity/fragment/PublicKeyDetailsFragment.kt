@@ -46,7 +46,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.util.Date
@@ -110,7 +109,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             showProgress()
           }
 
@@ -123,7 +122,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               updateViews(pgpKeyDetails)
               showContent()
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -146,7 +145,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
                 dialogMsg = msg
               )
             )
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
           else -> {}
         }

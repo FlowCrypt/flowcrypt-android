@@ -14,7 +14,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
@@ -24,6 +27,7 @@ import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.navigateUp
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -67,7 +71,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen().apply {
       setKeepOnScreenCondition {
-        launcherViewModel.isLoadingStateFlow.value
+        launcherViewModel.isInitLoadingCompletedStateFlow.value == null
       }
     }
     super.onCreate(savedInstanceState)
@@ -76,6 +80,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     handleAccountAuthenticatorResponse()
     initAccountViewModel()
     setupLabelsViewModel()
+    setupDefaultRouting(savedInstanceState)
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -127,6 +132,12 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     arguments: Bundle?
   ) {
 
+  }
+
+  fun setDrawerLockMode(isLocked: Boolean) {
+    binding.drawerLayout.setDrawerLockMode(
+      if (isLocked) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED
+    )
   }
 
   private fun initViews() {
@@ -229,6 +240,27 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
       for (localFolder in it?.customLabels ?: emptyList()) {
         mailLabels?.subMenu?.add(localFolder.folderAlias)
+      }
+    }
+  }
+
+  private fun setupDefaultRouting(savedInstanceState: Bundle?) {
+    if (savedInstanceState == null) {
+      lifecycleScope.launch {
+        repeatOnLifecycle(Lifecycle.State.STARTED) {
+          launcherViewModel.isInitLoadingCompletedStateFlow.collect { initData ->
+            initData?.let {
+              val startDestination = when {
+                initData.accountEntity != null -> {
+                  NavGraphDirections.actionGlobalToEmailListFragment()
+                }
+
+                else -> NavGraphDirections.actionGlobalToMainSignInFragment()
+              }
+              navController.navigate(startDestination)
+            }
+          }
+        }
       }
     }
   }

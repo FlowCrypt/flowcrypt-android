@@ -1552,7 +1552,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       when (it.status) {
         Result.Status.LOADING -> {
           updateState.invoke(false)
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource.incrementSafely()
           progressBar?.visible()
         }
 
@@ -1562,14 +1562,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           it.data?.let { list ->
             composeMsgViewModel.replaceRecipients(recipientType, list)
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           updateState.invoke(true)
           progressBar?.invisible()
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource.decrementSafely()
         }
 
         Result.Status.NONE -> {}
