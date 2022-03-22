@@ -40,8 +40,12 @@ class CreateMessageActivity : BaseBackStackSyncActivity(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    (supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as? NavHostFragment)
-      ?.navController?.setGraph(R.navigation.create_msg_graph, intent.extras)
+    val navHostFragment =
+      supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
+    val navController = navHostFragment.navController
+    val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
+    navGraph.startDestination = R.id.createMessageFragment
+    navController.setGraph(navGraph, intent.extras)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

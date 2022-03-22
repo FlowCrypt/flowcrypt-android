@@ -502,6 +502,56 @@
             app:destination="@id/messageDetailsFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/createMessageFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment"
+        android:label="CreateMessageFragment"
+        tools:layout="@layout/fragment_create_message">
+        <argument
+            android:name="encryptedByDefault"
+            android:defaultValue="true"
+            app:argType="boolean" />
+        <argument
+            android:name="serviceInfo"
+            android:defaultValue="@null"
+            app:argType="com.flowcrypt.email.api.email.model.ServiceInfo"
+            app:nullable="true" />
+        <argument
+            android:name="incomingMessageInfo"
+            android:defaultValue="@null"
+            app:argType="com.flowcrypt.email.api.email.model.IncomingMessageInfo"
+            app:nullable="true" />
+        <argument
+            android:name="messageType"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_providePasswordToProtectMsgFragment"
+            app:destination="@id/providePasswordToProtectMsgFragment" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_importMissingPublicKeyFragment"
+            app:destination="@id/importMissingPublicKeyFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/providePasswordToProtectMsgFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragment"
+        tools:layout="@layout/fragment_provide_password_to_protect_msg">
+        <argument
+            android:name="defaultPassword"
+            android:defaultValue=""
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/importMissingPublicKeyFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ImportMissingPublicKeyFragment"
+        tools:layout="@layout/fragment_import_missing_public_key">
+        <argument
+            android:name="recipientWithPubKeys"
+            app:argType="com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys" />
+    </fragment>
+
     <dialog
         android:id="@+id/twoWayDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment"

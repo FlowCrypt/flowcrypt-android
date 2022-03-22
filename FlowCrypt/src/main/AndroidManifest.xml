@@ -76,7 +76,7 @@
             android:name=".ui.activity.CreateMessageActivity"
             android:exported="true"
             android:screenOrientation="portrait">
-            <nav-graph android:value="@navigation/create_msg_graph" />
+            <nav-graph android:value="@navigation/nav_graph" />
 
             <intent-filter>
                 <!--Handle the clicks on email links in a browser-->
@@ -112,11 +112,6 @@
 
         <activity
             android:name=".ui.activity.ImportPrivateKeyActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.ImportPublicKeyActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

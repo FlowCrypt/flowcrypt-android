@@ -76,7 +76,6 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
-import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectRecipientsActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
@@ -225,12 +224,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
           )
 
-          if (recipientWithPubKeys != null) {
-            startActivityForResult(
-              ImportPublicKeyActivity.newIntent(
-                context, account,
-                getString(R.string.import_public_key), recipientWithPubKeys
-              ), REQUEST_CODE_IMPORT_PUBLIC_KEY
+          recipientWithPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections
+                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
             )
           }
         }
@@ -278,12 +275,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         }
       }
 
-      REQUEST_CODE_IMPORT_PUBLIC_KEY -> when (resultCode) {
+      /*REQUEST_CODE_IMPORT_PUBLIC_KEY -> when (resultCode) {
         Activity.RESULT_OK -> {
           Toast.makeText(context, R.string.the_key_successfully_imported, Toast.LENGTH_SHORT).show()
           updateRecipients()
         }
-      }
+      }*/
 
       REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT -> {
         when (resultCode) {
@@ -1892,7 +1889,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   companion object {
     private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
-    private const val REQUEST_CODE_IMPORT_PUBLIC_KEY = 101
     private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
     private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT = 103
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
