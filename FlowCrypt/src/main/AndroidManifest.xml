@@ -72,6 +72,7 @@
         </activity>
 
         <activity
+            android:theme="@style/AppTheme"
             android:name=".ui.activity.CreateMessageActivity"
             android:exported="true"
             android:screenOrientation="portrait">
@@ -118,14 +119,6 @@
             android:name=".ui.activity.ImportPublicKeyActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.settings.SettingsActivity"
-            android:exported="false"
-            android:label="@string/title_activity_settings"
-            android:screenOrientation="portrait">
-            <nav-graph android:value="@navigation/nav_graph" />
-        </activity>
 
         <activity
             android:name=".ui.activity.SelectRecipientsActivity"
