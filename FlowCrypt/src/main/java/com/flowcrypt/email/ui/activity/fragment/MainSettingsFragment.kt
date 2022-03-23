@@ -6,8 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
-import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -25,12 +23,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
  * E-mail: DenBond7@gmail.com
  */
 class MainSettingsFragment : BasePreferenceFragment() {
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-    (activity as AppCompatActivity?)?.supportActionBar?.title =
-      getString(R.string.title_activity_settings)
-  }
-
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     addPreferencesFromResource(R.xml.preferences_main_settings)
 

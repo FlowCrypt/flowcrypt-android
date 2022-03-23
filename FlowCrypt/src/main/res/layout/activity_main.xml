@@ -57,7 +57,7 @@
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header"
-        app:menu="@menu/activity_email_manager_drawer" />
+        app:menu="@menu/side_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
 

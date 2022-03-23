@@ -142,7 +142,7 @@
     <fragment
         android:id="@+id/mainSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MainSettingsFragment"
-        android:label="MainSettingsFragment">
+        android:label="@string/settings">
         <action
             android:id="@+id/action_mainSettingsFragment_to_serverSettingsFragment"
             app:destination="@id/serverSettingsFragment" />
@@ -773,4 +773,7 @@
         app:launchSingleTop="true"
         app:popUpTo="@+id/nav_graph"
         app:popUpToInclusive="true" />
+    <action
+        android:id="@+id/action_global_mainSettingsFragment"
+        app:destination="@id/mainSettingsFragment" />
 </navigation>

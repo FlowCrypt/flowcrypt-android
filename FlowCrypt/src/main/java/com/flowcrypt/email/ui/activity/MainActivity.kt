@@ -189,6 +189,21 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         }
       })
     navigationViewManager?.accountManagementLayout?.let { binding.navigationView.addHeaderView(it) }
+
+    binding.navigationView.setNavigationItemSelectedListener { menuItem ->
+      when (menuItem.itemId) {
+        R.id.navMenuActionSettings -> {
+          navController.navigate(NavGraphDirections.actionGlobalMainSettingsFragment())
+        }
+
+        R.id.navMenuActionReportProblem -> {
+          //FeedbackActivity.show(this)
+        }
+      }
+
+      binding.drawerLayout.closeDrawer(GravityCompat.START)
+      return@setNavigationItemSelectedListener true
+    }
   }
 
   private fun setupDrawerLayout() {
