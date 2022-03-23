@@ -6,31 +6,32 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/layoutContent"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <include
-        android:id="@+id/layoutSyncStatus"
-        layout="@layout/sync_status"
+        android:id="@+id/layoutProgress"
+        layout="@layout/progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:visibility="gone" />
+        tools:visibility="gone" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutContentView"
+        android:id="@+id/layoutContent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <TextView
             android:id="@+id/textViewTitle"
             style="@style/ScreenHeading"
             android:layout_width="0dp"
             android:text="@string/import_private_key"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHeight_default="wrap"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
@@ -40,7 +41,6 @@
             android:layout_marginTop="@dimen/margin_top_first_button"
             android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/textViewTitle"
             tools:text="Import keys" />
@@ -55,7 +55,8 @@
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/buttonImportBackup" />
+            app:layout_constraintTop_toBottomOf="@+id/buttonImportBackup"
+            app:layout_goneMarginTop="@dimen/margin_top_first_button" />
 
         <Button
             android:id="@+id/buttonLoadFromClipboard"
@@ -82,36 +83,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutProgress"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/textViewProgressText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="0dp"
-            android:layout_marginTop="@dimen/default_margin_very_big"
-            android:layout_marginRight="0dp"
-            android:text="@string/evaluating"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

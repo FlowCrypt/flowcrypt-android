@@ -10,7 +10,6 @@ import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -48,10 +47,6 @@ abstract class BaseDialogFragment : DialogFragment() {
         movementMethod = LinkMovementMethod.getInstance()
       }
     }
-  }
-
-  fun showToast(string: String) {
-    Toast.makeText(context, string, Toast.LENGTH_SHORT).show()
   }
 
   companion object {

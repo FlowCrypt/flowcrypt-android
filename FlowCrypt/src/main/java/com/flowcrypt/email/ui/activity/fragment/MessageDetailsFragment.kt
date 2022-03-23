@@ -83,7 +83,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -224,6 +223,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
     subscribeToDownloadAttachmentViaDialog()
+    subscribeToImportingAdditionalPrivateKeys()
     updateActionsVisibility(args.localFolder, null)
   }
 
@@ -251,12 +251,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
-        }
-      }
-
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION -> when (resultCode) {
         Activity.RESULT_OK -> {
           val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(
@@ -1297,18 +1291,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     ) as ViewGroup
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey?.setOnClickListener {
-      startActivityForResult(
-        ImportPrivateKeyActivity.getIntent(
-          context = context,
-          title = getString(R.string.import_private_key),
-          throwErrorIfDuplicateFoundEnabled = true,
-          cls = ImportPrivateKeyActivity::class.java,
-          isSubmittingPubKeysEnabled = false,
-          accountEntity = account,
-          skipImportedKeys = true
-        ),
-        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY
-      )
+      account?.let { accountEntity ->
+        navController?.navigate(
+          MessageDetailsFragmentDirections
+            .actionMessageDetailsFragmentToImportAdditionalPrivateKeysFragment(
+              accountEntity
+            )
+        )
+      }
     }
 
     val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
@@ -1711,9 +1701,21 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
   }
 
+  private fun subscribeToImportingAdditionalPrivateKeys() {
+    setFragmentResultListener(
+      ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
+    ) { _, bundle ->
+      val keys = bundle.getParcelableArrayList<PgpKeyDetails>(
+        ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
+      )
+      if (keys?.isNotEmpty() == true) {
+        toast(R.string.key_successfully_imported)
+      }
+    }
+  }
+
   companion object {
     private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
-    private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 104

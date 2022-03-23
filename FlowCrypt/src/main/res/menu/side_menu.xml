@@ -26,5 +26,5 @@
     <item
         android:id="@+id/navMenuActionSettings"
         android:icon="@drawable/ic_settings_grey_32dp"
-        android:title="@string/action_settings" />
+        android:title="@string/settings" />
 </menu>

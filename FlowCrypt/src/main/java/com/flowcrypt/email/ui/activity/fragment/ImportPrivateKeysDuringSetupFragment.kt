@@ -56,7 +56,7 @@ class ImportPrivateKeysDuringSetupFragment : BaseImportKeyFragment() {
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
       navController?.navigate(
-        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(false)
+        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
       )
     }
 
@@ -103,11 +103,7 @@ class ImportPrivateKeysDuringSetupFragment : BaseImportKeyFragment() {
           .actionImportPrivateKeysDuringSetupFragmentToCheckKeysFragment(
             privateKeys = keys.toTypedArray(),
             subTitle = title,
-            sourceType = if (activeUri != null) {
-              KeyImportDetails.SourceType.FILE
-            } else {
-              KeyImportDetails.SourceType.CLIPBOARD
-            },
+            sourceType = importSourceType,
             positiveBtnTitle = getString(R.string.continue_),
             negativeBtnTitle = getString(R.string.choose_another_key),
             initSubTitlePlurals = 0,

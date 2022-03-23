@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
@@ -190,7 +191,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     }
 
     if (selectedAtts.isEmpty()) {
-      showToast(getString(R.string.please_select_key))
+      toast(R.string.please_select_key)
     } else {
       sendResult(selectedAtts)
       dismiss()

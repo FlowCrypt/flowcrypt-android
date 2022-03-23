@@ -262,7 +262,8 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
   private fun setupDefaultRouting(savedInstanceState: Bundle?) {
     if (savedInstanceState == null) {
       lifecycleScope.launch {
-        repeatOnLifecycle(Lifecycle.State.STARTED) {
+        //we use Lifecycle.State.CREATED because we need it only at startup
+        repeatOnLifecycle(Lifecycle.State.CREATED) {
           launcherViewModel.isInitLoadingCompletedStateFlow.collect { initData ->
             initData?.let {
               val startDestination = when {

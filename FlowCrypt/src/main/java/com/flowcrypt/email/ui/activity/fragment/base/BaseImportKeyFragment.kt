@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.setFragmentResultListener
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
@@ -27,13 +28,14 @@ abstract class BaseImportKeyFragment : BaseFragment() {
   abstract fun handleParsedKeys(keys: List<PgpKeyDetails>)
 
   protected var activeUri: Uri? = null
-  protected var clipboardCache: String? = null
+  protected var importSourceType: KeyImportDetails.SourceType =
+    KeyImportDetails.SourceType.MANUAL_ENTERING
 
   private val openDocumentActivityResultLauncher =
     registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
       uri?.let {
+        importSourceType = KeyImportDetails.SourceType.FILE
         activeUri = it
-        clipboardCache = null
         handleSelectedFile(it)
       }
     }
@@ -44,15 +46,14 @@ abstract class BaseImportKeyFragment : BaseFragment() {
     subscribeToParsedPgpKeysFromSource()
   }
 
-  fun selectFile() {
+  protected fun selectFile() {
     openDocumentActivityResultLauncher.launch("*/*")
   }
 
   private fun subscribeToCheckClipboard() {
     setFragmentResultListener(FindKeysInClipboardDialogFragment.REQUEST_KEY_CLIPBOARD_RESULT) { _, bundle ->
       val pgpKeysAsString = bundle.getString(FindKeysInClipboardDialogFragment.KEY_CLIPBOARD_TEXT)
-      activeUri = null
-      clipboardCache = pgpKeysAsString
+      importSourceType = KeyImportDetails.SourceType.CLIPBOARD
       handleClipboard(pgpKeysAsString)
     }
   }

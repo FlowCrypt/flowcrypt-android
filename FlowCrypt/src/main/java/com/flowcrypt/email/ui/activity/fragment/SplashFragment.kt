@@ -21,6 +21,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
  */
 class SplashFragment : BaseFragment() {
   override val contentResourceId: Int = -1
+  override val isDisplayHomeAsUpEnabled = false
+  override val isToolbarVisible: Boolean = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -18,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
@@ -36,7 +36,6 @@ import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -106,6 +105,7 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
     supportActionBar?.setTitle(R.string.keys)
     initViews()
     setupPrivateKeysViewModel()
+    subscribeToImportingAdditionalPrivateKeys()
   }
 
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
@@ -124,10 +124,6 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
-        Activity.RESULT_OK -> toast(R.string.key_successfully_imported, Toast.LENGTH_SHORT)
-      }
-
       REQUEST_CODE_DELETE_KEYS_DIALOG -> {
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> {
@@ -167,7 +163,7 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.parseKeysResultLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.parseKeysResultLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress()
@@ -190,8 +186,9 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
           toast(it.exception?.message, Toast.LENGTH_SHORT)
           countingIdlingResource.decrementSafely()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun initViews() {
@@ -214,19 +211,14 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
     }
 
     binding?.floatActionButtonAddKey?.setOnClickListener {
-      startActivityForResult(
-        ImportPrivateKeyActivity.getIntent(
-          context = requireContext(),
-          title = getString(R.string.import_private_key),
-          throwErrorIfDuplicateFoundEnabled = true,
-          cls = ImportPrivateKeyActivity::class.java,
-          isSubmittingPubKeysEnabled = false,
-          accountEntity = account,
-          isSyncEnabled = true,
-          skipImportedKeys = true
-        ),
-        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY
-      )
+      account?.let { accountEntity ->
+        navController?.navigate(
+          PrivateKeysListFragmentDirections
+            .actionPrivateKeysListFragmentToImportAdditionalPrivateKeysFragment(
+              accountEntity
+            )
+        )
+      }
     }
   }
 
@@ -283,9 +275,20 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
     }
   }
 
-  companion object {
+  private fun subscribeToImportingAdditionalPrivateKeys() {
+    setFragmentResultListener(
+      ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
+    ) { _, bundle ->
+      val keys = bundle.getParcelableArrayList<PgpKeyDetails>(
+        ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
+      )
+      if (keys?.isNotEmpty() == true) {
+        toast(R.string.key_successfully_imported)
+      }
+    }
+  }
 
-    private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0
+  companion object {
     private const val REQUEST_CODE_DELETE_KEYS_DIALOG = 100
 
     fun newInstance(): PrivateKeysListFragment {

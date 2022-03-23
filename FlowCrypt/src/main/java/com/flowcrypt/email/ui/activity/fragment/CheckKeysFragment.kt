@@ -79,7 +79,7 @@ class CheckKeysFragment : BaseFragment() {
         originalKeys = ArrayList(keyDetailsAndFingerprintsMap.keys)
 
         if (uniqueKeysCount == 0) {
-          returnResult(CANCELED)
+          returnResult(NO_NEW_KEYS)
           return
         }
       }
