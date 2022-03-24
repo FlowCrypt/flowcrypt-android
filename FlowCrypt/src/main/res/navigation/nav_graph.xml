@@ -272,6 +272,9 @@
         <argument
             android:name="publicKeyEntity"
             app:argType="com.flowcrypt.email.database.entity.PublicKeyEntity" />
+        <action
+            android:id="@+id/action_publicKeyDetailsFragment_to_editContactFragment"
+            app:destination="@id/editContactFragment" />
     </fragment>
 
     <fragment
@@ -539,6 +542,21 @@
             app:destination="@id/checkKeysFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/editContactFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.EditContactFragment"
+        tools:layout="@layout/fragment_edit_contact">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="publicKeyEntity"
+            app:argType="com.flowcrypt.email.database.entity.PublicKeyEntity" />
+        <action
+            android:id="@+id/action_editContactFragment_to_updateRecipientPublicKeyDialogFragment"
+            app:destination="@id/updateRecipientPublicKeyDialogFragment" />
+    </fragment>
+
     <dialog
         android:id="@+id/twoWayDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment">
@@ -712,6 +730,18 @@
         <argument
             android:name="screenshot"
             app:argType="com.flowcrypt.email.ui.activity.fragment.FeedbackFragment$Screenshot" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/updateRecipientPublicKeyDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyDialogFragment"
+        tools:layout="@layout/fragment_update_recipient_public_key">
+        <argument
+            android:name="publicKeyEntity"
+            app:argType="com.flowcrypt.email.database.entity.PublicKeyEntity" />
+        <argument
+            android:name="pgpKeyDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
     </dialog>
 
     <action

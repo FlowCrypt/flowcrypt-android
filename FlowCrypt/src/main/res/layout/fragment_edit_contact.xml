@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/layoutProgress"
+        layout="@layout/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textViewTitle"
+            style="@style/ScreenHeading"
+            android:layout_width="0dp"
+            android:layout_marginTop="0dp"
+            android:text="@string/enter_a_new_public_key_for_this_contact"
+            android:textSize="@dimen/default_text_size_medium"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutKeyIdOrEmail"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:layout_weight="1"
+            android:hint="@string/new_pub_key"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/buttonCheck"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewTitle">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextNewPubKey"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:ems="10"
+                android:gravity="start|top"
+                android:inputType="textMultiLine" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/buttonCheck"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/default_button_height"
+            android:layout_marginBottom="@dimen/default_margin_content"
+            android:enabled="false"
+            android:text="@string/check"
+            android:textColor="@color/white"
+            android:theme="@style/AppWidget.Button.Green.WithDisabled"
+            app:layout_constraintBottom_toTopOf="@+id/textView"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/default_margin_content"
+            android:text="@string/or"
+            android:textSize="@dimen/default_text_size_medium"
+            app:layout_constraintBottom_toTopOf="@+id/buttonLoadFromFile"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+
+        <Button
+            android:id="@+id/buttonLoadFromFile"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:text="@string/load_from_a_file"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintBottom_toTopOf="@+id/buttonLoadFromClipboard"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+
+        <Button
+            android:id="@+id/buttonLoadFromClipboard"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:layout_marginBottom="@dimen/default_margin_content_big"
+            android:text="@string/load_from_clipboard"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/default_margin_content_big" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineTop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_begin="@dimen/default_margin_content_big" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/default_margin_content_big" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_end="@dimen/default_margin_content_big" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

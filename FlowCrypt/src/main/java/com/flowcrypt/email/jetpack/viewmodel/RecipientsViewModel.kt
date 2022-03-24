@@ -84,6 +84,11 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   val addPublicKeyToRecipientStateFlow: StateFlow<Result<RecipientWithPubKeys>> =
     addPublicKeyToRecipientMutableStateFlow.asStateFlow()
 
+  private val updateRecipientPublicKeyMutableStateFlow: MutableStateFlow<Result<Boolean?>> =
+    MutableStateFlow(Result.none())
+  val updateRecipientPublicKeyStateFlow: StateFlow<Result<Boolean?>> =
+    updateRecipientPublicKeyMutableStateFlow.asStateFlow()
+
   fun contactChangesLiveData(recipientEntity: RecipientEntity): LiveData<RecipientWithPubKeys?> {
     return roomDatabase.recipientDao().getRecipientsWithPubKeysByEmailsLD(recipientEntity.email)
   }
@@ -194,13 +199,21 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
   fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
-      roomDatabase.pubKeyDao()
-        .updateSuspend(
-          pgpKeyDetails.toPublicKeyEntity(publicKeyEntity.recipient).copy(
-            id = publicKeyEntity.id,
-            recipient = publicKeyEntity.recipient
-          )
+      updateRecipientPublicKeyMutableStateFlow.value = Result.loading()
+
+      try {
+        updateRecipientPublicKeyMutableStateFlow.value = Result.success(
+          roomDatabase.pubKeyDao()
+            .updateSuspend(
+              pgpKeyDetails.toPublicKeyEntity(publicKeyEntity.recipient).copy(
+                id = publicKeyEntity.id,
+                recipient = publicKeyEntity.recipient
+              )
+            ) > 0
         )
+      } catch (e: Exception) {
+        updateRecipientPublicKeyMutableStateFlow.value = Result.exception(e)
+      }
     }
   }
 

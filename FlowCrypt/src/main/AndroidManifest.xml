@@ -125,11 +125,6 @@
             android:exported="false"
             android:launchMode="singleTop" />
 
-        <activity
-            android:name=".ui.activity.EditContactActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
         <!-- Providers -->
         <provider
             android:name="androidx.core.content.FileProvider"

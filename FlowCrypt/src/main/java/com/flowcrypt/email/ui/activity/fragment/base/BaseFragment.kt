@@ -104,6 +104,7 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
     super.onViewCreated(view, savedInstanceState)
     appBarLayout?.visibleOrGone(isToolbarVisible)
     supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
+    supportActionBar?.subtitle = null
     initAccountViewModel()
   }
 

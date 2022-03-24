@@ -39,7 +39,6 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.GeneralUtil
@@ -191,14 +190,17 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       }
 
       R.id.menuActionEdit -> {
-        startActivity(
-          EditContactActivity.newIntent(
-            requireContext(),
-            account,
-            cachedPublicKeyEntity
-          )
-        )
-
+        account?.let { accountEntity ->
+          cachedPublicKeyEntity?.let { publicKeyEntity ->
+            navController?.navigate(
+              PublicKeyDetailsFragmentDirections
+                .actionPublicKeyDetailsFragmentToEditContactFragment(
+                  accountEntity,
+                  publicKeyEntity
+                )
+            )
+          }
+        }
         return true
       }
 
