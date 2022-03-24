@@ -120,11 +120,6 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity
-            android:name=".ui.activity.CorruptedStorageActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
-
         <!-- Providers -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -197,8 +192,6 @@
         </service>
 
         <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
-
-        <receiver android:name=".broadcastreceivers.CorruptedStorageBroadcastReceiver" />
 
         <receiver
             android:name=".broadcastreceivers.AppUpdateBroadcastReceiver"
