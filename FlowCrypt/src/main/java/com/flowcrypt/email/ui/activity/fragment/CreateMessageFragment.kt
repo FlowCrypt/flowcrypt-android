@@ -76,7 +76,6 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
-import com.flowcrypt.email.ui.activity.SelectRecipientsActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -167,7 +166,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    subscribeToSetWebPortalPassword()
     initExtras(activity?.intent)
   }
 
@@ -187,6 +185,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
+    subscribeToSetWebPortalPassword()
+    subscribeToSelectRecipients()
 
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
@@ -236,12 +236,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           cachedRecipientWithoutPubKeys =
             data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
-          if (cachedRecipientWithoutPubKeys != null) {
-            startActivityForResult(
-              SelectRecipientsActivity.newIntent(
-                context,
-                getString(R.string.use_public_key_from), false
-              ), REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT
+          cachedRecipientWithoutPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
+                title = getString(R.string.use_public_key_from)
+              )
             )
           }
         }
@@ -281,35 +280,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           updateRecipients()
         }
       }*/
-
-      REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT -> {
-        when (resultCode) {
-          Activity.RESULT_OK -> if (data != null) {
-            val recipientEntity =
-              data.getParcelableExtra<RecipientEntity>(SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT)
-            recipientEntity?.let {
-              recipientsViewModel.copyPubKeysBetweenRecipients(
-                recipientEntity,
-                cachedRecipientWithoutPubKeys?.recipient
-              )
-
-              updateRecipients()
-              updateChips(binding?.editTextRecipientTo,
-                composeMsgViewModel.recipientWithPubKeysTo.map { it.recipientWithPubKeys })
-              updateChips(
-                binding?.editTextRecipientCc,
-                composeMsgViewModel.recipientWithPubKeysCc.map { it.recipientWithPubKeys })
-              updateChips(
-                binding?.editTextRecipientBcc,
-                composeMsgViewModel.recipientWithPubKeysBcc.map { it.recipientWithPubKeys })
-
-              Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
-            }
-          }
-        }
-
-        cachedRecipientWithoutPubKeys = null
-      }
 
       REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
         Activity.RESULT_OK -> {
@@ -1447,7 +1417,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
-    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, {
+    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
         aliases.add(accountEntity.email)
@@ -1489,7 +1459,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
 
       showContent()
-    })
+    }
   }
 
   private fun setupPrivateKeysViewModel() {
@@ -1887,10 +1857,39 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     }
   }
 
+  private fun subscribeToSelectRecipients() {
+    setFragmentResultListener(
+      SelectRecipientsFragment.REQUEST_KEY_SELECT_RECIPIENTS
+    ) { _, bundle ->
+      val list =
+        bundle.getParcelableArrayList<RecipientEntity>(SelectRecipientsFragment.KEY_RECIPIENTS)
+      list?.let { recipients ->
+        val recipientEntity = recipients.firstOrNull() ?: return@let
+        recipientsViewModel.copyPubKeysBetweenRecipients(
+          recipientEntity,
+          cachedRecipientWithoutPubKeys?.recipient
+        )
+
+        updateRecipients()
+        updateChips(binding?.editTextRecipientTo,
+          composeMsgViewModel.recipientWithPubKeysTo.map { it.recipientWithPubKeys })
+        updateChips(
+          binding?.editTextRecipientCc,
+          composeMsgViewModel.recipientWithPubKeysCc.map { it.recipientWithPubKeys })
+        updateChips(
+          binding?.editTextRecipientBcc,
+          composeMsgViewModel.recipientWithPubKeysBcc.map { it.recipientWithPubKeys })
+
+        Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
+
+        cachedRecipientWithoutPubKeys = null
+      }
+    }
+  }
+
   companion object {
     private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
     private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
-    private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT = 103
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 107
     private val TAG = CreateMessageFragment::class.java.simpleName

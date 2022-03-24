@@ -509,6 +509,9 @@
         <action
             android:id="@+id/action_createMessageFragment_to_importMissingPublicKeyFragment"
             app:destination="@id/importMissingPublicKeyFragment" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_selectRecipientsFragment"
+            app:destination="@id/selectRecipientsFragment" />
     </fragment>
 
     <fragment
@@ -555,6 +558,22 @@
         <action
             android:id="@+id/action_editContactFragment_to_updateRecipientPublicKeyDialogFragment"
             app:destination="@id/updateRecipientPublicKeyDialogFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/selectRecipientsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.SelectRecipientsFragment"
+        tools:layout="@layout/fragment_select_recipients">
+
+        <argument
+            android:name="useMultipleMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="title"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </fragment>
 
     <dialog
