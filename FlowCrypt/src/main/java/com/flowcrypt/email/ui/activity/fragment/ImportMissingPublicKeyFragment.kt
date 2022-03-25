@@ -19,6 +19,7 @@ import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportMissingPublicKeyBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -29,13 +30,15 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDia
 import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.material.snackbar.Snackbar
 
-class ImportMissingPublicKeyFragment : BaseImportKeyFragment() {
-  private var binding: FragmentImportMissingPublicKeyBinding? = null
+class ImportMissingPublicKeyFragment :
+  BaseImportKeyFragment<FragmentImportMissingPublicKeyBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentImportMissingPublicKeyBinding.inflate(inflater, container, false)
+
   private val args by navArgs<ImportMissingPublicKeyFragmentArgs>()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
   override val isPrivateKeyMode: Boolean = false
-  override val contentResourceId: Int = R.layout.fragment_import_missing_public_key
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
@@ -121,7 +124,7 @@ class ImportMissingPublicKeyFragment : BaseImportKeyFragment() {
       recipientsViewModel.addPublicKeyToRecipientStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -132,7 +135,7 @@ class ImportMissingPublicKeyFragment : BaseImportKeyFragment() {
                 bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
               )
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -142,7 +145,7 @@ class ImportMissingPublicKeyFragment : BaseImportKeyFragment() {
             } else exception.message
 
             showInfoSnackbar(msgText = errorMsg)
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {
           }

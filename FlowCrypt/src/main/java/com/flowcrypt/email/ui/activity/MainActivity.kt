@@ -122,7 +122,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
     } ?: fragments?.firstOrNull {
       it is AddOtherAccountFragment
     }
-    val oAuthFragment = fragment as? BaseOAuthFragment
+    val oAuthFragment = fragment as? BaseOAuthFragment<*>
     oAuthFragment?.handleOAuth2Intent(intent)
   }
 

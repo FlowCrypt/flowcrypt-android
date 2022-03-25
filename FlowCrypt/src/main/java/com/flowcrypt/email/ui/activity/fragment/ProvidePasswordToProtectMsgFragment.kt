@@ -28,12 +28,13 @@ import com.flowcrypt.email.jetpack.viewmodel.WebPortalPasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.UIUtil
 
-class ProvidePasswordToProtectMsgFragment : BaseFragment() {
-  private var binding: FragmentProvidePasswordToProtectMsgBinding? = null
+class ProvidePasswordToProtectMsgFragment :
+  BaseFragment<FragmentProvidePasswordToProtectMsgBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentProvidePasswordToProtectMsgBinding.inflate(inflater, container, false)
+
   private val args by navArgs<ProvidePasswordToProtectMsgFragmentArgs>()
   private val webPortalPasswordStrengthViewModel: WebPortalPasswordStrengthViewModel by viewModels()
-
-  override val contentResourceId: Int = R.layout.fragment_provide_password_to_protect_msg
 
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -44,7 +45,6 @@ class ProvidePasswordToProtectMsgFragment : BaseFragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.web_portal_password)
     initViews()
     initWebPortalPasswordStrengthViewModel()
   }

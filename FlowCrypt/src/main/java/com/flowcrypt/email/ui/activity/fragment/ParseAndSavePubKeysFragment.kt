@@ -19,6 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentParseAndSavePubKeysBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -38,14 +39,15 @@ import com.flowcrypt.email.ui.adapter.ImportOrUpdatePubKeysRecyclerViewAdapter
  *         Time: 4:09 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
+class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBinding>(),
+  ListProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentParseAndSavePubKeysBinding.inflate(inflater, container, false)
+
   private val args by navArgs<ParseAndSavePubKeysFragmentArgs>()
   private val importPubKeysFromSourceSharedViewModel: ImportPubKeysFromSourceSharedViewModel
       by activityViewModels()
   private val cachedPubKeysKeysViewModel: CachedPubKeysKeysViewModel by viewModels()
-  private var binding: FragmentParseAndSavePubKeysBinding? = null
-
-  override val contentResourceId: Int = R.layout.fragment_parse_and_save_pub_keys
 
   override val emptyView: View?
     get() = binding?.emptyView
@@ -85,7 +87,6 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.add_contact)
     initViews()
 
     setupImportPubKeysFromSourceSharedViewModel()
@@ -110,7 +111,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress()
           }
 
@@ -123,7 +124,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
               pubKeysAdapter.submitList(pgpKeyDetailsList)
               showContent()
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -131,7 +132,7 @@ class ParseAndSavePubKeysFragment : BaseFragment(), ListProgressBehaviour {
               getString(R.string.source_has_wrong_pgp_structure, getString(R.string.public_))
             )
             showInfoDialogWithExceptionDetails(it.exception)
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           else -> {

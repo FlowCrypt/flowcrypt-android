@@ -13,6 +13,7 @@ import androidx.fragment.app.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentSearchBackupsInEmailBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
@@ -28,8 +29,11 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
  * Time: 15:27
  * E-mail: DenBond7@gmail.com
  */
-class SearchBackupsInEmailFragment : BaseFragment(), ProgressBehaviour {
-  private var binding: FragmentSearchBackupsInEmailBinding? = null
+class SearchBackupsInEmailFragment : BaseFragment<FragmentSearchBackupsInEmailBinding>(),
+  ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentSearchBackupsInEmailBinding.inflate(inflater, container, false)
+
   private val backupsViewModel: BackupsViewModel by viewModels()
 
   override val progressView: View?
@@ -38,8 +42,6 @@ class SearchBackupsInEmailFragment : BaseFragment(), ProgressBehaviour {
     get() = binding?.gContent
   override val statusView: View?
     get() = binding?.iStatus?.root
-
-  override val contentResourceId: Int = R.layout.fragment_search_backups_in_email
 
   override fun onCreateView(
     inflater: LayoutInflater,
@@ -52,7 +54,6 @@ class SearchBackupsInEmailFragment : BaseFragment(), ProgressBehaviour {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.backups)
     initViews()
     initBackupsViewModel()
   }
@@ -67,10 +68,10 @@ class SearchBackupsInEmailFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun initBackupsViewModel() {
-    backupsViewModel.onlineBackupsLiveData.observe(viewLifecycleOwner, {
+    backupsViewModel.onlineBackupsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           showProgress()
         }
 
@@ -84,19 +85,19 @@ class SearchBackupsInEmailFragment : BaseFragment(), ProgressBehaviour {
             binding?.btBackup?.text = getString(R.string.see_more_backup_options)
           }
           showContent()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           toast(it.exceptionMsg)
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
           navController?.navigateUp()
         }
 
         else -> {
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
       }
-    })
+    }
   }
 }

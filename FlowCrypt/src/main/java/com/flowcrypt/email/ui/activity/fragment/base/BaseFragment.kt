@@ -10,23 +10,23 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.ActionBar
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.test.espresso.idling.CountingIdlingResource
+import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
-import com.flowcrypt.email.extensions.shutdown
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
-import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 
@@ -38,51 +38,33 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseFragment : Fragment(), UiUxSettings {
+abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
+  protected var binding: T? = null
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
+  protected val account: AccountEntity?
+    get() = accountViewModel.activeAccountLiveData.value
+  private lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
+  private val loggingTag: String = javaClass.simpleName
 
-  protected var account: AccountEntity? = null
-  protected var isAccountInfoReceived = false
+  protected abstract fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): T
 
-  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(
-    GeneralUtil.genIdlingResourcesName(this::class.java),
-    GeneralUtil.isDebugBuild()
-  )
-
-  /**
-   * Get the content view resources id. This method must return an resources id of a layout
-   * if we want to show some UI.
-   *
-   * @return The content view resources id.
-   */
-  abstract val contentResourceId: Int
-
-  protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
-
-  /**
-   * This method returns information about an availability of a "back press action" at the
-   * current moment.
-   *
-   * @return true if a back press action enable at current moment, false otherwise.
-   */
-  var isBackPressedEnabled = true
-  var snackBar: Snackbar? = null
+  protected var snackBar: Snackbar? = null
     private set
-
-  val supportActionBar: ActionBar?
-    get() = if (activity is AppCompatActivity) {
-      (activity as AppCompatActivity).supportActionBar
-    } else
-      null
 
   val appBarLayout: AppBarLayout?
     get() = activity?.findViewById(R.id.appBarLayout)
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
+    LogsUtil.d(loggingTag, "onAttach")
     connectionLifecycleObserver = ConnectionLifecycleObserver(context)
     lifecycle.addObserver(connectionLifecycleObserver)
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    LogsUtil.d(loggingTag, "onCreate")
   }
 
   override fun onCreateView(
@@ -90,27 +72,70 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
     container: ViewGroup?,
     savedInstanceState: Bundle?
   ): View? {
-    return if (contentResourceId > 0) {
-      inflater.inflate(contentResourceId, container, false)
-    } else super.onCreateView(inflater, container, savedInstanceState)
+    LogsUtil.d(loggingTag, "onCreateView")
+    binding = inflateBinding(inflater, container)
+    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    LogsUtil.d(loggingTag, "onViewCreated")
     appBarLayout?.visibleOrGone(isToolbarVisible)
     supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
     supportActionBar?.subtitle = null
     initAccountViewModel()
   }
 
-  override fun onDetach() {
-    super.onDetach()
-    lifecycle.removeObserver(connectionLifecycleObserver)
+  override fun onStart() {
+    super.onStart()
+    LogsUtil.d(loggingTag, "onStart")
+  }
+
+  override fun onResume() {
+    super.onResume()
+    LogsUtil.d(loggingTag, "onResume")
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    super.onCreateOptionsMenu(menu, inflater)
+    LogsUtil.d(loggingTag, "onCreateOptionsMenu")
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu) {
+    super.onPrepareOptionsMenu(menu)
+    LogsUtil.d(loggingTag, "onPrepareOptionsMenu")
+  }
+
+  override fun onPause() {
+    super.onPause()
+    LogsUtil.d(loggingTag, "onPause")
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    LogsUtil.d(loggingTag, "onSaveInstanceState")
+  }
+
+  override fun onStop() {
+    super.onStop()
+    LogsUtil.d(loggingTag, "onStop")
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    LogsUtil.d(loggingTag, "onDestroyView")
+    binding = null
   }
 
   override fun onDestroy() {
     super.onDestroy()
-    countingIdlingResource.shutdown()
+    LogsUtil.d(loggingTag, "onDestroy")
+  }
+
+  override fun onDetach() {
+    super.onDetach()
+    LogsUtil.d(loggingTag, "onDetach")
+    lifecycle.removeObserver(connectionLifecycleObserver)
   }
 
   open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -187,11 +212,11 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
 
   }
 
-  fun dismissCurrentSnackBar() {
+  protected fun dismissCurrentSnackBar() {
     snackBar?.dismiss()
   }
 
-  fun isConnected(): Boolean {
+  protected fun isConnected(): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       connectionLifecycleObserver.connectionLiveData.value ?: false
     } else {
@@ -229,9 +254,7 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
 
   private fun initAccountViewModel() {
     accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner) {
-      account = it
-      isAccountInfoReceived = true
-      onAccountInfoRefreshed(account)
+      onAccountInfoRefreshed(it)
     }
   }
 }

@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.setFragmentResultListener
+import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment
@@ -21,7 +22,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDia
  *         Time: 3:50 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseImportKeyFragment : BaseFragment() {
+abstract class BaseImportKeyFragment<T : ViewBinding> : BaseFragment<T>() {
   abstract val isPrivateKeyMode: Boolean
   abstract fun handleSelectedFile(uri: Uri)
   abstract fun handleClipboard(pgpKeysAsString: String?)

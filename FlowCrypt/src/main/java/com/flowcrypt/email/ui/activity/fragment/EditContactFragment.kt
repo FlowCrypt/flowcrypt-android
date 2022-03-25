@@ -17,6 +17,7 @@ import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentEditContactBinding
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -31,11 +32,12 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyD
  *         Time: 11:58 AM
  *         E-mail: DenBond7@gmail.com
  */
-class EditContactFragment : BaseImportKeyFragment(), ProgressBehaviour {
-  private var binding: FragmentEditContactBinding? = null
+class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(), ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentEditContactBinding.inflate(inflater, container, false)
+
   private val args by navArgs<EditContactFragmentArgs>()
 
-  override val contentResourceId: Int = R.layout.fragment_edit_contact
   override val isPrivateKeyMode = false
 
   override val progressView: View?

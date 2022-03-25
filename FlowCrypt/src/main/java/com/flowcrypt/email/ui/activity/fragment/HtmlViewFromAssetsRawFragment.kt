@@ -10,8 +10,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentHtmlViewFromAssetsRawBinding
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 
 /**
@@ -20,11 +20,11 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
  *         Time: 6:05 PM
  *         E-mail: DenBond7@gmail.com
  */
-class HtmlViewFromAssetsRawFragment : BaseFragment() {
-  private var binding: FragmentHtmlViewFromAssetsRawBinding? = null
-  private val args by navArgs<HtmlViewFromAssetsRawFragmentArgs>()
+class HtmlViewFromAssetsRawFragment : BaseFragment<FragmentHtmlViewFromAssetsRawBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentHtmlViewFromAssetsRawBinding.inflate(inflater, container, false)
 
-  override val contentResourceId: Int = R.layout.fragment_html_view_from_assets_raw
+  private val args by navArgs<HtmlViewFromAssetsRawFragmentArgs>()
 
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?

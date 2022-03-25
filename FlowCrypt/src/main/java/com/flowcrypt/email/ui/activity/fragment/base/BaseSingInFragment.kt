@@ -8,11 +8,13 @@ package com.flowcrypt.email.ui.activity.fragment.base
 import android.app.Activity
 import android.content.Intent
 import androidx.fragment.app.viewModels
+import androidx.viewbinding.ViewBinding
 import androidx.work.WorkManager
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -33,7 +35,7 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 6:29 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
+abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   protected val existingAccounts = mutableListOf<AccountEntity>()
@@ -54,13 +56,13 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress(getString(R.string.processing))
           }
 
           Result.Status.SUCCESS -> {
             it.data?.let { pair -> onSetupCompleted(pair.first, pair.second) }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -86,7 +88,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                 ?: getString(R.string.unknown_error)
               )
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {}
         }
@@ -96,7 +98,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress(getString(R.string.processing))
           }
 
@@ -107,7 +109,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                 pair.second
               )
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -118,7 +120,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
               msgText = e?.message ?: e?.javaClass?.simpleName
               ?: getString(R.string.unknown_error)
             )
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {}
         }

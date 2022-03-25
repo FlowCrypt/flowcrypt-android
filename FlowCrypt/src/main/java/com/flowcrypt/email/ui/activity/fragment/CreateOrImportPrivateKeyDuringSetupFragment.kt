@@ -14,7 +14,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.databinding.FragmentCreateOrImportPrivateKeyDuringSetupBinding
 import com.flowcrypt.email.extensions.gone
@@ -33,11 +32,13 @@ import com.flowcrypt.email.util.GeneralUtil
  *         Time: 12:16 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CreateOrImportPrivateKeyDuringSetupFragment : BaseFragment() {
-  private var binding: FragmentCreateOrImportPrivateKeyDuringSetupBinding? = null
+class CreateOrImportPrivateKeyDuringSetupFragment :
+  BaseFragment<FragmentCreateOrImportPrivateKeyDuringSetupBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentCreateOrImportPrivateKeyDuringSetupBinding.inflate(inflater, container, false)
+
   private val args by navArgs<CreateOrImportPrivateKeyDuringSetupFragmentArgs>()
 
-  override val contentResourceId = R.layout.fragment_create_or_import_private_key_during_setup
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 

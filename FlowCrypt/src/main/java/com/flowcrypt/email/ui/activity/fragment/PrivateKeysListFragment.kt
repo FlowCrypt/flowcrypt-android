@@ -28,6 +28,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentPrivateKeysBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -51,9 +52,10 @@ import com.flowcrypt.email.ui.adapter.selection.PrivateKeyItemDetailsLookup
  * Time: 10:30
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
+class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), ListProgressBehaviour,
   PrivateKeysRecyclerViewAdapter.OnKeySelectedListener {
-  private var binding: FragmentPrivateKeysBinding? = null
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentPrivateKeysBinding.inflate(inflater, container, false)
 
   private val recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(this)
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
@@ -89,8 +91,6 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
     get() = binding?.groupContent
   override val statusView: View? = null
 
-  override val contentResourceId: Int = R.layout.fragment_private_keys
-
   override fun onCreateView(
     inflater: LayoutInflater,
     container: ViewGroup?,
@@ -102,7 +102,6 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.keys)
     initViews()
     setupPrivateKeysViewModel()
     subscribeToImportingAdditionalPrivateKeys()
@@ -167,7 +166,7 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress()
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -178,13 +177,13 @@ class PrivateKeysListFragment : BaseFragment(), ListProgressBehaviour,
           } else {
             showContent()
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           showContent()
           toast(it.exception?.message, Toast.LENGTH_SHORT)
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
         else -> {}
       }

@@ -38,13 +38,13 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 3:55 PM
  *         E-mail: DenBond7@gmail.com
  */
-class FeedbackFragment : BaseFragment() {
+class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentFeedbackBinding.inflate(inflater, container, false)
+
   private val args by navArgs<FeedbackFragmentArgs>()
-  private var binding: FragmentFeedbackBinding? = null
   private var bitmapRaw: ByteArray = byteArrayOf()
   private lateinit var bitmap: Bitmap
-
-  override val contentResourceId: Int = R.layout.fragment_feedback
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

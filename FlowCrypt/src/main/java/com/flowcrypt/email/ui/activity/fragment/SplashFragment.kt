@@ -6,10 +6,12 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.get
-import com.flowcrypt.email.extensions.actionBar
+import com.flowcrypt.email.databinding.FragmentSplashBinding
 import com.flowcrypt.email.extensions.mainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 
@@ -19,8 +21,10 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
  *         Time: 8:13 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SplashFragment : BaseFragment() {
-  override val contentResourceId: Int = -1
+class SplashFragment : BaseFragment<FragmentSplashBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentSplashBinding.inflate(inflater, container, false)
+
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
@@ -39,8 +43,6 @@ class SplashFragment : BaseFragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    actionBar?.setDisplayHomeAsUpEnabled(false)
-    actionBar?.setHomeButtonEnabled(false)
     mainActivity?.setDrawerLockMode(true)
   }
 }

@@ -23,9 +23,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.databinding.FragmentSelectRecipientsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -38,8 +40,11 @@ import com.flowcrypt.email.util.GeneralUtil
  *         Time: 3:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SelectRecipientsFragment : BaseFragment(), ListProgressBehaviour {
-  private var binding: FragmentSelectRecipientsBinding? = null
+class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>(),
+  ListProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentSelectRecipientsBinding.inflate(inflater, container, false)
+
   private val args by navArgs<SelectRecipientsFragmentArgs>()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
@@ -61,7 +66,6 @@ class SelectRecipientsFragment : BaseFragment(), ListProgressBehaviour {
 
   private var searchPattern: String = ""
 
-  override val contentResourceId: Int = R.layout.fragment_select_recipients
   override val progressView: View?
     get() = binding?.layoutProgress?.root
   override val contentView: View?
@@ -139,7 +143,7 @@ class SelectRecipientsFragment : BaseFragment(), ListProgressBehaviour {
     recipientsViewModel.contactsWithPgpSearchLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely("searchPattern = $searchPattern")
+          countingIdlingResource?.incrementSafely("searchPattern = $searchPattern")
           showProgress()
         }
 
@@ -150,7 +154,7 @@ class SelectRecipientsFragment : BaseFragment(), ListProgressBehaviour {
             recipientsRecyclerViewAdapter.submitList(it.data)
             showContent()
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {}

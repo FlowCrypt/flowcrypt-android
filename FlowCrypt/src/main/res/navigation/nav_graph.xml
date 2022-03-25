@@ -107,6 +107,7 @@
     <fragment
         android:id="@+id/createPrivateKeySecondFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeySecondFragment"
+        android:label="@string/security"
         tools:layout="@layout/fragment_create_private_key_second">
         <argument
             android:name="accountEntity"
@@ -181,6 +182,7 @@
     <fragment
         android:id="@+id/checkPassphraseStrengthFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment"
+        android:label="@string/security"
         tools:layout="@layout/fragment_check_passphrase_strength">
         <argument
             android:name="popBackStackIdIfSuccess"
@@ -201,6 +203,7 @@
     <fragment
         android:id="@+id/recheckProvidedPassphraseFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment"
+        android:label="@string/security"
         tools:layout="@layout/fragment_recheck_provided_passphrase">
         <argument
             android:name="popBackStackIdIfSuccess"
@@ -216,6 +219,7 @@
     <fragment
         android:id="@+id/changePassphraseOfImportedKeysFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ChangePassphraseOfImportedKeysFragment"
+        android:label="@string/security"
         tools:layout="@layout/fragment_change_passphrase_of_imported_keys">
         <argument
             android:name="popBackStackIdIfSuccess"
@@ -241,6 +245,7 @@
     <fragment
         android:id="@+id/recipientsListFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.RecipientsListFragment"
+        android:label="@string/contacts"
         tools:layout="@layout/fragment_recipients_list">
         <action
             android:id="@+id/action_recipientsListFragment_to_importRecipientsFromSourceFragment"
@@ -253,6 +258,7 @@
     <fragment
         android:id="@+id/recipientDetailsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.RecipientDetailsFragment"
+        android:label="@string/recipient_detail"
         tools:layout="@layout/fragment_recipient_details">
         <action
             android:id="@+id/action_recipientDetailsFragment_to_publicKeyDetailsFragment"
@@ -265,6 +271,7 @@
     <fragment
         android:id="@+id/publicKeyDetailsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragment"
+        android:label="@string/pub_key"
         tools:layout="@layout/fragment_public_key_details">
         <argument
             android:name="recipientEntity"
@@ -280,6 +287,7 @@
     <fragment
         android:id="@+id/privateKeysListFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment"
+        android:label="@string/keys"
         tools:layout="@layout/fragment_private_keys">
         <action
             android:id="@+id/action_privateKeysListFragment_to_privateKeyDetailsFragment"
@@ -292,6 +300,7 @@
     <fragment
         android:id="@+id/privateKeyDetailsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment"
+        android:label="@string/key_details"
         tools:layout="@layout/fragment_private_key_details">
         <argument
             android:name="fingerprint"
@@ -301,6 +310,7 @@
     <fragment
         android:id="@+id/attesterSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment"
+        android:label="@string/attester"
         tools:layout="@layout/fragment_attester_settings" />
 
     <fragment
@@ -310,11 +320,13 @@
     <fragment
         android:id="@+id/legalSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment"
+        android:label="@string/legal"
         tools:layout="@layout/fragment_legal" />
 
     <fragment
         android:id="@+id/serverSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ServerSettingsFragment"
+        android:label="@string/server_settings"
         tools:layout="@layout/fragment_server_settings">
         <action
             android:id="@+id/action_serverSettingsFragment_to_checkCredentialsFragment"
@@ -351,6 +363,7 @@
     <fragment
         android:id="@+id/searchBackupsInEmailFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragment"
+        android:label="@string/backups"
         tools:layout="@layout/fragment_search_backups_in_email">
         <action
             android:id="@+id/action_searchBackupsInEmailFragment_to_backupKeysFragment"
@@ -360,6 +373,7 @@
     <fragment
         android:id="@+id/backupKeysFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment"
+        android:label="@string/backup_options"
         tools:layout="@layout/fragment_backup_keys">
         <action
             android:id="@+id/action_backupKeysFragment_to_checkPassphraseStrengthFragment"
@@ -380,6 +394,7 @@
     <fragment
         android:id="@+id/importRecipientsFromSourceFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ImportRecipientsFromSourceFragment"
+        android:label="@string/add_contact"
         tools:layout="@layout/fragment_import_recipients_from_source">
         <action
             android:id="@+id/action_importRecipientsFromSourceFragment_to_parseAndSavePubKeysFragment"
@@ -393,6 +408,7 @@
     <fragment
         android:id="@+id/parseAndSavePubKeysFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ParseAndSavePubKeysFragment"
+        android:label="@string/add_contact"
         tools:layout="@layout/fragment_parse_and_save_pub_keys">
         <argument
             android:name="source"
@@ -517,6 +533,7 @@
     <fragment
         android:id="@+id/providePasswordToProtectMsgFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragment"
+        android:label="@string/web_portal_password"
         tools:layout="@layout/fragment_provide_password_to_protect_msg">
         <argument
             android:name="defaultPassword"

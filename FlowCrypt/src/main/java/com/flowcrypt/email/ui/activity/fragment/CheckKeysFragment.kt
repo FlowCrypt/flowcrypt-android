@@ -19,6 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentCheckKeysBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -47,8 +48,10 @@ import java.nio.charset.StandardCharsets
  *         Time: 7:28 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CheckKeysFragment : BaseFragment() {
-  private var binding: FragmentCheckKeysBinding? = null
+class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentCheckKeysBinding.inflate(inflater, container, false)
+
   private val args by navArgs<CheckKeysFragmentArgs>()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
 
@@ -59,7 +62,6 @@ class CheckKeysFragment : BaseFragment() {
 
   private var uniqueKeysCount: Int = 0
 
-  override val contentResourceId = R.layout.fragment_check_keys
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
@@ -184,7 +186,7 @@ class CheckKeysFragment : BaseFragment() {
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           binding?.progressBar?.visibility = View.VISIBLE
         }
 
@@ -248,7 +250,7 @@ class CheckKeysFragment : BaseFragment() {
             else -> {
             }
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
       }
     }

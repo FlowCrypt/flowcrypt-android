@@ -39,6 +39,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentMessagesListBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -81,10 +82,11 @@ import javax.mail.AuthenticationFailedException
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
+class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListProgressBehaviour,
   SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
 
-  private var binding: FragmentMessagesListBinding? = null
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentMessagesListBinding.inflate(inflater, container, false)
 
   override val emptyView: View?
     get() = binding?.empty?.root
@@ -108,8 +110,6 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
 
   private lateinit var adapter: MsgsPagedListAdapter
   private var keepSelectionInMemory = false
-
-  override val contentResourceId: Int = R.layout.fragment_messages_list
 
   private val isOutboxFolder: Boolean
     get() {
@@ -142,7 +142,6 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter(this)
-    setupConnectionNotifier()
   }
 
   override fun onCreateView(
@@ -880,7 +879,7 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
       when (it.status) {
         Result.Status.LOADING -> {
           if (it.progress == null) {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
           }
 
           if (binding?.rVMsgs?.adapter?.itemCount == 0) {
@@ -932,7 +931,7 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
         Result.Status.SUCCESS -> {
           setActionProgress(100)
           showContent()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -953,11 +952,11 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
                 ?: getString(R.string.can_not_connect_to_the_server)
             )
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
       }
     }
@@ -986,7 +985,7 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
     msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner) { result ->
       when (result.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           binding?.sRL?.isRefreshing = true
         }
 
@@ -1017,7 +1016,7 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
             }
           }
 
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
       }
     }
@@ -1027,13 +1026,13 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
     labelsViewModel.loadLabelsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           setActionProgress(0, getString(R.string.loading_labels))
         }
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -1044,11 +1043,11 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
           } else {
             showStatus(msg = it.exception?.message)
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
       }
     }
@@ -1104,12 +1103,6 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
     }
   }
 
-  private fun setupConnectionNotifier() {
-    connectionLifecycleObserver.connectionLiveData.observe(this) {
-      //do nothing yet
-    }
-  }
-
   private fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
     keepSelectionInMemory = false
     actionMode?.finish()
@@ -1139,13 +1132,7 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
     } ?: labelsViewModel.loadLabels()
   }
 
-  interface OnManageEmailsListener {
-    val currentFolder: LocalFolder?
-    fun onRetryGoogleAuth()
-  }
-
   companion object {
-    private const val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
     private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 11
     private const val REQUEST_CODE_ERROR_DURING_CREATION = 12
     private const val REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE = 13

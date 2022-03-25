@@ -34,6 +34,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentPublicKeyDetailsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -58,9 +59,12 @@ import java.util.Date
  *         E-mail: DenBond7@gmail.com
  */
 @ExperimentalCoroutinesApi
-class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
+class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>(),
+  ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentPublicKeyDetailsBinding.inflate(inflater, container, false)
+
   private val args by navArgs<PublicKeyDetailsFragmentArgs>()
-  private var binding: FragmentPublicKeyDetailsBinding? = null
   private val publicKeyDetailsViewModel: PublicKeyDetailsViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -75,8 +79,6 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
 
   private val savePubKeyActivityResultLauncher =
     registerForActivityResult(ExportPubKeyCreateDocument()) { uri: Uri? -> uri?.let { saveKey(it) } }
-
-  override val contentResourceId: Int = R.layout.fragment_public_key_details
 
   override val progressView: View?
     get() = binding?.progress?.root
@@ -98,17 +100,12 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     return binding?.root
   }
 
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.pub_key)
-  }
-
   private fun setupPublicKeyDetailsViewModel() {
     lifecycleScope.launchWhenStarted {
       publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress()
           }
 
@@ -121,7 +118,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               updateViews(pgpKeyDetails)
               showContent()
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -144,7 +141,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
                 dialogMsg = msg
               )
             )
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {}
         }

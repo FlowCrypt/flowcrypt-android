@@ -20,6 +20,7 @@ import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportAdditionalPrivateKeysBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -43,14 +44,16 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 4:53 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ImportAdditionalPrivateKeysFragment : BaseImportKeyFragment(), ProgressBehaviour {
-  private var binding: FragmentImportAdditionalPrivateKeysBinding? = null
+class ImportAdditionalPrivateKeysFragment :
+  BaseImportKeyFragment<FragmentImportAdditionalPrivateKeysBinding>(), ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentImportAdditionalPrivateKeysBinding.inflate(inflater, container, false)
+
   private val args by navArgs<ImportAdditionalPrivateKeysFragmentArgs>()
   private val backupsViewModel: BackupsViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override val isPrivateKeyMode: Boolean = true
-  override val contentResourceId: Int = R.layout.fragment_import_additional_private_keys
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
@@ -140,7 +143,7 @@ class ImportAdditionalPrivateKeysFragment : BaseImportKeyFragment(), ProgressBeh
     backupsViewModel.onlineBackupsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           showProgress(progressMsg = getString(R.string.loading_backups))
         }
 
@@ -180,14 +183,14 @@ class ImportAdditionalPrivateKeysFragment : BaseImportKeyFragment(), ProgressBeh
             binding?.buttonImportBackup?.gone()
           }
           showContent()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           binding?.buttonImportBackup?.gone()
           toast(R.string.error_occurred_while_receiving_private_keys)
           showContent()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {}
@@ -200,7 +203,7 @@ class ImportAdditionalPrivateKeysFragment : BaseImportKeyFragment(), ProgressBeh
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress(getString(R.string.processing))
           }
 
@@ -212,7 +215,7 @@ class ImportAdditionalPrivateKeysFragment : BaseImportKeyFragment(), ProgressBeh
               )
               navController?.navigateUp()
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -236,7 +239,7 @@ class ImportAdditionalPrivateKeysFragment : BaseImportKeyFragment(), ProgressBeh
                 ?: getString(R.string.unknown_error)
               )
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {}
         }

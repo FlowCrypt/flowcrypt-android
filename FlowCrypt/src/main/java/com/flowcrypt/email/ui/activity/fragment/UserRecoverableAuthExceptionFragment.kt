@@ -11,7 +11,9 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
@@ -26,6 +28,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.databinding.FragmentUserRecoverableAuthExceptionBinding
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MainActivity
@@ -43,19 +46,21 @@ import java.util.Locale
  *         Time: 12:18 PM
  *         E-mail: DenBond7@gmail.com
  */
-class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehaviour {
+class UserRecoverableAuthExceptionFragment :
+  BaseOAuthFragment<FragmentUserRecoverableAuthExceptionBinding>(), ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentUserRecoverableAuthExceptionBinding.inflate(inflater, container, false)
+
   private val args by navArgs<UserRecoverableAuthExceptionFragmentArgs>()
 
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.layoutContent)
+    get() = binding?.layoutContent
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
   private lateinit var textViewExplanation: TextView
-
-  override val contentResourceId: Int = R.layout.fragment_user_recoverable_auth_exception
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -65,8 +70,6 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     ErrorNotificationManager(requireContext()).cancel(R.id.notification_id_auth_failure)
-
-    supportActionBar?.title = null
     initViews(view)
     setupOAuth2AuthCredentialsViewModel()
   }
@@ -209,7 +212,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
       }
     }
 
-    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_account_details))
@@ -257,7 +260,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
         else -> {
         }
       }
-    })
+    }
   }
 
   companion object {

@@ -57,6 +57,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.databinding.FragmentCreateMessageBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -66,6 +67,7 @@ import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -76,7 +78,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -114,9 +116,13 @@ import javax.mail.internet.InternetAddress
  * Time: 11:27
  * E-mail: DenBond7@gmail.com
  */
-class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
+class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
+  View.OnFocusChangeListener,
   AdapterView.OnItemSelectedListener,
   View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
+
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentCreateMessageBinding.inflate(inflater, container, false)
 
   private lateinit var draftCacheDir: File
 
@@ -132,7 +138,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     }
   }
 
-  private var binding: FragmentCreateMessageBinding? = null
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
@@ -146,11 +151,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private var isIncomingMsgInfoUsed: Boolean = false
   private var isMsgSentToQueue: Boolean = false
   private var originalColor: Int = 0
-
-  override val contentResourceId: Int = R.layout.fragment_create_message
-
-  override val contentView: View?
-    get() = binding?.scrollView
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -964,8 +964,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun showContent() {
-    UIUtil.exchangeViewVisibility(false, progressView, contentView)
-
     if ((args.incomingMessageInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
       this.isIncomingMsgInfoUsed = true
       updateViews()
@@ -1519,7 +1517,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       when (it.status) {
         Result.Status.LOADING -> {
           updateState.invoke(false)
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           progressBar?.visible()
         }
 
@@ -1529,14 +1527,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           it.data?.let { list ->
             composeMsgViewModel.replaceRecipients(recipientType, list)
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           updateState.invoke(true)
           progressBar?.invisible()
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.NONE -> {}

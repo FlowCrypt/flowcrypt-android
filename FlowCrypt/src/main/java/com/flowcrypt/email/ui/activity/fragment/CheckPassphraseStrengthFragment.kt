@@ -30,11 +30,13 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 20:15
  * E-mail: DenBond7@gmail.com
  */
-class CheckPassphraseStrengthFragment : BasePassphraseStrengthFragment() {
-  private val args by navArgs<CheckPassphraseStrengthFragmentArgs>()
-  private var binding: FragmentCheckPassphraseStrengthBinding? = null
+class CheckPassphraseStrengthFragment :
+  BasePassphraseStrengthFragment<FragmentCheckPassphraseStrengthBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentCheckPassphraseStrengthBinding.inflate(inflater, container, false)
 
-  override val contentResourceId: Int = R.layout.fragment_check_passphrase_strength
+  private val args by navArgs<CheckPassphraseStrengthFragmentArgs>()
+
   override val isToolbarVisible: Boolean = false
 
   override fun onAttach(context: Context) {
@@ -52,7 +54,6 @@ class CheckPassphraseStrengthFragment : BasePassphraseStrengthFragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.security)
     initViews()
     initPasswordStrengthViewModel()
   }

@@ -29,6 +29,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentPrivateKeyDetailsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -61,10 +62,12 @@ import java.util.Date
  * Time: 12:43
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
-  private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
-  private var binding: FragmentPrivateKeyDetailsBinding? = null
+class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>(),
+  ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentPrivateKeyDetailsBinding.inflate(inflater, container, false)
 
+  private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
   private val pgpKeyDetailsViewModel: PgpKeyDetailsViewModel by viewModels {
@@ -77,8 +80,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     get() = binding?.content
   override val statusView: View?
     get() = binding?.status?.root
-
-  override val contentResourceId: Int = R.layout.fragment_private_key_details
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -127,7 +128,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.key_details)
     initViews()
     updateViews()
     setupPgpKeyDetailsViewModel()
@@ -308,10 +308,10 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupPgpKeyDetailsViewModel() {
-    pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner, {
+    pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           showProgress()
         }
 
@@ -324,15 +324,16 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
             matchPassphrase(it.data)
           }
           showContent()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun matchPassphrase(pgpKeyDetails: PgpKeyDetails) {
@@ -347,16 +348,16 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
           parentFragmentManager.popBackStack()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -365,18 +366,19 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
             ?: "Couldn't delete a key with fingerprint =" +
             " {${pgpKeyDetailsViewModel.getPgpKeyDetails()?.fingerprint ?: ""}}"
           )
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun setupCheckPrivateKeysViewModel() {
-    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner, { it ->
+    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) { it ->
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -420,7 +422,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           binding?.tVPassPhraseVerification?.text = verificationMsg
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -429,10 +431,11 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_check_pass_phrase)
           )
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   companion object {

@@ -61,6 +61,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -69,6 +70,7 @@ import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -125,7 +127,11 @@ import javax.mail.internet.InternetAddress
  * Time: 16:29
  * E-mail: DenBond7@gmail.com
  */
-class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickListener {
+class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), ProgressBehaviour,
+  View.OnClickListener {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentMessageDetailsBinding.inflate(inflater, container, false)
+
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
@@ -137,7 +143,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
-  private var binding: FragmentMessageDetailsBinding? = null
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
@@ -220,8 +225,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var isMoveToInboxActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
-
-  override val contentResourceId: Int = R.layout.fragment_message_details
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -550,16 +553,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED))
       }
       pgpBadgeListAdapter.submitList(badges)
-    }
-  }
-
-  private fun showConnLostHint() {
-    showSnackbar(
-      requireView(), getString(R.string.failed_load_message_from_email_server),
-      getString(R.string.retry)
-    ) {
-      UIUtil.exchangeViewVisibility(true, progressView, statusView)
-
     }
   }
 
@@ -1374,7 +1367,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     recipientsViewModel.recipientsFromLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -1398,12 +1391,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           } else {
             updatePgpBadges()
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           updatePgpBadges()
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {
@@ -1427,7 +1420,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           val value = it.progress?.toInt() ?: 0
 
           if (value == 0) {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
           }
 
           when (it.resultCode) {
@@ -1446,7 +1439,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           it.data?.let { incomingMsgInfo ->
             showIncomingMsgInfo(incomingMsgInfo)
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -1484,12 +1477,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               )
             }
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {
           setActionProgress(100)
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
       }
     }
@@ -1541,7 +1534,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       msgDetailsViewModel.reVerifySignaturesStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -1550,12 +1543,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               msgInfo = msgInfo?.copy(verificationResult = verificationResult)
             }
             updatePgpBadges()
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
             updatePgpBadges()
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           else -> {

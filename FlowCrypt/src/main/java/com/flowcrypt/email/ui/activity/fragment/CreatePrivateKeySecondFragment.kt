@@ -29,11 +29,12 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 11:36 AM
  *         E-mail: DenBond7@gmail.com
  */
-class CreatePrivateKeySecondFragment : BaseFragment() {
-  private val args by navArgs<CreatePrivateKeySecondFragmentArgs>()
-  private var binding: FragmentCreatePrivateKeySecondBinding? = null
+class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySecondBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentCreatePrivateKeySecondBinding.inflate(inflater, container, false)
 
-  override val contentResourceId: Int = R.layout.fragment_create_private_key_second
+  private val args by navArgs<CreatePrivateKeySecondFragmentArgs>()
+
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
@@ -46,7 +47,6 @@ class CreatePrivateKeySecondFragment : BaseFragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.security)
     initViews()
     subscribeToCreatePrivateKey()
   }

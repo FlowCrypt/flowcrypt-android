@@ -21,10 +21,12 @@ import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -43,7 +45,7 @@ import java.util.Locale
  *         Time: 10:36 AM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BasePassphraseStrengthFragment : BaseFragment() {
+abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>() {
   protected val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
   protected var pwdStrengthResult: PgpPwd.PwdStrengthResult? = null
 
@@ -58,13 +60,13 @@ abstract class BasePassphraseStrengthFragment : BaseFragment() {
       passwordStrengthViewModel.pwdStrengthResultStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
             pwdStrengthResult = it.data
             updateStrengthViews()
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -74,7 +76,7 @@ abstract class BasePassphraseStrengthFragment : BaseFragment() {
                 ?: getString(R.string.unknown_error), Toast.LENGTH_LONG
               )
             }
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           else -> {

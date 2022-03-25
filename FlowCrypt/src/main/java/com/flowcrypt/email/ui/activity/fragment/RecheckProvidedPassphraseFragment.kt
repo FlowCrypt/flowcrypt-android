@@ -28,11 +28,11 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 6:10 PM
  *         E-mail: DenBond7@gmail.com
  */
-class RecheckProvidedPassphraseFragment : BaseFragment() {
-  private val args by navArgs<RecheckProvidedPassphraseFragmentArgs>()
-  private var binding: FragmentRecheckProvidedPassphraseBinding? = null
+class RecheckProvidedPassphraseFragment : BaseFragment<FragmentRecheckProvidedPassphraseBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentRecheckProvidedPassphraseBinding.inflate(inflater, container, false)
 
-  override val contentResourceId: Int = R.layout.fragment_recheck_provided_passphrase
+  private val args by navArgs<RecheckProvidedPassphraseFragmentArgs>()
   override val isToolbarVisible: Boolean = false
 
   override fun onAttach(context: Context) {
@@ -50,7 +50,6 @@ class RecheckProvidedPassphraseFragment : BaseFragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.security)
     initViews()
   }
 

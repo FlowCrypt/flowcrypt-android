@@ -12,14 +12,12 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
@@ -36,6 +34,7 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.databinding.FragmentAddOtherAccountBinding
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
@@ -67,35 +66,22 @@ import javax.mail.AuthenticationFailedException
  *         Time: 3:39 PM
  *         E-mail: DenBond7@gmail.com
  */
-class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelectedListener {
+class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBinding>(),
+  AdapterView.OnItemSelectedListener {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentAddOtherAccountBinding.inflate(inflater, container, false)
 
-  private var buttonSignInWithOutlook: Button? = null
-  private var editTextEmail: EditText? = null
-  private var editTextUserName: EditText? = null
-  private var editTextPassword: EditText? = null
-  private var editTextImapServer: EditText? = null
-  private var editTextImapPort: EditText? = null
-  private var editTextSmtpServer: EditText? = null
-  private var editTextSmtpPort: EditText? = null
-  private var editTextSmtpUsername: EditText? = null
-  private var editTextSmtpPassword: EditText? = null
-  private var spinnerImapSecurityType: Spinner? = null
-  private var spinnerSmtpSecurityType: Spinner? = null
-  private var checkBoxAdvancedMode: CheckBox? = null
-  private var checkBoxRequireSignInForSmtp: CheckBox? = null
   private var authCreds: AuthCredentials? = null
 
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
 
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.layoutContent)
+    get() = binding?.layoutContent
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
-
-  override val contentResourceId: Int = R.layout.fragment_add_other_account
+    get() = binding?.status?.root
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -146,7 +132,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       R.id.spinnerImapSecurityType -> {
         val (_, _, defImapPort) = parent.adapter.getItem(position) as SecurityType
         if (isImapSpinnerRestored) {
-          editTextImapPort?.setText(defImapPort.toString())
+          binding?.editTextImapPort?.setText(defImapPort.toString())
         } else {
           isImapSpinnerRestored = true
         }
@@ -155,7 +141,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       R.id.spinnerSmtpSecyrityType -> {
         val (_, _, _, defSmtpPort) = parent.adapter.getItem(position) as SecurityType
         if (isSmtpSpinnerRestored) {
-          editTextSmtpPort?.setText(defSmtpPort.toString())
+          binding?.editTextSmtpPort?.setText(defSmtpPort.toString())
         } else {
           isSmtpSpinnerRestored = true
         }
@@ -224,23 +210,13 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   }
 
   private fun initViews(view: View) {
-    editTextEmail = view.findViewById(R.id.editTextEmail)
-    editTextUserName = view.findViewById(R.id.editTextUserName)
-    editTextPassword = view.findViewById(R.id.editTextPassword)
-    editTextImapServer = view.findViewById(R.id.editTextImapServer)
-    editTextImapPort = view.findViewById(R.id.editTextImapPort)
-    editTextSmtpServer = view.findViewById(R.id.editTextSmtpServer)
-    editTextSmtpPort = view.findViewById(R.id.editTextSmtpPort)
-    editTextSmtpUsername = view.findViewById(R.id.editTextSmtpUsername)
-    editTextSmtpPassword = view.findViewById(R.id.editTextSmtpPassword)
+    binding?.editTextEmail?.addInputFilter(InputFilters.NoCaps())
+    binding?.editTextImapServer?.addInputFilter(InputFilters.NoCaps())
+    binding?.editTextSmtpServer?.addInputFilter(InputFilters.NoCaps())
+    binding?.editTextImapPort?.addInputFilter(InputFilters.OnlyDigits())
+    binding?.editTextSmtpPort?.addInputFilter(InputFilters.OnlyDigits())
 
-    editTextEmail?.addInputFilter(InputFilters.NoCaps())
-    editTextImapServer?.addInputFilter(InputFilters.NoCaps())
-    editTextSmtpServer?.addInputFilter(InputFilters.NoCaps())
-    editTextImapPort?.addInputFilter(InputFilters.OnlyDigits())
-    editTextSmtpPort?.addInputFilter(InputFilters.OnlyDigits())
-
-    editTextPassword?.setOnEditorActionListener { _, actionId, _ ->
+    binding?.editTextPassword?.setOnEditorActionListener { _, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
           tryToConnect()
@@ -250,49 +226,45 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       }
     }
 
-    editTextEmail?.doAfterTextChanged {
+    binding?.editTextEmail?.doAfterTextChanged {
       if (GeneralUtil.isEmailValid(it)) {
-        if (checkBoxAdvancedMode?.isChecked == false) {
+        if (binding?.checkBoxAdvancedMode?.isChecked == false) {
           if (applyRecommendSettings()) return@doAfterTextChanged
         }
 
         val email = it.toString()
         val mainDomain = email.substring(email.indexOf('@') + 1)
-        editTextImapServer?.setText(getString(R.string.template_imap_server, mainDomain))
-        editTextSmtpServer?.setText(getString(R.string.template_smtp_server, mainDomain))
-        editTextUserName?.setText(email)
-        editTextSmtpUsername?.setText(email)
+        binding?.editTextImapServer?.setText(getString(R.string.template_imap_server, mainDomain))
+        binding?.editTextSmtpServer?.setText(getString(R.string.template_smtp_server, mainDomain))
+        binding?.editTextUserName?.setText(email)
+        binding?.editTextSmtpUsername?.setText(email)
       }
     }
 
-    editTextPassword?.doAfterTextChanged {
-      if (checkBoxAdvancedMode?.isChecked == false) {
+    binding?.editTextPassword?.doAfterTextChanged {
+      if (binding?.checkBoxAdvancedMode?.isChecked == false) {
         val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
-          editTextEmail?.text.toString(), editTextPassword?.text.toString()
+          binding?.editTextEmail?.text.toString(), binding?.editTextPassword?.text.toString()
         )
 
-        editTextSmtpPassword?.setText(recommendAuthCredentials?.smtpSignInPassword)
+        binding?.editTextSmtpPassword?.setText(recommendAuthCredentials?.smtpSignInPassword)
       }
     }
 
-    checkBoxAdvancedMode = view.findViewById(R.id.checkBoxAdvancedMode)
-    checkBoxRequireSignInForSmtp = view.findViewById(R.id.checkBoxRequireSignInForSmtp)
-    val groupRequireSignInForSmtp = view.findViewById<View>(R.id.groupRequireSignInForSmtp)
-
-    checkBoxRequireSignInForSmtp?.setOnCheckedChangeListener { _, isChecked ->
-      if (checkBoxAdvancedMode?.isChecked == true) {
-        groupRequireSignInForSmtp.visibility = if (isChecked) View.VISIBLE else View.GONE
+    binding?.checkBoxRequireSignInForSmtp?.setOnCheckedChangeListener { _, isChecked ->
+      if (binding?.checkBoxAdvancedMode?.isChecked == true) {
+        binding?.groupRequireSignInForSmtp?.visibility = if (isChecked) View.VISIBLE else View.GONE
       }
     }
 
-    checkBoxAdvancedMode?.setOnCheckedChangeListener { buttonView, isChecked ->
+    binding?.checkBoxAdvancedMode?.setOnCheckedChangeListener { buttonView, isChecked ->
       buttonView.hideKeyboard()
       view.findViewById<View>(R.id.groupAdvancedSettings)?.visibility =
         if (isChecked) View.VISIBLE else View.GONE
-      if ((checkBoxRequireSignInForSmtp?.isChecked == true) && isChecked) {
-        groupRequireSignInForSmtp?.visibility = View.VISIBLE
+      if ((binding?.checkBoxRequireSignInForSmtp?.isChecked == true) && isChecked) {
+        binding?.groupRequireSignInForSmtp?.visibility = View.VISIBLE
       } else {
-        groupRequireSignInForSmtp?.visibility = View.GONE
+        binding?.groupRequireSignInForSmtp?.visibility = View.GONE
       }
 
       if (!isChecked) {
@@ -300,19 +272,16 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       }
     }
 
-    spinnerImapSecurityType = view.findViewById(R.id.spinnerImapSecurityType)
-    spinnerSmtpSecurityType = view.findViewById(R.id.spinnerSmtpSecyrityType)
-
     val adapter = ArrayAdapter(
       requireContext(), android.R.layout.simple_spinner_dropdown_item,
       SecurityType.generateSecurityTypes(requireContext())
     )
 
-    spinnerImapSecurityType?.adapter = adapter
-    spinnerSmtpSecurityType?.adapter = adapter
+    binding?.spinnerImapSecurityType?.adapter = adapter
+    binding?.spinnerSmtpSecyrityType?.adapter = adapter
 
-    spinnerImapSecurityType?.onItemSelectedListener = this
-    spinnerSmtpSecurityType?.onItemSelectedListener = this
+    binding?.spinnerImapSecurityType?.onItemSelectedListener = this
+    binding?.spinnerSmtpSecyrityType?.onItemSelectedListener = this
 
     view.findViewById<View>(R.id.buttonTryToConnect)?.setOnClickListener {
       importCandidates.clear()
@@ -323,8 +292,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       //FeedbackActivity.show(requireActivity())
     }
 
-    buttonSignInWithOutlook = view.findViewById(R.id.buttonSignInWithOutlook)
-    buttonSignInWithOutlook?.setOnClickListener {
+    binding?.buttonSignInWithOutlook?.setOnClickListener {
       importCandidates.clear()
       it.isEnabled = false
       oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
@@ -340,28 +308,28 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   private fun updateView(authCreds: AuthCredentials?, updateEmail: Boolean = true) {
     authCreds?.let { nonNullAuthCreds ->
       if (updateEmail) {
-        editTextEmail?.setText(nonNullAuthCreds.email)
+        binding?.editTextEmail?.setText(nonNullAuthCreds.email)
       }
-      editTextUserName?.setText(nonNullAuthCreds.username)
-      editTextImapServer?.setText(nonNullAuthCreds.imapServer)
-      editTextImapPort?.setText(nonNullAuthCreds.imapPort.toString())
-      editTextSmtpServer?.setText(nonNullAuthCreds.smtpServer)
-      editTextSmtpPort?.setText(nonNullAuthCreds.smtpPort.toString())
-      checkBoxRequireSignInForSmtp?.isChecked = nonNullAuthCreds.hasCustomSignInForSmtp
-      editTextSmtpUsername?.setText(nonNullAuthCreds.smtpSigInUsername)
-      editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)
+      binding?.editTextUserName?.setText(nonNullAuthCreds.username)
+      binding?.editTextImapServer?.setText(nonNullAuthCreds.imapServer)
+      binding?.editTextImapPort?.setText(nonNullAuthCreds.imapPort.toString())
+      binding?.editTextSmtpServer?.setText(nonNullAuthCreds.smtpServer)
+      binding?.editTextSmtpPort?.setText(nonNullAuthCreds.smtpPort.toString())
+      binding?.checkBoxRequireSignInForSmtp?.isChecked = nonNullAuthCreds.hasCustomSignInForSmtp
+      binding?.editTextSmtpUsername?.setText(nonNullAuthCreds.smtpSigInUsername)
+      binding?.editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)
 
-      val imapOptionsCount = spinnerImapSecurityType?.adapter?.count ?: 0
+      val imapOptionsCount = binding?.spinnerImapSecurityType?.adapter?.count ?: 0
       for (i in 0 until imapOptionsCount) {
-        if (nonNullAuthCreds.imapOpt === (spinnerImapSecurityType?.adapter?.getItem(i) as SecurityType).opt) {
-          spinnerImapSecurityType?.setSelection(i)
+        if (nonNullAuthCreds.imapOpt === (binding?.spinnerImapSecurityType?.adapter?.getItem(i) as SecurityType).opt) {
+          binding?.spinnerImapSecurityType?.setSelection(i)
         }
       }
 
-      val smtpOptionsCount = spinnerSmtpSecurityType?.adapter?.count ?: 0
+      val smtpOptionsCount = binding?.spinnerSmtpSecyrityType?.adapter?.count ?: 0
       for (i in 0 until smtpOptionsCount) {
-        if (nonNullAuthCreds.smtpOpt === (spinnerSmtpSecurityType?.adapter?.getItem(i) as SecurityType).opt) {
-          spinnerSmtpSecurityType?.setSelection(i)
+        if (nonNullAuthCreds.smtpOpt === (binding?.spinnerSmtpSecyrityType?.adapter?.getItem(i) as SecurityType).opt) {
+          binding?.spinnerSmtpSecyrityType?.setSelection(i)
         }
       }
     }
@@ -386,7 +354,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
             if (original != null) {
               if (original is AuthenticationFailedException) {
-                val isGmailImapServer = editTextImapServer?.text.toString()
+                val isGmailImapServer = binding?.editTextImapServer?.text.toString()
                   .equals(GmailConstants.GMAIL_IMAP_SERVER, ignoreCase = true)
                 val isMsgEmpty = TextUtils.isEmpty(original.message)
                 val hasAlert = original.message?.startsWith(
@@ -406,10 +374,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
             }
 
             val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
-              editTextEmail?.text.toString(), editTextPassword?.text.toString()
+              binding?.editTextEmail?.text.toString(), binding?.editTextPassword?.text.toString()
             )?.faqUrl
 
-            val dialogMsg = if (checkBoxAdvancedMode?.isChecked == false) {
+            val dialogMsg = if (binding?.checkBoxAdvancedMode?.isChecked == false) {
               getString(R.string.show_error_msg_with_recommendations, msg)
             } else {
               msg
@@ -590,7 +558,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         Result.Status.SUCCESS -> {
           it.data?.let { authorizationRequest ->
             oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
-            buttonSignInWithOutlook?.isEnabled = true
+            binding?.buttonSignInWithOutlook?.isEnabled = true
             showContent()
 
             authRequest = authorizationRequest
@@ -611,7 +579,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
-          buttonSignInWithOutlook?.isEnabled = true
+          binding?.buttonSignInWithOutlook?.isEnabled = true
           showContent()
           showInfoDialogWithExceptionDetails(
             it.exception,
@@ -668,29 +636,29 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       if (it.useOAuth2) return it
     }
 
-    val imapPort = if (TextUtils.isEmpty(editTextImapPort?.text))
+    val imapPort = if (TextUtils.isEmpty(binding?.editTextImapPort?.text))
       JavaEmailConstants.SSL_IMAP_PORT
     else
-      Integer.parseInt(editTextImapPort?.text.toString())
+      Integer.parseInt(binding?.editTextImapPort?.text.toString())
 
-    val smtpPort = if (TextUtils.isEmpty(editTextSmtpPort?.text))
+    val smtpPort = if (TextUtils.isEmpty(binding?.editTextSmtpPort?.text))
       JavaEmailConstants.SSL_SMTP_PORT
     else
-      Integer.parseInt(editTextSmtpPort?.text.toString())
+      Integer.parseInt(binding?.editTextSmtpPort?.text.toString())
 
     return AuthCredentials(
-      email = editTextEmail?.text.toString(),
-      username = editTextUserName?.text.toString(),
-      password = editTextPassword?.text.toString(),
-      imapServer = editTextImapServer?.text.toString(),
+      email = binding?.editTextEmail?.text.toString(),
+      username = binding?.editTextUserName?.text.toString(),
+      password = binding?.editTextPassword?.text.toString(),
+      imapServer = binding?.editTextImapServer?.text.toString(),
       imapPort = imapPort,
-      imapOpt = (spinnerImapSecurityType?.selectedItem as SecurityType).opt,
-      smtpServer = editTextSmtpServer?.text.toString(),
+      imapOpt = (binding?.spinnerImapSecurityType?.selectedItem as SecurityType).opt,
+      smtpServer = binding?.editTextSmtpServer?.text.toString(),
       smtpPort = smtpPort,
-      smtpOpt = (spinnerSmtpSecurityType?.selectedItem as SecurityType).opt,
-      hasCustomSignInForSmtp = checkBoxRequireSignInForSmtp?.isChecked ?: false,
-      smtpSigInUsername = editTextSmtpUsername?.text.toString(),
-      smtpSignInPassword = editTextSmtpPassword?.text.toString()
+      smtpOpt = (binding?.spinnerSmtpSecyrityType?.selectedItem as SecurityType).opt,
+      hasCustomSignInForSmtp = binding?.checkBoxRequireSignInForSmtp?.isChecked ?: false,
+      smtpSigInUsername = binding?.editTextSmtpUsername?.text.toString(),
+      smtpSignInPassword = binding?.editTextSmtpPassword?.text.toString()
     )
   }
 
@@ -710,25 +678,25 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
    */
   private fun isDataCorrect(): Boolean {
     when {
-      editTextEmail?.text.isNullOrEmpty() -> {
+      binding?.editTextEmail?.text.isNullOrEmpty() -> {
         showInfoSnackbar(
-          editTextEmail,
+          binding?.editTextEmail,
           getString(R.string.text_must_not_be_empty, getString(R.string.e_mail))
         )
-        editTextEmail?.requestFocus()
+        binding?.editTextEmail?.requestFocus()
       }
 
-      GeneralUtil.isEmailValid(editTextEmail?.text) -> {
-        if (checkBoxAdvancedMode?.isChecked == false) {
+      GeneralUtil.isEmailValid(binding?.editTextEmail?.text) -> {
+        if (binding?.checkBoxAdvancedMode?.isChecked == false) {
           when {
-            editTextPassword?.text.isNullOrEmpty() -> {
+            binding?.editTextPassword?.text.isNullOrEmpty() -> {
               showInfoSnackbar(
-                editTextPassword, getString(
+                binding?.editTextPassword, getString(
                   R.string.text_must_not_be_empty,
                   getString(R.string.password)
                 )
               )
-              editTextPassword?.requestFocus()
+              binding?.editTextPassword?.requestFocus()
             }
 
             else -> return true
@@ -736,85 +704,85 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         }
 
         when {
-          editTextUserName?.text.isNullOrEmpty() -> {
+          binding?.editTextUserName?.text.isNullOrEmpty() -> {
             showInfoSnackbar(
-              editTextUserName, getString(
+              binding?.editTextUserName, getString(
                 R.string.text_must_not_be_empty,
                 getString(R.string.username)
               )
             )
-            editTextUserName?.requestFocus()
+            binding?.editTextUserName?.requestFocus()
           }
 
-          editTextPassword?.text.isNullOrEmpty() -> {
+          binding?.editTextPassword?.text.isNullOrEmpty() -> {
             showInfoSnackbar(
-              editTextPassword, getString(
+              binding?.editTextPassword, getString(
                 R.string.text_must_not_be_empty,
                 getString(R.string.password)
               )
             )
-            editTextPassword?.requestFocus()
+            binding?.editTextPassword?.requestFocus()
           }
 
-          editTextImapServer?.text.isNullOrEmpty() -> {
+          binding?.editTextImapServer?.text.isNullOrEmpty() -> {
             showInfoSnackbar(
-              editTextImapServer, getString(
+              binding?.editTextImapServer, getString(
                 R.string.text_must_not_be_empty,
                 getString(R.string.imap_server)
               )
             )
-            editTextImapServer?.requestFocus()
+            binding?.editTextImapServer?.requestFocus()
           }
 
-          editTextImapPort?.text.isNullOrEmpty() -> {
+          binding?.editTextImapPort?.text.isNullOrEmpty() -> {
             showInfoSnackbar(
-              editTextImapPort, getString(
+              binding?.editTextImapPort, getString(
                 R.string.text_must_not_be_empty,
                 getString(R.string.imap_port)
               )
             )
-            editTextImapPort?.requestFocus()
+            binding?.editTextImapPort?.requestFocus()
           }
 
-          editTextSmtpServer?.text.isNullOrEmpty() -> {
+          binding?.editTextSmtpServer?.text.isNullOrEmpty() -> {
             showInfoSnackbar(
-              editTextSmtpServer, getString(
+              binding?.editTextSmtpServer, getString(
                 R.string.text_must_not_be_empty,
                 getString(R.string.smtp_server)
               )
             )
-            editTextSmtpServer?.requestFocus()
+            binding?.editTextSmtpServer?.requestFocus()
           }
 
-          editTextSmtpPort?.text.isNullOrEmpty() -> {
+          binding?.editTextSmtpPort?.text.isNullOrEmpty() -> {
             showInfoSnackbar(
-              editTextSmtpPort, getString(
+              binding?.editTextSmtpPort, getString(
                 R.string.text_must_not_be_empty,
                 getString(R.string.smtp_port)
               )
             )
-            editTextSmtpPort?.requestFocus()
+            binding?.editTextSmtpPort?.requestFocus()
           }
 
-          checkBoxRequireSignInForSmtp?.isChecked == true -> when {
-            editTextSmtpUsername?.text.isNullOrEmpty() -> {
+          binding?.checkBoxRequireSignInForSmtp?.isChecked == true -> when {
+            binding?.editTextSmtpUsername?.text.isNullOrEmpty() -> {
               showInfoSnackbar(
-                editTextSmtpUsername, getString(
+                binding?.editTextSmtpUsername, getString(
                   R.string.text_must_not_be_empty,
                   getString(R.string.smtp_username)
                 )
               )
-              editTextSmtpUsername?.requestFocus()
+              binding?.editTextSmtpUsername?.requestFocus()
             }
 
-            editTextSmtpPassword?.text.isNullOrEmpty() -> {
+            binding?.editTextSmtpPassword?.text.isNullOrEmpty() -> {
               showInfoSnackbar(
-                editTextSmtpPassword, getString(
+                binding?.editTextSmtpPassword, getString(
                   R.string.text_must_not_be_empty,
                   getString(R.string.smtp_password)
                 )
               )
-              editTextSmtpPassword?.requestFocus()
+              binding?.editTextSmtpPassword?.requestFocus()
             }
             else -> return true
           }
@@ -824,8 +792,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       }
 
       else -> {
-        showInfoSnackbar(editTextEmail, getString(R.string.error_email_is_not_valid))
-        editTextEmail?.requestFocus()
+        showInfoSnackbar(binding?.editTextEmail, getString(R.string.error_email_is_not_valid))
+        binding?.editTextEmail?.requestFocus()
       }
     }
 
@@ -848,7 +816,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   private fun applyRecommendSettings(): Boolean {
     val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
-      editTextEmail?.text.toString(), editTextPassword?.text.toString()
+      binding?.editTextEmail?.text.toString(), binding?.editTextPassword?.text.toString()
     )
 
     if (recommendAuthCredentials != null) {

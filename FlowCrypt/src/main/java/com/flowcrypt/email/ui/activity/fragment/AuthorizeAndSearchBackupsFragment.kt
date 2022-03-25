@@ -6,14 +6,17 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.databinding.FragmentAuthorizeSearchPrivateKeyBackupsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -29,21 +32,23 @@ import com.flowcrypt.email.util.GeneralUtil
  *         Time: 2:13 PM
  *         E-mail: DenBond7@gmail.com
  */
-class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
+class AuthorizeAndSearchBackupsFragment :
+  BaseFragment<FragmentAuthorizeSearchPrivateKeyBackupsBinding>(), ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentAuthorizeSearchPrivateKeyBackupsBinding.inflate(inflater, container, false)
+
   private val args by navArgs<AuthorizeAndSearchBackupsFragmentArgs>()
   private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
 
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.layoutContent)
+    get() = binding?.layoutContent
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
   override val isToolbarVisible: Boolean = false
-
-  override val contentResourceId: Int = R.layout.fragment_authorize_search_private_key_backups
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -77,13 +82,13 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress(it.progressMsg)
           }
 
           Result.Status.SUCCESS -> {
             loadPrivateKeysViewModel.fetchAvailableKeys(args.account)
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           else -> {
@@ -91,7 +96,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
               REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
               bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
             )
-            countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
             navController?.navigateUp()
           }
         }
@@ -103,7 +108,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
     loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           showProgress(it.progressMsg)
         }
 
@@ -112,7 +117,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
             REQUEST_KEY_SEARCH_BACKUPS,
             bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it)
           )
-          countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
           navController?.navigateUp()
         }
       }

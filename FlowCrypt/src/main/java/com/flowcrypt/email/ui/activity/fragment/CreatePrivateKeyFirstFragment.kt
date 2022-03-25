@@ -30,11 +30,13 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 10:04 AM
  *         E-mail: DenBond7@gmail.com
  */
-class CreatePrivateKeyFirstFragment : BasePassphraseStrengthFragment() {
-  private val args by navArgs<CreatePrivateKeyFirstFragmentArgs>()
-  private var binding: FragmentCreatePrivateKeyFirstBinding? = null
+class CreatePrivateKeyFirstFragment :
+  BasePassphraseStrengthFragment<FragmentCreatePrivateKeyFirstBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentCreatePrivateKeyFirstBinding.inflate(inflater, container, false)
 
-  override val contentResourceId: Int = R.layout.fragment_create_private_key_first
+  private val args by navArgs<CreatePrivateKeyFirstFragmentArgs>()
+
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 

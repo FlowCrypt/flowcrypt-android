@@ -13,7 +13,6 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
-import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportPrivateKeysDuringSetupBinding
@@ -30,12 +29,12 @@ import com.flowcrypt.email.util.GeneralUtil
  *         Time: 5:23 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ImportPrivateKeysDuringSetupFragment : BaseImportKeyFragment() {
-  private var binding: FragmentImportPrivateKeysDuringSetupBinding? = null
-  private val args by navArgs<ImportPrivateKeysDuringSetupFragmentArgs>()
+class ImportPrivateKeysDuringSetupFragment :
+  BaseImportKeyFragment<FragmentImportPrivateKeysDuringSetupBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentImportPrivateKeysDuringSetupBinding.inflate(inflater, container, false)
 
   override val isPrivateKeyMode: Boolean = true
-  override val contentResourceId: Int = R.layout.fragment_import_private_keys_during_setup
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 

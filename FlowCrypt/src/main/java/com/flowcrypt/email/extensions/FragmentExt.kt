@@ -8,13 +8,16 @@ package com.flowcrypt.email.extensions
 import android.widget.Toast
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBar
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -29,11 +32,17 @@ import com.flowcrypt.email.util.UIUtil
  *         E-mail: DenBond7@gmail.com
  */
 
+val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
+  get() = (activity as? BaseActivity<*>)?.countingIdlingResource
+
 val androidx.fragment.app.Fragment.mainActivity: MainActivity?
   get() = activity as? MainActivity
 
-val androidx.fragment.app.Fragment.actionBar: ActionBar?
-  get() = mainActivity?.supportActionBar
+val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
+  get() = if (activity is AppCompatActivity) {
+    (activity as AppCompatActivity).supportActionBar
+  } else
+    null
 
 val androidx.fragment.app.Fragment.navController: NavController?
   get() = activity?.let {

@@ -29,11 +29,13 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragme
  *         Time: 8:31 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
-  private var binding: FragmentImportRecipientsFromSourceBinding? = null
+class ImportRecipientsFromSourceFragment :
+  BaseImportKeyFragment<FragmentImportRecipientsFromSourceBinding>() {
+
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentImportRecipientsFromSourceBinding.inflate(inflater, container, false)
 
   override val isPrivateKeyMode: Boolean = false
-  override val contentResourceId: Int = R.layout.fragment_import_recipients_from_source
 
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -44,7 +46,6 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.add_contact)
     initViews()
     subscribeToFetchPubKeysViaLookUp()
   }
