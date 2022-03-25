@@ -23,7 +23,6 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
@@ -38,6 +37,7 @@ import com.flowcrypt.email.databinding.FragmentAddOtherAccountBinding
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -102,6 +102,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     subscribeToAuthorizeAndSearchBackups()
     subscribeToCheckPrivateKeys()
     subscribeCreateOrImportPrivateKeyDuringSetup()
+    subscribeToTwoWayDialog()
 
     setupOAuth2AuthCredentialsViewModel()
     initAddNewAccountLiveData()
@@ -111,20 +112,6 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   override fun onPause() {
     super.onPause()
     saveTempCreds()
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            tryToConnect()
-          }
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -181,11 +168,9 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     } else {
       //remove account and show error
       accountViewModel.deleteAccount(accountEntity)
-      navController?.navigate(
-        NavGraphDirections.actionGlobalInfoDialogFragment(
-          dialogTitle = getString(R.string.error),
-          dialogMsg = getString(R.string.import_keys_from_different_sources)
-        )
+      showInfoDialog(
+        dialogTitle = getString(R.string.error),
+        dialogMsg = getString(R.string.import_keys_from_different_sources)
       )
     }
   }
@@ -495,6 +480,19 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
           getTempAccount(),
           pgpKeyDetails
         )
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_RETRY_SETTINGS_CHECKING -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          tryToConnect()
+        }
       }
     }
   }

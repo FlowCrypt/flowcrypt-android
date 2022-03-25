@@ -26,13 +26,6 @@ class HtmlViewFromAssetsRawFragment : BaseFragment<FragmentHtmlViewFromAssetsRaw
 
   private val args by navArgs<HtmlViewFromAssetsRawFragmentArgs>()
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentHtmlViewFromAssetsRawBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = args.title

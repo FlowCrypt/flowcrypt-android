@@ -14,8 +14,8 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -27,10 +27,10 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentServerSettingsBinding
 import com.flowcrypt.email.extensions.getNavigationResult
-import com.flowcrypt.email.extensions.getNavigationResultForDialog
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
@@ -76,6 +76,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     updateViews(authCreds)
     initAccountViewModel()
     observeOnResultLiveData()
+    subscribeToTwoWayDialog()
   }
 
   override fun onDestroy() {
@@ -338,16 +339,14 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
           val dialogMsg =
             msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
 
-          navController?.navigate(
-            NavGraphDirections.actionGlobalTwoWayDialogFragment(
-              requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
-              dialogTitle = title,
-              dialogMsg = dialogMsg,
-              positiveButtonTitle = getString(R.string.retry),
-              negativeButtonTitle = getString(R.string.cancel),
-              isCancelable = true,
-              useLinkify = true
-            )
+          showTwoWayDialog(
+            requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
+            dialogTitle = title,
+            dialogMsg = dialogMsg,
+            positiveButtonTitle = getString(R.string.retry),
+            negativeButtonTitle = getString(R.string.cancel),
+            isCancelable = true,
+            useLinkify = true
           )
         }
 
@@ -364,21 +363,6 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
         }
 
         else -> {}
-      }
-    }
-
-    getNavigationResultForDialog<TwoWayDialogFragment.Result>(
-      destinationId = R.id.serverSettingsFragment,
-      key = TwoWayDialogFragment.KEY_RESULT
-    ) {
-      when (it.requestCode) {
-        REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
-          when (it.resultCode) {
-            TwoWayDialogFragment.RESULT_OK -> {
-              checkCredentials()
-            }
-          }
-        }
       }
     }
   }
@@ -412,6 +396,19 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
             showContent()
             toast(getString(R.string.server_settings_were_not_updated))
           }
+        }
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_RETRY_SETTINGS_CHECKING -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          checkCredentials()
         }
       }
     }

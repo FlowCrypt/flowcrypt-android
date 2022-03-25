@@ -19,6 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentCreatePrivateKeyDialogBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -87,7 +88,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
       createPrivateKeyViewModel.createPrivateKeyStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity?.countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -104,7 +105,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
               )
             }
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -117,7 +118,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
               binding?.btRetry?.visible()
             }
 
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {
           }

@@ -17,6 +17,7 @@ import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentEditContactBinding
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
@@ -45,13 +46,6 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
   override val contentView: View?
     get() = binding?.layoutContent
   override val statusView: View? = null
-
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentEditContactBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -82,11 +76,9 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
 
   override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
     if (keys.size > 1) {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalInfoDialogFragment(
-          dialogTitle = "",
-          dialogMsg = getString(R.string.more_than_one_public_key_found)
-        )
+      showInfoDialog(
+        dialogTitle = "",
+        dialogMsg = getString(R.string.more_than_one_public_key_found)
       )
       return
     }

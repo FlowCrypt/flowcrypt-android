@@ -19,6 +19,7 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentParsePgpKeysFromSourceBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -98,7 +99,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
       parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity?.countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -124,7 +125,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
                 )
               }
             }
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -137,7 +138,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
               binding?.btRetry?.visible()
             }
 
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {
           }

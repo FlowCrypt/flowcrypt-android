@@ -41,7 +41,6 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -68,6 +67,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.supportActionBar
@@ -234,13 +234,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     updateActionsVisibility(args.localFolder, null)
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentMessageDetailsBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     updateViews()
@@ -249,6 +242,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     setupMsgDetailsViewModel()
     setupRecipientsViewModel()
     collectReVerifySignaturesStateFlow()
+    subscribeToTwoWayDialog()
   }
 
   override fun onDestroy() {
@@ -268,14 +262,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           if (atts.isNotEmpty()) {
             makeAttsProtected(atts)
             sendTemplateMsgWithPublicKey(atts[0])
-          }
-        }
-      }
-
-      REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
           }
         }
       }
@@ -339,6 +325,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         } else {
           if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
             showTwoWayDialog(
+              requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
               dialogTitle = "",
               dialogMsg = requireContext().resources.getQuantityString(
                 R.plurals.delete_msg_question,
@@ -347,7 +334,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               ),
               positiveButtonTitle = getString(android.R.string.ok),
               negativeButtonTitle = getString(android.R.string.cancel),
-              requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG
             )
           } else {
             msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
@@ -822,12 +808,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun prepareDateHeaderValue(): String {
-    val dateInMilliseconds: Long
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-      dateInMilliseconds = args.messageEntity.sentDate ?: 0
-    } else {
-      dateInMilliseconds = args.messageEntity.receivedDate ?: 0
-    }
+    val dateInMilliseconds: Long =
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
+        args.messageEntity.sentDate ?: 0
+      } else {
+        args.messageEntity.receivedDate ?: 0
+      }
 
     val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
         DateUtils.FORMAT_SHOW_YEAR
@@ -1350,9 +1336,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, {
+    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner) {
       updateActionsVisibility(args.localFolder, it)
-    })
+    }
   }
 
   private fun setupMsgDetailsViewModel() {
@@ -1558,6 +1544,19 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_DELETE_MESSAGE_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
+        }
+      }
+    }
+  }
+
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
       if (attInfo.rawData?.isNotEmpty() == true) {
@@ -1595,12 +1594,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         startActivity(Intent(intent).setPackage("com.airwatch.contentlocker"))
       } catch (e: ActivityNotFoundException) {
         //We don't have the required app
-        navController?.navigate(
-          NavGraphDirections.actionGlobalInfoDialogFragment(
-            requestCode = 0,
-            dialogTitle = "",
-            dialogMsg = getString(R.string.warning_don_not_have_content_app)
-          )
+        showInfoDialog(
+          dialogTitle = "",
+          dialogMsg = getString(R.string.warning_don_not_have_content_app)
         )
       }
     } else {

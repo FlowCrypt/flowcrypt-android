@@ -113,6 +113,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     subscribeToCheckAccountSettings()
     subscribeToAuthorizeAndSearchBackups()
     subscribeToCheckPrivateKeys()
+    subscribeToTwoWayDialog()
     observeOnResultLiveData()
 
     initAddNewAccountLiveData()
@@ -144,50 +145,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         /*CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> {
           //handleResultFromCheckKeysActivity(resultCode, data)
         }*/
-      }
-
-      REQUEST_CODE_RETRY_LOGIN -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            orgRules = null
-            val account = googleSignInAccount?.account?.name ?: return
-            val idToken = googleSignInAccount?.idToken ?: return
-            loginViewModel.login(account, uuid, idToken)
-          }
-        }
-      }
-
-      REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            val account = googleSignInAccount?.account?.name ?: return
-            domainOrgRulesViewModel.fetchOrgRules(
-              account = account,
-              uuid = uuid,
-              fesUrl = fesUrl
-            )
-          }
-        }
-      }
-
-      REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            val idToken = googleSignInAccount?.idToken ?: return
-            orgRules?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
-          }
-        }
-      }
-
-      REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            orgRules = null
-            fesUrl = null
-            val account = googleSignInAccount?.account?.name ?: return
-            checkFesServerViewModel.checkFesServerAvailability(account)
-          }
-        }
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -464,6 +421,43 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         CheckKeysFragment.CheckingState.CANCELED, CheckKeysFragment.CheckingState.NEGATIVE -> {
           showContent()
+        }
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          orgRules = null
+          fesUrl = null
+          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          checkFesServerViewModel.checkFesServerAvailability(account)
+        }
+
+        REQUEST_CODE_RETRY_LOGIN -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          orgRules = null
+          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
+          loginViewModel.login(account, uuid, idToken)
+        }
+
+        REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          domainOrgRulesViewModel.fetchOrgRules(
+            account = account,
+            uuid = uuid,
+            fesUrl = fesUrl
+          )
+        }
+
+        REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
+          orgRules?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
         }
       }
     }
@@ -782,14 +776,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun showDialogWithRetryButton(it: Result<ApiResponse>, resultCode: Int) {
+  private fun showDialogWithRetryButton(it: Result<ApiResponse>, requestCode: Int) {
     showContent()
-    showDialogWithRetryButton(it.exceptionMsg, resultCode)
+    showDialogWithRetryButton(it.exceptionMsg, requestCode)
   }
 
-  private fun showDialogWithRetryButton(errorMsg: String, resultCode: Int) {
+  private fun showDialogWithRetryButton(errorMsg: String, requestCode: Int) {
     showTwoWayDialog(
-      requestCode = resultCode,
+      requestCode = requestCode,
       dialogTitle = "",
       dialogMsg = errorMsg,
       positiveButtonTitle = getString(R.string.retry),

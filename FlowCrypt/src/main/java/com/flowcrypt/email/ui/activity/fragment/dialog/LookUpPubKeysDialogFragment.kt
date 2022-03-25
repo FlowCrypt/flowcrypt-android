@@ -18,13 +18,13 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentLookUpPubKeysBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import kotlinx.coroutines.flow.collect
 
 /**
  * @author Denis Bondarenko
@@ -69,7 +69,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
       recipientsViewModel.lookUpPubKeysStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity?.countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             binding?.pBLoading?.visible()
             binding?.btnRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -83,7 +83,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_PUB_KEYS to pubKeys)
               )
             }
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -95,7 +95,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
               exception.javaClass.simpleName
             } else exception.message
 
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {
           }

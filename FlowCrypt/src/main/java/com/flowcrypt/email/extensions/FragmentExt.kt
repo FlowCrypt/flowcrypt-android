@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
@@ -21,8 +20,6 @@ import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -60,10 +57,6 @@ val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
 
 val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
   get() = navController?.previousBackStackEntry?.savedStateHandle
-
-fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
-  text?.let { context?.toast(text, duration) }
-}
 
 fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T) {
   previousOnResultSavedStateHandle?.set(key, value)
@@ -110,60 +103,62 @@ fun <T> androidx.fragment.app.Fragment.getNavigationResultForDialog(
   })
 }
 
+fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
+  text?.let { context?.toast(text, duration) }
+}
+
 fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGTH_SHORT) {
   if (resId != -1) {
-    activity?.toast(resId, duration)
+    context?.toast(resId, duration)
   }
 }
 
-fun androidx.fragment.app.Fragment.showDialogFragment(dialog: DialogFragment) {
-  dialog.show(parentFragmentManager, dialog.javaClass::class.java.simpleName)
-}
-
 fun androidx.fragment.app.Fragment.showInfoDialog(
+  requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
   buttonTitle: String? = null,
-  isPopBackStack: Boolean = false,
   isCancelable: Boolean = false,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false,
-  requestCode: Int = 10000
+  useWebViewToRender: Boolean = false
 ) {
-  val fragment = InfoDialogFragment.newInstance(
-    dialogTitle = dialogTitle,
-    dialogMsg = dialogMsg,
-    buttonTitle = buttonTitle,
-    isPopBackStack = isPopBackStack,
-    isCancelable = isCancelable,
-    hasHtml = hasHtml,
-    useLinkify = useLinkify
+  navController?.navigate(
+    NavGraphDirections.actionGlobalInfoDialogFragment(
+      requestCode = requestCode,
+      dialogTitle = dialogTitle,
+      dialogMsg = dialogMsg,
+      buttonTitle = buttonTitle,
+      isCancelable = isCancelable,
+      hasHtml = hasHtml,
+      useLinkify = useLinkify,
+      useWebViewToRender = useWebViewToRender
+    )
   )
-  fragment.setTargetFragment(this, requestCode)
-  showDialogFragment(fragment)
 }
 
 fun androidx.fragment.app.Fragment.showTwoWayDialog(
+  requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
   positiveButtonTitle: String? = null,
   negativeButtonTitle: String? = null,
   isCancelable: Boolean = false,
-  requestCode: Int = 10000,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false
 ) {
-  val fragment = TwoWayDialogFragment.newInstance(
-    dialogTitle = dialogTitle,
-    dialogMsg = dialogMsg,
-    positiveButtonTitle = positiveButtonTitle,
-    negativeButtonTitle = negativeButtonTitle,
-    isCancelable = isCancelable,
-    hasHtml = hasHtml,
-    useLinkify = useLinkify
+  navController?.navigate(
+    NavGraphDirections.actionGlobalTwoWayDialogFragment(
+      requestCode = requestCode,
+      dialogTitle = dialogTitle,
+      dialogMsg = dialogMsg,
+      positiveButtonTitle = positiveButtonTitle,
+      negativeButtonTitle = negativeButtonTitle,
+      isCancelable = isCancelable,
+      hasHtml = hasHtml,
+      useLinkify = useLinkify
+    )
   )
-  fragment.setTargetFragment(this, requestCode)
-  showDialogFragment(fragment)
 }
 
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
@@ -187,11 +182,9 @@ fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
   val msg =
     e?.message ?: e?.javaClass?.simpleName ?: msgDetails ?: getString(R.string.unknown_error)
 
-  navController?.navigate(
-    NavGraphDirections.actionGlobalInfoDialogFragment(
-      dialogTitle = "",
-      dialogMsg = msg
-    )
+  showInfoDialog(
+    dialogTitle = "",
+    dialogMsg = msg
   )
 }
 

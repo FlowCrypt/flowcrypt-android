@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -91,20 +90,12 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     get() = binding?.groupContent
   override val statusView: View? = null
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentPrivateKeysBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
     setupPrivateKeysViewModel()
     subscribeToImportingAdditionalPrivateKeys()
+    subscribeToTwoWayDialog()
   }
 
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
@@ -119,25 +110,6 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     tracker?.onSaveInstanceState(outState)
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_DELETE_KEYS_DIALOG -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            account?.let { accountEntity ->
-              tracker?.selection?.map { it }
-                ?.let { privateKeysViewModel.deleteKeys(accountEntity, it) }
-            }
-
-            actionMode?.finish()
-          }
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun onKeySelected(position: Int, pgpKeyDetails: PgpKeyDetails?) {
@@ -241,6 +213,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
         return when (item?.itemId) {
           R.id.menuActionDeleteKey -> {
             showTwoWayDialog(
+              requestCode = REQUEST_CODE_DELETE_KEYS_DIALOG,
               dialogTitle = "",
               dialogMsg = requireContext().resources.getQuantityString(
                 R.plurals.delete_key_question,
@@ -249,7 +222,6 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
               ),
               positiveButtonTitle = getString(android.R.string.ok),
               negativeButtonTitle = getString(android.R.string.cancel),
-              requestCode = REQUEST_CODE_DELETE_KEYS_DIALOG,
               isCancelable = false
             )
             true
@@ -283,6 +255,24 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
       )
       if (keys?.isNotEmpty() == true) {
         toast(R.string.key_successfully_imported)
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_DELETE_KEYS_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          account?.let { accountEntity ->
+            tracker?.selection?.map { it }
+              ?.let { privateKeysViewModel.deleteKeys(accountEntity, it) }
+          }
+
+          actionMode?.finish()
+        }
       }
     }
   }

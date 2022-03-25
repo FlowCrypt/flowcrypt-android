@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.accounts.AuthenticatorException
-import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -22,6 +21,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
@@ -43,6 +43,8 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFeedbackFragment
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
@@ -56,7 +58,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
@@ -144,18 +145,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     adapter = MsgsPagedListAdapter(this)
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentMessagesListBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
     setupMsgsViewModel()
     setupLabelsViewModel()
+    subscribeToTwoWayDialog()
 
     currentFolder?.searchQuery?.let {
       binding?.sRL?.isEnabled = false
@@ -179,69 +174,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override fun onPause() {
     super.onPause()
     snackBar?.dismiss()
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
-        TwoWayDialogFragment.RESULT_OK -> currentFolder?.let {
-          val oldState = activeMsgEntity?.msgState
-          val newMsgState = when (oldState) {
-            MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
-            MessageState.ERROR_PASSWORD_PROTECTED -> MessageState.NEW_PASSWORD_PROTECTED
-
-            else -> MessageState.QUEUED
-          }
-          msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
-          if (oldState == MessageState.ERROR_PASSWORD_PROTECTED) {
-            HandlePasswordProtectedMsgWorker.enqueue(requireContext())
-          } else {
-            MessagesSenderWorker.enqueue(requireContext())
-          }
-        }
-      }
-
-      REQUEST_CODE_ERROR_DURING_CREATION -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> currentFolder?.let {
-            //FeedbackActivity.show(requireActivity())
-          }
-
-          TwoWayDialogFragment.RESULT_CANCELED -> {
-            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
-          }
-        }
-      }
-
-      REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> currentFolder?.let {
-            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
-          }
-        }
-      }
-
-      REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            currentFolder?.let { localFolder ->
-              val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
-              if (ids.isNotEmpty()) {
-                msgsViewModel.changeMsgsState(
-                  ids,
-                  localFolder,
-                  MessageState.PENDING_DELETING_PERMANENTLY
-                )
-              }
-            }
-
-            actionMode?.finish()
-          }
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun onRefresh() {
@@ -334,17 +266,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         )
         else -> {
           if (isOutbox && !isRawMsgAvailable) {
-            val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+            showTwoWayDialog(
+              requestCode = REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE,
               dialogTitle = "",
               dialogMsg = getString(R.string.message_failed_to_create),
               positiveButtonTitle = getString(R.string.delete_message),
               negativeButtonTitle = getString(R.string.cancel),
               isCancelable = true
-            )
-            twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE)
-            twoWayDialogFragment.show(
-              parentFragmentManager,
-              TwoWayDialogFragment::class.java.simpleName
             )
           } else {
             currentFolder?.let { localFolder ->
@@ -431,17 +359,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           messageEntity.errorMsg ?: "none"
         )
 
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+        showTwoWayDialog(
+          requestCode = REQUEST_CODE_ERROR_DURING_CREATION,
           dialogTitle = "",
           dialogMsg = message,
           positiveButtonTitle = getString(R.string.write_us),
           negativeButtonTitle = getString(R.string.delete_message),
           isCancelable = true
-        )
-        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_ERROR_DURING_CREATION)
-        twoWayDialogFragment.show(
-          parentFragmentManager,
-          TwoWayDialogFragment::class.java.simpleName
         )
         return
       }
@@ -464,17 +388,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       MessageState.ERROR_SENDING_FAILED,
       MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
       MessageState.ERROR_PASSWORD_PROTECTED -> {
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+        showTwoWayDialog(
+          requestCode = REQUEST_CODE_RETRY_TO_SEND_MESSAGES,
           dialogTitle = "",
           dialogMsg = getString(R.string.message_failed_to_send, message),
           positiveButtonTitle = getString(R.string.retry),
           negativeButtonTitle = getString(R.string.cancel),
           isCancelable = true
-        )
-        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES)
-        twoWayDialogFragment.show(
-          parentFragmentManager,
-          TwoWayDialogFragment::class.java.simpleName
         )
         return
       }
@@ -483,25 +403,20 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
     }
 
-    val infoDialogFragment = InfoDialogFragment.newInstance(
+    showInfoDialog(
       dialogTitle = null,
       dialogMsg = message,
       buttonTitle = null,
-      isPopBackStack = false,
       isCancelable = true,
       hasHtml = false
     )
-    infoDialogFragment.onInfoDialogButtonClickListener =
+
+    /*infoDialogFragment.onInfoDialogButtonClickListener =
       object : InfoDialogFragment.OnInfoDialogButtonClickListener {
         override fun onInfoDialogButtonClick(requestCode: Int) {
           msgsViewModel.deleteOutgoingMsgs(listOf(messageEntity))
         }
-      }
-
-    infoDialogFragment.show(
-      requireActivity().supportFragmentManager,
-      InfoDialogFragment::class.java.simpleName
-    )
+      }*/
   }
 
   private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {
@@ -784,6 +699,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             R.id.menuActionDeleteMessage -> {
               if (it.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
+                  requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
                   dialogTitle = "",
                   dialogMsg = requireContext().resources.getQuantityString(
                     R.plurals.delete_msg_question,
@@ -792,7 +708,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                   ),
                   positiveButtonTitle = getString(android.R.string.ok),
                   negativeButtonTitle = getString(android.R.string.cancel),
-                  requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
                   isCancelable = false
                 )
               } else {
@@ -1066,6 +981,71 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       } else {
         foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { folder ->
           currentFolder = folder
+        }
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> {
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            currentFolder?.let {
+              val oldState = activeMsgEntity?.msgState
+              val newMsgState = when (oldState) {
+                MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER ->
+                  MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
+                MessageState.ERROR_PASSWORD_PROTECTED -> MessageState.NEW_PASSWORD_PROTECTED
+
+                else -> MessageState.QUEUED
+              }
+              msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
+              if (oldState == MessageState.ERROR_PASSWORD_PROTECTED) {
+                HandlePasswordProtectedMsgWorker.enqueue(requireContext())
+              } else {
+                MessagesSenderWorker.enqueue(requireContext())
+              }
+            }
+          }
+        }
+
+        REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE -> {
+          currentFolder?.let {
+            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+          }
+        }
+
+        REQUEST_CODE_ERROR_DURING_CREATION -> {
+          when (result) {
+            TwoWayDialogFragment.RESULT_OK -> currentFolder?.let {
+              showFeedbackFragment()
+            }
+
+            TwoWayDialogFragment.RESULT_CANCELED -> {
+              activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+            }
+          }
+        }
+
+        REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            currentFolder?.let { localFolder ->
+              val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
+              if (ids.isNotEmpty()) {
+                msgsViewModel.changeMsgsState(
+                  ids,
+                  localFolder,
+                  MessageState.PENDING_DELETING_PERMANENTLY
+                )
+              }
+            }
+
+            actionMode?.finish()
+          }
         }
       }
     }

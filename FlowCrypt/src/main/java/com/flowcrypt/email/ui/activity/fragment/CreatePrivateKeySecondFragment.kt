@@ -38,13 +38,6 @@ class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySeco
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentCreatePrivateKeySecondBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()

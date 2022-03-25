@@ -43,15 +43,6 @@ class SearchBackupsInEmailFragment : BaseFragment<FragmentSearchBackupsInEmailBi
   override val statusView: View?
     get() = binding?.iStatus?.root
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentSearchBackupsInEmailBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()

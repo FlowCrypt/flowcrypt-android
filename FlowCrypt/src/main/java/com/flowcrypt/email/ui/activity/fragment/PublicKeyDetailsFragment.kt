@@ -28,7 +28,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -38,6 +37,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -93,13 +93,6 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     setupPublicKeyDetailsViewModel()
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentPublicKeyDetailsBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   private fun setupPublicKeyDetailsViewModel() {
     lifecycleScope.launchWhenStarted {
       publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
@@ -134,13 +127,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
               }
             }
 
-            navController?.navigate(
-              NavGraphDirections.actionGlobalInfoDialogFragment(
-                requestCode = 0,
-                dialogTitle = "",
-                dialogMsg = msg
-              )
-            )
+            showInfoDialog(dialogTitle = "", dialogMsg = msg)
             countingIdlingResource?.decrementSafely()
           }
           else -> {}

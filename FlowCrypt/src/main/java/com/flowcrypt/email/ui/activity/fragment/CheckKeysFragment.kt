@@ -14,7 +14,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -23,6 +22,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
@@ -97,13 +97,6 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     }
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentCheckKeysBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
@@ -142,11 +135,9 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     }
 
     binding?.imageButtonHint?.setOnClickListener {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalInfoDialogFragment(
-          dialogTitle = getString(R.string.info),
-          dialogMsg = getString(R.string.hint_when_found_keys_in_email)
-        )
+      showInfoDialog(
+        dialogTitle = getString(R.string.info),
+        dialogMsg = getString(R.string.hint_when_found_keys_in_email)
       )
     }
     binding?.imageButtonHint?.visibleOrGone(
@@ -154,15 +145,13 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     )
 
     binding?.imageButtonPasswordHint?.setOnClickListener {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalInfoDialogFragment(
-          dialogTitle = "",
-          dialogMsg = IOUtils.toString(
-            requireContext().assets.open("html/forgotten_pass_phrase_hint.htm"),
-            StandardCharsets.UTF_8
-          ),
-          useWebViewToRender = true
-        )
+      showInfoDialog(
+        dialogTitle = "",
+        dialogMsg = IOUtils.toString(
+          requireContext().assets.open("html/forgotten_pass_phrase_hint.htm"),
+          StandardCharsets.UTF_8
+        ),
+        useWebViewToRender = true
       )
     }
     binding?.textViewSubTitle?.text = args.subTitle
@@ -228,13 +217,11 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
                 if (resultKeys.size == 1) {
                   when (resultKeys.first().e) {
                     is KeyIntegrityException -> {
-                      navController?.navigate(
-                        NavGraphDirections.actionGlobalInfoDialogFragment(
-                          dialogTitle = "",
-                          dialogMsg = getString(
-                            R.string.warning_when_import_invalid_prv_key,
-                            getString(R.string.support_email)
-                          )
+                      showInfoDialog(
+                        dialogTitle = "",
+                        dialogMsg = getString(
+                          R.string.warning_when_import_invalid_prv_key,
+                          getString(R.string.support_email)
                         )
                       )
                     }
@@ -260,11 +247,9 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     val partiallyEncryptedPrivateKes = originalKeys.filter { it.isPartiallyEncrypted }
 
     if (partiallyEncryptedPrivateKes.isNotEmpty()) {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalInfoDialogFragment(
-          dialogTitle = "",
-          dialogMsg = getString(R.string.partially_encrypted_private_key_error_msg)
-        )
+      showInfoDialog(
+        dialogTitle = "",
+        dialogMsg = getString(R.string.partially_encrypted_private_key_error_msg)
       )
     }
   }

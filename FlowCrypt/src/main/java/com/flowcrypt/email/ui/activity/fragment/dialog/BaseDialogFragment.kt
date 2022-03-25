@@ -5,14 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
-import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
-import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * The base dialog fragment.
@@ -23,20 +20,8 @@ import com.flowcrypt.email.util.GeneralUtil
  * E-mail: DenBond7@gmail.com
  */
 abstract class BaseDialogFragment : DialogFragment() {
-  protected var hasHtml: Boolean = false
-  protected var useLinkify: Boolean = false
 
-  val baseActivity: MainActivity?
-    get() = activity as? MainActivity
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    hasHtml = arguments?.getBoolean(KEY_INFO_HAS_HTML, false) ?: false
-    useLinkify = arguments?.getBoolean(KEY_INFO_USE_LINKIFY, false) ?: false
-  }
-
-  override fun onStart() {
-    super.onStart()
+  protected fun modifyLinkMovementMethod(hasHtml: Boolean, useLinkify: Boolean) {
     if (hasHtml) {
       (dialog?.findViewById<View>(android.R.id.message) as? TextView)?.apply {
         movementMethod = LinkMovementMethod.getInstance()
@@ -47,12 +32,5 @@ abstract class BaseDialogFragment : DialogFragment() {
         movementMethod = LinkMovementMethod.getInstance()
       }
     }
-  }
-
-  companion object {
-    val KEY_INFO_HAS_HTML =
-      GeneralUtil.generateUniqueExtraKey("KEY_INFO_HAS_HTML", BaseDialogFragment::class.java)
-    val KEY_INFO_USE_LINKIFY =
-      GeneralUtil.generateUniqueExtraKey("KEY_INFO_USE_LINKIFY", BaseDialogFragment::class.java)
   }
 }

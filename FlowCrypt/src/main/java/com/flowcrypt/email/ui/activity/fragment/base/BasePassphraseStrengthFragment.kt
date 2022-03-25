@@ -23,13 +23,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.security.pgp.PgpPwd
@@ -87,16 +86,13 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
   }
 
   protected fun showPassphraseHint() {
-    navController?.navigate(
-      NavGraphDirections.actionGlobalInfoDialogFragment(
-        requestCode = 0,
-        dialogTitle = "",
-        dialogMsg = IOUtils.toString(
-          requireContext().assets.open("html/pass_phrase_hint.htm"),
-          StandardCharsets.UTF_8
-        ),
-        useWebViewToRender = true
-      )
+    showInfoDialog(
+      dialogTitle = "",
+      dialogMsg = IOUtils.toString(
+        requireContext().assets.open("html/pass_phrase_hint.htm"),
+        StandardCharsets.UTF_8
+      ),
+      useWebViewToRender = true
     )
   }
 
@@ -112,11 +108,9 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
       pwdStrengthResult?.word?.let { word ->
         when (word.word) {
           Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> {
-            navController?.navigate(
-              NavGraphDirections.actionGlobalInfoDialogFragment(
-                dialogTitle = "",
-                dialogMsg = getString(R.string.select_stronger_pass_phrase)
-              )
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = getString(R.string.select_stronger_pass_phrase)
             )
           }
 

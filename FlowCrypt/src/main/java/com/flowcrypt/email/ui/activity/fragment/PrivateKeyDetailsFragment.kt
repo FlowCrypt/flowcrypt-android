@@ -21,6 +21,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
@@ -44,7 +45,6 @@ import com.flowcrypt.email.jetpack.viewmodel.factory.PgpKeyDetailsViewModelFacto
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -102,28 +102,19 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     return when (item.itemId) {
       R.id.menuActionDeleteKey -> {
         showTwoWayDialog(
+          requestCode = REQUEST_CODE_DELETE_KEY_DIALOG,
           dialogTitle = "",
           dialogMsg = requireContext().resources.getQuantityString(
             R.plurals.delete_key_question, 1, 1
           ),
           positiveButtonTitle = getString(android.R.string.ok),
-          negativeButtonTitle = getString(android.R.string.cancel),
-          requestCode = REQUEST_CODE_DELETE_KEY_DIALOG
+          negativeButtonTitle = getString(android.R.string.cancel)
         )
         true
       }
 
       else -> super.onOptionsItemSelected(item)
     }
-  }
-
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentPrivateKeyDetailsBinding.inflate(inflater, container, false)
-    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -133,6 +124,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     setupPgpKeyDetailsViewModel()
     setupPrivateKeysViewModel()
     setupCheckPrivateKeysViewModel()
+    subscribeToTwoWayDialog()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -140,21 +132,6 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
       REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
         Activity.RESULT_OK -> if (data != null && data.data != null) {
           saveKey(data)
-        }
-      }
-
-      REQUEST_CODE_DELETE_KEY_DIALOG -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            pgpKeyDetailsViewModel.getPgpKeyDetails()?.let {
-              account?.let { accountEntity ->
-                privateKeysViewModel.deleteKeys(
-                  accountEntity,
-                  listOf(it)
-                )
-              }
-            }
-          }
         }
       }
 
@@ -239,11 +216,10 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     }
 
     binding?.btnShowPubKey?.setOnClickListener {
-      val dialogFragment = InfoDialogFragment.newInstance(
+      showInfoDialog(
         dialogTitle = "",
-        dialogMsg = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
+        dialogMsg = pgpKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
       )
-      dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
     }
 
     binding?.btnCopyToClipboard?.setOnClickListener {
@@ -434,6 +410,26 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           countingIdlingResource?.decrementSafely()
         }
         else -> {}
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_DELETE_KEY_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          pgpKeyDetailsViewModel.getPgpKeyDetails()?.let {
+            account?.let { accountEntity ->
+              privateKeysViewModel.deleteKeys(
+                accountEntity,
+                listOf(it)
+              )
+            }
+          }
+        }
       }
     }
   }

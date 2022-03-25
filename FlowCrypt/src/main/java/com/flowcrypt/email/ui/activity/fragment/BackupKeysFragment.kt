@@ -27,6 +27,7 @@ import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -78,13 +79,6 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
         else -> navController?.navigateUp()
       }
     }
-  }
-
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentBackupKeysBinding.inflate(inflater, container, false)
-    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -204,13 +198,10 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
             areBackupsSavingNow = false
 
             if (!handleKnownException(it.exception)) {
-              navController?.navigate(
-                NavGraphDirections.actionGlobalInfoDialogFragment(
-                  requestCode = 0,
-                  dialogTitle = "",
-                  dialogMsg = it.exception?.message
-                    ?: getString(R.string.error_could_not_save_private_keys)
-                )
+              showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = it.exception?.message
+                  ?: getString(R.string.error_could_not_save_private_keys)
               )
             }
             privateKeysViewModel.saveBackupAsFileLiveData.value = Result.none()

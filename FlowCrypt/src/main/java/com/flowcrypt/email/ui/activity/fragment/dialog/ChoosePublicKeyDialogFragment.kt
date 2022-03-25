@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.toast
@@ -110,10 +111,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   @SuppressLint("FragmentLiveDataObserve")
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.parseKeysResultLiveData.observe(this, {
+    privateKeysViewModel.parseKeysResultLiveData.observe(this) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity?.countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           buttonOk?.visibility = View.GONE
           UIUtil.exchangeViewVisibility(true, progressBar, listViewKeys)
         }
@@ -165,17 +166,18 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             }
           }
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
-          baseActivity?.countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
           textViewMsg?.text = it.exception?.message
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
-          baseActivity?.countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun sendResult() {

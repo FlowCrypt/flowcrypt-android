@@ -63,14 +63,6 @@ class ImportAdditionalPrivateKeysFragment :
     get() = binding?.layoutContent
   override val statusView: View? = null
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentImportAdditionalPrivateKeysBinding
-      .inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()

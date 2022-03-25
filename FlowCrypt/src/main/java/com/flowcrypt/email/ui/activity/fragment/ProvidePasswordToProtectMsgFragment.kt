@@ -36,13 +36,6 @@ class ProvidePasswordToProtectMsgFragment :
   private val args by navArgs<ProvidePasswordToProtectMsgFragmentArgs>()
   private val webPortalPasswordStrengthViewModel: WebPortalPasswordStrengthViewModel by viewModels()
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentProvidePasswordToProtectMsgBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()

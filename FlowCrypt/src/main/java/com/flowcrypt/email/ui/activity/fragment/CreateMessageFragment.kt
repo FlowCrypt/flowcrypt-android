@@ -169,13 +169,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     initExtras(activity?.intent)
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentCreateMessageBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initNonEncryptedHintView()
@@ -1757,23 +1750,19 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         if (password.isNotEmpty()) {
           val keysStorage = KeysStorageImpl.getInstance(requireContext())
           if (keysStorage.hasPassphrase(Passphrase(password.toString().toCharArray()))) {
-            navController?.navigate(
-              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
-                dialogTitle = getString(R.string.warning),
-                dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
-              )
+            showInfoDialog(
+              dialogTitle = getString(R.string.warning),
+              dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
             )
             return false
           }
 
           if (binding?.editTextEmailSubject?.text.toString() == password.toString()) {
-            navController?.navigate(
-              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
-                dialogTitle = getString(R.string.warning),
-                dialogMsg = getString(
-                  R.string.warning_use_subject_as_password,
-                  getString(R.string.app_name)
-                )
+            showInfoDialog(
+              dialogTitle = getString(R.string.warning),
+              dialogMsg = getString(
+                R.string.warning_use_subject_as_password,
+                getString(R.string.app_name)
               )
             )
             return false

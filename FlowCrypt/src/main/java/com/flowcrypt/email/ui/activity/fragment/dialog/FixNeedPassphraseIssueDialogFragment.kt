@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentFixEmptyPassphraseBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -139,10 +140,10 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
   @SuppressLint("FragmentLiveDataObserve")
   private fun setupKeysWithEmptyPassphraseLiveData() {
-    keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData.observe(this, {
+    keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData.observe(this) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity?.countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           binding?.pBLoading?.visible()
         }
 
@@ -177,27 +178,27 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             }
             prvKeysRecyclerViewAdapter.submitList(matchingKeys)
           }
-          baseActivity?.countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           binding?.pBLoading?.gone()
           binding?.tVStatusMessage?.visible()
           binding?.tVStatusMessage?.text = it.exception?.message
-          baseActivity?.countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
         else -> {
         }
       }
-    })
+    }
   }
 
   @SuppressLint("FragmentLiveDataObserve")
   private fun setupCheckPrivateKeysViewModel() {
-    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(this, {
+    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(this) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity?.countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           binding?.pBCheckPassphrase?.visible()
         }
 
@@ -248,7 +249,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             }
           }
 
-          baseActivity?.countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -258,12 +259,11 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
               ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_check_pass_phrase)
           )
-          baseActivity?.countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
-        else -> {
-        }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun sendResult(result: Int) {

@@ -67,13 +67,6 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
   override val statusView: View?
     get() = null
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentRecipientsListBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
