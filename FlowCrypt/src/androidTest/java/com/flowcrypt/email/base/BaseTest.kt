@@ -31,7 +31,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
-import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import org.hamcrest.MatcherAssert.assertThat

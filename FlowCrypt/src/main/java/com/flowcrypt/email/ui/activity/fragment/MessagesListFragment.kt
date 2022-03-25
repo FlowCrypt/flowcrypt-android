@@ -48,7 +48,11 @@ import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
+import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
@@ -959,21 +963,22 @@ class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
     }
 
     msgsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) {
-      val activity = activity as? BaseSyncActivity ?: return@observe
-      with(activity) {
-        when (it) {
-          MessageState.PENDING_ARCHIVING -> archiveMsgs()
-          MessageState.PENDING_DELETING -> deleteMsgs()
-          MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
-          MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
-          MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
-          MessageState.QUEUED -> context?.let { nonNullContext ->
-            MessagesSenderWorker.enqueue(
-              nonNullContext
-            )
-          }
-          else -> {
-          }
+      when (it) {
+        MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
+          requireContext()
+        )
+        MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> UpdateMsgsSeenStateWorker.enqueue(
+          requireContext()
+        )
+        MessageState.QUEUED -> context?.let { nonNullContext ->
+          MessagesSenderWorker.enqueue(
+            nonNullContext
+          )
+        }
+        else -> {
         }
       }
     }

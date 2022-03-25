@@ -11,7 +11,7 @@ import android.text.util.Linkify
 import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
-import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -26,8 +26,8 @@ abstract class BaseDialogFragment : DialogFragment() {
   protected var hasHtml: Boolean = false
   protected var useLinkify: Boolean = false
 
-  val baseActivity: BaseActivity?
-    get() = activity as? BaseActivity
+  val baseActivity: MainActivity?
+    get() = activity as? MainActivity
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

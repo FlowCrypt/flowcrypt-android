@@ -8,10 +8,10 @@ import android.accounts.AccountAuthenticatorResponse
 import android.accounts.AccountManager
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -21,7 +21,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
-import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.navigateUp
@@ -29,12 +28,12 @@ import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
+import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
@@ -52,21 +51,22 @@ import kotlinx.coroutines.launch
  * Time: 11:13 AM
  * E-mail: DenBond7@gmail.com
  */
-class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedListener {
-  private lateinit var navController: NavController
-  private lateinit var binding: ActivityMainBinding
+class MainActivity : BaseActivity<ActivityMainBinding>(),
+  NavController.OnDestinationChangedListener {
   private lateinit var appBarConfiguration: AppBarConfiguration
 
   private var isNavigationArrowDisplayed: Boolean = false
   private var navigationViewManager: NavigationViewManager? = null
 
   private val launcherViewModel: LauncherViewModel by viewModels()
-  private val accountViewModel: AccountViewModel by viewModels()
   private val actionsViewModel: ActionsViewModel by viewModels()
   private val labelsViewModel: LabelsViewModel by viewModels()
 
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
+
+  override fun inflateBinding(inflater: LayoutInflater): ActivityMainBinding =
+    ActivityMainBinding.inflate(layoutInflater)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen().apply {
@@ -141,13 +141,6 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
   }
 
   private fun initViews() {
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-    setSupportActionBar(binding.toolbar)
-
-    navController = (supportFragmentManager.findFragmentById(R.id.fragmentContainerView)
-        as NavHostFragment).navController
     navController.addOnDestinationChangedListener(this)
 
     setupAppBarConfiguration()
@@ -156,7 +149,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
   }
 
   private fun setupAppBarConfiguration() {
-    val topLevelDestinationIds = mutableSetOf(R.id.emailListFragment)
+    val topLevelDestinationIds = mutableSetOf(R.id.messagesListFragment)
     findStartDest(navController.graph)?.id?.let { topLevelDestinationIds.add(it) }
     appBarConfiguration = AppBarConfiguration(topLevelDestinationIds, binding.drawerLayout)
     NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
@@ -294,6 +287,45 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
       menuItem.actionView = view
     } else {
       menuItem.actionView = null
+    }
+  }
+
+  private fun logout() {
+    lifecycleScope.launch {
+      /*activeAccount?.let { accountEntity ->
+        countingIdlingResource.incrementSafely()
+        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
+
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+        roomDatabase.accountDao().logout(accountEntity)
+        removeAccountFromAccountManager(accountEntity)
+
+        //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
+        //remove all info about the given account from the local db
+        roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
+        roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
+
+        val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        if (newActiveAccount == null) {
+          roomDatabase.recipientDao().deleteAll()
+          stopService(Intent(applicationContext, IdleService::class.java))
+          val intent = Intent(applicationContext, MainActivity::class.java)
+          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+          startActivity(intent)
+          finish()
+        }
+
+        countingIdlingResource.decrementSafely()
+      }*/
+    }
+  }
+
+  private fun removeAccountFromAccountManager(accountEntity: AccountEntity?) {
+    val accountManager = AccountManager.get(this)
+    accountManager.accounts.firstOrNull { it.name == accountEntity?.email }?.let { account ->
+      if (account.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
+        accountManager.removeAccountExplicitly(account)
+      }
     }
   }
 

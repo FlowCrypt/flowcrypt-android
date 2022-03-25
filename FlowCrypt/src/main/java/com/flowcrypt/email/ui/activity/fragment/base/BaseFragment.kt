@@ -25,7 +25,6 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
-import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.material.appbar.AppBarLayout
@@ -78,11 +77,7 @@ abstract class BaseFragment : Fragment(), UiUxSettings {
       null
 
   val appBarLayout: AppBarLayout?
-    get() = if (activity is BaseActivity) {
-      (activity as BaseActivity).appBarLayout
-    } else {
-      activity?.findViewById(R.id.appBarLayout)
-    }
+    get() = activity?.findViewById(R.id.appBarLayout)
 
   override fun onAttach(context: Context) {
     super.onAttach(context)

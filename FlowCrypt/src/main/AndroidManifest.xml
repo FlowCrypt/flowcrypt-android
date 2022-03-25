@@ -54,24 +54,6 @@
         </activity>
 
         <activity
-            android:name="net.openid.appauth.RedirectUriReceiverActivity"
-            android:exported="true"
-            tools:node="replace">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <!-- support Microsoft OAuth2.0 -->
-                <data
-                    android:host="${applicationId}"
-                    android:path="@string/microsoft_redirect_path"
-                    android:scheme="msauth" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:theme="@style/AppTheme"
             android:name=".ui.activity.CreateMessageActivity"
             android:exported="true"
@@ -111,9 +93,22 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.SearchMessagesActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+            android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            android:exported="true"
+            tools:node="replace">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- support Microsoft OAuth2.0 -->
+                <data
+                    android:host="${applicationId}"
+                    android:path="@string/microsoft_redirect_path"
+                    android:scheme="msauth" />
+            </intent-filter>
+        </activity>
 
         <!-- Providers -->
         <provider

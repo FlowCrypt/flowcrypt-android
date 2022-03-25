@@ -70,7 +70,12 @@ class FeedbackFragment : BaseFragment() {
 
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
     super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.activity_feedback, menu)
+    inflater.inflate(R.menu.fragment_feedback, menu)
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu) {
+    super.onPrepareOptionsMenu(menu)
+    menu.findItem(R.id.menuActionHelp).isVisible = false
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -88,6 +88,7 @@ class JavaEmailConstants {
     const val FOLDER_SPAM = "SPAM"
     const val FOLDER_ALL_MAIL = "ALL"
     const val FOLDER_OUTBOX = "Outbox"
+    const val FOLDER_SEARCH = ""
     const val FOLDER_FLAG_HAS_NO_CHILDREN = "\\HasNoChildren"
 
     const val EMAIL_PROVIDER_GMAIL = "gmail.com"

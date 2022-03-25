@@ -76,6 +76,11 @@ import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
+import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
@@ -83,7 +88,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
@@ -1510,28 +1514,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun observerMsgStatesLiveData() {
     msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) { newState ->
-      var finishActivity = true
-      val syncActivity = activity as? BaseSyncActivity
-      syncActivity?.let {
-        with(syncActivity) {
-          when (newState) {
-            MessageState.PENDING_ARCHIVING -> archiveMsgs()
-            MessageState.PENDING_DELETING -> deleteMsgs()
-            MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
-            MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
-            MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
-            MessageState.PENDING_MARK_READ -> {
-              changeMsgsReadState()
-              finishActivity = false
-            }
-            else -> {
-            }
-          }
-        }
-      }
-
-      if (finishActivity) {
-        activity?.finish()
+      when (newState) {
+        MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
+          requireContext()
+        )
+        MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_READ -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
+        else -> {}
       }
     }
   }

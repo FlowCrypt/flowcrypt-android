@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 
 /**
  * The base fragment which must used when we will work with an email provider.
@@ -24,13 +23,6 @@ abstract class BaseSyncFragment : BaseFragment() {
   protected var progressView: View? = null
   protected var statusView: View? = null
   protected var tVStatusMsg: TextView? = null
-
-  protected val baseSyncActivity: BaseSyncActivity
-    get() {
-      return activity as? BaseSyncActivity ?: throw IllegalArgumentException(
-        "Can't use outside ${BaseSyncActivity::class.java}"
-      )
-    }
 
   /**
    * Get a content view which contains a UI.

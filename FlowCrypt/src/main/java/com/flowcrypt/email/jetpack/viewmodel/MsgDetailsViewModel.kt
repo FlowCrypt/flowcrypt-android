@@ -46,7 +46,6 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
-import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -726,7 +725,7 @@ class MsgDetailsViewModel(
             AttachmentEntity.fromAttInfo(it.apply {
               email = accountEntity.email
               this.folder =
-                if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+                if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else JavaEmailConstants.FOLDER_SEARCH
               uid = msgUid
             })
           }

@@ -5,11 +5,8 @@
 
 package com.flowcrypt.email.util.google
 
-import android.view.View
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.R
-import com.flowcrypt.email.ui.activity.base.BaseActivity
-import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.ui.activity.BaseActivity
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
@@ -47,19 +44,14 @@ class GoogleApiClientHelper {
      * @param rootView        A view which will be used for showing an info [Snackbar]
      * @param requestCode     A request code for handling the result.
      */
-    fun signInWithGmailUsingOAuth2(
+    /*fun signInWithGmailUsingOAuth2(
       activity: BaseActivity, client: GoogleSignInClient,
       rootView: View?, requestCode: Int
     ) {
       if (GeneralUtil.isConnected(activity)) {
         client.signOut()
         activity.startActivityForResult(client.signInIntent, requestCode)
-      } else {
-        activity.showInfoSnackbar(
-          rootView,
-          activity.getString(R.string.internet_connection_is_not_available)
-        )
       }
-    }
+    }*/
   }
 }
