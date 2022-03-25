@@ -38,7 +38,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.databinding.FragmentEmailListBinding
+import com.flowcrypt.email.databinding.FragmentMessagesListBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
@@ -77,10 +77,10 @@ import javax.mail.AuthenticationFailedException
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-class EmailListFragment : BaseFragment(), ListProgressBehaviour,
+class MessagesListFragment : BaseFragment(), ListProgressBehaviour,
   SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
 
-  private var binding: FragmentEmailListBinding? = null
+  private var binding: FragmentMessagesListBinding? = null
 
   override val emptyView: View?
     get() = binding?.empty?.root
@@ -105,7 +105,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   private lateinit var adapter: MsgsPagedListAdapter
   private var keepSelectionInMemory = false
 
-  override val contentResourceId: Int = R.layout.fragment_email_list
+  override val contentResourceId: Int = R.layout.fragment_messages_list
 
   private val isOutboxFolder: Boolean
     get() {
@@ -121,7 +121,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
       when {
         tracker?.hasSelection() == true -> {
           if (actionMode == null) {
-            actionMode = (this@EmailListFragment.activity as AppCompatActivity)
+            actionMode = (this@MessagesListFragment.activity as AppCompatActivity)
               .startSupportActionMode(genActionModeForMsgs())
           }
           actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
@@ -144,7 +144,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
   ): View? {
-    binding = FragmentEmailListBinding.inflate(inflater, container, false)
+    binding = FragmentMessagesListBinding.inflate(inflater, container, false)
     return binding?.root
   }
 
@@ -346,7 +346,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
           } else {
             currentFolder?.let { localFolder ->
               navController?.navigate(
-                EmailListFragmentDirections.actionEmailListFragmentToMessageDetailsFragment(
+                MessagesListFragmentDirections.actionMessagesListFragmentToMessageDetailsFragment(
                   messageEntity = msgEntity,
                   localFolder = localFolder
                 )
@@ -579,7 +579,7 @@ class EmailListFragment : BaseFragment(), ListProgressBehaviour,
 
         keyProvider?.let {
           tracker = SelectionTracker.Builder(
-            EmailListFragment::class.java.simpleName,
+            MessagesListFragment::class.java.simpleName,
             recyclerView,
             it,
             MsgItemDetailsLookup(recyclerView),

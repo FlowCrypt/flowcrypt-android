@@ -268,7 +268,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             initData?.let {
               val startDestination = when {
                 initData.accountEntity != null -> {
-                  NavGraphDirections.actionGlobalToEmailListFragment()
+                  NavGraphDirections.actionGlobalToMessagesListFragment()
                 }
 
                 else -> NavGraphDirections.actionGlobalToMainSignInFragment()

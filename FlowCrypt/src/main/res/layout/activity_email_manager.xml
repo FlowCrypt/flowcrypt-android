@@ -20,11 +20,11 @@
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/emailListFragment"
-            android:name="com.flowcrypt.email.ui.activity.fragment.EmailListFragment"
+            android:name="com.flowcrypt.email.ui.activity.fragment.MessagesListFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:layout="@layout/fragment_email_list" />
+            tools:layout="@layout/fragment_messages_list" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/floatActionButtonCompose"

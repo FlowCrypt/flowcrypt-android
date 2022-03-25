@@ -171,7 +171,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
   protected open fun runEmailManagerActivity() {
     IdleService.start(requireContext())
     getTempAccount()?.let { roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email)) }
-    navController?.navigate(NavGraphDirections.actionGlobalToEmailListFragment())
+    navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
   }
 
   /**

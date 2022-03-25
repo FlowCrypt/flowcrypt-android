@@ -473,11 +473,11 @@
     </fragment>
 
     <fragment
-        android:id="@+id/emailListFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.EmailListFragment"
-        tools:layout="@layout/fragment_email_list">
+        android:id="@+id/messagesListFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.MessagesListFragment"
+        tools:layout="@layout/fragment_messages_list">
         <action
-            android:id="@+id/action_emailListFragment_to_messageDetailsFragment"
+            android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"
             app:destination="@id/messageDetailsFragment" />
     </fragment>
 
@@ -794,8 +794,8 @@
         app:popUpTo="@+id/nav_graph"
         app:popUpToInclusive="true" />
     <action
-        android:id="@+id/action_global_to_emailListFragment"
-        app:destination="@id/emailListFragment"
+        android:id="@+id/action_global_to_messagesListFragment"
+        app:destination="@id/messagesListFragment"
         app:launchSingleTop="true"
         app:popUpTo="@+id/nav_graph"
         app:popUpToInclusive="true" />
