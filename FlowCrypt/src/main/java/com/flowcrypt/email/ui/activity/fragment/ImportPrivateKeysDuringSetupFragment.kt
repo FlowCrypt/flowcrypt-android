@@ -47,7 +47,7 @@ class ImportPrivateKeysDuringSetupFragment :
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
       navController?.navigate(
-        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
       )
     }
 

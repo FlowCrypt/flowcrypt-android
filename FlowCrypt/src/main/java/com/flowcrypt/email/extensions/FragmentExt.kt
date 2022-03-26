@@ -19,8 +19,10 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
+import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.util.UIUtil
+import com.google.android.material.appbar.AppBarLayout
 
 /**
  * @author Denis Bondarenko
@@ -28,6 +30,9 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 4:16 PM
  *         E-mail: DenBond7@gmail.com
  */
+
+val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
+  get() = activity?.findViewById(R.id.appBarLayout)
 
 val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
   get() = (activity as? BaseActivity<*>)?.countingIdlingResource
@@ -43,13 +48,7 @@ val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
 
 val androidx.fragment.app.Fragment.navController: NavController?
   get() = activity?.let {
-    try {
-      Navigation.findNavController(it, R.id.fragmentContainerView)
-    } catch (e: Exception) {
-      //to prevent error in fragments which don't use navController
-      //todo-denbond7 remove this after the full migration
-      null
-    }
+    Navigation.findNavController(it, R.id.fragmentContainerView)
   }
 
 val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
@@ -57,6 +56,13 @@ val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
 
 val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
   get() = navController?.previousBackStackEntry?.savedStateHandle
+
+fun androidx.fragment.app.Fragment.doBaseUISetup(uiUxSettings: UiUxSettings) {
+  mainActivity?.setDrawerLockMode(uiUxSettings.isSideMenuLocked)
+  appBarLayout?.visibleOrGone(uiUxSettings.isToolbarVisible)
+  supportActionBar?.setDisplayHomeAsUpEnabled(uiUxSettings.isDisplayHomeAsUpEnabled)
+  supportActionBar?.subtitle = null
+}
 
 fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T) {
   previousOnResultSavedStateHandle?.set(key, value)
@@ -118,17 +124,22 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
   dialogTitle: String? = null,
   dialogMsg: String? = null,
   buttonTitle: String? = null,
-  isCancelable: Boolean = false,
+  isCancelable: Boolean = true,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false,
   useWebViewToRender: Boolean = false
 ) {
+  //to show the current dialog we should be sure there is no active dialogs
+  if (navController?.currentDestination?.navigatorName == "dialog") {
+    navController?.navigateUp()
+  }
+
   navController?.navigate(
     NavGraphDirections.actionGlobalInfoDialogFragment(
       requestCode = requestCode,
       dialogTitle = dialogTitle,
       dialogMsg = dialogMsg,
-      buttonTitle = buttonTitle,
+      buttonTitle = buttonTitle ?: getString(android.R.string.ok),
       isCancelable = isCancelable,
       hasHtml = hasHtml,
       useLinkify = useLinkify,
@@ -143,17 +154,22 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
   dialogMsg: String? = null,
   positiveButtonTitle: String? = null,
   negativeButtonTitle: String? = null,
-  isCancelable: Boolean = false,
+  isCancelable: Boolean = true,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false
 ) {
+  //to show the current dialog we should be sure there is no active dialogs
+  if (navController?.currentDestination?.navigatorName == "dialog") {
+    navController?.navigateUp()
+  }
+
   navController?.navigate(
     NavGraphDirections.actionGlobalTwoWayDialogFragment(
       requestCode = requestCode,
       dialogTitle = dialogTitle,
       dialogMsg = dialogMsg,
-      positiveButtonTitle = positiveButtonTitle,
-      negativeButtonTitle = negativeButtonTitle,
+      positiveButtonTitle = positiveButtonTitle ?: getString(android.R.string.ok),
+      negativeButtonTitle = negativeButtonTitle ?: getString(android.R.string.cancel),
       isCancelable = isCancelable,
       hasHtml = hasHtml,
       useLinkify = useLinkify

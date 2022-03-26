@@ -38,6 +38,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -90,6 +91,10 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
     setupPublicKeyDetailsViewModel()
   }
 
@@ -152,10 +157,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
             String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
           )
         )
-        Toast.makeText(
-          context, getString(R.string.public_key_copied_to_clipboard),
-          Toast.LENGTH_SHORT
-        ).show()
+        toast(R.string.public_key_copied_to_clipboard)
         return true
       }
 

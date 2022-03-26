@@ -17,4 +17,7 @@ interface UiUxSettings {
 
   val isDisplayHomeAsUpEnabled: Boolean
     get() = true
+
+  val isSideMenuLocked: Boolean
+    get() = true
 }

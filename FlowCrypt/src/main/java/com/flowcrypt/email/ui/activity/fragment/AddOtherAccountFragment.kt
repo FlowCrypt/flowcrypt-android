@@ -37,6 +37,7 @@ import com.flowcrypt.email.databinding.FragmentAddOtherAccountBinding
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.showTwoWayDialog
@@ -274,7 +275,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     }
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
-      //FeedbackActivity.show(requireActivity())
+      showFeedbackFragment()
     }
 
     binding?.buttonSignInWithOutlook?.setOnClickListener {
@@ -455,10 +456,6 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
         }
 
         CheckKeysFragment.CheckingState.CANCELED -> showContent()
-
-        CheckKeysFragment.CheckingState.NEGATIVE -> {
-          navController?.navigateUp()
-        }
       }
     }
   }

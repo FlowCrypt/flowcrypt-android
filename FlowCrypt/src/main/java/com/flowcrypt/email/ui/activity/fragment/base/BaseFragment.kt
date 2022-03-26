@@ -19,15 +19,14 @@ import androidx.fragment.app.viewModels
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.doBaseUISetup
 import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.extensions.supportActionBar
-import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.LogsUtil
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -51,9 +50,6 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
 
   protected var snackBar: Snackbar? = null
     private set
-
-  val appBarLayout: AppBarLayout?
-    get() = activity?.findViewById(R.id.appBarLayout)
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -80,9 +76,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     LogsUtil.d(loggingTag, "onViewCreated")
-    appBarLayout?.visibleOrGone(isToolbarVisible)
-    supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
-    supportActionBar?.subtitle = null
+    doBaseUISetup(this)
     initAccountViewModel()
   }
 

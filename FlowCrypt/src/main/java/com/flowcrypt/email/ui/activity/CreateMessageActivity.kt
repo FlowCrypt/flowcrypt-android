@@ -10,7 +10,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
-import androidx.navigation.fragment.NavHostFragment
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
@@ -39,9 +38,6 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val navHostFragment =
-      supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
-    val navController = navHostFragment.navController
     val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
     navGraph.startDestination = R.id.createMessageFragment
     navController.setGraph(navGraph, intent.extras)

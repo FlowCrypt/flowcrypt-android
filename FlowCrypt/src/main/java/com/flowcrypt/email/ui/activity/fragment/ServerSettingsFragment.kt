@@ -386,9 +386,8 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
                 MessagesSenderWorker.enqueue(context, true)
                 InboxIdleSyncWorker.enqueue(context)
                 toast(text = getString(R.string.server_settings_updated))
-                //EmailManagerActivity.runEmailManagerActivity(context)
+                navController?.navigateUp()
               }
-              activity?.finish()
             }
           }
 

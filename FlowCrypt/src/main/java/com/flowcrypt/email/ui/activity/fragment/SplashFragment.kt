@@ -8,11 +8,9 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.get
 import com.flowcrypt.email.databinding.FragmentSplashBinding
-import com.flowcrypt.email.extensions.mainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 
 /**
@@ -39,10 +37,5 @@ class SplashFragment : BaseFragment<FragmentSplashBinding>() {
     for (i in 0 until menu.size()) {
       menu[i].isVisible = false
     }
-  }
-
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-    mainActivity?.setDrawerLockMode(true)
   }
 }

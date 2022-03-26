@@ -46,6 +46,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
@@ -88,6 +89,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentMessagesListBinding.inflate(inflater, container, false)
+
+  override val isSideMenuLocked: Boolean = false
 
   override val emptyView: View?
     get() = binding?.empty?.root
@@ -147,6 +150,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    supportActionBar?.title = currentFolder?.folderAlias
     initViews()
     setupMsgsViewModel()
     setupLabelsViewModel()
@@ -405,10 +409,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
     showInfoDialog(
       dialogTitle = null,
-      dialogMsg = message,
-      buttonTitle = null,
-      isCancelable = true,
-      hasHtml = false
+      dialogMsg = message
     )
 
     /*infoDialogFragment.onInfoDialogButtonClickListener =

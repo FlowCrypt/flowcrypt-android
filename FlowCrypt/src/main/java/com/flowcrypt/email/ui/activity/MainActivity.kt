@@ -14,7 +14,6 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -34,6 +33,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
+import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
@@ -55,7 +55,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
   NavController.OnDestinationChangedListener {
   private lateinit var appBarConfiguration: AppBarConfiguration
 
-  private var isNavigationArrowDisplayed: Boolean = false
   private var navigationViewManager: NavigationViewManager? = null
 
   private val launcherViewModel: LauncherViewModel by viewModels()
@@ -81,19 +80,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
     initAccountViewModel()
     setupLabelsViewModel()
     setupDefaultRouting(savedInstanceState)
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      android.R.id.home -> if (isNavigationArrowDisplayed) {
-        onBackPressed()
-        true
-      } else {
-        super.onOptionsItemSelected(item)
-      }
-
-      else -> super.onOptionsItemSelected(item)
-    }
   }
 
   override fun onSupportNavigateUp(): Boolean {
@@ -132,12 +118,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
     arguments: Bundle?
   ) {
 
-  }
-
-  fun setDrawerLockMode(isLocked: Boolean) {
-    binding.drawerLayout.setDrawerLockMode(
-      if (isLocked) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED
-    )
   }
 
   private fun initViews() {
@@ -190,7 +170,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
         }
 
         R.id.navMenuActionReportProblem -> {
-          //FeedbackActivity.show(this)
+          showFeedbackFragment()
         }
       }
 

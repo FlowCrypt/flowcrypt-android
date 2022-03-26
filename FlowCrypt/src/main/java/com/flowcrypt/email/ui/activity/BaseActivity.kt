@@ -10,9 +10,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.allViews
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.test.espresso.idling.CountingIdlingResource
@@ -38,6 +41,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   protected lateinit var navController: NavController
 
   protected val tag: String = javaClass.simpleName
+  protected var isNavigationArrowDisplayed: Boolean = false
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val activeAccount: AccountEntity?
     get() = accountViewModel.activeAccountLiveData.value
@@ -57,9 +61,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     setContentView(binding.root)
     initViews()
 
-    navController = (supportFragmentManager.findFragmentById(R.id.fragmentContainerView)
-        as NavHostFragment).navController
-
+    setupNavController()
     initAccountViewModel()
   }
 
@@ -106,8 +108,11 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
-      android.R.id.home -> {
-        navController.navigateUp()
+      android.R.id.home -> if (isNavigationArrowDisplayed) {
+        onBackPressed()
+        true
+      } else {
+        super.onOptionsItemSelected(item)
       }
 
       R.id.menuActionHelp -> {
@@ -121,6 +126,19 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
 
   protected open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
 
+  }
+
+  fun setDrawerLockMode(isLocked: Boolean) {
+    val drawerLayout = ((binding.root as? ViewGroup)?.allViews?.filter { it is DrawerLayout }
+      ?.firstOrNull()) as? DrawerLayout
+    drawerLayout?.setDrawerLockMode(
+      if (isLocked) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED
+    )
+  }
+
+  private fun setupNavController() {
+    navController = (supportFragmentManager.findFragmentById(R.id.fragmentContainerView)
+        as NavHostFragment).navController
   }
 
   private fun initAccountViewModel() {

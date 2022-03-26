@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentUserRecoverableAuthExceptionBinding
+import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MainActivity
@@ -167,7 +168,7 @@ class UserRecoverableAuthExceptionFragment :
     }
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
-      //FeedbackActivity.show(requireActivity())
+      showFeedbackFragment()
     }
   }
 
