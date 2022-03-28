@@ -10,6 +10,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
+import androidx.navigation.NavHostController
+import androidx.navigation.ui.AppBarConfiguration
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
@@ -36,8 +38,21 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
   override fun inflateBinding(inflater: LayoutInflater): ActivityCreateMessageBinding =
     ActivityCreateMessageBinding.inflate(layoutInflater)
 
+  override fun initAppBarConfiguration(): AppBarConfiguration {
+    return AppBarConfiguration(topLevelDestinationIds = emptySet(), fallbackOnNavigateUpListener = {
+      if (navController.navigateUp()) {
+        true
+      } else {
+        finish()
+        false
+      }
+    })
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    (navController as? NavHostController)?.enableOnBackPressed(true)
+    isNavigationArrowDisplayed = true
     val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
     navGraph.startDestination = R.id.createMessageFragment
     navController.setGraph(navGraph, intent.extras)
@@ -62,21 +77,14 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
 
   companion object {
     fun generateIntent(
-      context: Context,
-      msgInfo: IncomingMessageInfo?,
-      msgEncryptionType: MessageEncryptionType
-    ): Intent {
-      return generateIntent(context, msgInfo, MessageType.NEW, msgEncryptionType)
-    }
-
-    fun generateIntent(
       context: Context?,
-      msgInfo: IncomingMessageInfo?,
       @MessageType messageType: Int,
-      msgEncryptionType: MessageEncryptionType?,
+      msgEncryptionType: MessageEncryptionType = MessageEncryptionType.ENCRYPTED,
+      msgInfo: IncomingMessageInfo? = null,
       serviceInfo: ServiceInfo? = null
     ): Intent {
       val intent = Intent(context, CreateMessageActivity::class.java)
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
       intent.putExtra("incomingMessageInfo", msgInfo)
       intent.putExtra("messageType", messageType)
       intent.putExtra("encryptedByDefault", msgEncryptionType == MessageEncryptionType.ENCRYPTED)

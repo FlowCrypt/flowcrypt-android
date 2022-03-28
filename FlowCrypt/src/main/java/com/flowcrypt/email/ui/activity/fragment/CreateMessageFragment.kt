@@ -958,6 +958,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun showContent() {
+    UIUtil.exchangeViewVisibility(false, binding?.viewIdProgressView, binding?.scrollView)
     if ((args.incomingMessageInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
       this.isIncomingMsgInfoUsed = true
       updateViews()

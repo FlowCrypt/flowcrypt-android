@@ -107,6 +107,7 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
             userComment = binding?.editTextUserMessage?.text.toString(),
             screenShotBytes = screenShotBytes
           )
+          toast(getString(R.string.thank_you_for_feedback))
           navController?.navigateUp()
         }
         return true

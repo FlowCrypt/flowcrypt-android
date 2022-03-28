@@ -48,6 +48,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
@@ -57,6 +58,8 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWor
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -233,16 +236,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
    */
   fun setActionProgress(progress: Int, message: String? = null) {
     binding?.progressBarActionProgress?.progress = progress
-    binding?.progressBarActionProgress?.visibility =
-      if (progress == 100) View.GONE else View.VISIBLE
-
+    binding?.groupActionProgress?.visibleOrGone(progress != 100)
     if (progress != 100) {
       binding?.textViewActionProgress?.text =
         getString(R.string.progress_message, progress, message)
-      binding?.textViewActionProgress?.visibility = View.VISIBLE
     } else {
       binding?.textViewActionProgress?.text = null
-      binding?.textViewActionProgress?.visibility = View.GONE
       adapter.changeProgress(false)
     }
   }
@@ -477,6 +476,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary
     )
     binding?.sRL?.setOnRefreshListener(this)
+
+    binding?.floatActionButtonCompose?.setOnClickListener {
+      startActivity(
+        CreateMessageActivity.generateIntent(context, MessageType.NEW)
+      )
+    }
   }
 
   private fun setupRecyclerView() {

@@ -361,7 +361,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       R.id.layoutReplyButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.REPLY, msgEncryptType
+            context, MessageType.REPLY, msgEncryptType, prepareMsgInfoForReply()
           )
         )
       }
@@ -369,7 +369,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.REPLY_ALL, msgEncryptType
+            context, MessageType.REPLY_ALL, msgEncryptType, prepareMsgInfoForReply()
           )
         )
       }
@@ -415,7 +415,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
         startActivity(
           CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.FORWARD, msgEncryptType
+            context, MessageType.FORWARD, msgEncryptType, prepareMsgInfoForReply()
           )
         )
       }
@@ -578,8 +578,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     startActivity(
       CreateMessageActivity.generateIntent(
-        context, prepareMsgInfoForReply(), MessageType.REPLY,
-        MessageEncryptionType.STANDARD,
+        context, MessageType.REPLY,
+        MessageEncryptionType.STANDARD, prepareMsgInfoForReply(),
         ServiceInfo(
           isToFieldEditable = false,
           isFromFieldEditable = false,

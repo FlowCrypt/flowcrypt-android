@@ -18,6 +18,8 @@ import androidx.core.view.allViews
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
@@ -39,6 +41,7 @@ import com.flowcrypt.email.util.LogsUtil
 abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   protected lateinit var binding: T
   protected lateinit var navController: NavController
+  protected lateinit var appBarConfiguration: AppBarConfiguration
 
   protected val tag: String = javaClass.simpleName
   protected var isNavigationArrowDisplayed: Boolean = false
@@ -52,16 +55,14 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   )
 
   protected abstract fun inflateBinding(inflater: LayoutInflater): T
+  protected abstract fun initAppBarConfiguration(): AppBarConfiguration
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     LogsUtil.d(tag, "onCreate")
 
-    binding = inflateBinding(layoutInflater)
-    setContentView(binding.root)
     initViews()
-
-    setupNavController()
+    setupNavigation()
     initAccountViewModel()
   }
 
@@ -136,11 +137,6 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     )
   }
 
-  private fun setupNavController() {
-    navController = (supportFragmentManager.findFragmentById(R.id.fragmentContainerView)
-        as NavHostFragment).navController
-  }
-
   private fun initAccountViewModel() {
     accountViewModel.activeAccountLiveData.observe(this) {
       onAccountInfoRefreshed(it)
@@ -148,6 +144,24 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   }
 
   private fun initViews() {
+    binding = inflateBinding(layoutInflater)
+    setContentView(binding.root)
     findViewById<Toolbar>(R.id.toolbar)?.let { setSupportActionBar(it) }
+  }
+
+  private fun setupNavigation() {
+    navController = (supportFragmentManager.findFragmentById(R.id.fragmentContainerView)
+        as NavHostFragment).navController
+    appBarConfiguration = initAppBarConfiguration()
+    navController.addOnDestinationChangedListener { _, destination, _ ->
+      isNavigationArrowDisplayed = destination.id !in appBarConfiguration.topLevelDestinations
+    }
+    findViewById<Toolbar>(R.id.toolbar)?.let {
+      NavigationUI.setupWithNavController(
+        it,
+        navController,
+        appBarConfiguration
+      )
+    }
   }
 }

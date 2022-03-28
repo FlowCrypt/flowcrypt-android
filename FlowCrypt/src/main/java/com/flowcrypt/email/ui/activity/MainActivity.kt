@@ -17,12 +17,9 @@ import androidx.core.view.GravityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.NavigationUI
-import androidx.navigation.ui.navigateUp
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.NavGraphDirections
@@ -51,10 +48,7 @@ import kotlinx.coroutines.launch
  * Time: 11:13 AM
  * E-mail: DenBond7@gmail.com
  */
-class MainActivity : BaseActivity<ActivityMainBinding>(),
-  NavController.OnDestinationChangedListener {
-  private lateinit var appBarConfiguration: AppBarConfiguration
-
+class MainActivity : BaseActivity<ActivityMainBinding>() {
   private var navigationViewManager: NavigationViewManager? = null
 
   private val launcherViewModel: LauncherViewModel by viewModels()
@@ -66,6 +60,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
 
   override fun inflateBinding(inflater: LayoutInflater): ActivityMainBinding =
     ActivityMainBinding.inflate(layoutInflater)
+
+  override fun initAppBarConfiguration(): AppBarConfiguration {
+    val topLevelDestinationIds = mutableSetOf(R.id.messagesListFragment)
+    findStartDest(navController.graph)?.id?.let { topLevelDestinationIds.add(it) }
+    return AppBarConfiguration(topLevelDestinationIds, binding.drawerLayout)
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen().apply {
@@ -80,10 +80,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
     initAccountViewModel()
     setupLabelsViewModel()
     setupDefaultRouting(savedInstanceState)
-  }
-
-  override fun onSupportNavigateUp(): Boolean {
-    return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
   }
 
   override fun finish() {
@@ -112,31 +108,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(),
     oAuthFragment?.handleOAuth2Intent(intent)
   }
 
-  override fun onDestinationChanged(
-    controller: NavController,
-    destination: NavDestination,
-    arguments: Bundle?
-  ) {
-
-  }
-
   private fun initViews() {
-    navController.addOnDestinationChangedListener(this)
-
-    setupAppBarConfiguration()
     setupNavigationView()
     setupDrawerLayout()
-  }
-
-  private fun setupAppBarConfiguration() {
-    val topLevelDestinationIds = mutableSetOf(R.id.messagesListFragment)
-    findStartDest(navController.graph)?.id?.let { topLevelDestinationIds.add(it) }
-    appBarConfiguration = AppBarConfiguration(topLevelDestinationIds, binding.drawerLayout)
-    NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
-
-    navController.addOnDestinationChangedListener { _, destination, _ ->
-      isNavigationArrowDisplayed = destination.id !in topLevelDestinationIds
-    }
   }
 
   private fun setupNavigationView() {

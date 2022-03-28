@@ -17,7 +17,7 @@ import android.webkit.WebViewClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
-import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 
 /**
@@ -112,8 +112,7 @@ class EmailWebView : WebView {
      * @param uri [Uri] with mailto: scheme.
      */
     private fun handleEmailLinks(uri: Uri) {
-      val intent =
-        CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED)
+      val intent = CreateMessageActivity.generateIntent(context, MessageType.NEW)
       intent.action = Intent.ACTION_SENDTO
       intent.data = uri
       context.startActivity(intent)
