@@ -20,6 +20,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.NavGraphDirections
@@ -109,6 +110,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun initViews() {
+    NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
     setupNavigationView()
     setupDrawerLayout()
   }
