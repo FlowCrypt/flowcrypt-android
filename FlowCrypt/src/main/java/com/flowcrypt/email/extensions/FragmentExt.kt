@@ -17,7 +17,6 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.BaseActivity
-import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
 import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -37,9 +36,6 @@ val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
 val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
   get() = (activity as? BaseActivity<*>)?.countingIdlingResource
 
-val androidx.fragment.app.Fragment.mainActivity: MainActivity?
-  get() = activity as? MainActivity
-
 val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
   get() = if (activity is AppCompatActivity) {
     (activity as AppCompatActivity).supportActionBar
@@ -58,7 +54,7 @@ val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
   get() = navController?.previousBackStackEntry?.savedStateHandle
 
 fun androidx.fragment.app.Fragment.doBaseUISetup(uiUxSettings: UiUxSettings) {
-  mainActivity?.setDrawerLockMode(uiUxSettings.isSideMenuLocked)
+  (activity as? BaseActivity<*>)?.setDrawerLockMode(uiUxSettings.isSideMenuLocked)
   appBarLayout?.visibleOrGone(uiUxSettings.isToolbarVisible)
   supportActionBar?.setDisplayHomeAsUpEnabled(uiUxSettings.isDisplayHomeAsUpEnabled)
   supportActionBar?.subtitle = null
