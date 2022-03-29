@@ -35,7 +35,6 @@ open class ParseKeysViewModel(application: Application) : AccountViewModel(appli
     pgpKeyDetailsListMutableStateFlow.asStateFlow()
   private val controlledRunnerForParseKeys = ControlledRunner<Result<List<PgpKeyDetails>>>()
 
-
   fun parseKeys(source: ByteArray?) {
     source?.let { parseKeys(it.inputStream()) }
   }
