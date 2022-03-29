@@ -181,6 +181,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     setupRecipientsViewModel()
     subscribeToSetWebPortalPassword()
     subscribeToSelectRecipients()
+    subscribeToAddMissingRecipientPublicKey()
 
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
@@ -267,13 +268,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           binding?.btnSetWebPortalPassword?.callOnClick()
         }
       }
-
-      /*REQUEST_CODE_IMPORT_PUBLIC_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          Toast.makeText(context, R.string.the_key_successfully_imported, Toast.LENGTH_SHORT).show()
-          updateRecipients()
-        }
-      }*/
 
       REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
         Activity.RESULT_OK -> {
@@ -1879,9 +1873,23 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           binding?.editTextRecipientBcc,
           composeMsgViewModel.recipientWithPubKeysBcc.map { it.recipientWithPubKeys })
 
-        Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
-
+        toast(R.string.key_successfully_copied, Toast.LENGTH_LONG)
         cachedRecipientWithoutPubKeys = null
+      }
+    }
+  }
+
+  private fun subscribeToAddMissingRecipientPublicKey() {
+    setFragmentResultListener(
+      ImportMissingPublicKeyFragment.REQUEST_KEY_RECIPIENT_WITH_PUB_KEY
+    ) { _, bundle ->
+      val recipientWithPubKeys = bundle.getParcelable<RecipientWithPubKeys>(
+        ImportMissingPublicKeyFragment.KEY_RECIPIENT_WITH_PUB_KEY
+      )
+
+      if (recipientWithPubKeys?.hasAtLeastOnePubKey() == true) {
+        toast(R.string.the_key_successfully_imported)
+        updateRecipients()
       }
     }
   }
