@@ -7,6 +7,7 @@ package com.flowcrypt.email.service
 
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -15,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -70,14 +72,17 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
     return NotificationCompat.Builder(this, NotificationChannelManager.CHANNEL_ID_SILENT)
       .setContentTitle(getString(R.string.active_passphrase_session))
       .setSmallIcon(R.drawable.ic_baseline_password_24dp)
-      /*.setContentIntent(
+      .setContentIntent(
         PendingIntent.getActivity(
           this,
           0,
-          Intent(this, EmailManagerActivity::class.java),
+          Intent(this, MainActivity::class.java).apply {
+            action = Intent.ACTION_MAIN
+            addCategory(Intent.CATEGORY_LAUNCHER)
+          },
           PendingIntent.FLAG_IMMUTABLE
         )
-      )*/
+      )
       .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
       .build()
   }
