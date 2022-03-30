@@ -96,7 +96,10 @@ class NavigationViewManager(
       LayoutInflater.from(context).inflate(
         R.layout.add_account, accountManagementLayout, false
       ).apply {
-        setOnClickListener { navHeaderActionsListener.onAddAccountClick() }
+        setOnClickListener {
+          navHeaderBinding?.layoutUserDetails?.performClick()
+          navHeaderActionsListener.onAddAccountClick()
+        }
       })
     return accountManagementLayout
   }

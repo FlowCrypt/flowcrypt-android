@@ -74,18 +74,36 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
 
     binding?.buttonSelectAnotherAccount?.visibleOrGone(args.isShowAnotherAccountBtnEnabled)
     binding?.buttonSelectAnotherAccount?.setOnClickListener {
-      returnResult(USE_ANOTHER_ACCOUNT)
+      setResult(USE_ANOTHER_ACCOUNT, emptyList())
     }
   }
 
-  private fun returnResult(@CreateOrImportPrivateKeyDuringSetupFragment.Result state: Int) {
+  private fun setResult(@Result result: Int, keys: List<PgpKeyDetails>) {
     setFragmentResult(
-      CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS,
+      REQUEST_KEY_PRIVATE_KEYS,
       bundleOf(
-        KEY_STATE to state
+        KEY_STATE to result,
+        KEY_PRIVATE_KEYS to ArrayList(keys)
       )
     )
     navController?.navigateUp()
+  }
+
+  private fun subscribeToCheckPrivateKeysFromImport() {
+    setFragmentResultListener(ImportPrivateKeysDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
+      val keys =
+        bundle.getParcelableArrayList<PgpKeyDetails>(ImportPrivateKeysDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+      keys?.let { setResult(HANDLE_RESOLVED_KEYS, it) }
+    }
+  }
+
+  private fun subscribeToCreatePrivateKey() {
+    setFragmentResultListener(CreatePrivateKeyFirstFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
+      val pgpKeyDetails =
+        bundle.getParcelable<PgpKeyDetails>(CreatePrivateKeyFirstFragment.KEY_CREATED_KEY)
+
+      pgpKeyDetails?.let { setResult(HANDLE_CREATED_KEY, listOf(it)) }
+    }
   }
 
   @Retention(AnnotationRetention.SOURCE)
@@ -98,50 +116,18 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
     }
   }
 
-  private fun subscribeToCheckPrivateKeysFromImport() {
-    setFragmentResultListener(ImportPrivateKeysDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
-      val keys =
-        bundle.getParcelableArrayList<PgpKeyDetails>(ImportPrivateKeysDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
-      setFragmentResult(
-        REQUEST_KEY_PRIVATE_KEYS,
-        bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys)
-      )
-      navController?.navigateUp()
-    }
-  }
-
-  private fun subscribeToCreatePrivateKey() {
-    setFragmentResultListener(CreatePrivateKeyFirstFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
-      val pgpKeyDetails =
-        bundle.getParcelable<PgpKeyDetails>(CreatePrivateKeyFirstFragment.KEY_CREATED_KEY)
-      setFragmentResult(
-        REQUEST_KEY_CREATE_KEY,
-        bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
-      )
-      navController?.navigateUp()
-    }
-  }
-
   companion object {
-    val KEY_STATE = GeneralUtil.generateUniqueExtraKey(
-      "KEY_STATE", CreateOrImportPrivateKeyDuringSetupFragment::class.java
-    )
-
     val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PRIVATE_KEYS",
       CreateOrImportPrivateKeyDuringSetupFragment::class.java
     )
 
-    val KEY_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "KEY_UNLOCKED_PRIVATE_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
+    val KEY_STATE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_STATE", CreateOrImportPrivateKeyDuringSetupFragment::class.java
     )
 
-    val REQUEST_KEY_CREATE_KEY = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PARSED_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
-    )
-
-    val KEY_CREATED_KEY = GeneralUtil.generateUniqueExtraKey(
-      "KEY_PARSED_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
+    val KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "KEY_PRIVATE_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
     )
   }
 }

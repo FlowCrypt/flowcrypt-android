@@ -498,6 +498,9 @@
         <action
             android:id="@+id/action_messagesListFragment_to_createMessageFragment"
             app:destination="@id/createMessageFragment" />
+        <action
+            android:id="@+id/action_messagesListFragment_to_mainSignInFragment"
+            app:destination="@id/mainSignInFragment" />
     </fragment>
 
     <fragment

@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base
 
-import android.app.Activity
-import android.content.Intent
 import androidx.fragment.app.viewModels
 import androidx.viewbinding.ViewBinding
 import androidx.work.WorkManager
@@ -25,7 +23,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
-import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
 
@@ -43,13 +40,20 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
 
   abstract fun getTempAccount(): AccountEntity?
   abstract fun onAccountAdded(accountEntity: AccountEntity)
-  abstract fun onSetupCompleted(accountEntity: AccountEntity, keys: List<PgpKeyDetails>)
   abstract fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
     accountEntity: AccountEntity,
     pgpKeyDetails: PgpKeyDetails
   )
 
   override val isToolbarVisible: Boolean = false
+
+  protected fun onSetupCompleted(accountEntity: AccountEntity) {
+    if (existingAccounts.isEmpty()) {
+      navigateToPrimaryAccountMessagesList(accountEntity)
+    } else {
+      switchAccount(accountEntity)
+    }
+  }
 
   protected fun initPrivateKeysViewModel() {
     privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner) {
@@ -61,7 +65,7 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
           }
 
           Result.Status.SUCCESS -> {
-            it.data?.let { pair -> onSetupCompleted(pair.first, pair.second) }
+            it.data?.let { pair -> onSetupCompleted(pair.first) }
             countingIdlingResource?.decrementSafely()
           }
 
@@ -170,25 +174,18 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
     }
   }
 
-  protected open fun runEmailManagerActivity() {
+  protected open fun navigateToPrimaryAccountMessagesList(accountEntity: AccountEntity) {
     IdleService.start(requireContext())
-    getTempAccount()?.let { roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email)) }
+    if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
+    }
     navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
   }
 
-  /**
-   * Return the [Activity.RESULT_OK] to the initiator-activity.
-   */
-  protected open fun returnResultOk() {
-    getTempAccount()?.let {
-      if (it.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email))
-      }
-
-      val intent = Intent()
-      intent.putExtra(MainActivity.KEY_EXTRA_NEW_ACCOUNT, it)
-      activity?.setResult(Activity.RESULT_OK, intent)
-      activity?.finish()
+  protected open fun switchAccount(accountEntity: AccountEntity) {
+    if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
     }
+    navController?.navigateUp()
   }
 }

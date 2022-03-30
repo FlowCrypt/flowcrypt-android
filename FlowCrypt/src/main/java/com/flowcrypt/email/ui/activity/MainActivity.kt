@@ -6,8 +6,11 @@ package com.flowcrypt.email.ui.activity
 
 import android.accounts.AccountAuthenticatorResponse
 import android.accounts.AccountManager
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.widget.TextView
@@ -36,7 +39,9 @@ import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
+import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
+import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
@@ -59,6 +64,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
 
+  private val idleServiceConnection = object : ServiceConnection {
+    override fun onServiceConnected(className: ComponentName, service: IBinder) {}
+    override fun onServiceDisconnected(arg0: ComponentName) {}
+  }
+
   override fun inflateBinding(inflater: LayoutInflater): ActivityMainBinding =
     ActivityMainBinding.inflate(layoutInflater)
 
@@ -75,6 +85,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       }
     }
     super.onCreate(savedInstanceState)
+
+    IdleService.start(this)
+    IdleService.bind(this, idleServiceConnection)
 
     initViews()
     handleAccountAuthenticatorResponse()
@@ -109,6 +122,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     oAuthFragment?.handleOAuth2Intent(intent)
   }
 
+  override fun onDestroy() {
+    super.onDestroy()
+    unbindService(idleServiceConnection)
+  }
+
   private fun initViews() {
     NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
     setupNavigationView()
@@ -125,7 +143,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         override fun onAddAccountClick() {
           binding.drawerLayout.closeDrawer(GravityCompat.START)
-          //open main sign in
+          binding.navigationView.menu.setGroupVisible(0, true)
+          navController.navigate(
+            MessagesListFragmentDirections.actionMessagesListFragmentToMainSignInFragment()
+          )
         }
 
         override fun onSwitchAccountClick(accountEntity: AccountEntity) {

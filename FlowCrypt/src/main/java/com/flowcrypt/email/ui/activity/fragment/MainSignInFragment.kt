@@ -46,8 +46,10 @@ import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
-import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
-import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.CHECKED_KEYS
+import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.SKIP_REMAINING_KEYS
+import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_RESOLVED_KEYS
+import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.USE_ANOTHER_ACCOUNT
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -114,6 +116,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     subscribeToAuthorizeAndSearchBackups()
     subscribeToCheckPrivateKeys()
     subscribeToTwoWayDialog()
+    subscribeCreateOrImportPrivateKeyDuringSetup()
     observeOnResultLiveData()
 
     initAddNewAccountLiveData()
@@ -132,19 +135,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       REQUEST_CODE_SIGN_IN -> {
         handleSignInResult(resultCode, GoogleSignIn.getSignedInAccountFromIntent(data))
-      }
-
-      REQUEST_CODE_CREATE_OR_IMPORT_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-
-        /*Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
-          this.googleSignInAccount = null
-          showContent()
-        }*/
-
-        /*CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> {
-          //handleResultFromCheckKeysActivity(resultCode, data)
-        }*/
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -169,26 +159,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     )
   }
 
-  override fun onSetupCompleted(accountEntity: AccountEntity, keys: List<PgpKeyDetails>) {
-    if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-  }
-
   override fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
     accountEntity: AccountEntity,
     pgpKeyDetails: PgpKeyDetails
   ) {
     TODO("Not yet implemented")
-  }
-
-  override fun returnResultOk() {
-    getTempAccount()?.let {
-      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email))
-
-      val intent = Intent()
-      intent.putExtra(MainActivity.KEY_EXTRA_NEW_ACCOUNT, it)
-      activity?.setResult(Activity.RESULT_OK, intent)
-      activity?.finish()
-    }
   }
 
   private fun initViews(view: View) {
@@ -265,7 +240,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       if (resultCode == Activity.RESULT_OK) {
         showInfoSnackbar(msgText = msg)
       } else {
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        toast(msg)
       }
     }
   }
@@ -281,9 +256,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           requireContext().startService(
             Intent(requireContext(), CheckClipboardToFindKeyService::class.java)
           )
-          /*val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
-          startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)*/
-
           navController?.navigate(
             MainSignInFragmentDirections
               .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
@@ -390,33 +362,21 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun subscribeToCheckPrivateKeys() {
     setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
-      val keys =
-        bundle.getParcelableArrayList<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+      val keys = bundle.getParcelableArrayList(
+        CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
+      ) ?: emptyList<PgpKeyDetails>()
       @CheckKeysFragment.CheckingState val checkingState: Int =
         bundle.getInt(CheckKeysFragment.KEY_STATE)
 
       when (checkingState) {
-        CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
-          if (keys.isNullOrEmpty()) {
-            showInfoSnackbar(msgText = getString(R.string.error_no_keys))
-          } else {
-            importCandidates.clear()
-            importCandidates.addAll(keys)
-
-            if (getTempAccount() == null) {
-              ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
-              toast(R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT)
-            } else {
-              getTempAccount()?.let {
-                accountViewModel.addNewAccount(it)
-              }
-            }
-          }
+        CHECKED_KEYS,
+        SKIP_REMAINING_KEYS -> {
+          handleUnlockedKeys(keys)
         }
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
           toast(R.string.key_already_imported_finishing_setup, Toast.LENGTH_SHORT)
-          if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+          getTempAccount()?.let { onSetupCompleted(it) }
         }
 
         CheckKeysFragment.CheckingState.CANCELED, CheckKeysFragment.CheckingState.NEGATIVE -> {
@@ -458,6 +418,31 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
           orgRules?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
+        }
+      }
+    }
+  }
+
+  private fun subscribeCreateOrImportPrivateKeyDuringSetup() {
+    setFragmentResultListener(
+      CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS
+    ) { _, bundle ->
+      @CreateOrImportPrivateKeyDuringSetupFragment.Result val result =
+        bundle.getInt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_STATE)
+
+      val keys =
+        bundle.getParcelableArrayList(CreateOrImportPrivateKeyDuringSetupFragment.KEY_PRIVATE_KEYS)
+          ?: emptyList<PgpKeyDetails>()
+
+
+      when (result) {
+        HANDLE_RESOLVED_KEYS -> {
+          handleUnlockedKeys(keys)
+        }
+
+        USE_ANOTHER_ACCOUNT -> {
+          this.googleSignInAccount = null
+          showContent()
         }
       }
     }
@@ -798,6 +783,24 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       dialogMsg = getString(R.string.please_login_again_to_continue),
       isCancelable = true
     )
+  }
+
+  private fun handleUnlockedKeys(keys: List<PgpKeyDetails>) {
+    if (keys.isNullOrEmpty()) {
+      showContent()
+      showInfoSnackbar(msgText = getString(R.string.error_no_keys))
+    } else {
+      importCandidates.clear()
+      importCandidates.addAll(keys)
+
+      if (getTempAccount() == null) {
+        showContent()
+        ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
+        toast(R.string.error_occurred_try_again_later)
+      } else {
+        getTempAccount()?.let { accountViewModel.addNewAccount(it) }
+      }
+    }
   }
 
   companion object {

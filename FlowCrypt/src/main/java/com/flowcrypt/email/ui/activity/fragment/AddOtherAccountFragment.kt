@@ -45,6 +45,9 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_CREATED_KEY
+import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_RESOLVED_KEYS
+import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.USE_ANOTHER_ACCOUNT
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
@@ -141,11 +144,11 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
   }
 
-  override fun runEmailManagerActivity() {
+  override fun navigateToPrimaryAccountMessagesList(accountEntity: AccountEntity) {
     if (authCreds?.useOAuth2 == true) {
       storeAccountInfoToAccountManager()
     }
-    super.runEmailManagerActivity()
+    super.navigateToPrimaryAccountMessagesList(accountEntity)
   }
 
   override fun getTempAccount(): AccountEntity {
@@ -176,10 +179,6 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     }
   }
 
-  override fun onSetupCompleted(accountEntity: AccountEntity, keys: List<PgpKeyDetails>) {
-    if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-  }
-
   override fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
     accountEntity: AccountEntity,
     pgpKeyDetails: PgpKeyDetails
@@ -187,12 +186,12 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     handleUnlockedKeys(listOf(pgpKeyDetails))
   }
 
-  override fun returnResultOk() {
+  override fun switchAccount(accountEntity: AccountEntity) {
     if (authCreds?.useOAuth2 == true) {
       storeAccountInfoToAccountManager()
     }
 
-    super.returnResultOk()
+    super.switchAccount(accountEntity)
   }
 
   private fun initViews(view: View) {
@@ -452,7 +451,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
           toast(R.string.key_already_imported_finishing_setup, Toast.LENGTH_SHORT)
-          if (existingAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+          onSetupCompleted(getTempAccount())
         }
 
         CheckKeysFragment.CheckingState.CANCELED -> showContent()
@@ -462,21 +461,31 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
   private fun subscribeCreateOrImportPrivateKeyDuringSetup() {
     setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
-      val keys = bundle.getParcelableArrayList<PgpKeyDetails>(
-        CreateOrImportPrivateKeyDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS
-      )
-      handleUnlockedKeys(keys)
-    }
+      @CreateOrImportPrivateKeyDuringSetupFragment.Result val result =
+        bundle.getInt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_STATE)
 
-    setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
-      val pgpKeyDetails = bundle.getParcelable<PgpKeyDetails>(
-        CreateOrImportPrivateKeyDuringSetupFragment.KEY_CREATED_KEY
-      )
-      pgpKeyDetails?.let {
-        privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
-          getTempAccount(),
-          pgpKeyDetails
-        )
+      val keys =
+        bundle.getParcelableArrayList(CreateOrImportPrivateKeyDuringSetupFragment.KEY_PRIVATE_KEYS)
+          ?: emptyList<PgpKeyDetails>()
+
+      when (result) {
+        HANDLE_RESOLVED_KEYS -> {
+          handleUnlockedKeys(keys)
+        }
+
+        HANDLE_CREATED_KEY -> {
+          val pgpKeyDetails = keys.firstOrNull()
+          pgpKeyDetails?.let {
+            privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
+              getTempAccount(),
+              pgpKeyDetails
+            )
+          }
+        }
+
+        USE_ANOTHER_ACCOUNT -> {
+          showContent()
+        }
       }
     }
   }
