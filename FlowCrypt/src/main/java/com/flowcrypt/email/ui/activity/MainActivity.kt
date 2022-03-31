@@ -12,6 +12,7 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.view.LayoutInflater
+import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -125,6 +126,27 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     unbindService(idleServiceConnection)
   }
 
+  override fun onBackPressed() {
+    if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+      binding.drawerLayout.closeDrawer(GravityCompat.START)
+    } else {
+      if (navController.currentDestination?.id == R.id.messagesListFragment) {
+        val foldersManager = labelsViewModel.foldersManagerLiveData.value
+        val currentFolder = labelsViewModel.activeFolderLiveData.value
+        val inbox = foldersManager?.findInboxFolder()
+        if (inbox != null) {
+          if (currentFolder == inbox) {
+            super.onBackPressed()
+          } else {
+            labelsViewModel.changeActiveFolder(inbox)
+          }
+        } else super.onBackPressed()
+      } else {
+        super.onBackPressed()
+      }
+    }
+  }
+
   private fun initViews() {
     NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
     setupNavigationView()
@@ -166,6 +188,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         R.id.navMenuActionReportProblem -> {
           showFeedbackFragment()
+        }
+
+        Menu.NONE -> {
+          labelsViewModel.foldersManagerLiveData.value?.let { foldersManager ->
+            foldersManager.getFolderByAlias(menuItem.title.toString())?.let {
+              labelsViewModel.changeActiveFolder(it)
+            }
+          }
         }
       }
 

@@ -21,6 +21,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.selection.SelectionTracker
@@ -104,7 +105,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override val statusView: View?
     get() = binding?.status?.root
 
-  private val labelsViewModel: LabelsViewModel by viewModels()
+  private val labelsViewModel: LabelsViewModel by activityViewModels()
   private val msgsViewModel: MessagesViewModel by viewModels()
 
   private var footerProgressView: View? = null
@@ -112,8 +113,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   private var keyProvider: CustomStableIdKeyProvider? = null
   private var actionMode: ActionMode? = null
   private var activeMsgEntity: MessageEntity? = null
-  private var foldersManager: FoldersManager? = null
-  private var currentFolder: LocalFolder? = null
+  private val currentFolder: LocalFolder?
+    get() = labelsViewModel.activeFolderLiveData.value
 
   private lateinit var adapter: MsgsPagedListAdapter
   private var keepSelectionInMemory = false
@@ -153,7 +154,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = currentFolder?.folderAlias
     initViews()
     setupMsgsViewModel()
     setupLabelsViewModel()
@@ -980,22 +980,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
     }
 
-    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner) {
-      val differentAccount = foldersManager?.account != it.account
-      foldersManager = it
-
-      if (differentAccount || currentFolder == null) {
-        currentFolder = foldersManager?.folderInbox
-        if (currentFolder == null) {
-          currentFolder = foldersManager?.findInboxFolder()
-        }
-
-        onFolderChanged()
-      } else {
-        foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { folder ->
-          currentFolder = folder
-        }
-      }
+    labelsViewModel.activeFolderLiveData.observe(viewLifecycleOwner) {
+      supportActionBar?.title = it.folderAlias
+      onFolderChanged()
     }
   }
 
@@ -1097,6 +1084,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   private fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
+    if (adapter.currentFolder == currentFolder) {
+      return
+    }
+
     keepSelectionInMemory = false
     actionMode?.finish()
     tracker?.clearSelection()

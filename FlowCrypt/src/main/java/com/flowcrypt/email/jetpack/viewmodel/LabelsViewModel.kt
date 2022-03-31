@@ -7,6 +7,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
@@ -14,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
@@ -41,12 +43,38 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
     }
   }
 
+  val activeFolderLiveData: MediatorLiveData<LocalFolder> = MediatorLiveData()
+
+  private val manuallyChangedFolderLiveData: MutableLiveData<LocalFolder?> = MutableLiveData()
+  private val initLocalFolderLiveData: LiveData<LocalFolder?> =
+    Transformations.switchMap(foldersManagerLiveData) {
+      liveData {
+        emit(it?.folderInbox ?: it?.findInboxFolder())
+      }
+    }
+
+  init {
+    activeFolderLiveData.addSource(manuallyChangedFolderLiveData) {
+      it?.let { localFolder -> activeFolderLiveData.value = localFolder }
+    }
+
+    activeFolderLiveData.addSource(initLocalFolderLiveData) {
+      if (activeFolderLiveData.value == null || activeFolderLiveData.value?.account != it?.account) {
+        it?.let { localFolder -> activeFolderLiveData.value = localFolder }
+      }
+    }
+  }
+
   val loadLabelsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
 
   fun updateOutboxMsgsCount() {
     viewModelScope.launch {
       updateOutboxMsgsCount(getActiveAccountSuspend())
     }
+  }
+
+  fun changeActiveFolder(localFolder: LocalFolder) {
+    manuallyChangedFolderLiveData.value = localFolder
   }
 
   fun loadLabels() {
