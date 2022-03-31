@@ -17,9 +17,7 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
@@ -93,7 +91,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     handleAccountAuthenticatorResponse()
     initAccountViewModel()
     setupLabelsViewModel()
-    setupDefaultRouting(savedInstanceState)
   }
 
   override fun finish() {
@@ -111,6 +108,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   override fun onNewIntent(intent: Intent?) {
     super.onNewIntent(intent)
+    navController.handleDeepLink(intent)
     val fragments =
       supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments
     val fragment = fragments?.firstOrNull {
@@ -225,28 +223,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
       for (localFolder in it?.customLabels ?: emptyList()) {
         mailLabels?.subMenu?.add(localFolder.folderAlias)
-      }
-    }
-  }
-
-  private fun setupDefaultRouting(savedInstanceState: Bundle?) {
-    if (savedInstanceState == null) {
-      lifecycleScope.launch {
-        //we use Lifecycle.State.CREATED because we need it only at startup
-        repeatOnLifecycle(Lifecycle.State.CREATED) {
-          launcherViewModel.isInitLoadingCompletedStateFlow.collect { initData ->
-            initData?.let {
-              val startDestination = when {
-                initData.accountEntity != null -> {
-                  NavGraphDirections.actionGlobalToMessagesListFragment()
-                }
-
-                else -> NavGraphDirections.actionGlobalToMainSignInFragment()
-              }
-              navController.navigate(startDestination)
-            }
-          }
-        }
       }
     }
   }

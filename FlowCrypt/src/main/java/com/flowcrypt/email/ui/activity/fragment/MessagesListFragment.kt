@@ -183,6 +183,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     snackBar?.dismiss()
   }
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    if (accountEntity == null) {
+      navController?.navigate(MessagesListFragmentDirections.actionGlobalToMainSignInFragment())
+    }
+  }
+
   override fun onRefresh() {
     snackBar?.dismiss()
 
