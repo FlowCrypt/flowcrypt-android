@@ -960,7 +960,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       override fun onPageFinished() {
         setActionProgress(100, null)
         updateReplyButtons()
-        //(activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
       }
     })
   }
@@ -1493,6 +1492,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun observerMsgStatesLiveData() {
     msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) { newState ->
+      var navigateUp = true
       when (newState) {
         MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
@@ -1501,8 +1501,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         )
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
-        MessageState.PENDING_MARK_READ -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_READ -> {
+          UpdateMsgsSeenStateWorker.enqueue(requireContext())
+          navigateUp = false
+        }
         else -> {}
+      }
+
+      if (navigateUp) {
+        navController?.navigateUp()
       }
     }
   }
