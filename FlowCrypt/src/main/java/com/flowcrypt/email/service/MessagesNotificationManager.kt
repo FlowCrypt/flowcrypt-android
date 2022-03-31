@@ -215,7 +215,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun getInboxPendingIntent(context: Context): PendingIntent {
-    val inboxIntent = Intent()//Intent(context, EmailManagerActivity::class.java)
+    val inboxIntent = Intent(context, MainActivity::class.java)
     inboxIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
     return PendingIntent.getActivity(
       context,
