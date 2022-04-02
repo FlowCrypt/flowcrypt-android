@@ -26,7 +26,7 @@ class NavigationViewManager(
   activity: Activity,
   private val navHeaderActionsListener: NavHeaderActionsListener
 ) {
-  private var navHeaderBinding: NavHeaderBinding? = null
+  var navHeaderBinding: NavHeaderBinding? = null
   val accountManagementLayout: LinearLayout = LinearLayout(activity).apply {
     orientation = LinearLayout.VERTICAL
     layoutParams = ViewGroup.LayoutParams(

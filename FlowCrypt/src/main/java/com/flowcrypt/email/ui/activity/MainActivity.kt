@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.activity
 import android.accounts.Account
 import android.accounts.AccountAuthenticatorResponse
 import android.accounts.AccountManager
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -15,11 +16,16 @@ import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.widget.Toolbar
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
@@ -43,8 +49,10 @@ import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
+import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
@@ -70,6 +78,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
+  private var actionBarDrawerToggle: ActionBarDrawerToggle? = null
 
   private val idleServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, service: IBinder) {}
@@ -138,6 +147,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   override fun onDestroy() {
     super.onDestroy()
     unbindService(idleServiceConnection)
+    actionBarDrawerToggle?.let { binding.drawerLayout.removeDrawerListener(it) }
   }
 
   override fun onBackPressed() {
@@ -223,7 +233,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun setupDrawerLayout() {
-    //
+    actionBarDrawerToggle = CustomDrawerToggle(
+      this, binding.drawerLayout, binding.toolbar,
+      R.string.navigation_drawer_open, R.string.navigation_drawer_close
+    )
+    actionBarDrawerToggle?.let { binding.drawerLayout.addDrawerListener(it) }
+    actionBarDrawerToggle?.syncState()
   }
 
   private fun findStartDest(graph: NavGraph): NavDestination? {
@@ -334,6 +349,64 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     accountManager.accounts.firstOrNull { it.name == accountEntity?.email }?.let { account ->
       if (account.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
         accountManager.removeAccountExplicitly(account)
+      }
+    }
+  }
+
+  private fun notifyFragmentAboutDrawerChange(slideOffset: Float, isOpened: Boolean) {
+    val fragments =
+      supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments
+    val fragment = fragments?.firstOrNull {
+      it is MessagesListFragment
+    } as? MessagesListFragment
+
+    fragment?.onDrawerStateChanged(slideOffset, isOpened)
+  }
+
+
+  /**
+   * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
+   * update task when the drawer will be opened.
+   */
+  private inner class CustomDrawerToggle(
+    activity: Activity,
+    drawerLayout: DrawerLayout?,
+    toolbar: Toolbar?,
+    @StringRes openDrawerContentDescRes: Int,
+    @StringRes closeDrawerContentDescRes: Int
+  ) : ActionBarDrawerToggle(
+    activity,
+    drawerLayout,
+    toolbar,
+    openDrawerContentDescRes,
+    closeDrawerContentDescRes
+  ) {
+
+    var slideOffset = 0f
+
+    override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+      super.onDrawerSlide(drawerView, slideOffset)
+      this.slideOffset = slideOffset
+      notifyFragmentAboutDrawerChange(slideOffset, true)
+    }
+
+    override fun onDrawerOpened(drawerView: View) {
+      super.onDrawerOpened(drawerView)
+      UpdateLabelsWorker.enqueue(context = this@MainActivity)
+      labelsViewModel.updateOutboxMsgsCount()
+    }
+
+    override fun onDrawerClosed(drawerView: View) {
+      super.onDrawerClosed(drawerView)
+      if (binding.navigationView.menu.getItem(0)?.isVisible == false) {
+        navigationViewManager?.navHeaderBinding?.layoutUserDetails?.performClick()
+      }
+    }
+
+    override fun onDrawerStateChanged(newState: Int) {
+      super.onDrawerStateChanged(newState)
+      if (newState == 0 && slideOffset == 0f) {
+        notifyFragmentAboutDrawerChange(slideOffset, false)
       }
     }
   }
