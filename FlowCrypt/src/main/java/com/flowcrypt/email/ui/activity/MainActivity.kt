@@ -49,6 +49,9 @@ import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
+import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.launch
 
 /**
@@ -58,6 +61,7 @@ import kotlinx.coroutines.launch
  * E-mail: DenBond7@gmail.com
  */
 class MainActivity : BaseActivity<ActivityMainBinding>() {
+  private lateinit var client: GoogleSignInClient
   private var navigationViewManager: NavigationViewManager? = null
 
   private val launcherViewModel: LauncherViewModel by viewModels()
@@ -88,6 +92,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       }
     }
     super.onCreate(savedInstanceState)
+
+    client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
     IdleService.start(this)
     IdleService.bind(this, idleServiceConnection)
@@ -298,6 +304,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private fun logout() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
+        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
+
         countingIdlingResource.incrementSafely()
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
