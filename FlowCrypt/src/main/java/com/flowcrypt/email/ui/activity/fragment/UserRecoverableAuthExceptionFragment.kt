@@ -14,7 +14,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
@@ -29,8 +28,10 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentUserRecoverableAuthExceptionBinding
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
@@ -61,8 +62,6 @@ class UserRecoverableAuthExceptionFragment :
   override val statusView: View?
     get() = binding?.status?.root
 
-  private lateinit var textViewExplanation: TextView
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     ErrorNotificationManager.isShowingAuthErrorEnabled = false
@@ -71,7 +70,7 @@ class UserRecoverableAuthExceptionFragment :
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     ErrorNotificationManager(requireContext()).cancel(R.id.notification_id_auth_failure)
-    initViews(view)
+    initViews()
     setupOAuth2AuthCredentialsViewModel()
   }
 
@@ -96,10 +95,8 @@ class UserRecoverableAuthExceptionFragment :
                     MessageState.QUEUED.value
                   )
                   MessagesSenderWorker.enqueue(context)
-                  //EmailManagerActivity.runEmailManagerActivity(context)
+                  navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
                 }
-
-                activity?.finish()
               }
             }
           }
@@ -120,15 +117,14 @@ class UserRecoverableAuthExceptionFragment :
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
-    textViewExplanation.text = getString(
+    binding?.textViewExplanation?.text = getString(
       R.string.reconnect_your_account,
       getString(R.string.app_name), accountEntity?.email ?: ""
     )
   }
 
-  private fun initViews(view: View) {
-    textViewExplanation = view.findViewById(R.id.textViewExplanation)
-    view.findViewById<View>(R.id.buttonReconnect)?.setOnClickListener {
+  private fun initViews() {
+    binding?.buttonReconnect?.setOnClickListener {
       account?.let { accountEntity ->
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
@@ -144,30 +140,26 @@ class UserRecoverableAuthExceptionFragment :
           }
 
           else -> {
-            Toast.makeText(
-              requireContext(),
-              getString(R.string.access_was_not_granted),
-              Toast.LENGTH_SHORT
-            ).show()
+            toast(R.string.access_was_not_granted)
           }
         }
       }
     }
-    //view.findViewById<View>(R.id.buttonLogout)?.setOnClickListener { baseActivity.logout() }
-    view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
+
+    binding?.buttonPrivacy?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)
     }
-    view.findViewById<View>(R.id.buttonTerms)?.setOnClickListener {
+    binding?.buttonTerms?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
-    view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
+    binding?.buttonSecurity?.setOnClickListener {
       NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
         title = getString(R.string.security),
         resourceIdAsString = "html/security.htm"
       )
     }
 
-    view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
+    binding?.buttonHelp?.setOnClickListener {
       showFeedbackFragment()
     }
   }
@@ -245,8 +237,7 @@ class UserRecoverableAuthExceptionFragment :
               )
             }
 
-            context?.let { context -> }//EmailManagerActivity.runEmailManagerActivity(context)
-            activity?.finish()
+            navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
           }
         }
 
