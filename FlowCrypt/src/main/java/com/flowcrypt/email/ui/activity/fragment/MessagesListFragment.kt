@@ -988,6 +988,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       supportActionBar?.title = it.folderAlias
       onFolderChanged()
     }
+
+    labelsViewModel.labelsLiveData.observe(viewLifecycleOwner) {
+      if (it.isEmpty()) {
+        labelsViewModel.loadLabels()
+      }
+    }
   }
 
   private fun subscribeToTwoWayDialog() {

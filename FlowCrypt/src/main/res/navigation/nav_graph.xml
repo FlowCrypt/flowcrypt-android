@@ -486,6 +486,7 @@
     <fragment
         android:id="@+id/messagesListFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MessagesListFragment"
+        android:label="@null"
         tools:layout="@layout/fragment_messages_list">
         <action
             android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"

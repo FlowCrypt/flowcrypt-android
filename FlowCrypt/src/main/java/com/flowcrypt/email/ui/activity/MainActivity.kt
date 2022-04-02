@@ -35,6 +35,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
@@ -196,6 +198,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           showFeedbackFragment()
         }
 
+        R.id.navMenuLogOut -> {
+          logout()
+        }
+
         Menu.NONE -> {
           labelsViewModel.foldersManagerLiveData.value?.let { foldersManager ->
             foldersManager.getFolderByAlias(menuItem.title.toString())?.let {
@@ -291,7 +297,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   private fun logout() {
     lifecycleScope.launch {
-      /*activeAccount?.let { accountEntity ->
+      activeAccount?.let { accountEntity ->
         countingIdlingResource.incrementSafely()
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
@@ -307,15 +313,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
         if (newActiveAccount == null) {
           roomDatabase.recipientDao().deleteAll()
-          stopService(Intent(applicationContext, IdleService::class.java))
-          val intent = Intent(applicationContext, MainActivity::class.java)
-          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-          startActivity(intent)
-          finish()
+          navController.navigate(NavGraphDirections.actionGlobalToMainSignInFragment())
         }
 
         countingIdlingResource.decrementSafely()
-      }*/
+      }
     }
   }
 
