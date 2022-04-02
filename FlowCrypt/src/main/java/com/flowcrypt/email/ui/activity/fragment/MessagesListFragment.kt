@@ -858,7 +858,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
-          showContent()
+          if (binding?.rVMsgs?.adapter?.itemCount == 0) {
+            showEmptyView()
+          } else {
+            showContent()
+          }
           countingIdlingResource?.decrementSafely()
         }
 
