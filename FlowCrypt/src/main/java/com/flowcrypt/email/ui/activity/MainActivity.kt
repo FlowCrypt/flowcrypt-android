@@ -4,6 +4,7 @@
  */
 package com.flowcrypt.email.ui.activity
 
+import android.accounts.Account
 import android.accounts.AccountAuthenticatorResponse
 import android.accounts.AccountManager
 import android.content.ComponentName
@@ -15,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
@@ -34,6 +36,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
 import com.flowcrypt.email.extensions.showFeedbackFragment
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
@@ -44,7 +47,6 @@ import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
-import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
 
 /**
@@ -92,6 +94,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     handleAccountAuthenticatorResponse()
     initAccountViewModel()
     setupLabelsViewModel()
+
+    handleLogoutFromSystemSettings(intent)
   }
 
   override fun finish() {
@@ -109,16 +113,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   override fun onNewIntent(intent: Intent?) {
     super.onNewIntent(intent)
-    navController.handleDeepLink(intent)
-    val fragments =
-      supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments
-    val fragment = fragments?.firstOrNull {
-      it is UserRecoverableAuthExceptionFragment
-    } ?: fragments?.firstOrNull {
-      it is AddOtherAccountFragment
+    if (!handleLogoutFromSystemSettings(intent)) {
+      navController.handleDeepLink(intent)
+      val fragments =
+        supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments
+      val fragment = fragments?.firstOrNull {
+        it is UserRecoverableAuthExceptionFragment
+      } ?: fragments?.firstOrNull {
+        it is AddOtherAccountFragment
+      }
+      val oAuthFragment = fragment as? BaseOAuthFragment<*>
+      oAuthFragment?.handleOAuth2Intent(intent)
     }
-    val oAuthFragment = fragment as? BaseOAuthFragment<*>
-    oAuthFragment?.handleOAuth2Intent(intent)
   }
 
   override fun onDestroy() {
@@ -273,6 +279,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
   }
 
+  private fun handleLogoutFromSystemSettings(intent: Intent?): Boolean {
+    return if (ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS.equals(intent?.action, true)) {
+      val account = intent?.getParcelableExtra<Account>(KEY_ACCOUNT)
+      account?.let {
+        toast(getString(R.string.open_side_menu_and_do_logout, it.name), Toast.LENGTH_LONG)
+      }
+      true
+    } else false
+  }
+
   private fun logout() {
     lifecycleScope.launch {
       /*activeAccount?.let { accountEntity ->
@@ -313,12 +329,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   companion object {
-    const val ACTION_ADD_ONE_MORE_ACCOUNT =
-      BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
-
-    val KEY_EXTRA_NEW_ACCOUNT =
-      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", MainActivity::class.java)
+    const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =
+      BuildConfig.APPLICATION_ID + ".ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS"
+    const val KEY_ACCOUNT = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT"
   }
 }

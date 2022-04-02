@@ -193,13 +193,13 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
       val isRemovalAllowed = bundle.getBoolean(AccountManager.KEY_BOOLEAN_RESULT, false)
       if (isRemovalAllowed) {
         return Bundle().apply {
-          /*putParcelable(
+          putParcelable(
             AccountManager.KEY_INTENT,
-            Intent(context, EmailManagerActivity::class.java).apply {
-              action = EmailManagerActivity.ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS
+            Intent(context, MainActivity::class.java).apply {
+              action = MainActivity.ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS
               putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
-              putExtra(EmailManagerActivity.KEY_ACCOUNT, account)
-            })*/
+              putExtra(MainActivity.KEY_ACCOUNT, account)
+            })
         }
       }
     }
