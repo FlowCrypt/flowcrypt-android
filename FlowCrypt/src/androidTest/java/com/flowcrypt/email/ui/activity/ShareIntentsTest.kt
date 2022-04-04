@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
+import androidx.core.net.MailTo
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.closeSoftKeyboard
@@ -48,7 +49,6 @@ import java.io.UnsupportedEncodingException
 import java.net.HttpURLConnection
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-import java.util.ArrayList
 import java.util.Random
 import java.util.UUID
 
@@ -133,7 +133,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToSubjectBody() {
     activeActivityRule.launch(
       genIntentForUri(
-        randomActionForRFC6068, "mailto:" + recipients[0]
+        randomActionForRFC6068, MailTo.MAILTO_SCHEME + recipients[0]
             + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
@@ -145,7 +145,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToParamSubjectBody() {
     activeActivityRule.launch(
       genIntentForUri(
-        randomActionForRFC6068, "mailto:?to=" + recipients[0]
+        randomActionForRFC6068, MailTo.MAILTO_SCHEME + "?to=" + recipients[0]
             + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
@@ -157,7 +157,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToToParamSubjectBody() {
     activeActivityRule.launch(
       genIntentForUri(
-        randomActionForRFC6068, "mailto:" + recipients[0]
+        randomActionForRFC6068, MailTo.MAILTO_SCHEME + recipients[0]
             + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
@@ -169,7 +169,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToParamToSubjectBody() {
     activeActivityRule.launch(
       genIntentForUri(
-        randomActionForRFC6068, "mailto:?to=" + recipients[0]
+        randomActionForRFC6068, MailTo.MAILTO_SCHEME + "?to=" + recipients[0]
             + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
@@ -181,7 +181,7 @@ class ShareIntentsTest : BaseTest() {
   fun testMultiToSubjectBody() {
     activeActivityRule.launch(
       genIntentForUri(
-        randomActionForRFC6068, "mailto:" + recipients[0]
+        randomActionForRFC6068, MailTo.MAILTO_SCHEME + recipients[0]
             + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
@@ -193,7 +193,7 @@ class ShareIntentsTest : BaseTest() {
   fun testMultiToParamSubjectBody() {
     activeActivityRule.launch(
       genIntentForUri(
-        randomActionForRFC6068, "mailto:?to=" + recipients[0]
+        randomActionForRFC6068, MailTo.MAILTO_SCHEME + "?to=" + recipients[0]
             + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
@@ -203,7 +203,7 @@ class ShareIntentsTest : BaseTest() {
 
   @Test
   fun testEmptyMailToSchema() {
-    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:"))
+    activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, MailTo.MAILTO_SCHEME))
     registerAllIdlingResources()
     checkViewsOnScreen(0, null, null, 0)
   }

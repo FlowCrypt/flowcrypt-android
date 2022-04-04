@@ -45,7 +45,6 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.util.*
 
 
 /**
@@ -58,7 +57,7 @@ import java.util.*
 @RunWith(AndroidJUnit4::class)
 @Ignore("will be fixed after migration to NavController")
 class SelectRecipientsActivityTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<SelectRecipientsActivity>()
+  override val activityScenarioRule = activityScenarioRule<MainActivity>()
   private var filterIdlingResource: IdlingResource? = null
 
   @get:Rule

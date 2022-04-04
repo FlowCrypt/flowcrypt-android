@@ -24,6 +24,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -39,6 +40,7 @@ import java.io.File
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("Temporary disabled due to architecture changes")
 class BackupKeysFragmentTwoKeysDiffPassphrasesTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule

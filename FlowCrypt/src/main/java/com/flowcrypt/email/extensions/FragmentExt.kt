@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.NavGraphDirections
@@ -20,6 +21,10 @@ import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
 import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragmentArgs
+import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.appbar.AppBarLayout
 
@@ -34,7 +39,7 @@ val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
   get() = activity?.findViewById(R.id.appBarLayout)
 
 val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
-  get() = (activity as? BaseActivity<*>)?.countingIdlingResource
+  get() = FlavorSettings.getCountingIdlingResource()
 
 val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
   get() = if (activity is AppCompatActivity) {
@@ -130,8 +135,9 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
     navController?.navigateUp()
   }
 
-  navController?.navigate(
-    NavGraphDirections.actionGlobalInfoDialogFragment(
+  val navDirections = object : NavDirections {
+    override fun getActionId() = R.id.info_dialog_graph
+    override fun getArguments() = InfoDialogFragmentArgs(
       requestCode = requestCode,
       dialogTitle = dialogTitle,
       dialogMsg = dialogMsg,
@@ -140,8 +146,10 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
       hasHtml = hasHtml,
       useLinkify = useLinkify,
       useWebViewToRender = useWebViewToRender
-    )
-  )
+    ).toBundle()
+  }
+
+  navController?.navigate(navDirections)
 }
 
 fun androidx.fragment.app.Fragment.showTwoWayDialog(
@@ -159,8 +167,9 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
     navController?.navigateUp()
   }
 
-  navController?.navigate(
-    NavGraphDirections.actionGlobalTwoWayDialogFragment(
+  val navDirections = object : NavDirections {
+    override fun getActionId() = R.id.two_way_dialog_graph
+    override fun getArguments() = TwoWayDialogFragmentArgs(
       requestCode = requestCode,
       dialogTitle = dialogTitle,
       dialogMsg = dialogMsg,
@@ -169,22 +178,29 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
       isCancelable = isCancelable,
       hasHtml = hasHtml,
       useLinkify = useLinkify
-    )
-  )
+    ).toBundle()
+  }
+
+  navController?.navigate(navDirections)
 }
 
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
   fingerprints: List<String>,
-  requestCode: Int,
-  logicType: FixNeedPassphraseIssueDialogFragment.LogicType
-  = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
+  logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
 ) {
-  val tag = FixNeedPassphraseIssueDialogFragment::class.java.simpleName
-  if (parentFragmentManager.findFragmentByTag(tag) == null) {
-    val fragment = FixNeedPassphraseIssueDialogFragment.newInstance(fingerprints, logicType)
-    fragment.setTargetFragment(this, requestCode)
-    fragment.show(parentFragmentManager, tag)
+  if (navController?.currentDestination?.navigatorName == "dialog") {
+    navController?.navigateUp()
   }
+
+  val navDirections = object : NavDirections {
+    override fun getActionId() = R.id.fix_need_pass_phrase_dialog_graph
+    override fun getArguments() = FixNeedPassphraseIssueDialogFragmentArgs(
+      fingerprints = fingerprints.toTypedArray(),
+      logicType = logicType
+    ).toBundle()
+  }
+
+  navController?.navigate(navDirections)
 }
 
 fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(

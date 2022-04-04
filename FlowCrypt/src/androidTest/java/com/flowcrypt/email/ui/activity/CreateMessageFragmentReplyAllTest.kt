@@ -5,16 +5,17 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.content.Intent
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
-import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -22,8 +23,9 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -38,7 +40,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageActivityReplyAllTest : BaseTest() {
+class CreateMessageFragmentReplyAllTest : BaseTest() {
   override val activeActivityRule =
     lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
@@ -73,17 +75,20 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
     roomDatabase.accountAliasesDao().insert(accountAliasesEntity)
 
     activeActivityRule.launch(
-      CreateMessageActivity.generateIntent(
-        getTargetContext(),
-        msgInfo,
-        MessageType.REPLY_ALL,
-        MessageEncryptionType.STANDARD
-      )
+      Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
+        putExtras(
+          CreateMessageFragmentArgs(
+            incomingMessageInfo = msgInfo,
+            encryptedByDefault = false,
+            messageType = MessageType.REPLY
+          ).toBundle()
+        )
+      }
     )
 
     registerAllIdlingResources()
 
-    Espresso.onView(ViewMatchers.withId(R.id.editTextRecipientCc))
-      .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))
+    onView(withId(R.id.editTextRecipientCc))
+      .check(matches(not(isDisplayed())))
   }
 }

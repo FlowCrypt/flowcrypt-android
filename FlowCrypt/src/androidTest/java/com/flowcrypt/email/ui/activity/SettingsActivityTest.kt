@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -23,7 +22,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
 import org.junit.Ignore
 import org.junit.Rule
@@ -41,7 +40,11 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class SettingsActivityTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>()
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/settings"
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -50,11 +53,6 @@ class SettingsActivityTest : BaseTest() {
     .around(AddAccountToDatabaseRule())
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
-
-  @Test
-  fun testShowHelpScreen() {
-    testHelpScreen()
-  }
 
   @Test
   @NotReadyForCI
@@ -99,7 +97,7 @@ class SettingsActivityTest : BaseTest() {
     onView(withText(commandName))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(allOf<View>(withText(screenName), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(screenName), withParent(withId(R.id.toolbar))))
       .check(matches(isDisplayed()))
   }
 }

@@ -5,14 +5,15 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.app.Activity
 import android.content.Intent
+import android.os.Bundle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -28,8 +29,8 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.apache.commons.io.FilenameUtils
-import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -44,9 +45,8 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CheckKeysActivityTestMultiBackups : BaseTest() {
-  override val activeActivityRule =
-    lazyActivityScenarioRule<CheckKeysActivity>(launchActivity = false)
+class CheckKeysFragmentMultiBackupsTest : BaseTest() {
+  override val activeActivityRule = lazyActivityScenarioRule<MainActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
@@ -71,7 +71,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(1, 2, 1)
-    checkSkipRemainingBackupsButton()
+    checkIsSkipRemainingBackupsButtonDisplayed()
   }
 
   /**
@@ -90,7 +90,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(1, 2, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -107,7 +107,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -125,7 +125,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -143,7 +143,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(1)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -162,7 +162,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(1, 3, 2)
-    checkSkipRemainingBackupsButton()
+    checkIsSkipRemainingBackupsButtonDisplayed()
   }
 
   /**
@@ -181,7 +181,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(2, 3, 1)
-    checkSkipRemainingBackupsButton()
+    checkIsSkipRemainingBackupsButtonDisplayed()
   }
 
   /**
@@ -202,7 +202,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(1, 3, 2)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -223,7 +223,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(2, 3, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -242,7 +242,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(1, 2, 1)
-    checkSkipRemainingBackupsButton()
+    checkIsSkipRemainingBackupsButtonDisplayed()
   }
 
   /**
@@ -261,7 +261,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -282,7 +282,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(1, 2, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -303,7 +303,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(2, 3, 1)
-    checkSkipRemainingBackupsButton()
+    checkIsSkipRemainingBackupsButtonDisplayed()
   }
 
   /**
@@ -326,7 +326,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(2, 3, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
+    checkFragmentNotDisplayed()
   }
 
   /**
@@ -443,28 +443,28 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     val keysPaths = arrayOf("pgp/keys/issue_1669_corrupted_prv.asc")
     launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
     typePassword("123")
-    isDialogWithTextDisplayed(
-      decorView,
-      getResString(
-        R.string.warning_when_import_invalid_prv_key,
-        getResString(R.string.support_email)
+    onView(
+      withText(
+        getResString(
+          R.string.warning_when_import_invalid_prv_key,
+          getResString(R.string.support_email)
+        )
       )
     )
+      .check(matches(isDisplayed()))
   }
 
   private fun launchActivity(
     keysPaths: Array<String>,
     sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
   ) {
-    activeActivityRule.launch(getStartCheckKeysActivityIntent(keysPaths, sourceType))
+    activeActivityRule.launch(genIntent(keysPaths, sourceType))
     registerAllIdlingResources()
   }
 
-  private fun checkSkipRemainingBackupsButton() {
+  private fun checkIsSkipRemainingBackupsButtonDisplayed() {
     onView(withId(R.id.buttonSkipRemainingBackups))
-      .perform(scrollTo(), click())
-
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS)
+      .check(matches(isDisplayed()))
   }
 
   /**
@@ -528,7 +528,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
       .check(matches(withText(text)))
   }
 
-  private fun getStartCheckKeysActivityIntent(
+  private fun genIntent(
     keysPaths: Array<String>,
     sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
   ): Intent {
@@ -552,14 +552,29 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
       }
     }
 
-    return CheckKeysActivity.newIntent(
-      context = getTargetContext(),
-      privateKeys = keyDetailsList,
-      sourceType = sourceType,
-      subTitle = bottomTitle,
-      positiveBtnTitle = getTargetContext().getString(R.string.continue_),
-      negativeBtnTitle = getTargetContext().getString(R.string.choose_another_key),
-      isExtraImportOpt = sourceType != KeyImportDetails.SourceType.EMAIL
+    return TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/check_private_keys",
+      extras = Bundle().apply {
+        putParcelableArray("privateKeys", keyDetailsList.toTypedArray())
+        putParcelable("sourceType", sourceType)
+        putString("subTitle", bottomTitle)
+        putString("positiveBtnTitle", getTargetContext().getString(R.string.continue_))
+        putString("negativeBtnTitle", getTargetContext().getString(R.string.choose_another_key))
+        putBoolean("isExtraImportOpt", sourceType != KeyImportDetails.SourceType.EMAIL)
+        putInt(
+          "initSubTitlePlurals",
+          if (sourceType == KeyImportDetails.SourceType.FILE) {
+            0
+          } else {
+            R.plurals.found_backup_of_your_account_key
+          }
+        )
+      }
     )
+  }
+
+  private fun checkFragmentNotDisplayed() {
+    onView(withText(R.string.enter_your_pass_phrase))
+      .check(doesNotExist())
   }
 }

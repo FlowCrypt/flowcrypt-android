@@ -37,7 +37,6 @@ import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers
@@ -65,7 +64,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/settings/contacts/recipient_details/pubkey_details",
       extras = Bundle().apply {

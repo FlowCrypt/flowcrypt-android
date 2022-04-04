@@ -15,7 +15,6 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
@@ -56,15 +55,15 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
   private val account = AccountDaoManager.getAccountDao("no.pub@org-rules-test.flowcrypt.com.json")
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<ImportPrivateKeyActivity>(
-    intent = ImportPrivateKeyActivity.getIntent(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    /*intent = ImportPrivateKeyActivity.getIntent(
       context = getTargetContext(),
       accountEntity = account,
       isSyncEnabled = false,
       title = getTargetContext().getString(R.string.import_private_key),
       throwErrorIfDuplicateFoundEnabled = true,
       cls = ImportPrivateKeyActivity::class.java
-    )
+    )*/
   )
 
   @get:Rule
@@ -77,18 +76,18 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
   @Test
   @NotReadyForCI
   fun testErrorWhenImportingKeyFromClipboard() {
-    useIntentionFromRunCheckKeysActivity()
+    useIntentionFromRunMainActivity()
     addTextToClipboard("private key", privateKey)
     isDialogWithTextDisplayed(decorView, ERROR_MESSAGE_FROM_ATTESTER)
   }
 
-  private fun useIntentionFromRunCheckKeysActivity() {
+  private fun useIntentionFromRunMainActivity() {
     val intent = Intent()
     val list: ArrayList<PgpKeyDetails> = ArrayList()
     list.add(keyDetails)
-    intent.putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
+    //intent.putExtra(MainActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
 
-    intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
+    intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
   }
 

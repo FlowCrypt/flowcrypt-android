@@ -29,7 +29,7 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
  * E-mail: DenBond7@gmail.com
  */
 class EmailWebView : WebView {
-  private var onPageFinishedListener: OnPageFinishedListener? = null
+  private var onPageLoadingListener: OnPageLoadingListener? = null
 
   constructor(context: Context) : super(context)
 
@@ -52,11 +52,7 @@ class EmailWebView : WebView {
     webChromeClient = object : WebChromeClient() {
       override fun onProgressChanged(view: WebView, newProgress: Int) {
         super.onProgressChanged(view, newProgress)
-        if (newProgress == 100) {
-          if (onPageFinishedListener != null) {
-            onPageFinishedListener!!.onPageFinished()
-          }
-        }
+        onPageLoadingListener?.onPageLoading(newProgress)
       }
     }
 
@@ -72,12 +68,12 @@ class EmailWebView : WebView {
     webSettings.javaScriptEnabled = false
   }
 
-  fun setOnPageFinishedListener(onPageFinishedListener: OnPageFinishedListener) {
-    this.onPageFinishedListener = onPageFinishedListener
+  fun setOnPageLoadingListener(onPageLoadingListener: OnPageLoadingListener) {
+    this.onPageLoadingListener = onPageLoadingListener
   }
 
-  interface OnPageFinishedListener {
-    fun onPageFinished()
+  interface OnPageLoadingListener {
+    fun onPageLoading(newProgress: Int)
   }
 
   /**

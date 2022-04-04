@@ -9,6 +9,11 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/messagesListFragment">
 
+    <include app:graph="@navigation/create_msg_graph" />
+    <include app:graph="@navigation/info_dialog_graph" />
+    <include app:graph="@navigation/two_way_dialog_graph" />
+    <include app:graph="@navigation/fix_need_pass_phrase_dialog_graph" />
+
     <fragment
         android:id="@+id/mainSignInFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MainSignInFragment"
@@ -492,64 +497,11 @@
             android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"
             app:destination="@id/messageDetailsFragment" />
         <action
-            android:id="@+id/action_messagesListFragment_to_createMessageFragment"
-            app:destination="@id/createMessageFragment" />
+            android:id="@+id/action_messagesListFragment_to_create_msg_graph"
+            app:destination="@id/create_msg_graph" />
         <action
             android:id="@+id/action_messagesListFragment_to_mainSignInFragment"
             app:destination="@id/mainSignInFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/createMessageFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment"
-        tools:layout="@layout/fragment_create_message">
-        <argument
-            android:name="encryptedByDefault"
-            android:defaultValue="true"
-            app:argType="boolean" />
-        <argument
-            android:name="serviceInfo"
-            android:defaultValue="@null"
-            app:argType="com.flowcrypt.email.api.email.model.ServiceInfo"
-            app:nullable="true" />
-        <argument
-            android:name="incomingMessageInfo"
-            android:defaultValue="@null"
-            app:argType="com.flowcrypt.email.api.email.model.IncomingMessageInfo"
-            app:nullable="true" />
-        <argument
-            android:name="messageType"
-            android:defaultValue="0"
-            app:argType="integer" />
-        <action
-            android:id="@+id/action_createMessageFragment_to_providePasswordToProtectMsgFragment"
-            app:destination="@id/providePasswordToProtectMsgFragment" />
-        <action
-            android:id="@+id/action_createMessageFragment_to_importMissingPublicKeyFragment"
-            app:destination="@id/importMissingPublicKeyFragment" />
-        <action
-            android:id="@+id/action_createMessageFragment_to_selectRecipientsFragment"
-            app:destination="@id/selectRecipientsFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/providePasswordToProtectMsgFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragment"
-        android:label="@string/web_portal_password"
-        tools:layout="@layout/fragment_provide_password_to_protect_msg">
-        <argument
-            android:name="defaultPassword"
-            android:defaultValue=""
-            app:argType="string" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/importMissingPublicKeyFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.ImportMissingPublicKeyFragment"
-        tools:layout="@layout/fragment_import_missing_public_key">
-        <argument
-            android:name="recipientWithPubKeys"
-            app:argType="com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys" />
     </fragment>
 
     <fragment
@@ -578,114 +530,6 @@
             android:id="@+id/action_editContactFragment_to_updateRecipientPublicKeyDialogFragment"
             app:destination="@id/updateRecipientPublicKeyDialogFragment" />
     </fragment>
-
-    <fragment
-        android:id="@+id/selectRecipientsFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.SelectRecipientsFragment"
-        tools:layout="@layout/fragment_select_recipients">
-
-        <argument
-            android:name="useMultipleMode"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="title"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-    </fragment>
-
-    <dialog
-        android:id="@+id/twoWayDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment">
-        <argument
-            android:name="requestCode"
-            android:defaultValue="0"
-            app:argType="integer" />
-        <argument
-            android:name="dialogTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="dialogMsg"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="positiveButtonTitle"
-            app:argType="string" />
-        <argument
-            android:name="negativeButtonTitle"
-            app:argType="string" />
-        <argument
-            android:name="isCancelable"
-            android:defaultValue="true"
-            app:argType="boolean" />
-        <argument
-            android:name="hasHtml"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="useLinkify"
-            android:defaultValue="false"
-            app:argType="boolean" />
-    </dialog>
-
-    <dialog
-        android:id="@+id/infoDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment">
-        <argument
-            android:name="requestCode"
-            android:defaultValue="0"
-            app:argType="integer" />
-        <argument
-            android:name="dialogTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="dialogMsg"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="buttonTitle"
-            app:argType="string" />
-        <argument
-            android:name="isCancelable"
-            android:defaultValue="true"
-            app:argType="boolean" />
-        <argument
-            android:name="useNavigationUp"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="hasHtml"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="useWebViewToRender"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="useLinkify"
-            android:defaultValue="false"
-            app:argType="boolean" />
-    </dialog>
-
-    <dialog
-        android:id="@+id/fixNeedPassphraseIssueDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment"
-        tools:layout="@layout/fragment_fix_empty_passphrase">
-        <argument
-            android:name="fingerprints"
-            app:argType="string[]"
-            app:nullable="true" />
-        <argument
-            android:name="logicType"
-            app:argType="com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment$LogicType" />
-    </dialog>
 
     <dialog
         android:id="@+id/lookUpPubKeysDialogFragment"
@@ -776,15 +620,6 @@
             app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
     </dialog>
 
-    <action
-        android:id="@+id/action_global_twoWayDialogFragment"
-        app:destination="@id/twoWayDialogFragment" />
-    <action
-        android:id="@+id/action_global_infoDialogFragment"
-        app:destination="@id/infoDialogFragment" />
-    <action
-        android:id="@+id/action_global_fixNeedPassphraseIssueDialogFragment"
-        app:destination="@id/fixNeedPassphraseIssueDialogFragment" />
     <action
         android:id="@+id/action_global_lookUpPubKeysDialogFragment"
         app:destination="@id/lookUpPubKeysDialogFragment" />

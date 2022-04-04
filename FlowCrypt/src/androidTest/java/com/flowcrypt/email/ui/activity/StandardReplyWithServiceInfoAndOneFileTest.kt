@@ -193,11 +193,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
     }
   }
 
-  @Test
-  fun testShowHelpScreen() {
-    testHelpScreen()
-  }
-
   companion object {
     private const val STRING = "Some short string"
   }

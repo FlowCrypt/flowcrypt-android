@@ -15,7 +15,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
@@ -31,7 +30,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
-import com.flowcrypt.email.ui.activity.BaseActivity
+import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import org.hamcrest.MatcherAssert.assertThat
@@ -58,22 +57,19 @@ abstract class BaseTest : BaseActivityTestImplementation {
   private var countingIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
 
-  protected var decorView: View? = null
-
-  @Before
-  fun initDecorView() {
-    activityScenario?.onActivity {
-      decorView = it.window.decorView
+  protected val decorView: View?
+    get() {
+      var decorView: View? = null
+      activityScenario?.onActivity {
+        decorView = it.window.decorView
+      }
+      return decorView
     }
-  }
 
   @Before
   fun registerCountingIdlingResource() {
-    activityScenario?.onActivity { activity ->
-      val baseActivity = (activity as? BaseActivity) ?: return@onActivity
-      countingIdlingResource = countingIdlingResource
-      countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
-    }
+    countingIdlingResource = FlavorSettings.getCountingIdlingResource()
+    countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
   @After
@@ -170,14 +166,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
   }
 
   /**
-   * Test is a [Snackbar] not displayed.
-   */
-  protected fun checkIsSnackBarNotDisplayed() {
-    onView(withId(com.google.android.material.R.id.snackbar_action))
-      .check(doesNotExist())
-  }
-
-  /**
    * Add some text to the [ClipboardManager]
    *
    * @param label The clipboard data label.
@@ -259,7 +247,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
       val assetsMimeMsgSource = String(getContext().assets.open(mimeMsgPath).readBytes())
       val finalMimeMsgSource =
         //https://stackoverflow.com/questions/55475483/regex-to-find-and-fix-lf-lineendings-to-crlf
-        if (useCrLfForMime) assetsMimeMsgSource.replace("((?<!\\r)\\n|\\r(?!\\n))".toRegex(), "\r\n") else assetsMimeMsgSource
+        if (useCrLfForMime) {
+          assetsMimeMsgSource.replace("((?<!\\r)\\n|\\r(?!\\n))".toRegex(), "\r\n")
+        } else {
+          assetsMimeMsgSource
+        }
 
       addMsgToCache(uri.toString(), finalMimeMsgSource.toInputStream())
     }
@@ -268,7 +260,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   fun registerAllIdlingResources() {
     registerCountingIdlingResource()
-    initDecorView()
   }
 
   private fun addMsgToCache(key: String, inputStream: InputStream) {

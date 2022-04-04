@@ -35,7 +35,7 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -60,7 +60,7 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/settings/keys/details",
       extras = Bundle().apply {

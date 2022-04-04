@@ -6,6 +6,7 @@
 package com.flowcrypt.email.util
 
 import android.content.Context
+import androidx.test.espresso.idling.CountingIdlingResource
 import java.util.Properties
 
 /**
@@ -19,4 +20,5 @@ interface EnvironmentSettings {
   fun getFlavorPropertiesForSession(): Properties
   fun isGMailAPIEnabled(): Boolean
   fun configure(context: Context)
+  fun getCountingIdlingResource(): CountingIdlingResource? = null
 }

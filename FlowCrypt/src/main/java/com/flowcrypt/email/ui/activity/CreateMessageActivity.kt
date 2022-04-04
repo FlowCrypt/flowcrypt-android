@@ -20,9 +20,11 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityCreateMessageBinding
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.util.FlavorSettings
 
 /**
  * This activity describes a logic of send encrypted or standard message.
@@ -53,8 +55,7 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
     super.onCreate(savedInstanceState)
     (navController as? NavHostController)?.enableOnBackPressed(true)
     isNavigationArrowDisplayed = true
-    val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
-    navGraph.startDestination = R.id.createMessageFragment
+    val navGraph = navController.navInflater.inflate(R.navigation.create_msg_graph)
     navController.setGraph(navGraph, intent.extras)
   }
 
@@ -62,16 +63,17 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
     super.onAccountInfoRefreshed(accountEntity)
     //check create a message from extra info when account didn't setup
     if (activeAccount == null) {
-      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show()
+      toast(R.string.setup_app, Toast.LENGTH_LONG)
       finish()
+      startActivity(Intent(this, MainActivity::class.java))
     }
   }
 
   override fun onLoadKeysProgress(status: Result.Status) {
     if (status == Result.Status.LOADING) {
-      countingIdlingResource.incrementSafely()
+      FlavorSettings.getCountingIdlingResource().incrementSafely()
     } else {
-      countingIdlingResource.decrementSafely()
+      FlavorSettings.getCountingIdlingResource().decrementSafely()
     }
   }
 

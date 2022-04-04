@@ -57,6 +57,7 @@ import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
+import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -325,7 +326,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       activeAccount?.let { accountEntity ->
         if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
 
-        countingIdlingResource.incrementSafely()
+        FlavorSettings.getCountingIdlingResource().incrementSafely()
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
@@ -343,7 +344,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           navController.navigate(NavGraphDirections.actionGlobalToMainSignInFragment())
         }
 
-        countingIdlingResource.decrementSafely()
+        FlavorSettings.getCountingIdlingResource().decrementSafely()
       }
     }
   }

@@ -15,23 +15,23 @@ import com.flowcrypt.email.util.LogsUtil
  *         Time: 7:26 PM
  *         E-mail: DenBond7@gmail.com
  */
-fun CountingIdlingResource.incrementSafely(msg: String = "") {
+fun CountingIdlingResource?.incrementSafely(msg: String = "") {
   if (GeneralUtil.isDebugBuild()) {
     LogsUtil.d("CountingIdlingResource", "$this:incrementSafely: $msg")
-    increment()
+    this?.increment()
   }
 }
 
-fun CountingIdlingResource.decrementSafely(msg: String = "") {
-  if (GeneralUtil.isDebugBuild() && !isIdleNow) {
+fun CountingIdlingResource?.decrementSafely(msg: String = "") {
+  if (GeneralUtil.isDebugBuild() && this?.isIdleNow == false) {
     LogsUtil.d("CountingIdlingResource", "$this:decrementSafely: $msg")
     decrement()
   }
 }
 
-fun CountingIdlingResource.shutdown() {
+fun CountingIdlingResource?.shutdown() {
   if (GeneralUtil.isDebugBuild()) {
-    while (!isIdleNow) {
+    while (this?.isIdleNow == false) {
       decrement()
     }
   }

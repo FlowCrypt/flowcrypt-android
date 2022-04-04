@@ -7,8 +7,6 @@ package com.flowcrypt.email.ui.activity.enterprise
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents.intended
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -33,6 +31,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -60,11 +59,11 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MainActivityEnterpriseTest : BaseSignActivityTest() {
+class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/sign-in/gmail"
+      uri = "flowcrypt://email.flowcrypt.com/sign-in/main"
     )
   )
 
@@ -249,8 +248,6 @@ class MainActivityEnterpriseTest : BaseSignActivityTest() {
   @NotReadyForCI
   fun testNoPrvCreateRule() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_WITH_NO_PRV_CREATE_RULE))
-    intended(hasComponent(CreateOrImportKeyActivity::class.java.name))
-
     onView(withId(R.id.buttonCreateNewKey))
       .check(matches(not(isDisplayed())))
   }

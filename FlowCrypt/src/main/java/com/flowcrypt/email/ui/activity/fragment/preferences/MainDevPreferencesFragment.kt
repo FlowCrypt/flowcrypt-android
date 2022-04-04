@@ -75,11 +75,11 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
       Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED,
       Constants.PREF_KEY_IS_ACRA_ENABLED,
       Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED,
-      Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED -> showApplicationDetailsSettingsActivity()
+      Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED -> showApplicationDetailsMainActivity()
     }
   }
 
-  private fun showApplicationDetailsSettingsActivity() {
+  private fun showApplicationDetailsMainActivity() {
     Toast.makeText(
       activity,
       R.string.toast_message_press_force_stop_to_apply_changes,

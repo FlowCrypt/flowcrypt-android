@@ -182,6 +182,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToSetWebPortalPassword()
     subscribeToSelectRecipients()
     subscribeToAddMissingRecipientPublicKey()
+    subscribeFixNeedPassphraseIssueDialogFragment()
 
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
@@ -290,12 +291,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
       }
 
-      REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG -> when (resultCode) {
-        FixNeedPassphraseIssueDialogFragment.RESULT_OK -> {
-          sendMsg()
-        }
-      }
-
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
@@ -342,10 +337,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 val fingerprint = openPgpV4Fingerprint.toString()
                 val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
                 if (passphrase?.isEmpty == true) {
-                  showNeedPassphraseDialog(
-                    listOf(fingerprint),
-                    REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
-                  )
+                  showNeedPassphraseDialog(listOf(fingerprint))
                   return true
                 }
               }
@@ -355,10 +347,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             this.isMsgSentToQueue = true
           }
         } else {
-          Toast.makeText(
-            context, R.string.please_wait_while_information_about_recipients_will_be_updated,
-            Toast.LENGTH_SHORT
-          ).show()
+          toast(R.string.please_wait_while_information_about_recipients_will_be_updated)
         }
         return true
       }
@@ -1300,7 +1289,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    val existedAttsSize = (attachments.map { it.encodedSize.toInt() }.sum())
+    val existedAttsSize = (attachments.sumOf { it.encodedSize.toInt() })
     val newAttSize = newAttInfo?.encodedSize?.toInt() ?: 0
     return (existedAttsSize + newAttSize) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
@@ -1894,11 +1883,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private fun subscribeFixNeedPassphraseIssueDialogFragment() {
+    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      sendMsg()
+    }
+  }
+
   companion object {
     private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
     private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
-    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 107
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
 }

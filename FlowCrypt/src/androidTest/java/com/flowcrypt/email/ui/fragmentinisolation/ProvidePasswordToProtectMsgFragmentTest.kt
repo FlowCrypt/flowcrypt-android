@@ -3,8 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment
+package com.flowcrypt.email.ui.fragmentinisolation
 
+import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.typeText
@@ -14,7 +15,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -23,10 +23,11 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
-import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragment
+import com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragmentArgs
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -42,11 +43,6 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class ProvidePasswordToProtectMsgFragmentTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/compose/web-portal-password"
-    )
-  )
   private val accountRule = AddAccountToDatabaseRule()
 
   @get:Rule
@@ -54,8 +50,15 @@ class ProvidePasswordToProtectMsgFragmentTest : BaseTest() {
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
     .around(accountRule)
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun launchFragmentInContainer() {
+    launchFragmentInContainer<ProvidePasswordToProtectMsgFragment>(
+      themeResId = R.style.AppTheme,
+      fragmentArgs = ProvidePasswordToProtectMsgFragmentArgs().toBundle()
+    )
+  }
 
   @Test
   fun testPasswordStrength() {

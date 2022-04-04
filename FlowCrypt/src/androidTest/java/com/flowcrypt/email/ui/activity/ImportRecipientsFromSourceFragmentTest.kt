@@ -33,7 +33,6 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -60,11 +59,11 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ImportPgpContactActivityTest : BaseTest() {
+class ImportRecipientsFromSourceFragmentTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
     )

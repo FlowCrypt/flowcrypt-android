@@ -158,8 +158,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
-                  fingerprints,
-                  REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
+                  fingerprints
                 )
                 return
               }
@@ -956,10 +955,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       StandardCharsets.UTF_8.displayName(),
       null
     )
-    binding?.emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
-      override fun onPageFinished() {
-        setActionProgress(100, null)
-        updateReplyButtons()
+    binding?.emailWebView?.setOnPageLoadingListener(object : EmailWebView.OnPageLoadingListener {
+      override fun onPageLoading(newProgress: Int) {
+        when (newProgress) {
+          0 -> countingIdlingResource?.incrementSafely()
+
+          100 -> {
+            setActionProgress(100, null)
+            updateReplyButtons()
+            countingIdlingResource?.decrementSafely()
+          }
+        }
       }
     })
   }
@@ -1210,7 +1216,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.fingerprints ?: return@OnClickListener
-            showNeedPassphraseDialog(fingerprints, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
+            showNeedPassphraseDialog(fingerprints)
           }
         }
 
@@ -1517,7 +1523,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun observerPassphraseNeededLiveData() {
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
-        showNeedPassphraseDialog(fingerprintList, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
+        showNeedPassphraseDialog(fingerprintList)
       }
     }
   }
@@ -1706,7 +1712,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
-    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
 

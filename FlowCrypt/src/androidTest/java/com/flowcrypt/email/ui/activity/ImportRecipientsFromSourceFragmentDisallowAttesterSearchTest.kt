@@ -24,7 +24,6 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
@@ -36,12 +35,12 @@ import org.junit.runner.RunWith
 /**
  * @author Denis Bondarenko
  *         Date: 8/6/21
- *         Time: 2:05 PM
+ *         Time: 2:14 PM
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ImportPgpContactActivityDisallowAttesterSearchForDomainTest : BaseTest() {
+class ImportRecipientsFromSourceFragmentDisallowAttesterSearchTest : BaseTest() {
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
       flags = listOf(
@@ -50,7 +49,7 @@ class ImportPgpContactActivityDisallowAttesterSearchForDomainTest : BaseTest() {
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
-      disallowAttesterSearchForDomains = listOf(DISALLOWED_DOMAIN),
+      disallowAttesterSearchForDomains = listOf("*"),
       enforceKeygenAlgo = null,
       enforceKeygenExpireMonths = null
     )
@@ -59,7 +58,7 @@ class ImportPgpContactActivityDisallowAttesterSearchForDomainTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
     )
@@ -74,7 +73,7 @@ class ImportPgpContactActivityDisallowAttesterSearchForDomainTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  fun testCanLookupThisRecipientOnAttester() {
+  fun testDisallowLookupOnAttester() {
     onView(withId(R.id.eTKeyIdOrEmail))
       .perform(
         clearText(),

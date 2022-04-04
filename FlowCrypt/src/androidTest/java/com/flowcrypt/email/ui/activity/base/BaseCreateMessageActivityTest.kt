@@ -15,11 +15,12 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 
 /**
  * @author Denis Bondarenko
@@ -36,10 +37,16 @@ abstract class BaseCreateMessageActivityTest : BaseTest() {
 
   protected open val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
-  protected val intent: Intent = CreateMessageActivity.generateIntent(
-    getTargetContext(), null,
-    MessageEncryptionType.ENCRYPTED
-  )
+  protected val intent: Intent =
+    Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
+      putExtras(
+        CreateMessageFragmentArgs(
+          encryptedByDefault = true,
+          messageType = MessageType.NEW
+        ).toBundle()
+      )
+    }
+
 
   protected fun fillInAllFields(recipient: String) {
     onView(withId(R.id.layoutTo))

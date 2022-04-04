@@ -336,6 +336,7 @@ dependencies {
     kapt("com.google.auto.service:auto-service:1.0.1")
 
     devDebugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
+    debugImplementation('androidx.fragment:fragment-testing:1.4.1')
 
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"

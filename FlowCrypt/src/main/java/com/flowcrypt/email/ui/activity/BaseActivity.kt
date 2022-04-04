@@ -20,14 +20,11 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showFeedbackFragment
-import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 
 /**
@@ -48,11 +45,6 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val activeAccount: AccountEntity?
     get() = accountViewModel.activeAccountLiveData.value
-
-  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(
-    GeneralUtil.genIdlingResourcesName(this::class.java),
-    GeneralUtil.isDebugBuild()
-  )
 
   protected abstract fun inflateBinding(inflater: LayoutInflater): T
   protected abstract fun initAppBarConfiguration(): AppBarConfiguration
@@ -99,7 +91,6 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   override fun onDestroy() {
     super.onDestroy()
     LogsUtil.d(tag, "onDestroy")
-    countingIdlingResource.shutdown()
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {

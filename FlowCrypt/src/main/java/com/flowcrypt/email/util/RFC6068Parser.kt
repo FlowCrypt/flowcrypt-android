@@ -8,7 +8,6 @@ package com.flowcrypt.email.util
 import android.net.Uri
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.model.ExtraActionInfo
-import java.util.ArrayList
 import java.util.Arrays
 
 /**
@@ -26,7 +25,6 @@ import java.util.Arrays
  */
 class RFC6068Parser {
   companion object {
-    private const val MAILTO_SCHEME = "mailto"
     private const val TO = "to"
     private const val BODY = "body"
     private const val CC = "cc"
@@ -34,7 +32,7 @@ class RFC6068Parser {
     private const val SUBJECT = "subject"
 
     fun isMailTo(uri: Uri?): Boolean {
-      return uri != null && MAILTO_SCHEME == uri.scheme
+      return androidx.core.net.MailTo.isMailTo(uri)
     }
 
     fun parse(uri: Uri?): ExtraActionInfo {

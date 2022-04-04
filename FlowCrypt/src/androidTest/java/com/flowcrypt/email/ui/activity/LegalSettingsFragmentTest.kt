@@ -23,7 +23,6 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
 import org.junit.Rule
@@ -41,7 +40,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class LegalSettingsFragmentTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/settings/legal"
     )
@@ -71,11 +70,6 @@ class LegalSettingsFragmentTest : BaseTest() {
       onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
         .check(matches(isDisplayed())).check(matches(isSelected()))
     }
-  }
-
-  @Test
-  fun testShowHelpScreen() {
-    testHelpScreen()
   }
 
   @Test

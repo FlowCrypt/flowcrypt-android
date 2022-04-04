@@ -15,7 +15,6 @@ import android.view.ViewGroup
 import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -28,6 +27,7 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -251,11 +251,9 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
   private fun handleKnownException(e: Throwable?): Boolean {
     when (e) {
       is EmptyPassphraseException -> {
-        navController?.navigate(
-          NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
-            fingerprints = e.fingerprints.toTypedArray(),
-            logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
-          )
+        showNeedPassphraseDialog(
+          fingerprints = e.fingerprints,
+          logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
         )
       }
 
@@ -331,11 +329,9 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     val keysStorage = KeysStorageImpl.getInstance(requireContext())
     val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
     if (fingerprints.isNotEmpty()) {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
-          fingerprints = fingerprints.toTypedArray(),
-          logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
-        )
+      showNeedPassphraseDialog(
+        fingerprints = fingerprints,
+        logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
       )
     } else {
       action.invoke()

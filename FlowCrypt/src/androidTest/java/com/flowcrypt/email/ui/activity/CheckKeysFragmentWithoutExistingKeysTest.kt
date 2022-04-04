@@ -5,13 +5,15 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.app.Activity
+import android.os.Bundle
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -23,7 +25,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.PrivateKeysManager
-import org.junit.Assert
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -38,26 +40,24 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
+class CheckKeysFragmentWithoutExistingKeysTest : BaseTest() {
 
   private val privateKeys = PrivateKeysManager.getKeysFromAssets(
     arrayOf("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc"),
     true
   )
 
-  override val activityScenarioRule = activityScenarioRule<CheckKeysActivity>(
-    CheckKeysActivity.newIntent(
-      getTargetContext(),
-      privateKeys,
-      KeyImportDetails.SourceType.EMAIL,
-      getQuantityString(
-        R.plurals.found_backup_of_your_account_key,
-        privateKeys.size, privateKeys.size
-      ),
-      getTargetContext().getString(R.string.continue_),
-      getTargetContext().getString(R.string.use_another_account)
-    )
-  )
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      uri = "flowcrypt://email.flowcrypt.com/check_private_keys",
+      extras = Bundle().apply {
+        putParcelableArray("privateKeys", privateKeys.toTypedArray())
+        putParcelable("sourceType", KeyImportDetails.SourceType.EMAIL)
+        putString("positiveBtnTitle", getTargetContext().getString(R.string.continue_))
+        putString("negativeBtnTitle", getTargetContext().getString(R.string.use_another_account))
+        putInt("initSubTitlePlurals", R.plurals.found_backup_of_your_account_key)
+      }
+    ))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -90,7 +90,8 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
     onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
 
-    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
+    onView(ViewMatchers.withText(R.string.enter_your_pass_phrase))
+      .check(ViewAssertions.doesNotExist())
   }
 
   @Test
@@ -99,6 +100,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
     onView(withId(R.id.buttonNegativeAction))
       .perform(scrollTo(), click())
 
-    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == CheckKeysActivity.RESULT_NEGATIVE)
+    onView(ViewMatchers.withText(R.string.enter_your_pass_phrase))
+      .check(ViewAssertions.doesNotExist())
   }
 }
