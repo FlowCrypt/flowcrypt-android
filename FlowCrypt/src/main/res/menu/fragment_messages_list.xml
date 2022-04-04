@@ -7,14 +7,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <item
-        android:id="@+id/menuActionHelp"
-        android:icon="@drawable/ic_help_white_24dp"
-        android:menuCategory="system"
-        android:orderInCategory="1000"
-        android:title="@string/feedback"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/menuSearch"
         android:icon="@drawable/ic_search_white_24dp"
         android:menuCategory="system"
@@ -38,6 +30,7 @@
         android:menuCategory="system"
         android:orderInCategory="2"
         android:title="@string/showing_only_encrypted_messages"
+        android:visible="false"
         app:actionLayout="@layout/action_item_switch"
         app:showAsAction="always" />
 

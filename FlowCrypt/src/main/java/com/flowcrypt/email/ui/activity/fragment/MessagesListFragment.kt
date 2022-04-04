@@ -6,6 +6,8 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.accounts.AuthenticatorException
+import android.app.SearchManager
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -15,11 +17,13 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
@@ -73,6 +77,7 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.sun.mail.imap.protocol.SearchSequence
 import me.everything.android.ui.overscroll.IOverScrollDecor
 import me.everything.android.ui.overscroll.IOverScrollState
 import me.everything.android.ui.overscroll.IOverScrollStateListener
@@ -119,6 +124,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private lateinit var adapter: MsgsPagedListAdapter
   private var keepSelectionInMemory = false
+  private var isForceSendingEnabled: Boolean = true
 
   private val isOutboxFolder: Boolean
     get() {
@@ -150,6 +156,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    setHasOptionsMenu(true)
     adapter = MsgsPagedListAdapter(this)
   }
 
@@ -160,10 +167,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     setupLabelsViewModel()
     subscribeToTwoWayDialog()
     subscribeToInfoDialog()
-
-    currentFolder?.searchQuery?.let {
-      binding?.sRL?.isEnabled = false
-    }
   }
 
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
@@ -183,6 +186,104 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override fun onPause() {
     super.onPause()
     snackBar?.dismiss()
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    super.onCreateOptionsMenu(menu, inflater)
+    inflater.inflate(R.menu.fragment_messages_list, menu)
+
+    val menuItemSearch = menu.findItem(R.id.menuSearch)
+    menuItemSearch?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+      override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+        binding?.sRL?.isEnabled = false
+        return true
+      }
+
+      override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+        binding?.sRL?.isEnabled = true
+        currentFolder?.searchQuery = null
+        onFolderChanged(true)
+        return true
+      }
+    })
+
+    val searchView = menuItemSearch?.actionView as? SearchView
+    searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+      override fun onQueryTextSubmit(query: String?): Boolean {
+        if (
+          AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)
+          && !SearchSequence.isAscii(query)
+        ) {
+          toast(R.string.cyrillic_search_not_support_yet)
+          return true
+        }
+
+        currentFolder?.searchQuery = query
+        onFolderChanged(true)
+        return false
+      }
+
+      override fun onQueryTextChange(newText: String?): Boolean {
+        return false
+      }
+    })
+
+    val searchManager = context?.getSystemService(Context.SEARCH_SERVICE) as SearchManager
+    searchView?.setSearchableInfo(searchManager.getSearchableInfo(activity?.componentName))
+
+    if (currentFolder?.searchQuery?.isNotEmpty() == true) {
+      menuItemSearch?.expandActionView()
+      searchView?.setQuery(currentFolder?.searchQuery, false)
+      searchView?.queryHint = getString(R.string.search)
+    }
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu) {
+    super.onPrepareOptionsMenu(menu)
+    val itemSearch = menu.findItem(R.id.menuSearch)
+    val itemForceSending = menu.findItem(R.id.menuForceSending)
+    val itemEmptyTrash = menu.findItem(R.id.menuEmptyTrash)
+    itemEmptyTrash?.isVisible = currentFolder?.getFolderType() == FoldersManager.FolderType.TRASH
+    itemForceSending?.isEnabled = isForceSendingEnabled
+
+    when {
+      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
+        itemSearch?.isVisible = false
+        itemForceSending?.isVisible = true
+      }
+
+      else -> {
+        itemSearch?.isVisible = true
+        itemForceSending?.isVisible = false
+      }
+    }
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuForceSending -> {
+        /*showTwoWayDialogFragment(
+          requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
+          dialogTitle = getString(R.string.restart_sending),
+          dialogMsg = getString(R.string.restart_sending_process_warning)
+        )*/
+        return true
+      }
+
+      R.id.menuEmptyTrash -> {
+        /*showTwoWayDialogFragment(
+          requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
+          dialogTitle = getString(R.string.empty_trash),
+          dialogMsg = getString(R.string.empty_trash_warning),
+          positiveButtonTitle = getString(android.R.string.ok),
+          negativeButtonTitle = getString(android.R.string.cancel),
+          isCancelable = false
+        )*/
+        return true
+      }
+
+      else -> super.onOptionsItemSelected(item)
+    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -237,24 +338,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
-  /**
-   * Set a progress of the some action.
-   *
-   * @param progress The progress
-   * @param message  The user friendly message.
-   */
-  fun setActionProgress(progress: Int, message: String? = null) {
-    binding?.progressBarActionProgress?.progress = progress
-    binding?.groupActionProgress?.visibleOrGone(progress != 100)
-    if (progress != 100) {
-      binding?.textViewActionProgress?.text =
-        getString(R.string.progress_message, progress, message)
-    } else {
-      binding?.textViewActionProgress?.text = null
-      adapter.changeProgress(false)
-    }
-  }
-
   override fun onMsgClick(msgEntity: MessageEntity) {
     activeMsgEntity = msgEntity
     if (tracker?.hasSelection() == true) {
@@ -305,11 +388,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         Snackbar.LENGTH_LONG
       )
     }
-  }
-
-  fun onFilterMsgs(isEncryptedModeEnabled: Boolean) {
-    updateEmptyViewText(getString(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results))
-    onFolderChanged(deleteAllMsgs = true)
   }
 
   fun onDrawerStateChanged(slideOffset: Float, isOpened: Boolean) {
@@ -493,21 +571,26 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private fun setupSelectionTracker() {
     adapter.tracker = null
-    if (currentFolder?.searchQuery == null) {
-      binding?.rVMsgs?.let { recyclerView ->
-        keyProvider = CustomStableIdKeyProvider(recyclerView)
+    binding?.rVMsgs?.let { recyclerView ->
+      keyProvider = CustomStableIdKeyProvider(recyclerView)
+      keyProvider?.let {
+        tracker = SelectionTracker.Builder(
+          MessagesListFragment::class.java.simpleName,
+          recyclerView,
+          it,
+          MsgItemDetailsLookup(recyclerView),
+          StorageStrategy.createLongStorage()
+        ).withSelectionPredicate(object : SelectionTracker.SelectionPredicate<Long>() {
+          override fun canSetStateForKey(key: Long, nextState: Boolean): Boolean =
+            currentFolder?.searchQuery == null
 
-        keyProvider?.let {
-          tracker = SelectionTracker.Builder(
-            MessagesListFragment::class.java.simpleName,
-            recyclerView,
-            it,
-            MsgItemDetailsLookup(recyclerView),
-            StorageStrategy.createLongStorage()
-          ).build()
-          tracker?.addObserver(selectionObserver)
-          adapter.tracker = tracker
-        }
+          override fun canSetStateAtPosition(position: Int, nextState: Boolean): Boolean =
+            currentFolder?.searchQuery == null
+
+          override fun canSelectMultiple(): Boolean = true
+        }).build()
+        tracker?.addObserver(selectionObserver)
+        adapter.tracker = tracker
       }
     }
   }
@@ -763,9 +846,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun onDestroyActionMode(mode: ActionMode?) {
-        if (currentFolder?.searchQuery == null) {
-          binding?.sRL?.isEnabled = true
-        }
+        binding?.sRL?.isEnabled = true
 
         if (!keepSelectionInMemory) {
           tracker?.clearSelection()
@@ -947,6 +1028,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
         resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
       } else null
+
+      isForceSendingEnabled = msgsCount > 0
+      isForceSendingEnabled = it.none { entity -> entity.msgState == MessageState.SENDING }
     }
   }
 
@@ -1102,8 +1186,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   private fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
-    if (adapter.currentFolder == currentFolder) {
-      return
+    if (adapter.currentFolder?.searchQuery.isNullOrEmpty()) {
+      activity?.invalidateOptionsMenu()
+      if (!forceClearCache && adapter.currentFolder == currentFolder) {
+        return
+      }
     }
 
     keepSelectionInMemory = false
@@ -1113,10 +1200,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     val newFolder = currentFolder
     adapter.currentFolder = newFolder
     adapter.submitList(null)
-
-    newFolder?.searchQuery?.let {
-      binding?.sRL?.isEnabled = false
-    }
 
     val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
     val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
@@ -1132,6 +1215,18 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         deleteAllMsgs = deleteAllMsgs
       )
     } ?: labelsViewModel.loadLabels()
+  }
+
+  private fun setActionProgress(progress: Int, message: String? = null) {
+    binding?.progressBarActionProgress?.progress = progress
+    binding?.groupActionProgress?.visibleOrGone(progress != 100)
+    if (progress != 100) {
+      binding?.textViewActionProgress?.text =
+        getString(R.string.progress_message, progress, message)
+    } else {
+      binding?.textViewActionProgress?.text = null
+      adapter.changeProgress(false)
+    }
   }
 
   companion object {
