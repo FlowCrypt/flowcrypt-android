@@ -63,6 +63,7 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
@@ -158,6 +159,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     setupMsgsViewModel()
     setupLabelsViewModel()
     subscribeToTwoWayDialog()
+    subscribeToInfoDialog()
 
     currentFolder?.searchQuery?.let {
       binding?.sRL?.isEnabled = false
@@ -325,13 +327,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
-  /**
-   * Reload the folder messages.
-   */
-  fun reloadMsgs() {
-    onFolderChanged(deleteAllMsgs = true)
-  }
-
   private fun showConnProblemHint() {
     showSnackbar(
       view = requireView(),
@@ -414,16 +409,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
 
     showInfoDialog(
+      requestCode = REQUEST_CODE_INFO_DIALOG_FAILED_TO_SEND,
       dialogTitle = null,
       dialogMsg = message
     )
-
-    /*infoDialogFragment.onInfoDialogButtonClickListener =
-      object : InfoDialogFragment.OnInfoDialogButtonClickListener {
-        override fun onInfoDialogButtonClick(requestCode: Int) {
-          msgsViewModel.deleteOutgoingMsgs(listOf(messageEntity))
-        }
-      }*/
   }
 
   private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {
@@ -952,6 +941,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         }
       }
     }
+
+    msgsViewModel.outboxMsgsLiveData.observe(viewLifecycleOwner) {
+      val msgsCount = it.size
+      supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
+        resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
+      } else null
+    }
   }
 
   private fun setupLabelsViewModel() {
@@ -1061,6 +1057,18 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
+  private fun subscribeToInfoDialog() {
+    setFragmentResultListener(InfoDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      when (bundle.getInt(InfoDialogFragment.KEY_REQUEST_CODE)) {
+        REQUEST_CODE_INFO_DIALOG_FAILED_TO_SEND -> {
+          currentFolder?.let {
+            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+          }
+        }
+      }
+    }
+  }
+
   private fun isArchiveActionEnabled(): Boolean {
     var isEnabled = false
 
@@ -1131,6 +1139,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     private const val REQUEST_CODE_ERROR_DURING_CREATION = 12
     private const val REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE = 13
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 14
+    private const val REQUEST_CODE_INFO_DIALOG_FAILED_TO_SEND = 15
 
     private const val DIALOG_MSG_MAX_LENGTH = 600
   }
