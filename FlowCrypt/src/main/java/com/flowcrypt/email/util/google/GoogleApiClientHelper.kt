@@ -6,11 +6,8 @@
 package com.flowcrypt.email.util.google
 
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.ui.activity.BaseActivity
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
-import com.google.android.material.snackbar.Snackbar
 
 /**
  * This class describes methods which can be used to work with Google API.
@@ -35,23 +32,5 @@ class GoogleApiClientHelper {
 
       return builder.build()
     }
-
-    /**
-     * Do sign in with Gmail account using OAuth2 mechanism.
-     *
-     * @param activity        An instance of [BaseActivity]
-     * @param client          An instance of [GoogleSignInClient]
-     * @param rootView        A view which will be used for showing an info [Snackbar]
-     * @param requestCode     A request code for handling the result.
-     */
-    /*fun signInWithGmailUsingOAuth2(
-      activity: BaseActivity, client: GoogleSignInClient,
-      rootView: View?, requestCode: Int
-    ) {
-      if (GeneralUtil.isConnected(activity)) {
-        client.signOut()
-        activity.startActivityForResult(client.signInIntent, requestCode)
-      }
-    }*/
   }
 }
