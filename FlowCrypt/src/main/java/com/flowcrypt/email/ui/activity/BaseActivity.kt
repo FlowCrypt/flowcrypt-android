@@ -125,6 +125,12 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     }
   }
 
+  protected open fun initViews() {
+    binding = inflateBinding(layoutInflater)
+    setContentView(binding.root)
+    findViewById<Toolbar>(R.id.toolbar)?.let { setSupportActionBar(it) }
+  }
+
   protected open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
 
   }
@@ -141,12 +147,6 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     accountViewModel.activeAccountLiveData.observe(this) {
       onAccountInfoRefreshed(it)
     }
-  }
-
-  private fun initViews() {
-    binding = inflateBinding(layoutInflater)
-    setContentView(binding.root)
-    findViewById<Toolbar>(R.id.toolbar)?.let { setSupportActionBar(it) }
   }
 
   private fun setupNavigation() {

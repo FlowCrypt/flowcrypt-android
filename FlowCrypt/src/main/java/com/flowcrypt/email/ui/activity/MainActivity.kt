@@ -107,7 +107,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     IdleService.start(this)
     IdleService.bind(this, idleServiceConnection)
 
-    initViews()
+    postInitViews()
     handleAccountAuthenticatorResponse()
     initAccountViewModel()
     setupLabelsViewModel()
@@ -171,10 +171,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
   }
 
-  private fun initViews() {
+  override fun initViews() {
+    super.initViews()
+    setupDrawerLayout()
+  }
+
+  private fun postInitViews() {
     NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
     setupNavigationView()
-    setupDrawerLayout()
   }
 
   private fun setupNavigationView() {
