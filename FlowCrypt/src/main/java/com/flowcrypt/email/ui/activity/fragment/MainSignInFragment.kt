@@ -466,9 +466,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             CheckClipboardToFindKeyService::class.java
           )
         )
-        /*val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
-        startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)*/
-
         navController?.navigate(
           MainSignInFragmentDirections
             .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
@@ -806,7 +803,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   companion object {
     private const val REQUEST_CODE_SIGN_IN = 100
     private const val REQUEST_CODE_RESOLVE_SIGN_IN_ERROR = 101
-    private const val REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102
     private const val REQUEST_CODE_RETRY_LOGIN = 104
     private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106

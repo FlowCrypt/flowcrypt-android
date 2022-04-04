@@ -117,7 +117,6 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            //need to test it
             showContent()
             val e = it.exception
             showInfoSnackbar(
