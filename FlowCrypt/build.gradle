@@ -428,7 +428,7 @@ dependencies {
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20211018.2'
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
 
     implementation('org.pgpainless:pgpainless-core:1.1.4') {
         // exclude group: 'org.bouncycastle' because we will specify it manually
