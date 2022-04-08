@@ -402,7 +402,7 @@ dependencies {
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
     implementation 'com.google.api-client:google-api-client-android:1.33.4'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-    implementation 'com.google.apis:google-api-services-gmail:v1-rev20220307-1.32.1'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev20220404-1.32.1'
 
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
