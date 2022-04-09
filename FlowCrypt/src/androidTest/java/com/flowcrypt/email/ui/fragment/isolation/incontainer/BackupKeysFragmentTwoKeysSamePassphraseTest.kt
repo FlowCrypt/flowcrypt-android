@@ -3,9 +3,8 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -16,32 +15,32 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
-import org.junit.Assert.assertTrue
-import org.junit.Ignore
+import com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment
+import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.CoreMatchers.not
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.io.File
 
 /**
  * @author Denis Bondarenko
  *         Date: 6/22/21
- *         Time: 11:30 AM
+ *         Time: 11:27 AM
  *         E-mail: DenBond7@gmail.com
  */
+
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Temporary disabled due to architecture changes")
-class BackupKeysFragmentTwoKeysDiffPassphrasesTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentTwoKeysSamePassphraseTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -52,40 +51,49 @@ class BackupKeysFragmentTwoKeysDiffPassphrasesTest : BaseBackupKeysFragmentTest(
     .around(
       AddPrivateKeyToDatabaseRule(
         accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc",
-        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
+        keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
+        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
         sourceType = KeyImportDetails.SourceType.EMAIL
       )
     )
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun launchFragmentInContainerWithPredefinedArgs() {
+    launchFragmentInContainer<BackupKeysFragment>()
+  }
 
   @Test
   @DependsOnMailServer
-  @NotReadyForCI
-  fun testDiffPassphrasesForEmailOption() {
+  fun testSuccessWithTwoKeysEmailOption() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-    /*intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))*/
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
-    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
+
+    onView(withId(R.id.btBackup))
+      .check(matches(not(isDisplayed())))
+
+    isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 
   @Test
-  fun testDiffPassphrasesForDownloadOption() {
+  fun testSuccessWithTwoKeysDownloadOption() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
-    intendingFileChoose(File(""))
+
+    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
+
+    intendingFileChoose(file)
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-    /*intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))*/
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
-    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
+
+    TestGeneralUtil.deleteFiles(listOf(file))
+
+    onView(withId(R.id.btBackup))
+      .check(matches(not(isDisplayed())))
+
+    isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 }
-

@@ -3,14 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -19,12 +17,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -33,16 +34,16 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- * Date: 23.02.2018
- * Time: 10:25
+ * Date: 20.02.2018
+ * Time: 15:42
  * E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class LegalSettingsFragmentTest : BaseTest() {
+class MainSettingsFragmentNavigationToSubMenuFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/legal"
+      uri = "flowcrypt://email.flowcrypt.com/settings"
     )
   )
 
@@ -54,42 +55,50 @@ class LegalSettingsFragmentTest : BaseTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  private val titleNames: Array<String> = arrayOf(
-    getResString(R.string.privacy),
-    getResString(R.string.terms),
-    getResString(R.string.licence),
-    getResString(R.string.sources)
-  )
-
   @Test
-  fun testClickToTitleViewPager() {
-    for (titleName in titleNames) {
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-        .check(matches(isDisplayed()))
-        .perform(click())
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-        .check(matches(isDisplayed())).check(matches(isSelected()))
-    }
+  @NotReadyForCI
+  @Ignore("need to change this test")
+  fun testShowBackupsScreen() {
+    checkIsScreenDisplaying(getResString(R.string.backups))
   }
 
   @Test
-  fun testSwipeInViewPager() {
-    onView(
-      allOf(
-        withParent(withParent(withParent(withId(R.id.tabLayout)))),
-        withText(titleNames[0])
-      )
+  fun testShowSecurityScreen() {
+    checkIsScreenDisplaying(getResString(R.string.security_and_privacy))
+  }
+
+  @Test
+  fun testShowContactsScreen() {
+    checkIsScreenDisplaying(getResString(R.string.contacts))
+  }
+
+  @Test
+  fun testShowKeysScreen() {
+    checkIsScreenDisplaying(getResString(R.string.keys))
+  }
+
+  @Test
+  fun testShowAttesterScreen() {
+    checkIsScreenDisplaying(getResString(R.string.attester))
+  }
+
+  @Test
+  fun testShowLegalScreen() {
+    checkIsScreenDisplaying(
+      getResString(R.string.experimental),
+      getResString(R.string.experimental_settings)
     )
-      .check(matches(isDisplayed())).check(matches(isSelected()))
-    for (i in 1 until titleNames.size) {
-      onView(withId(R.id.viewPager)).perform(swipeLeft())
-      onView(
-        allOf(
-          withParent(withParent(withParent(withId(R.id.tabLayout)))),
-          withText(titleNames[i])
-        )
-      )
-        .check(matches(isDisplayed())).check(matches(isSelected()))
-    }
+  }
+
+  private fun checkIsScreenDisplaying(screenName: String) {
+    checkIsScreenDisplaying(screenName, screenName)
+  }
+
+  private fun checkIsScreenDisplaying(commandName: String, screenName: String) {
+    onView(withText(commandName))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(allOf(withText(screenName), withParent(withId(R.id.toolbar))))
+      .check(matches(isDisplayed()))
   }
 }

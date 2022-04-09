@@ -3,26 +3,27 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
+import com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers.not
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -31,14 +32,13 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 6/22/21
- *         Time: 11:27 AM
- *         E-mail: DenBond7@gmail.com
+ * Date: 17.08.2018
+ * Time: 16:28
+ * E-mail: DenBond7@gmail.com
  */
-
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentTwoKeysSamePassphraseTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentInIsolationTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -46,32 +46,45 @@ class BackupKeysFragmentTwoKeysSamePassphraseTest : BaseBackupKeysFragmentTest()
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
-    .around(
-      AddPrivateKeyToDatabaseRule(
-        accountEntity = addAccountToDatabaseRule.account,
-        keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
-        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-        sourceType = KeyImportDetails.SourceType.EMAIL
-      )
-    )
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun launchFragmentInContainerWithPredefinedArgs() {
+    launchFragmentInContainer<BackupKeysFragment>()
+  }
+
+  @Test
+  fun testEmailOptionHint() {
+    onView(withId(R.id.rBEmailOption))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withText(getResString(R.string.backup_as_email_hint)))
+      .check(matches(isDisplayed()))
+  }
+
+  @Test
+  fun testDownloadOptionHint() {
+    onView(withId(R.id.rBDownloadOption))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withText(getResString(R.string.backup_as_download_hint)))
+      .check(matches(isDisplayed()))
+  }
 
   @Test
   @DependsOnMailServer
-  fun testSuccessWithTwoKeysEmailOption() {
+  fun testSuccessEmailOption() {
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
 
     onView(withId(R.id.btBackup))
       .check(matches(not(isDisplayed())))
-
     isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 
   @Test
-  fun testSuccessWithTwoKeysDownloadOption() {
+  fun testSuccessDownloadOption() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -87,7 +100,6 @@ class BackupKeysFragmentTwoKeysSamePassphraseTest : BaseBackupKeysFragmentTest()
 
     onView(withId(R.id.btBackup))
       .check(matches(not(isDisplayed())))
-
     isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 }

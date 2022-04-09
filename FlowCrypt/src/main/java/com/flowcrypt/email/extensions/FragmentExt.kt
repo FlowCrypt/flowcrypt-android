@@ -49,7 +49,11 @@ val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
 
 val androidx.fragment.app.Fragment.navController: NavController?
   get() = activity?.let {
-    Navigation.findNavController(it, R.id.fragmentContainerView)
+    try {
+      Navigation.findNavController(it, R.id.fragmentContainerView)
+    } catch (e: Exception) {
+      return@let null
+    }
   }
 
 val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle

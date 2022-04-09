@@ -3,40 +3,43 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
-import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers.not
+import com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.io.File
 
 /**
  * @author Denis Bondarenko
- * Date: 17.08.2018
- * Time: 16:28
- * E-mail: DenBond7@gmail.com
+ *         Date: 6/22/21
+ *         Time: 11:30 AM
+ *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentTwoKeysDiffPassphrasesInIsolationTest : BaseBackupKeysFragmentTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -44,56 +47,44 @@ class BackupKeysFragmentTest : BaseBackupKeysFragmentTest() {
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
-    .around(activityScenarioRule)
+    .around(
+      AddPrivateKeyToDatabaseRule(
+        accountEntity = addAccountToDatabaseRule.account,
+        keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc",
+        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
+        sourceType = KeyImportDetails.SourceType.EMAIL
+      )
+    )
     .around(ScreenshotTestRule())
 
-  @Test
-  fun testEmailOptionHint() {
-    onView(withId(R.id.rBEmailOption))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(getResString(R.string.backup_as_email_hint)))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testDownloadOptionHint() {
-    onView(withId(R.id.rBDownloadOption))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(getResString(R.string.backup_as_download_hint)))
-      .check(matches(isDisplayed()))
+  @Before
+  fun launchFragmentInContainerWithPredefinedArgs() {
+    launchFragmentInContainer<BackupKeysFragment>()
   }
 
   @Test
   @DependsOnMailServer
-  fun testSuccessEmailOption() {
+  @NotReadyForCI
+  fun testDiffPassphrasesForEmailOption() {
+    onView(withId(R.id.rBEmailOption))
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-
-    onView(withId(R.id.btBackup))
-      .check(matches(not(isDisplayed())))
-    isToastDisplayed(getResString(R.string.backed_up_successfully))
+    checkIsSnackBarDisplayed(getResString(R.string.different_pass_phrases))
   }
 
   @Test
-  fun testSuccessDownloadOption() {
+  fun testDiffPassphrasesForDownloadOption() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
-
-    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
-
-    intendingFileChoose(file)
+    intendingFileChoose(File(""))
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-
-    TestGeneralUtil.deleteFiles(listOf(file))
-
-    onView(withId(R.id.btBackup))
-      .check(matches(not(isDisplayed())))
-    isToastDisplayed(getResString(R.string.backed_up_successfully))
+    checkIsSnackBarDisplayed(getResString(R.string.different_pass_phrases))
   }
 }
+

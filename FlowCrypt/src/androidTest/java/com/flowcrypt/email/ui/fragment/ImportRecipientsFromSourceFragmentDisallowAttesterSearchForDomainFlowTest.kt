@@ -3,13 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment
 
-import android.os.Bundle
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
-import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -18,12 +18,14 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
@@ -33,23 +35,33 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 6/29/21
- *         Time: 3:54 PM
+ *         Date: 8/6/21
+ *         Time: 2:05 PM
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class RecheckProvidedPassphraseFragmentTest : BaseTest() {
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+class ImportRecipientsFromSourceFragmentDisallowAttesterSearchForDomainFlowTest : BaseTest() {
+  private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
+    OrgRules(
+      flags = listOf(
+        OrgRules.DomainRule.NO_PRV_CREATE,
+        OrgRules.DomainRule.NO_PRV_BACKUP
+      ),
+      customKeyserverUrl = null,
+      keyManagerUrl = "https://keymanagerurl.test",
+      disallowAttesterSearchForDomains = listOf(DISALLOWED_DOMAIN),
+      enforceKeygenAlgo = null,
+      enforceKeygenExpireMonths = null
+    )
+  )
 
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+
+  override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/security/recheck_passphrase",
-      extras = Bundle().apply {
-        putInt("popBackStackIdIfSuccess", R.id.securitySettingsFragment)
-        putString("title", getResString(R.string.change_pass_phrase))
-        putString("passphrase", PERFECT_PASSWORD)
-      }
+      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
     )
   )
 
@@ -58,36 +70,26 @@ class RecheckProvidedPassphraseFragmentTest : BaseTest() {
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
-    .around(AddPrivateKeyToDatabaseRule())
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
-  fun testEmptyPassphrase() {
-    onView(withId(R.id.btConfirmPassphrase))
-      .perform(click())
-    onView(withText(getResString(R.string.passphrase_must_be_non_empty)))
+  fun testCanLookupThisRecipientOnAttester() {
+    onView(withId(R.id.eTKeyIdOrEmail))
+      .perform(
+        clearText(),
+        typeText("user@$DISALLOWED_DOMAIN"),
+        closeSoftKeyboard()
+      )
+    onView(withId(R.id.iBSearchKey))
       .check(matches(isDisplayed()))
-    onView(withId(com.google.android.material.R.id.snackbar_action))
-      .check(matches(isDisplayed()))
       .perform(click())
-  }
 
-  @Test
-  fun testShowMsgMismatchOfPassphrase() {
-    onView(withId(R.id.eTRepeatedPassphrase))
-      .check(matches(isDisplayed()))
-      .perform(replaceText("some text"), closeSoftKeyboard())
-    onView(withId(R.id.btConfirmPassphrase))
-      .perform(click())
-    onView(withText(getResString(R.string.pass_phrases_do_not_match)))
-      .check(matches(isDisplayed()))
-    onView(withId(com.google.android.material.R.id.snackbar_action))
-      .check(matches(isDisplayed())).perform(click())
+    onView(withText(R.string.supported_public_key_not_found))
+      .check(matches((isDisplayed())))
   }
 
   companion object {
-    internal const val GREAT_PASSWORD = "weak, poor, great, good"
-    internal const val PERFECT_PASSWORD = "unconventional blueberry unlike any other"
+    private const val DISALLOWED_DOMAIN = "disallowed.test"
   }
 }

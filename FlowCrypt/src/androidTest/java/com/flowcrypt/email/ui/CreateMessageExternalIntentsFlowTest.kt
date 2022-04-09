@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.content.Intent
 import android.net.Uri
@@ -30,6 +30,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -60,7 +61,7 @@ import java.util.UUID
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ShareIntentsTest : BaseTest() {
+class CreateMessageExternalIntentsFlowTest : BaseTest() {
   override val activeActivityRule =
     lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?

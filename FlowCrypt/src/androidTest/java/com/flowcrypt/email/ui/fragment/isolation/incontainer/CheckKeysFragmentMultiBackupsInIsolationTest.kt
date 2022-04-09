@@ -3,17 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -27,9 +23,9 @@ import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment
+import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragmentArgs
 import com.flowcrypt.email.util.PrivateKeysManager
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.apache.commons.io.FilenameUtils
 import org.junit.Rule
 import org.junit.Test
@@ -45,16 +41,11 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CheckKeysFragmentMultiBackupsTest : BaseTest() {
-  override val activeActivityRule = lazyActivityScenarioRule<MainActivity>(launchActivity = false)
-  override val activityScenario: ActivityScenario<*>?
-    get() = activeActivityRule.scenario
-
+class CheckKeysFragmentMultiBackupsInIsolationTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
-    .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
   /**
@@ -66,7 +57,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
       "pgp/key_testing@flowcrypt.test_keyB_default.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
@@ -83,14 +74,12 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
       "pgp/key_testing@flowcrypt.test_keyB_default.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(1, 2, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -102,12 +91,10 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -120,12 +107,10 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyC_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -138,12 +123,10 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyC_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(1)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -157,7 +140,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyB_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_default.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
@@ -176,7 +159,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyB_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
@@ -195,14 +178,12 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyB_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_default.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(1, 3, 2)
     typePassword(TestConstants.DEFAULT_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -216,14 +197,12 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyB_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(2, 3, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -237,7 +216,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyC_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
@@ -256,12 +235,10 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyC_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -275,14 +252,12 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyC_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(1, 2, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -298,7 +273,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyC_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
@@ -319,14 +294,12 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
       "pgp/key_testing@flowcrypt.test_keyC_default.asc",
       "pgp/key_testing@flowcrypt.test_keyC_strong.asc"
     )
-    launchActivity(keysPaths)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths)
 
     checkKeysTitleAtStart(3)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     checkKeysTitle(2, 3, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
-
-    checkFragmentNotDisplayed()
   }
 
   /**
@@ -335,7 +308,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleSingleBinaryKeyFromFile() {
     val keysPaths = arrayOf("pgp/keys/single_prv_key_binary.key")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(1, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -346,7 +319,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleManyBinaryKeysFromFile() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_binary.key")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -357,7 +330,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleManyBinaryKeysPrvAndPubFromFile() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_binary.key")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(5, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -368,7 +341,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleSingleArmoredKeyFromFile() {
     val keysPaths = arrayOf("pgp/keys/single_prv_key_armored.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(1, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -380,7 +353,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileOwnHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_own_header.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -392,7 +365,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileSingleHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_single_header.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -405,7 +378,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleManyArmoredKeysFromFileOwnWithSingleHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_keys_armored_own_with_single_header.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(10, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -417,7 +390,7 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleManyArmoredPrvPubKeysFromFileOwnHeader() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_armored_own_header.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(6, keysPaths, KeyImportDetails.SourceType.FILE)
   }
@@ -430,36 +403,50 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
   @Test
   fun testSubTitleManyArmoredPrvPubKeysFromFileOwnWithSingleHeaderdd() {
     val keysPaths = arrayOf("pgp/keys/10_prv_and_pub_keys_armored_own_with_single_header.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
+    launchFragmentInContainerWithPredefinedArgs(keysPaths, KeyImportDetails.SourceType.FILE)
 
     checkKeysTitleAtStart(4, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
-  /**
-   * It refers to https://github.com/FlowCrypt/flowcrypt-android/issues/1669
-   */
-  @Test
-  fun testImportCorruptedKey() {
-    val keysPaths = arrayOf("pgp/keys/issue_1669_corrupted_prv.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
-    typePassword("123")
-    onView(
-      withText(
-        getResString(
-          R.string.warning_when_import_invalid_prv_key,
-          getResString(R.string.support_email)
-        )
-      )
-    )
-      .check(matches(isDisplayed()))
-  }
-
-  private fun launchActivity(
+  private fun launchFragmentInContainerWithPredefinedArgs(
     keysPaths: Array<String>,
     sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
   ) {
-    activeActivityRule.launch(genIntent(keysPaths, sourceType))
-    registerAllIdlingResources()
+    val keyDetailsList = PrivateKeysManager.getKeysFromAssets(keysPaths, true)
+
+    val bottomTitle: String
+    when (sourceType) {
+      KeyImportDetails.SourceType.FILE -> {
+        assert(keysPaths.size == 1)
+        val fileName = FilenameUtils.getName(keysPaths.first())
+        bottomTitle = getQuantityString(
+          R.plurals.file_contains_some_amount_of_keys,
+          keyDetailsList.size, fileName, keyDetailsList.size
+        )
+      }
+      else -> {
+        bottomTitle = getQuantityString(
+          R.plurals.found_backup_of_your_account_key,
+          keyDetailsList.size, keyDetailsList.size
+        )
+      }
+    }
+
+    launchFragmentInContainer<CheckKeysFragment>(
+      fragmentArgs = CheckKeysFragmentArgs(
+        privateKeys = keyDetailsList.toTypedArray(),
+        positiveBtnTitle = getTargetContext().getString(R.string.continue_),
+        negativeBtnTitle = getTargetContext().getString(R.string.choose_another_key),
+        subTitle = bottomTitle,
+        initSubTitlePlurals = if (sourceType == KeyImportDetails.SourceType.FILE) {
+          0
+        } else {
+          R.plurals.found_backup_of_your_account_key
+        },
+        sourceType = sourceType,
+        isExtraImportOpt = sourceType != KeyImportDetails.SourceType.EMAIL
+      ).toBundle()
+    )
   }
 
   private fun checkIsSkipRemainingBackupsButtonDisplayed() {
@@ -526,55 +513,5 @@ class CheckKeysFragmentMultiBackupsTest : BaseTest() {
     onView(withId(R.id.textViewSubTitle))
       .check(matches(isDisplayed()))
       .check(matches(withText(text)))
-  }
-
-  private fun genIntent(
-    keysPaths: Array<String>,
-    sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
-  ): Intent {
-    val keyDetailsList = PrivateKeysManager.getKeysFromAssets(keysPaths, true)
-
-    val bottomTitle: String
-    when (sourceType) {
-      KeyImportDetails.SourceType.FILE -> {
-        assert(keysPaths.size == 1)
-        val fileName = FilenameUtils.getName(keysPaths.first())
-        bottomTitle = getQuantityString(
-          R.plurals.file_contains_some_amount_of_keys,
-          keyDetailsList.size, fileName, keyDetailsList.size
-        )
-      }
-      else -> {
-        bottomTitle = getQuantityString(
-          R.plurals.found_backup_of_your_account_key,
-          keyDetailsList.size, keyDetailsList.size
-        )
-      }
-    }
-
-    return TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/check_private_keys",
-      extras = Bundle().apply {
-        putParcelableArray("privateKeys", keyDetailsList.toTypedArray())
-        putParcelable("sourceType", sourceType)
-        putString("subTitle", bottomTitle)
-        putString("positiveBtnTitle", getTargetContext().getString(R.string.continue_))
-        putString("negativeBtnTitle", getTargetContext().getString(R.string.choose_another_key))
-        putBoolean("isExtraImportOpt", sourceType != KeyImportDetails.SourceType.EMAIL)
-        putInt(
-          "initSubTitlePlurals",
-          if (sourceType == KeyImportDetails.SourceType.FILE) {
-            0
-          } else {
-            R.plurals.found_backup_of_your_account_key
-          }
-        )
-      }
-    )
-  }
-
-  private fun checkFragmentNotDisplayed() {
-    onView(withText(R.string.enter_your_pass_phrase))
-      .check(doesNotExist())
   }
 }
