@@ -386,14 +386,19 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   fun protectPrivateKeys(privateKeys: List<PgpKeyDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
       protectPrivateKeysLiveData.value = Result.loading()
+      val sourceTypeInfo = privateKeys.associateBy({ it.fingerprint }, { it.importSourceType })
       try {
         val encryptedKeysSource = privateKeys.map { pgpKeyDetails ->
           PgpKey.encryptKeySuspend(requireNotNull(pgpKeyDetails.privateKey), passphrase)
         }.joinToString(separator = "\n")
 
         protectPrivateKeysLiveData.value =
-          Result.success(PgpKey.parsePrivateKeys(encryptedKeysSource)
-            .map { it.copy(tempPassphrase = passphrase.chars) })
+          Result.success(PgpKey.parsePrivateKeys(encryptedKeysSource).map { key ->
+            key.copy(
+              tempPassphrase = passphrase.chars,
+              importSourceType = sourceTypeInfo[key.fingerprint]
+            )
+          })
       } catch (e: Exception) {
         e.printStackTrace()
         protectPrivateKeysLiveData.value = Result.exception(e)
