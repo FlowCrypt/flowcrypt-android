@@ -3,15 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParent
-import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.activityScenarioRule
+import androidx.test.espresso.web.assertion.WebViewAssertions.webMatches
+import androidx.test.espresso.web.sugar.Web.onWebView
+import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
+import androidx.test.espresso.web.webdriver.DriverAtoms.getText
+import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -19,9 +21,9 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.fragment.HtmlViewFromAssetsRawFragment
 import com.flowcrypt.email.ui.activity.fragment.HtmlViewFromAssetsRawFragmentArgs
-import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.containsString
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -36,27 +38,28 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class HtmlViewFromAssetsRawActivityTest : BaseTest() {
-  override val activeActivityRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/html_from_assets",
-      extras = HtmlViewFromAssetsRawFragmentArgs(
-        title = getResString(R.string.privacy),
-        resourceIdAsString = "html/privacy.htm"
-      ).toBundle()
-    )
-  )
+class HtmlViewFromAssetsRawFragmentInIsolationTest : BaseTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
-    .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
   @Test
   fun testDisplayPrivacyFromAssets() {
-    onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
+    launchFragmentInContainer<HtmlViewFromAssetsRawFragment>(
+      fragmentArgs = HtmlViewFromAssetsRawFragmentArgs(
+        title = getResString(R.string.privacy),
+        resourceIdAsString = "html/privacy.htm"
+      ).toBundle()
+    )
+    onView(withId(R.id.webView))
       .check(matches(isDisplayed()))
+
+    onWebView(withId(R.id.webView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.webView))
+      .withElement(findElement(Locator.TAG_NAME, "h1"))
+      .check(webMatches(getText(), containsString("FlowCrypt Privacy Policy")))
   }
 }

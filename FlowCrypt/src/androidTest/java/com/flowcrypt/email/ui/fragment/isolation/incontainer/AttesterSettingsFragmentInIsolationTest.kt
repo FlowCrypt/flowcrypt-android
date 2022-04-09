@@ -3,13 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -22,6 +21,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
@@ -44,12 +44,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class AttesterSettingsFragmentTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/attester"
-    )
-  )
+class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   private val accountRule = AddAccountToDatabaseRule()
 
   @get:Rule
@@ -57,12 +52,12 @@ class AttesterSettingsFragmentTest : BaseTest() {
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
     .around(accountRule)
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
   @NotReadyForCI
   fun testKeysExistOnAttester() {
+    launchFragmentInContainer<AttesterSettingsFragment>()
     onView(withId(R.id.rVAttester))
       .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
     onView(withId(R.id.empty))

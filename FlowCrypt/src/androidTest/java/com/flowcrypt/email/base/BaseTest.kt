@@ -8,14 +8,21 @@ package com.flowcrypt.email.base
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.StyleRes
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentFactory
+import androidx.fragment.app.testing.FragmentScenario
+import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -30,6 +37,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -69,6 +77,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
   @Before
   fun registerCountingIdlingResource() {
     countingIdlingResource = FlavorSettings.getCountingIdlingResource()
+    (countingIdlingResource as? CountingIdlingResource)?.shutdown()
     countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
@@ -261,6 +270,16 @@ abstract class BaseTest : BaseActivityTestImplementation {
   fun registerAllIdlingResources() {
     registerCountingIdlingResource()
   }
+
+  inline fun <reified F : Fragment> launchFragmentInContainer(
+    fragmentArgs: Bundle? = null,
+    @StyleRes themeResId: Int = R.style.AppTheme,
+    initialState: Lifecycle.State = Lifecycle.State.RESUMED,
+    factory: FragmentFactory? = null
+  ): FragmentScenario<F> = FragmentScenario.launchInContainer(
+    F::class.java, fragmentArgs, themeResId, initialState,
+    factory
+  )
 
   private fun addMsgToCache(key: String, inputStream: InputStream) {
     MsgsCacheManager.storeMsg(key, MimeMessage(Session.getInstance(Properties()), inputStream))

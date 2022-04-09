@@ -3,28 +3,28 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
-import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
+import com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment
 import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.UIUtil
+import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -33,14 +33,13 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 8/6/21
- *         Time: 1:24 PM
+ *         Date: 8/4/21
+ *         Time: 11:00 AM
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageFragmentDisallowAttesterSearchForDomainTest : BaseCreateMessageActivityTest() {
-
+class PrivateKeysListFragmentEkmInIsolationTest : BaseTest() {
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
       flags = listOf(
@@ -49,16 +48,16 @@ class CreateMessageFragmentDisallowAttesterSearchForDomainTest : BaseCreateMessa
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
-      disallowAttesterSearchForDomains = listOf(DISALLOWED_DOMAIN),
+      disallowAttesterSearchForDomains = null,
       enforceKeygenAlgo = null,
       enforceKeygenExpireMonths = null
     )
   )
 
-  override val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
-    keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
+    keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc",
     passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
     sourceType = KeyImportDetails.SourceType.EMAIL,
     passphraseType = KeyEntity.PassphraseType.RAM
@@ -70,33 +69,13 @@ class CreateMessageFragmentDisallowAttesterSearchForDomainTest : BaseCreateMessa
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
   @Test
-  fun testCanLookupThisRecipientOnAttester() {
-    activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+  fun testAddNewKeyGone() {
+    launchFragmentInContainer<PrivateKeysListFragment>()
 
-    val recipient = "user@$DISALLOWED_DOMAIN"
-
-    fillInAllFields(recipient)
-
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            recipient,
-            UIUtil.getColor(
-              getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
-            )
-          )
-        )
-      )
-  }
-
-  companion object {
-    private const val DISALLOWED_DOMAIN = "disallowed.test"
+    onView(withId(R.id.floatActionButtonAddKey))
+      .check(matches(not(isDisplayed())))
   }
 }

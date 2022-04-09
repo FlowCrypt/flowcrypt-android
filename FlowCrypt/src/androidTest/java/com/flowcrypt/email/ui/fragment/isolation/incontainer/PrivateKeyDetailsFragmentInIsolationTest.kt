@@ -3,12 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.os.Bundle
 import android.os.Environment
 import android.text.TextUtils
 import android.text.format.DateFormat
@@ -24,28 +23,33 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.activityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.MoveToFlowBehaviour
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment
+import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
+import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 import java.io.File
 import java.util.Date
 
@@ -55,22 +59,12 @@ import java.util.Date
  *         Time: 2:38 PM
  *         E-mail: DenBond7@gmail.com
  */
-class PrivateKeyDetailsFragmentTest : BaseTest() {
+@MediumTest
+@RunWith(AndroidJUnit4::class)
+class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/keys/details",
-      extras = Bundle().apply {
-        putString(
-          "fingerprint",
-          PrivateKeysManager.getPgpKeyDetailsFromAssets(addPrivateKeyToDatabaseRule.keyPath).fingerprint
-        )
-      }
-    )
-  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -78,8 +72,17 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun launchFragmentInContainerWithPredefinedArgs() {
+    launchFragmentInContainer<PrivateKeyDetailsFragment>(
+      fragmentArgs = PrivateKeyDetailsFragmentArgs(
+        fingerprint = PrivateKeysManager
+          .getPgpKeyDetailsFromAssets(addPrivateKeyToDatabaseRule.keyPath).fingerprint
+      ).toBundle()
+    )
+  }
 
   @Test
   fun testKeyDetailsCheckDetails() {
@@ -130,6 +133,8 @@ class PrivateKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
+  @MoveToFlowBehaviour
+  @Ignore("MoveToFlowBehaviour")
   fun testKeyDetailsShowPubKey() {
     val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
     onView(withId(R.id.btnShowPubKey))

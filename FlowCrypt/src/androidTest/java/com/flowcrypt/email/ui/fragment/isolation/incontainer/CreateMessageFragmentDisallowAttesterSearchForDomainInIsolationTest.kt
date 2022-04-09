@@ -3,15 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import android.os.Bundle
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -19,17 +18,18 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
+import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.PrivateKeysManager
-import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Matchers.not
+import com.flowcrypt.email.util.UIUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -38,25 +38,13 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 8/4/21
- *         Time: 11:33 AM
+ *         Date: 8/6/21
+ *         Time: 1:24 PM
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class PrivateKeyDetailsFragmentEkmTest : BaseTest() {
-  override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/keys/details",
-      extras = Bundle().apply {
-        putString(
-          "fingerprint",
-          PrivateKeysManager.getPgpKeyDetailsFromAssets(KEY_PATH).fingerprint
-        )
-      }
-    )
-  )
+class CreateMessageFragmentDisallowAttesterSearchForDomainInIsolationTest : BaseTest() {
 
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
@@ -66,15 +54,16 @@ class PrivateKeyDetailsFragmentEkmTest : BaseTest() {
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
-      disallowAttesterSearchForDomains = null,
+      disallowAttesterSearchForDomains = listOf(DISALLOWED_DOMAIN),
       enforceKeygenAlgo = null,
       enforceKeygenExpireMonths = null
     )
   )
+
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
-    keyPath = KEY_PATH,
+    keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
     passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
     sourceType = KeyImportDetails.SourceType.EMAIL,
     passphraseType = KeyEntity.PassphraseType.RAM
@@ -86,22 +75,46 @@ class PrivateKeyDetailsFragmentEkmTest : BaseTest() {
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
-  fun testBtnShowPrKeyGone() {
-    onView(withId(R.id.btnShowPrKey))
-      .check(matches(not(isDisplayed())))
-  }
+  fun testCanLookupThisRecipientOnAttester() {
+    launchFragmentInContainer<CreateMessageFragment>(
+      fragmentArgs = CreateMessageFragmentArgs().toBundle()
+    )
 
-  @Test
-  fun testActionDeleteDisabled() {
-    onView(withId(R.id.menuActionDeleteKey))
-      .check(matches(not(isEnabled())))
+    val recipient = "user@$DISALLOWED_DOMAIN"
+
+    onView(withId(R.id.editTextRecipientTo))
+      .perform(typeText(recipient), closeSoftKeyboard())
+    //need to leave focus from 'To' field. move the focus to the next view
+    onView(withId(R.id.editTextEmailSubject))
+      .perform(
+        click(),
+        typeText("subject"),
+        closeSoftKeyboard()
+      )
+    onView(withId(R.id.editTextEmailMessage))
+      .perform(
+        typeText("message"),
+        closeSoftKeyboard()
+      )
+
+    onView(withId(R.id.editTextRecipientTo))
+      .check(
+        matches(
+          withChipsBackgroundColor(
+            recipient,
+            UIUtil.getColor(
+              getTargetContext(),
+              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+            )
+          )
+        )
+      )
   }
 
   companion object {
-    private const val KEY_PATH = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc"
+    private const val DISALLOWED_DOMAIN = "disallowed.test"
   }
 }

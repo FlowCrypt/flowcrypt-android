@@ -3,32 +3,33 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
+import com.flowcrypt.email.junit.annotations.MoveToFlowBehaviour
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
-import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
+import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment
+import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.PrivateKeysManager
+import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -37,18 +38,13 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 8/6/21
- *         Time: 1:52 PM
+ *         Date: 8/4/21
+ *         Time: 11:33 AM
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageFragmentDisallowAttesterSearchTest : BaseCreateMessageActivityTest() {
-  override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? = null
-  override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(intent = intent)
-  override val activityScenario: ActivityScenario<*>?
-    get() = activityScenarioRule.scenario
-
+class PrivateKeyDetailsFragmentEkmInIsolationTest : BaseTest() {
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
       flags = listOf(
@@ -57,16 +53,15 @@ class CreateMessageFragmentDisallowAttesterSearchTest : BaseCreateMessageActivit
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
-      disallowAttesterSearchForDomains = listOf("*"),
+      disallowAttesterSearchForDomains = null,
       enforceKeygenAlgo = null,
       enforceKeygenExpireMonths = null
     )
   )
-
-  override val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
-    keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
+    keyPath = KEY_PATH,
     passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
     sourceType = KeyImportDetails.SourceType.EMAIL,
     passphraseType = KeyEntity.PassphraseType.RAM
@@ -78,26 +73,33 @@ class CreateMessageFragmentDisallowAttesterSearchTest : BaseCreateMessageActivit
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
-  fun testDisallowLookupOnAttester() {
-    val recipient = "recipient@example.test"
+  fun testBtnShowPrKeyGone() {
+    launchFragmentInContainer<PrivateKeyDetailsFragment>(
+      fragmentArgs = PrivateKeyDetailsFragmentArgs(
+        fingerprint = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+          KEY_PATH
+        ).fingerprint
+      ).toBundle()
+    )
 
-    fillInAllFields(recipient)
+    Thread.sleep(5000)
 
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            recipient,
-            UIUtil.getColor(
-              getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
-            )
-          )
-        )
-      )
+    onView(withId(R.id.btnShowPrKey))
+      .check(matches(not(isDisplayed())))
+  }
+
+  @Test
+  @MoveToFlowBehaviour
+  @Ignore("MoveToFlowBehaviour")
+  fun testActionDeleteDisabled() {
+    onView(withId(R.id.menuActionDeleteKey))
+      .check(matches(not(isEnabled())))
+  }
+
+  companion object {
+    private const val KEY_PATH = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc"
   }
 }

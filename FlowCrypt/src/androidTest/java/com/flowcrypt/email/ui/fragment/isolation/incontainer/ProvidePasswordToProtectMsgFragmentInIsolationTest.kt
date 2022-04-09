@@ -3,9 +3,8 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.fragmentinisolation
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.typeText
@@ -27,7 +26,6 @@ import com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragm
 import com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragmentArgs
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -42,7 +40,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ProvidePasswordToProtectMsgFragmentTest : BaseTest() {
+class ProvidePasswordToProtectMsgFragmentInIsolationTest : BaseTest() {
   private val accountRule = AddAccountToDatabaseRule()
 
   @get:Rule
@@ -52,16 +50,12 @@ class ProvidePasswordToProtectMsgFragmentTest : BaseTest() {
     .around(accountRule)
     .around(ScreenshotTestRule())
 
-  @Before
-  fun launchFragmentInContainer() {
-    launchFragmentInContainer<ProvidePasswordToProtectMsgFragment>(
-      themeResId = R.style.AppTheme,
-      fragmentArgs = ProvidePasswordToProtectMsgFragmentArgs().toBundle()
-    )
-  }
-
   @Test
   fun testPasswordStrength() {
+    launchFragmentInContainer<ProvidePasswordToProtectMsgFragment>(
+      fragmentArgs = ProvidePasswordToProtectMsgFragmentArgs().toBundle()
+    )
+
     onView(withId(R.id.btSetPassword))
       .check(matches(not(isEnabled())))
 

@@ -25,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.util.*
 
 
 /**
@@ -84,10 +83,10 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
   fun refreshData() {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
-        refreshingLiveData.postValue(Result.loading())
+        refreshingLiveData.value = Result.loading()
         val accountEntity = activeAccountLiveData.value
           ?: roomDatabase.accountDao().getActiveAccountSuspend()
-        refreshingLiveData.postValue(getResult(accountEntity))
+        refreshingLiveData.value = getResult(accountEntity)
       }
     }
   }

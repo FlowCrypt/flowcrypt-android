@@ -3,12 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.enterprise
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -17,9 +16,8 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.MainSettingsFragment
 import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -35,13 +33,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class SettingsActivityEnterpriseTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings"
-    )
-  )
-
+class MainSettingsFragmentEnterpriseInIsolationTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
@@ -51,11 +43,11 @@ class SettingsActivityEnterpriseTest : BaseTest() {
         AccountDaoManager.getAccountDao("enterprise_account_no_prv_backup.json")
       )
     )
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
   fun testBackupsDisabled() {
+    launchFragmentInContainer<MainSettingsFragment>()
     //need to wait database updates
     Thread.sleep(1000)
     onView(withText(getResString(R.string.backups)))
