@@ -128,7 +128,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     initAcra {
       reportFormat = StringFormat.JSON
       buildConfigClass = BuildConfig::class.java
-      reportContent = arrayOf(
+      reportContent = listOf(
         ReportField.ANDROID_VERSION,
         ReportField.APP_VERSION_CODE,
         ReportField.APP_VERSION_NAME,
