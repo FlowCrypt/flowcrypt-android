@@ -106,7 +106,7 @@ class CreatePrivateKeyFirstFragment :
       navController?.navigateUp()
       setFragmentResult(
         REQUEST_KEY_CREATE_KEY,
-        bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
+        bundleOf(KEY_CREATED_KEY to pgpKeyDetails, KEY_ACCOUNT to args.accountEntity)
       )
     }
   }
@@ -118,6 +118,10 @@ class CreatePrivateKeyFirstFragment :
 
     val KEY_CREATED_KEY = GeneralUtil.generateUniqueExtraKey(
       "KEY_PARSED_KEYS", CreatePrivateKeyFirstFragment::class.java
+    )
+
+    val KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
+      "KEY_ACCOUNT", CreatePrivateKeyFirstFragment::class.java
     )
   }
 }

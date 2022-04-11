@@ -48,6 +48,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.CHECKED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.SKIP_REMAINING_KEYS
+import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_CREATED_KEY
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_RESOLVED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.USE_ANOTHER_ACCOUNT
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
@@ -163,7 +164,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     accountEntity: AccountEntity,
     pgpKeyDetails: PgpKeyDetails
   ) {
-    TODO("Not yet implemented")
+    handleUnlockedKeys(accountEntity, listOf(pgpKeyDetails))
   }
 
   private fun initViews(view: View) {
@@ -371,7 +372,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       when (checkingState) {
         CHECKED_KEYS,
         SKIP_REMAINING_KEYS -> {
-          handleUnlockedKeys(keys)
+          handleUnlockedKeys(getTempAccount(), keys)
         }
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
@@ -434,10 +435,22 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         bundle.getParcelableArrayList(CreateOrImportPrivateKeyDuringSetupFragment.KEY_PRIVATE_KEYS)
           ?: emptyList<PgpKeyDetails>()
 
+      val account = bundle.getParcelable<AccountEntity>(
+        CreateOrImportPrivateKeyDuringSetupFragment.KEY_ACCOUNT
+      )
 
       when (result) {
         HANDLE_RESOLVED_KEYS -> {
-          handleUnlockedKeys(keys)
+          handleUnlockedKeys(account, keys)
+        }
+
+        HANDLE_CREATED_KEY -> {
+          val pgpKeyDetails = keys.firstOrNull() ?: return@setFragmentResultListener
+          account ?: return@setFragmentResultListener
+          privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
+            account,
+            pgpKeyDetails
+          )
         }
 
         USE_ANOTHER_ACCOUNT -> {
@@ -457,7 +470,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun onFetchKeysCompleted(keyDetailsList: ArrayList<PgpKeyDetails>?) {
+  private fun onFetchKeysCompleted(keyDetailsList: List<PgpKeyDetails>?) {
     if (keyDetailsList.isNullOrEmpty()) {
       getTempAccount()?.let {
         requireContext().startService(
@@ -782,7 +795,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     )
   }
 
-  private fun handleUnlockedKeys(keys: List<PgpKeyDetails>) {
+  private fun handleUnlockedKeys(accountEntity: AccountEntity?, keys: List<PgpKeyDetails>) {
     if (keys.isNullOrEmpty()) {
       showContent()
       showInfoSnackbar(msgText = getString(R.string.error_no_keys))
@@ -790,12 +803,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       importCandidates.clear()
       importCandidates.addAll(keys)
 
-      if (getTempAccount() == null) {
+      if (accountEntity == null) {
         showContent()
         ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
         toast(R.string.error_occurred_try_again_later)
       } else {
-        getTempAccount()?.let { accountViewModel.addNewAccount(it) }
+        accountViewModel.addNewAccount(accountEntity)
       }
     }
   }
