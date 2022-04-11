@@ -28,6 +28,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -40,6 +41,7 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -61,6 +63,7 @@ import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageType
@@ -78,6 +81,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.imap.protocol.SearchSequence
+import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
 import me.everything.android.ui.overscroll.IOverScrollState
 import me.everything.android.ui.overscroll.IOverScrollStateListener
@@ -262,23 +266,23 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuForceSending -> {
-        /*showTwoWayDialogFragment(
+        showTwoWayDialog(
           requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
           dialogTitle = getString(R.string.restart_sending),
           dialogMsg = getString(R.string.restart_sending_process_warning)
-        )*/
+        )
         return true
       }
 
       R.id.menuEmptyTrash -> {
-        /*showTwoWayDialogFragment(
+        showTwoWayDialog(
           requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
           dialogTitle = getString(R.string.empty_trash),
           dialogMsg = getString(R.string.empty_trash_warning),
           positiveButtonTitle = getString(android.R.string.ok),
           negativeButtonTitle = getString(android.R.string.cancel),
           isCancelable = false
-        )*/
+        )
         return true
       }
 
@@ -615,7 +619,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
       ): Int {
-        val position = viewHolder.adapterPosition
+        val position = viewHolder.bindingAdapterPosition
         return if (position != RecyclerView.NO_POSITION) {
           val msgEntity = adapter.getMsgEntity(position)
           if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
@@ -628,7 +632,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-        val position = viewHolder.adapterPosition
+        val position = viewHolder.bindingAdapterPosition
         if (position != RecyclerView.NO_POSITION) {
           val item = adapter.getItemId(position)
           currentFolder?.let {
@@ -1031,6 +1035,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
       isForceSendingEnabled = msgsCount > 0
       isForceSendingEnabled = it.none { entity -> entity.msgState == MessageState.SENDING }
+
+      if (currentFolder?.isOutbox() == true) {
+        activity?.invalidateOptionsMenu()
+      }
     }
   }
 
@@ -1137,6 +1145,36 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             actionMode?.finish()
           }
         }
+
+        REQUEST_CODE_DIALOG_EMPTY_TRASH -> {
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            if (GeneralUtil.isConnected(requireContext())) {
+              EmptyTrashWorker.enqueue(requireContext())
+            } else {
+              showInfoSnackbar(msgText = getString(R.string.internet_connection_is_not_available))
+            }
+          }
+        }
+
+        REQUEST_CODE_DIALOG_FORCE_SENDING -> {
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            if (isForceSendingEnabled) {
+              lifecycleScope.launch {
+                val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+                account?.let { accountEntity ->
+                  roomDatabase.msgDao().changeMsgsStateSuspend(
+                    account = accountEntity.email,
+                    label = JavaEmailConstants.FOLDER_OUTBOX,
+                    oldValue = MessageState.AUTH_FAILURE.value,
+                    newValues = MessageState.QUEUED.value
+                  )
+                }
+
+                MessagesSenderWorker.enqueue(requireContext(), true)
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -1235,6 +1273,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     private const val REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE = 13
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 14
     private const val REQUEST_CODE_INFO_DIALOG_FAILED_TO_SEND = 15
+    private const val REQUEST_CODE_DIALOG_EMPTY_TRASH = 16
+    private const val REQUEST_CODE_DIALOG_FORCE_SENDING = 17
 
     private const val DIALOG_MSG_MAX_LENGTH = 600
   }
