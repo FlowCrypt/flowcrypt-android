@@ -88,7 +88,7 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
             Result.success(true)
           }
         } else {
-          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+          val connection = IMAPStoreManager.getConnection(accountEntity.id)
           if (connection == null) {
             loadLabelsFromRemoteServerLiveData.value =
               Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))

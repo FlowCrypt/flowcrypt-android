@@ -180,7 +180,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               refreshMsgsInternal(accountEntity, localFolder)
             }
           } else {
-            IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
+            IMAPStoreManager.getConnection(accountEntity.id)?.executeWithResult { store ->
               refreshMsgsInternal(accountEntity, store, localFolder)
             }
               ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
@@ -230,7 +230,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                 }
               }
             } else {
-              IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
+              IMAPStoreManager.getConnection(accountEntity.id)?.executeWithResult { store ->
                 if (localFolder.searchQuery.isNullOrEmpty()) {
                   loadMsgsFromRemoteServerAndStoreLocally(
                     accountEntity,

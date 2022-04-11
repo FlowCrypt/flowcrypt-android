@@ -372,7 +372,7 @@ class MsgDetailsViewModel(
           fetchAttachmentsInternal(accountEntity)
         }
       } else {
-        IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
+        IMAPStoreManager.getConnection(accountEntity.id)?.store?.let { store ->
           fetchAttachmentsInternal(accountEntity, store)
         }
       }
@@ -525,7 +525,7 @@ class MsgDetailsViewModel(
         }
       }
 
-      val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+      val connection = IMAPStoreManager.getConnection(accountEntity.id)
       if (connection == null) {
         throw java.lang.NullPointerException("There is no active connection for ${accountEntity.email}")
       } else {

@@ -25,7 +25,7 @@ import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.Properties
 import javax.mail.Folder
 import javax.mail.Session
 import javax.mail.Store
@@ -55,7 +55,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
                 else -> throw ManualHandledException("Unsupported provider")
               }
             } else {
-              val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+              val connection = IMAPStoreManager.getConnection(accountEntity.id)
               if (connection == null) {
                 emit(Result.exception<List<PgpKeyDetails>?>(NullPointerException("There is no active connection for ${accountEntity.email}")))
               } else {
@@ -108,7 +108,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
             else -> throw ManualHandledException("Unsupported provider")
           }
         } else {
-          val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+          val connection = IMAPStoreManager.getConnection(accountEntity.id)
           if (connection == null) {
             postBackupLiveData.value =
               Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
