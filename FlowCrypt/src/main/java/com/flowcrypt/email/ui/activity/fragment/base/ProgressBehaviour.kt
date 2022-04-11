@@ -27,7 +27,7 @@ interface ProgressBehaviour {
 
   fun showProgress(progressMsg: String? = null) {
     contentView?.visibility = View.GONE
-    statusView?.visibility = View.GONE
+    goneStatusView()
 
     val tVProgressMsg = progressView?.findViewById<TextView>(R.id.tVProgressMsg)
     tVProgressMsg?.text = progressMsg
@@ -36,13 +36,13 @@ interface ProgressBehaviour {
   }
 
   fun showContent() {
-    statusView?.visibility = View.GONE
-    progressView?.visibility = View.GONE
+    goneStatusView()
+    goneProgressView()
     contentView?.visibility = View.VISIBLE
   }
 
   fun showStatus(msg: String? = null, resourcesId: Int = 0) {
-    progressView?.visibility = View.GONE
+    goneProgressView()
     contentView?.visibility = View.GONE
 
     val tvStatusMsg = statusView?.findViewById<TextView>(R.id.tVStatusMsg)
@@ -54,5 +54,16 @@ interface ProgressBehaviour {
     }
 
     statusView?.visibility = View.VISIBLE
+  }
+
+  fun goneStatusView() {
+    statusView?.visibility = View.GONE
+    statusView?.findViewById<TextView>(R.id.tVStatusMsg)?.text = null
+    statusView?.findViewById<ImageView>(R.id.iVStatusImg)?.setImageDrawable(null)
+  }
+
+  fun goneProgressView() {
+    progressView?.visibility = View.GONE
+    progressView?.findViewById<TextView>(R.id.tVProgressMsg)?.text = null
   }
 }
