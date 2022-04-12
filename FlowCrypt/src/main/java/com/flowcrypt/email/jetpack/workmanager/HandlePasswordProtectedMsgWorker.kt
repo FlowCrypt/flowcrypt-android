@@ -21,9 +21,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.javax.mail.internet.getAddresses
 import com.flowcrypt.email.extensions.javax.mail.internet.getFromAddress
-import com.flowcrypt.email.extensions.javax.mail.internet.getMatchingRecipients
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
@@ -128,10 +126,12 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val plainMimeMsgWithAttachments = getMimeMessage(account, msgEntity, attachments)
 
             //get recipients that will be used to create password-encrypted msg
-            val toCandidates = getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.TO)
-            val ccCandidates = getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.CC)
+            val toCandidates =
+              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.TO) ?: emptyArray()
+            val ccCandidates =
+              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.CC) ?: emptyArray()
             val bccCandidates =
-              getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.BCC)
+              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.BCC) ?: emptyArray()
 
             if (toCandidates.isEmpty() && ccCandidates.isEmpty() && bccCandidates.isEmpty()) {
               throw IllegalStateException("Wrong password-protected implementation")
@@ -143,12 +143,14 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val idToken = getGoogleIdToken()
             val replyToken = fetchReplyToken(apiRepository, domain, idToken)
             val replyInfoData = ReplyInfoData(
-              sender = fromAddress.address,
+              sender = fromAddress.address.lowercase(),
               recipient = (toCandidates + ccCandidates + bccCandidates)
-                .mapNotNull { (it as? InternetAddress)?.address }
+                .mapNotNull { (it as? InternetAddress)?.address?.lowercase() }
                 .filterNot {
                   it.equals(fromAddress.address, true)
-                },
+                }
+                .toHashSet()
+                .toList(),
               subject = plainMimeMsgWithAttachments.subject,
               token = replyToken
             )
@@ -198,8 +200,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             updateExistingMimeMsgWithUrl(msgEntity, fesUrl)
           } else {
-            roomDatabase.msgDao()
-              .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
           }
           MessagesSenderWorker.enqueue(applicationContext)
         } catch (e: Exception) {
@@ -312,19 +313,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
         decryptWhenForward = true
       )
     }
-
-  private suspend fun getRecipients(
-    mimeMsgWithAttachments: MimeMessage,
-    type: Message.RecipientType
-  ) = withContext(Dispatchers.IO) {
-    mimeMsgWithAttachments.getMatchingRecipients(
-      type = type,
-      list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
-        context = applicationContext,
-        emails = mimeMsgWithAttachments.getAddresses(type)
-      )
-    )
-  }
 
   private suspend fun updateExistingMimeMsgWithUrl(
     msgEntity: MessageEntity,
