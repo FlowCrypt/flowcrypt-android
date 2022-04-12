@@ -16,9 +16,9 @@ import java.util.Properties
  *         E-mail: DenBond7@gmail.com
  */
 interface EnvironmentSettings {
-  fun sslTrustedDomains(): List<String>
-  fun getFlavorPropertiesForSession(): Properties
-  fun isGMailAPIEnabled(): Boolean
+  fun sslTrustedDomains(): List<String> = emptyList()
+  fun getFlavorPropertiesForSession(): Properties = Properties()
+  fun isGMailAPIEnabled(): Boolean = false
   fun configure(context: Context)
   fun getCountingIdlingResource(): CountingIdlingResource? = null
 }
