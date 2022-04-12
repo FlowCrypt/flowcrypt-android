@@ -13,6 +13,7 @@
     <include app:graph="@navigation/info_dialog_graph" />
     <include app:graph="@navigation/two_way_dialog_graph" />
     <include app:graph="@navigation/fix_need_pass_phrase_dialog_graph" />
+    <include app:graph="@navigation/feedback_graph" />
 
     <fragment
         android:id="@+id/createMessageFragment"
