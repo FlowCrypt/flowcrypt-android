@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -49,6 +50,7 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     dialogBuilder.setPositiveButton(
       args.positiveButtonTitle
     ) { _, _ ->
+      navController?.navigateUp()
       setFragmentResult(
         REQUEST_KEY_BUTTON_CLICK,
         bundleOf(KEY_REQUEST_CODE to args.requestCode, KEY_RESULT to RESULT_OK)
@@ -58,6 +60,7 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     dialogBuilder.setNegativeButton(
       args.negativeButtonTitle
     ) { _, _ ->
+      navController?.navigateUp()
       setFragmentResult(
         REQUEST_KEY_BUTTON_CLICK,
         bundleOf(KEY_REQUEST_CODE to args.requestCode, KEY_RESULT to RESULT_CANCELED)

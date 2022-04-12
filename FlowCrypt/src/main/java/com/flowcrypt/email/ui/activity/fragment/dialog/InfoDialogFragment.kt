@@ -13,6 +13,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import java.nio.charset.StandardCharsets
@@ -45,6 +46,7 @@ class InfoDialogFragment : BaseDialogFragment() {
         setMessage(if (args.hasHtml) UIUtil.getHtmlSpannedFromText(args.dialogMsg) else args.dialogMsg)
       }
       setPositiveButton(args.buttonTitle) { _, _ ->
+        navController?.navigateUp()
         setFragmentResult(
           REQUEST_KEY_BUTTON_CLICK,
           bundleOf(KEY_REQUEST_CODE to args.requestCode)
