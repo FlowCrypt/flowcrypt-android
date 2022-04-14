@@ -86,7 +86,7 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
       serviceInfo: ServiceInfo? = null
     ): Intent {
       val intent = Intent(context, CreateMessageActivity::class.java)
-      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
       intent.putExtra("incomingMessageInfo", msgInfo)
       intent.putExtra("messageType", messageType)
       intent.putExtra("encryptedByDefault", msgEncryptionType == MessageEncryptionType.ENCRYPTED)

@@ -41,7 +41,7 @@
         <activity
             android:name=".ui.activity.MainActivity"
             android:exported="true"
-            android:launchMode="singleInstance"
+            android:launchMode="singleInstancePerTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Starting">
             <intent-filter>
@@ -56,6 +56,8 @@
         <activity
             android:name=".ui.activity.CreateMessageActivity"
             android:exported="true"
+            android:autoRemoveFromRecents="true"
+            android:documentLaunchMode="intoExisting"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme">
             <nav-graph android:value="@navigation/create_msg_graph" />
