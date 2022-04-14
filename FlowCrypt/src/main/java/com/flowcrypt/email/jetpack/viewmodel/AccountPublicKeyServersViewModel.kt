@@ -82,17 +82,16 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
 
   fun refreshData() {
     viewModelScope.launch {
-      withContext(Dispatchers.IO) {
-        refreshingLiveData.value = Result.loading()
-        val accountEntity = activeAccountLiveData.value
-          ?: roomDatabase.accountDao().getActiveAccountSuspend()
-        refreshingLiveData.value = getResult(accountEntity)
-      }
+      refreshingLiveData.value = Result.loading()
+      val accountEntity = activeAccountLiveData.value
+        ?: roomDatabase.accountDao().getActiveAccountSuspend()
+      refreshingLiveData.value = getResult(accountEntity)
     }
   }
 
-  private suspend fun getResult(accountEntity: AccountEntity?): Result<List<PgpKeyDetails>> {
-    return if (accountEntity != null) {
+  private suspend fun getResult(accountEntity: AccountEntity?):
+      Result<List<PgpKeyDetails>> = withContext(Dispatchers.IO) {
+    return@withContext if (accountEntity != null) {
       try {
         val results = mutableListOf<PgpKeyDetails>()
         val emails = ArrayList<String>()
