@@ -132,8 +132,11 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
     lifecycle.removeObserver(connectionLifecycleObserver)
   }
 
+  /**
+   * This method will be called when we receive new updates about the active account
+   */
   open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
-
+    // nothing to do here in the base implementation
   }
 
   fun setSupportActionBarTitle(title: String) {

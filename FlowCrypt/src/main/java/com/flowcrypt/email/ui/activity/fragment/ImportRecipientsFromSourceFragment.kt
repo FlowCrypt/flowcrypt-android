@@ -58,7 +58,7 @@ class ImportRecipientsFromSourceFragment :
   }
 
   override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
-
+    // nothing to do here
   }
 
   private fun initViews() {

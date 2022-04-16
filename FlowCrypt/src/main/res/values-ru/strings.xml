@@ -495,6 +495,6 @@
     <string name="warning_don_not_have_content_app">Просмотр вложения невозможен. Ваша организация требует использовать Content для просмотра вложений, но приложение Content не установлено.\n\nПожалуйста, обратитесь в службу поддержки.</string>
     <string name="import_keys">Импортировать ключи</string>
     <string name="error">Ошибка</string>
-    <string name="import_keys_from_different_sources">Вы пытаетесь импортировать ключи с разных источников</string>
+    <string name="import_keys_from_different_sources">Вы пытаетесь импортировать ключи из разных источников</string>
     <string name="thank_you_for_feedback">Спасибо за Ваш отзыв</string>
 </resources>

@@ -111,7 +111,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
-    get() = binding?.rVMsgs
+    get() = binding?.recyclerViewMsgs
   override val statusView: View?
     get() = binding?.status?.root
 
@@ -199,12 +199,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     val menuItemSearch = menu.findItem(R.id.menuSearch)
     menuItemSearch?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
       override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-        binding?.sRL?.isEnabled = false
+        binding?.swipeRefreshLayout?.isEnabled = false
         return true
       }
 
       override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-        binding?.sRL?.isEnabled = true
+        binding?.swipeRefreshLayout?.isEnabled = true
         currentFolder?.searchQuery = null
         onFolderChanged(true)
         return true
@@ -301,14 +301,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     snackBar?.dismiss()
 
     if (currentFolder == null) {
-      binding?.sRL?.isRefreshing = false
+      binding?.swipeRefreshLayout?.isRefreshing = false
       labelsViewModel.loadLabels()
       return
     }
 
     val isEmpty = TextUtils.isEmpty(currentFolder?.fullName)
     if (isEmpty || isOutboxFolder) {
-      binding?.sRL?.isRefreshing = false
+      binding?.swipeRefreshLayout?.isRefreshing = false
 
       if (isOutboxFolder) {
         context?.let { MessagesSenderWorker.enqueue(it) }
@@ -318,7 +318,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         if (adapter.itemCount > 0) {
           refreshMsgs()
         } else {
-          binding?.sRL?.isRefreshing = false
+          binding?.swipeRefreshLayout?.isRefreshing = false
 
           if (adapter.itemCount == 0) {
             showProgress()
@@ -327,7 +327,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           loadNextMsgs()
         }
       } else {
-        binding?.sRL?.isRefreshing = false
+        binding?.swipeRefreshLayout?.isRefreshing = false
 
         if (adapter.itemCount == 0) {
           showStatus(msg = getString(R.string.no_connection))
@@ -548,12 +548,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     setupRecyclerView()
 
     footerProgressView = LayoutInflater.from(context)
-      .inflate(R.layout.list_view_progress_footer, binding?.rVMsgs, false)
+      .inflate(R.layout.list_view_progress_footer, binding?.recyclerViewMsgs, false)
     footerProgressView?.visibility = View.GONE
-    binding?.sRL?.setColorSchemeResources(
+    binding?.swipeRefreshLayout?.setColorSchemeResources(
       R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary
     )
-    binding?.sRL?.setOnRefreshListener(this)
+    binding?.swipeRefreshLayout?.setOnRefreshListener(this)
 
     binding?.floatActionButtonCompose?.setOnClickListener {
       startActivity(
@@ -564,10 +564,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private fun setupRecyclerView() {
     val layoutManager = LinearLayoutManager(context)
-    binding?.rVMsgs?.layoutManager = layoutManager
-    binding?.rVMsgs?.setHasFixedSize(true)
-    binding?.rVMsgs?.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
-    binding?.rVMsgs?.adapter = adapter
+    binding?.recyclerViewMsgs?.layoutManager = layoutManager
+    binding?.recyclerViewMsgs?.setHasFixedSize(true)
+    binding?.recyclerViewMsgs?.addItemDecoration(
+      DividerItemDecoration(context, layoutManager.orientation)
+    )
+    binding?.recyclerViewMsgs?.adapter = adapter
     setupItemTouchHelper()
     setupSelectionTracker()
     setupBottomOverScroll()
@@ -575,7 +577,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private fun setupSelectionTracker() {
     adapter.tracker = null
-    binding?.rVMsgs?.let { recyclerView ->
+    binding?.recyclerViewMsgs?.let { recyclerView ->
       keyProvider = CustomStableIdKeyProvider(recyclerView)
       keyProvider?.let {
         tracker = SelectionTracker.Builder(
@@ -724,11 +726,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
     })
 
-    itemTouchHelper.attachToRecyclerView(binding?.rVMsgs)
+    itemTouchHelper.attachToRecyclerView(binding?.recyclerViewMsgs)
   }
 
   private fun setupBottomOverScroll() {
-    binding?.rVMsgs?.let { recyclerView ->
+    binding?.recyclerViewMsgs?.let { recyclerView ->
       val overScrollAdapter = object : RecyclerViewOverScrollDecorAdapter(recyclerView) {
         /**
          * we disable OverScroll checking for top
@@ -824,7 +826,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
       override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
         mode?.menuInflater?.inflate(R.menu.message_list_context_menu, menu)
-        binding?.sRL?.isEnabled = false
+        binding?.swipeRefreshLayout?.isEnabled = false
         return true
       }
 
@@ -850,7 +852,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun onDestroyActionMode(mode: ActionMode?) {
-        binding?.sRL?.isEnabled = true
+        binding?.swipeRefreshLayout?.isEnabled = true
 
         if (!keepSelectionInMemory) {
           tracker?.clearSelection()
@@ -884,7 +886,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             countingIdlingResource?.incrementSafely()
           }
 
-          if (binding?.rVMsgs?.adapter?.itemCount == 0) {
+          if (binding?.recyclerViewMsgs?.adapter?.itemCount == 0) {
             showProgress()
           }
 
@@ -932,7 +934,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
-          if (binding?.rVMsgs?.adapter?.itemCount == 0) {
+          if (binding?.recyclerViewMsgs?.adapter?.itemCount == 0) {
             showEmptyView()
           } else {
             showContent()
@@ -992,11 +994,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       when (result.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely()
-          binding?.sRL?.isRefreshing = true
+          binding?.swipeRefreshLayout?.isRefreshing = true
         }
 
         else -> {
-          binding?.sRL?.isRefreshing = false
+          binding?.swipeRefreshLayout?.isRefreshing = false
 
           if (result.status == Result.Status.EXCEPTION) {
             when (result.exception) {

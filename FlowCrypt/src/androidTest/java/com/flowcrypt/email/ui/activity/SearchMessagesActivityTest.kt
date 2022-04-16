@@ -90,14 +90,14 @@ class SearchMessagesActivityTest : BaseTest() {
       .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
       .check(matches(withText(DEFAULT_QUERY_TEXT)))
-    onView(withId(R.id.rVMsgs))
+    onView(withId(R.id.recyclerViewMsgs))
       .check(matches(not(withEmptyRecyclerView())))
   }
 
   @Test
   @NotReadyForCI
   fun testSearchQuery() {
-    onView(withId(R.id.rVMsgs))
+    onView(withId(R.id.recyclerViewMsgs))
       .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
 
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -107,7 +107,7 @@ class SearchMessagesActivityTest : BaseTest() {
       .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
     //todo-denbond7 Need to improve this code
     Thread.sleep(2000)
-    onView(withId(R.id.rVMsgs))
+    onView(withId(R.id.recyclerViewMsgs))
       .check(matches(withRecyclerViewItemCount(2))).check(matches(isDisplayed()))
   }
 
@@ -121,16 +121,16 @@ class SearchMessagesActivityTest : BaseTest() {
       .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
     //todo-denbond7 Need to improve this code
     Thread.sleep(2000)
-    onView(withId(R.id.rVMsgs))
+    onView(withId(R.id.recyclerViewMsgs))
       .check(matches(withRecyclerViewItemCount(3))).check(matches(isDisplayed()))
   }
 
   @Test
   @NotReadyForCI
   fun testShowNotEmptyList() {
-    onView(withId(R.id.rVMsgs))
+    onView(withId(R.id.recyclerViewMsgs))
       .check(matches(isDisplayed()))
-    onView(withId(R.id.rVMsgs))
+    onView(withId(R.id.recyclerViewMsgs))
       .check(matches(not(withEmptyRecyclerView())))
   }
 

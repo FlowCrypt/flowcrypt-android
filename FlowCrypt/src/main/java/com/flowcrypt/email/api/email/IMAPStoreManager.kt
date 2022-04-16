@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -26,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
  *         E-mail: DenBond7@gmail.com
  */
 object IMAPStoreManager {
+  private val RETRY_TIMEOUT = TimeUnit.MILLISECONDS.toMillis(200)
   private val activeConnections = ConcurrentHashMap<Long, IMAPStoreConnection>()
 
   fun init(context: Context) {
@@ -88,7 +90,7 @@ object IMAPStoreManager {
     if (attempts > 0) {
       while (attempts != 0 && activeConnections[id] == null) {
         attempts--
-        delay(200)
+        delay(RETRY_TIMEOUT)
       }
     }
     return@withContext activeConnections[id]
