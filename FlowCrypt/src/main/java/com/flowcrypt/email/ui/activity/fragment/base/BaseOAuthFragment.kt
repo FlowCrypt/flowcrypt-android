@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.base
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.viewModels
+import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -23,7 +24,7 @@ import net.openid.appauth.AuthorizationResponse
  *         Time: 5:24 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseOAuthFragment : BaseFragment() {
+abstract class BaseOAuthFragment<T : ViewBinding> : BaseFragment<T>() {
   protected val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
 
   protected var authRequest: AuthorizationRequest? = null
@@ -67,7 +68,10 @@ abstract class BaseOAuthFragment : BaseFragment() {
       } else {
         showInfoDialog(
           dialogTitle = getString(R.string.oauth_error),
-          dialogMsg = getString(R.string.could_not_verify_response),
+          dialogMsg = getString(
+            R.string.could_not_verify_response,
+            getString(R.string.support_email)
+          ),
           useLinkify = true
         )
       }

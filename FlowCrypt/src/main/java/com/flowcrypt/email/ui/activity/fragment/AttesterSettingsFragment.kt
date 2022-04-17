@@ -6,15 +6,18 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.databinding.FragmentAttesterSettingsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.AccountPublicKeyServersViewModel
@@ -32,33 +35,36 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 9:46 AM
  *         E-mail: DenBond7@gmail.com
  */
-class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
+class AttesterSettingsFragment : BaseFragment<FragmentAttesterSettingsBinding>(),
+  ListProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentAttesterSettingsBinding.inflate(inflater, container, false)
+
   override val emptyView: View?
-    get() = view?.findViewById(R.id.empty)
+    get() = binding?.empty?.root
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.rVAttester)
+    get() = binding?.rVAttester
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
+    get() = binding?.status?.root
 
-  override val contentResourceId: Int = R.layout.fragment_attester_settings
-
-  private var sRL: SwipeRefreshLayout? = null
   private val accountPublicKeyServersViewModel: AccountPublicKeyServersViewModel by viewModels()
   private val attesterKeyAdapter: AttesterKeyAdapter = AttesterKeyAdapter()
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.attester)
     initViews(view)
     setupAccountKeysInfoViewModel()
   }
 
   private fun initViews(view: View) {
-    sRL = view.findViewById(R.id.sRL)
-    sRL?.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
-    sRL?.setOnRefreshListener {
+    binding?.sRL?.setColorSchemeResources(
+      R.color.colorPrimary,
+      R.color.colorPrimary,
+      R.color.colorPrimary
+    )
+    binding?.sRL?.setOnRefreshListener {
       dismissCurrentSnackBar()
       accountPublicKeyServersViewModel.refreshData()
     }
@@ -76,19 +82,19 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
   }
 
   private fun setupAccountKeysInfoViewModel() {
-    accountPublicKeyServersViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, {
+    accountPublicKeyServersViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
-            if (sRL?.isRefreshing != true || attesterKeyAdapter.itemCount == 0) {
-              sRL?.isRefreshing = false
+            countingIdlingResource?.incrementSafely()
+            if (binding?.sRL?.isRefreshing != true || attesterKeyAdapter.itemCount == 0) {
+              binding?.sRL?.isRefreshing = false
               showProgress()
             } else return@let
           }
 
           Result.Status.SUCCESS -> {
-            sRL?.isRefreshing = false
+            binding?.sRL?.isRefreshing = false
             it.data?.let { responses ->
               if (responses.isNotEmpty()) {
                 attesterKeyAdapter.setData(responses)
@@ -97,16 +103,16 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
                 showEmptyView()
               }
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.ERROR -> {
-            sRL?.isRefreshing = false
-            baseActivity.countingIdlingResource.decrementSafely()
+            binding?.sRL?.isRefreshing = false
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
-            sRL?.isRefreshing = false
+            binding?.sRL?.isRefreshing = false
             showStatus(
               it.exception?.message
                 ?: it.exception?.javaClass?.simpleName
@@ -121,10 +127,11 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
               accountPublicKeyServersViewModel.refreshData()
             }
 
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
+          else -> {}
         }
       }
-    })
+    }
   }
 }

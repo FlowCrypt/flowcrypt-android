@@ -6,6 +6,7 @@
 package com.flowcrypt.email.util
 
 import android.content.Context
+import androidx.test.espresso.idling.CountingIdlingResource
 import java.util.Properties
 
 /**
@@ -15,8 +16,14 @@ import java.util.Properties
  *         E-mail: DenBond7@gmail.com
  */
 object FlavorSettings : EnvironmentSettings {
+  private val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(
+    GeneralUtil.genIdlingResourcesName(this::class.java),
+    GeneralUtil.isDebugBuild()
+  )
+
   override fun sslTrustedDomains(): List<String> = emptyList()
   override fun getFlavorPropertiesForSession() = Properties()
   override fun isGMailAPIEnabled(): Boolean = false
   override fun configure(context: Context) {}
+  override fun getCountingIdlingResource() = countingIdlingResource
 }

@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ADB:Print independent tests" type="ShConfigurationType">
+    <option name="SCRIPT_TEXT" value="$ANDROID_HOME/platform-tools/adb shell am instrument -r -w -e filter com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter -e log true com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner | grep -e &quot;INSTRUMENTATION_STATUS: test&quot; -e &quot;INSTRUMENTATION_STATUS: class&quot; -e &quot;OK&quot; | awk '!x[$0]++'" />
+    <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+    <option name="SCRIPT_PATH" value="" />
+    <option name="SCRIPT_OPTIONS" value="" />
+    <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+    <option name="INTERPRETER_PATH" value="/bin/bash" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="EXECUTE_IN_TERMINAL" value="false" />
+    <option name="EXECUTE_SCRIPT_FILE" value="false" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>

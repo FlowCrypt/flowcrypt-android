@@ -16,7 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -76,7 +76,10 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
         PendingIntent.getActivity(
           this,
           0,
-          Intent(this, EmailManagerActivity::class.java),
+          Intent(this, MainActivity::class.java).apply {
+            action = Intent.ACTION_MAIN
+            addCategory(Intent.CATEGORY_LAUNCHER)
+          },
           PendingIntent.FLAG_IMMUTABLE
         )
       )

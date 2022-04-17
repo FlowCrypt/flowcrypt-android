@@ -8,13 +8,14 @@ package com.flowcrypt.email.service
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.navigation.NavDeepLinkBuilder
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -26,8 +27,7 @@ import com.flowcrypt.email.broadcastreceivers.MarkMessagesAsOldBroadcastReceiver
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
@@ -36,7 +36,6 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.ArrayList
 
 /**
  * This manager is responsible for displaying messages notifications.
@@ -147,12 +146,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setStyle(NotificationCompat.BigTextStyle().bigText(msg.subject))
         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
         .setContentText(msg.subject)
-        .setContentIntent(
-          getMsgDetailsPendingIntent(
-            context, msg.uid.toInt(),
-            localFolder, msg
-          )
-        )
+        .setContentIntent(getMsgDetailsPendingIntent(context, msg.uid.toInt(), localFolder, msg))
         .setDefaults(Notification.DEFAULT_ALL)
         .setSubText(account.email)
 
@@ -221,7 +215,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun getInboxPendingIntent(context: Context): PendingIntent {
-    val inboxIntent = Intent(context, EmailManagerActivity::class.java)
+    val inboxIntent = Intent(context, MainActivity::class.java)
     inboxIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
     return PendingIntent.getActivity(
       context,
@@ -276,16 +270,22 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun getMsgDetailsPendingIntent(
-    context: Context, requestCode: Int, localFolder: LocalFolder,
-    msg: MessageEntity
+    context: Context, requestCode: Int, localFolder: LocalFolder, messageEntity: MessageEntity
   ): PendingIntent {
-    val intent = MessageDetailsActivity.getIntent(context, localFolder, msg)
-
-    val stackBuilder = TaskStackBuilder.create(context)
-    stackBuilder.addParentStack(MessageDetailsActivity::class.java)
-    stackBuilder.addNextIntent(intent)
-
-    return stackBuilder.getPendingIntent(requestCode, PendingIntent.FLAG_UPDATE_CURRENT)
+    return requireNotNull(
+      NavDeepLinkBuilder(context)
+        .setGraph(R.navigation.nav_graph)
+        .setDestination(R.id.messageDetailsFragment)
+        .setArguments(Bundle().apply {
+          putParcelable("messageEntity", messageEntity)
+          putParcelable("localFolder", localFolder)
+        })
+        .setComponentName(MainActivity::class.java)
+        .createTaskStackBuilder()
+        .getPendingIntent(
+          requestCode, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    )
   }
 
   companion object {

@@ -17,7 +17,7 @@ import android.webkit.WebViewClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
-import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 
 /**
@@ -29,7 +29,7 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
  * E-mail: DenBond7@gmail.com
  */
 class EmailWebView : WebView {
-  private var onPageFinishedListener: OnPageFinishedListener? = null
+  private var onPageLoadingListener: OnPageLoadingListener? = null
 
   constructor(context: Context) : super(context)
 
@@ -52,11 +52,7 @@ class EmailWebView : WebView {
     webChromeClient = object : WebChromeClient() {
       override fun onProgressChanged(view: WebView, newProgress: Int) {
         super.onProgressChanged(view, newProgress)
-        if (newProgress == 100) {
-          if (onPageFinishedListener != null) {
-            onPageFinishedListener!!.onPageFinished()
-          }
-        }
+        onPageLoadingListener?.onPageLoading(newProgress)
       }
     }
 
@@ -72,12 +68,12 @@ class EmailWebView : WebView {
     webSettings.javaScriptEnabled = false
   }
 
-  fun setOnPageFinishedListener(onPageFinishedListener: OnPageFinishedListener) {
-    this.onPageFinishedListener = onPageFinishedListener
+  fun setOnPageLoadingListener(onPageLoadingListener: OnPageLoadingListener) {
+    this.onPageLoadingListener = onPageLoadingListener
   }
 
-  interface OnPageFinishedListener {
-    fun onPageFinished()
+  interface OnPageLoadingListener {
+    fun onPageLoading(newProgress: Int)
   }
 
   /**
@@ -112,8 +108,7 @@ class EmailWebView : WebView {
      * @param uri [Uri] with mailto: scheme.
      */
     private fun handleEmailLinks(uri: Uri) {
-      val intent =
-        CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED)
+      val intent = CreateMessageActivity.generateIntent(context, MessageType.NEW)
       intent.action = Intent.ACTION_SENDTO
       intent.data = uri
       context.startActivity(intent)

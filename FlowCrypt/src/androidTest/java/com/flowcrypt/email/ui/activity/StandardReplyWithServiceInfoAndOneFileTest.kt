@@ -85,7 +85,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   )
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     intent = CreateMessageActivity.generateIntent(
       getTargetContext(),
       msgInfo = incomingMsgInfo,
@@ -191,11 +191,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
       onView(withText(R.string.switch_to_secure_email))
         .check(doesNotExist())
     }
-  }
-
-  @Test
-  fun testShowHelpScreen() {
-    testHelpScreen()
   }
 
   companion object {

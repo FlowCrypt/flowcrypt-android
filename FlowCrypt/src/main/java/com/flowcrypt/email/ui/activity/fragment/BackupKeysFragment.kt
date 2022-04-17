@@ -15,17 +15,19 @@ import android.view.ViewGroup
 import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentBackupKeysBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -50,8 +52,9 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:06
  * E-mail: DenBond7@gmail.com
  */
-class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
-  private var binding: FragmentBackupKeysBinding? = null
+class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentBackupKeysBinding.inflate(inflater, container, false)
 
   override val progressView: View?
     get() = binding?.iProgress?.root
@@ -67,8 +70,6 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
   private var areBackupsSavingNow: Boolean = false
   private var destinationUri: Uri? = null
 
-  override val contentResourceId: Int = R.layout.fragment_backup_keys
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     requireActivity().onBackPressedDispatcher.addCallback(this) {
@@ -80,16 +81,8 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentBackupKeysBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.backup_options)
     initViews()
     setupPrivateKeysViewModel()
     setupBackupsViewModel()
@@ -178,11 +171,11 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.saveBackupAsFileLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.saveBackupAsFileLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress(getString(R.string.processing))
             areBackupsSavingNow = true
           }
@@ -197,7 +190,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
               showContent()
               showInfoSnackbar(binding?.root, getString(R.string.error_occurred_please_try_again))
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -205,31 +198,27 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
             areBackupsSavingNow = false
 
             if (!handleKnownException(it.exception)) {
-              navController?.navigate(
-                NavGraphDirections.actionGlobalInfoDialogFragment(
-                  requestCode = 0,
-                  dialogTitle = "",
-                  dialogMsg = it.exception?.message
-                    ?: getString(R.string.error_could_not_save_private_keys)
-                )
+              showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = it.exception?.message
+                  ?: getString(R.string.error_could_not_save_private_keys)
               )
             }
             privateKeysViewModel.saveBackupAsFileLiveData.value = Result.none()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
-          else -> {
-          }
+          else -> {}
         }
       }
-    })
+    }
   }
 
   private fun setupBackupsViewModel() {
-    backupsViewModel.postBackupLiveData.observe(viewLifecycleOwner, {
+    backupsViewModel.postBackupLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           isPrivateKeySendingNow = true
           showProgress(getString(R.string.processing))
         }
@@ -238,7 +227,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           isPrivateKeySendingNow = false
           toast(R.string.backed_up_successfully)
           navController?.popBackStack(R.id.mainSettingsFragment, false)
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -246,27 +235,25 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
           isPrivateKeySendingNow = false
 
           if (!handleKnownException(it.exception)) {
-            showBackupingErrorHint()
+            showBackuppingErrorHint()
           }
 
           backupsViewModel.postBackupLiveData.value = Result.none()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {
         }
       }
-    })
+    }
   }
 
   private fun handleKnownException(e: Throwable?): Boolean {
     when (e) {
       is EmptyPassphraseException -> {
-        navController?.navigate(
-          NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
-            fingerprints = e.fingerprints.toTypedArray(),
-            logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
-          )
+        showNeedPassphraseDialog(
+          fingerprints = e.fingerprints,
+          logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
         )
       }
 
@@ -296,7 +283,7 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     return true
   }
 
-  private fun showBackupingErrorHint() {
+  private fun showBackuppingErrorHint() {
     showSnackbar(
       view = binding?.root,
       msgText = getString(R.string.backup_was_not_sent),
@@ -342,11 +329,9 @@ class BackupKeysFragment : BaseFragment(), ProgressBehaviour {
     val keysStorage = KeysStorageImpl.getInstance(requireContext())
     val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
     if (fingerprints.isNotEmpty()) {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalFixNeedPassphraseIssueDialogFragment(
-          fingerprints = fingerprints.toTypedArray(),
-          logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
-        )
+      showNeedPassphraseDialog(
+        fingerprints = fingerprints,
+        logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
       )
     } else {
       action.invoke()

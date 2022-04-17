@@ -79,14 +79,14 @@ data class ExtraActionInfo constructor(
      *
      * @param intent An incoming intent.
      */
-    fun parseExtraActionInfo(context: Context, intent: Intent): ExtraActionInfo {
+    fun parseExtraActionInfo(context: Context, intent: Intent): ExtraActionInfo? {
       var info: ExtraActionInfo? = null
 
       //parse mailto: URI
-      if (Intent.ACTION_VIEW == intent.action || Intent.ACTION_SENDTO == intent.action) {
+      if (intent.action in listOf(Intent.ACTION_VIEW, Intent.ACTION_SENDTO)) {
         if (RFC6068Parser.isMailTo(intent.data)) {
           info = RFC6068Parser.parse(intent.data)
-        }
+        } else return null
       }
 
       if (info == null) {

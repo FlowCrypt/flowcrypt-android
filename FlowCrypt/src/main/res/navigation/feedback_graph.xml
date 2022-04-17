@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/feedback_graph"
+    app:startDestination="@id/feedbackFragment">
+    <fragment
+        android:id="@+id/feedbackFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.FeedbackFragment"
+        android:label="@string/help_feedback_or_question"
+        tools:layout="@layout/fragment_feedback">
+        <argument
+            android:name="screenshot"
+            app:argType="com.flowcrypt.email.ui.activity.fragment.FeedbackFragment$Screenshot" />
+        <action
+            android:id="@+id/action_feedbackFragment_to_editScreenshotDialogFragment"
+            app:destination="@id/editScreenshotDialogFragment" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/editScreenshotDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.EditScreenshotDialogFragment"
+        tools:layout="@layout/fragment_screenshot_editor">
+        <argument
+            android:name="screenshot"
+            app:argType="com.flowcrypt.email.ui.activity.fragment.FeedbackFragment$Screenshot" />
+    </dialog>
+</navigation>

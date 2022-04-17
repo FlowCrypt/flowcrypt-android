@@ -30,7 +30,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * A test for [SignInActivity]
+ * A test for [MainActivity]
  *
  * @author Denis Bondarenko
  * Date: 13.02.2018
@@ -39,9 +39,9 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class SignInActivityTest : BaseTest() {
+class MainActivityTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>()
+  override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

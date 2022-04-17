@@ -27,6 +27,7 @@ import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
@@ -66,7 +67,7 @@ import java.math.BigInteger
 import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
-import java.util.*
+import java.util.Properties
 import javax.mail.Flags
 import javax.mail.MessagingException
 import javax.mail.Part
@@ -718,7 +719,9 @@ class GmailApiHelper {
             continue
           }
 
-          list.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
+          list.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList.map {
+            it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
+          })
         }
 
         return@withContext list

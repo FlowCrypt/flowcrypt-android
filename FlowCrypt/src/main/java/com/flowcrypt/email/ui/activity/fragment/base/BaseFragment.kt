@@ -10,23 +10,23 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.ActionBar
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.doBaseUISetup
 import com.flowcrypt.email.extensions.hasActiveConnection
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
-import com.flowcrypt.email.model.results.LoaderResult
-import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
-import com.flowcrypt.email.util.UIUtil
-import com.google.android.material.appbar.AppBarLayout
+import com.flowcrypt.email.util.LogsUtil
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -37,53 +37,30 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseFragment : Fragment() {
+abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
+  protected var binding: T? = null
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
+  protected val account: AccountEntity?
+    get() = accountViewModel.activeAccountLiveData.value
+  private lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
+  private val loggingTag: String = javaClass.simpleName
 
-  protected var account: AccountEntity? = null
-  protected var isAccountInfoReceived = false
+  protected abstract fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): T
 
-  /**
-   * Get the content view resources id. This method must return an resources id of a layout
-   * if we want to show some UI.
-   *
-   * @return The content view resources id.
-   */
-  abstract val contentResourceId: Int
-
-  protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
-
-  /**
-   * This method returns information about an availability of a "back press action" at the
-   * current moment.
-   *
-   * @return true if a back press action enable at current moment, false otherwise.
-   */
-  var isBackPressedEnabled = true
-  var snackBar: Snackbar? = null
+  protected var snackBar: Snackbar? = null
     private set
-
-  val supportActionBar: ActionBar?
-    get() = if (activity is AppCompatActivity) {
-      (activity as AppCompatActivity).supportActionBar
-    } else
-      null
-
-  val appBarLayout: AppBarLayout?
-    get() = if (activity is BaseActivity) {
-      (activity as BaseActivity).appBarLayout
-    } else {
-      activity?.findViewById(R.id.appBarLayout)
-    }
-
-  val baseActivity: BaseActivity
-    get() = activity as BaseActivity
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
+    LogsUtil.d(loggingTag, "onAttach")
     connectionLifecycleObserver = ConnectionLifecycleObserver(context)
     lifecycle.addObserver(connectionLifecycleObserver)
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    LogsUtil.d(loggingTag, "onCreate")
   }
 
   override fun onCreateView(
@@ -91,48 +68,75 @@ abstract class BaseFragment : Fragment() {
     container: ViewGroup?,
     savedInstanceState: Bundle?
   ): View? {
-    return if (contentResourceId > 0) {
-      inflater.inflate(contentResourceId, container, false)
-    } else super.onCreateView(inflater, container, savedInstanceState)
+    LogsUtil.d(loggingTag, "onCreateView")
+    binding = inflateBinding(inflater, container)
+    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    LogsUtil.d(loggingTag, "onViewCreated")
+    doBaseUISetup(this)
     initAccountViewModel()
+  }
+
+  override fun onStart() {
+    super.onStart()
+    LogsUtil.d(loggingTag, "onStart")
+  }
+
+  override fun onResume() {
+    super.onResume()
+    LogsUtil.d(loggingTag, "onResume")
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    super.onCreateOptionsMenu(menu, inflater)
+    LogsUtil.d(loggingTag, "onCreateOptionsMenu")
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu) {
+    super.onPrepareOptionsMenu(menu)
+    LogsUtil.d(loggingTag, "onPrepareOptionsMenu")
+  }
+
+  override fun onPause() {
+    super.onPause()
+    LogsUtil.d(loggingTag, "onPause")
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    LogsUtil.d(loggingTag, "onSaveInstanceState")
+  }
+
+  override fun onStop() {
+    super.onStop()
+    LogsUtil.d(loggingTag, "onStop")
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    LogsUtil.d(loggingTag, "onDestroyView")
+    binding = null
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    LogsUtil.d(loggingTag, "onDestroy")
   }
 
   override fun onDetach() {
     super.onDetach()
+    LogsUtil.d(loggingTag, "onDetach")
     lifecycle.removeObserver(connectionLifecycleObserver)
   }
 
+  /**
+   * This method will be called when we receive new updates about the active account
+   */
   open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
-
-  }
-
-  /**
-   * This method handles a success result of some loader.
-   *
-   * @param loaderId The loader id.
-   * @param result   The object which contains information about the loader results
-   */
-  open fun onSuccess(loaderId: Int, result: Any?) {
-
-  }
-
-  /**
-   * This method handles a failure result of some loader. This method contains a base
-   * realization of the failure behavior.
-   *
-   * @param loaderId The loader id.
-   * @param e        The exception which happened when loader does it work.
-   */
-  open fun onError(loaderId: Int, e: Exception?) {
-    e?.message?.let {
-      if (view != null) {
-        UIUtil.showInfoSnackbar(requireView(), it)
-      }
-    }
+    // nothing to do here in the base implementation
   }
 
   fun setSupportActionBarTitle(title: String) {
@@ -205,28 +209,15 @@ abstract class BaseFragment : Fragment() {
 
   }
 
-  fun dismissCurrentSnackBar() {
+  protected fun dismissCurrentSnackBar() {
     snackBar?.dismiss()
   }
 
-  fun isConnected(): Boolean {
+  protected fun isConnected(): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       connectionLifecycleObserver.connectionLiveData.value ?: false
     } else {
       context.hasActiveConnection()
-    }
-  }
-
-  //todo-denbond7 remove me after improved PreviewImportRecipientWithPubKeysFragment
-  protected fun handleLoaderResult(loaderId: Int, loaderResult: LoaderResult?) {
-    if (loaderResult != null) {
-      when {
-        loaderResult.result != null -> onSuccess(loaderId, loaderResult.result)
-        loaderResult.exception != null -> onError(loaderId, loaderResult.exception)
-        else -> UIUtil.showInfoSnackbar(requireView(), getString(R.string.unknown_error))
-      }
-    } else {
-      UIUtil.showInfoSnackbar(requireView(), getString(R.string.error_loader_result_is_empty))
     }
   }
 
@@ -259,10 +250,8 @@ abstract class BaseFragment : Fragment() {
 
 
   private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, {
-      account = it
-      isAccountInfoReceived = true
-      onAccountInfoRefreshed(account)
-    })
+    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner) {
+      onAccountInfoRefreshed(it)
+    }
   }
 }

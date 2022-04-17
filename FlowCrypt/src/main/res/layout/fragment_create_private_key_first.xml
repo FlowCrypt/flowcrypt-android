@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/textViewFirstPasswordCheckTitle"
+            style="@style/ScreenHeading"
+            android:text="@string/set_up_flow_crypt"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/layoutPasswordHint"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/layout_height_sub_header"
+            android:layout_marginTop="@dimen/default_margin_content_big"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewFirstPasswordCheckTitle">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/see_choosing_secure_pass_phrases"
+                android:textColor="@android:color/black" />
+
+            <ImageButton
+                android:id="@+id/imageButtonShowPasswordHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/see_choosing_secure_pass_phrases"
+                android:padding="@dimen/default_margin_content_small"
+                app:srcCompat="@mipmap/ic_help_grey" />
+
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutKeyPassword"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top_password_layout"
+            android:hint="@string/enter_new_pass_phrase"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/layoutPasswordHint"
+            app:passwordToggleContentDescription="description"
+            app:passwordToggleEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextKeyPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:ems="10"
+                android:inputType="textPassword" />
+
+            <ProgressBar
+                android:id="@+id/progressBarPasswordQuality"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/default_margin_content_small"
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/textViewPasswordQualityInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_small"
+                android:gravity="center"
+                tools:text="WEAK (average time to crack: 13 seconds)" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/buttonSetPassPhrase"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/default_margin_content_big"
+            android:text="@string/set_pass_phrase"
+            android:theme="@style/AppWidget.Button.SilverWithWhiteText"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPassword" />
+
+        <TextView
+            android:id="@+id/textViewPasswordWarning"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_big"
+            android:gravity="center"
+            android:text="@string/loss_of_this_pass_phrase_cannot_be_recovered"
+            android:textColor="@color/gray"
+            android:textSize="@dimen/default_text_size_medium"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/buttonSetPassPhrase" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/padding_guideline_setup_screen" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

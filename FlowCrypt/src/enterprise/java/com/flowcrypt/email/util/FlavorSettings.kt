@@ -6,7 +6,6 @@
 package com.flowcrypt.email.util
 
 import android.content.Context
-import java.util.Properties
 
 /**
  * @author Denis Bondarenko
@@ -15,8 +14,6 @@ import java.util.Properties
  *         E-mail: DenBond7@gmail.com
  */
 object FlavorSettings : EnvironmentSettings {
-  override fun sslTrustedDomains(): List<String> = emptyList()
-  override fun getFlavorPropertiesForSession() = Properties()
   override fun isGMailAPIEnabled(): Boolean = true
   override fun configure(context: Context) {}
 }

@@ -18,13 +18,13 @@ import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportAllPubKeysFromSourceBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ImportPubKeysFromSourceSharedViewModel
-import kotlinx.coroutines.flow.collect
 
 /**
  * @author Denis Bondarenko
@@ -91,7 +91,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
 
               binding?.pB?.progress = it.progress.toInt()
             } else {
-              baseActivity?.countingIdlingResource?.incrementSafely()
+              countingIdlingResource?.incrementSafely()
             }
           }
 
@@ -101,7 +101,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
               REQUEST_KEY_IMPORT_PUB_KEYS_RESULT,
               bundleOf(KEY_IMPORT_PUB_KEYS_RESULT to it.data)
             )
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           else -> {

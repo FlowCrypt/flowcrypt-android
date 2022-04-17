@@ -7,7 +7,6 @@ package com.flowcrypt.email.base
 
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import org.junit.rules.TestRule
 
 /**
@@ -28,7 +27,4 @@ interface BaseActivityTestImplementation {
 
   val useIntents: Boolean
     get() = false
-
-  val useLazyInit: Boolean
-    get() = activeActivityRule is LazyActivityScenarioRule<*>
 }

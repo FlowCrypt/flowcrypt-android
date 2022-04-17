@@ -14,6 +14,8 @@
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
         <item name="windowActionModeOverlay">true</item>
         <item name="actionModeStyle">@style/AppWidget.ActionMode</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -21,7 +23,12 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.NoActionBar.Launcher">
-        <item name="android:windowBackground">@drawable/splash_screen_background</item>
+    <style name="AppTheme.Starting" parent="Theme.SplashScreen">
+        <!--Set the splash screen background, animated icon, and animation duration.-->
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <!--Use windowSplashScreenAnimatedIcon to add either a drawable or an animated drawable. One of these is required.-->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <!--Set the theme of the Activity that directly follows your splash screen.-->
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 </resources>

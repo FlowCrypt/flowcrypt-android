@@ -19,7 +19,6 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ManualHandledException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.*
 import javax.mail.Store
 
 /**
@@ -66,7 +65,7 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
           if (activeAccountEntity.useAPI) {
             runAPIAction(activeAccountEntity)
           } else {
-            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
+            val connection = IMAPStoreManager.getConnection(activeAccountEntity.id)
             connection?.executeIMAPAction { store ->
               runIMAPAction(activeAccountEntity, store)
             }

@@ -20,13 +20,13 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentFindKeysInClipboardBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
-import kotlinx.coroutines.flow.collect
 
 /**
  * @author Denis Bondarenko
@@ -113,7 +113,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
       parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity?.countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -133,7 +133,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_CLIPBOARD_TEXT to clipboardText)
               )
             }
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -145,7 +145,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
               exception.javaClass.simpleName
             } else exception.message
 
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
           else -> {
           }
