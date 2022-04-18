@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.content.Intent
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -15,7 +16,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -23,6 +23,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.junit.Rule
 import org.junit.Test
@@ -60,12 +61,15 @@ class CreateMessageActivityReplyTest : BaseTest() {
       "messages/mime/standard_msg_reply_to_header.txt"
     )
     activeActivityRule.launch(
-      CreateMessageActivity.generateIntent(
-        getTargetContext(),
-        msgInfo,
-        MessageType.REPLY,
-        MessageEncryptionType.STANDARD
-      )
+      Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
+        putExtras(
+          CreateMessageFragmentArgs(
+            incomingMessageInfo = msgInfo,
+            encryptedByDefault = false,
+            messageType = MessageType.REPLY
+          ).toBundle()
+        )
+      }
     )
 
     registerAllIdlingResources()

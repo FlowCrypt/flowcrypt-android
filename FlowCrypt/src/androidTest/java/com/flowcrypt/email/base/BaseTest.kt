@@ -8,15 +8,21 @@ package com.flowcrypt.email.base
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.StyleRes
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentFactory
+import androidx.fragment.app.testing.FragmentScenario
+import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -31,7 +37,8 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
-import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.extensions.shutdown
+import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import org.hamcrest.MatcherAssert.assertThat
@@ -58,22 +65,20 @@ abstract class BaseTest : BaseActivityTestImplementation {
   private var countingIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
 
-  protected var decorView: View? = null
-
-  @Before
-  fun initDecorView() {
-    activityScenario?.onActivity {
-      decorView = it.window.decorView
+  protected val decorView: View?
+    get() {
+      var decorView: View? = null
+      activityScenario?.onActivity {
+        decorView = it.window.decorView
+      }
+      return decorView
     }
-  }
 
   @Before
   fun registerCountingIdlingResource() {
-    activityScenario?.onActivity { activity ->
-      val baseActivity = (activity as? BaseActivity) ?: return@onActivity
-      countingIdlingResource = baseActivity.countingIdlingResource
-      countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
-    }
+    countingIdlingResource = FlavorSettings.getCountingIdlingResource()
+    (countingIdlingResource as? CountingIdlingResource)?.shutdown()
+    countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
   @After
@@ -170,14 +175,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
   }
 
   /**
-   * Test is a [Snackbar] not displayed.
-   */
-  protected fun checkIsSnackBarNotDisplayed() {
-    onView(withId(com.google.android.material.R.id.snackbar_action))
-      .check(doesNotExist())
-  }
-
-  /**
    * Add some text to the [ClipboardManager]
    *
    * @param label The clipboard data label.
@@ -259,7 +256,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
       val assetsMimeMsgSource = String(getContext().assets.open(mimeMsgPath).readBytes())
       val finalMimeMsgSource =
         //https://stackoverflow.com/questions/55475483/regex-to-find-and-fix-lf-lineendings-to-crlf
-        if (useCrLfForMime) assetsMimeMsgSource.replace("((?<!\\r)\\n|\\r(?!\\n))".toRegex(), "\r\n") else assetsMimeMsgSource
+        if (useCrLfForMime) {
+          assetsMimeMsgSource.replace("((?<!\\r)\\n|\\r(?!\\n))".toRegex(), "\r\n")
+        } else {
+          assetsMimeMsgSource
+        }
 
       addMsgToCache(uri.toString(), finalMimeMsgSource.toInputStream())
     }
@@ -268,8 +269,17 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   fun registerAllIdlingResources() {
     registerCountingIdlingResource()
-    initDecorView()
   }
+
+  inline fun <reified F : Fragment> launchFragmentInContainer(
+    fragmentArgs: Bundle? = null,
+    @StyleRes themeResId: Int = R.style.AppTheme,
+    initialState: Lifecycle.State = Lifecycle.State.RESUMED,
+    factory: FragmentFactory? = null
+  ): FragmentScenario<F> = FragmentScenario.launchInContainer(
+    F::class.java, fragmentArgs, themeResId, initialState,
+    factory
+  )
 
   private fun addMsgToCache(key: String, inputStream: InputStream) {
     MsgsCacheManager.storeMsg(key, MimeMessage(Session.getInstance(Properties()), inputStream))

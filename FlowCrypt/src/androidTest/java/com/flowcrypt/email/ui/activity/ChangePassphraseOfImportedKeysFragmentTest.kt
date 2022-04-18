@@ -21,7 +21,6 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
@@ -40,7 +39,7 @@ import org.junit.runner.RunWith
 class ChangePassphraseOfImportedKeysFragmentTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
-  override val activityScenarioRule = activityScenarioRule<SettingsActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/settings/security/change_passphrase",
       extras = Bundle().apply {

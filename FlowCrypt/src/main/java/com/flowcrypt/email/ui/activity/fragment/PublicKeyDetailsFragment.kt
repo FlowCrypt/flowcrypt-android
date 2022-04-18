@@ -28,25 +28,25 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentPublicKeyDetailsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.util.Date
@@ -60,9 +60,12 @@ import java.util.Date
  *         E-mail: DenBond7@gmail.com
  */
 @ExperimentalCoroutinesApi
-class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
+class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>(),
+  ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentPublicKeyDetailsBinding.inflate(inflater, container, false)
+
   private val args by navArgs<PublicKeyDetailsFragmentArgs>()
-  private var binding: FragmentPublicKeyDetailsBinding? = null
   private val publicKeyDetailsViewModel: PublicKeyDetailsViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -78,8 +81,6 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   private val savePubKeyActivityResultLauncher =
     registerForActivityResult(ExportPubKeyCreateDocument()) { uri: Uri? -> uri?.let { saveKey(it) } }
 
-  override val contentResourceId: Int = R.layout.fragment_public_key_details
-
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
@@ -90,19 +91,11 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    setupPublicKeyDetailsViewModel()
-  }
-
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentPublicKeyDetailsBinding.inflate(inflater, container, false)
-    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.pub_key)
+    setupPublicKeyDetailsViewModel()
   }
 
   private fun setupPublicKeyDetailsViewModel() {
@@ -110,7 +103,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress()
           }
 
@@ -123,7 +116,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               updateViews(pgpKeyDetails)
               showContent()
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -139,14 +132,8 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               }
             }
 
-            navController?.navigate(
-              NavGraphDirections.actionGlobalInfoDialogFragment(
-                requestCode = 0,
-                dialogTitle = "",
-                dialogMsg = msg
-              )
-            )
-            baseActivity.countingIdlingResource.decrementSafely()
+            showInfoDialog(dialogTitle = "", dialogMsg = msg)
+            countingIdlingResource?.decrementSafely()
           }
           else -> {}
         }
@@ -170,10 +157,7 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
             String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
           )
         )
-        Toast.makeText(
-          context, getString(R.string.public_key_copied_to_clipboard),
-          Toast.LENGTH_SHORT
-        ).show()
+        toast(R.string.public_key_copied_to_clipboard)
         return true
       }
 
@@ -192,14 +176,17 @@ class PublicKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       }
 
       R.id.menuActionEdit -> {
-        startActivity(
-          EditContactActivity.newIntent(
-            requireContext(),
-            account,
-            cachedPublicKeyEntity
-          )
-        )
-
+        account?.let { accountEntity ->
+          cachedPublicKeyEntity?.let { publicKeyEntity ->
+            navController?.navigate(
+              PublicKeyDetailsFragmentDirections
+                .actionPublicKeyDetailsFragmentToEditContactFragment(
+                  accountEntity,
+                  publicKeyEntity
+                )
+            )
+          }
+        }
         return true
       }
 

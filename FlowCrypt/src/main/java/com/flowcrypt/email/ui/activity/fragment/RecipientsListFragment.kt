@@ -23,7 +23,6 @@ import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
-import kotlinx.coroutines.flow.collect
 
 /**
  * This fragment shows a list of contacts which have a public key.
@@ -33,8 +32,11 @@ import kotlinx.coroutines.flow.collect
  *         Time: 6:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-class RecipientsListFragment : BaseFragment(), ListProgressBehaviour {
-  private var binding: FragmentRecipientsListBinding? = null
+class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
+  ListProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentRecipientsListBinding.inflate(inflater, container, false)
+
   private val recipientsRecyclerViewAdapter: RecipientsRecyclerViewAdapter =
     RecipientsRecyclerViewAdapter(
       true,
@@ -56,7 +58,6 @@ class RecipientsListFragment : BaseFragment(), ListProgressBehaviour {
       })
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
-  override val contentResourceId: Int = R.layout.fragment_recipients_list
   override val emptyView: View?
     get() = binding?.emptyView
   override val progressView: View?
@@ -66,16 +67,8 @@ class RecipientsListFragment : BaseFragment(), ListProgressBehaviour {
   override val statusView: View?
     get() = null
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentRecipientsListBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.contacts)
     initViews()
     setupRecipientsViewModel()
   }

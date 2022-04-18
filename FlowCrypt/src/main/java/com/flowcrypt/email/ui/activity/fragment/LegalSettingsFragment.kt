@@ -17,13 +17,12 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.viewpager.widget.ViewPager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.databinding.FragmentLegalBinding
+import com.flowcrypt.email.databinding.SwipeToRefrechWithWebviewBinding
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.google.android.material.tabs.TabLayout
 
 /**
  * This [Fragment] consists information about a legal.
@@ -33,38 +32,30 @@ import com.google.android.material.tabs.TabLayout
  * Time: 13:27
  * E-mail: DenBond7@gmail.com
  */
-class LegalSettingsFragment : BaseFragment() {
-  private var viewPager: ViewPager? = null
-  private var tabLayout: TabLayout? = null
-
-  override val contentResourceId: Int = R.layout.fragment_legal
+class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentLegalBinding.inflate(inflater, container, false)
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.legal)
-    initViews(view)
-    updateViews()
+    initViews()
   }
 
-  private fun initViews(view: View) {
-    viewPager = view.findViewById(R.id.viewPager)
-    tabLayout = view.findViewById(R.id.tabLayout)
-  }
-
-  private fun updateViews() {
-    viewPager?.adapter = TabPagerAdapter(childFragmentManager)
-    tabLayout?.setupWithViewPager(viewPager)
+  private fun initViews() {
+    binding?.viewPager?.adapter = TabPagerAdapter(childFragmentManager)
+    binding?.tabLayout?.setupWithViewPager(binding?.viewPager)
   }
 
   /**
    * The fragment with [WebView] as the root view. The [WebView] initialized by a
    * html file from the assets directory.
    */
-  class WebViewFragment : BaseFragment() {
+  class WebViewFragment : BaseFragment<SwipeToRefrechWithWebviewBinding>() {
+    override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+      SwipeToRefrechWithWebviewBinding.inflate(inflater, container, false)
+
     private var assetsPath: String? = null
     private var isRefreshEnabled: Boolean = false
-
-    override val contentResourceId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
@@ -72,43 +63,33 @@ class LegalSettingsFragment : BaseFragment() {
       isRefreshEnabled = arguments?.getBoolean(KEY_IS_REFRESH_ENABLED, false) ?: false
     }
 
-    override fun onCreateView(
-      inflater: LayoutInflater, container: ViewGroup?,
-      savedInstanceState: Bundle?
-    ): View? {
-
-      return inflater.inflate(R.layout.swipe_to_refrech_with_webview, container, false)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
       super.onViewCreated(view, savedInstanceState)
-      val webView = view.findViewById<WebView>(R.id.webView)
-      val swipeRefreshLayout = view.findViewById<SwipeRefreshLayout>(R.id.swipeRefreshLayout)
       if (isRefreshEnabled) {
-        swipeRefreshLayout?.setColorSchemeResources(
+        binding?.swipeRefreshLayout?.setColorSchemeResources(
           R.color.colorPrimary,
           R.color.colorPrimary,
           R.color.colorPrimary
         )
-        swipeRefreshLayout.setOnRefreshListener {
-          assetsPath?.let { webView?.loadUrl(it) }
+        binding?.swipeRefreshLayout?.setOnRefreshListener {
+          assetsPath?.let { binding?.webView?.loadUrl(it) }
         }
       } else {
-        swipeRefreshLayout.isEnabled = false
+        binding?.swipeRefreshLayout?.isEnabled = false
       }
 
-      webView?.layoutParams = ViewGroup.LayoutParams(
+      binding?.webView?.layoutParams = ViewGroup.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.MATCH_PARENT
       )
-      webView?.webViewClient = object : WebViewClient() {
+      binding?.webView?.webViewClient = object : WebViewClient() {
         override fun onReceivedError(
           view: WebView?,
           request: WebResourceRequest?,
           error: WebResourceError?
         ) {
           if (error?.description == "net::ERR_INTERNET_DISCONNECTED") {
-            webView?.loadUrl("file:///android_asset/html/no_connection.htm")
+            binding?.webView?.loadUrl("file:///android_asset/html/no_connection.htm")
           } else {
             super.onReceivedError(view, request, error)
           }
@@ -116,10 +97,10 @@ class LegalSettingsFragment : BaseFragment() {
 
         override fun onPageFinished(view: WebView?, url: String?) {
           super.onPageFinished(view, url)
-          swipeRefreshLayout.isRefreshing = false
+          binding?.swipeRefreshLayout?.isRefreshing = false
         }
       }
-      assetsPath?.let { webView?.loadUrl(it) }
+      assetsPath?.let { binding?.webView?.loadUrl(it) }
     }
 
     companion object {

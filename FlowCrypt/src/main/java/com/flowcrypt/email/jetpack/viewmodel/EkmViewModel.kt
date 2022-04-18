@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules.DomainRule
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
@@ -89,7 +90,9 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
                 )
               }
             }
-            pgpKeyDetailsList.addAll(parsedList)
+            pgpKeyDetailsList.addAll(parsedList.map {
+              it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
+            })
           }
         }
 

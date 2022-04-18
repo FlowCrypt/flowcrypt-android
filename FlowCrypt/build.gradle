@@ -336,6 +336,7 @@ dependencies {
     kapt("com.google.auto.service:auto-service:1.0.1")
 
     devDebugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
+    debugImplementation('androidx.fragment:fragment-testing:1.4.1')
 
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
@@ -357,7 +358,7 @@ dependencies {
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
     testImplementation 'org.robolectric:robolectric:4.7.3'
-    testImplementation 'io.github.classgraph:classgraph:4.8.143'
+    testImplementation 'io.github.classgraph:classgraph:4.8.146'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
@@ -378,17 +379,21 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${rootProject.ext.lifecycleVersion}"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.1"
     implementation "androidx.lifecycle:lifecycle-process:2.4.1"
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-alpha06")
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.core:core-splashscreen:1.0.0-beta02'
     implementation 'androidx.activity:activity-ktx:1.4.0'
     implementation 'androidx.fragment:fragment-ktx:1.4.1'
     implementation 'androidx.work:work-runtime-ktx:2.7.1'
     implementation "androidx.navigation:navigation-fragment-ktx:${rootProject.ext.navVersion}"
     implementation "androidx.navigation:navigation-ui-ktx:${rootProject.ext.navVersion}"
     implementation "androidx.navigation:navigation-runtime-ktx:${rootProject.ext.navVersion}"
+    implementation("androidx.navigation:navigation-dynamic-features-fragment:${rootProject.ext.navVersion}")
+
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:18.0.1'
@@ -400,9 +405,9 @@ dependencies {
     //https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.9.0'
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-    implementation 'com.google.api-client:google-api-client-android:1.33.4'
+    implementation 'com.google.api-client:google-api-client-android:1.34.0'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-    implementation 'com.google.apis:google-api-services-gmail:v1-rev20220307-1.32.1'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev20220404-1.32.1'
 
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
@@ -419,7 +424,7 @@ dependencies {
 
     implementation "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
     implementation 'com.hootsuite.android:nachos:1.2.0'
-    implementation 'com.nulab-inc:zxcvbn:1.6.0'
+    implementation 'com.nulab-inc:zxcvbn:1.7.0'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'ja.burhanrashid52:photoeditor:1.1.1'
     implementation 'net.openid:appauth:0.11.1'
@@ -439,7 +444,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk15to18:${rootProject.ext.bouncycastleVersion}"
     implementation "org.bouncycastle:bcpg-jdk15to18:${rootProject.ext.bouncycastleVersion}"
 
-    implementation 'ch.acra:acra-http:5.8.4'
+    implementation 'ch.acra:acra-http:5.9.1'
     //ACRA needs the following dependency to use a custom report sender
     compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
 }

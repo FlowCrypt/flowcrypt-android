@@ -6,9 +6,8 @@
     <string name="error_some_email_is_not_valid">Ошибка: неверный Email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Ошибка: нет подключения к Интернету</string>
     <string name="unknown_error">Неизвестная ошибка</string>
-    <string name="action_settings">Настройки</string>
     <string name="security">Безопасность</string>
-    <string name="title_activity_settings">Настройки</string>
+    <string name="settings">Настройки</string>
     <string name="contacts">Контакты</string>
     <string name="keys">Ключи</string>
     <string name="help">Поддержка</string>
@@ -494,4 +493,8 @@
     <string name="error_occurred_during_downloading_att">Произошла ошибка при загрузке.\n\nДетали ошибки:  %1$s</string>
     <string name="no_apps_that_can_handle_intent">Извините, у Вас нет приложений, которые могут открыть этот файл</string>
     <string name="warning_don_not_have_content_app">Просмотр вложения невозможен. Ваша организация требует использовать Content для просмотра вложений, но приложение Content не установлено.\n\nПожалуйста, обратитесь в службу поддержки.</string>
+    <string name="import_keys">Импортировать ключи</string>
+    <string name="error">Ошибка</string>
+    <string name="import_keys_from_different_sources">Вы пытаетесь импортировать ключи из разных источников</string>
+    <string name="thank_you_for_feedback">Спасибо за Ваш отзыв</string>
 </resources>

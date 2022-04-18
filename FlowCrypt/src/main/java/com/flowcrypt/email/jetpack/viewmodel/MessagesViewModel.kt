@@ -36,7 +36,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncrypt
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.service.EmailAndNameUpdaterService
 import com.flowcrypt.email.service.MessagesNotificationManager
-import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
@@ -51,7 +50,8 @@ import java.io.File
 import java.io.IOException
 import java.math.BigInteger
 import java.net.HttpURLConnection
-import java.util.*
+import java.util.Arrays
+import java.util.Properties
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
@@ -60,7 +60,6 @@ import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
 import javax.mail.internet.InternetAddress
-import kotlin.collections.ArrayList
 
 
 /**
@@ -97,7 +96,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         val label = if (localFolder.searchQuery.isNullOrEmpty()) {
           localFolder.fullName
         } else {
-          SearchMessagesActivity.SEARCH_FOLDER_NAME
+          JavaEmailConstants.FOLDER_SEARCH
         }
 
         emitSource(
@@ -127,7 +126,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       val label = if (folder.searchQuery.isNullOrEmpty()) {
         folder.fullName
       } else {
-        SearchMessagesActivity.SEARCH_FOLDER_NAME
+        JavaEmailConstants.FOLDER_SEARCH
       }
       emit(roomDatabase.msgDao().countSuspend(account, label))
     }
@@ -142,7 +141,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       val label = if (newFolder.searchQuery.isNullOrEmpty()) {
         newFolder.fullName
       } else {
-        SearchMessagesActivity.SEARCH_FOLDER_NAME
+        JavaEmailConstants.FOLDER_SEARCH
       }
 
       val accountEntity = getActiveAccountSuspend()
@@ -181,7 +180,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               refreshMsgsInternal(accountEntity, localFolder)
             }
           } else {
-            IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
+            IMAPStoreManager.getConnection(accountEntity.id)?.executeWithResult { store ->
               refreshMsgsInternal(accountEntity, store, localFolder)
             }
               ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
@@ -203,7 +202,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       accountEntity?.let {
         val totalItemsCount = roomDatabase.msgDao().getMsgsCount(
           accountEntity.email,
-          if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+          if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else JavaEmailConstants.FOLDER_SEARCH
         )
         if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
 
@@ -231,7 +230,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                 }
               }
             } else {
-              IMAPStoreManager.activeConnections[accountEntity.id]?.executeWithResult { store ->
+              IMAPStoreManager.getConnection(accountEntity.id)?.executeWithResult { store ->
                 if (localFolder.searchQuery.isNullOrEmpty()) {
                   loadMsgsFromRemoteServerAndStoreLocally(
                     accountEntity,
@@ -659,7 +658,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           )
           handleSearchResults(
             accountEntity,
-            localFolder.copy(fullName = SearchMessagesActivity.SEARCH_FOLDER_NAME),
+            localFolder.copy(fullName = JavaEmailConstants.FOLDER_SEARCH),
             msgs
           )
         } else {
@@ -736,7 +735,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   ) = withContext(Dispatchers.IO) {
     val email = account.email
     val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
-    val searchLabel = SearchMessagesActivity.SEARCH_FOLDER_NAME
+    val searchLabel = JavaEmailConstants.FOLDER_SEARCH
 
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),

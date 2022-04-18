@@ -6,11 +6,12 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.os.Bundle
+import android.view.View
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.doBaseUISetup
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 
 /**
@@ -21,12 +22,14 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
  * Time: 10:16
  * E-mail: DenBond7@gmail.com
  */
-abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
+abstract class BasePreferenceFragment : PreferenceFragmentCompat(), UiUxSettings {
   protected val accountViewModel: AccountViewModel by viewModels()
-  protected var account: AccountEntity? = null
+  protected val account: AccountEntity?
+    get() = accountViewModel.activeAccountLiveData.value
 
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    doBaseUISetup(this)
     initAccountViewModel()
   }
 
@@ -39,11 +42,8 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
    * @return A generated summary.
    */
   protected fun generateSummary(
-    value: String,
-    values: Array<CharSequence>,
-    entries: Array<CharSequence>
-  )
-      : CharSequence {
+    value: String, values: Array<CharSequence>, entries: Array<CharSequence>
+  ): CharSequence {
     for (i in values.indices) {
       if (values[i] == value) {
         return entries[i]
@@ -55,9 +55,8 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
   open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {}
 
   private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, Observer {
-      account = it
+    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner) {
       onAccountInfoRefreshed(account)
-    })
+    }
   }
 }

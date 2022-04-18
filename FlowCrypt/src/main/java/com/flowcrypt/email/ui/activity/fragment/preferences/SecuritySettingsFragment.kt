@@ -5,10 +5,10 @@
 
 package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.setFragmentResultListener
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -36,24 +36,13 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
       getString(R.string.security_and_privacy)
 
     observeOnResultLiveData()
+    subscribeFixNeedPassphraseIssueDialogFragment()
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences_security_settings, rootKey)
     findPreference<Preference>(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)?.onPreferenceClickListener =
       this
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG -> when (resultCode) {
-        FixNeedPassphraseIssueDialogFragment.RESULT_OK -> {
-          navigateToCheckPassphraseStrengthFragment()
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun onPreferenceClick(preference: Preference): Boolean {
@@ -72,7 +61,6 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
           if (fingerprints.isNotEmpty()) {
             showNeedPassphraseDialog(
               fingerprints = fingerprints,
-              requestCode = REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG,
               logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
             )
           } else {
@@ -106,6 +94,12 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
     }
   }
 
+  private fun subscribeFixNeedPassphraseIssueDialogFragment() {
+    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      navigateToCheckPassphraseStrengthFragment()
+    }
+  }
+
   private fun navigateToCheckPassphraseStrengthFragment() {
     navController?.navigate(
       SecuritySettingsFragmentDirections
@@ -115,9 +109,5 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
           lostPassphraseTitle = getString(R.string.loss_of_this_pass_phrase_cannot_be_recovered)
         )
     )
-  }
-
-  companion object {
-    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 100
   }
 }

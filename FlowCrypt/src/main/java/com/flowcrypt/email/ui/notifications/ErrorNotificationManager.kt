@@ -13,11 +13,12 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
+import androidx.navigation.NavDeepLinkBuilder
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 
 /**
  * It's a manager which helps to show errors notifications with a high priority.
@@ -32,16 +33,14 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
   override val groupId: Int = NOTIFICATIONS_GROUP_ERROR
 
   fun notifyUserAboutProblemWithOutgoingMsgs(account: AccountEntity, messageCount: Int) {
-    val intent = Intent(context, EmailManagerActivity::class.java).apply {
-      action = EmailManagerActivity.ACTION_OPEN_OUTBOX_FOLDER
-    }
-
-    val pendingIntent =
-      PendingIntent.getActivity(
-        context,
+    val pendingIntent = NavDeepLinkBuilder(context)
+      .setGraph(R.navigation.nav_graph)
+      .setDestination(R.id.messagesListFragment)
+      .setComponentName(MainActivity::class.java)
+      .createTaskStackBuilder()
+      .getPendingIntent(
         System.currentTimeMillis().toInt(),
-        intent,
-        PendingIntent.FLAG_IMMUTABLE
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
       )
 
     val contentText = context.resources.getQuantityString(

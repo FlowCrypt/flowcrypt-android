@@ -41,7 +41,6 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.MsgDetailsGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -61,14 +60,17 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -76,6 +78,11 @@ import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
+import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
@@ -83,9 +90,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
@@ -123,7 +127,11 @@ import javax.mail.internet.InternetAddress
  * Time: 16:29
  * E-mail: DenBond7@gmail.com
  */
-class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickListener {
+class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), ProgressBehaviour,
+  View.OnClickListener {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentMessageDetailsBinding.inflate(inflater, container, false)
+
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
@@ -135,7 +143,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
-  private var binding: FragmentMessageDetailsBinding? = null
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
@@ -151,8 +158,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
-                  fingerprints,
-                  REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
+                  fingerprints
                 )
                 return
               }
@@ -219,20 +225,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
 
-  override val contentResourceId: Int = R.layout.fragment_message_details
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
     subscribeToDownloadAttachmentViaDialog()
+    subscribeToImportingAdditionalPrivateKeys()
     updateActionsVisibility(args.localFolder, null)
-  }
-
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentMessageDetailsBinding.inflate(inflater, container, false)
-    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -243,6 +241,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     setupMsgDetailsViewModel()
     setupRecipientsViewModel()
     collectReVerifySignaturesStateFlow()
+    subscribeToTwoWayDialog()
   }
 
   override fun onDestroy() {
@@ -252,12 +251,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
-        }
-      }
-
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION -> when (resultCode) {
         Activity.RESULT_OK -> {
           val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(
@@ -268,14 +261,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           if (atts.isNotEmpty()) {
             makeAttsProtected(atts)
             sendTemplateMsgWithPublicKey(atts[0])
-          }
-        }
-      }
-
-      REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
           }
         }
       }
@@ -339,6 +324,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         } else {
           if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
             showTwoWayDialog(
+              requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
               dialogTitle = "",
               dialogMsg = requireContext().resources.getQuantityString(
                 R.plurals.delete_msg_question,
@@ -347,7 +333,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               ),
               positiveButtonTitle = getString(android.R.string.ok),
               negativeButtonTitle = getString(android.R.string.cancel),
-              requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG
             )
           } else {
             msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
@@ -375,7 +360,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       R.id.layoutReplyButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.REPLY, msgEncryptType
+            context, MessageType.REPLY, msgEncryptType, prepareMsgInfoForReply()
           )
         )
       }
@@ -383,7 +368,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.REPLY_ALL, msgEncryptType
+            context, MessageType.REPLY_ALL, msgEncryptType, prepareMsgInfoForReply()
           )
         )
       }
@@ -429,7 +414,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         startActivity(
           CreateMessageActivity.generateIntent(
-            context, prepareMsgInfoForReply(), MessageType.FORWARD, msgEncryptType
+            context, MessageType.FORWARD, msgEncryptType, prepareMsgInfoForReply()
           )
         )
       }
@@ -556,16 +541,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
   }
 
-  private fun showConnLostHint() {
-    showSnackbar(
-      requireView(), getString(R.string.failed_load_message_from_email_server),
-      getString(R.string.retry)
-    ) {
-      UIUtil.exchangeViewVisibility(true, progressView, statusView)
-
-    }
-  }
-
   private fun makeAttsProtected(atts: List<AttachmentInfo>) {
     for (att in atts) {
       att.isProtected = true
@@ -602,8 +577,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     startActivity(
       CreateMessageActivity.generateIntent(
-        context, prepareMsgInfoForReply(), MessageType.REPLY,
-        MessageEncryptionType.STANDARD,
+        context, MessageType.REPLY,
+        MessageEncryptionType.STANDARD, prepareMsgInfoForReply(),
         ServiceInfo(
           isToFieldEditable = false,
           isFromFieldEditable = false,
@@ -832,12 +807,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun prepareDateHeaderValue(): String {
-    val dateInMilliseconds: Long
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-      dateInMilliseconds = args.messageEntity.sentDate ?: 0
-    } else {
-      dateInMilliseconds = args.messageEntity.receivedDate ?: 0
-    }
+    val dateInMilliseconds: Long =
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
+        args.messageEntity.sentDate ?: 0
+      } else {
+        args.messageEntity.receivedDate ?: 0
+      }
 
     val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
         DateUtils.FORMAT_SHOW_YEAR
@@ -980,11 +955,17 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       StandardCharsets.UTF_8.displayName(),
       null
     )
-    binding?.emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
-      override fun onPageFinished() {
-        setActionProgress(100, null)
-        updateReplyButtons()
-        (activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
+    binding?.emailWebView?.setOnPageLoadingListener(object : EmailWebView.OnPageLoadingListener {
+      override fun onPageLoading(newProgress: Int) {
+        when (newProgress) {
+          0 -> countingIdlingResource?.incrementSafely()
+
+          100 -> {
+            setActionProgress(100, null)
+            updateReplyButtons()
+            countingIdlingResource?.decrementSafely()
+          }
+        }
       }
     })
   }
@@ -1235,7 +1216,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.fingerprints ?: return@OnClickListener
-            showNeedPassphraseDialog(fingerprints, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
+            showNeedPassphraseDialog(fingerprints)
           }
         }
 
@@ -1298,18 +1279,14 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     ) as ViewGroup
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey?.setOnClickListener {
-      startActivityForResult(
-        ImportPrivateKeyActivity.getIntent(
-          context = context,
-          title = getString(R.string.import_private_key),
-          throwErrorIfDuplicateFoundEnabled = true,
-          cls = ImportPrivateKeyActivity::class.java,
-          isSubmittingPubKeysEnabled = false,
-          accountEntity = account,
-          skipImportedKeys = true
-        ),
-        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY
-      )
+      account?.let { accountEntity ->
+        navController?.navigate(
+          MessageDetailsFragmentDirections
+            .actionMessageDetailsFragmentToImportAdditionalPrivateKeysFragment(
+              accountEntity
+            )
+        )
+      }
     }
 
     val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
@@ -1364,9 +1341,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, {
+    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner) {
       updateActionsVisibility(args.localFolder, it)
-    })
+    }
   }
 
   private fun setupMsgDetailsViewModel() {
@@ -1381,7 +1358,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     recipientsViewModel.recipientsFromLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -1405,12 +1382,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           } else {
             updatePgpBadges()
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           updatePgpBadges()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {
@@ -1434,7 +1411,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           val value = it.progress?.toInt() ?: 0
 
           if (value == 0) {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
           }
 
           when (it.resultCode) {
@@ -1453,7 +1430,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
           it.data?.let { incomingMsgInfo ->
             showIncomingMsgInfo(incomingMsgInfo)
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
@@ -1491,12 +1468,12 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               )
             }
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         else -> {
           setActionProgress(100)
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
       }
     }
@@ -1521,28 +1498,24 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
   private fun observerMsgStatesLiveData() {
     msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) { newState ->
-      var finishActivity = true
-      val syncActivity = activity as? BaseSyncActivity
-      syncActivity?.let {
-        with(syncActivity) {
-          when (newState) {
-            MessageState.PENDING_ARCHIVING -> archiveMsgs()
-            MessageState.PENDING_DELETING -> deleteMsgs()
-            MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
-            MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
-            MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
-            MessageState.PENDING_MARK_READ -> {
-              changeMsgsReadState()
-              finishActivity = false
-            }
-            else -> {
-            }
-          }
+      var navigateUp = true
+      when (newState) {
+        MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
+          requireContext()
+        )
+        MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_READ -> {
+          UpdateMsgsSeenStateWorker.enqueue(requireContext())
+          navigateUp = false
         }
+        else -> {}
       }
 
-      if (finishActivity) {
-        activity?.finish()
+      if (navigateUp) {
+        navController?.navigateUp()
       }
     }
   }
@@ -1550,7 +1523,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun observerPassphraseNeededLiveData() {
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
-        showNeedPassphraseDialog(fingerprintList, REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG)
+        showNeedPassphraseDialog(fingerprintList)
       }
     }
   }
@@ -1560,7 +1533,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       msgDetailsViewModel.reVerifySignaturesStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -1569,16 +1542,29 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
               msgInfo = msgInfo?.copy(verificationResult = verificationResult)
             }
             updatePgpBadges()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
             updatePgpBadges()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           else -> {
           }
+        }
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_DELETE_MESSAGE_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
         }
       }
     }
@@ -1621,12 +1607,9 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         startActivity(Intent(intent).setPackage("com.airwatch.contentlocker"))
       } catch (e: ActivityNotFoundException) {
         //We don't have the required app
-        navController?.navigate(
-          MsgDetailsGraphDirections.actionGlobalInfoDialogFragment(
-            requestCode = 0,
-            dialogTitle = "",
-            dialogMsg = getString(R.string.warning_don_not_have_content_app)
-          )
+        showInfoDialog(
+          dialogTitle = "",
+          dialogMsg = getString(R.string.warning_don_not_have_content_app)
         )
       }
     } else {
@@ -1712,12 +1695,23 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
   }
 
+  private fun subscribeToImportingAdditionalPrivateKeys() {
+    setFragmentResultListener(
+      ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
+    ) { _, bundle ->
+      val keys = bundle.getParcelableArrayList<PgpKeyDetails>(
+        ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
+      )
+      if (keys?.isNotEmpty() == true) {
+        toast(R.string.key_successfully_imported)
+      }
+    }
+  }
+
   companion object {
     private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
-    private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
-    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
 

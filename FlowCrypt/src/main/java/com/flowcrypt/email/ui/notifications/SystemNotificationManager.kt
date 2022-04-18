@@ -16,7 +16,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 
 /**
  * It's a manager which helps to show system notifications.
@@ -41,7 +41,7 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
     }
 
     val intent = if (account?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
-      Intent(context, EmailManagerActivity::class.java)
+      Intent(context, MainActivity::class.java)
     } else {
       Intent(
         Intent.ACTION_VIEW,
