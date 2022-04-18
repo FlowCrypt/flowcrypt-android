@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.extensions.org.pgpainless.key.info
 
-import org.pgpainless.algorithm.EncryptionPurpose
 import org.pgpainless.key.info.KeyRingInfo
 
 /**
@@ -17,7 +16,7 @@ import org.pgpainless.key.info.KeyRingInfo
 fun KeyRingInfo.usableForEncryption(): Boolean {
   return !publicKey.hasRevocation()
       && !isExpired()
-      && getEncryptionSubkeys(EncryptionPurpose.ANY).isNotEmpty()
+      && isUsableForEncryption
       && primaryUserId?.isNotEmpty() == true
 }
 

@@ -12,7 +12,9 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPublicKeyRing
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
@@ -134,31 +136,43 @@ class SecurityUtils {
     }
 
     /**
-     * Get a sender key details. If we will find a few keys we will return the first;
+     * Get sender public keys. We use this method to encrypt data for all user's available keys.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param senderEmail The sender email
+     */
+    fun getSenderPublicKeys(
+      context: Context,
+      senderEmail: String
+    ): List<String> {
+      val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
+      val matchingRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
+      return matchingRings.map { it.toPublicKeyRing().armor() }
+    }
+
+    /**
+     * Get a sender PGP keys details.
      *
      * @param context     Interface to global information about an application environment.
      * @param account     The given account
      * @param senderEmail The sender email
-     * @return <tt>String</tt> The sender key.
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderPgpKeyDetailsList(
+    fun getSenderPgpKeyDetails(
       context: Context,
       account: AccountEntity,
       senderEmail: String
-    ): List<PgpKeyDetails> {
+    ): PgpKeyDetails {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
-      val matchingRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
-      if (matchingRings.isEmpty()) {
-        if (account.email.equals(senderEmail, ignoreCase = true)) {
+      val pgpSecretKeyRing = keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
+        ?: if (account.email.equals(senderEmail, ignoreCase = true)) {
           throw NoKeyAvailableException(context, account.email)
         } else {
           throw NoKeyAvailableException(context, account.email, senderEmail)
         }
-      }
 
-      return keysStorage.getPgpKeyDetailsList(keysStorage.getPGPSecretKeyRingsByUserId(senderEmail))
+      return keysStorage.getPgpKeyDetailsList(listOf(pgpSecretKeyRing)).first()
     }
 
     /**

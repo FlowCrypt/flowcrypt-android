@@ -330,16 +330,19 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
               val keysStorage = KeysStorageImpl.getInstance(requireContext())
               val senderEmail = binding?.editTextFrom?.text.toString()
-              val keyRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
-              if (keyRings.isNotEmpty()) {
-                val firstMatchedSecretKey = keyRings.first()
-                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(firstMatchedSecretKey)
+              val usableSecretKey =
+                keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
+              if (usableSecretKey != null) {
+                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(usableSecretKey)
                 val fingerprint = openPgpV4Fingerprint.toString()
                 val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
                 if (passphrase?.isEmpty == true) {
                   showNeedPassphraseDialog(listOf(fingerprint))
                   return true
                 }
+              } else {
+                showInfoDialog(dialogMsg = getString(R.string.private_key_not_usable_for_encryption))
+                return true
               }
             }
 

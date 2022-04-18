@@ -256,10 +256,7 @@ object ProcessingOutgoingMessageInfoHelper {
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
       pubKeys = mutableListOf()
       pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
-      pubKeys.addAll(
-        SecurityUtils.getSenderPgpKeyDetailsList(context, accountEntity, senderEmail)
-          .map { it.publicKey }
-      )
+      pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
     }
 
     if (outgoingMsgInfo.atts?.isNotEmpty() == true) {
