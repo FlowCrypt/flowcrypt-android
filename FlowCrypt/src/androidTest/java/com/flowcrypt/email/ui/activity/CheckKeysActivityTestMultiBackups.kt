@@ -435,23 +435,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(4, keysPaths, KeyImportDetails.SourceType.FILE)
   }
 
-  /**
-   * It refers to https://github.com/FlowCrypt/flowcrypt-android/issues/1669
-   */
-  @Test
-  fun testImportCorruptedKey() {
-    val keysPaths = arrayOf("pgp/keys/issue_1669_corrupted_prv.asc")
-    launchActivity(keysPaths, KeyImportDetails.SourceType.FILE)
-    typePassword("123")
-    isDialogWithTextDisplayed(
-      decorView,
-      getResString(
-        R.string.warning_when_import_invalid_prv_key,
-        getResString(R.string.support_email)
-      )
-    )
-  }
-
   private fun launchActivity(
     keysPaths: Array<String>,
     sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL
