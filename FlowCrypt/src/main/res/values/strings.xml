@@ -583,5 +583,5 @@
     <string name="error">Error</string>
     <string name="import_keys_from_different_sources">You are trying to import keys from different sources</string>
     <string name="thank_you_for_feedback">Thank you for the feedback</string>
-    <string name="private_key_not_usable_for_encryption">Sorry, you can\'t send an encrypted message. You have no private keys suitable for encryption.</string>
+    <string name="no_private_keys_suitable_for_encryption">Sorry, you can\'t send an encrypted message. You have no private keys suitable for encryption.</string>
 </resources>

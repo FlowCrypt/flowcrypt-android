@@ -341,7 +341,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                   return true
                 }
               } else {
-                showInfoDialog(dialogMsg = getString(R.string.private_key_not_usable_for_encryption))
+                showInfoDialog(dialogMsg = getString(R.string.no_private_keys_suitable_for_encryption))
                 return true
               }
             }
