@@ -85,15 +85,52 @@
                 tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
             <TextView
-                android:id="@+id/tVDate"
+                android:id="@+id/textViewStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:ellipsize="middle"
+                android:text="@string/status"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/tVFingerprint" />
+
+            <TextView
+                android:id="@+id/textViewStatusValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:background="@drawable/bg_rectangle_silver_border"
+                android:backgroundTint="@color/orange"
+                android:drawablePadding="@dimen/default_twice_dip"
+                android:text="@string/revoked"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                app:drawableStartCompat="@drawable/ic_outline_warning_amber_16"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewStatus"
+                app:layout_constraintStart_toEndOf="@+id/textViewStatus"
+                app:layout_constraintTop_toTopOf="@+id/textViewStatus" />
+
+            <TextView
+                android:id="@+id/textViewCreationDate"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVFingerprint"
-                tools:text="Date: Nov 3, 2017" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
+                tools:text="Creation date: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewExpirationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewCreationDate"
+                tools:text="Expiration date: Nov 3, 2017" />
 
             <TextView
                 android:id="@+id/tVUsers"
@@ -103,7 +140,7 @@
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVDate"
+                app:layout_constraintTop_toBottomOf="@+id/textViewExpirationDate"
                 tools:text="Users: email@domain.com, email2@domain.com" />
 
             <TextView

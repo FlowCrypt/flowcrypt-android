@@ -247,10 +247,21 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
         ), binding?.tVFingerprint
       )
 
-      binding?.tVDate?.text = getString(
-        R.string.template_date,
-        DateFormat.getMediumDateFormat(context).format(Date(value.created))
+      binding?.textViewStatusValue?.backgroundTintList =
+        value.getColorStateListDependsOnStatus(requireContext())
+      binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
+        value.getStatusIcon(), 0, 0, 0
       )
+      binding?.textViewStatusValue?.text = value.getStatusText(requireContext())
+
+      val dateFormat = DateFormat.getMediumDateFormat(context)
+      binding?.textViewCreationDate?.text = getString(
+        R.string.template_creation_date,
+        dateFormat.format(Date(value.created))
+      )
+      binding?.textViewExpirationDate?.text = value.expiration?.let {
+        getString(R.string.key_expiration, dateFormat?.format(Date(it)))
+      } ?: getString(R.string.key_expiration, getString(R.string.key_does_not_expire))
       binding?.tVUsers?.text = getString(R.string.template_users, value.getUserIdsAsSingleString())
 
       val passPhrase = pgpKeyDetailsViewModel.getPassphrase()
@@ -352,7 +363,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   }
 
   private fun setupCheckPrivateKeysViewModel() {
-    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) { it ->
+    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely()

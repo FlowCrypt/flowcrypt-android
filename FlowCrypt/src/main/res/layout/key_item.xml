@@ -67,7 +67,7 @@
         android:layout_marginStart="@dimen/default_margin_small"
         android:layout_marginTop="@dimen/margin_top_message_subject"
         android:background="@drawable/bg_rectangle_silver_border"
-        android:backgroundTint="@color/orange"
+        android:backgroundTint="@color/red"
         android:drawablePadding="@dimen/default_twice_dip"
         android:text="@string/revoked"
         android:textAlignment="center"
