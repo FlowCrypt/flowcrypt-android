@@ -21,12 +21,16 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
@@ -66,6 +70,15 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseCreateMessageActivityTest
       .check(matches(isDisplayed()))
       .perform(click())
 
+    val exception = Assert.assertThrows(IllegalStateException::class.java) {
+      SecurityUtils.getSenderPublicKeys(getTargetContext(), addAccountToDatabaseRule.account.email)
+    }
+
+    assertEquals(
+      "There are no usable for encryption keys for " + addPrivateKeyToDatabaseRule.pgpKeyDetails.getPrimaryInternetAddress(),
+      exception.message
+    )
+
     isDialogWithTextDisplayed(
       decorView,
       getResString(R.string.no_private_keys_suitable_for_encryption)
@@ -92,6 +105,25 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseCreateMessageActivityTest
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    //the sender has 2 private keys. But one of them is revoked.
+    //Anyway at this point we should have a private key that is usable for signing
+    assertNotNull(
+      SecurityUtils.getSenderPgpKeyDetails(
+        getTargetContext(),
+        addAccountToDatabaseRule.account,
+        addAccountToDatabaseRule.account.email
+      )
+    )
+
+    //SecurityUtils.getSenderPublicKeys should = 1
+    assertEquals(
+      1,
+      SecurityUtils.getSenderPublicKeys(
+        getTargetContext(),
+        addAccountToDatabaseRule.account.email
+      ).size
+    )
 
     isDialogWithTextDisplayed(
       decorView,
