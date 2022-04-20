@@ -504,4 +504,6 @@
     <string name="status">Статус:</string>
     <string name="valid">валидный</string>
     <string name="undefined">не определен</string>
+    <string name="not_valid">не валидный</string>
+    <string name="expired">просроченный</string>
 </resources>

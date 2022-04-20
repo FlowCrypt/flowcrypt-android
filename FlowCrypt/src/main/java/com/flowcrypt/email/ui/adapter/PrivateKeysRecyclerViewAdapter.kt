@@ -66,7 +66,15 @@ class PrivateKeysRecyclerViewAdapter(
       context.getString(R.string.key_expiration, dateFormat?.format(Date(it)))
     } ?: context.getString(R.string.key_expiration, context.getString(R.string.key_does_not_expire))
 
-    viewHolder.textViewRevoked.visibleOrGone(pgpKeyDetails.isRevoked)
+    viewHolder.textViewStatus.visibleOrGone(!pgpKeyDetails.usableForEncryption)
+    if (!pgpKeyDetails.usableForEncryption) {
+      viewHolder.textViewStatus.backgroundTintList =
+        pgpKeyDetails.getColorStateListDependsOnStatus(context)
+      viewHolder.textViewStatus.setCompoundDrawablesWithIntrinsicBounds(
+        pgpKeyDetails.getStatusIcon(), 0, 0, 0
+      )
+      viewHolder.textViewStatus.text = pgpKeyDetails.getStatusText(context)
+    }
 
     viewHolder.itemView.setOnClickListener {
       listener?.onKeySelected(viewHolder.bindingAdapterPosition, pgpKeyDetails)
@@ -105,7 +113,7 @@ class PrivateKeysRecyclerViewAdapter(
     val textViewFingerprint: TextView = view.findViewById(R.id.textViewFingerprint)
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
     val textViewExpiration: TextView = view.findViewById(R.id.textViewExpiration)
-    val textViewRevoked: TextView = view.findViewById(R.id.textViewRevoked)
+    val textViewStatus: TextView = view.findViewById(R.id.textViewStatus)
   }
 
   inner class DiffUtilCallback(

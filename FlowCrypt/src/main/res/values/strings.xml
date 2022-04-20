@@ -590,4 +590,6 @@
     <string name="status">Status:</string>
     <string name="valid">valid</string>
     <string name="undefined">undefined</string>
+    <string name="not_valid">not valid</string>
+    <string name="expired">expired</string>
 </resources>

@@ -195,8 +195,8 @@ data class PgpKeyDetails constructor(
     return when {
       usableForEncryption -> context.getString(R.string.valid)
       isRevoked -> context.getString(R.string.revoked)
-      isExpired -> context.getString(R.string.warning_key_expired)
-      isPartiallyEncrypted -> context.getString(R.string.only_partially_signed)
+      isExpired -> context.getString(R.string.expired)
+      isPartiallyEncrypted -> context.getString(R.string.not_valid)
       else -> context.getString(R.string.undefined)
     }
   }

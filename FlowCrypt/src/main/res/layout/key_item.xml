@@ -54,14 +54,14 @@
         android:maxLines="1"
         android:textColor="@color/nobel"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
-        app:layout_constraintEnd_toStartOf="@+id/textViewRevoked"
+        app:layout_constraintEnd_toStartOf="@+id/textViewStatus"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
         tools:text="Expiration: April 19, 2015" />
 
     <TextView
-        android:id="@+id/textViewRevoked"
+        android:id="@+id/textViewStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin_small"
