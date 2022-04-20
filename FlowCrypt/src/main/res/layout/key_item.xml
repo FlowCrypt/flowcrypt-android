@@ -46,6 +46,39 @@
         tools:text="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
     <TextView
+        android:id="@+id/textViewExpiration"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_message_subject"
+        android:ellipsize="middle"
+        android:maxLines="1"
+        android:textColor="@color/nobel"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+        app:layout_constraintEnd_toStartOf="@+id/textViewRevoked"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
+        tools:text="Expiration: April 19, 2015" />
+
+    <TextView
+        android:id="@+id/textViewRevoked"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_small"
+        android:layout_marginTop="@dimen/margin_top_message_subject"
+        android:background="@drawable/bg_rectangle_silver_border"
+        android:backgroundTint="@color/orange"
+        android:drawablePadding="@dimen/default_twice_dip"
+        android:text="@string/revoked"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        app:drawableStartCompat="@drawable/ic_outline_warning_amber_16"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toEndOf="@+id/textViewExpiration"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint" />
+
+    <TextView
         android:id="@+id/textViewCreationDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

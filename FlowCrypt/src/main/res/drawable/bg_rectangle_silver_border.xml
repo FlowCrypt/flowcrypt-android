@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingStart="@dimen/default_four_dip"
+    android:paddingEnd="@dimen/default_four_dip">
+    <item>
+        <shape android:shape="rectangle">
+            <corners
+                android:bottomLeftRadius="@dimen/default_four_dip"
+                android:bottomRightRadius="@dimen/default_four_dip"
+                android:topLeftRadius="@dimen/default_four_dip"
+                android:topRightRadius="@dimen/default_four_dip" />
+
+            <stroke
+                android:width="0.5dp"
+                android:color="@color/silver" />
+        </shape>
+    </item>
+</layer-list>

@@ -15,6 +15,7 @@ import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionPgpKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
@@ -41,8 +42,9 @@ class PrivateKeysRecyclerViewAdapter(
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+    val context = viewHolder.itemView.context
     if (dateFormat == null) {
-      dateFormat = DateFormat.getMediumDateFormat(viewHolder.itemView.context)
+      dateFormat = DateFormat.getMediumDateFormat(context)
     }
 
     val pgpKeyDetails = pgpKeyDetailsList[position]
@@ -60,8 +62,14 @@ class PrivateKeysRecyclerViewAdapter(
       viewHolder.textViewCreationDate.text = null
     }
 
+    viewHolder.textViewExpiration.text = pgpKeyDetails.expiration?.let {
+      context.getString(R.string.key_expiration, dateFormat?.format(Date(it)))
+    } ?: context.getString(R.string.key_expiration, context.getString(R.string.key_does_not_expire))
+
+    viewHolder.textViewRevoked.visibleOrGone(pgpKeyDetails.isRevoked)
+
     viewHolder.itemView.setOnClickListener {
-      listener?.onKeySelected(viewHolder.adapterPosition, pgpKeyDetails)
+      listener?.onKeySelected(viewHolder.bindingAdapterPosition, pgpKeyDetails)
     }
   }
 
@@ -84,8 +92,8 @@ class PrivateKeysRecyclerViewAdapter(
 
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     fun getPgpKeyDetails(): ItemDetailsLookup.ItemDetails<PgpKeyDetails>? {
-      return pgpKeyDetailsList.getOrNull(adapterPosition)?.let {
-        SelectionPgpKeyDetails(adapterPosition, it)
+      return pgpKeyDetailsList.getOrNull(bindingAdapterPosition)?.let {
+        SelectionPgpKeyDetails(bindingAdapterPosition, it)
       }
     }
 
@@ -96,6 +104,8 @@ class PrivateKeysRecyclerViewAdapter(
     val textViewKeyOwner: TextView = view.findViewById(R.id.textViewKeyOwner)
     val textViewFingerprint: TextView = view.findViewById(R.id.textViewFingerprint)
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
+    val textViewExpiration: TextView = view.findViewById(R.id.textViewExpiration)
+    val textViewRevoked: TextView = view.findViewById(R.id.textViewRevoked)
   }
 
   inner class DiffUtilCallback(
