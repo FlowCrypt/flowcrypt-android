@@ -14,8 +14,9 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPublicKeyRing
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.pgp.PgpArmor
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
@@ -25,8 +26,14 @@ import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import org.apache.commons.codec.android.binary.Hex
 import org.apache.commons.codec.android.digest.DigestUtils
+import org.bouncycastle.bcpg.ArmoredOutputStream
+import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 /**
@@ -146,8 +153,12 @@ class SecurityUtils {
       senderEmail: String
     ): List<String> {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
-      val matchingRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
-      return matchingRings.map { it.toPublicKeyRing().armor() }
+      val matchingKeyRingInfoList = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
+        .map { KeyRingInfo(it) }.filter { it.usableForEncryption() }
+      if (matchingKeyRingInfoList.isEmpty()) {
+        throw IllegalStateException("There are no usable for encryption keys for $senderEmail")
+      }
+      return matchingKeyRingInfoList.map { PGPPublicKeyRing(it.publicKeys).armor() }
     }
 
     /**
@@ -196,6 +207,23 @@ class SecurityUtils {
      */
     fun isPossiblyEncryptedData(fileName: String?): Boolean {
       return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(fileName ?: "")
+    }
+
+    fun armor(
+      headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS,
+      encode: (outputStream: OutputStream) -> Unit
+    ): String {
+      ByteArrayOutputStream().use { out ->
+        ArmoredOutputStream(out).use { armoredOut ->
+          if (headers != null) {
+            for (header in headers) {
+              armoredOut.setHeader(header.first, header.second)
+            }
+          }
+          encode.invoke(armoredOut)
+        }
+        return String(out.toByteArray(), StandardCharsets.US_ASCII)
+      }
     }
   }
 }
