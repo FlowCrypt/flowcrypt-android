@@ -102,13 +102,13 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
         )
       )
 
-    onView(withId(R.id.tVDate))
+    onView(withId(R.id.textViewCreationDate))
       .check(
         matches(
           withText(
             getHtmlString(
               getResString(
-                R.string.template_date,
+                R.string.template_creation_date,
                 DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created))
               )
             )

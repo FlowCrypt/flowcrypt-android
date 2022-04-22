@@ -310,7 +310,7 @@
     <string name="save_to_file">Save to file</string>
     <string name="show_private_key">Show private key</string>
     <string name="template_fingerprint" formatted="false"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
-    <string name="template_date">Date: %1$s</string>
+    <string name="template_creation_date">Key creation: %1$s</string>
     <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
@@ -583,4 +583,13 @@
     <string name="error">Error</string>
     <string name="import_keys_from_different_sources">You are trying to import keys from different sources</string>
     <string name="thank_you_for_feedback">Thank you for the feedback</string>
+    <string name="no_private_keys_suitable_for_encryption">Sorry, you can\'t send an encrypted message. You have no private keys suitable for encryption.</string>
+    <string name="revoked">revoked</string>
+    <string name="key_expiration">Key expiration: %1$s</string>
+    <string name="key_does_not_expire">Key does not expire</string>
+    <string name="status">Status:</string>
+    <string name="valid">valid</string>
+    <string name="undefined">undefined</string>
+    <string name="not_valid">not valid</string>
+    <string name="expired">expired</string>
 </resources>

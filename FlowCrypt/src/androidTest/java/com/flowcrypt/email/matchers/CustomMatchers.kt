@@ -5,9 +5,12 @@
 
 package com.flowcrypt.email.matchers
 
+import android.content.Context
 import android.view.View
 import android.widget.ListView
+import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Root
 import androidx.test.espresso.matcher.BoundedMatcher
@@ -122,6 +125,15 @@ class CustomMatchers {
       @TextViewDrawableMatcher.DrawablePosition drawablePosition: Int
     ): Matcher<View> {
       return TextViewDrawableMatcher(resourceId, drawablePosition)
+    }
+
+    fun withTextViewBackgroundTint(
+      context: Context,
+      @ColorRes resourceId: Int
+    ): BackgroundTintMatcher {
+      return BackgroundTintMatcher(
+        requireNotNull(ContextCompat.getColorStateList(context, resourceId))
+      )
     }
   }
 }

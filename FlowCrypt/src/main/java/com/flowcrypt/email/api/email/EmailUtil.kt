@@ -652,14 +652,11 @@ class EmailUtil {
 
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-        val senderPgpKeyDetailsList =
-          SecurityUtils.getSenderPgpKeyDetailsList(context, accountEntity, senderEmail)
-
         pubKeys = mutableListOf()
         pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
-        pubKeys.addAll(senderPgpKeyDetailsList.map { it.publicKey })
+        pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
         prvKeys = listOf(
-          senderPgpKeyDetailsList.firstOrNull()?.privateKey
+          SecurityUtils.getSenderPgpKeyDetails(context, accountEntity, senderEmail).privateKey
             ?: throw IllegalStateException("Sender private key not found")
         )
         ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
@@ -1040,12 +1037,8 @@ class EmailUtil {
         val publicKeys = mutableListOf<String>()
         val senderEmail = msgEntity.from.first().address
         val recipients = msgEntity.allRecipients.toMutableList()
-        publicKeys.addAll(
-          SecurityUtils.getRecipientsUsablePubKeys(context, recipients)
-        )
-        publicKeys.addAll(
-          SecurityUtils.getSenderPgpKeyDetailsList(context, account, senderEmail)
-            .map { it.publicKey })
+        publicKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
+        publicKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
 
         for (att in atts) {
           val attBodyPart = genBodyPartWithAtt(

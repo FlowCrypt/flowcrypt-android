@@ -47,4 +47,6 @@ interface KeysStorage {
   fun hasPassphrase(passphrase: Passphrase): Boolean
 
   fun getFingerprintsWithEmptyPassphrase(): List<String>
+
+  fun getFirstUsableForEncryptionPGPSecretKeyRing(user: String): PGPSecretKeyRing?
 }
