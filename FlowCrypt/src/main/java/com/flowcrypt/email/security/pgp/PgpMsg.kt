@@ -24,10 +24,10 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.javax.mail.isHtmlText
 import com.flowcrypt.email.extensions.javax.mail.isMultipart
 import com.flowcrypt.email.extensions.javax.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.javax.mail.isOpenPGPMimeSigned
+import com.flowcrypt.email.extensions.javax.mail.isPlainText
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.escapeHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
@@ -288,10 +288,9 @@ object PgpMsg {
         val isMultipartAlternative = part.isMultipartAlternative()
         for (partCount in 0 until multiPart.count) {
           val subPart = multiPart.getBodyPart(partCount)
-          if (isMultipartAlternative) {
-            //if we found multipart/alternative we have to show just html
-            //and don't try to find PGP things
-            if (!subPart.isHtmlText()) {
+          if (!subPart.isMultipart() && isMultipartAlternative) {
+            //if we found multipart/alternative we can skip part with Content-Type: text/plain
+            if (multiPart.count > 1 && subPart.isPlainText()) {
               continue
             }
           }
