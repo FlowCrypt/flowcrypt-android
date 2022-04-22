@@ -25,9 +25,6 @@ class BackgroundTintMatcher(private val expectedBackgroundTintList: ColorStateLi
   override fun matchesSafely(textView: TextView, mismatchDescription: Description): Boolean {
     context = textView.context
     val actualBackgroundTintList = textView.backgroundTintList
-    mismatchDescription
-      .appendText("textView.backgroundTintList was ")
-      .appendText(actualBackgroundTintList.toString())
     return actualBackgroundTintList == expectedBackgroundTintList
   }
 

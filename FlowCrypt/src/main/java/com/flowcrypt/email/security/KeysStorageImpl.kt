@@ -240,14 +240,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   }
 
   override fun getFirstUsableForEncryptionPGPSecretKeyRing(user: String): PGPSecretKeyRing? {
-    val keyRings = getPGPSecretKeyRingsByUserId(user)
-    for (keyRing in keyRings) {
-      val keyRingInfo = KeyRingInfo(keyRing)
-      if (keyRingInfo.usableForEncryption()) {
-        return keyRing
-      }
-    }
-    return null
+    return getPGPSecretKeyRingsByUserId(user).firstOrNull { KeyRingInfo(it).usableForEncryption() }
   }
 
   private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {
