@@ -26,6 +26,10 @@ fun Part.isHtmlText(): Boolean {
   return isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_HTML)
 }
 
+fun Part.isPlainText(): Boolean {
+  return isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
+}
+
 fun Part.baseContentType(): String? {
   return try {
     ContentType(contentType).baseType
