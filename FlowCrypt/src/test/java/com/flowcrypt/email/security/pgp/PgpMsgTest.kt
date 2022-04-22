@@ -22,6 +22,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -316,10 +317,11 @@ class PgpMsgTest {
   // -------------------------------------------------------------------------------------------
 
   @Test
+  @Ignore("Should be reworked after switching to a new logic that uses RawBlockParser")
   fun multipleComplexMessagesTest() {
     val testFiles = listOf(
       "decrypt - [enigmail] basic html-0.json",
-      /*"decrypt - [gnupg v2] thai text-0.json",
+      "decrypt - [gnupg v2] thai text-0.json",
       "decrypt - [gnupg v2] thai text in html-0.json",
       "decrypt - [gpgmail] signed message will get parsed and rendered " +
           "(though verification fails, enigmail does the same)-0.json",
@@ -330,12 +332,20 @@ class PgpMsgTest {
       "decrypt - [symantec] base64 german umlauts-0.json",
       "decrypt - [thunderbird] unicode chinese-0.json",
       "decrypt - verify encrypted+signed message-0.json",
-      "verify - Kraken - urldecode signature-0.json"*/
+      "verify - Kraken - urldecode signature-0.json"
     )
 
     for (testFile in testFiles) {
       checkComplexMessage(testFile)
     }
+  }
+
+  // Use this one for debugging
+  @Test
+  @Ignore("Should be reworked after switching to a new logic that uses RawBlockParser")
+  fun singleComplexMessageTest() {
+    val testFile = "verify - Kraken - urldecode signature-0.json"
+    checkComplexMessage(testFile)
   }
 
   private fun checkComplexMessage(fileName: String) {
