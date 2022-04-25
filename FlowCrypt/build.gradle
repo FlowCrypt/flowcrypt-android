@@ -444,7 +444,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk15to18:${rootProject.ext.bouncycastleVersion}"
     implementation "org.bouncycastle:bcpg-jdk15to18:${rootProject.ext.bouncycastleVersion}"
 
-    implementation 'ch.acra:acra-http:5.9.1'
+    implementation 'ch.acra:acra-http:5.9.3'
     //ACRA needs the following dependency to use a custom report sender
     compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
 }
