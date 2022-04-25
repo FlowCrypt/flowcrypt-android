@@ -17,6 +17,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.allViews
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
@@ -126,6 +127,19 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
 
   }
 
+  /**
+   * This method can be used to handle destination changes.
+   *
+   * @param controller the controller that navigated
+   * @param destination the new destination
+   * @param arguments the arguments passed to the destination
+   */
+  protected open fun onDestinationChanged(
+    controller: NavController, destination: NavDestination, arguments: Bundle?
+  ) {
+    // nothing to do here, actual actions will be defined by subclasses
+  }
+
   fun setDrawerLockMode(isLocked: Boolean) {
     val drawerLayout = ((binding.root as? ViewGroup)?.allViews?.filter { it is DrawerLayout }
       ?.firstOrNull()) as? DrawerLayout
@@ -144,8 +158,9 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     navController = (supportFragmentManager.findFragmentById(R.id.fragmentContainerView)
         as NavHostFragment).navController
     appBarConfiguration = initAppBarConfiguration()
-    navController.addOnDestinationChangedListener { _, destination, _ ->
+    navController.addOnDestinationChangedListener { controller, destination, arguments ->
       isNavigationArrowDisplayed = destination.id !in appBarConfiguration.topLevelDestinations
+      onDestinationChanged(controller, destination, arguments)
     }
     findViewById<Toolbar>(R.id.toolbar)?.let {
       NavigationUI.setupWithNavController(

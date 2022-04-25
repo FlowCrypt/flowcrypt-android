@@ -26,7 +26,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
@@ -48,6 +52,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
+import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
@@ -80,6 +85,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
   private var actionBarDrawerToggle: ActionBarDrawerToggle? = null
+  private var isUpdateOrgRulesRequired: Boolean = true
 
   private val idleServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, service: IBinder) {}
@@ -102,6 +108,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       }
     }
     super.onCreate(savedInstanceState)
+    observeMovingToBackground()
 
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
@@ -114,6 +121,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     setupLabelsViewModel()
 
     handleLogoutFromSystemSettings(intent)
+  }
+
+  override fun onStart() {
+    super.onStart()
+    tryToUpdateOrgRules()
   }
 
   override fun finish() {
@@ -169,6 +181,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       } else {
         super.onBackPressed()
       }
+    }
+  }
+
+  override fun onDestinationChanged(
+    controller: NavController,
+    destination: NavDestination,
+    arguments: Bundle?
+  ) {
+    super.onDestinationChanged(controller, destination, arguments)
+    if (navController.currentDestination?.id == R.id.messagesListFragment) {
+      tryToUpdateOrgRules()
     }
   }
 
@@ -368,6 +391,25 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     fragment?.onDrawerStateChanged(slideOffset, isOpened)
   }
 
+  private fun observeMovingToBackground() {
+    ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+      /**
+       * The app moved to background
+       */
+      override fun onStop(owner: LifecycleOwner) {
+        isUpdateOrgRulesRequired = true
+      }
+    })
+  }
+
+  private fun tryToUpdateOrgRules() {
+    if (isUpdateOrgRulesRequired
+      && navController.currentDestination?.id == R.id.messagesListFragment
+    ) {
+      RefreshClientConfigurationWorker.enqueue(applicationContext)
+      isUpdateOrgRulesRequired = false
+    }
+  }
 
   /**
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
