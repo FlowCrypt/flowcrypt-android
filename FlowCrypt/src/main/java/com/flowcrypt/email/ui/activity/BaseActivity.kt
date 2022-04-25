@@ -128,7 +128,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   }
 
   /**
-   * This method can bu used to handle destination changes.
+   * This method can be used to handle destination changes.
    *
    * @param controller the controller that navigated
    * @param destination the new destination
@@ -137,7 +137,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   protected open fun onDestinationChanged(
     controller: NavController, destination: NavDestination, arguments: Bundle?
   ) {
-
+    // nothing to do here, actual actions will be defined by subclasses
   }
 
   fun setDrawerLockMode(isLocked: Boolean) {
