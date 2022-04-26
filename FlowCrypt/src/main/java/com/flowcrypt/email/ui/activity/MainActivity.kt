@@ -42,16 +42,20 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showFeedbackFragment
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RefreshPrivateKeysFromEkmViewModel
 import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
@@ -63,6 +67,7 @@ import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFrag
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -81,11 +86,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private val launcherViewModel: LauncherViewModel by viewModels()
   private val actionsViewModel: ActionsViewModel by viewModels()
   private val labelsViewModel: LabelsViewModel by viewModels()
+  private val refreshPrivateKeysFromEkmViewModel: RefreshPrivateKeysFromEkmViewModel by viewModels()
 
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
   private var actionBarDrawerToggle: ActionBarDrawerToggle? = null
-  private var isUpdateOrgRulesRequired: Boolean = true
+  private var isUpdateEnterpriseThingsRequired: Boolean = true
 
   private val idleServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, service: IBinder) {}
@@ -121,6 +127,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     setupLabelsViewModel()
 
     handleLogoutFromSystemSettings(intent)
+
+    subscribeToCollectRefreshPrivateKeysFromEkm()
   }
 
   override fun onStart() {
@@ -397,17 +405,41 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
        * The app moved to background
        */
       override fun onStop(owner: LifecycleOwner) {
-        isUpdateOrgRulesRequired = true
+        isUpdateEnterpriseThingsRequired = true
       }
     })
   }
 
   private fun tryToUpdateOrgRules() {
-    if (isUpdateOrgRulesRequired
+    if (isUpdateEnterpriseThingsRequired
       && navController.currentDestination?.id == R.id.messagesListFragment
     ) {
       RefreshClientConfigurationWorker.enqueue(applicationContext)
-      isUpdateOrgRulesRequired = false
+      refreshPrivateKeysFromEkmViewModel.refreshPrivateKeys()
+      isUpdateEnterpriseThingsRequired = false
+    }
+  }
+
+  private fun subscribeToCollectRefreshPrivateKeysFromEkm() {
+    lifecycleScope.launchWhenStarted {
+      refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> FlavorSettings.getCountingIdlingResource().incrementSafely()
+          Result.Status.SUCCESS -> {
+            toast("ekm")
+            FlavorSettings.getCountingIdlingResource().decrementSafely()
+          }
+          Result.Status.EXCEPTION -> {
+            it.exception?.let { exception ->
+              if (exception !is CommonConnectionException) {
+                showInfoDialog(dialogMsg = it.exceptionMsg)
+              }
+            }
+            FlavorSettings.getCountingIdlingResource().decrementSafely()
+          }
+          else -> {}
+        }
+      }
     }
   }
 

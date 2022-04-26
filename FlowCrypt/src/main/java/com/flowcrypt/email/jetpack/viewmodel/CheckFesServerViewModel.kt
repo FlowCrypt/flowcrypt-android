@@ -14,13 +14,8 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.exception.CommonConnectionException
 import kotlinx.coroutines.launch
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 
 /**
  * @author Denis Bondarenko
@@ -48,22 +43,12 @@ class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(a
         if (result.status == Result.Status.EXCEPTION) {
           val causedException = result.exception
           if (causedException != null) {
-            val processedException = when (causedException) {
-              is UnknownHostException, is SocketTimeoutException, is ConnectException -> {
-                if (context.hasActiveConnection()) {
-                  CommonConnectionException(
-                    cause = causedException,
-                    hasInternetAccess = GeneralUtil.hasInternetAccess()
-                  )
-                } else {
-                  CommonConnectionException(cause = causedException, hasInternetAccess = false)
-                }
-              }
-
-              else -> causedException
-            }
-
-            checkFesServerLiveData.value = Result.exception(processedException)
+            checkFesServerLiveData.value = Result.exception(
+              GeneralUtil.preProcessException(
+                context = context,
+                causedException = causedException
+              )
+            )
             return@launch
           }
         }

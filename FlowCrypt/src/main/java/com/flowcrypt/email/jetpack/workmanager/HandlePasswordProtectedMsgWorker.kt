@@ -32,12 +32,9 @@ import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.gson.GsonBuilder
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -48,7 +45,6 @@ import java.io.InputStream
 import java.net.SocketException
 import java.util.Base64
 import java.util.Properties
-import java.util.concurrent.TimeUnit
 import javax.mail.Address
 import javax.mail.Message
 import javax.mail.MessagingException
@@ -140,7 +136,9 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             //start of creating and uploading a password-protected msg to FES
             val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
             val domain = EmailUtil.getDomain(fromAddress.address)
-            val idToken = getGoogleIdToken()
+            val idToken = GeneralUtil.getGoogleIdToken(
+              applicationContext, RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
+            )
             val replyToken = fetchReplyToken(apiRepository, domain, idToken)
             val replyInfoData = ReplyInfoData(
               sender = fromAddress.address.lowercase(),
@@ -376,23 +374,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
     return@withContext String(decryptionResult.content?.toByteArray() ?: byteArrayOf())
   }
-
-  private suspend fun getGoogleIdToken(retryAttempt: Int = 0): String =
-    withContext(Dispatchers.IO) {
-      val googleSignInClient = GoogleSignIn.getClient(
-        applicationContext,
-        GoogleApiClientHelper.generateGoogleSignInOptions()
-      )
-      val silentSignIn = googleSignInClient.silentSignIn()
-      if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
-        if (retryAttempt <= RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN) {
-          //do delay for 10 seconds and try again. Max attempts == RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
-          delay(TimeUnit.SECONDS.toMillis(10))
-          return@withContext getGoogleIdToken(retryAttempt + 1)
-        } else throw IllegalStateException("Could not receive idToken")
-      }
-      return@withContext requireNotNull(silentSignIn.result.idToken)
-    }
 
   private suspend fun fetchReplyToken(
     apiRepository: FlowcryptApiRepository,

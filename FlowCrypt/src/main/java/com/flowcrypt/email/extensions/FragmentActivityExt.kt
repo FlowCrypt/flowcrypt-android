@@ -12,6 +12,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragmentArgs
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -38,4 +39,36 @@ fun FragmentActivity.showFeedbackFragment() {
     }
     navController.navigate(navDirections)
   }
+}
+
+fun FragmentActivity.showInfoDialog(
+  requestCode: Int = 0,
+  dialogTitle: String? = null,
+  dialogMsg: String? = null,
+  buttonTitle: String? = null,
+  isCancelable: Boolean = true,
+  hasHtml: Boolean = false,
+  useLinkify: Boolean = false,
+  useWebViewToRender: Boolean = false
+) {
+  //to show the current dialog we should be sure there is no active dialogs
+  if (navController.currentDestination?.navigatorName == "dialog") {
+    navController.navigateUp()
+  }
+
+  val navDirections = object : NavDirections {
+    override fun getActionId() = R.id.info_dialog_graph
+    override fun getArguments() = InfoDialogFragmentArgs(
+      requestCode = requestCode,
+      dialogTitle = dialogTitle,
+      dialogMsg = dialogMsg,
+      buttonTitle = buttonTitle ?: getString(android.R.string.ok),
+      isCancelable = isCancelable,
+      hasHtml = hasHtml,
+      useLinkify = useLinkify,
+      useWebViewToRender = useWebViewToRender
+    ).toBundle()
+  }
+
+  navController.navigate(navDirections)
 }
