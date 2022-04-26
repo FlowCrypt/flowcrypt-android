@@ -432,7 +432,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           Result.Status.EXCEPTION -> {
             it.exception?.let { exception ->
               if (exception !is CommonConnectionException) {
-                showInfoDialog(dialogMsg = it.exceptionMsg)
+                showInfoDialog(
+                  dialogMsg = it.exceptionMsg,
+                  dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
+                )
               }
             }
             FlavorSettings.getCountingIdlingResource().decrementSafely()

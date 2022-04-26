@@ -506,4 +506,5 @@
     <string name="undefined">не определен</string>
     <string name="not_valid">не валидный</string>
     <string name="expired">просроченный</string>
+    <string name="refreshing_keys_from_ekm_failed">Не удалось обновить ключи с сервера EKM</string>
 </resources>

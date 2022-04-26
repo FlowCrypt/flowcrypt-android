@@ -592,4 +592,5 @@
     <string name="undefined">undefined</string>
     <string name="not_valid">not valid</string>
     <string name="expired">expired</string>
+    <string name="refreshing_keys_from_ekm_failed">Refreshing keys from EKM failed</string>
 </resources>
