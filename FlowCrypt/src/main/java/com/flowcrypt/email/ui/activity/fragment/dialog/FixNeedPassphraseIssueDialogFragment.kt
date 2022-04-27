@@ -231,7 +231,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                   if (countOfMatchedPassphrases == checkResults.size) {
                     setFragmentResult(
                       REQUEST_KEY_RESULT,
-                      bundleOf(KEY_RESULT to 1)
+                      bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                     )
                     navController?.navigateUp()
                   }
@@ -239,7 +239,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                 AT_LEAST_ONE -> {
                   setFragmentResult(
                     REQUEST_KEY_RESULT,
-                    bundleOf(KEY_RESULT to 1)
+                    bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                   )
                   navController?.navigateUp()
                 }
@@ -285,6 +285,10 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
     val KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_RESULT", FixNeedPassphraseIssueDialogFragment::class.java
+    )
+
+    val KEY_REQUEST_CODE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_REQUEST_CODE", FixNeedPassphraseIssueDialogFragment::class.java
     )
   }
 }

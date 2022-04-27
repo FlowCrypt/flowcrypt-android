@@ -47,8 +47,8 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : EkmViewMode
       val activeAccount = getActiveAccountSuspend() ?: return@launch
       if (activeAccount.clientConfiguration?.usesKeyManager() == true) {
         refreshPrivateKeysFromEkmMutableStateFlow.value =
-          controlledRunnerRefreshPrivateKeysFromEkm.cancelPreviousThenRun {
-            return@cancelPreviousThenRun try {
+          controlledRunnerRefreshPrivateKeysFromEkm.joinPreviousOrRun {
+            return@joinPreviousOrRun try {
               refreshPrivateKeysInternal(activeAccount)
             } catch (e: Exception) {
               e.printStackTrace()

@@ -26,6 +26,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -51,6 +52,7 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
@@ -65,9 +67,11 @@ import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.exception.CommonConnectionException
+import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -129,6 +133,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     handleLogoutFromSystemSettings(intent)
 
     subscribeToCollectRefreshPrivateKeysFromEkm()
+    subscribeToFixNeedPassphraseIssueDialogFragment()
   }
 
   override fun onStart() {
@@ -431,11 +436,22 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           }
           Result.Status.EXCEPTION -> {
             it.exception?.let { exception ->
-              if (exception !is CommonConnectionException) {
-                showInfoDialog(
-                  dialogMsg = it.exceptionMsg,
-                  dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
-                )
+              when (exception) {
+                is EmptyPassphraseException -> {
+                  showNeedPassphraseDialog(
+                    navController = navController,
+                    fingerprints = exception.fingerprints,
+                    logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
+                    requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM
+                  )
+                }
+
+                !is CommonConnectionException -> {
+                  showInfoDialog(
+                    dialogMsg = it.exceptionMsg,
+                    dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
+                  )
+                }
               }
             }
             FlavorSettings.getCountingIdlingResource().decrementSafely()
@@ -444,6 +460,19 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
       }
     }
+  }
+
+  private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
+    binding.fragmentContainerView.getFragment<Fragment>().childFragmentManager
+      .setFragmentResultListener(
+        FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT,
+        this
+      ) { _, bundle ->
+        val requestCode = bundle.getInt(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE)
+        if (requestCode == REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM) {
+          refreshPrivateKeysFromEkmViewModel.refreshPrivateKeys()
+        }
+      }
   }
 
   /**
@@ -494,6 +523,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   companion object {
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM = 1000
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =

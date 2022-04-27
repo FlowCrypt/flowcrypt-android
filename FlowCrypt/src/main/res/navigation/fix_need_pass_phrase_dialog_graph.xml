@@ -21,6 +21,10 @@
             android:name="logicType"
             android:defaultValue="0L"
             app:argType="long" />
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
     </dialog>
 
 </navigation>

@@ -96,7 +96,8 @@ fun LifecycleOwner.showTwoWayDialog(
 fun LifecycleOwner.showNeedPassphraseDialog(
   navController: NavController?,
   fingerprints: List<String>,
-  logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
+  logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
+  requestCode: Int = 0
 ) {
   if (navController?.currentDestination?.navigatorName == "dialog") {
     navController.navigateUp()
@@ -106,7 +107,8 @@ fun LifecycleOwner.showNeedPassphraseDialog(
     override fun getActionId() = R.id.fix_need_pass_phrase_dialog_graph
     override fun getArguments() = FixNeedPassphraseIssueDialogFragmentArgs(
       fingerprints = fingerprints.toTypedArray(),
-      logicType = logicType
+      logicType = logicType,
+      requestCode = requestCode
     ).toBundle()
   }
 
