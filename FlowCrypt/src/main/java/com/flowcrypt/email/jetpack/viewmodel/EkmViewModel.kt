@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
  *         Time: 6:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-class EkmViewModel(application: Application) : AccountViewModel(application) {
+class EkmViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository = FlowcryptApiRepository()
   val ekmLiveData: MutableLiveData<Result<EkmPrivateKeysResponse>> = MutableLiveData(Result.none())
 
