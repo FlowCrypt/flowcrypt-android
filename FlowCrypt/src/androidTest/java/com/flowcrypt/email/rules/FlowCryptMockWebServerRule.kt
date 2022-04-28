@@ -34,9 +34,6 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
           server.useHttps(sslSocketFactory, false)
           server.start(port)
           base.evaluate()
-          server.shutdown()
-        } catch (e: Exception) {
-          e.printStackTrace()
         } finally {
           server.shutdown()
         }

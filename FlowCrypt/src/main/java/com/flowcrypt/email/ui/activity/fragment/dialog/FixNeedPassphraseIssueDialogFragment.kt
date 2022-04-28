@@ -168,7 +168,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
               AT_LEAST_ONE -> {
                 if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
                   binding?.tVStatusMessage?.text = resources.getQuantityString(
-                    R.plurals.please_provide_passphrase_for_following_keys,
+                    args.atLeastOneKeyResId,
                     matchingKeys.size
                   )
                 }

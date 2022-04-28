@@ -593,4 +593,8 @@
     <string name="not_valid">not valid</string>
     <string name="expired">expired</string>
     <string name="refreshing_keys_from_ekm_failed">Refreshing keys from EKM failed</string>
+    <plurals name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">
+        <item quantity="one">Please provide a pass phrase for the following key to keep your account keys up to date</item>
+        <item quantity="other">Please provide a pass phrase for at least one of the following keys to keep your account keys up to date</item>
+    </plurals>
 </resources>
