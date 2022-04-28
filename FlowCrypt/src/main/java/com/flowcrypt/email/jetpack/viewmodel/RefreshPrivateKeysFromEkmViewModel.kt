@@ -51,7 +51,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
         refreshPrivateKeysFromEkmMutableStateFlow.value =
           controlledRunnerRefreshPrivateKeysFromEkm.joinPreviousOrRun {
             return@joinPreviousOrRun try {
-              refreshPrivateKeysInternal(activeAccount)
+              refreshPrivateKeysInternally(activeAccount)
             } catch (e: Exception) {
               e.printStackTrace()
               Result.exception(e)
@@ -63,7 +63,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
     }
   }
 
-  private suspend fun refreshPrivateKeysInternal(activeAccount: AccountEntity): Result<Boolean?> =
+  private suspend fun refreshPrivateKeysInternally(activeAccount: AccountEntity): Result<Boolean?> =
     withContext(Dispatchers.IO) {
       val context: Context = getApplication()
       val retryAttempts = 6
@@ -74,8 +74,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
 
       val ekmPrivateResult = repository.getPrivateKeysViaEkm(
         context = context,
-        ekmUrl = activeAccount.clientConfiguration?.keyManagerUrl
-          ?: throw IllegalArgumentException("key_manager_url is empty"),
+        ekmUrl = requireNotNull(activeAccount.clientConfiguration?.keyManagerUrl),
         idToken = idToken
       )
 
@@ -93,7 +92,9 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
 
           Result.Status.ERROR -> Result.exception(ApiException(ekmPrivateResult.data?.apiError))
 
-          else -> Result.exception(NullPointerException())
+          else -> throw IllegalStateException(
+            "Unsupported status = ${ekmPrivateResult.status} at this step"
+          )
         }
       }
 
@@ -116,7 +117,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
           //ask Tom should we do any things here
           throw IllegalStateException(context.getString(R.string.could_not_parse_one_of_ekm_key))
         } else {
-          //ask Tom should we do any things here
+          //ask Tom should we check isFullyDecrypted
 
           //check that all keys were fully decrypted when we fetched them.
           // If any is encrypted at all, that's an unexpected error, we should throw an exception.
