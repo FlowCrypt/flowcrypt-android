@@ -24,11 +24,10 @@ import javax.net.ssl.SSLSocketFactory
  *         E-mail: DenBond7@gmail.com
  */
 class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatcher) : BaseRule() {
-  var server = MockWebServer()
-
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
+        val server = MockWebServer()
         try {
           server.dispatcher = responseDispatcher
           val sslSocketFactory = getSSLSocketFactory()
@@ -38,6 +37,8 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
           server.shutdown()
         } catch (e: Exception) {
           e.printStackTrace()
+        } finally {
+          server.shutdown()
         }
       }
     }
