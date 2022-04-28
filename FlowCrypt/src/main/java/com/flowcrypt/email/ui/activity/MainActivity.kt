@@ -431,7 +431,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         when (it.status) {
           Result.Status.LOADING -> FlavorSettings.getCountingIdlingResource().incrementSafely()
           Result.Status.SUCCESS -> {
-            toast("ekm")
             FlavorSettings.getCountingIdlingResource().decrementSafely()
           }
           Result.Status.EXCEPTION -> {

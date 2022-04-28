@@ -479,6 +479,10 @@ class GeneralUtil {
       retryAttempt: Int = 0
     ): String =
       withContext(Dispatchers.IO) {
+        //before fetch idToken from [GoogleSignInClient]
+        //we try to get IdToken from the flavor settings
+        FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
+
         val googleSignInClient = GoogleSignIn.getClient(
           context,
           GoogleApiClientHelper.generateGoogleSignInOptions()
