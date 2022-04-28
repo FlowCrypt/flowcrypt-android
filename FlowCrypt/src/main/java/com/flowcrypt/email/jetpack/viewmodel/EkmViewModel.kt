@@ -32,8 +32,8 @@ import kotlinx.coroutines.launch
  *         Time: 6:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-open class EkmViewModel(application: Application) : AccountViewModel(application) {
-  protected val repository = FlowcryptApiRepository()
+class EkmViewModel(application: Application) : AccountViewModel(application) {
+  private val repository = FlowcryptApiRepository()
   val ekmLiveData: MutableLiveData<Result<EkmPrivateKeysResponse>> = MutableLiveData(Result.none())
 
   fun fetchPrvKeys(orgRules: OrgRules, idToken: String) {

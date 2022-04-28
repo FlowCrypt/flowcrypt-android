@@ -9,6 +9,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -34,7 +35,8 @@ import org.pgpainless.util.Passphrase
  *         Time: 4:34 PM
  *         E-mail: DenBond7@gmail.com
  */
-class RefreshPrivateKeysFromEkmViewModel(application: Application) : EkmViewModel(application) {
+class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountViewModel(application) {
+  private val repository = FlowcryptApiRepository()
   private val controlledRunnerRefreshPrivateKeysFromEkm = ControlledRunner<Result<Boolean?>>()
   private val refreshPrivateKeysFromEkmMutableStateFlow =
     MutableStateFlow<Result<Boolean?>>(Result.none())

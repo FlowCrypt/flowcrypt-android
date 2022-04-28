@@ -70,7 +70,7 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
         OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
       ),
       customKeyserverUrl = null,
-      keyManagerUrl = EMAIL_EKM_URL,
+      keyManagerUrl = EKM_URL,
       enforceKeygenAlgo = null,
       enforceKeygenExpireMonths = null
     )
@@ -230,7 +230,7 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
   }
 
   companion object {
-    private const val EMAIL_EKM_URL = "https://localhost:1212/ekm/"
+    private const val EKM_URL = "https://localhost:1212/ekm/"
     private val EKM_KEY_WITH_EXTENDED_EXPIRATION = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/expired_extended@flowcrypt.test_prv_default.asc"
     )
