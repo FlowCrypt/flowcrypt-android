@@ -430,9 +430,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> FlavorSettings.getCountingIdlingResource().incrementSafely()
-          Result.Status.SUCCESS -> {
-            FlavorSettings.getCountingIdlingResource().decrementSafely()
-          }
+          Result.Status.SUCCESS -> FlavorSettings.getCountingIdlingResource().decrementSafely()
           Result.Status.EXCEPTION -> {
             it.exception?.let { exception ->
               when (exception) {
