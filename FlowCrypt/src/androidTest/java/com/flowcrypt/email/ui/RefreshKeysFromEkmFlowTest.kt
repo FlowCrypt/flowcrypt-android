@@ -143,10 +143,7 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
     //check that we show dialog where a user provides a pass phrase
     isDialogWithTextDisplayed(
       decorView,
-      getQuantityString(
-        R.plurals.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date,
-        1
-      )
+      getResString(R.string.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date)
     )
 
     onView(withId(R.id.eTKeyPassword))

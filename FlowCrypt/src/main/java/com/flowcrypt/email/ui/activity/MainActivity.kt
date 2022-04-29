@@ -440,8 +440,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     fingerprints = exception.fingerprints,
                     logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
                     requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM,
-                    atLeastOneKeyResId =
-                    R.plurals.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
+                    customTitle = getString(
+                      R.string.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
+                    ),
+                    showKeys = false
                   )
                 }
 

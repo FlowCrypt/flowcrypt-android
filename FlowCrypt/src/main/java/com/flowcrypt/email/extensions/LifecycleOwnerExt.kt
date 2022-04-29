@@ -98,7 +98,8 @@ fun LifecycleOwner.showNeedPassphraseDialog(
   fingerprints: List<String>,
   logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
   requestCode: Int = 0,
-  atLeastOneKeyResId: Int = R.plurals.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
+  customTitle: String? = null,
+  showKeys: Boolean = true
 ) {
   if (navController?.currentDestination?.navigatorName == "dialog") {
     navController.navigateUp()
@@ -110,7 +111,8 @@ fun LifecycleOwner.showNeedPassphraseDialog(
       fingerprints = fingerprints.toTypedArray(),
       logicType = logicType,
       requestCode = requestCode,
-      atLeastOneKeyResId = atLeastOneKeyResId
+      customTitle = customTitle,
+      showKeys = showKeys
     ).toBundle()
   }
 
