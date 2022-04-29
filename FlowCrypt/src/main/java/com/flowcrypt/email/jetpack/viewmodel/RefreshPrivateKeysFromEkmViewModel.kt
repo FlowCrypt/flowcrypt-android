@@ -155,54 +155,56 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
     val keysStorage = KeysStorageImpl.getInstance(context)
     val existingKeyEntities = keysStorage.getRawKeys()
     val existingPgpKeyDetailsList = keysStorage.getPgpKeyDetailsList()
-    var passphrase: Passphrase? = null
+    val keysToUpdate = mutableListOf<PgpKeyDetails>()
+    val keysToAdd = mutableListOf<PgpKeyDetails>()
 
     for (fetchedPgpKeyDetails in fetchedPgpKeyDetailsList) {
-      if (!fetchedPgpKeyDetails.usableForEncryption) {
-        //ask Tom
-        //we skip a key that is not usable for encryption
-        continue
+      val existingPgpKeyDetails = existingPgpKeyDetailsList.firstOrNull {
+        it.fingerprint == fetchedPgpKeyDetails.fingerprint
       }
-
-      val existingPgpKeyDetails =
-        existingPgpKeyDetailsList.firstOrNull { it.fingerprint == fetchedPgpKeyDetails.fingerprint }
 
       if (existingPgpKeyDetails != null) {
         if (fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
-          if (passphrase == null) {
-            passphrase = getUsablePassphraseFromCache()
-          }
-
-          val existingKeyEntity = existingKeyEntities.first {
-            it.fingerprint == existingPgpKeyDetails.fingerprint
-          }
-
-          val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, fetchedPgpKeyDetails)
-          roomDatabase.keysDao().updateSuspend(
-            existingKeyEntity.copy(
-              privateKey = safeVersionOfPrvKey,
-              publicKey = fetchedPgpKeyDetails.publicKey.toByteArray()
-            )
-          )
+          keysToUpdate.add(fetchedPgpKeyDetails)
         }
       } else {
-        if (passphrase == null) {
-          passphrase = getUsablePassphraseFromCache()
-        }
-
-        val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, fetchedPgpKeyDetails)
-        val keyEntity = fetchedPgpKeyDetails.toKeyEntity(activeAccount).copy(
-          privateKey = safeVersionOfPrvKey,
-          storedPassphrase = null
-        )
-        roomDatabase.keysDao().insertSuspend(keyEntity)
+        keysToAdd.add(fetchedPgpKeyDetails)
       }
+    }
+
+    if (keysToUpdate.isEmpty() && keysToAdd.isEmpty()) {
+      return@withContext
+    }
+
+    val passphrase: Passphrase = getUsablePassphraseFromCache()
+
+    for (pgpKeyDetails in keysToUpdate) {
+      val existingKeyEntity = existingKeyEntities.first {
+        it.fingerprint == pgpKeyDetails.fingerprint
+      }
+
+      val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
+      roomDatabase.keysDao().updateSuspend(
+        existingKeyEntity.copy(
+          privateKey = safeVersionOfPrvKey,
+          publicKey = pgpKeyDetails.publicKey.toByteArray()
+        )
+      )
+    }
+
+    for (pgpKeyDetails in keysToAdd) {
+      val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
+      val keyEntity = pgpKeyDetails.toKeyEntity(activeAccount).copy(
+        privateKey = safeVersionOfPrvKey,
+        storedPassphrase = null
+      )
+      roomDatabase.keysDao().insertSuspend(keyEntity)
     }
   }
 
   /**
    * We receive a private key from EKM in decrypted format. Before saving it to the local database
-   * we have to protect it with a provided [Passphrase] and encrypt it with [AndroidKeyStore]
+   * we have to protect it with a provided [Passphrase] and encrypt it with AndroidKeyStore
    */
   private suspend fun protectAndEncryptInternally(
     passphrase: Passphrase,
