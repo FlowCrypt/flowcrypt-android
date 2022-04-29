@@ -95,7 +95,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
   private var actionBarDrawerToggle: ActionBarDrawerToggle? = null
-  private var isUpdateEnterpriseThingsRequired: Boolean = true
+  private var isUpdateFromEnterpriseApisRequired: Boolean = true
 
   private val idleServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, service: IBinder) {}
@@ -410,18 +410,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
        * The app moved to background
        */
       override fun onStop(owner: LifecycleOwner) {
-        isUpdateEnterpriseThingsRequired = true
+        isUpdateFromEnterpriseApisRequired = true
       }
     })
   }
 
   private fun tryToUpdateOrgRules() {
-    if (isUpdateEnterpriseThingsRequired
+    if (isUpdateFromEnterpriseApisRequired
       && navController.currentDestination?.id == R.id.messagesListFragment
     ) {
       RefreshClientConfigurationWorker.enqueue(applicationContext)
       refreshPrivateKeysFromEkmViewModel.refreshPrivateKeys()
-      isUpdateEnterpriseThingsRequired = false
+      isUpdateFromEnterpriseApisRequired = false
     }
   }
 

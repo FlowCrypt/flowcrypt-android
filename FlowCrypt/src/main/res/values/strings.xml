@@ -597,4 +597,5 @@
         <item quantity="one">Please provide a pass phrase for the following key to keep your account keys up to date</item>
         <item quantity="other">Please provide a pass phrase for at least one of the following keys to keep your account keys up to date</item>
     </plurals>
+    <string name="source_contains_more_than_one_key">Source contains more than one private key</string>
 </resources>

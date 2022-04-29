@@ -98,9 +98,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
         }
       }
 
-      if (ekmPrivateResult.data?.privateKeys?.isEmpty() == true) {
-        return@withContext Result.success(true)
-      }
+      requireNotNull(ekmPrivateResult.data?.privateKeys)
 
       val pgpKeyDetailsList = mutableListOf<PgpKeyDetails>()
       ekmPrivateResult.data?.privateKeys?.forEach { key ->
@@ -113,25 +111,34 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
             )
           }
 
-        if (parsedList.isEmpty()) {
-          //ask Tom should we do any things here
-          throw IllegalStateException(context.getString(R.string.could_not_parse_one_of_ekm_key))
-        } else {
-          //ask Tom should we check isFullyDecrypted
-
-          //check that all keys were fully decrypted when we fetched them.
-          // If any is encrypted at all, that's an unexpected error, we should throw an exception.
-          parsedList.forEach {
-            if (!it.isFullyDecrypted) {
-              throw IllegalStateException(
-                context.getString(
-                  R.string.found_not_fully_decrypted_key_ask_admin,
-                  it.fingerprint
-                )
-              )
-            }
+        when {
+          parsedList.isEmpty() -> {
+            throw IllegalStateException(
+              context.getString(R.string.could_not_parse_one_of_ekm_key)
+            )
           }
-          pgpKeyDetailsList.addAll(parsedList)
+
+          parsedList.size > 1 -> {
+            throw IllegalStateException(
+              context.getString(R.string.source_contains_more_than_one_key)
+            )
+          }
+
+          else -> {
+            //check that all keys were fully decrypted when we fetched them.
+            // If any is encrypted at all, that's an unexpected error, we should throw an exception.
+            parsedList.forEach {
+              if (!it.isFullyDecrypted) {
+                throw IllegalStateException(
+                  context.getString(
+                    R.string.found_not_fully_decrypted_key_ask_admin,
+                    it.fingerprint
+                  )
+                )
+              }
+            }
+            pgpKeyDetailsList.addAll(parsedList)
+          }
         }
       }
 
