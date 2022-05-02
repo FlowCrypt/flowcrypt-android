@@ -219,7 +219,10 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   @Test
   fun testErrorGetPrvKeysViaEkmEmptyList() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST))
-    isDialogWithTextDisplayed(decorView, getResString(R.string.no_prv_keys_ask_admin))
+    isDialogWithTextDisplayed(
+      decorView,
+      "IllegalStateException:" + getResString(R.string.no_prv_keys_ask_admin)
+    )
     onView(withText(R.string.retry))
       .check(matches(isDisplayed()))
   }
@@ -235,7 +238,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
       "pgp/keys/user_with_not_fully_decrypted_prv_key@flowcrypt.test_prv_default.asc"
     )
     isDialogWithTextDisplayed(
-      decorView, getResString(
+      decorView, "IllegalStateException:" + getResString(
         R.string.found_not_fully_decrypted_key_ask_admin,
         pgpKeyDetails.fingerprint
       )
@@ -308,7 +311,10 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
     )
-    isDialogWithTextDisplayed(decorView, ApiException(ApiError(code = 403, msg = "")).message!!)
+    isDialogWithTextDisplayed(
+      decorView,
+      "ApiException:" + ApiException(ApiError(code = 403, msg = "")).message!!
+    )
   }
 
   private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
