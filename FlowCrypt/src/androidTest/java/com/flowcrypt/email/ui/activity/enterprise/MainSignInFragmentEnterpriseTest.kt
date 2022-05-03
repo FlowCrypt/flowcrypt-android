@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.junit.annotations.DebugTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -67,10 +68,8 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
     )
   )
 
-  @get:Rule
-  val testNameRule = TestName()
-
-  val mockWebServerRule =
+  private val testNameRule = TestName()
+  private val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson =
@@ -109,6 +108,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
+    .around(testNameRule)
     .around(mockWebServerRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
@@ -298,6 +298,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
+  @DebugTest
   fun testFesServerUpGetClientConfigurationSuccess() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
@@ -307,6 +308,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
+  @DebugTest
   fun testFesServerUpGetClientConfigurationFailed() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
