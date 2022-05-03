@@ -15,7 +15,6 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.util.GeneralUtil
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -36,7 +35,6 @@ class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(a
         Result.loading(progressMsg = context.getString(R.string.loading))
 
       try {
-        delay(10000)
         val result = repository.checkFes(
           context = getApplication(),
           domain = EmailUtil.getDomain(account)

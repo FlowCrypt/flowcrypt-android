@@ -25,7 +25,6 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
-import com.flowcrypt.email.junit.annotations.DebugTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -42,6 +41,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -73,38 +73,32 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(getTargetContext()).gson
 
-        var response: MockResponse? = null
         if (request.path?.startsWith("/api") == true) {
           if (request.path.equals("/api/")) {
-            response = handleFesAvailabilityAPI(gson)
+            return handleFesAvailabilityAPI(gson)
           }
 
           if (request.path.equals("/api/v1/client-configuration?domain=localhost:1212")) {
-            response = handleClientConfigurationAPI(gson)
+            return handleClientConfigurationAPI(gson)
           }
         }
 
         if (request.path?.startsWith("/ekm") == true) {
-          handleEkmAPI(request, gson)?.let { response = it }
+          handleEkmAPI(request, gson)?.let { return it }
         }
 
         val model =
           gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
 
         if (request.path.equals("/account/login")) {
-          response = handleLoginAPI(model, gson)
+          return handleLoginAPI(model, gson)
         }
 
         if (request.path.equals("/account/get")) {
-          response = handleGetDomainRulesAPI(model, gson)
+          return handleGetDomainRulesAPI(model, gson)
         }
 
-        if (response?.status == "HTTP/1.1 404 Client Error") {
-          response?.setBody("request.path = " + request.path + " | testNameRule.methodName = " + testNameRule.methodName)
-        }
-
-        return response ?: MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-          .setBody("request.path = " + request.path + " | testNameRule.methodName = " + testNameRule.methodName)
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
     })
 
@@ -302,6 +296,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
+  @Ignore("emulator can't resolve fes.localhost. Temporary disabled")
   fun testFesServerUpGetClientConfigurationSuccess() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
@@ -311,7 +306,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
-  @DebugTest
+  @Ignore("emulator can't resolve fes.localhost. Temporary disabled")
   fun testFesServerUpGetClientConfigurationFailed() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
