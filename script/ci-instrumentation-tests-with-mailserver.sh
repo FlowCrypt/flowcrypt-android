@@ -7,4 +7,4 @@
 # com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
 
 ./gradlew --console=plain :FlowCrypt:connectedDevTestDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DependsOnMailServerFilter
+    -Pandroid.testInstrumentationRunnerArguments.annotation=com.flowcrypt.email.junit.annotations.DebugTest
