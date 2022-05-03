@@ -514,7 +514,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS, Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showDialogWithRetryButton(
-            "it.status:${it.status} + it.data:${it.data}",
+            "it.status:${it.status} + it.data:${it.data} + it.exception:${it.exceptionMsg}",
             REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
           )
           /*if ("enterprise-server" == it.data?.service) {
