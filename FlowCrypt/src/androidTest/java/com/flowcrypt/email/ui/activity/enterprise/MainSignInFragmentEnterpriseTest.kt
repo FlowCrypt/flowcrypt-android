@@ -75,32 +75,37 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
         val gson =
           ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
 
+        var response: MockResponse? = null
         if (request.path?.startsWith("/api") == true) {
           if (request.path.equals("/api/")) {
-            return handleFesAvailabilityAPI(gson)
+            response = handleFesAvailabilityAPI(gson)
           }
 
           if (request.path.equals("/api/v1/client-configuration?domain=localhost:1212")) {
-            return handleClientConfigurationAPI(gson)
+            response = handleClientConfigurationAPI(gson)
           }
         }
 
         if (request.path?.startsWith("/ekm") == true) {
-          handleEkmAPI(request, gson)?.let { return it }
+          handleEkmAPI(request, gson)?.let { response = it }
         }
 
         val model =
           gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
 
         if (request.path.equals("/account/login")) {
-          return handleLoginAPI(model, gson)
+          response = handleLoginAPI(model, gson)
         }
 
         if (request.path.equals("/account/get")) {
-          return handleGetDomainRulesAPI(model, gson)
+          response = handleGetDomainRulesAPI(model, gson)
         }
 
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        if (response?.status == "HTTP/1.1 404 Client Error") {
+          response?.setBody("request.path = " + request.path + " | testNameRule.methodName = " + testNameRule.methodName)
+        }
+
+        return response ?: MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
           .setBody("request.path = " + request.path + " | testNameRule.methodName = " + testNameRule.methodName)
       }
     })
