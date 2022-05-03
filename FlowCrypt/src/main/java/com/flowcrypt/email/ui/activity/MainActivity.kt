@@ -26,6 +26,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -42,16 +43,21 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showFeedbackFragment
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RefreshPrivateKeysFromEkmViewModel
 import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
@@ -61,8 +67,11 @@ import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
+import com.flowcrypt.email.util.exception.CommonConnectionException
+import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -81,11 +90,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private val launcherViewModel: LauncherViewModel by viewModels()
   private val actionsViewModel: ActionsViewModel by viewModels()
   private val labelsViewModel: LabelsViewModel by viewModels()
+  private val refreshPrivateKeysFromEkmViewModel: RefreshPrivateKeysFromEkmViewModel by viewModels()
 
   private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
   private val resultBundle: Bundle? = null
   private var actionBarDrawerToggle: ActionBarDrawerToggle? = null
-  private var isUpdateOrgRulesRequired: Boolean = true
+  private var isUpdateFromEnterpriseApisRequired: Boolean = true
 
   private val idleServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, service: IBinder) {}
@@ -121,6 +131,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     setupLabelsViewModel()
 
     handleLogoutFromSystemSettings(intent)
+
+    subscribeToCollectRefreshPrivateKeysFromEkm()
+    subscribeToFixNeedPassphraseIssueDialogFragment()
   }
 
   override fun onStart() {
@@ -397,18 +410,70 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
        * The app moved to background
        */
       override fun onStop(owner: LifecycleOwner) {
-        isUpdateOrgRulesRequired = true
+        isUpdateFromEnterpriseApisRequired = true
       }
     })
   }
 
   private fun tryToUpdateOrgRules() {
-    if (isUpdateOrgRulesRequired
+    if (isUpdateFromEnterpriseApisRequired
       && navController.currentDestination?.id == R.id.messagesListFragment
     ) {
       RefreshClientConfigurationWorker.enqueue(applicationContext)
-      isUpdateOrgRulesRequired = false
+      refreshPrivateKeysFromEkmViewModel.refreshPrivateKeys()
+      isUpdateFromEnterpriseApisRequired = false
     }
+  }
+
+  private fun subscribeToCollectRefreshPrivateKeysFromEkm() {
+    lifecycleScope.launchWhenStarted {
+      refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> FlavorSettings.getCountingIdlingResource().incrementSafely()
+          Result.Status.SUCCESS -> FlavorSettings.getCountingIdlingResource().decrementSafely()
+          Result.Status.EXCEPTION -> {
+            it.exception?.let { exception ->
+              when (exception) {
+                is EmptyPassphraseException -> {
+                  showNeedPassphraseDialog(
+                    navController = navController,
+                    fingerprints = exception.fingerprints,
+                    logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
+                    requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM,
+                    customTitle = getString(
+                      R.string.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
+                    ),
+                    showKeys = false
+                  )
+                }
+
+                !is CommonConnectionException -> {
+                  showInfoDialog(
+                    dialogMsg = it.exceptionMsg,
+                    dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
+                  )
+                }
+              }
+            }
+            FlavorSettings.getCountingIdlingResource().decrementSafely()
+          }
+          else -> {}
+        }
+      }
+    }
+  }
+
+  private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
+    binding.fragmentContainerView.getFragment<Fragment>().childFragmentManager
+      .setFragmentResultListener(
+        FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT,
+        this
+      ) { _, bundle ->
+        val requestCode = bundle.getInt(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE)
+        if (requestCode == REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM) {
+          refreshPrivateKeysFromEkmViewModel.refreshPrivateKeys()
+        }
+      }
   }
 
   /**
@@ -459,6 +524,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   companion object {
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM = 1000
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =

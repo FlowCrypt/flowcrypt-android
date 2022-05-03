@@ -13,7 +13,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
@@ -42,6 +41,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -67,14 +67,11 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
     )
   )
 
-  @get:Rule
-  val testNameRule = TestName()
-
-  val mockWebServerRule =
+  private val testNameRule = TestName()
+  private val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson =
-          ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+        val gson = ApiHelper.getInstance(getTargetContext()).gson
 
         if (request.path?.startsWith("/api") == true) {
           if (request.path.equals("/api/")) {
@@ -109,6 +106,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
+    .around(testNameRule)
     .around(mockWebServerRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
@@ -219,7 +217,10 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   @Test
   fun testErrorGetPrvKeysViaEkmEmptyList() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST))
-    isDialogWithTextDisplayed(decorView, getResString(R.string.no_prv_keys_ask_admin))
+    isDialogWithTextDisplayed(
+      decorView,
+      "IllegalStateException:" + getResString(R.string.no_prv_keys_ask_admin)
+    )
     onView(withText(R.string.retry))
       .check(matches(isDisplayed()))
   }
@@ -235,7 +236,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
       "pgp/keys/user_with_not_fully_decrypted_prv_key@flowcrypt.test_prv_default.asc"
     )
     isDialogWithTextDisplayed(
-      decorView, getResString(
+      decorView, "IllegalStateException:" + getResString(
         R.string.found_not_fully_decrypted_key_ask_admin,
         pgpKeyDetails.fingerprint
       )
@@ -295,6 +296,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
+  @Ignore("emulator can't resolve fes.localhost. Temporary disabled")
   fun testFesServerUpGetClientConfigurationSuccess() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
@@ -304,11 +306,15 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   }
 
   @Test
+  @Ignore("emulator can't resolve fes.localhost. Temporary disabled")
   fun testFesServerUpGetClientConfigurationFailed() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
     )
-    isDialogWithTextDisplayed(decorView, ApiException(ApiError(code = 403, msg = "")).message!!)
+    isDialogWithTextDisplayed(
+      decorView,
+      "ApiException:" + ApiException(ApiError(code = 403, msg = "")).message!!
+    )
   }
 
   private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
@@ -319,42 +325,46 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
         Thread.sleep(100)
       }
       MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-    } else {
-      when {
-        testNameRule.methodName == "testFesServerUpHasConnectionHttpCode404" -> {
-          MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        }
+    } else when (testNameRule.methodName) {
+      "testFesServerUpHasConnectionHttpCode404" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
 
-        testNameRule.methodName == "testFesServerUpHasConnectionHttpCodeNotSuccess" -> {
-          MockResponse().setResponseCode(500)
-        }
+      "testFesServerUpHasConnectionHttpCodeNotSuccess" -> {
+        MockResponse().setResponseCode(500)
+      }
 
-        testNameRule.methodName == "testFesServerUpNotEnterpriseServer" -> {
-          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-            .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
-        }
+      "testFesServerUpNotEnterpriseServer" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
+      }
 
-        else -> {
-          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-            .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
-        }
+      else -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
       }
     }
   }
 
   private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
-    return MockResponse().setResponseCode(
-      if (testNameRule.methodName == "testFesServerUpGetClientConfigurationFailed") 403 else HttpURLConnection.HTTP_OK
-    ).setBody(
-      gson.toJson(
-        ClientConfigurationResponse(
-          orgRules = OrgRules(
-            flags = ACCEPTED_ORG_RULES,
-            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+    val returnError = testNameRule.methodName == "testFesServerUpGetClientConfigurationFailed"
+    return MockResponse()
+      .setResponseCode(
+        if (returnError) HttpURLConnection.HTTP_FORBIDDEN else HttpURLConnection.HTTP_OK
+      ).apply {
+        if (!returnError) {
+          setBody(
+            gson.toJson(
+              ClientConfigurationResponse(
+                orgRules = OrgRules(
+                  flags = ACCEPTED_ORG_RULES,
+                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+                )
+              )
+            )
           )
-        )
-      )
-    )
+        }
+      }
   }
 
   private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
@@ -499,14 +509,25 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
       EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
 
-      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      EMAIL_DOMAIN_ORG_RULES_ERROR,
+      EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS,
+      EMAIL_FES_CLIENT_CONFIGURATION_FAILED,
+      EMAIL_WITH_NO_PRV_CREATE_RULE,
+      EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST,
+      EMAIL_FES_REQUEST_TIME_OUT,
+      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS,
+      EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED,
+      EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED,
+      EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING,
+      EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED,
+      EMAIL_FES_NOT_ENTERPRISE_SERVER,
+      EMAIL_FORBID_STORING_PASS_PHRASE_MISSING,
+      EMAIL_GET_KEYS_VIA_EKM_ERROR,
+      EMAIL_FES_HTTP_404
+      -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
 
-      EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-
-      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
     }
   }
 
@@ -560,21 +581,21 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
 
     private val LOGIN_API_ERROR_RESPONSE = LoginResponse(
       ApiError(
-        400, "Something wrong happened.",
+        HttpURLConnection.HTTP_BAD_REQUEST, "Something wrong happened.",
         "api input: missing key: token"
       ), null
     )
 
     private val DOMAIN_ORG_RULES_ERROR_RESPONSE = DomainOrgRulesResponse(
       ApiError(
-        401,
+        HttpURLConnection.HTTP_UNAUTHORIZED,
         "Not logged in or unknown account", "auth"
       ), null
     )
 
     private const val EKM_ERROR = "some error"
     private val EKM_ERROR_RESPONSE = EkmPrivateKeysResponse(
-      code = 400,
+      code = HttpURLConnection.HTTP_BAD_REQUEST,
       message = EKM_ERROR
     )
 

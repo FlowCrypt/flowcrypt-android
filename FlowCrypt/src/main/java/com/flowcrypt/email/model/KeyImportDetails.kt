@@ -72,7 +72,7 @@ data class KeyImportDetails constructor(
    * The key available types.
    */
   enum class SourceType : Parcelable {
-    EMAIL, FILE, CLIPBOARD, NEW, MANUAL_ENTERING;
+    EMAIL, FILE, CLIPBOARD, NEW, MANUAL_ENTERING, EKM;
 
     companion object {
       @JvmField
@@ -92,7 +92,7 @@ data class KeyImportDetails constructor(
 
     fun toPrivateKeySourceTypeString(): String {
       return when (this) {
-        EMAIL -> PrivateKeySourceType.BACKUP
+        EMAIL, EKM -> PrivateKeySourceType.BACKUP
         FILE, CLIPBOARD, MANUAL_ENTERING -> PrivateKeySourceType.IMPORT
         NEW -> PrivateKeySourceType.NEW
       }.toString()

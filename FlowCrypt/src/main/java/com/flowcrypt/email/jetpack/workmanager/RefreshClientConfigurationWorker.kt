@@ -34,32 +34,31 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
     LogsUtil.d(TAG, "doWork")
     val repository = FlowcryptApiRepository()
     val publicEmailDomains = EmailUtil.getPublicEmailDomains()
+    val account = roomDatabase.accountDao().getActiveAccount() ?: return Result.success()
 
-    for (account in roomDatabase.accountDao().getAccounts()) {
-      val domain = EmailUtil.getDomain(account.email)
-      if (domain in publicEmailDomains) {
-        continue
-      }
+    val domain = EmailUtil.getDomain(account.email)
+    if (domain in publicEmailDomains) {
+      return Result.success()
+    }
 
-      val fesUrl = GeneralUtil.generateFesUrl(domain)
-      val uuid = account.uuid ?: continue
-      try {
-        val result = repository.getDomainOrgRules(
-          context = applicationContext,
-          loginModel = LoginModel(account.email, uuid),
-          fesUrl = fesUrl
-        )
+    val fesUrl = GeneralUtil.generateFesUrl(domain)
+    val uuid = account.uuid ?: return Result.success()
+    try {
+      val result = repository.getDomainOrgRules(
+        context = applicationContext,
+        loginModel = LoginModel(account.email, uuid),
+        fesUrl = fesUrl
+      )
 
-        if (result.status == Status.SUCCESS) {
-          val fetchedOrgRules = (result.data as? DomainOrgRulesResponse)?.orgRules
-            ?: (result.data as? ClientConfigurationResponse)?.orgRules
-          fetchedOrgRules?.let { orgRules ->
-            roomDatabase.accountDao().updateSuspend(account.copy(clientConfiguration = orgRules))
-          }
+      if (result.status == Status.SUCCESS) {
+        val fetchedOrgRules = (result.data as? DomainOrgRulesResponse)?.orgRules
+          ?: (result.data as? ClientConfigurationResponse)?.orgRules
+        fetchedOrgRules?.let { orgRules ->
+          roomDatabase.accountDao().updateSuspend(account.copy(clientConfiguration = orgRules))
         }
-      } catch (e: Exception) {
-        e.printStackTrace()
       }
+    } catch (e: Exception) {
+      e.printStackTrace()
     }
 
     LogsUtil.d(TAG, "work was finished")

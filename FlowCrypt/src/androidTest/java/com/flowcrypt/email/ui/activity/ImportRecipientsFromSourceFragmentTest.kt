@@ -169,7 +169,7 @@ class ImportRecipientsFromSourceFragmentTest : BaseTest() {
       .perform(click())
 
     //due to realization of MockWebServer I can't produce the same response.
-    isDialogWithTextDisplayed(decorView, "API error: code = 404, message = ")
+    isDialogWithTextDisplayed(decorView, "API error: code = 404, message = Public key not found")
   }
 
   @Test

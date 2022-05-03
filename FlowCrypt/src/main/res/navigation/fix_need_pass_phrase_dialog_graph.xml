@@ -21,6 +21,19 @@
             android:name="logicType"
             android:defaultValue="0L"
             app:argType="long" />
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="customTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="showKeys"
+            android:defaultValue="true"
+            app:argType="boolean" />
     </dialog>
 
 </navigation>

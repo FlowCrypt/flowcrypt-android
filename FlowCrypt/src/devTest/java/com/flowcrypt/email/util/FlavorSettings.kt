@@ -7,7 +7,7 @@ package com.flowcrypt.email.util
 
 import android.content.Context
 import androidx.test.espresso.idling.CountingIdlingResource
-import java.util.Properties
+import java.util.UUID
 
 /**
  * @author Denis Bondarenko
@@ -21,9 +21,8 @@ object FlavorSettings : EnvironmentSettings {
     GeneralUtil.isDebugBuild()
   )
 
-  override fun sslTrustedDomains(): List<String> = emptyList()
-  override fun getFlavorPropertiesForSession() = Properties()
   override fun isGMailAPIEnabled(): Boolean = false
   override fun configure(context: Context) {}
   override fun getCountingIdlingResource() = countingIdlingResource
+  override fun getGoogleIdToken(): String? = UUID.randomUUID().toString()
 }

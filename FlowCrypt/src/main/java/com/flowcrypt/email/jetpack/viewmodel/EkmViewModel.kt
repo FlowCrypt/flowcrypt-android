@@ -91,7 +91,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
               }
             }
             pgpKeyDetailsList.addAll(parsedList.map {
-              it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
+              it.copy(importSourceType = KeyImportDetails.SourceType.EKM)
             })
           }
         }
