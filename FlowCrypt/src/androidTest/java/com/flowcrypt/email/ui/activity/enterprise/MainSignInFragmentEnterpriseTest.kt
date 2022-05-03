@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
@@ -47,6 +48,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 
 /**
@@ -69,8 +71,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   private val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        /*val gson =
-          ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+        val gson = ApiHelper.getInstance(getTargetContext()).gson
 
         var response: MockResponse? = null
         if (request.path?.startsWith("/api") == true) {
@@ -100,9 +101,9 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
 
         if (response?.status == "HTTP/1.1 404 Client Error") {
           response?.setBody("request.path = " + request.path + " | testNameRule.methodName = " + testNameRule.methodName)
-        }*/
+        }
 
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_METHOD)
+        return response ?: MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_METHOD)
           .setBody("request.path = " + request.path + " | testNameRule.methodName = " + testNameRule.methodName)
       }
     })
