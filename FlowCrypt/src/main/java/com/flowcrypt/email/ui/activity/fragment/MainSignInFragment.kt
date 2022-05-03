@@ -55,7 +55,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
-import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
@@ -70,9 +69,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
-import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
-import javax.net.ssl.SSLException
 
 /**
  * @author Denis Bondarenko
@@ -515,8 +512,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           showProgress(progressMsg = it.progressMsg)
         }
 
-        Result.Status.SUCCESS -> {
-          if ("enterprise-server" == it.data?.service) {
+        Result.Status.SUCCESS, Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showDialogWithRetryButton(
+            "it.status:${it.status} + it.data:${it.data}",
+            REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
+          )
+          /*if ("enterprise-server" == it.data?.service) {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
               fesUrl = GeneralUtil.generateFesUrl(domain)
@@ -528,13 +529,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
           } else {
             continueBasedOnFlavorSettings()
-          }
+          }*/
 
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           countingIdlingResource?.decrementSafely()
         }
 
-        Result.Status.ERROR -> {
+        /*Result.Status.ERROR -> {
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
           countingIdlingResource?.decrementSafely()
@@ -580,7 +581,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           countingIdlingResource?.decrementSafely()
-        }
+        }*/
         else -> {}
       }
     }

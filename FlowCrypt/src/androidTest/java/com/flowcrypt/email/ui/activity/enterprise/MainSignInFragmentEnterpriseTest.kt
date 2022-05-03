@@ -330,25 +330,23 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
         Thread.sleep(100)
       }
       MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-    } else {
-      when {
-        testNameRule.methodName == "testFesServerUpHasConnectionHttpCode404" -> {
-          MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        }
+    } else when (testNameRule.methodName) {
+      "testFesServerUpHasConnectionHttpCode404" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
 
-        testNameRule.methodName == "testFesServerUpHasConnectionHttpCodeNotSuccess" -> {
-          MockResponse().setResponseCode(500)
-        }
+      "testFesServerUpHasConnectionHttpCodeNotSuccess" -> {
+        MockResponse().setResponseCode(500)
+      }
 
-        testNameRule.methodName == "testFesServerUpNotEnterpriseServer" -> {
-          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-            .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
-        }
+      "testFesServerUpNotEnterpriseServer" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
+      }
 
-        else -> {
-          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-            .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
-        }
+      else -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
       }
     }
   }

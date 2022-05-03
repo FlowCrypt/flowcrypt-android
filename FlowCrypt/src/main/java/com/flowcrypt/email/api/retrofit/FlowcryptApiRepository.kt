@@ -72,10 +72,6 @@ class FlowcryptApiRepository : ApiRepository {
     fesUrl: String?
   ): Result<ApiResponse> =
     withContext(Dispatchers.IO) {
-      if (fesUrl == null) {
-        throw IllegalStateException("fesUrl = $fesUrl, loginModel = $loginModel")
-      }
-
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       getResult(context = context) {
         if (fesUrl != null) {
