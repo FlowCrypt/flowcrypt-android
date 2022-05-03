@@ -101,6 +101,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
         }
 
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+          .setBody("request.path = " + request.path + " | testNameRule.methodName = " + testNameRule.methodName)
       }
     })
 
