@@ -12,8 +12,6 @@ ext {
     compileSdkVersion = 31
     targetSdkVersion = 31
     minSdkVersion = 26
-    /*https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android*/
-    leakcanaryVersion = '2.8.1'
     /*https://mvnrepository.com/artifact/com.sun.mail/android-mail*/
     javaMailVersion = '1.6.7'
     /*https://mvnrepository.com/artifact/com.github.bumptech.glide/glide*/
