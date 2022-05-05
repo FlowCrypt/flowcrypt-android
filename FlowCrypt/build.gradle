@@ -441,8 +441,8 @@ dependencies {
         exclude group: 'org.bouncycastle'
     }
 
-    implementation "org.bouncycastle:bcprov-jdk15to18:${rootProject.ext.bouncycastleVersion}"
-    implementation "org.bouncycastle:bcpg-jdk15to18:${rootProject.ext.bouncycastleVersion}"
+    implementation "org.bouncycastle:bcprov-jdk15to18:1.71"
+    implementation "org.bouncycastle:bcpg-jdk15to18:1.71"
 
     implementation 'ch.acra:acra-http:5.9.3'
     //ACRA needs the following dependency to use a custom report sender

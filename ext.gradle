@@ -12,6 +12,4 @@ ext {
     compileSdkVersion = 31
     targetSdkVersion = 31
     minSdkVersion = 26
-    /*https://mvnrepository.com/search?q=org.bouncycastle*/
-    bouncycastleVersion = '1.71'
 }
