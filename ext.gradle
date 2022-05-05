@@ -12,8 +12,6 @@ ext {
     compileSdkVersion = 31
     targetSdkVersion = 31
     minSdkVersion = 26
-    /*https://mvnrepository.com/artifact/com.squareup.okio/okio*/
-    okioVersion = '2.10.0'
     /*https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android*/
     leakcanaryVersion = '2.8.1'
     /*https://mvnrepository.com/artifact/com.sun.mail/android-mail*/
