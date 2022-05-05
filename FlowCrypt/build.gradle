@@ -433,6 +433,14 @@ dependencies {
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20211018.2'
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
+
+    constraints {
+        //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
+        implementation('commons-codec:commons-codec:1.15') {
+            because 'version 1.11 has VULNERABILITY DESCRIPTION CWE-200'
+        }
+    }
+
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
 
     implementation('org.pgpainless:pgpainless-core:1.2.0') {
