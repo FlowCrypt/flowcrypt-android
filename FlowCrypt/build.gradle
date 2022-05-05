@@ -400,7 +400,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:20.2.0'
 
     //https://mvnrepository.com/artifact/com.google.android.material/material
-    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'com.google.android.material:material:1.6.0'
 
     //https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.9.0'
