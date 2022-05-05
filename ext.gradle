@@ -12,8 +12,6 @@ ext {
     compileSdkVersion = 31
     targetSdkVersion = 31
     minSdkVersion = 26
-    /*https://developer.android.com/jetpack/androidx/androidx-rn*/
-    androidxBaseVersion = '1.0.0'
     /* https://developer.android.com/jetpack/androidx/releases/recyclerview*/
     recyclerViewVersion = '1.2.1'
     /* https://developer.android.com/jetpack/androidx/releases/lifecycle*/
