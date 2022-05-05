@@ -12,8 +12,6 @@ ext {
     compileSdkVersion = 31
     targetSdkVersion = 31
     minSdkVersion = 26
-    /* https://mvnrepository.com/artifact/androidx.test.espresso*/
-    espressoVersion = '3.4.0'
     /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
     retrofitVersion = '2.9.0'
     /*https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor*/
