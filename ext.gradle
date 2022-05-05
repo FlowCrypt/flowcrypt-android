@@ -12,8 +12,6 @@ ext {
     compileSdkVersion = 31
     targetSdkVersion = 31
     minSdkVersion = 26
-    /* https://developer.android.com/jetpack/androidx/releases/paging#declaring_dependencies*/
-    pagingVersion = '2.1.2'
     /*https://developer.android.com/jetpack/androidx/releases/navigation*/
     navVersion = '2.3.5'
     /* https://mvnrepository.com/artifact/androidx.test.espresso*/
