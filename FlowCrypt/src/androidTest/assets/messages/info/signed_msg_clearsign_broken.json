@@ -9,7 +9,7 @@
     {
       "content": "-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA512\n\nSome important text that is signed\n-----BEGIN PGP SIGNATURE-----\nVersion: PGPainless\n\niHUEARYKAAYFAmFm9GEAIQkQwyCJzWr41s4WIQTBZCjWAcs5N4nPYdTDIInNavjW\nVMWbrRaCiEghT5b3tpYn6jzVDenjxwg\u003d\n\u003dvdIK\n-----END PGP SIGNATURE-----",
       "error": {
-        "errorMsg": "[FinalIOException]: java.io.IOException: crc check failed in armored message."
+        "errorMsg": "[IOException]: crc check failed in armored message."
       },
       "isOpenPGPMimeSigned": false,
       "type": "signedContent"
