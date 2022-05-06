@@ -435,7 +435,7 @@ dependencies {
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
 
-    implementation('org.pgpainless:pgpainless-core:1.2.0') {
+    implementation('org.pgpainless:pgpainless-core:1.2.2') {
         /*exclude group: 'org.bouncycastle' because we have to specify it manually and update
         gradle.properties android.jetifier.ignorelist=bcprov-version.jar if needed*/
         exclude group: 'org.bouncycastle'
