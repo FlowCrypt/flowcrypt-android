@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.extensions
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBar
@@ -12,12 +13,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
+import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragmentArgs
 import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.material.appbar.AppBarLayout
 
@@ -186,4 +191,34 @@ fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
 
 fun androidx.fragment.app.Fragment.showFeedbackFragment() {
   showFeedbackFragment(requireActivity(), navController)
+}
+
+fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
+  isPrivateKeyMode: Boolean
+) {
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override fun getActionId() = R.id.findKeysInClipboardDialogFragment
+      override fun getArguments() = FindKeysInClipboardDialogFragmentArgs(
+        isPrivateKeyMode = isPrivateKeyMode
+      ).toBundle()
+    }
+  }
+}
+
+fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
+  source: String? = null,
+  uri: Uri? = null,
+  @ParsePgpKeysFromSourceDialogFragment.FilterType filterType: Long
+) {
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override fun getActionId() = R.id.parsePgpKeysFromSourceDialogFragment
+      override fun getArguments() = ParsePgpKeysFromSourceDialogFragmentArgs(
+        source = source,
+        uri = uri,
+        filterType = filterType
+      ).toBundle()
+    }
+  }
 }
