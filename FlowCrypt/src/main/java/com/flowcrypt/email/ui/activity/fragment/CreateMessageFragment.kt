@@ -133,7 +133,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val composeMsgViewModel: ComposeMsgViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
-      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ComposeMsgViewModel(args.encryptedByDefault, requireActivity().application) as T
       }
     }

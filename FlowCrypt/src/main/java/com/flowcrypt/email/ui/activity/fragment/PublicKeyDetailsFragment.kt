@@ -69,7 +69,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   private val publicKeyDetailsViewModel: PublicKeyDetailsViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
-      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return PublicKeyDetailsViewModel(args.publicKeyEntity, requireActivity().application) as T
       }
     }
