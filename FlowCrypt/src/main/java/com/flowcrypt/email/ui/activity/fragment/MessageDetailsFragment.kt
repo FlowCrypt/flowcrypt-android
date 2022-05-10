@@ -36,6 +36,8 @@ import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -77,7 +79,6 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
@@ -141,7 +142,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private val args by navArgs<MessageDetailsFragmentArgs>()
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
-    MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
+    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return MsgDetailsViewModel(
+          args.localFolder, args.messageEntity, requireActivity().application
+        ) as T
+      }
+    }
   }
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
