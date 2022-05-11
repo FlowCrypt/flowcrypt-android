@@ -13,11 +13,12 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentEditContactBinding
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
@@ -57,20 +58,16 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
   }
 
   override fun handleSelectedFile(uri: Uri) {
-    navController?.navigate(
-      NavGraphDirections.actionGlobalParsePgpKeysFromSourceDialogFragment(
-        uri = uri,
-        filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
-      )
+    showParsePgpKeysFromSourceDialogFragment(
+      uri = uri,
+      filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
   }
 
   override fun handleClipboard(pgpKeysAsString: String?) {
-    navController?.navigate(
-      NavGraphDirections.actionGlobalParsePgpKeysFromSourceDialogFragment(
-        source = pgpKeysAsString,
-        filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
-      )
+    showParsePgpKeysFromSourceDialogFragment(
+      source = pgpKeysAsString,
+      filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
   }
 
@@ -99,18 +96,14 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
 
     binding?.buttonCheck?.setOnClickListener {
       importSourceType = KeyImportDetails.SourceType.MANUAL_ENTERING
-      navController?.navigate(
-        NavGraphDirections.actionGlobalParsePgpKeysFromSourceDialogFragment(
-          source = binding?.editTextNewPubKey?.text.toString(),
-          filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
-        )
+      showParsePgpKeysFromSourceDialogFragment(
+        source = binding?.editTextNewPubKey?.text.toString(),
+        filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
       )
     }
 
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
-      )
+      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {

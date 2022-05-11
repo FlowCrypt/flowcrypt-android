@@ -9,11 +9,12 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/messagesListFragment">
 
-    <include app:graph="@navigation/create_msg_graph" />
     <include app:graph="@navigation/info_dialog_graph" />
     <include app:graph="@navigation/two_way_dialog_graph" />
     <include app:graph="@navigation/fix_need_pass_phrase_dialog_graph" />
     <include app:graph="@navigation/feedback_graph" />
+    <include app:graph="@navigation/parse_keys_from_source_dialog_graph" />
+    <include app:graph="@navigation/find_keys_in_clipboard_dialog_graph" />
 
     <fragment
         android:id="@+id/mainSignInFragment"
@@ -485,9 +486,6 @@
             android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"
             app:destination="@id/messageDetailsFragment" />
         <action
-            android:id="@+id/action_messagesListFragment_to_create_msg_graph"
-            app:destination="@id/create_msg_graph" />
-        <action
             android:id="@+id/action_messagesListFragment_to_mainSignInFragment"
             app:destination="@id/mainSignInFragment" />
     </fragment>
@@ -529,15 +527,6 @@
     </dialog>
 
     <dialog
-        android:id="@+id/findKeysInClipboardDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment"
-        tools:layout="@layout/fragment_find_keys_in_clipboard">
-        <argument
-            android:name="isPrivateKeyMode"
-            app:argType="boolean" />
-    </dialog>
-
-    <dialog
         android:id="@+id/importAllPubKeysFromSourceDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment"
         tools:layout="@layout/fragment_import_all_pub_keys_from_source" />
@@ -553,26 +542,6 @@
         <argument
             android:name="attachmentInfo"
             app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
-    </dialog>
-
-    <dialog
-        android:id="@+id/parsePgpKeysFromSourceDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment"
-        tools:layout="@layout/fragment_parse_pgp_keys_from_source">
-        <argument
-            android:name="source"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="uri"
-            android:defaultValue="@null"
-            app:argType="android.net.Uri"
-            app:nullable="true" />
-        <argument
-            android:name="filterType"
-            android:defaultValue="0L"
-            app:argType="long" />
     </dialog>
 
     <dialog
@@ -603,14 +572,8 @@
         android:id="@+id/action_global_lookUpPubKeysDialogFragment"
         app:destination="@id/lookUpPubKeysDialogFragment" />
     <action
-        android:id="@+id/action_global_findKeysInClipboardDialogFragment"
-        app:destination="@id/findKeysInClipboardDialogFragment" />
-    <action
         android:id="@+id/action_global_htmlViewFromAssetsRawFragment"
         app:destination="@id/htmlViewFromAssetsRawFragment" />
-    <action
-        android:id="@+id/action_global_parsePgpKeysFromSourceDialogFragment"
-        app:destination="@id/parsePgpKeysFromSourceDialogFragment" />
     <action
         android:id="@+id/action_global_feedbackFragment"
         app:destination="@id/feedbackFragment" />

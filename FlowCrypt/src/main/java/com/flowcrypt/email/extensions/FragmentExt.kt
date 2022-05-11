@@ -198,7 +198,7 @@ fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
-      override fun getActionId() = R.id.findKeysInClipboardDialogFragment
+      override fun getActionId() = R.id.find_keys_in_clipboard_dialog_graph
       override fun getArguments() = FindKeysInClipboardDialogFragmentArgs(
         isPrivateKeyMode = isPrivateKeyMode
       ).toBundle()
@@ -213,7 +213,7 @@ fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
-      override fun getActionId() = R.id.parsePgpKeysFromSourceDialogFragment
+      override fun getActionId() = R.id.parse_keys_from_source_dialog_graph
       override fun getArguments() = ParsePgpKeysFromSourceDialogFragmentArgs(
         source = source,
         uri = uri,

@@ -9,11 +9,12 @@
     android:id="@+id/create_msg_graph"
     app:startDestination="@id/createMessageFragment">
 
-
     <include app:graph="@navigation/info_dialog_graph" />
     <include app:graph="@navigation/two_way_dialog_graph" />
     <include app:graph="@navigation/fix_need_pass_phrase_dialog_graph" />
     <include app:graph="@navigation/feedback_graph" />
+    <include app:graph="@navigation/parse_keys_from_source_dialog_graph" />
+    <include app:graph="@navigation/find_keys_in_clipboard_dialog_graph" />
 
     <fragment
         android:id="@+id/createMessageFragment"

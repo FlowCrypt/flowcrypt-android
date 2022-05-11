@@ -99,7 +99,7 @@ class ImportMissingPublicKeyFragment :
 
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(false)
+      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
