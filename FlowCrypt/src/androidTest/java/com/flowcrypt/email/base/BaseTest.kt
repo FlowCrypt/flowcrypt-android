@@ -5,9 +5,12 @@
 
 package com.flowcrypt.email.base
 
+import android.app.Activity
+import android.app.Instrumentation
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.text.Html
 import android.view.View
@@ -24,6 +27,10 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -269,6 +276,16 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   fun registerAllIdlingResources() {
     registerCountingIdlingResource()
+  }
+
+  fun intendingActivityResultContractsGetContent(resultData: Intent, type: String = "*/*") {
+    intending(
+      Matchers.allOf(
+        hasAction(Intent.ACTION_GET_CONTENT),
+        hasCategories(Matchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
+        hasType(type)
+      )
+    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
   }
 
   inline fun <reified F : Fragment> launchFragmentInContainer(
