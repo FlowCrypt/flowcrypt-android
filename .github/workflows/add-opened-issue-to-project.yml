@@ -1,0 +1,16 @@
+name: Add an opened issue to the project
+# https://github.com/marketplace/actions/add-to-github-projects-beta
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  add-to-project:
+    name: Add issue to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v0.0.3
+        with:
+          project-url: https://github.com/orgs/FlowCrypt/projects/1
+          github-token: ${{ secrets.FLOWCRYPT_ROBOT_ACCESS_TOKEN }}
