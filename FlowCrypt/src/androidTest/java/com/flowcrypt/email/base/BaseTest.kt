@@ -48,6 +48,8 @@ import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.`is`
@@ -56,8 +58,6 @@ import org.junit.After
 import org.junit.Before
 import java.io.InputStream
 import java.util.Properties
-import javax.mail.Session
-import javax.mail.internet.MimeMessage
 
 /**
  * The base test implementation.

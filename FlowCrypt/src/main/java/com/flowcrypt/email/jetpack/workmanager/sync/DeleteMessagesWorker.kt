@@ -21,13 +21,13 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPStore
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.util.*
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.Store
+import java.util.Locale
 
 
 /**
@@ -57,7 +57,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
         GmailApiHelper.moveToTrash(
           context = applicationContext,
           accountEntity = account,
-          ids = uidList.map { java.lang.Long.toHexString(it).toLowerCase(Locale.US) })
+          ids = uidList.map { java.lang.Long.toHexString(it).lowercase(Locale.US) })
         //need to wait while the Gmail server will update labels
         delay(2000)
       }

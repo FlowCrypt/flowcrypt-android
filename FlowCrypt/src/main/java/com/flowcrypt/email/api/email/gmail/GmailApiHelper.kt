@@ -53,6 +53,11 @@ import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import com.sun.mail.gimap.GmailRawSearchTerm
+import jakarta.mail.Flags
+import jakarta.mail.MessagingException
+import jakarta.mail.Part
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -68,11 +73,6 @@ import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Properties
-import javax.mail.Flags
-import javax.mail.MessagingException
-import javax.mail.Part
-import javax.mail.Session
-import javax.mail.internet.MimeMessage
 import javax.net.ssl.SSLException
 
 /**
@@ -630,7 +630,7 @@ class GmailApiHelper {
     suspend fun sendMsg(
       context: Context,
       account: AccountEntity,
-      mimeMessage: javax.mail.Message
+      mimeMessage: jakarta.mail.Message
     ): Boolean = withContext(Dispatchers.IO) {
       val gmail = generateGmailApiService(context, account)
       val outputStream = ByteArrayOutputStream()

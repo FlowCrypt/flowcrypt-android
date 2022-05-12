@@ -7,15 +7,15 @@
 package com.flowcrypt.email.core.msg
 
 import com.flowcrypt.email.core.msg.RawBlockParser.RawBlock
+import com.flowcrypt.email.extensions.jakarta.mail.baseContentType
+import com.flowcrypt.email.extensions.jakarta.mail.isInline
 import com.flowcrypt.email.extensions.java.io.readText
-import com.flowcrypt.email.extensions.javax.mail.baseContentType
-import com.flowcrypt.email.extensions.javax.mail.isInline
 import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
+import jakarta.mail.Part
+import jakarta.mail.internet.MimePart
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
-import javax.mail.Part
-import javax.mail.internet.MimePart
 
 /**
  * This class is responsible for analyzing input source and extract [RawBlock] that can contain

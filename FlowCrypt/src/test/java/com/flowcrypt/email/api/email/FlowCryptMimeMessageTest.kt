@@ -5,12 +5,12 @@
 
 package com.flowcrypt.email.api.email
 
-import com.flowcrypt.email.extensions.javax.mail.internet.domain
+import com.flowcrypt.email.extensions.jakarta.mail.internet.domain
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.Properties
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko

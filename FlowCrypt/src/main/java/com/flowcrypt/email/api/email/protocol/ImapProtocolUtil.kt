@@ -8,12 +8,12 @@ package com.flowcrypt.email.api.email.protocol
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.BodyPart
+import jakarta.mail.MessagingException
+import jakarta.mail.Multipart
+import jakarta.mail.Part
+import jakarta.mail.internet.MimePart
 import java.io.InputStream
-import javax.mail.BodyPart
-import javax.mail.MessagingException
-import javax.mail.Multipart
-import javax.mail.Part
-import javax.mail.internet.MimePart
 
 /**
  * This class describes custom realization of some IMAP futures, which not found in JavaMail implementation.

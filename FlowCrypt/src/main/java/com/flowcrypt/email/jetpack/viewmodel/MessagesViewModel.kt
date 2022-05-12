@@ -13,7 +13,9 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Config
 import androidx.paging.PagedList
-import androidx.paging.toLiveData
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.liveData
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -43,6 +45,14 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.FetchProfile
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.Session
+import jakarta.mail.Store
+import jakarta.mail.UIDFolder
+import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,14 +62,6 @@ import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.util.Arrays
 import java.util.Properties
-import javax.mail.FetchProfile
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.Session
-import javax.mail.Store
-import javax.mail.UIDFolder
-import javax.mail.internet.InternetAddress
 
 
 /**
@@ -99,12 +101,20 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           JavaEmailConstants.FOLDER_SEARCH
         }
 
+        val config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3)
         emitSource(
-          roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
-            .toLiveData(
-              config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
-              boundaryCallback = boundaryCallback
-            )
+          Pager(
+            PagingConfig(
+              config.pageSize,
+              config.prefetchDistance,
+              config.enablePlaceholders,
+              config.initialLoadSizeHint,
+              config.maxSize
+            ),
+            null,
+            roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
+              .asPagingSourceFactory(ArchTaskExecutor.getIOThreadExecutor().asCoroutineDispatcher())
+          ).liveData
         )
       }
     }
@@ -593,7 +603,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
    * Generate a list of [EmailAndNamePair] objects from the input message.
    * This information will be retrieved from "to" and "cc" headers.
    *
-   * @param msg The input [javax.mail.Message].
+   * @param msg The input [jakarta.mail.Message].
    * @return <tt>[List]</tt> of EmailAndNamePair objects, which contains information
    * about
    * emails and names.

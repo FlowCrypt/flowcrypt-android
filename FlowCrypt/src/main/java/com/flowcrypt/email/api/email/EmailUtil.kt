@@ -55,6 +55,30 @@ import com.sun.mail.imap.protocol.FetchResponse
 import com.sun.mail.imap.protocol.UID
 import com.sun.mail.imap.protocol.UIDSet
 import com.sun.mail.util.ASCIIUtility
+import jakarta.activation.DataHandler
+import jakarta.mail.BodyPart
+import jakarta.mail.FetchProfile
+import jakarta.mail.Message
+import jakarta.mail.MessageRemovedException
+import jakarta.mail.MessagingException
+import jakarta.mail.Multipart
+import jakarta.mail.Part
+import jakarta.mail.Session
+import jakarta.mail.UIDFolder
+import jakarta.mail.internet.AddressException
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
+import jakarta.mail.search.AndTerm
+import jakarta.mail.search.BodyTerm
+import jakarta.mail.search.FromStringTerm
+import jakarta.mail.search.OrTerm
+import jakarta.mail.search.RecipientStringTerm
+import jakarta.mail.search.SearchTerm
+import jakarta.mail.search.StringTerm
+import jakarta.mail.search.SubjectTerm
+import jakarta.mail.util.ByteArrayDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
@@ -68,30 +92,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.Properties
 import java.util.UUID
-import javax.activation.DataHandler
-import javax.mail.BodyPart
-import javax.mail.FetchProfile
-import javax.mail.Message
-import javax.mail.MessageRemovedException
-import javax.mail.MessagingException
-import javax.mail.Multipart
-import javax.mail.Part
-import javax.mail.Session
-import javax.mail.UIDFolder
-import javax.mail.internet.AddressException
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeBodyPart
-import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimeMultipart
-import javax.mail.search.AndTerm
-import javax.mail.search.BodyTerm
-import javax.mail.search.FromStringTerm
-import javax.mail.search.OrTerm
-import javax.mail.search.RecipientStringTerm
-import javax.mail.search.SearchTerm
-import javax.mail.search.StringTerm
-import javax.mail.search.SubjectTerm
-import javax.mail.util.ByteArrayDataSource
 
 /**
  * @author Denis Bondarenko
@@ -400,7 +400,7 @@ class EmailUtil {
     }
 
     /**
-     * Generate an array of [javax.mail.Message] which contains candidates for insert.
+     * Generate an array of [jakarta.mail.Message] which contains candidates for insert.
      *
      * @param localUIDs The list of UID of the local messages.
      * @param folder    The remote [IMAPFolder].

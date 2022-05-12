@@ -13,11 +13,11 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.event.MessageChangedEvent
+import jakarta.mail.event.MessageCountEvent
+import jakarta.mail.event.MessageCountListener
+import jakarta.mail.search.SubjectTerm
 import java.util.concurrent.TimeUnit
-import javax.mail.event.MessageChangedEvent
-import javax.mail.event.MessageCountEvent
-import javax.mail.event.MessageCountListener
-import javax.mail.search.SubjectTerm
 
 /**
  * This is a thread where we do a sync of some IMAP folder.
@@ -92,7 +92,7 @@ class IdleSyncRunnable(
 
         store.getFolder(inboxLocalFolder.fullName).use { remoteFolder ->
           this.remoteFolder =
-            (remoteFolder as IMAPFolder).apply { open(javax.mail.Folder.READ_ONLY) }
+            (remoteFolder as IMAPFolder).apply { open(jakarta.mail.Folder.READ_ONLY) }
           actionsListener?.syncFolderState()
           remoteFolder.addMessageCountListener(object : MessageCountListener {
             override fun messagesAdded(e: MessageCountEvent?) {

@@ -19,6 +19,7 @@ import com.flowcrypt.email.jfixture.SelectConstructorCustomisation
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import io.github.classgraph.ClassGraph
+import jakarta.mail.internet.InternetAddress
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -27,7 +28,6 @@ import org.junit.runner.RunWith
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.annotation.Config
-import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko

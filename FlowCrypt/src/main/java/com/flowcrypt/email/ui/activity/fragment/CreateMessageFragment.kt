@@ -99,6 +99,8 @@ import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator
+import jakarta.mail.Message
+import jakarta.mail.internet.InternetAddress
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -106,8 +108,6 @@ import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.IOException
 import java.util.regex.Pattern
-import javax.mail.Message
-import javax.mail.internet.InternetAddress
 
 /**
  * This fragment describe a logic of sent an encrypted or standard message.

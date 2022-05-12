@@ -21,7 +21,7 @@ import android.widget.TextView
 import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
 import androidx.paging.PagedList
-import androidx.paging.PagedListAdapter
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
@@ -35,9 +35,8 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
-import java.util.ArrayList
+import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
-import javax.mail.internet.InternetAddress
 
 /**
  * This class is responsible for displaying the message in the list.
@@ -48,7 +47,7 @@ import javax.mail.internet.InternetAddress
  *         E-mail: DenBond7@gmail.com
  */
 class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
-  PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
+  PagingDataAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
   var tracker: SelectionTracker<Long>? = null
   var currentFolder: LocalFolder? = null

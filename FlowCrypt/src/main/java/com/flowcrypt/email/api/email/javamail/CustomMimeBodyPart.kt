@@ -5,9 +5,9 @@
 
 package com.flowcrypt.email.api.email.javamail
 
+import jakarta.mail.internet.InternetHeaders
+import jakarta.mail.internet.MimeBodyPart
 import java.io.InputStream
-import javax.mail.internet.InternetHeaders
-import javax.mail.internet.MimeBodyPart
 
 /**
  * @author Denis Bondarenko
