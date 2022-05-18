@@ -6,7 +6,6 @@
 package com.flowcrypt.email.database.dao
 
 import androidx.lifecycle.LiveData
-import androidx.paging.DataSource
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
@@ -80,12 +79,6 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     folder: String?,
     msgsUID: Collection<Long>?
   ): List<MessageEntity>
-
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
-  abstract fun getMessagesDataSourceFactory(
-    account: String,
-    folder: String
-  ): DataSource.Factory<Int, MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
   abstract fun getMessagesPagingDataSourceFactory(
