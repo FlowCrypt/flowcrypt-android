@@ -29,6 +29,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -81,6 +82,8 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.imap.protocol.SearchSequence
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
 import me.everything.android.ui.overscroll.IOverScrollState
@@ -98,8 +101,8 @@ import javax.mail.AuthenticationFailedException
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListProgressBehaviour,
-  SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
+class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
+  ListProgressBehaviour, SwipeRefreshLayout.OnRefreshListener {
 
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentMessagesListBinding.inflate(inflater, container, false)
@@ -126,7 +129,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   private val currentFolder: LocalFolder?
     get() = labelsViewModel.activeFolderLiveData.value
 
-  private lateinit var adapter: MsgsPagedListAdapter
+  private val adapter by lazy { MsgsPagedListAdapter() }
+
   private var keepSelectionInMemory = false
   private var isForceSendingEnabled: Boolean = true
 
@@ -161,7 +165,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    adapter = MsgsPagedListAdapter(this)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -342,7 +345,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
-  override fun onMsgClick(msgEntity: MessageEntity) {
+  /*override fun onMsgClick(msgEntity: MessageEntity) {
     activeMsgEntity = msgEntity
     if (tracker?.hasSelection() == true) {
       return
@@ -392,7 +395,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         Snackbar.LENGTH_LONG
       )
     }
-  }
+  }*/
 
   fun onDrawerStateChanged(slideOffset: Float, isOpened: Boolean) {
     when {
@@ -527,8 +530,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       if (currentFolder == null) {
         labelsViewModel.loadLabels()
       } else {
-        adapter.changeProgress(true)
-        msgsViewModel.loadMsgsFromRemoteServer()
+        //adapter.changeProgress(true)
+        //msgsViewModel.loadMsgsFromRemoteServer()
       }
     } else {
       footerProgressView?.visibility = View.GONE
@@ -571,12 +574,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     )
     binding?.recyclerViewMsgs?.adapter = adapter
     setupItemTouchHelper()
-    setupSelectionTracker()
+    //setupSelectionTracker()
     setupBottomOverScroll()
   }
 
   private fun setupSelectionTracker() {
-    adapter.tracker = null
+    //adapter.tracker = null
     binding?.recyclerViewMsgs?.let { recyclerView ->
       keyProvider = CustomStableIdKeyProvider(recyclerView)
       keyProvider?.let {
@@ -596,7 +599,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           override fun canSelectMultiple(): Boolean = true
         }).build()
         tracker?.addObserver(selectionObserver)
-        adapter.tracker = tracker
+        //adapter.tracker = tracker
       }
     }
   }
@@ -623,7 +626,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       ): Int {
         val position = viewHolder.bindingAdapterPosition
         return if (position != RecyclerView.NO_POSITION) {
-          val msgEntity = adapter.getMsgEntity(position)
+          val msgEntity: MessageEntity? = null//adapter.getMsgEntity(position)
           if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
             0
           } else
@@ -639,8 +642,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           val item = adapter.getItemId(position)
           currentFolder?.let {
             msgsViewModel.changeMsgsState(
-              listOf(item), it, MessageState
-                .PENDING_ARCHIVING, false
+              listOf(element = item),
+              localFolder = it,
+              newMsgState = MessageState.PENDING_ARCHIVING,
+              notifyMsgStatesListener = false
             )
           }
 
@@ -764,7 +769,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                   && System.currentTimeMillis() - lastCallTime >= TIMEOUT_BETWEEN_ACTIONS
                 ) {
                   if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
-                    msgsViewModel.loadMsgsFromRemoteServer()
+                    //msgsViewModel.loadMsgsFromRemoteServer()
                   }
                 }
               }
@@ -842,10 +847,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         if (isChangeSeenStateActionEnabled()) {
           val id = tracker?.selection?.first() ?: return true
-          val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
+          /*val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
 
           menuActionMarkUnread?.isVisible = msgEntity?.isSeen == true
-          menuActionMarkRead?.isVisible = msgEntity?.isSeen != true
+          menuActionMarkRead?.isVisible = msgEntity?.isSeen != true*/
         }
 
         return true
@@ -870,13 +875,30 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
     }
 
-    msgsViewModel.msgsLiveData?.observe(viewLifecycleOwner) {
-      if (it?.size ?: 0 != 0) {
-        showContent()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    lifecycleScope.launch {
+      msgsViewModel.pagerFlow.collectLatest { pagingData ->
+        adapter.submitData(pagingData)
+        actionMode?.invalidate()
       }
+    }
 
-      adapter.submitList(it)
-      actionMode?.invalidate()
+    lifecycleScope.launch {
+      adapter.loadStateFlow.collect { loadState ->
+        when {
+          loadState.mediator?.refresh is LoadState.Loading && adapter.itemCount == 0 -> {
+            showProgress()
+          }
+
+          loadState.refresh is LoadState.NotLoading && adapter.itemCount == 0 -> {
+            showEmptyView()
+          }
+
+          loadState.refresh is LoadState.NotLoading && adapter.itemCount > 0 -> {
+            showContent()
+          }
+        }
+      }
     }
 
     msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
@@ -1137,9 +1159,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
               if (ids.isNotEmpty()) {
                 msgsViewModel.changeMsgsState(
-                  ids,
-                  localFolder,
-                  MessageState.PENDING_DELETING_PERMANENTLY
+                  ids = ids,
+                  localFolder = localFolder,
+                  newMsgState = MessageState.PENDING_DELETING_PERMANENTLY
                 )
               }
             }
@@ -1239,7 +1261,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
     val newFolder = currentFolder
     adapter.currentFolder = newFolder
-    adapter.submitList(null)
 
     val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
     val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
@@ -1265,7 +1286,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         getString(R.string.progress_message, progress, message)
     } else {
       binding?.textViewActionProgress?.text = null
-      adapter.changeProgress(false)
+      //adapter.changeProgress(false)
     }
   }
 

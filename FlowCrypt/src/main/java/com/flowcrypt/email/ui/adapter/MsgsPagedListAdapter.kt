@@ -15,15 +15,9 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
-import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
-import androidx.paging.PagedList
-import androidx.paging.PagedListAdapter
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.selection.ItemDetailsLookup
-import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
@@ -32,10 +26,12 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.databinding.MessagesListItemBinding
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.visible
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
-import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
-import java.util.ArrayList
 import java.util.regex.Pattern
 import javax.mail.internet.InternetAddress
 
@@ -47,193 +43,24 @@ import javax.mail.internet.InternetAddress
  *         Time: 4:48 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
-  PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
-  private val senderNamePattern: Pattern
-  var tracker: SelectionTracker<Long>? = null
-  var currentFolder: LocalFolder? = null
+class MsgsPagedListAdapter(var currentFolder: LocalFolder? = null) :
+  PagingDataAdapter<MessageEntity, MsgsPagedListAdapter.MessageViewHolder>(ITEM_CALLBACK) {
+  private val senderNamePattern: Pattern = prepareSenderNamePattern()
 
-  init {
-    this.senderNamePattern = prepareSenderNamePattern()
-    setHasStableIds(true)
+  override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
+    val msgEntity = getItem(position) ?: return
+    holder.bind(msgEntity)
   }
 
-  override fun onCreateViewHolder(parent: ViewGroup, @ItemType viewType: Int): BaseViewHolder {
-    return when (viewType) {
-      FOOTER -> object : BaseViewHolder(
-        LayoutInflater.from(parent.context)
-          .inflate(R.layout.list_view_progress_footer, parent, false)
-      ) {
-        override val itemType = FOOTER
-      }
-
-      MESSAGE -> MessageViewHolder(
-        LayoutInflater.from(parent.context)
-          .inflate(R.layout.messages_list_item, parent, false)
-      )
-
-      else -> object : BaseViewHolder(ProgressBar(parent.context)) {
-        override val itemType = NONE
-      }
-    }
-  }
-
-  override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-    holder.setActivatedState(tracker?.isSelected(getItem(position)?.id) ?: false)
-
-    when (holder.itemType) {
-      MESSAGE -> {
-        val msgEntity = getItem(position)
-        updateItem(msgEntity, holder as MessageViewHolder)
-        holder.itemView.setOnClickListener {
-          msgEntity?.let { onMessageClickListener?.onMsgClick(it) }
-        }
-      }
-    }
-  }
-
-  override fun getItemViewType(position: Int): Int {
-    return MESSAGE
-  }
-
-  override fun getItemId(position: Int): Long {
-    return getItem(position)?.id ?: super.getItemId(position)
-  }
-
-  override fun onCurrentListChanged(
-    previousList: PagedList<MessageEntity>?,
-    currentList: PagedList<MessageEntity>?
-  ) {
-    super.onCurrentListChanged(previousList, currentList)
-    val currentIds = currentList?.map { it?.id }?.toSet()
-    val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
-
-    for (id in ids) {
-      if (currentIds?.contains(id) == false) {
-        tracker?.deselect(id)
-      }
-    }
-  }
-
-  fun getMsgEntity(position: Int?): MessageEntity? {
-    position ?: return null
-
-    if (position == RecyclerView.NO_POSITION) {
-      return null
-    }
-
-    return getItem(position)
-  }
-
-  fun changeProgress(isFooterEnabled: Boolean) {
-    LogsUtil.d(javaClass.name, isFooterEnabled.toString())
-  }
-
-  private fun updateItem(messageEntity: MessageEntity?, viewHolder: MessageViewHolder) {
-    val context = viewHolder.itemView.context
-    if (messageEntity != null) {
-      val subject = if (TextUtils.isEmpty(messageEntity.subject)) {
-        context.getString(R.string.no_subject)
-      } else {
-        messageEntity.subject
-      }
-
-      val folderType = FoldersManager.getFolderType(currentFolder)
-      if (folderType != null) {
-        when (folderType) {
-          FoldersManager.FolderType.SENT -> viewHolder.textViewSenderAddress?.text =
-            generateAddresses(messageEntity.to)
-
-          FoldersManager.FolderType.OUTBOX -> {
-            val status = generateOutboxStatus(
-              viewHolder.textViewSenderAddress?.context,
-              messageEntity.msgState
-            )
-            viewHolder.textViewSenderAddress?.text = status
-          }
-
-          else -> viewHolder.textViewSenderAddress?.text = generateAddresses(messageEntity.from)
-        }
-      } else {
-        viewHolder.textViewSenderAddress?.text = generateAddresses(messageEntity.from)
-      }
-
-      viewHolder.textViewSubject?.text = subject
-      if (folderType === FoldersManager.FolderType.OUTBOX) {
-        viewHolder.textViewDate?.text =
-          DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate)
-      } else {
-        viewHolder.textViewDate?.text =
-          DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate)
-      }
-
-      if (messageEntity.isSeen) {
-        changeViewsTypeface(viewHolder, Typeface.NORMAL)
-        viewHolder.textViewSenderAddress?.setTextColor(UIUtil.getColor(context, R.color.dark))
-        viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, R.color.gray))
-      } else {
-        changeViewsTypeface(viewHolder, Typeface.BOLD)
-        viewHolder.textViewSenderAddress?.setTextColor(
-          UIUtil.getColor(
-            context,
-            android.R.color.black
-          )
-        )
-        viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, android.R.color.black))
-      }
-
-      viewHolder.imageViewAtts?.visibility =
-        if (messageEntity.hasAttachments == true) View.VISIBLE else View.GONE
-      viewHolder.viewIsEncrypted?.visibility =
-        if (messageEntity.isEncrypted == true) View.VISIBLE else View.GONE
-
-      when (messageEntity.msgState) {
-        MessageState.PENDING_ARCHIVING -> {
-          with(viewHolder.imageViewStatus) {
-            this?.visibility = View.VISIBLE
-            this?.setBackgroundResource(R.drawable.ic_archive_blue_16dp)
-          }
-        }
-
-        MessageState.PENDING_MARK_UNREAD -> {
-          with(viewHolder.imageViewStatus) {
-            this?.visibility = View.VISIBLE
-            this?.setBackgroundResource(R.drawable.ic_markunread_blue_16dp)
-          }
-        }
-
-        MessageState.PENDING_DELETING,
-        MessageState.PENDING_DELETING_PERMANENTLY,
-        MessageState.PENDING_EMPTY_TRASH -> {
-          with(viewHolder.imageViewStatus) {
-            this?.visibility = View.VISIBLE
-            this?.setBackgroundResource(R.drawable.ic_delete_blue_16dp)
-          }
-        }
-
-        MessageState.PENDING_MOVE_TO_INBOX -> {
-          with(viewHolder.imageViewStatus) {
-            this?.visibility = View.VISIBLE
-            this?.setBackgroundResource(R.drawable.ic_move_to_inbox_blue_16dp)
-          }
-        }
-
-        else -> viewHolder.imageViewStatus?.visibility = View.GONE
-      }
-
-    } else {
-      clearItem(viewHolder)
-    }
-  }
-
-  private fun changeViewsTypeface(viewHolder: MessageViewHolder, typeface: Int) {
-    viewHolder.textViewSenderAddress?.setTypeface(null, typeface)
-    viewHolder.textViewDate?.setTypeface(null, typeface)
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
+    return MessageViewHolder(
+      LayoutInflater.from(parent.context).inflate(R.layout.messages_list_item, parent, false)
+    )
   }
 
   /**
-   * Prepare a [Pattern] which will be used for finding some information in the sender name. This pattern is
-   * case insensitive.
+   * Prepare a [Pattern] which will be used for finding some information in the sender name.
+   * This pattern is case insensitive.
    *
    * @return A generated [Pattern].
    */
@@ -269,22 +96,6 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
    */
   private fun prepareSenderName(name: String): String {
     return senderNamePattern.matcher(name).replaceFirst("")
-  }
-
-  /**
-   * Clear all views in the item.
-   *
-   * @param viewHolder A View holder object which consist links to views.
-   */
-  private fun clearItem(viewHolder: MessageViewHolder) {
-    viewHolder.textViewSenderAddress?.text = null
-    viewHolder.textViewSubject?.text = null
-    viewHolder.textViewDate?.text = null
-    viewHolder.imageViewAtts?.visibility = View.GONE
-    viewHolder.viewIsEncrypted?.visibility = View.GONE
-    viewHolder.imageViewStatus?.visibility = View.GONE
-
-    changeViewsTypeface(viewHolder, Typeface.NORMAL)
   }
 
   private fun generateAddresses(internetAddresses: List<InternetAddress>?): String {
@@ -409,51 +220,107 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     return TextUtils.concat(spannableStringMe, " ", status)
   }
 
-  abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    @ItemType
-    abstract val itemType: Int
+  inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
 
     fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> =
       object : ItemDetailsLookup.ItemDetails<Long>() {
-        override fun getPosition(): Int = adapterPosition
-        override fun getSelectionKey(): Long? = itemId
+        override fun getPosition(): Int = bindingAdapterPosition
+        override fun getSelectionKey(): Long = itemId
       }
 
-    fun setActivatedState(isActivated: Boolean) {
-      itemView.isActivated = isActivated
+    fun bind(value: MessageEntity) {
+      val context = itemView.context
+
+      val subject = if (TextUtils.isEmpty(value.subject)) {
+        context.getString(R.string.no_subject)
+      } else {
+        value.subject
+      }
+
+      val folderType = FoldersManager.getFolderType(currentFolder)
+      if (folderType != null) {
+        when (folderType) {
+          FoldersManager.FolderType.SENT -> {
+            binding.textViewSenderAddress.text = generateAddresses(value.to)
+          }
+
+          FoldersManager.FolderType.OUTBOX -> {
+            val status = generateOutboxStatus(
+              binding.textViewSenderAddress.context,
+              value.msgState
+            )
+            binding.textViewSenderAddress.text = status
+          }
+
+          else -> {
+            binding.textViewSenderAddress.text = generateAddresses(value.from)
+          }
+        }
+      } else {
+        binding.textViewSenderAddress.text = generateAddresses(value.from)
+      }
+
+      binding.textViewSubject.text = subject
+      if (folderType === FoldersManager.FolderType.OUTBOX) {
+        binding.textViewDate.text = DateTimeUtil.formatSameDayTime(context, value.sentDate)
+      } else {
+        binding.textViewDate.text = DateTimeUtil.formatSameDayTime(context, value.receivedDate)
+      }
+
+      if (value.isSeen) {
+        changeViewsTypeface(Typeface.NORMAL)
+        binding.textViewSenderAddress.setTextColor(UIUtil.getColor(context, R.color.dark))
+        binding.textViewDate.setTextColor(UIUtil.getColor(context, R.color.gray))
+      } else {
+        changeViewsTypeface(Typeface.BOLD)
+        binding.textViewSenderAddress.setTextColor(UIUtil.getColor(context, android.R.color.black))
+        binding.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color.black))
+      }
+
+      binding.imageViewAtts.visibleOrGone(value.hasAttachments == true)
+      binding.viewIsEncrypted.visibleOrGone(value.isEncrypted == true)
+
+      when (value.msgState) {
+        MessageState.PENDING_ARCHIVING -> {
+          binding.imageViewStatus.visible()
+          binding.imageViewStatus.setBackgroundResource(R.drawable.ic_archive_blue_16dp)
+        }
+
+        MessageState.PENDING_MARK_UNREAD -> {
+          binding.imageViewStatus.visible()
+          binding.imageViewStatus.setBackgroundResource(R.drawable.ic_markunread_blue_16dp)
+        }
+
+        MessageState.PENDING_DELETING,
+        MessageState.PENDING_DELETING_PERMANENTLY,
+        MessageState.PENDING_EMPTY_TRASH -> {
+          binding.imageViewStatus.visible()
+          binding.imageViewStatus.setBackgroundResource(R.drawable.ic_delete_blue_16dp)
+        }
+
+        MessageState.PENDING_MOVE_TO_INBOX -> {
+          binding.imageViewStatus.visible()
+          binding.imageViewStatus.setBackgroundResource(R.drawable.ic_move_to_inbox_blue_16dp)
+        }
+
+        else -> binding.imageViewStatus.gone()
+      }
+    }
+
+    private fun changeViewsTypeface(typeface: Int) {
+      binding.textViewSenderAddress.setTypeface(null, typeface)
+      binding.textViewDate.setTypeface(null, typeface)
     }
   }
 
-  inner class MessageViewHolder(itemView: View) : BaseViewHolder(itemView) {
-    override val itemType = MESSAGE
-
-    var textViewSenderAddress: TextView? = itemView.findViewById(R.id.textViewSenderAddress)
-    var textViewDate: TextView? = itemView.findViewById(R.id.textViewDate)
-    var textViewSubject: TextView? = itemView.findViewById(R.id.textViewSubject)
-    var imageViewAtts: ImageView? = itemView.findViewById(R.id.imageViewAtts)
-    var imageViewStatus: ImageView? = itemView.findViewById(R.id.imageViewStatus)
-    var viewIsEncrypted: View? = itemView.findViewById(R.id.viewIsEncrypted)
-  }
-
-  interface OnMessageClickListener {
-    fun onMsgClick(msgEntity: MessageEntity)
-  }
-
   companion object {
-    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<MessageEntity>() {
+    private val ITEM_CALLBACK = object : DiffUtil.ItemCallback<MessageEntity>() {
       override fun areItemsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) =
         oldMsg.id == newMsg.id
 
       override fun areContentsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) =
         oldMsg == newMsg
     }
-
-    @IntDef(NONE, FOOTER, MESSAGE)
-    @Retention(AnnotationRetention.SOURCE)
-    annotation class ItemType
-
-    const val NONE = 0
-    const val FOOTER = 1
-    const val MESSAGE = 2
   }
 }

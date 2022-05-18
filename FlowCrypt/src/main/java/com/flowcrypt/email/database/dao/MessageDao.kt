@@ -7,6 +7,7 @@ package com.flowcrypt.email.database.dao
 
 import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
@@ -18,9 +19,8 @@ import com.flowcrypt.email.database.dao.BaseDao.Companion.getEntitiesViaStepsSus
 import com.flowcrypt.email.database.entity.MessageEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.Locale
 import javax.mail.Flags
-import kotlin.collections.ArrayList
 
 /**
  * This class describes available methods for [MessageEntity]
@@ -86,6 +86,12 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     account: String,
     folder: String
   ): DataSource.Factory<Int, MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
+  abstract fun getMessagesPagingDataSourceFactory(
+    account: String,
+    folder: String
+  ): PagingSource<Int, MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
   abstract fun getMsgLiveData(account: String, folder: String, uid: Long): LiveData<MessageEntity?>

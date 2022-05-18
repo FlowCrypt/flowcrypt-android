@@ -222,7 +222,7 @@ class FoldersManager constructor(val account: String) {
     sentFolder?.let { return it }
 
     for (localFolder in allFolders) {
-      if (localFolder.fullName.toUpperCase(Locale.US) in arrayOf("INBOX/SENT", "SENT")) {
+      if (localFolder.fullName.uppercase(Locale.US) in arrayOf("INBOX/SENT", "SENT")) {
         sentFolder = localFolder
       }
     }
@@ -404,8 +404,8 @@ class FoldersManager constructor(val account: String) {
      * @return [FolderType].
      */
     fun getFolderType(localFolder: LocalFolder?): FolderType? {
-      val folderTypes = FolderType.values()
       val attributes = localFolder?.attributes ?: emptyList()
+      val folderTypes = FolderType.values()
 
       for (attribute in attributes) {
         for (folderType in folderTypes) {

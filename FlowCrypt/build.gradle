@@ -210,7 +210,8 @@ android {
     kotlinOptions {
         jvmTarget = "11"
         //need for ACRA, maybe will be deleted in the upcoming updates
-        freeCompilerArgs = ['-Xjvm-default=enable']
+        freeCompilerArgs += ['-Xjvm-default=enable']
+        freeCompilerArgs += ["-Xopt-in=kotlin.RequiresOptIn"]
     }
 
     packagingOptions {
@@ -382,6 +383,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-rc01'
     implementation 'androidx.room:room-runtime:2.4.2'
     implementation 'androidx.room:room-ktx:2.4.2'
+    implementation 'androidx.room:room-paging:2.4.2'
     implementation 'androidx.paging:paging-runtime-ktx:3.1.1'
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.core:core-ktx:1.7.0'

@@ -109,8 +109,6 @@ class GmailApiHelper {
       "CATEGORY_PROMOTIONS",
       "CATEGORY_SOCIAL"
     )
-    private const val COUNT_OF_LOADED_EMAILS_BY_STEP =
-      JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -220,8 +218,11 @@ class GmailApiHelper {
     }
 
     suspend fun loadMsgsBaseInfo(
-      context: Context, accountEntity: AccountEntity, localFolder:
-      LocalFolder, nextPageToken: String? = null
+      context: Context,
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      maxResults: Long,
+      nextPageToken: String? = null
     ): ListMessagesResponse = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val request = gmailApiService
@@ -229,7 +230,7 @@ class GmailApiHelper {
         .messages()
         .list(DEFAULT_USER_ID)
         .setPageToken(nextPageToken)
-        .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+        .setMaxResults(maxResults)
 
       if (!localFolder.isAll()) {
         request.labelIds = listOf(localFolder.fullName)
@@ -583,8 +584,11 @@ class GmailApiHelper {
     }
 
     suspend fun loadMsgsBaseInfoUsingSearch(
-      context: Context, accountEntity: AccountEntity,
-      localFolder: LocalFolder, nextPageToken: String? = null
+      context: Context,
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      maxResults: Long,
+      nextPageToken: String? = null
     ):
         ListMessagesResponse = withContext(Dispatchers.IO) {
 
@@ -601,7 +605,7 @@ class GmailApiHelper {
           ) as? GmailRawSearchTerm)?.pattern
         )
         .setPageToken(nextPageToken)
-        .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+        .setMaxResults(maxResults)
       return@withContext list.execute()
     }
 
