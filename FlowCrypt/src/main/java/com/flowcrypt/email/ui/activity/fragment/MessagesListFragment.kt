@@ -73,6 +73,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.adapter.MsgsLoadStateAdapter
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
@@ -572,7 +573,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
     binding?.recyclerViewMsgs?.addItemDecoration(
       DividerItemDecoration(context, layoutManager.orientation)
     )
-    binding?.recyclerViewMsgs?.adapter = adapter
+    binding?.recyclerViewMsgs?.adapter = adapter.withLoadStateFooter(MsgsLoadStateAdapter())
     setupItemTouchHelper()
     //setupSelectionTracker()
     setupBottomOverScroll()
