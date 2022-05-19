@@ -124,19 +124,26 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
 
   private var footerProgressView: View? = null
   private var tracker: SelectionTracker<Long>? = null
-  private var keyProvider: CustomStableIdKeyProvider? = null
   private var actionMode: ActionMode? = null
   private var activeMsgEntity: MessageEntity? = null
   private val currentFolder: LocalFolder?
     get() = labelsViewModel.activeFolderLiveData.value
 
   private val adapter by lazy {
-    MsgsPagedListAdapter(null, object : MsgsPagedListAdapter.OnMessageClickListener {
+    MsgsPagedListAdapter(object : MsgsPagedListAdapter.OnMessagesActionListener {
       override fun onMsgClick(msgEntity: MessageEntity) {
         onMsgClicked(msgEntity)
       }
-    })
+
+      override fun onExistingMsgsChanged(snapshotOfExistingIds: Set<Long>) {
+        val selectedIds = tracker?.selection?.mapNotNull { it }?.toSet() ?: emptySet()
+        val irrelevantSelectedIds = selectedIds - snapshotOfExistingIds
+        tracker?.setItemsSelected(irrelevantSelectedIds, false)
+      }
+    }) { key -> tracker?.isSelected(key) ?: false }
   }
+
+  private val keyProvider by lazy { CustomStableIdKeyProvider(adapter) }
 
   private var keepSelectionInMemory = false
   private var isForceSendingEnabled: Boolean = true
@@ -471,9 +478,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
     }
   }
 
-  /**
-   * Try to load a next messages from an IMAP server.
-   */
   private fun loadNextMsgs() {
     if (isOutboxFolder) {
       return
@@ -485,8 +489,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
       if (currentFolder == null) {
         labelsViewModel.loadLabels()
       } else {
-        //adapter.changeProgress(true)
-        //msgsViewModel.loadMsgsFromRemoteServer()
+        adapter.refresh()
       }
     } else {
       footerProgressView?.visibility = View.GONE
@@ -529,33 +532,28 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
     )
     binding?.recyclerViewMsgs?.adapter = adapter.withLoadStateFooter(MsgsLoadStateAdapter())
     setupItemTouchHelper()
-    //setupSelectionTracker()
+    setupSelectionTracker()
     setupBottomOverScroll()
   }
 
   private fun setupSelectionTracker() {
-    //adapter.tracker = null
     binding?.recyclerViewMsgs?.let { recyclerView ->
-      keyProvider = CustomStableIdKeyProvider(recyclerView)
-      keyProvider?.let {
-        tracker = SelectionTracker.Builder(
-          MessagesListFragment::class.java.simpleName,
-          recyclerView,
-          it,
-          MsgItemDetailsLookup(recyclerView),
-          StorageStrategy.createLongStorage()
-        ).withSelectionPredicate(object : SelectionTracker.SelectionPredicate<Long>() {
-          override fun canSetStateForKey(key: Long, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+      tracker = SelectionTracker.Builder(
+        MessagesListFragment::class.java.simpleName,
+        recyclerView,
+        keyProvider,
+        MsgItemDetailsLookup(recyclerView),
+        StorageStrategy.createLongStorage()
+      ).withSelectionPredicate(object : SelectionTracker.SelectionPredicate<Long>() {
+        override fun canSetStateForKey(key: Long, nextState: Boolean): Boolean =
+          currentFolder?.searchQuery == null
 
-          override fun canSetStateAtPosition(position: Int, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+        override fun canSetStateAtPosition(position: Int, nextState: Boolean): Boolean =
+          currentFolder?.searchQuery == null
 
-          override fun canSelectMultiple(): Boolean = true
-        }).build()
-        tracker?.addObserver(selectionObserver)
-        //adapter.tracker = tracker
-      }
+        override fun canSelectMultiple(): Boolean = true
+      }).build()
+      tracker?.addObserver(selectionObserver)
     }
   }
 
@@ -729,7 +727,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
                   && System.currentTimeMillis() - lastCallTime >= TIMEOUT_BETWEEN_ACTIONS
                 ) {
                   if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
-                    //msgsViewModel.loadMsgsFromRemoteServer()
+                    adapter.refresh()
                   }
                 }
               }
@@ -807,10 +805,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
 
         if (isChangeSeenStateActionEnabled()) {
           val id = tracker?.selection?.first() ?: return true
-          /*val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
+          val msgEntity = adapter.getMessageEntity(keyProvider.getPosition(id))
 
           menuActionMarkUnread?.isVisible = msgEntity?.isSeen == true
-          menuActionMarkRead?.isVisible = msgEntity?.isSeen != true*/
+          menuActionMarkRead?.isVisible = msgEntity?.isSeen != true
         }
 
         return true
@@ -1220,7 +1218,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
     tracker?.clearSelection()
 
     val newFolder = currentFolder
-    adapter.currentFolder = newFolder
+    adapter.switchFolder(newFolder)
 
     val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
     val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
@@ -1246,7 +1244,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
         getString(R.string.progress_message, progress, message)
     } else {
       binding?.textViewActionProgress?.text = null
-      //adapter.changeProgress(false)
     }
   }
 

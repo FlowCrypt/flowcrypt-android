@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.adapter.selection
 
 import androidx.recyclerview.selection.ItemKeyProvider
 import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 
 /**
  * @author Denis Bondarenko
@@ -14,20 +15,14 @@ import androidx.recyclerview.widget.RecyclerView
  *         Time: 4:44 PM
  *         E-mail: DenBond7@gmail.com
  */
-class CustomStableIdKeyProvider(private val recyclerView: RecyclerView) :
+class CustomStableIdKeyProvider(private val adapter: MsgsPagedListAdapter) :
   ItemKeyProvider<Long>(SCOPE_CACHED) {
-  init {
-    requireNotNull(recyclerView.adapter)
-    require(recyclerView.adapter?.hasStableIds() == true) {
-      "Adapter should have stable ids"
-    }
-  }
 
   override fun getKey(position: Int): Long? {
-    return recyclerView.adapter?.getItemId(position)
+    return adapter.getMessageEntity(position)?.id
   }
 
   override fun getPosition(key: Long): Int {
-    return recyclerView.findViewHolderForItemId(key)?.adapterPosition ?: RecyclerView.NO_POSITION
+    return adapter.getPositionByIds(key) ?: RecyclerView.NO_POSITION
   }
 }

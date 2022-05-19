@@ -45,13 +45,24 @@ import javax.mail.internet.InternetAddress
  *         E-mail: DenBond7@gmail.com
  */
 class MsgsPagedListAdapter(
-  var currentFolder: LocalFolder? = null,
-  private val onMessageClickListener: OnMessageClickListener? = null
+  private val onMessagesActionListener: OnMessagesActionListener? = null,
+  private val selectionChecker: (key: Long) -> Boolean
 ) : PagingDataAdapter<MessageEntity, MsgsPagedListAdapter.MessageViewHolder>(ITEM_CALLBACK) {
   private val senderNamePattern: Pattern = prepareSenderNamePattern()
+  private val keyPositionsMap = mutableMapOf<Long, Int>()
+  var currentFolder: LocalFolder? = null
+    private set
+
+  init {
+    addOnPagesUpdatedListener {
+      val ids = snapshot().items.mapNotNull { it.id }.toSet()
+      onMessagesActionListener?.onExistingMsgsChanged(ids)
+    }
+  }
 
   override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
     val msgEntity = getItem(position) ?: return
+    msgEntity.id?.let { keyPositionsMap[msgEntity.id] = holder.absoluteAdapterPosition }
     holder.bind(msgEntity)
   }
 
@@ -63,6 +74,15 @@ class MsgsPagedListAdapter(
 
   fun getMessageEntity(@IntRange(from = 0) position: Int): MessageEntity? {
     return getItem(position)
+  }
+
+  fun getPositionByIds(ids: Long): Int? {
+    return keyPositionsMap[ids]
+  }
+
+  fun switchFolder(newFolder: LocalFolder?) {
+    keyPositionsMap.clear()
+    currentFolder = newFolder
   }
 
   /**
@@ -229,18 +249,21 @@ class MsgsPagedListAdapter(
 
   inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
+    private var messageEntity: MessageEntity? = null
 
     fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> =
       object : ItemDetailsLookup.ItemDetails<Long>() {
-        override fun getPosition(): Int = bindingAdapterPosition
-        override fun getSelectionKey(): Long = itemId
+        override fun getPosition(): Int = absoluteAdapterPosition
+        override fun getSelectionKey(): Long? = messageEntity?.id
       }
 
     fun bind(value: MessageEntity) {
+      messageEntity = value
       val context = itemView.context
 
+      itemView.isActivated = value.id?.let { selectionChecker.invoke(it) } ?: false
       itemView.setOnClickListener {
-        onMessageClickListener?.onMsgClick(value)
+        onMessagesActionListener?.onMsgClick(value)
       }
 
       val subject = if (TextUtils.isEmpty(value.subject)) {
@@ -325,8 +348,9 @@ class MsgsPagedListAdapter(
     }
   }
 
-  interface OnMessageClickListener {
+  interface OnMessagesActionListener {
     fun onMsgClick(msgEntity: MessageEntity)
+    fun onExistingMsgsChanged(snapshotOfExistingIds: Set<Long>)
   }
 
   companion object {
