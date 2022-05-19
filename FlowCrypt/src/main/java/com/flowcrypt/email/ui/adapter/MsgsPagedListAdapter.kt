@@ -43,8 +43,10 @@ import javax.mail.internet.InternetAddress
  *         Time: 4:48 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MsgsPagedListAdapter(var currentFolder: LocalFolder? = null) :
-  PagingDataAdapter<MessageEntity, MsgsPagedListAdapter.MessageViewHolder>(ITEM_CALLBACK) {
+class MsgsPagedListAdapter(
+  var currentFolder: LocalFolder? = null,
+  private val onMessageClickListener: OnMessageClickListener? = null
+) : PagingDataAdapter<MessageEntity, MsgsPagedListAdapter.MessageViewHolder>(ITEM_CALLBACK) {
   private val senderNamePattern: Pattern = prepareSenderNamePattern()
 
   override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
@@ -232,6 +234,10 @@ class MsgsPagedListAdapter(var currentFolder: LocalFolder? = null) :
     fun bind(value: MessageEntity) {
       val context = itemView.context
 
+      itemView.setOnClickListener {
+        onMessageClickListener?.onMsgClick(value)
+      }
+
       val subject = if (TextUtils.isEmpty(value.subject)) {
         context.getString(R.string.no_subject)
       } else {
@@ -312,6 +318,10 @@ class MsgsPagedListAdapter(var currentFolder: LocalFolder? = null) :
       binding.textViewSenderAddress.setTypeface(null, typeface)
       binding.textViewDate.setTypeface(null, typeface)
     }
+  }
+
+  interface OnMessageClickListener {
+    fun onMsgClick(msgEntity: MessageEntity)
   }
 
   companion object {

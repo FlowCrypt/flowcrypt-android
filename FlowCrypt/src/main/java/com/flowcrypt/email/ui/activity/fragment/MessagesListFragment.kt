@@ -130,7 +130,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
   private val currentFolder: LocalFolder?
     get() = labelsViewModel.activeFolderLiveData.value
 
-  private val adapter by lazy { MsgsPagedListAdapter() }
+  private val adapter by lazy {
+    MsgsPagedListAdapter(null, object : MsgsPagedListAdapter.OnMessageClickListener {
+      override fun onMsgClick(msgEntity: MessageEntity) {
+        onMsgClicked(msgEntity)
+      }
+    })
+  }
 
   private var keepSelectionInMemory = false
   private var isForceSendingEnabled: Boolean = true
@@ -345,58 +351,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
       }
     }
   }
-
-  /*override fun onMsgClick(msgEntity: MessageEntity) {
-    activeMsgEntity = msgEntity
-    if (tracker?.hasSelection() == true) {
-      return
-    }
-
-    val isOutbox =
-      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)
-    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
-    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
-      when (msgEntity.msgState) {
-        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
-        MessageState.ERROR_CACHE_PROBLEM,
-        MessageState.ERROR_DURING_CREATION,
-        MessageState.ERROR_SENDING_FAILED,
-        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
-        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
-        MessageState.ERROR_PASSWORD_PROTECTED -> handleOutgoingMsgWhichHasSomeError(
-          msgEntity
-        )
-        else -> {
-          if (isOutbox && !isRawMsgAvailable) {
-            showTwoWayDialog(
-              requestCode = REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE,
-              dialogTitle = "",
-              dialogMsg = getString(R.string.message_failed_to_create),
-              positiveButtonTitle = getString(R.string.delete_message),
-              negativeButtonTitle = getString(R.string.cancel),
-              isCancelable = true
-            )
-          } else {
-            currentFolder?.let { localFolder ->
-              navController?.navigate(
-                MessagesListFragmentDirections.actionMessagesListFragmentToMessageDetailsFragment(
-                  messageEntity = msgEntity,
-                  localFolder = localFolder
-                )
-              )
-            }
-          }
-        }
-      }
-    } else {
-      showInfoSnackbar(
-        view,
-        getString(R.string.internet_connection_is_not_available),
-        Snackbar.LENGTH_LONG
-      )
-    }
-  }*/
 
   fun onDrawerStateChanged(slideOffset: Float, isOpened: Boolean) {
     when {
@@ -1288,6 +1242,58 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
     } else {
       binding?.textViewActionProgress?.text = null
       //adapter.changeProgress(false)
+    }
+  }
+
+  private fun onMsgClicked(msgEntity: MessageEntity) {
+    activeMsgEntity = msgEntity
+    if (tracker?.hasSelection() == true) {
+      return
+    }
+
+    val isOutbox =
+      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)
+    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
+    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
+      when (msgEntity.msgState) {
+        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+        MessageState.ERROR_CACHE_PROBLEM,
+        MessageState.ERROR_DURING_CREATION,
+        MessageState.ERROR_SENDING_FAILED,
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
+        MessageState.ERROR_PASSWORD_PROTECTED -> handleOutgoingMsgWhichHasSomeError(
+          msgEntity
+        )
+        else -> {
+          if (isOutbox && !isRawMsgAvailable) {
+            showTwoWayDialog(
+              requestCode = REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE,
+              dialogTitle = "",
+              dialogMsg = getString(R.string.message_failed_to_create),
+              positiveButtonTitle = getString(R.string.delete_message),
+              negativeButtonTitle = getString(R.string.cancel),
+              isCancelable = true
+            )
+          } else {
+            currentFolder?.let { localFolder ->
+              navController?.navigate(
+                MessagesListFragmentDirections.actionMessagesListFragmentToMessageDetailsFragment(
+                  messageEntity = msgEntity,
+                  localFolder = localFolder
+                )
+              )
+            }
+          }
+        }
+      }
+    } else {
+      showInfoSnackbar(
+        view,
+        getString(R.string.internet_connection_is_not_available),
+        Snackbar.LENGTH_LONG
+      )
     }
   }
 
