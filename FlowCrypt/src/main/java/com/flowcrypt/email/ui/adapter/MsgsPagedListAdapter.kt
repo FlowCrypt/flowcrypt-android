@@ -15,6 +15,7 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.IntRange
 import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.selection.ItemDetailsLookup
@@ -58,6 +59,10 @@ class MsgsPagedListAdapter(
     return MessageViewHolder(
       LayoutInflater.from(parent.context).inflate(R.layout.messages_list_item, parent, false)
     )
+  }
+
+  fun getMessageEntity(@IntRange(from = 0) position: Int): MessageEntity? {
+    return getItem(position)
   }
 
   /**

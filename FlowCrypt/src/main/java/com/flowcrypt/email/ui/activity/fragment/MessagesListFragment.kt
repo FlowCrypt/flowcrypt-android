@@ -581,7 +581,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
       ): Int {
         val position = viewHolder.bindingAdapterPosition
         return if (position != RecyclerView.NO_POSITION) {
-          val msgEntity: MessageEntity? = null//adapter.getMsgEntity(position)
+          val msgEntity: MessageEntity? = adapter.getMessageEntity(position)
           if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
             0
           } else
@@ -594,10 +594,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
       override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         val position = viewHolder.bindingAdapterPosition
         if (position != RecyclerView.NO_POSITION) {
-          val item = adapter.getItemId(position)
+          val itemId = adapter.getMessageEntity(position)?.id ?: return
           currentFolder?.let {
             msgsViewModel.changeMsgsState(
-              listOf(element = item),
+              ids = listOf(itemId),
               localFolder = it,
               newMsgState = MessageState.PENDING_ARCHIVING,
               notifyMsgStatesListener = false
@@ -611,7 +611,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
             duration = Snackbar.LENGTH_LONG
           ) {
             currentFolder?.let {
-              msgsViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
+              msgsViewModel.changeMsgsState(
+                ids = listOf(itemId),
+                localFolder = it,
+                newMsgState = MessageState.NONE,
+                notifyMsgStatesListener = false
+              )
               //we should force archiving action because we can have other messages in the pending archiving states
               msgsViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
             }
@@ -823,7 +828,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
 
   private fun setupMsgsViewModel() {
     msgsViewModel.msgsCountLiveData.observe(viewLifecycleOwner) {
-      if (it ?: 0 == 0) {
+      if ((it ?: 0) == 0) {
         showEmptyView()
       } else {
         showContent()
