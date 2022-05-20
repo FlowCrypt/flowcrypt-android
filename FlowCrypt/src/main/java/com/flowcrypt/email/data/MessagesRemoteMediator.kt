@@ -6,6 +6,7 @@
 package com.flowcrypt.email.data
 
 import android.content.Context
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -61,11 +62,15 @@ class MessagesRemoteMediator(
     loadType: LoadType,
     state: PagingState<Int, MessageEntity>
   ): MediatorResult {
+    Log.d(
+      "DDDDD",
+      "${this.hashCode()} + folder = ${localFolder?.fullName} + state.pages.size = ${state.pages.size} + loadType = $loadType"
+    )
     try {
-      progressNotifier.invoke(R.id.progress_id_start_of_loading_new_messages, 0.0)
       if (loadType == LoadType.PREPEND || localFolder == null || localFolder.isOutbox()) {
         return MediatorResult.Success(endOfPaginationReached = true)
       }
+      progressNotifier.invoke(R.id.progress_id_start_of_loading_new_messages, 0.0)
       val activeAccountWithProtectedData = roomDatabase.accountDao().getActiveAccountSuspend()
       val accountEntity =
         AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(activeAccountWithProtectedData)
@@ -96,6 +101,7 @@ class MessagesRemoteMediator(
         return MediatorResult.Error(requireNotNull(actionResult.exception))
       }
 
+      Log.d("DDDDD", "count of fetched msgs = ${actionResult.data}")
       return MediatorResult.Success(endOfPaginationReached = (actionResult.data ?: 0) == 0)
     } catch (exception: Exception) {
       return MediatorResult.Error(exception)
