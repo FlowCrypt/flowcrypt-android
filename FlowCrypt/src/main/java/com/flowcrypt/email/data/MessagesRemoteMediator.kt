@@ -10,6 +10,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -52,6 +53,7 @@ class MessagesRemoteMediator(
   private val context: Context,
   private val roomDatabase: FlowCryptRoomDatabase,
   private val localFolder: LocalFolder? = null,
+  private val progressNotifier: (resultCode: Int, progress: Double) -> Unit
 ) : RemoteMediator<Int, MessageEntity>() {
   private var searchNextPageToken: String? = null
 
@@ -59,28 +61,30 @@ class MessagesRemoteMediator(
     loadType: LoadType,
     state: PagingState<Int, MessageEntity>
   ): MediatorResult {
-    if (loadType == LoadType.PREPEND || localFolder == null || localFolder.isOutbox()) {
-      return MediatorResult.Success(endOfPaginationReached = true)
-    }
-    val activeAccountWithProtectedData = roomDatabase.accountDao().getActiveAccountSuspend()
-    val accountEntity =
-      AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(activeAccountWithProtectedData)
-        ?: return MediatorResult.Success(endOfPaginationReached = true)
-
-    val totalItemsCount = roomDatabase.msgDao().getMsgsCount(
-      account = accountEntity.email,
-      label = if (localFolder.searchQuery.isNullOrEmpty()) {
-        localFolder.fullName
-      } else {
-        JavaEmailConstants.FOLDER_SEARCH
-      }
-    )
-
-    if (loadType == LoadType.REFRESH && totalItemsCount != 0) {
-      return MediatorResult.Success(endOfPaginationReached = false)
-    }
-
     try {
+      progressNotifier.invoke(R.id.progress_id_start_of_loading_new_messages, 0.0)
+      if (loadType == LoadType.PREPEND || localFolder == null || localFolder.isOutbox()) {
+        return MediatorResult.Success(endOfPaginationReached = true)
+      }
+      val activeAccountWithProtectedData = roomDatabase.accountDao().getActiveAccountSuspend()
+      val accountEntity =
+        AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(activeAccountWithProtectedData)
+          ?: return MediatorResult.Success(endOfPaginationReached = true)
+
+      val totalItemsCount = roomDatabase.msgDao().getMsgsCount(
+        account = accountEntity.email,
+        label = if (localFolder.searchQuery.isNullOrEmpty()) {
+          localFolder.fullName
+        } else {
+          JavaEmailConstants.FOLDER_SEARCH
+        }
+      )
+
+      if (loadType == LoadType.REFRESH && totalItemsCount != 0) {
+        return MediatorResult.Success(endOfPaginationReached = false)
+      }
+
+      progressNotifier.invoke(R.id.progress_id_start_of_loading_new_messages, 10.0)
       val actionResult = fetchAndCacheMessages(
         accountEntity = accountEntity,
         localFolder = localFolder,
@@ -95,6 +99,8 @@ class MessagesRemoteMediator(
       return MediatorResult.Success(endOfPaginationReached = (actionResult.data ?: 0) == 0)
     } catch (exception: Exception) {
       return MediatorResult.Error(exception)
+    } finally {
+      progressNotifier.invoke(R.id.progress_id_done, 100.0)
     }
   }
 
@@ -154,7 +160,9 @@ class MessagesRemoteMediator(
     var countOfFetchedMsgs = 0
     store.getFolder(localFolder.fullName).use { folder ->
       val imapFolder = folder as IMAPFolder
+      progressNotifier.invoke(R.id.progress_id_opening_store, 20.0)
       imapFolder.open(Folder.READ_ONLY)
+      progressNotifier.invoke(R.id.progress_id_opening_store, 40.0)
 
       val countOfLoadedMsgs = when {
         countOfAlreadyLoadedMsgs < 0 -> 0
@@ -186,6 +194,7 @@ class MessagesRemoteMediator(
         .getLabelSuspend(accountEntity.email, accountEntity.accountType, folderName)?.let {
           roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = msgsCount))
         }
+      progressNotifier.invoke(R.id.progress_id_getting_list_of_emails, 60.0)
       if (end < 1) {
         handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
       } else {
@@ -206,7 +215,7 @@ class MessagesRemoteMediator(
         handleReceivedMsgs(accountEntity, localFolder, folder, msgs)
       }
     }
-
+    progressNotifier.invoke(R.id.progress_id_getting_list_of_emails, 80.0)
     return@withContext Result.success(countOfFetchedMsgs)
   }
 
@@ -221,6 +230,7 @@ class MessagesRemoteMediator(
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
         val labelEntity: LabelEntity? = roomDatabase.labelDao()
           .getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
+        progressNotifier.invoke(R.id.progress_id_gmail_list, 20.0)
         val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(
           context = context,
           accountEntity = accountEntity,
@@ -228,14 +238,17 @@ class MessagesRemoteMediator(
           maxResults = pageSize.toLong(),
           nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
         )
-
+        progressNotifier.invoke(R.id.progress_id_gmail_msgs_info, 60.0)
         if (messagesBaseInfo.messages?.isNotEmpty() == true) {
           val msgs = GmailApiHelper.loadMsgsInParallel(
             context, accountEntity, messagesBaseInfo.messages
               ?: emptyList(), localFolder
           )
           countOfFetchedMsgs = msgs.size
+          progressNotifier.invoke(R.id.progress_id_gmail_msgs_info, 90.0)
           handleReceivedMsgs(accountEntity, localFolder, msgs)
+        } else {
+          progressNotifier.invoke(R.id.progress_id_gmail_msgs_info, 90.0)
         }
 
         labelEntity?.let {
@@ -392,6 +405,7 @@ class MessagesRemoteMediator(
     var countOfFetchedMsgs = 0
     when (accountEntity.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+        progressNotifier.invoke(R.id.progress_id_gmail_list, 20.0)
         val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfoUsingSearch(
           context = context,
           accountEntity = accountEntity,
@@ -399,18 +413,21 @@ class MessagesRemoteMediator(
           maxResults = pageSize.toLong(),
           nextPageToken = if (totalItemsCount > 0) searchNextPageToken else null
         )
-
+        progressNotifier.invoke(R.id.progress_id_gmail_msgs_info, 70.0)
         if (messagesBaseInfo.messages?.isNotEmpty() == true) {
           val msgs = GmailApiHelper.loadMsgsInParallel(
             context, accountEntity, messagesBaseInfo.messages
               ?: emptyList(), localFolder
           )
           countOfFetchedMsgs = msgs.size
+          progressNotifier.invoke(R.id.progress_id_gmail_msgs_info, 90.0)
           handleSearchResults(
             accountEntity,
             localFolder.copy(fullName = JavaEmailConstants.FOLDER_SEARCH),
             msgs
           )
+        } else {
+          progressNotifier.invoke(R.id.progress_id_gmail_msgs_info, 90.0)
         }
 
         searchNextPageToken = messagesBaseInfo.nextPageToken
@@ -429,7 +446,9 @@ class MessagesRemoteMediator(
     var countOfFetchedMsgs = 0
     store.getFolder(localFolder.fullName).use { folder ->
       val imapFolder = folder as IMAPFolder
+      progressNotifier.invoke(R.id.progress_id_opening_store, 20.0)
       imapFolder.open(Folder.READ_ONLY)
+      progressNotifier.invoke(R.id.progress_id_opening_store, 40.0)
 
       val countOfLoadedMsgs = when {
         countOfAlreadyLoadedMsgs < 0 -> 0
@@ -445,6 +464,7 @@ class MessagesRemoteMediator(
         startCandidate < 1 -> 1
         else -> startCandidate
       }
+      progressNotifier.invoke(R.id.progress_id_getting_list_of_emails, 60.0)
 
       if (end < 1) {
         handleSearchResults(accountEntity, localFolder, imapFolder, arrayOf())
@@ -461,6 +481,8 @@ class MessagesRemoteMediator(
         countOfFetchedMsgs = bufferedMsgs.size
         handleSearchResults(accountEntity, localFolder, imapFolder, bufferedMsgs)
       }
+
+      progressNotifier.invoke(R.id.progress_id_getting_list_of_emails, 80.0)
     }
 
     return@withContext Result.success(countOfFetchedMsgs)

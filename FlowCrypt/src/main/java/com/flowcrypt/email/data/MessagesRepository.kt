@@ -20,11 +20,12 @@ import com.flowcrypt.email.database.entity.MessageEntity
  *         E-mail: DenBond7@gmail.com
  */
 object MessagesRepository {
-  const val PAGE_SIZE = 15
+  const val PAGE_SIZE = 20
 
   fun getMessagesPager(
     context: Context,
-    localFolder: LocalFolder?
+    localFolder: LocalFolder?,
+    remoteMediatorProgressNotifier: (resultCode: Int, progress: Double) -> Unit
   ): Pager<Int, MessageEntity> {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     @OptIn(ExperimentalPagingApi::class)
@@ -39,7 +40,12 @@ object MessagesRepository {
           folder = localFolder?.fullName ?: ""
         )
       },
-      remoteMediator = MessagesRemoteMediator(context, roomDatabase, localFolder)
+      remoteMediator = MessagesRemoteMediator(
+        context = context,
+        roomDatabase = roomDatabase,
+        localFolder = localFolder,
+        progressNotifier = remoteMediatorProgressNotifier
+      )
     )
   }
 }

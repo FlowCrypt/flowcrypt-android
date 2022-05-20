@@ -9,7 +9,6 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.flowcrypt.email.Constants
@@ -76,9 +75,17 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   private val activeLocalFolderStateFlow: StateFlow<LocalFolder?> =
     activeLocalFolderMutableStateFlow.asStateFlow()
 
+  private val loadMsgsListProgressMutableStateFlow: MutableStateFlow<Pair<Int, Double>> =
+    MutableStateFlow(Pair(0, 0.0))
+  val loadMsgsListProgressStateFlow: StateFlow<Pair<Int, Double>> =
+    loadMsgsListProgressMutableStateFlow.asStateFlow()
+
   @ExperimentalCoroutinesApi
   val pagerFlow = activeLocalFolderStateFlow.flatMapLatest { localFolder ->
-    val pager = MessagesRepository.getMessagesPager(application, localFolder)
+    val pager =
+      MessagesRepository.getMessagesPager(application, localFolder) { resultCode, progress ->
+        loadMsgsListProgressMutableStateFlow.value = Pair(resultCode, progress)
+      }
     pager.flow.cachedIn(viewModelScope)
   }
 
@@ -88,22 +95,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
     }
 
-  val loadMsgsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
   val refreshMsgsLiveData = MutableLiveData<Result<Boolean?>>()
-
-  val msgsCountLiveData = Transformations.switchMap(loadMsgsFromRemoteServerLiveData) {
-    liveData {
-      if (it.status != Result.Status.SUCCESS) return@liveData
-      val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: return@liveData
-      val folder = activeLocalFolderMutableStateFlow.value ?: return@liveData
-      val label = if (folder.searchQuery.isNullOrEmpty()) {
-        folder.fullName
-      } else {
-        JavaEmailConstants.FOLDER_SEARCH
-      }
-      emit(roomDatabase.msgDao().countSuspend(account, label))
-    }
-  }
 
   fun switchFolder(newFolder: LocalFolder, deleteAllMsgs: Boolean, forceClearFolderCache: Boolean) {
     if (activeLocalFolderMutableStateFlow.value == newFolder) {

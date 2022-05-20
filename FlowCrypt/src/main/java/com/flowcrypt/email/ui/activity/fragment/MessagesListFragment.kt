@@ -726,9 +726,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
                 if (oldState == IOverScrollState.STATE_DRAG_END_SIDE
                   && System.currentTimeMillis() - lastCallTime >= TIMEOUT_BETWEEN_ACTIONS
                 ) {
-                  if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
+                  /*if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
                     adapter.refresh()
-                  }
+                  }*/
                 }
               }
             }
@@ -825,19 +825,48 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
   }
 
   private fun setupMsgsViewModel() {
-    msgsViewModel.msgsCountLiveData.observe(viewLifecycleOwner) {
-      if ((it ?: 0) == 0) {
-        showEmptyView()
-      } else {
-        showContent()
-      }
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
     lifecycleScope.launch {
       msgsViewModel.pagerFlow.collectLatest { pagingData ->
         adapter.submitData(pagingData)
         actionMode?.invalidate()
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
+      msgsViewModel.loadMsgsListProgressStateFlow.collect {
+        val resultCode = it.first
+        val progress = it.second.toInt()
+
+        if (progress == 0) {
+          countingIdlingResource?.incrementSafely()
+        }
+
+        if (binding?.recyclerViewMsgs?.adapter?.itemCount == 0) {
+          showProgress()
+        }
+
+        when (resultCode) {
+          R.id.progress_id_start_of_loading_new_messages -> setActionProgress(
+            progress,
+            "Starting"
+          )
+
+          R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
+
+          R.id.progress_id_getting_list_of_emails -> setActionProgress(
+            progress,
+            "Getting list of emails"
+          )
+
+          R.id.progress_id_gmail_list -> setActionProgress(progress, "Getting list of emails")
+
+          R.id.progress_id_gmail_msgs_info -> setActionProgress(progress, "Getting emails info")
+          R.id.progress_id_done -> {
+            setActionProgress(progress, "Done")
+            countingIdlingResource?.decrementSafely()
+          }
+        }
       }
     }
 
@@ -859,57 +888,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
       }
     }
 
-    msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
+    /*msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          if (it.progress == null) {
-            countingIdlingResource?.incrementSafely()
-          }
 
-          if (binding?.recyclerViewMsgs?.adapter?.itemCount == 0) {
-            showProgress()
-          }
-
-          val progress = it.progress?.toInt() ?: 0
-
-          when (it.resultCode) {
-            R.id.progress_id_start_of_loading_new_messages -> setActionProgress(
-              progress,
-              "Starting"
-            )
-
-            R.id.progress_id_adding_task_to_queue -> setActionProgress(progress, "Queuing")
-
-            R.id.progress_id_running_task -> setActionProgress(progress, "Running task")
-
-            R.id.progress_id_resetting_connection -> setActionProgress(
-              progress,
-              "Resetting connection"
-            )
-
-            R.id.progress_id_connecting_to_email_server -> setActionProgress(progress, "Connecting")
-
-            R.id.progress_id_running_smtp_action -> setActionProgress(
-              progress,
-              "Running SMTP action"
-            )
-
-            R.id.progress_id_running_imap_action -> setActionProgress(
-              progress,
-              "Running IMAP action"
-            )
-
-            R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
-
-            R.id.progress_id_getting_list_of_emails -> setActionProgress(
-              progress,
-              "Getting list of emails"
-            )
-
-            R.id.progress_id_gmail_list -> setActionProgress(progress, "Getting list of emails")
-
-            R.id.progress_id_gmail_msgs_info -> setActionProgress(progress, "Getting emails info")
-          }
         }
 
         Result.Status.SUCCESS -> {
@@ -947,7 +929,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
           countingIdlingResource?.decrementSafely()
         }
       }
-    }
+    }*/
 
     msgsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) {
       when (it) {
