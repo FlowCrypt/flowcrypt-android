@@ -21,7 +21,7 @@ import android.widget.TextView
 import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
 import androidx.paging.PagedList
-import androidx.paging.PagingDataAdapter
+import androidx.paging.PagedListAdapter
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
@@ -47,7 +47,7 @@ import java.util.regex.Pattern
  *         E-mail: DenBond7@gmail.com
  */
 class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
-  PagingDataAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
+  PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
   var tracker: SelectionTracker<Long>? = null
   var currentFolder: LocalFolder? = null

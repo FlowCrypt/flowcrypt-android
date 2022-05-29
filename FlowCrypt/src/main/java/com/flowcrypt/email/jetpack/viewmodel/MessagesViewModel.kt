@@ -13,9 +13,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Config
 import androidx.paging.PagedList
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.liveData
+import androidx.paging.toLiveData
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -101,20 +99,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           JavaEmailConstants.FOLDER_SEARCH
         }
 
-        val config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3)
         emitSource(
-          Pager(
-            PagingConfig(
-              config.pageSize,
-              config.prefetchDistance,
-              config.enablePlaceholders,
-              config.initialLoadSizeHint,
-              config.maxSize
-            ),
-            null,
-            roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
-              .asPagingSourceFactory(ArchTaskExecutor.getIOThreadExecutor().asCoroutineDispatcher())
-          ).liveData
+          roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
+            .toLiveData(
+              config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
+              boundaryCallback = boundaryCallback
+            )
         )
       }
     }
@@ -603,7 +593,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
    * Generate a list of [EmailAndNamePair] objects from the input message.
    * This information will be retrieved from "to" and "cc" headers.
    *
-   * @param msg The input [jakarta.mail.Message].
+   * @param msg The input [javax.mail.Message].
    * @return <tt>[List]</tt> of EmailAndNamePair objects, which contains information
    * about
    * emails and names.
