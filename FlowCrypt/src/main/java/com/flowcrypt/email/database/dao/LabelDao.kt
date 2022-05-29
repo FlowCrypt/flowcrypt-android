@@ -23,10 +23,16 @@ import com.flowcrypt.email.database.entity.LabelEntity
  */
 @Dao
 interface LabelDao : BaseDao<LabelEntity> {
-  @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType AND name = :label")
+  @Query(
+    "SELECT * FROM labels " +
+        "WHERE email = :account AND account_type = :accountType AND name = :label"
+  )
   suspend fun getLabelSuspend(account: String, accountType: String?, label: String): LabelEntity?
 
-  @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType AND name = :label")
+  @Query(
+    "SELECT * FROM labels " +
+        "WHERE email = :account AND account_type = :accountType AND name = :label"
+  )
   fun getLabel(account: String, accountType: String?, label: String): LabelEntity?
 
   @Query("SELECT * FROM labels WHERE email = :account AND account_type = :accountType")

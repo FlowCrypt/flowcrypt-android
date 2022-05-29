@@ -18,9 +18,8 @@ import com.flowcrypt.email.database.dao.BaseDao.Companion.getEntitiesViaStepsSus
 import com.flowcrypt.email.database.entity.MessageEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.Locale
 import javax.mail.Flags
-import kotlin.collections.ArrayList
 
 /**
  * This class describes available methods for [MessageEntity]
@@ -55,33 +54,48 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   ):
       List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy"
+  )
   abstract fun getNewMsgs(
     account: String, folder: String,
     orderBy: String = "received_date ASC"
   ): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy"
+  )
   abstract suspend fun getNewMsgsSuspend(
     account: String, folder: String,
     orderBy: String = "received_date ASC"
   ): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)"
+  )
   abstract fun getMsgsByUids(
     account: String?,
     folder: String?,
     msgsUID: Collection<Long>?
   ): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)"
+  )
   abstract suspend fun getMsgsByUidsSuspend(
     account: String?,
     folder: String?,
     msgsUID: Collection<Long>?
   ): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder ORDER BY received_date DESC"
+  )
   abstract fun getMessagesDataSourceFactory(
     account: String,
     folder: String
@@ -123,20 +137,29 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     label: String = JavaEmailConstants.FOLDER_OUTBOX
   ): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state IN (:msgStates)")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :label AND state IN (:msgStates)"
+  )
   abstract fun getOutboxMsgsByStates(
     account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
     msgStates: Collection<Int>
   ): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state IN (:msgStates)")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :label AND state IN (:msgStates)"
+  )
   abstract suspend fun getOutboxMsgsByStatesSuspend(
     account: String?,
     label: String = JavaEmailConstants.FOLDER_OUTBOX,
     msgStates: Collection<Int>
   ): List<MessageEntity>
 
-  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid = :uid AND (state NOT IN (:msgStates) OR state IS NULL)")
+  @Query(
+    "DELETE FROM messages WHERE email = :email " +
+        "AND folder = :label AND uid = :uid AND (state NOT IN (:msgStates) OR state IS NULL)"
+  )
   abstract suspend fun deleteOutgoingMsg(
     email: String?, label: String?, uid: Long?,
     msgStates: Collection<Int> = listOf(
@@ -146,7 +169,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     )
   ): Int
 
-  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :label AND (state IN (:msgStates) OR state IS NULL)")
+  @Query(
+    "SELECT COUNT(*) FROM messages WHERE email = :account " +
+        "AND folder = :label AND (state IN (:msgStates) OR state IS NULL)"
+  )
   abstract fun getFailedOutgoingMsgsCount(
     account: String?,
     label: String = JavaEmailConstants.FOLDER_OUTBOX,
@@ -162,7 +188,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     )
   ): Int
 
-  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :label AND (state IN (:msgStates) OR state IS NULL)")
+  @Query(
+    "SELECT COUNT(*) FROM messages WHERE email = :account " +
+        "AND folder = :label AND (state IN (:msgStates) OR state IS NULL)"
+  )
   abstract suspend fun getFailedOutgoingMsgsCountSuspend(
     account: String?,
     label: String = JavaEmailConstants.FOLDER_OUTBOX,
@@ -187,7 +216,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getLastUIDOfMsgForLabel(account: String?, folder: String?): Int
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY uid DESC LIMIT 1")
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder ORDER BY uid DESC LIMIT 1"
+  )
   abstract suspend fun getNewestMsg(account: String?, folder: String?): MessageEntity?
 
   @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
@@ -209,7 +241,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @param label     The label name.
    * @return The list of UID of selected messages in the database for some label.
    */
-  @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND is_encrypted = -1")
+  @Query(
+    "SELECT uid FROM messages " +
+        "WHERE email = :account AND folder = :label AND is_encrypted = -1"
+  )
   abstract suspend fun getNotCheckedUIDs(account: String?, label: String): List<Long>
 
   /**
@@ -219,7 +254,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @param label     The label name.
    * @return The list of UID and flags of all unseen messages in the database for some label.
    */
-  @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND flags NOT LIKE '%\\SEEN'")
+  @Query(
+    "SELECT uid FROM messages " +
+        "WHERE email = :account AND folder = :label AND flags NOT LIKE '%\\SEEN'"
+  )
   abstract fun getUIDOfUnseenMsgs(account: String?, label: String): List<Long>
 
   /**
@@ -231,20 +269,32 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @param newValues  The new value.
    * @return The count of the changed rows or -1 up.
    */
-  @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
+  @Query(
+    "UPDATE messages SET state=:newValues " +
+        "WHERE email = :account AND folder = :label AND state = :oldValue"
+  )
   abstract fun changeMsgsState(account: String?, label: String?, oldValue: Int, newValues: Int): Int
 
-  @Query("UPDATE messages SET state=:newValue WHERE email = :account AND folder = :label")
+  @Query(
+    "UPDATE messages SET state=:newValue " +
+        "WHERE email = :account AND folder = :label"
+  )
   abstract fun changeMsgsState(account: String?, label: String?, newValue: Int? = null): Int
 
-  @Query("UPDATE messages SET state=:newValue WHERE email = :account AND folder = :label")
+  @Query(
+    "UPDATE messages SET state=:newValue " +
+        "WHERE email = :account AND folder = :label"
+  )
   abstract suspend fun changeMsgsStateSuspend(
     account: String?,
     label: String?,
     newValue: Int? = null
   ): Int
 
-  @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
+  @Query(
+    "UPDATE messages SET state=:newValues " +
+        "WHERE email = :account AND folder = :label AND state = :oldValue"
+  )
   abstract suspend fun changeMsgsStateSuspend(
     account: String?, label: String?, oldValue: Int,
     newValues: Int
@@ -255,7 +305,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    *
    * @param account   The email that the message linked
    */
-  @Query("UPDATE messages SET state=2 WHERE email = :account AND folder = :label AND state =:oldValue")
+  @Query(
+    "UPDATE messages SET state=2 " +
+        "WHERE email = :account AND folder = :label AND state =:oldValue"
+  )
   abstract fun resetMsgsWithSendingState(
     account: String?,
     label: String = JavaEmailConstants.FOLDER_OUTBOX,
@@ -267,7 +320,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    *
    * @param account   The email that the message linked
    */
-  @Query("UPDATE messages SET state=2 WHERE email = :account AND folder = :label AND state =:oldValue")
+  @Query(
+    "UPDATE messages SET state=2 " +
+        "WHERE email = :account AND folder = :label AND state =:oldValue"
+  )
   abstract suspend fun resetMsgsWithSendingStateSuspend(
     account: String?,
     label: String = JavaEmailConstants.FOLDER_OUTBOX,
@@ -306,7 +362,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     stateValue: Int
   ): List<MessageEntity>
 
-  @Query("UPDATE messages SET is_new = 0 WHERE email = :account AND folder = :label AND uid IN (:uidList)")
+  @Query(
+    "UPDATE messages SET is_new = 0 " +
+        "WHERE email = :account AND folder = :label AND uid IN (:uidList)"
+  )
   abstract suspend fun markMsgsAsOld(
     account: String?,
     label: String?,
