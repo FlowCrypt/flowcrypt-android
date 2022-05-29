@@ -18,7 +18,6 @@ class JavaEmailConstants {
 
     const val DEFAULT_FETCH_BUFFER = 1024 * 1024
     const val ATTACHMENTS_FETCH_BUFFER = 1024 * 256
-    const val COUNT_OF_LOADED_EMAILS_BY_STEP = 45
 
     /*IMAP*/
     const val PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE = "mail.imap.ssl.enable"

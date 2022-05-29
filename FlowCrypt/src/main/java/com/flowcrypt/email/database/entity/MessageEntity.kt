@@ -30,7 +30,6 @@ import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSetting
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
-import java.util.ArrayList
 import java.util.Properties
 import javax.mail.Flags
 import javax.mail.Message
@@ -225,6 +224,7 @@ data class MessageEntity(
     if (msgState != other.msgState) return false
     if (isSeen != other.isSeen) return false
     if (uidAsHEX != other.uidAsHEX) return false
+    if (isPasswordProtected != other.isPasswordProtected) return false
 
     return true
   }
@@ -259,6 +259,7 @@ data class MessageEntity(
     result = 31 * result + msgState.hashCode()
     result = 31 * result + isSeen.hashCode()
     result = 31 * result + uidAsHEX.hashCode()
+    result = 31 * result + isPasswordProtected.hashCode()
     return result
   }
 

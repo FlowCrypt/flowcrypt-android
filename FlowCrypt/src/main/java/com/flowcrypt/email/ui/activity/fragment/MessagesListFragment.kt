@@ -29,6 +29,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -72,6 +73,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.adapter.MsgsLoadStateAdapter
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
@@ -81,6 +83,8 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.imap.protocol.SearchSequence
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
 import me.everything.android.ui.overscroll.IOverScrollState
@@ -98,8 +102,8 @@ import javax.mail.AuthenticationFailedException
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListProgressBehaviour,
-  SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {
+class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(),
+  ListProgressBehaviour, SwipeRefreshLayout.OnRefreshListener {
 
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentMessagesListBinding.inflate(inflater, container, false)
@@ -120,13 +124,27 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private var footerProgressView: View? = null
   private var tracker: SelectionTracker<Long>? = null
-  private var keyProvider: CustomStableIdKeyProvider? = null
   private var actionMode: ActionMode? = null
   private var activeMsgEntity: MessageEntity? = null
   private val currentFolder: LocalFolder?
     get() = labelsViewModel.activeFolderLiveData.value
 
-  private lateinit var adapter: MsgsPagedListAdapter
+  private val adapter by lazy {
+    MsgsPagedListAdapter(object : MsgsPagedListAdapter.OnMessagesActionListener {
+      override fun onMsgClick(msgEntity: MessageEntity) {
+        onMsgClicked(msgEntity)
+      }
+
+      override fun onExistingMsgsChanged(snapshotOfExistingIds: Set<Long>) {
+        val selectedIds = tracker?.selection?.mapNotNull { it }?.toSet() ?: emptySet()
+        val irrelevantSelectedIds = selectedIds - snapshotOfExistingIds
+        tracker?.setItemsSelected(irrelevantSelectedIds, false)
+      }
+    }) { key -> tracker?.isSelected(key) ?: false }
+  }
+
+  private val keyProvider by lazy { CustomStableIdKeyProvider(adapter) }
+
   private var keepSelectionInMemory = false
   private var isForceSendingEnabled: Boolean = true
 
@@ -161,7 +179,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    adapter = MsgsPagedListAdapter(this)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -342,58 +359,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
-  override fun onMsgClick(msgEntity: MessageEntity) {
-    activeMsgEntity = msgEntity
-    if (tracker?.hasSelection() == true) {
-      return
-    }
-
-    val isOutbox =
-      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)
-    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
-    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
-      when (msgEntity.msgState) {
-        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
-        MessageState.ERROR_CACHE_PROBLEM,
-        MessageState.ERROR_DURING_CREATION,
-        MessageState.ERROR_SENDING_FAILED,
-        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
-        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
-        MessageState.ERROR_PASSWORD_PROTECTED -> handleOutgoingMsgWhichHasSomeError(
-          msgEntity
-        )
-        else -> {
-          if (isOutbox && !isRawMsgAvailable) {
-            showTwoWayDialog(
-              requestCode = REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE,
-              dialogTitle = "",
-              dialogMsg = getString(R.string.message_failed_to_create),
-              positiveButtonTitle = getString(R.string.delete_message),
-              negativeButtonTitle = getString(R.string.cancel),
-              isCancelable = true
-            )
-          } else {
-            currentFolder?.let { localFolder ->
-              navController?.navigate(
-                MessagesListFragmentDirections.actionMessagesListFragmentToMessageDetailsFragment(
-                  messageEntity = msgEntity,
-                  localFolder = localFolder
-                )
-              )
-            }
-          }
-        }
-      }
-    } else {
-      showInfoSnackbar(
-        view,
-        getString(R.string.internet_connection_is_not_available),
-        Snackbar.LENGTH_LONG
-      )
-    }
-  }
-
   fun onDrawerStateChanged(slideOffset: Float, isOpened: Boolean) {
     when {
       slideOffset > 0 -> {
@@ -513,9 +478,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
-  /**
-   * Try to load a next messages from an IMAP server.
-   */
   private fun loadNextMsgs() {
     if (isOutboxFolder) {
       return
@@ -527,8 +489,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       if (currentFolder == null) {
         labelsViewModel.loadLabels()
       } else {
-        adapter.changeProgress(true)
-        msgsViewModel.loadMsgsFromRemoteServer()
+        adapter.refresh()
       }
     } else {
       footerProgressView?.visibility = View.GONE
@@ -569,35 +530,30 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     binding?.recyclerViewMsgs?.addItemDecoration(
       DividerItemDecoration(context, layoutManager.orientation)
     )
-    binding?.recyclerViewMsgs?.adapter = adapter
+    binding?.recyclerViewMsgs?.adapter = adapter.withLoadStateFooter(MsgsLoadStateAdapter())
     setupItemTouchHelper()
     setupSelectionTracker()
     setupBottomOverScroll()
   }
 
   private fun setupSelectionTracker() {
-    adapter.tracker = null
     binding?.recyclerViewMsgs?.let { recyclerView ->
-      keyProvider = CustomStableIdKeyProvider(recyclerView)
-      keyProvider?.let {
-        tracker = SelectionTracker.Builder(
-          MessagesListFragment::class.java.simpleName,
-          recyclerView,
-          it,
-          MsgItemDetailsLookup(recyclerView),
-          StorageStrategy.createLongStorage()
-        ).withSelectionPredicate(object : SelectionTracker.SelectionPredicate<Long>() {
-          override fun canSetStateForKey(key: Long, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+      tracker = SelectionTracker.Builder(
+        MessagesListFragment::class.java.simpleName,
+        recyclerView,
+        keyProvider,
+        MsgItemDetailsLookup(recyclerView),
+        StorageStrategy.createLongStorage()
+      ).withSelectionPredicate(object : SelectionTracker.SelectionPredicate<Long>() {
+        override fun canSetStateForKey(key: Long, nextState: Boolean): Boolean =
+          currentFolder?.searchQuery == null
 
-          override fun canSetStateAtPosition(position: Int, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+        override fun canSetStateAtPosition(position: Int, nextState: Boolean): Boolean =
+          currentFolder?.searchQuery == null
 
-          override fun canSelectMultiple(): Boolean = true
-        }).build()
-        tracker?.addObserver(selectionObserver)
-        adapter.tracker = tracker
-      }
+        override fun canSelectMultiple(): Boolean = true
+      }).build()
+      tracker?.addObserver(selectionObserver)
     }
   }
 
@@ -623,7 +579,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       ): Int {
         val position = viewHolder.bindingAdapterPosition
         return if (position != RecyclerView.NO_POSITION) {
-          val msgEntity = adapter.getMsgEntity(position)
+          val msgEntity: MessageEntity? = adapter.getMessageEntity(position)
           if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
             0
           } else
@@ -636,11 +592,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         val position = viewHolder.bindingAdapterPosition
         if (position != RecyclerView.NO_POSITION) {
-          val item = adapter.getItemId(position)
+          val itemId = adapter.getMessageEntity(position)?.id ?: return
           currentFolder?.let {
             msgsViewModel.changeMsgsState(
-              listOf(item), it, MessageState
-                .PENDING_ARCHIVING, false
+              ids = listOf(itemId),
+              localFolder = it,
+              newMsgState = MessageState.PENDING_ARCHIVING,
+              notifyMsgStatesListener = false
             )
           }
 
@@ -651,7 +609,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             duration = Snackbar.LENGTH_LONG
           ) {
             currentFolder?.let {
-              msgsViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
+              msgsViewModel.changeMsgsState(
+                ids = listOf(itemId),
+                localFolder = it,
+                newMsgState = MessageState.NONE,
+                notifyMsgStatesListener = false
+              )
               //we should force archiving action because we can have other messages in the pending archiving states
               msgsViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
             }
@@ -763,9 +726,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 if (oldState == IOverScrollState.STATE_DRAG_END_SIDE
                   && System.currentTimeMillis() - lastCallTime >= TIMEOUT_BETWEEN_ACTIONS
                 ) {
-                  if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
-                    msgsViewModel.loadMsgsFromRemoteServer()
-                  }
+                  /*if (msgsViewModel.loadMsgsFromRemoteServerLiveData.value?.status != Result.Status.LOADING) {
+                    adapter.refresh()
+                  }*/
                 }
               }
             }
@@ -842,7 +805,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         if (isChangeSeenStateActionEnabled()) {
           val id = tracker?.selection?.first() ?: return true
-          val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
+          val msgEntity = adapter.getMessageEntity(keyProvider.getPosition(id))
 
           menuActionMarkUnread?.isVisible = msgEntity?.isSeen == true
           menuActionMarkRead?.isVisible = msgEntity?.isSeen != true
@@ -862,74 +825,73 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   private fun setupMsgsViewModel() {
-    msgsViewModel.msgsCountLiveData.observe(viewLifecycleOwner) {
-      if (it ?: 0 == 0) {
-        showEmptyView()
-      } else {
-        showContent()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    lifecycleScope.launch {
+      msgsViewModel.pagerFlow.collectLatest { pagingData ->
+        adapter.submitData(pagingData)
+        actionMode?.invalidate()
       }
     }
 
-    msgsViewModel.msgsLiveData?.observe(viewLifecycleOwner) {
-      if (it?.size ?: 0 != 0) {
-        showContent()
-      }
+    lifecycleScope.launchWhenStarted {
+      msgsViewModel.loadMsgsListProgressStateFlow.collect {
+        val resultCode = it.first
+        val progress = it.second.toInt()
 
-      adapter.submitList(it)
-      actionMode?.invalidate()
-    }
+        if (progress == 0) {
+          countingIdlingResource?.incrementSafely()
+        }
 
-    msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          if (it.progress == null) {
-            countingIdlingResource?.incrementSafely()
+        if (binding?.recyclerViewMsgs?.adapter?.itemCount == 0) {
+          showProgress()
+        }
+
+        when (resultCode) {
+          R.id.progress_id_start_of_loading_new_messages -> setActionProgress(
+            progress,
+            "Starting"
+          )
+
+          R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
+
+          R.id.progress_id_getting_list_of_emails -> setActionProgress(
+            progress,
+            "Getting list of emails"
+          )
+
+          R.id.progress_id_gmail_list -> setActionProgress(progress, "Getting list of emails")
+
+          R.id.progress_id_gmail_msgs_info -> setActionProgress(progress, "Getting emails info")
+          R.id.progress_id_done -> {
+            setActionProgress(progress, "Done")
+            countingIdlingResource?.decrementSafely()
           }
+        }
+      }
+    }
 
-          if (binding?.recyclerViewMsgs?.adapter?.itemCount == 0) {
+    lifecycleScope.launch {
+      adapter.loadStateFlow.collect { loadState ->
+        when {
+          loadState.mediator?.refresh is LoadState.Loading && adapter.itemCount == 0 -> {
             showProgress()
           }
 
-          val progress = it.progress?.toInt() ?: 0
-
-          when (it.resultCode) {
-            R.id.progress_id_start_of_loading_new_messages -> setActionProgress(
-              progress,
-              "Starting"
-            )
-
-            R.id.progress_id_adding_task_to_queue -> setActionProgress(progress, "Queuing")
-
-            R.id.progress_id_running_task -> setActionProgress(progress, "Running task")
-
-            R.id.progress_id_resetting_connection -> setActionProgress(
-              progress,
-              "Resetting connection"
-            )
-
-            R.id.progress_id_connecting_to_email_server -> setActionProgress(progress, "Connecting")
-
-            R.id.progress_id_running_smtp_action -> setActionProgress(
-              progress,
-              "Running SMTP action"
-            )
-
-            R.id.progress_id_running_imap_action -> setActionProgress(
-              progress,
-              "Running IMAP action"
-            )
-
-            R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
-
-            R.id.progress_id_getting_list_of_emails -> setActionProgress(
-              progress,
-              "Getting list of emails"
-            )
-
-            R.id.progress_id_gmail_list -> setActionProgress(progress, "Getting list of emails")
-
-            R.id.progress_id_gmail_msgs_info -> setActionProgress(progress, "Getting emails info")
+          loadState.refresh is LoadState.NotLoading && adapter.itemCount == 0 -> {
+            showEmptyView()
           }
+
+          loadState.refresh is LoadState.NotLoading && adapter.itemCount > 0 -> {
+            showContent()
+          }
+        }
+      }
+    }
+
+    /*msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
+      when (it.status) {
+        Result.Status.LOADING -> {
+
         }
 
         Result.Status.SUCCESS -> {
@@ -967,7 +929,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           countingIdlingResource?.decrementSafely()
         }
       }
-    }
+    }*/
 
     msgsViewModel.msgStatesLiveData.observe(viewLifecycleOwner) {
       when (it) {
@@ -1137,9 +1099,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
               if (ids.isNotEmpty()) {
                 msgsViewModel.changeMsgsState(
-                  ids,
-                  localFolder,
-                  MessageState.PENDING_DELETING_PERMANENTLY
+                  ids = ids,
+                  localFolder = localFolder,
+                  newMsgState = MessageState.PENDING_DELETING_PERMANENTLY
                 )
               }
             }
@@ -1238,8 +1200,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     tracker?.clearSelection()
 
     val newFolder = currentFolder
-    adapter.currentFolder = newFolder
-    adapter.submitList(null)
+    adapter.switchFolder(newFolder)
 
     val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
     val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
@@ -1265,7 +1226,58 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         getString(R.string.progress_message, progress, message)
     } else {
       binding?.textViewActionProgress?.text = null
-      adapter.changeProgress(false)
+    }
+  }
+
+  private fun onMsgClicked(msgEntity: MessageEntity) {
+    activeMsgEntity = msgEntity
+    if (tracker?.hasSelection() == true) {
+      return
+    }
+
+    val isOutbox =
+      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)
+    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
+    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
+      when (msgEntity.msgState) {
+        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+        MessageState.ERROR_CACHE_PROBLEM,
+        MessageState.ERROR_DURING_CREATION,
+        MessageState.ERROR_SENDING_FAILED,
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
+        MessageState.ERROR_PASSWORD_PROTECTED -> handleOutgoingMsgWhichHasSomeError(
+          msgEntity
+        )
+        else -> {
+          if (isOutbox && !isRawMsgAvailable) {
+            showTwoWayDialog(
+              requestCode = REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE,
+              dialogTitle = "",
+              dialogMsg = getString(R.string.message_failed_to_create),
+              positiveButtonTitle = getString(R.string.delete_message),
+              negativeButtonTitle = getString(R.string.cancel),
+              isCancelable = true
+            )
+          } else {
+            currentFolder?.let { localFolder ->
+              navController?.navigate(
+                MessagesListFragmentDirections.actionMessagesListFragmentToMessageDetailsFragment(
+                  messageEntity = msgEntity,
+                  localFolder = localFolder
+                )
+              )
+            }
+          }
+        }
+      }
+    } else {
+      showInfoSnackbar(
+        view,
+        getString(R.string.internet_connection_is_not_available),
+        Snackbar.LENGTH_LONG
+      )
     }
   }
 

@@ -19,7 +19,7 @@ import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 class MsgItemDetailsLookup(private val recyclerView: RecyclerView) : ItemDetailsLookup<Long>() {
   override fun getItemDetails(e: MotionEvent): ItemDetails<Long>? {
     return recyclerView.findChildViewUnder(e.x, e.y)?.let {
-      (recyclerView.getChildViewHolder(it) as? MsgsPagedListAdapter.BaseViewHolder)?.getItemDetails()
+      (recyclerView.getChildViewHolder(it) as? MsgsPagedListAdapter.MessageViewHolder)?.getItemDetails()
     }
   }
 }
