@@ -209,8 +209,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
-        //need for ACRA, maybe will be deleted in the upcoming updates
-        freeCompilerArgs = ['-Xjvm-default=enable']
     }
 
     packagingOptions {
