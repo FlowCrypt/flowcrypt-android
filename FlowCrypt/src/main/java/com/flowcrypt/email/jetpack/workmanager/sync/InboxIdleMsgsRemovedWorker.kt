@@ -17,11 +17,11 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Folder
+import jakarta.mail.Store
+import jakarta.mail.UIDFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.mail.Folder
-import javax.mail.Store
-import javax.mail.UIDFolder
 
 /**
  * @author Denis Bondarenko

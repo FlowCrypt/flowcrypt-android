@@ -34,6 +34,7 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
+import jakarta.mail.Message
 import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -41,7 +42,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.util.UUID
-import javax.mail.Message
 
 /**
  * @author Denis Bondarenko

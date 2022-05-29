@@ -47,6 +47,14 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import com.google.api.client.http.FileContent
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.util.MailConnectException
+import jakarta.mail.AuthenticationFailedException
+import jakarta.mail.Flags
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.Session
+import jakarta.mail.Store
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -54,15 +62,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.net.SocketException
-import java.util.*
-import javax.mail.AuthenticationFailedException
-import javax.mail.Flags
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.Session
-import javax.mail.Store
-import javax.mail.internet.MimeMessage
 import javax.net.ssl.SSLException
 
 /**

@@ -9,10 +9,10 @@ package com.flowcrypt.email.core.msg
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PlainAttMsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
 import java.nio.charset.StandardCharsets
 import java.util.Properties
-import javax.mail.Session
-import javax.mail.internet.MimeMessage
 
 object MimeUtils {
   fun resemblesMsg(msg: ByteArray?): Boolean {

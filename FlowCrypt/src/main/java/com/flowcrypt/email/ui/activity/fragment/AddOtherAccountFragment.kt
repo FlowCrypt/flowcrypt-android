@@ -59,10 +59,10 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
+import jakarta.mail.AuthenticationFailedException
 import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
 import java.util.Locale
-import javax.mail.AuthenticationFailedException
 
 /**
  * @author Denis Bondarenko

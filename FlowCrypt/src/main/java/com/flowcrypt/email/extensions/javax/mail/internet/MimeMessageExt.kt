@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.extensions.javax.mail.internet
+package com.flowcrypt.email.extensions.jakarta.mail.internet
 
-import javax.mail.Message
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
+import jakarta.mail.Message
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 
 /**
  * @author Denis Bondarenko

@@ -10,7 +10,7 @@ import android.os.Parcelable
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import javax.mail.internet.InternetAddress
+import jakarta.mail.internet.InternetAddress
 
 /**
  * Simple POJO class which describe an outgoing message model.

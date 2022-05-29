@@ -19,6 +19,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
+import jakarta.mail.internet.InternetAddress
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -31,7 +32,6 @@ import org.pgpainless.util.Passphrase
 import java.time.Instant
 import java.util.TreeMap
 import java.util.concurrent.TimeUnit
-import javax.mail.internet.InternetAddress
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys

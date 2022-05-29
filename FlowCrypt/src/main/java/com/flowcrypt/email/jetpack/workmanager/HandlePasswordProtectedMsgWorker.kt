@@ -21,7 +21,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.javax.mail.internet.getFromAddress
+import com.flowcrypt.email.extensions.jakarta.mail.internet.getFromAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
@@ -34,6 +34,14 @@ import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.GsonBuilder
 import com.sun.mail.util.MailConnectException
+import jakarta.mail.Address
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.Multipart
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
@@ -45,14 +53,6 @@ import java.io.InputStream
 import java.net.SocketException
 import java.util.Base64
 import java.util.Properties
-import javax.mail.Address
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.Multipart
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeBodyPart
-import javax.mail.internet.MimeMessage
 import javax.net.ssl.SSLException
 import kotlin.random.Random
 

@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import com.flowcrypt.email.security.pgp.PgpKey
-import javax.mail.internet.MimePart
+import jakarta.mail.internet.MimePart
 
 object MsgBlockFactory {
   val supportedMsgBlockTypes = listOf(

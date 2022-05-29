@@ -37,7 +37,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.javax.mail.isOpenPGPMimeSigned
+import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -55,6 +55,13 @@ import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPMessage
+import jakarta.mail.BodyPart
+import jakarta.mail.FetchProfile
+import jakarta.mail.Folder
+import jakarta.mail.Multipart
+import jakarta.mail.Store
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,13 +73,6 @@ import java.io.BufferedInputStream
 import java.io.InputStream
 import java.util.Collections
 import java.util.LinkedList
-import javax.mail.BodyPart
-import javax.mail.FetchProfile
-import javax.mail.Folder
-import javax.mail.Multipart
-import javax.mail.Store
-import javax.mail.internet.MimeBodyPart
-import javax.mail.internet.MimeMessage
 
 /**
  * @author Denis Bondarenko

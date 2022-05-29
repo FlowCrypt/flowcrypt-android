@@ -15,10 +15,10 @@ import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Flags
+import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.mail.Flags
-import javax.mail.Message
 
 /**
  * @author Denis Bondarenko

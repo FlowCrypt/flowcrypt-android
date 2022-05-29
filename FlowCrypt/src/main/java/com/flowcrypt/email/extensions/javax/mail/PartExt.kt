@@ -4,11 +4,11 @@
  *    Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions.javax.mail
+package com.flowcrypt.email.extensions.jakarta.mail
 
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import javax.mail.Part
-import javax.mail.internet.ContentType
+import jakarta.mail.Part
+import jakarta.mail.internet.ContentType
 
 fun Part.isInline(): Boolean {
   return (this.disposition?.lowercase() ?: "") == Part.INLINE

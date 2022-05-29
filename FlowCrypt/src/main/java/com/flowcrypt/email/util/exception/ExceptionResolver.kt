@@ -12,15 +12,15 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.sun.mail.iap.ConnectionException
 import com.sun.mail.smtp.SMTPSendFailedException
 import com.sun.mail.util.MailConnectException
+import jakarta.mail.AuthenticationFailedException
+import jakarta.mail.FolderClosedException
+import jakarta.mail.MessagingException
+import jakarta.mail.StoreClosedException
 import kotlinx.coroutines.CancellationException
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.crypto.BadPaddingException
-import javax.mail.AuthenticationFailedException
-import javax.mail.FolderClosedException
-import javax.mail.MessagingException
-import javax.mail.StoreClosedException
 import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLProtocolException
 

@@ -43,6 +43,14 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.FetchProfile
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.Session
+import jakarta.mail.Store
+import jakarta.mail.UIDFolder
+import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,14 +60,6 @@ import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.util.Arrays
 import java.util.Properties
-import javax.mail.FetchProfile
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.Session
-import javax.mail.Store
-import javax.mail.UIDFolder
-import javax.mail.internet.InternetAddress
 
 
 /**

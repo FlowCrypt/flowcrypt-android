@@ -13,6 +13,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.ProgressOutputStream
 import com.flowcrypt.email.util.cache.DiskLruCache
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -23,7 +24,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import javax.crypto.CipherOutputStream
-import javax.mail.internet.MimeMessage
 
 /**
  * This class describes a logic of caching massages. Here we use [DiskLruCache] to store and retrieve raw MIME messages.
