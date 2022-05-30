@@ -32,9 +32,8 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
+import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
-import com.flowcrypt.email.model.EmailAndNamePair
-import com.flowcrypt.email.service.EmailAndNameUpdaterService
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -576,12 +575,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       val isSentFolder = imapFolder?.attributes?.contains("\\Sent") ?: true
 
       if (isSentFolder) {
-        val emailAndNamePairs = ArrayList<EmailAndNamePair>()
+        val emailAndNamePairs = mutableListOf<Pair<String, String?>>()
         for (message in messages) {
           emailAndNamePairs.addAll(getEmailAndNamePairs(message))
         }
 
-        EmailAndNameUpdaterService.enqueueWork(getApplication(), emailAndNamePairs)
+        EmailAndNameWorker.enqueue(getApplication(), emailAndNamePairs)
       }
     } catch (e: MessagingException) {
       e.printStackTrace()
@@ -590,23 +589,23 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   /**
-   * Generate a list of [EmailAndNamePair] objects from the input message.
+   * Generate a list of [Pair] objects from the input message.
    * This information will be retrieved from "to" and "cc" headers.
    *
-   * @param msg The input [javax.mail.Message].
-   * @return <tt>[List]</tt> of EmailAndNamePair objects, which contains information
+   * @param msg The input [jakarta.mail.Message].
+   * @return <tt>[List]</tt> of [Pair] objects, which contains information
    * about
    * emails and names.
    * @throws MessagingException when retrieve information about recipients.
    */
-  private fun getEmailAndNamePairs(msg: Message): List<EmailAndNamePair> {
-    val pairs = ArrayList<EmailAndNamePair>()
+  private fun getEmailAndNamePairs(msg: Message): List<Pair<String, String>> {
+    val pairs = mutableListOf<Pair<String, String>>()
 
     val addressesTo = msg.getRecipients(Message.RecipientType.TO)
     if (addressesTo != null) {
       for (address in addressesTo) {
         val internetAddress = address as InternetAddress
-        pairs.add(EmailAndNamePair(internetAddress.address, internetAddress.personal))
+        pairs.add(Pair(internetAddress.address, internetAddress.personal))
       }
     }
 
@@ -614,7 +613,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     if (addressesCC != null) {
       for (address in addressesCC) {
         val internetAddress = address as InternetAddress
-        pairs.add(EmailAndNamePair(internetAddress.address, internetAddress.personal))
+        pairs.add(Pair(internetAddress.address, internetAddress.personal))
       }
     }
 

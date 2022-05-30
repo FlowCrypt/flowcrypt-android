@@ -22,9 +22,7 @@ class JobIdManager {
      */
     const val JOB_MAX_ID = 10
 
-    const val JOB_TYPE_SYNC = 1
     const val JOB_TYPE_ACTION_QUEUE = 2
-    const val JOB_TYPE_EMAIL_AND_NAME_UPDATE = 3
     const val JOB_TYPE_PREPARE_OUT_GOING_MESSAGE = 4
     const val JOB_TYPE_FEEDBACK = 5
   }

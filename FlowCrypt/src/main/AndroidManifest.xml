@@ -144,11 +144,6 @@
             android:exported="false" />
 
         <service
-            android:name=".service.EmailAndNameUpdaterService"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
-        <service
             android:name=".service.IdleService"
             android:exported="false" />
 
