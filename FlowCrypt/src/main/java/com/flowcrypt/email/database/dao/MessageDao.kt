@@ -51,8 +51,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     account: String,
     folder: String,
     msgsID: Collection<Long>?
-  ):
-      List<MessageEntity>
+  ): List<MessageEntity>
 
   @Query(
     "SELECT * FROM messages " +
@@ -460,7 +459,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    */
   @Transaction
   open fun getMapOfUIDAndMsgFlags(email: String, label: String): Map<Long, String?> {
-    return getUIDAndFlagsPairs(email, label).map { it.uid to it.flags }.toMap()
+    return getUIDAndFlagsPairs(email, label).associate { it.uid to it.flags }
   }
 
   /**
@@ -473,7 +472,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Transaction
   open suspend fun getMapOfUIDAndMsgFlagsSuspend(email: String, label: String): Map<Long, String?> =
     withContext(Dispatchers.IO) {
-      return@withContext getUIDAndFlagsPairsSuspend(email, label).map { it.uid to it.flags }.toMap()
+      return@withContext getUIDAndFlagsPairsSuspend(email, label).associate { it.uid to it.flags }
     }
 
   /**
