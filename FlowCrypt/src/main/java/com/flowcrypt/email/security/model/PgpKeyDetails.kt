@@ -5,17 +5,22 @@
 
 package com.flowcrypt.email.security.model
 
+import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Patterns
+import androidx.core.content.ContextCompat
+import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.model.KeyImportDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import javax.mail.internet.AddressException
-import javax.mail.internet.InternetAddress
+import jakarta.mail.internet.AddressException
+import jakarta.mail.internet.InternetAddress
 
 /**
  * This class collects base info of [org.bouncycastle.openpgp.PGPKeyRing]
@@ -41,7 +46,8 @@ data class PgpKeyDetails constructor(
   @Expose val algo: Algo,
   @Expose val primaryKeyId: Long,
   var tempPassphrase: CharArray? = null,
-  var passphraseType: KeyEntity.PassphraseType? = null
+  var passphraseType: KeyEntity.PassphraseType? = null,
+  var importSourceType: KeyImportDetails.SourceType? = null
 ) : Parcelable {
   val fingerprint: String
     get() = ids.first().fingerprint
@@ -76,6 +82,9 @@ data class PgpKeyDetails constructor(
     source.createCharArray(),
     source.readParcelable<KeyEntity.PassphraseType>(
       KeyEntity.PassphraseType::class.java.classLoader
+    ),
+    source.readParcelable<KeyImportDetails.SourceType>(
+      KeyImportDetails.SourceType::class.java.classLoader
     )
   )
 
@@ -97,6 +106,7 @@ data class PgpKeyDetails constructor(
     writeLong(primaryKeyId)
     writeCharArray(tempPassphrase)
     writeParcelable(passphraseType, flags)
+    writeParcelable(importSourceType, flags)
   }
 
   fun getUserIdsAsSingleString(): String {
@@ -161,6 +171,34 @@ data class PgpKeyDetails constructor(
       fingerprint = fingerprint,
       publicKey = publicKey.toByteArray()
     )
+  }
+
+  fun getColorStateListDependsOnStatus(context: Context): ColorStateList? {
+    return ContextCompat.getColorStateList(
+      context, when {
+        usableForEncryption -> R.color.colorPrimary
+        isRevoked -> R.color.red
+        isExpired || isPartiallyEncrypted -> R.color.orange
+        else -> R.color.gray
+      }
+    )
+  }
+
+  fun getStatusIcon(): Int {
+    return when {
+      usableForEncryption -> R.drawable.ic_baseline_gpp_good_16
+      else -> R.drawable.ic_outline_warning_amber_16
+    }
+  }
+
+  fun getStatusText(context: Context): String {
+    return when {
+      usableForEncryption -> context.getString(R.string.valid)
+      isRevoked -> context.getString(R.string.revoked)
+      isExpired -> context.getString(R.string.expired)
+      isPartiallyEncrypted -> context.getString(R.string.not_valid)
+      else -> context.getString(R.string.undefined)
+    }
   }
 
   override fun equals(other: Any?): Boolean {

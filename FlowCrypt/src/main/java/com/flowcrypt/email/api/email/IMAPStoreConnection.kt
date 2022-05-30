@@ -14,15 +14,15 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.util.FolderClosedIOException
 import com.sun.mail.util.MailConnectException
+import jakarta.mail.FolderClosedException
+import jakarta.mail.MessagingException
+import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
-import javax.mail.FolderClosedException
-import javax.mail.MessagingException
-import javax.mail.Store
 import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLProtocolException
 

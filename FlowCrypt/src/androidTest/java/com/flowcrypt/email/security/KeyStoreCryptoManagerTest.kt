@@ -13,6 +13,8 @@ import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
 import okio.buffer
 import org.apache.commons.io.IOUtils
 import org.junit.After
@@ -26,8 +28,6 @@ import java.nio.charset.StandardCharsets
 import java.util.Properties
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
-import javax.mail.Session
-import javax.mail.internet.MimeMessage
 
 /**
  * @author Denis Bondarenko
@@ -107,7 +107,7 @@ class KeyStoreCryptoManagerTest {
     while (true) {
       val c = byteArrayInputStream.read()
 
-      if (c == -1 || c == '\n'.toInt()) {
+      if (c == -1 || c == '\n'.code) {
         break
       }
     }
@@ -181,7 +181,7 @@ class KeyStoreCryptoManagerTest {
     while (true) {
       val c = byteArrayInputStream.read()
 
-      if (c == -1 || c == '\n'.toInt()) {
+      if (c == -1 || c == '\n'.code) {
         break
       }
     }

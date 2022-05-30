@@ -20,7 +20,6 @@
     <string name="error_some_email_is_not_valid">Error: invalid email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Error: no internet</string>
     <string name="unknown_error">Unknown error</string>
-    <string name="action_settings">Settings</string>
     <string name="privacy">Privacy</string>
     <string name="terms">Terms</string>
     <string name="security">Security</string>
@@ -49,8 +48,7 @@
     <string name="please_wait_while_information_about_recipients_will_be_updated">Loading information about recipients, please wait</string>
     <string name="create_a_new_key">Create a new key</string>
     <string name="import_my_key">Import my key</string>
-    <string name="select_key_to_import">Select a key to import</string>
-    <string name="title_activity_settings">Settings</string>
+    <string name="settings">Settings</string>
     <string name="backups">Backups</string>
     <string name="contacts">Contacts</string>
     <string name="keys">Keys</string>
@@ -92,7 +90,7 @@
     <string name="error_occurred_please_try_again">Error occurred, please try again</string>
     <string name="user_photo">The user photo</string>
     <string name="template_message_part_public_key_owner">Public Key for %1$s</string>
-    <string name="template_message_part_public_key_fingerprint" formatted="false"><![CDATA[(Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
+    <string name="template_message_part_public_key_fingerprint"><![CDATA[(Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
     <string name="show_the_public_key">Show the Public Key</string>
     <string name="hide_the_public_key">Hide the Public Key</string>
     <string name="import_pub_key">Import public key</string>
@@ -105,12 +103,9 @@
     <string name="choose_another_key">Choose another key</string>
     <string name="continue_">Continue</string>
     <string name="info">Info</string>
-    <string name="hint">Hint</string>
     <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your %1$s Key where you are storing it, select the text and copy it. After that, return back to %2$s.</string>
-    <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP %1$s Key.</string>
     <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP %1$s Key.</string>
     <string name="source_has_wrong_pgp_structure">The content which you provided does not look like a valid PGP %1$s Key.</string>
-    <string name="evaluating">Evaluating…</string>
     <string name="key_successfully_imported">Key(s) successfully imported</string>
     <string name="the_key_successfully_imported">Key successfully imported</string>
     <string name="attach_file">Attach file</string>
@@ -128,7 +123,6 @@
     <string name="public_">Public</string>
     <string name="attachment">Attachment</string>
     <string name="can_not_connect_to_the_server">Cannot connect to the server</string>
-    <string name="failed_load_message_from_email_server">Failed to load message from email server</string>
     <string name="cancel">Cancel</string>
     <string name="waiting_to_load">Waiting to load</string>
     <string name="download_complete">Download complete</string>
@@ -176,7 +170,6 @@
     <string name="your_keys_cannot_open_this_message">Your keys cannot open this message</string>
     <string name="decrypt_error_current_key_cannot_open_message">Your current key cannot open this message. If you
         have any other keys available, you should import them now.</string>
-    <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
     <string name="from">From</string>
     <string name="show_original_message">Show original content</string>
     <string name="hide_original_message">Hide original content</string>
@@ -228,8 +221,6 @@
         this email account.</string>
     <string name="please_wait_while_key_will_be_created">Creating a key, please wait</string>
     <string name="not_private_key">This is not a private key</string>
-    <string name="get_access_to_gmail">Get access to Gmail</string>
-    <string name="sign_in">SIGN IN</string>
     <string name="setup_app">Please set up the app before use this option</string>
     <plurals name="not_recovered_all_keys">
         <item quantity="one">%1$d of %2$d keys successfully unlocked. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
@@ -241,7 +232,6 @@
     <string name="reply_encrypted">Reply\nEncrypted</string>
     <string name="reply_all_encrypted">Reply All\nEncrypted</string>
     <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
-    <string name="cannot_forward_encrypted_attachments">Encrypted attachments are not forwarded. Please attach the files if you want them included.</string>
     <string name="failed_please_try_again_later">Failed. Please try again later</string>
     <string name="cyrillic_search_not_support_yet">Searching with foreign alphabets not supported yet</string>
     <string name="add_contact">Add Contact</string>
@@ -254,8 +244,6 @@
     <string name="parsing_public_keys">Parsing public keys</string>
     <string name="importing_public_keys">Importing public keys</string>
     <string name="showing_only_encrypted_messages">Showing only encrypted messages</string>
-    <string name="showing_all_messages">Showing all messages</string>
-    <string name="no_encrypted_messages">No encrypted messages</string>
     <string name="messages">Messages</string>
     <string name="messages_notification_channel">The messages notification channel</string>
     <string name="notifications">Notifications</string>
@@ -281,8 +269,6 @@
         <item quantity="other">Loaded %1$d private keys from your clipboard</item>
     </plurals>
     <string name="select_only_one_key">Select a source that stores only one key</string>
-    <string name="yes">yes</string>
-    <string name="no">no</string>
     <string name="no_conn_msg_sent_later">Offline. The message will be sent later</string>
     <string name="me">me</string>
     <string name="sending">Sending&#8230;</string>
@@ -310,21 +296,16 @@
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="save_to_file">Save to file</string>
     <string name="show_private_key">Show private key</string>
-    <string name="template_fingerprint" formatted="false"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
-    <string name="template_date">Date: %1$s</string>
+    <string name="template_fingerprint"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
+    <string name="template_creation_date">Key creation: %1$s</string>
     <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
     <string name="saved">Saved</string>
     <string name="no_key_available">No key available for your email account</string>
     <string name="not_saved_file_already_exists">Not saved because the file already exists</string>
-    <string name="store_space_was_corrupted">App storage space was corrupted. This can happen on certain rooted or unofficial systems, due to user intervention, etc. Write us at %1$s if you need help.</string>
-    <string name="wipe_app_settings">Wipe %1$s App storage and set it up again to continue using %1$s on this device.</string>
-    <string name="reset_app_storage">Reset app storage</string>
     <string name="no_message_with_this_attachment">No message with this attachment</string>
     <string name="attachment_not_found">The attachment not found</string>
-    <string name="please_use_another_app_to_choose_file">Please use another app to choose a file</string>
-    <string name="file_not_found">File not found</string>
     <string name="no_pub_keys">There are no public keys</string>
     <string name="could_not_decrypt_message_due_to_error">Could not decrypt this message due to error:\n\n %1$s </string>
     <string name="show_aliases">Show aliases</string>
@@ -368,8 +349,6 @@
     <string name="pending">Pending&#8230;</string>
     <string name="mark_unread">Mark unread</string>
     <string name="user_not_verified">User not verified successfully</string>
-    <string name="submitting_pub_key">Submitting the pub key</string>
-    <string name="saving_prv_keys">Saving the private key(s)</string>
     <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
     <string name="reconnect_your_account">Please reconnect your account to continue using %1$s\nwith\n%2$s</string>
     <string name="reconnect">Reconnect</string>
@@ -379,12 +358,9 @@
     <string name="selection_text">Selected: %1$d</string>
     <string name="marked_for_archiving">Marked for archiving</string>
     <string name="undo">Undo</string>
-    <string name="choose_email">Choose email</string>
     <string name="network_error">Network error</string>
     <string name="error_no_keys">Error: no keys</string>
     <string name="could_not_load_private_keys">Couldn\'t load private keys</string>
-    <string name="error_loader_result_is_empty">Error. The loader result is empty</string>
-    <string name="could_not_import_data">Could\'t import data</string>
     <string name="partially_encrypted_private_key_error_msg">One of the provided Private Keys is a partially encrypted private key (some packets are encrypted, some not). Such keys are not supported. Please only import fully encrypted keys, with the same pass phrase for all secret packets.</string>
     <string name="file_is_too_big">The file is too big</string>
     <string name="source_is_empty_or_not_available">The source is empty or not available</string>
@@ -444,7 +420,6 @@
     <string name="open_side_menu_and_do_logout">Please open the side menu and do logout to remove %1$s</string>
     <string name="refrech_token_was_corrupted">The refresh token is wrong or was corrupted!</string>
     <string name="could_not_fetch_access_token">Couldn\'t fetch an access token. Correct credentials needed. Please logout and login again.</string>
-    <string name="contact_can_not_be_null">Contact can not be null</string>
     <string name="enter_a_new_public_key_for_this_contact">Enter a new Public Key for this contact</string>
     <string name="new_pub_key">New Public Key</string>
     <string name="or">or</string>
@@ -532,7 +507,6 @@
     <string name="msg_contains_not_valid_pub_key">This message contained a Public Key that was not valid.\n\n%1$s</string>
     <string name="msg_contains_not_valid_block">This message contained a block with type = %1$s that was not valid.\n\n%2$s</string>
     <string name="could_not_save_new_recipient">Couldn\'t save a new recipient</string>
-    <string name="recipient_already_exist">Recipient %1$s is already exist</string>
     <string name="primary_address_not_defined">Primary address is not defined</string>
     <string name="key_has_already_been_added">This key has already been added</string>
     <string name="could_not_save_pub_key_for_recipient">Couldn\'t save %1$s for %2$s</string>
@@ -580,4 +554,19 @@
     <string name="error_occurred_during_downloading_att">An error occurred during downloading.\n\nDetails:  %1$s</string>
     <string name="no_apps_that_can_handle_intent">Sorry, you don\'t have an application that can open this file</string>
     <string name="warning_don_not_have_content_app">Cannot view attachment. Your organization requires the use of Content app to view attachments, but the Content app is missing.\n\nPlease ask your Help Desk.</string>
+    <string name="error">Error</string>
+    <string name="import_keys_from_different_sources">You are trying to import keys from different sources</string>
+    <string name="thank_you_for_feedback">Thank you for the feedback</string>
+    <string name="no_private_keys_suitable_for_encryption">Sorry, you can\'t send an encrypted message. You have no private keys suitable for encryption.</string>
+    <string name="revoked">revoked</string>
+    <string name="key_expiration">Key expiration: %1$s</string>
+    <string name="key_does_not_expire">Key does not expire</string>
+    <string name="status">Status:</string>
+    <string name="valid">valid</string>
+    <string name="undefined">undefined</string>
+    <string name="not_valid">not valid</string>
+    <string name="expired">expired</string>
+    <string name="refreshing_keys_from_ekm_failed">Refreshing keys from EKM failed</string>
+    <string name="source_contains_more_than_one_key">Source contains more than one private key</string>
+    <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Please enter pass phrase to keep your account keys up to date</string>
 </resources>

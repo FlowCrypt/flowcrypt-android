@@ -5,25 +5,24 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base
 
-import android.app.Activity
-import android.content.Intent
 import androidx.fragment.app.viewModels
+import androidx.viewbinding.ViewBinding
 import androidx.work.WorkManager
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
 
@@ -33,26 +32,41 @@ import com.google.android.material.snackbar.Snackbar
  *         Time: 6:29 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
+abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  protected val existedAccounts = mutableListOf<AccountEntity>()
+  protected val existingAccounts = mutableListOf<AccountEntity>()
   protected val importCandidates = mutableListOf<PgpKeyDetails>()
 
   abstract fun getTempAccount(): AccountEntity?
+  abstract fun onAccountAdded(accountEntity: AccountEntity)
+  abstract fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
+    accountEntity: AccountEntity,
+    pgpKeyDetails: PgpKeyDetails
+  )
 
-  protected fun initSavePrivateKeysLiveData() {
-    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, {
+  override val isToolbarVisible: Boolean = false
+
+  protected fun onSetupCompleted(accountEntity: AccountEntity) {
+    if (existingAccounts.isEmpty()) {
+      navigateToPrimaryAccountMessagesList(accountEntity)
+    } else {
+      switchAccount(accountEntity)
+    }
+  }
+
+  protected fun initPrivateKeysViewModel() {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress(getString(R.string.processing))
           }
 
           Result.Status.SUCCESS -> {
-            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-            baseActivity.countingIdlingResource.decrementSafely()
+            it.data?.let { pair -> onSetupCompleted(pair.first) }
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -67,8 +81,7 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                   getTempAccount()?.let { accountEntity ->
                     privateKeysViewModel.encryptAndSaveKeysToDatabase(
                       accountEntity,
-                      e.keys,
-                      KeyImportDetails.SourceType.EMAIL
+                      e.keys
                     )
                   }
                 }
@@ -79,35 +92,61 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
                 ?: getString(R.string.unknown_error)
               )
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
+          else -> {}
         }
       }
-    })
+    }
+    privateKeysViewModel.additionalActionsAfterPrivateKeyCreationLiveData.observe(viewLifecycleOwner) {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource?.incrementSafely()
+            showProgress(getString(R.string.processing))
+          }
+
+          Result.Status.SUCCESS -> {
+            it.data?.let { pair ->
+              onAdditionalActionsAfterPrivateKeyCreationCompleted(
+                pair.first,
+                pair.second
+              )
+            }
+            countingIdlingResource?.decrementSafely()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            showContent()
+            val e = it.exception
+            showInfoSnackbar(
+              msgText = e?.message ?: e?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error)
+            )
+            countingIdlingResource?.decrementSafely()
+          }
+          else -> {}
+        }
+      }
+    }
   }
 
   protected fun initAddNewAccountLiveData() {
-    accountViewModel.addNewAccountLiveData.observe(viewLifecycleOwner, {
+    accountViewModel.addNewAccountLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(getString(R.string.processing))
         }
 
         Result.Status.SUCCESS -> {
-          if (it.data == true) {
+          if (it.data != null) {
             //clear LiveData value to prevent duplicate running
-            accountViewModel.addNewAccountLiveData.value = Result.success(null)
+            accountViewModel.addNewAccountLiveData.value = Result.none()
             context?.let { context ->
               WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
             }
 
-            getTempAccount()?.let { accountEntity ->
-              privateKeysViewModel.encryptAndSaveKeysToDatabase(
-                accountEntity,
-                importCandidates,
-                KeyImportDetails.SourceType.EMAIL
-              )
-            }
+            onAccountAdded(it.data)
           }
         }
 
@@ -121,38 +160,31 @@ abstract class BaseSingInFragment : BaseOAuthFragment(), ProgressBehaviour {
 
           showInfoDialog(dialogMsg = msg)
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun initAllAccountsLiveData() {
     //here we receive only value and unsubscribe
-    accountViewModel.pureAccountsLiveData.observeOnce(this, {
-      existedAccounts.clear()
-      existedAccounts.addAll(it)
-    })
-  }
-
-  protected open fun runEmailManagerActivity() {
-    IdleService.start(requireContext())
-    getTempAccount()?.let { roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email)) }
-    EmailManagerActivity.runEmailManagerActivity(requireContext())
-    activity?.finish()
-  }
-
-  /**
-   * Return the [Activity.RESULT_OK] to the initiator-activity.
-   */
-  protected open fun returnResultOk() {
-    getTempAccount()?.let {
-      if (it.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email))
-      }
-
-      val intent = Intent()
-      intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, it)
-      activity?.setResult(Activity.RESULT_OK, intent)
-      activity?.finish()
+    accountViewModel.pureAccountsLiveData.observeOnce(this) {
+      existingAccounts.clear()
+      existingAccounts.addAll(it)
     }
+  }
+
+  protected open fun navigateToPrimaryAccountMessagesList(accountEntity: AccountEntity) {
+    IdleService.start(requireContext())
+    if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
+    }
+    navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
+  }
+
+  protected open fun switchAccount(accountEntity: AccountEntity) {
+    if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
+    }
+    navController?.navigateUp()
   }
 }

@@ -178,6 +178,12 @@ object TestGeneralUtil {
     }
   }
 
+  fun genIntentForNavigationComponent(intent: Intent, extras: Bundle? = null): Intent {
+    return intent.apply {
+      extras?.let { putExtra("android-support-nav:controller:deepLinkExtras", it) }
+    }
+  }
+
   fun clearApp(context: Context) {
     SharedPreferencesHelper.clear(context)
     FileAndDirectoryUtils.cleanDir(context.cacheDir)

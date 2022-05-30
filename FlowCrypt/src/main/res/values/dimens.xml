@@ -25,7 +25,7 @@
     <dimen name="default_margin_small">5dp</dimen>
     <dimen name="default_margin_medium">10dp</dimen>
     <dimen name="default_margin_big">15dp</dimen>
-    <dimen name="default_margin_very_big">20dp</dimen>
+    <dimen name="default_margin_very_big" tools:ignore="UnusedResources">20dp</dimen>
     <dimen name="default_margin_huge">40dp</dimen>
 
     <dimen name="default_text_size_very_big">22sp</dimen>
@@ -64,7 +64,6 @@
     <dimen name="padding_pgp_message_error_small">2dp</dimen>
     <dimen name="padding_pgp_message_error_big">20dp</dimen>
     <dimen name="width_pgp_message_type_line">8dp</dimen>
-    <dimen name="height_webview_dialog">480dp</dimen>
     <dimen name="layout_height_message_item">72dp</dimen>
     <dimen name="gone_margin_right_attachment_icon">34dp</dimen>
     <dimen name="layout_height_action_button">72dp</dimen>

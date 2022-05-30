@@ -57,6 +57,8 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.databinding.FragmentCreateMessageBinding
+import com.flowcrypt.email.extensions.appBarLayout
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
@@ -66,6 +68,7 @@ import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -76,9 +79,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
-import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
-import com.flowcrypt.email.ui.activity.SelectRecipientsActivity
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -98,6 +99,8 @@ import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator
+import jakarta.mail.Message
+import jakarta.mail.internet.InternetAddress
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -105,8 +108,6 @@ import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.IOException
 import java.util.regex.Pattern
-import javax.mail.Message
-import javax.mail.internet.InternetAddress
 
 /**
  * This fragment describe a logic of sent an encrypted or standard message.
@@ -116,9 +117,13 @@ import javax.mail.internet.InternetAddress
  * Time: 11:27
  * E-mail: DenBond7@gmail.com
  */
-class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
+class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
+  View.OnFocusChangeListener,
   AdapterView.OnItemSelectedListener,
   View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
+
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentCreateMessageBinding.inflate(inflater, container, false)
 
   private lateinit var draftCacheDir: File
 
@@ -128,13 +133,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private val composeMsgViewModel: ComposeMsgViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
-      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ComposeMsgViewModel(args.encryptedByDefault, requireActivity().application) as T
       }
     }
   }
 
-  private var binding: FragmentCreateMessageBinding? = null
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
@@ -148,11 +152,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   private var isIncomingMsgInfoUsed: Boolean = false
   private var isMsgSentToQueue: Boolean = false
   private var originalColor: Int = 0
-
-  override val contentResourceId: Int = R.layout.fragment_create_message
-
-  override val contentView: View?
-    get() = binding?.scrollView
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -168,15 +167,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-    subscribeToSetWebPortalPassword()
     initExtras(activity?.intent)
-  }
-
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentCreateMessageBinding.inflate(inflater, container, false)
-    return binding?.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -188,6 +179,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
+    subscribeToSetWebPortalPassword()
+    subscribeToSelectRecipients()
+    subscribeToAddMissingRecipientPublicKey()
+    subscribeFixNeedPassphraseIssueDialogFragment()
 
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
@@ -225,12 +220,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
           )
 
-          if (recipientWithPubKeys != null) {
-            startActivityForResult(
-              ImportPublicKeyActivity.newIntent(
-                context, account,
-                getString(R.string.import_public_key), recipientWithPubKeys
-              ), REQUEST_CODE_IMPORT_PUBLIC_KEY
+          recipientWithPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections
+                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
             )
           }
         }
@@ -239,12 +232,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           cachedRecipientWithoutPubKeys =
             data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
-          if (cachedRecipientWithoutPubKeys != null) {
-            startActivityForResult(
-              SelectRecipientsActivity.newIntent(
-                context,
-                getString(R.string.use_public_key_from), false
-              ), REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT
+          cachedRecipientWithoutPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
+                title = getString(R.string.use_public_key_from)
+              )
             )
           }
         }
@@ -278,42 +270,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         }
       }
 
-      REQUEST_CODE_IMPORT_PUBLIC_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          Toast.makeText(context, R.string.the_key_successfully_imported, Toast.LENGTH_SHORT).show()
-          updateRecipients()
-        }
-      }
-
-      REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT -> {
-        when (resultCode) {
-          Activity.RESULT_OK -> if (data != null) {
-            val recipientEntity =
-              data.getParcelableExtra<RecipientEntity>(SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT)
-            recipientEntity?.let {
-              recipientsViewModel.copyPubKeysBetweenRecipients(
-                recipientEntity,
-                cachedRecipientWithoutPubKeys?.recipient
-              )
-
-              updateRecipients()
-              updateChips(binding?.editTextRecipientTo,
-                composeMsgViewModel.recipientWithPubKeysTo.map { it.recipientWithPubKeys })
-              updateChips(
-                binding?.editTextRecipientCc,
-                composeMsgViewModel.recipientWithPubKeysCc.map { it.recipientWithPubKeys })
-              updateChips(
-                binding?.editTextRecipientBcc,
-                composeMsgViewModel.recipientWithPubKeysBcc.map { it.recipientWithPubKeys })
-
-              Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
-            }
-          }
-        }
-
-        cachedRecipientWithoutPubKeys = null
-      }
-
       REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
         Activity.RESULT_OK -> {
           addAttachmentInfoFromIntent(data)
@@ -332,12 +288,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
               showAtts()
             }
           }
-        }
-      }
-
-      REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG -> when (resultCode) {
-        FixNeedPassphraseIssueDialogFragment.RESULT_OK -> {
-          sendMsg()
         }
       }
 
@@ -380,19 +330,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
               val keysStorage = KeysStorageImpl.getInstance(requireContext())
               val senderEmail = binding?.editTextFrom?.text.toString()
-              val keyRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
-              if (keyRings.isNotEmpty()) {
-                val firstMatchedSecretKey = keyRings.first()
-                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(firstMatchedSecretKey)
+              val usableSecretKey =
+                keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
+              if (usableSecretKey != null) {
+                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(usableSecretKey)
                 val fingerprint = openPgpV4Fingerprint.toString()
                 val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
                 if (passphrase?.isEmpty == true) {
-                  showNeedPassphraseDialog(
-                    listOf(fingerprint),
-                    REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG
-                  )
+                  showNeedPassphraseDialog(listOf(fingerprint))
                   return true
                 }
+              } else {
+                showInfoDialog(dialogMsg = getString(R.string.no_private_keys_suitable_for_encryption))
+                return true
               }
             }
 
@@ -400,10 +350,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
             this.isMsgSentToQueue = true
           }
         } else {
-          Toast.makeText(
-            context, R.string.please_wait_while_information_about_recipients_will_be_updated,
-            Toast.LENGTH_SHORT
-          ).show()
+          toast(R.string.please_wait_while_information_about_recipients_will_be_updated)
         }
         return true
       }
@@ -634,7 +581,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
     if (draftCacheDir.exists()) {
       if (!draftCacheDir.mkdir()) {
-        Log.e(TAG, "Create cache directory " + draftCacheDir.name + " filed!")
+        Log.e(TAG, "Create cache directory " + draftCacheDir.name + " failed!")
       }
     }
   }
@@ -686,7 +633,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           ExceptionUtil.handleError(e)
 
           if (!draftAtt.delete()) {
-            Log.e(TAG, "Delete " + draftAtt.name + " filed!")
+            Log.e(TAG, "Delete " + draftAtt.name + " failed!")
           }
         }
 
@@ -997,8 +944,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
   }
 
   private fun showContent() {
-    UIUtil.exchangeViewVisibility(false, progressView, contentView)
-
+    UIUtil.exchangeViewVisibility(false, binding?.viewIdProgressView, binding?.scrollView)
     if ((args.incomingMessageInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
       this.isIncomingMsgInfoUsed = true
       updateViews()
@@ -1346,7 +1292,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    val existedAttsSize = (attachments.map { it.encodedSize.toInt() }.sum())
+    val existedAttsSize = (attachments.sumOf { it.encodedSize.toInt() })
     val newAttSize = newAttInfo?.encodedSize?.toInt() ?: 0
     return (existedAttsSize + newAttSize) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
@@ -1450,7 +1396,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
 
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
-    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, {
+    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
         aliases.add(accountEntity.email)
@@ -1492,7 +1438,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       }
 
       showContent()
-    })
+    }
   }
 
   private fun setupPrivateKeysViewModel() {
@@ -1552,7 +1498,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       when (it.status) {
         Result.Status.LOADING -> {
           updateState.invoke(false)
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           progressBar?.visible()
         }
 
@@ -1562,14 +1508,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
           it.data?.let { list ->
             composeMsgViewModel.replaceRecipients(recipientType, list)
           }
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           updateState.invoke(true)
           progressBar?.invisible()
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.NONE -> {}
@@ -1792,23 +1738,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
         if (password.isNotEmpty()) {
           val keysStorage = KeysStorageImpl.getInstance(requireContext())
           if (keysStorage.hasPassphrase(Passphrase(password.toString().toCharArray()))) {
-            navController?.navigate(
-              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
-                dialogTitle = getString(R.string.warning),
-                dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
-              )
+            showInfoDialog(
+              dialogTitle = getString(R.string.warning),
+              dialogMsg = getString(R.string.warning_use_private_key_pass_phrase_as_password)
             )
             return false
           }
 
           if (binding?.editTextEmailSubject?.text.toString() == password.toString()) {
-            navController?.navigate(
-              CreateMessageFragmentDirections.actionGlobalInfoDialogFragment(
-                dialogTitle = getString(R.string.warning),
-                dialogMsg = getString(
-                  R.string.warning_use_subject_as_password,
-                  getString(R.string.app_name)
-                )
+            showInfoDialog(
+              dialogTitle = getString(R.string.warning),
+              dialogMsg = getString(
+                R.string.warning_use_subject_as_password,
+                getString(R.string.app_name)
               )
             )
             return false
@@ -1866,10 +1808,20 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
       messageType = args.messageType,
       replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
       uid = EmailUtil.genOutboxUID(requireContext()),
-      password = if (isPasswordProtectedFunctionalityEnabled()) {
-        composeMsgViewModel.webPortalPasswordStateFlow.value.toString().toCharArray()
-      } else null
+      password = usePasswordIfNeeded()
     )
+  }
+
+  private fun usePasswordIfNeeded(): CharArray? {
+    return if (isPasswordProtectedFunctionalityEnabled()) {
+      for (recipient in composeMsgViewModel.recipientWithPubKeys) {
+        val recipientWithPubKeys = recipient.recipientWithPubKeys
+        if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
+          return composeMsgViewModel.webPortalPasswordStateFlow.value.toString().toCharArray()
+        }
+      }
+      null
+    } else null
   }
 
   private fun isPasswordProtectedFunctionalityEnabled(): Boolean {
@@ -1890,13 +1842,60 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener,
     }
   }
 
+  private fun subscribeToSelectRecipients() {
+    setFragmentResultListener(
+      SelectRecipientsFragment.REQUEST_KEY_SELECT_RECIPIENTS
+    ) { _, bundle ->
+      val list =
+        bundle.getParcelableArrayList<RecipientEntity>(SelectRecipientsFragment.KEY_RECIPIENTS)
+      list?.let { recipients ->
+        val recipientEntity = recipients.firstOrNull() ?: return@let
+        recipientsViewModel.copyPubKeysBetweenRecipients(
+          recipientEntity,
+          cachedRecipientWithoutPubKeys?.recipient
+        )
+
+        updateRecipients()
+        updateChips(binding?.editTextRecipientTo,
+          composeMsgViewModel.recipientWithPubKeysTo.map { it.recipientWithPubKeys })
+        updateChips(
+          binding?.editTextRecipientCc,
+          composeMsgViewModel.recipientWithPubKeysCc.map { it.recipientWithPubKeys })
+        updateChips(
+          binding?.editTextRecipientBcc,
+          composeMsgViewModel.recipientWithPubKeysBcc.map { it.recipientWithPubKeys })
+
+        toast(R.string.key_successfully_copied, Toast.LENGTH_LONG)
+        cachedRecipientWithoutPubKeys = null
+      }
+    }
+  }
+
+  private fun subscribeToAddMissingRecipientPublicKey() {
+    setFragmentResultListener(
+      ImportMissingPublicKeyFragment.REQUEST_KEY_RECIPIENT_WITH_PUB_KEY
+    ) { _, bundle ->
+      val recipientWithPubKeys = bundle.getParcelable<RecipientWithPubKeys>(
+        ImportMissingPublicKeyFragment.KEY_RECIPIENT_WITH_PUB_KEY
+      )
+
+      if (recipientWithPubKeys?.hasAtLeastOnePubKey() == true) {
+        toast(R.string.the_key_successfully_imported)
+        updateRecipients()
+      }
+    }
+  }
+
+  private fun subscribeFixNeedPassphraseIssueDialogFragment() {
+    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      sendMsg()
+    }
+  }
+
   companion object {
     private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
-    private const val REQUEST_CODE_IMPORT_PUBLIC_KEY = 101
     private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
-    private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_RECIPIENT = 103
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
-    private const val REQUEST_CODE_SHOW_FIX_EMPTY_PASSPHRASE_DIALOG = 107
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
 }

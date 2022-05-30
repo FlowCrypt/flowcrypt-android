@@ -28,6 +28,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +37,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
-import javax.mail.Message
 
 /**
  * This is used in the message compose/reply view when recipient public keys need to be retrieved,
@@ -78,6 +78,16 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     MutableStateFlow(Result.loading())
   val lookUpPubKeysStateFlow: StateFlow<Result<PubResponse?>> =
     lookUpPubKeysMutableStateFlow.asStateFlow()
+
+  private val addPublicKeyToRecipientMutableStateFlow: MutableStateFlow<Result<RecipientWithPubKeys>> =
+    MutableStateFlow(Result.none())
+  val addPublicKeyToRecipientStateFlow: StateFlow<Result<RecipientWithPubKeys>> =
+    addPublicKeyToRecipientMutableStateFlow.asStateFlow()
+
+  private val updateRecipientPublicKeyMutableStateFlow: MutableStateFlow<Result<Boolean?>> =
+    MutableStateFlow(Result.none())
+  val updateRecipientPublicKeyStateFlow: StateFlow<Result<Boolean?>> =
+    updateRecipientPublicKeyMutableStateFlow.asStateFlow()
 
   fun contactChangesLiveData(recipientEntity: RecipientEntity): LiveData<RecipientWithPubKeys?> {
     return roomDatabase.recipientDao().getRecipientsWithPubKeysByEmailsLD(recipientEntity.email)
@@ -166,28 +176,44 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun copyPubKeysToRecipient(recipientEntity: RecipientEntity?, pgpKeyDetails: PgpKeyDetails) {
+  fun copyPubKeysToRecipient(recipientEntity: RecipientEntity, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
-      recipientEntity?.let {
+      addPublicKeyToRecipientMutableStateFlow.value = Result.loading()
+      try {
         val existingPubKey = roomDatabase.pubKeyDao()
           .getPublicKeyByRecipientAndFingerprint(recipientEntity.email, pgpKeyDetails.fingerprint)
         if (existingPubKey == null) {
           roomDatabase.pubKeyDao()
             .insertSuspend(pgpKeyDetails.toPublicKeyEntity(recipientEntity.email))
         }
+        addPublicKeyToRecipientMutableStateFlow.value = Result.success(
+          requireNotNull(
+            roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(recipientEntity.email)
+          )
+        )
+      } catch (e: Exception) {
+        addPublicKeyToRecipientMutableStateFlow.value = Result.exception(e)
       }
     }
   }
 
   fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyDetails: PgpKeyDetails) {
     viewModelScope.launch {
-      roomDatabase.pubKeyDao()
-        .updateSuspend(
-          pgpKeyDetails.toPublicKeyEntity(publicKeyEntity.recipient).copy(
-            id = publicKeyEntity.id,
-            recipient = publicKeyEntity.recipient
-          )
+      updateRecipientPublicKeyMutableStateFlow.value = Result.loading()
+
+      try {
+        updateRecipientPublicKeyMutableStateFlow.value = Result.success(
+          roomDatabase.pubKeyDao()
+            .updateSuspend(
+              pgpKeyDetails.toPublicKeyEntity(publicKeyEntity.recipient).copy(
+                id = publicKeyEntity.id,
+                recipient = publicKeyEntity.recipient
+              )
+            ) > 0
         )
+      } catch (e: Exception) {
+        updateRecipientPublicKeyMutableStateFlow.value = Result.exception(e)
+      }
     }
   }
 

@@ -1,0 +1,15 @@
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:tint="#FFFFFF"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,5.99L19.53,19L4.47,19L12,5.99M12,2L1,21h22L12,2zM13,16h-2v2h2v-2zM13,10h-2v4h2v-4z" />
+</vector>

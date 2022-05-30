@@ -12,8 +12,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.pgp.PgpArmor
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
@@ -23,8 +26,14 @@ import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import org.apache.commons.codec.android.binary.Hex
 import org.apache.commons.codec.android.digest.DigestUtils
+import org.bouncycastle.bcpg.ArmoredOutputStream
+import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 /**
@@ -134,31 +143,47 @@ class SecurityUtils {
     }
 
     /**
-     * Get a sender key details. If we will find a few keys we will return the first;
+     * Get sender public keys. We use this method to encrypt data for all user's available keys.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param senderEmail The sender email
+     */
+    fun getSenderPublicKeys(
+      context: Context,
+      senderEmail: String
+    ): List<String> {
+      val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
+      val matchingKeyRingInfoList = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
+        .map { KeyRingInfo(it) }.filter { it.usableForEncryption() }
+      if (matchingKeyRingInfoList.isEmpty()) {
+        throw IllegalStateException("There are no usable for encryption keys for $senderEmail")
+      }
+      return matchingKeyRingInfoList.map { PGPPublicKeyRing(it.publicKeys).armor() }
+    }
+
+    /**
+     * Get a sender PGP keys details.
      *
      * @param context     Interface to global information about an application environment.
      * @param account     The given account
      * @param senderEmail The sender email
-     * @return <tt>String</tt> The sender key.
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderPgpKeyDetailsList(
+    fun getSenderPgpKeyDetails(
       context: Context,
       account: AccountEntity,
       senderEmail: String
-    ): List<PgpKeyDetails> {
+    ): PgpKeyDetails {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
-      val matchingRings = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
-      if (matchingRings.isEmpty()) {
-        if (account.email.equals(senderEmail, ignoreCase = true)) {
+      val pgpSecretKeyRing = keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
+        ?: if (account.email.equals(senderEmail, ignoreCase = true)) {
           throw NoKeyAvailableException(context, account.email)
         } else {
           throw NoKeyAvailableException(context, account.email, senderEmail)
         }
-      }
 
-      return keysStorage.getPgpKeyDetailsList(keysStorage.getPGPSecretKeyRingsByUserId(senderEmail))
+      return keysStorage.getPgpKeyDetailsList(listOf(pgpSecretKeyRing)).first()
     }
 
     /**
@@ -182,6 +207,23 @@ class SecurityUtils {
      */
     fun isPossiblyEncryptedData(fileName: String?): Boolean {
       return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(fileName ?: "")
+    }
+
+    fun armor(
+      headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS,
+      encode: (outputStream: OutputStream) -> Unit
+    ): String {
+      ByteArrayOutputStream().use { out ->
+        ArmoredOutputStream(out).use { armoredOut ->
+          if (headers != null) {
+            for (header in headers) {
+              armoredOut.setHeader(header.first, header.second)
+            }
+          }
+          encode.invoke(armoredOut)
+        }
+        return String(out.toByteArray(), StandardCharsets.US_ASCII)
+      }
     }
   }
 }

@@ -33,15 +33,15 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Folder
+import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.util.*
-import javax.mail.Folder
-import javax.mail.Store
+import java.util.UUID
 
 /**
  * This realization of [CoroutineWorker] downloads the attachments for forwarding purposes.
@@ -66,13 +66,13 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       try {
         if (!attCacheDir.exists()) {
           if (!attCacheDir.mkdirs()) {
-            throw IllegalStateException("Create cache directory " + attCacheDir.name + " filed!")
+            throw IllegalStateException("Create cache directory " + attCacheDir.name + " failed!")
           }
         }
 
         if (!fwdAttsCacheDir.exists()) {
           if (!fwdAttsCacheDir.mkdirs()) {
-            throw IllegalStateException("Create cache directory " + fwdAttsCacheDir.name + " filed!")
+            throw IllegalStateException("Create cache directory " + fwdAttsCacheDir.name + " failed!")
           }
         }
 

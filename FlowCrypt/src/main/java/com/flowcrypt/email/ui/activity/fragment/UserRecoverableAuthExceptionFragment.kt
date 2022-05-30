@@ -11,12 +11,14 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.TextView
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -25,19 +27,20 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.databinding.FragmentUserRecoverableAuthExceptionBinding
+import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
-import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
-import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationService
-import java.util.*
+import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -45,19 +48,19 @@ import java.util.*
  *         Time: 12:18 PM
  *         E-mail: DenBond7@gmail.com
  */
-class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehaviour {
+class UserRecoverableAuthExceptionFragment :
+  BaseOAuthFragment<FragmentUserRecoverableAuthExceptionBinding>(), ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentUserRecoverableAuthExceptionBinding.inflate(inflater, container, false)
+
   private val args by navArgs<UserRecoverableAuthExceptionFragmentArgs>()
 
   override val progressView: View?
-    get() = view?.findViewById(R.id.progress)
+    get() = binding?.progress?.root
   override val contentView: View?
-    get() = view?.findViewById(R.id.layoutContent)
+    get() = binding?.layoutContent
   override val statusView: View?
-    get() = view?.findViewById(R.id.status)
-
-  private lateinit var textViewExplanation: TextView
-
-  override val contentResourceId: Int = R.layout.fragment_user_recoverable_auth_exception
+    get() = binding?.status?.root
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -67,9 +70,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     ErrorNotificationManager(requireContext()).cancel(R.id.notification_id_auth_failure)
-
-    supportActionBar?.title = null
-    initViews(view)
+    initViews()
     setupOAuth2AuthCredentialsViewModel()
   }
 
@@ -94,10 +95,8 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
                     MessageState.QUEUED.value
                   )
                   MessagesSenderWorker.enqueue(context)
-                  EmailManagerActivity.runEmailManagerActivity(context)
+                  navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
                 }
-
-                activity?.finish()
               }
             }
           }
@@ -118,15 +117,14 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
-    textViewExplanation.text = getString(
+    binding?.textViewExplanation?.text = getString(
       R.string.reconnect_your_account,
       getString(R.string.app_name), accountEntity?.email ?: ""
     )
   }
 
-  private fun initViews(view: View) {
-    textViewExplanation = view.findViewById(R.id.textViewExplanation)
-    view.findViewById<View>(R.id.buttonReconnect)?.setOnClickListener {
+  private fun initViews() {
+    binding?.buttonReconnect?.setOnClickListener {
       account?.let { accountEntity ->
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
@@ -142,39 +140,32 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
           }
 
           else -> {
-            Toast.makeText(
-              requireContext(),
-              getString(R.string.access_was_not_granted),
-              Toast.LENGTH_SHORT
-            ).show()
+            toast(R.string.access_was_not_granted)
           }
         }
       }
     }
-    view.findViewById<View>(R.id.buttonLogout)?.setOnClickListener { baseActivity.logout() }
-    view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
+
+    binding?.buttonPrivacy?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)
     }
-    view.findViewById<View>(R.id.buttonTerms)?.setOnClickListener {
+    binding?.buttonTerms?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
-    view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
-      startActivity(
-        HtmlViewFromAssetsRawActivity.newIntent(
-          requireContext(),
-          getString(R.string.security),
-          "html/security.htm"
-        )
+    binding?.buttonSecurity?.setOnClickListener {
+      NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
+        title = getString(R.string.security),
+        resourceIdAsString = "html/security.htm"
       )
     }
 
-    view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
-      FeedbackActivity.show(requireActivity())
+    binding?.buttonHelp?.setOnClickListener {
+      showFeedbackFragment()
     }
   }
 
   private fun setupOAuth2AuthCredentialsViewModel() {
-    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, {
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
@@ -193,7 +184,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
                   PendingIntent.getActivity(
                     requireContext(), 0, Intent(
                       requireContext(),
-                      SignInActivity::class.java
+                      MainActivity::class.java
                     ), PendingIntent.FLAG_IMMUTABLE
                   )
                 )
@@ -212,9 +203,9 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
         else -> {
         }
       }
-    })
+    }
 
-    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_account_details))
@@ -246,8 +237,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
               )
             }
 
-            context?.let { context -> EmailManagerActivity.runEmailManagerActivity(context) }
-            activity?.finish()
+            navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
           }
         }
 
@@ -262,7 +252,7 @@ class UserRecoverableAuthExceptionFragment : BaseOAuthFragment(), ProgressBehavi
         else -> {
         }
       }
-    })
+    }
   }
 
   companion object {

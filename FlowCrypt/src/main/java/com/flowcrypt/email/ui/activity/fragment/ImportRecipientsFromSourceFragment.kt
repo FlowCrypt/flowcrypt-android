@@ -18,9 +18,10 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportRecipientsFromSourceBinding
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment
 
 /**
@@ -29,29 +30,18 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragme
  *         Time: 8:31 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
-  private var binding: FragmentImportRecipientsFromSourceBinding? = null
+class ImportRecipientsFromSourceFragment :
+  BaseImportKeyFragment<FragmentImportRecipientsFromSourceBinding>() {
+
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentImportRecipientsFromSourceBinding.inflate(inflater, container, false)
 
   override val isPrivateKeyMode: Boolean = false
-  override val contentResourceId: Int = R.layout.fragment_import_recipients_from_source
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    subscribeToFetchPubKeysViaLookUp()
-    subscribeToCheckClipboard()
-  }
-
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentImportRecipientsFromSourceBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.add_contact)
     initViews()
+    subscribeToFetchPubKeysViaLookUp()
   }
 
   override fun handleSelectedFile(uri: Uri) {
@@ -59,6 +49,17 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
       ImportRecipientsFromSourceFragmentDirections
         .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(uri = uri)
     )
+  }
+
+  override fun handleClipboard(pgpKeysAsString: String?) {
+    navController?.navigate(
+      ImportRecipientsFromSourceFragmentDirections
+        .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pgpKeysAsString)
+    )
+  }
+
+  override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
+    // nothing to do here
   }
 
   private fun initViews() {
@@ -74,9 +75,7 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
     }
 
     binding?.btLoadFromClipboard?.setOnClickListener {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(false)
-      )
+      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
     }
 
     binding?.btLoadFromFile?.setOnClickListener {
@@ -103,16 +102,6 @@ class ImportRecipientsFromSourceFragment : BaseImportKeyFragment() {
   private fun subscribeToFetchPubKeysViaLookUp() {
     setFragmentResultListener(LookUpPubKeysDialogFragment.REQUEST_KEY_PUB_KEYS) { _, bundle ->
       val pubKeysAsString = bundle.getString(LookUpPubKeysDialogFragment.KEY_PUB_KEYS)
-      navController?.navigate(
-        ImportRecipientsFromSourceFragmentDirections
-          .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pubKeysAsString)
-      )
-    }
-  }
-
-  private fun subscribeToCheckClipboard() {
-    setFragmentResultListener(FindKeysInClipboardDialogFragment.REQUEST_KEY_CLIPBOARD_RESULT) { _, bundle ->
-      val pubKeysAsString = bundle.getString(FindKeysInClipboardDialogFragment.KEY_CLIPBOARD_TEXT)
       navController?.navigate(
         ImportRecipientsFromSourceFragmentDirections
           .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pubKeysAsString)

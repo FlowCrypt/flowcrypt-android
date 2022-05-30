@@ -9,10 +9,16 @@
     android:id="@+id/create_msg_graph"
     app:startDestination="@id/createMessageFragment">
 
+    <include app:graph="@navigation/info_dialog_graph" />
+    <include app:graph="@navigation/two_way_dialog_graph" />
+    <include app:graph="@navigation/fix_need_pass_phrase_dialog_graph" />
+    <include app:graph="@navigation/feedback_graph" />
+    <include app:graph="@navigation/parse_keys_from_source_dialog_graph" />
+    <include app:graph="@navigation/find_keys_in_clipboard_dialog_graph" />
+
     <fragment
         android:id="@+id/createMessageFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment"
-        android:label="CreateMessageFragment"
         tools:layout="@layout/fragment_create_message">
         <argument
             android:name="encryptedByDefault"
@@ -35,11 +41,18 @@
         <action
             android:id="@+id/action_createMessageFragment_to_providePasswordToProtectMsgFragment"
             app:destination="@id/providePasswordToProtectMsgFragment" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_importMissingPublicKeyFragment"
+            app:destination="@id/importMissingPublicKeyFragment" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_selectRecipientsFragment"
+            app:destination="@id/selectRecipientsFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/providePasswordToProtectMsgFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ProvidePasswordToProtectMsgFragment"
+        android:label="@string/web_portal_password"
         tools:layout="@layout/fragment_provide_password_to_protect_msg">
         <argument
             android:name="defaultPassword"
@@ -47,52 +60,29 @@
             app:argType="string" />
     </fragment>
 
-    <dialog
-        android:id="@+id/infoDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment"
-        android:label="InfoDialogFragment">
+    <fragment
+        android:id="@+id/importMissingPublicKeyFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ImportMissingPublicKeyFragment"
+        tools:layout="@layout/fragment_import_missing_public_key">
         <argument
-            android:name="requestCode"
-            android:defaultValue="0"
-            app:argType="integer" />
-        <argument
-            android:name="dialogTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="dialogMsg"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="buttonTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="isCancelable"
-            android:defaultValue="true"
-            app:argType="boolean" />
-        <argument
-            android:name="useNavigationUp"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="hasHtml"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="useWebViewToRender"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="useLinkify"
-            android:defaultValue="false"
-            app:argType="boolean" />
-    </dialog>
+            android:name="recipientWithPubKeys"
+            app:argType="com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys" />
+    </fragment>
 
-    <action
-        android:id="@+id/action_global_infoDialogFragment"
-        app:destination="@id/infoDialogFragment" />
+    <fragment
+        android:id="@+id/selectRecipientsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.SelectRecipientsFragment"
+        tools:layout="@layout/fragment_select_recipients">
+
+        <argument
+            android:name="useMultipleMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="title"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+
 </navigation>

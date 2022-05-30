@@ -22,16 +22,16 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.FetchProfile
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.Session
+import jakarta.mail.Store
+import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.util.Properties
-import javax.mail.FetchProfile
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.Session
-import javax.mail.Store
-import javax.mail.internet.InternetAddress
 
 /**
  * This [CoroutineWorker] loads information about recipients from the SENT folder.

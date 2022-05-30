@@ -21,6 +21,7 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentDownloadAttachmentBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
@@ -40,7 +41,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
   private val downloadAttachmentViewModel: DownloadAttachmentViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
-      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return DownloadAttachmentViewModel(args.attachmentInfo, requireActivity().application) as T
       }
     }
@@ -78,7 +79,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
       downloadAttachmentViewModel.downloadAttachmentStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity?.countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             binding?.progressBar?.visible()
             if (it.progress != null) {
               binding?.progressBar?.isIndeterminate = false
@@ -104,7 +105,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
                 )
               )
             }
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
@@ -115,7 +116,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
             } else exception.message
             binding?.textViewStatus?.text =
               context?.getString(R.string.error_occurred_during_downloading_att, errorMsg)
-            baseActivity?.countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           else -> {

@@ -39,8 +39,8 @@ interface ListProgressBehaviour : ProgressBehaviour {
 
   fun showEmptyView(msg: String? = null, resourcesId: Int = 0) {
     contentView?.visibility = View.GONE
-    statusView?.visibility = View.GONE
-    progressView?.visibility = View.GONE
+    goneStatusView()
+    goneProgressView()
 
     val tVEmpty = emptyView?.findViewById<TextView>(R.id.tVEmpty)
     msg?.let {

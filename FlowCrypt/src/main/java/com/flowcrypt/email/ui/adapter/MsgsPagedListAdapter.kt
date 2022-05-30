@@ -35,9 +35,8 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
-import java.util.ArrayList
+import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
-import javax.mail.internet.InternetAddress
 
 /**
  * This class is responsible for displaying the message in the list.

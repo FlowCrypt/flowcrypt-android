@@ -22,10 +22,10 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Folder
+import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.mail.Folder
-import javax.mail.Store
 
 /**
  * This task identifies encrypted messages and updates information about messages in the local database.

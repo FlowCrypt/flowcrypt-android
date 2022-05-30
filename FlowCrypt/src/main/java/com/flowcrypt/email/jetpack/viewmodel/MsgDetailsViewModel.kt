@@ -37,7 +37,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.javax.mail.isOpenPGPMimeSigned
+import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -46,7 +46,6 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
-import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -56,6 +55,13 @@ import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.IMAPMessage
+import jakarta.mail.BodyPart
+import jakarta.mail.FetchProfile
+import jakarta.mail.Folder
+import jakarta.mail.Multipart
+import jakarta.mail.Store
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -67,13 +73,6 @@ import java.io.BufferedInputStream
 import java.io.InputStream
 import java.util.Collections
 import java.util.LinkedList
-import javax.mail.BodyPart
-import javax.mail.FetchProfile
-import javax.mail.Folder
-import javax.mail.Multipart
-import javax.mail.Store
-import javax.mail.internet.MimeBodyPart
-import javax.mail.internet.MimeMessage
 
 /**
  * @author Denis Bondarenko
@@ -373,7 +372,7 @@ class MsgDetailsViewModel(
           fetchAttachmentsInternal(accountEntity)
         }
       } else {
-        IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
+        IMAPStoreManager.getConnection(accountEntity.id)?.store?.let { store ->
           fetchAttachmentsInternal(accountEntity, store)
         }
       }
@@ -526,7 +525,7 @@ class MsgDetailsViewModel(
         }
       }
 
-      val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+      val connection = IMAPStoreManager.getConnection(accountEntity.id)
       if (connection == null) {
         throw java.lang.NullPointerException("There is no active connection for ${accountEntity.email}")
       } else {
@@ -726,7 +725,7 @@ class MsgDetailsViewModel(
             AttachmentEntity.fromAttInfo(it.apply {
               email = accountEntity.email
               this.folder =
-                if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+                if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else JavaEmailConstants.FOLDER_SEARCH
               uid = msgUid
             })
           }

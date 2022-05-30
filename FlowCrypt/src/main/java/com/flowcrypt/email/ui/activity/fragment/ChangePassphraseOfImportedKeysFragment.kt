@@ -16,6 +16,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.databinding.FragmentChangePassphraseOfImportedKeysBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
@@ -34,9 +35,12 @@ import org.pgpainless.util.Passphrase
  *         Time: 9:42 AM
  *         E-mail: DenBond7@gmail.com
  */
-class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour {
+class ChangePassphraseOfImportedKeysFragment :
+  BaseFragment<FragmentChangePassphraseOfImportedKeysBinding>(), ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentChangePassphraseOfImportedKeysBinding.inflate(inflater, container, false)
+
   private val args by navArgs<ChangePassphraseOfImportedKeysFragmentArgs>()
-  private var binding: FragmentChangePassphraseOfImportedKeysBinding? = null
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
@@ -49,8 +53,6 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
 
   private var isBackEnabled = false
   private var isPassphraseChanged = false
-
-  override val contentResourceId: Int = R.layout.fragment_change_passphrase_of_imported_keys
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -66,16 +68,8 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
     )
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentChangePassphraseOfImportedKeysBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = getString(R.string.security)
     initViews()
     setupPrivateKeysViewModel()
     setupLoadPrivateKeysViewModel()
@@ -100,11 +94,11 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.changePassphraseLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.changePassphraseLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             isBackEnabled = false
             showProgress(getString(R.string.please_wait_while_pass_phrase_will_be_changed))
           }
@@ -115,9 +109,9 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
               //making backups is not allowed by OrgRules.
               isBackEnabled = true
               showContent()
-              baseActivity.countingIdlingResource.decrementSafely()
+              countingIdlingResource?.decrementSafely()
             } else {
-              baseActivity.countingIdlingResource.decrementSafely()
+              countingIdlingResource?.decrementSafely()
               loadPrivateKeysViewModel.fetchAvailableKeys(args.accountEntity)
             }
           }
@@ -135,55 +129,53 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
                 Passphrase.fromPassword(args.passphrase)
               )
             }
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
-          else -> {
-          }
+          else -> {}
         }
       }
-    })
+    }
 
-    privateKeysViewModel.saveBackupToInboxLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.saveBackupToInboxLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            baseActivity.countingIdlingResource.incrementSafely()
+            countingIdlingResource?.incrementSafely()
             showProgress(getString(R.string.please_wait_while_backup_will_be_saved))
           }
 
           Result.Status.SUCCESS -> {
             isBackEnabled = true
             showContent()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             navigateToMakeBackupFragment()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
-          else -> {
-          }
+          else -> {}
         }
       }
-    })
+    }
   }
 
   private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
             if (it.progress == null) {
-              baseActivity.countingIdlingResource.incrementSafely()
+              countingIdlingResource?.incrementSafely()
             }
             showProgress(getString(R.string.searching_backups))
           }
 
           Result.Status.SUCCESS -> {
             val keyDetailsList = it.data
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
             if (keyDetailsList?.isEmpty() == true) {
               navigateToMakeBackupFragment()
             } else {
@@ -193,14 +185,13 @@ class ChangePassphraseOfImportedKeysFragment : BaseFragment(), ProgressBehaviour
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             navigateToMakeBackupFragment()
-            baseActivity.countingIdlingResource.decrementSafely()
+            countingIdlingResource?.decrementSafely()
           }
 
-          else -> {
-          }
+          else -> {}
         }
       }
-    })
+    }
   }
 
   private fun navigateToMakeBackupFragment() {

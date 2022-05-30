@@ -4,11 +4,11 @@
  *    Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions.javax.mail
+package com.flowcrypt.email.extensions.jakarta.mail
 
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import javax.mail.Part
-import javax.mail.internet.ContentType
+import jakarta.mail.Part
+import jakarta.mail.internet.ContentType
 
 fun Part.isInline(): Boolean {
   return (this.disposition?.lowercase() ?: "") == Part.INLINE
@@ -24,6 +24,10 @@ fun Part.isMultipartAlternative(): Boolean {
 
 fun Part.isHtmlText(): Boolean {
   return isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_HTML)
+}
+
+fun Part.isPlainText(): Boolean {
+  return isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
 }
 
 fun Part.baseContentType(): String? {

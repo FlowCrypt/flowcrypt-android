@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.extensions
 
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 
 /**
@@ -30,6 +31,13 @@ val <T> Result<T>.exceptionMsg: String
       stringBuilder.append(it.javaClass.simpleName)
       stringBuilder.append(":")
       stringBuilder.append(it.message)
+    }
+
+    if (stringBuilder.isEmpty()) {
+      val apiResponse = data as? ApiResponse
+      apiResponse?.apiError?.let { apiError ->
+        stringBuilder.append(apiError.msg)
+      }
     }
 
     return if (stringBuilder.isEmpty()) "Unknown error" else stringBuilder.toString()

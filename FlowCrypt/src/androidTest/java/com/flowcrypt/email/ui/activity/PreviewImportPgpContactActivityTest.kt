@@ -63,18 +63,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
     TestGeneralUtil.readFileFromAssetsAsString("pgp/keys/10_pub_keys_armored_own_header.asc")
 
   @Test
-  fun testShowHelpScreen() {
-    /*activeActivityRule.launch(
-      PreviewImportPgpContactActivity.newIntent(
-        getTargetContext(),
-        singlePublicKeyForUnsavedContact
-      )
-    )*/
-    registerAllIdlingResources()
-    testHelpScreen()
-  }
-
-  @Test
   fun testIsDisplayedSingleItem() {
     /*val pgpContact = PgpContact(
       "default@flowcrypt.test", null,

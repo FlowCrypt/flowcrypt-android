@@ -29,15 +29,15 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Flags
+import jakarta.mail.event.MessageChangedEvent
+import jakarta.mail.event.MessageCountEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
-import javax.mail.Flags
-import javax.mail.event.MessageChangedEvent
-import javax.mail.event.MessageCountEvent
 
 /**
  *

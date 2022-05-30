@@ -19,20 +19,20 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Folder
+import jakarta.mail.MessagingException
+import jakarta.mail.Session
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
-import javax.mail.Folder
-import javax.mail.MessagingException
-import javax.mail.Session
-import kotlin.collections.ArrayList
 
 /**
  * This loader finds and returns a user backup of private keys from the mail.
@@ -127,7 +127,9 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   continue
                 }
 
-                details.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList)
+                details.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList.map {
+                  it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
+                })
               }
 
               folder.close(false)

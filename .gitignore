@@ -14,6 +14,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+androidx.databinding*
 
 # Custom settings
 /.idea/misc.xml

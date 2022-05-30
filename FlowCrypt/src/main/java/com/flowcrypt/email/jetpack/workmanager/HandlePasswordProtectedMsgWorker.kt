@@ -21,9 +21,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.javax.mail.internet.getAddresses
-import com.flowcrypt.email.extensions.javax.mail.internet.getFromAddress
-import com.flowcrypt.email.extensions.javax.mail.internet.getMatchingRecipients
+import com.flowcrypt.email.extensions.jakarta.mail.internet.getFromAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
@@ -34,12 +32,17 @@ import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.gson.GsonBuilder
 import com.sun.mail.util.MailConnectException
+import jakarta.mail.Address
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.Multipart
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -50,15 +53,6 @@ import java.io.InputStream
 import java.net.SocketException
 import java.util.Base64
 import java.util.Properties
-import java.util.concurrent.TimeUnit
-import javax.mail.Address
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.Multipart
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeBodyPart
-import javax.mail.internet.MimeMessage
 import javax.net.ssl.SSLException
 import kotlin.random.Random
 
@@ -128,10 +122,12 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val plainMimeMsgWithAttachments = getMimeMessage(account, msgEntity, attachments)
 
             //get recipients that will be used to create password-encrypted msg
-            val toCandidates = getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.TO)
-            val ccCandidates = getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.CC)
+            val toCandidates =
+              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.TO) ?: emptyArray()
+            val ccCandidates =
+              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.CC) ?: emptyArray()
             val bccCandidates =
-              getRecipients(plainMimeMsgWithAttachments, Message.RecipientType.BCC)
+              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.BCC) ?: emptyArray()
 
             if (toCandidates.isEmpty() && ccCandidates.isEmpty() && bccCandidates.isEmpty()) {
               throw IllegalStateException("Wrong password-protected implementation")
@@ -140,15 +136,19 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             //start of creating and uploading a password-protected msg to FES
             val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
             val domain = EmailUtil.getDomain(fromAddress.address)
-            val idToken = getGoogleIdToken()
+            val idToken = GeneralUtil.getGoogleIdToken(
+              applicationContext, RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
+            )
             val replyToken = fetchReplyToken(apiRepository, domain, idToken)
             val replyInfoData = ReplyInfoData(
-              sender = fromAddress.address,
+              sender = fromAddress.address.lowercase(),
               recipient = (toCandidates + ccCandidates + bccCandidates)
-                .mapNotNull { (it as? InternetAddress)?.address }
+                .mapNotNull { (it as? InternetAddress)?.address?.lowercase() }
                 .filterNot {
                   it.equals(fromAddress.address, true)
-                },
+                }
+                .toHashSet()
+                .toList(),
               subject = plainMimeMsgWithAttachments.subject,
               token = replyToken
             )
@@ -198,8 +198,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             updateExistingMimeMsgWithUrl(msgEntity, fesUrl)
           } else {
-            roomDatabase.msgDao()
-              .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
           }
           MessagesSenderWorker.enqueue(applicationContext)
         } catch (e: Exception) {
@@ -313,19 +312,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
       )
     }
 
-  private suspend fun getRecipients(
-    mimeMsgWithAttachments: MimeMessage,
-    type: Message.RecipientType
-  ) = withContext(Dispatchers.IO) {
-    mimeMsgWithAttachments.getMatchingRecipients(
-      type = type,
-      list = GeneralUtil.getRecipientsWithoutUsablePubKeys(
-        context = applicationContext,
-        emails = mimeMsgWithAttachments.getAddresses(type)
-      )
-    )
-  }
-
   private suspend fun updateExistingMimeMsgWithUrl(
     msgEntity: MessageEntity,
     url: String
@@ -388,23 +374,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
     return@withContext String(decryptionResult.content?.toByteArray() ?: byteArrayOf())
   }
-
-  private suspend fun getGoogleIdToken(retryAttempt: Int = 0): String =
-    withContext(Dispatchers.IO) {
-      val googleSignInClient = GoogleSignIn.getClient(
-        applicationContext,
-        GoogleApiClientHelper.generateGoogleSignInOptions()
-      )
-      val silentSignIn = googleSignInClient.silentSignIn()
-      if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
-        if (retryAttempt <= RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN) {
-          //do delay for 10 seconds and try again. Max attempts == RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
-          delay(TimeUnit.SECONDS.toMillis(10))
-          return@withContext getGoogleIdToken(retryAttempt + 1)
-        } else throw IllegalStateException("Could not receive idToken")
-      }
-      return@withContext requireNotNull(silentSignIn.result.idToken)
-    }
 
   private suspend fun fetchReplyToken(
     apiRepository: FlowcryptApiRepository,

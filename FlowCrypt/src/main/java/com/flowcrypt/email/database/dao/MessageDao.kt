@@ -16,11 +16,10 @@ import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
 import com.flowcrypt.email.database.dao.BaseDao.Companion.getEntitiesViaStepsSuspend
 import com.flowcrypt.email.database.entity.MessageEntity
+import jakarta.mail.Flags
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.*
-import javax.mail.Flags
-import kotlin.collections.ArrayList
+import java.util.Locale
 
 /**
  * This class describes available methods for [MessageEntity]

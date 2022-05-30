@@ -21,7 +21,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -29,9 +32,11 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentPrivateKeyDetailsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -39,11 +44,9 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PgpKeyDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.jetpack.viewmodel.factory.PgpKeyDetailsViewModelFactory
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -51,7 +54,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import org.pgpainless.util.Passphrase
 import java.io.FileNotFoundException
-import java.util.*
+import java.util.Date
 
 /**
  * This [Fragment] helps to show details about the given key.
@@ -61,14 +64,21 @@ import java.util.*
  * Time: 12:43
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
-  private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
-  private var binding: FragmentPrivateKeyDetailsBinding? = null
+class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>(),
+  ProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentPrivateKeyDetailsBinding.inflate(inflater, container, false)
 
+  private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
   private val pgpKeyDetailsViewModel: PgpKeyDetailsViewModel by viewModels {
-    PgpKeyDetailsViewModelFactory(args.fingerprint, requireActivity().application)
+    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return PgpKeyDetailsViewModel(args.fingerprint, requireActivity().application) as T
+      }
+    }
   }
 
   override val progressView: View?
@@ -77,8 +87,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     get() = binding?.content
   override val statusView: View?
     get() = binding?.status?.root
-
-  override val contentResourceId: Int = R.layout.fragment_private_key_details
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -101,13 +109,13 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     return when (item.itemId) {
       R.id.menuActionDeleteKey -> {
         showTwoWayDialog(
+          requestCode = REQUEST_CODE_DELETE_KEY_DIALOG,
           dialogTitle = "",
           dialogMsg = requireContext().resources.getQuantityString(
             R.plurals.delete_key_question, 1, 1
           ),
           positiveButtonTitle = getString(android.R.string.ok),
-          negativeButtonTitle = getString(android.R.string.cancel),
-          requestCode = REQUEST_CODE_DELETE_KEY_DIALOG
+          negativeButtonTitle = getString(android.R.string.cancel)
         )
         true
       }
@@ -116,23 +124,14 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
   }
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentPrivateKeyDetailsBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.key_details)
     initViews()
     updateViews()
     setupPgpKeyDetailsViewModel()
     setupPrivateKeysViewModel()
     setupCheckPrivateKeysViewModel()
+    subscribeToTwoWayDialog()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -140,21 +139,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
       REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
         Activity.RESULT_OK -> if (data != null && data.data != null) {
           saveKey(data)
-        }
-      }
-
-      REQUEST_CODE_DELETE_KEY_DIALOG -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            pgpKeyDetailsViewModel.getPgpKeyDetails()?.let {
-              account?.let { accountEntity ->
-                privateKeysViewModel.deleteKeys(
-                  accountEntity,
-                  listOf(it)
-                )
-              }
-            }
-          }
         }
       }
 
@@ -239,11 +223,10 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
     }
 
     binding?.btnShowPubKey?.setOnClickListener {
-      val dialogFragment = InfoDialogFragment.newInstance(
+      showInfoDialog(
         dialogTitle = "",
-        dialogMsg = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
+        dialogMsg = pgpKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
       )
-      dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
     }
 
     binding?.btnCopyToClipboard?.setOnClickListener {
@@ -270,10 +253,21 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
         ), binding?.tVFingerprint
       )
 
-      binding?.tVDate?.text = getString(
-        R.string.template_date,
-        DateFormat.getMediumDateFormat(context).format(Date(value.created))
+      binding?.textViewStatusValue?.backgroundTintList =
+        value.getColorStateListDependsOnStatus(requireContext())
+      binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
+        value.getStatusIcon(), 0, 0, 0
       )
+      binding?.textViewStatusValue?.text = value.getStatusText(requireContext())
+
+      val dateFormat = DateFormat.getMediumDateFormat(context)
+      binding?.textViewCreationDate?.text = getString(
+        R.string.template_creation_date,
+        dateFormat.format(Date(value.created))
+      )
+      binding?.textViewExpirationDate?.text = value.expiration?.let {
+        getString(R.string.key_expiration, dateFormat?.format(Date(it)))
+      } ?: getString(R.string.key_expiration, getString(R.string.key_does_not_expire))
       binding?.tVUsers?.text = getString(R.string.template_users, value.getUserIdsAsSingleString())
 
       val passPhrase = pgpKeyDetailsViewModel.getPassphrase()
@@ -308,31 +302,32 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupPgpKeyDetailsViewModel() {
-    pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner, {
+    pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
           showProgress()
         }
 
         Result.Status.SUCCESS -> {
           if (it.data == null) {
             toast(getString(R.string.no_details_about_given_key))
-            parentFragmentManager.popBackStack()
+            navController?.navigateUp()
           } else {
             updateViews()
             matchPassphrase(it.data)
           }
           showContent()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun matchPassphrase(pgpKeyDetails: PgpKeyDetails) {
@@ -347,16 +342,16 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
-          parentFragmentManager.popBackStack()
-          baseActivity.countingIdlingResource.decrementSafely()
+          navController?.navigateUp()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -365,18 +360,19 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
             ?: "Couldn't delete a key with fingerprint =" +
             " {${pgpKeyDetailsViewModel.getPgpKeyDetails()?.fingerprint ?: ""}}"
           )
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
+        else -> {}
       }
-    })
+    }
   }
 
   private fun setupCheckPrivateKeysViewModel() {
-    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner, { it ->
+    checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
+          countingIdlingResource?.incrementSafely()
         }
 
         Result.Status.SUCCESS -> {
@@ -420,7 +416,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           binding?.tVPassPhraseVerification?.text = verificationMsg
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -429,10 +425,31 @@ class PrivateKeyDetailsFragment : BaseFragment(), ProgressBehaviour {
               ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_check_pass_phrase)
           )
-          baseActivity.countingIdlingResource.decrementSafely()
+          countingIdlingResource?.decrementSafely()
+        }
+        else -> {}
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_DELETE_KEY_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          pgpKeyDetailsViewModel.getPgpKeyDetails()?.let {
+            account?.let { accountEntity ->
+              privateKeysViewModel.deleteKeys(
+                accountEntity,
+                listOf(it)
+              )
+            }
+          }
         }
       }
-    })
+    }
   }
 
   companion object {

@@ -14,8 +14,11 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -24,7 +27,8 @@ import java.util.concurrent.ConcurrentHashMap
  *         E-mail: DenBond7@gmail.com
  */
 object IMAPStoreManager {
-  val activeConnections = ConcurrentHashMap<Long, IMAPStoreConnection>()
+  private val RETRY_TIMEOUT = TimeUnit.MILLISECONDS.toMillis(200)
+  private val activeConnections = ConcurrentHashMap<Long, IMAPStoreConnection>()
 
   fun init(context: Context) {
     val applicationContext = context.applicationContext
@@ -78,5 +82,17 @@ object IMAPStoreManager {
         }
       }
     }
+  }
+
+  suspend fun getConnection(id: Long?, retryAttempts: Int = 5) = withContext(Dispatchers.IO) {
+    id ?: return@withContext null
+    var attempts = retryAttempts
+    if (attempts > 0) {
+      while (attempts != 0 && activeConnections[id] == null) {
+        attempts--
+        delay(RETRY_TIMEOUT)
+      }
+    }
+    return@withContext activeConnections[id]
   }
 }

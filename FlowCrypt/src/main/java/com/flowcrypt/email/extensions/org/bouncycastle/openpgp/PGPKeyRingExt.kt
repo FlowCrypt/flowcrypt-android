@@ -7,11 +7,11 @@ package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import androidx.annotation.WorkerThread
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpArmor
-import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.algorithm.PublicKeyAlgorithm
@@ -19,9 +19,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.info.KeyInfo
 import org.pgpainless.key.info.KeyRingInfo
-import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.nio.charset.StandardCharsets
 import java.time.Instant
 
 /**
@@ -90,17 +88,7 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
 
 @Throws(IOException::class)
 fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS): String {
-  ByteArrayOutputStream().use { out ->
-    ArmoredOutputStream(out).use { armoredOut ->
-      if (headers != null) {
-        for (header in headers) {
-          armoredOut.setHeader(header.first, header.second)
-        }
-      }
-      this.encode(armoredOut)
-    }
-    return String(out.toByteArray(), StandardCharsets.US_ASCII)
-  }
+  return SecurityUtils.armor(headers) { this.encode(it) }
 }
 
 val PGPKeyRing.expiration: Instant?

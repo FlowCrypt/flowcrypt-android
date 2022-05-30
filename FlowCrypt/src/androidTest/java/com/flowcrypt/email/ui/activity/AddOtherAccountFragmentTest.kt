@@ -5,10 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.ComponentName
-import android.content.Intent
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -17,9 +13,6 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents.intended
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
@@ -35,7 +28,6 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
@@ -50,8 +42,8 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
+import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.instanceOf
-import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.startsWith
 import org.junit.Ignore
@@ -71,7 +63,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AddOtherAccountFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<SignInActivity>(
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       uri = "flowcrypt://email.flowcrypt.com/sign-in/other"
     )
@@ -114,12 +106,12 @@ class AddOtherAccountFragmentTest : BaseTest() {
   @Test
   fun testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword))
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
     enableAdvancedMode()
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
       .perform(scrollTo(), click())
     onView(withId(R.id.editTextSmtpPassword))
-      .check(matches(withText(isEmptyString())))
+      .check(matches(withText(`is`(emptyString()))))
   }
 
   @Test
@@ -209,7 +201,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextSmtpPassword))
       .perform(scrollTo())
-      .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+      .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
 
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
       .perform(scrollTo(), click())
@@ -236,13 +228,13 @@ class AddOtherAccountFragmentTest : BaseTest() {
         .perform(scrollTo(), clearText(), typeText(invalidEmailAddress), closeSoftKeyboard())
       onView(withId(R.id.editTextUserName))
         .perform(scrollTo())
-        .check(matches(withText(isEmptyString())))
+        .check(matches(withText(`is`(emptyString()))))
       onView(withId(R.id.editTextImapServer))
         .perform(scrollTo())
-        .check(matches(withText(isEmptyString())))
+        .check(matches(withText(`is`(emptyString()))))
       onView(withId(R.id.editTextSmtpServer))
         .perform(scrollTo())
-        .check(matches(withText(isEmptyString())))
+        .check(matches(withText(`is`(emptyString()))))
     }
 
     val text = userName + TestConstants.COMMERCIAL_AT_SYMBOL + host
@@ -353,48 +345,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
       onView(withId(fieldIdentifiersWithIncorrectData[i]))
         .perform(scrollTo(), clearText(), typeText(correctData[i]), closeSoftKeyboard())
     }
-  }
-
-  @Test
-  @DependsOnMailServer
-  fun testWhenNoAccountsAndHasBackup() {
-    val prvKey = PrivateKeysManager
-      .getPgpKeyDetailsFromAssets("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc")
-      .copy(
-        passphraseType = KeyEntity.PassphraseType.DATABASE,
-        tempPassphrase = TestConstants.DEFAULT_PASSWORD.toCharArray()
-      )
-
-    intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().apply {
-        putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, ArrayList(listOf(prvKey)))
-      }))
-
-    val creds = AuthCredentialsManager.getAuthCredentials()
-
-    onView(withId(R.id.editTextEmail))
-      .perform(clearText(), typeText(creds.email), closeSoftKeyboard())
-    onView(withId(R.id.editTextPassword))
-      .perform(clearText(), typeText(creds.password), closeSoftKeyboard())
-    onView(withId(R.id.buttonTryToConnect))
-      .perform(scrollTo(), click())
-
-    intended(hasComponent(EmailManagerActivity::class.java.name))
-  }
-
-  @Test
-  @DependsOnMailServer
-  fun testWhenHasAccountsHasBackup() {
-    val user = AccountDaoManager.getUserWithMoreThan21Letters()
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(user)
-    PrivateKeysManager.saveKeyFromAssetsToDatabase(
-      accountEntity = user,
-      keyPath = "pgp/key_testing@flowcrypt.test_keyB_default.asc",
-      passphrase = TestConstants.DEFAULT_PASSWORD,
-      sourceType = KeyImportDetails.SourceType.EMAIL
-    )
-
-    testWhenNoAccountsAndHasBackup()
   }
 
   @Test

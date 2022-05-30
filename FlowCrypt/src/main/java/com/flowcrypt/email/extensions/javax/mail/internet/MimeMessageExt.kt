@@ -3,12 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.extensions.javax.mail.internet
+package com.flowcrypt.email.extensions.jakarta.mail.internet
 
-import javax.mail.Address
-import javax.mail.Message
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
+import jakarta.mail.Message
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 
 /**
  * @author Denis Bondarenko
@@ -24,13 +23,4 @@ fun MimeMessage.getAddresses(type: Message.RecipientType): List<String> {
 fun MimeMessage.getFromAddress(): InternetAddress {
   return (from.first() as? InternetAddress)
     ?: throw IllegalStateException("'from' address is undefined")
-}
-
-fun MimeMessage.getMatchingRecipients(
-  type: Message.RecipientType,
-  list: Iterable<String>
-): Array<Address> {
-  return getRecipients(type)?.filter {
-    (it as? InternetAddress)?.address?.lowercase() in list
-  }?.toTypedArray() ?: emptyArray()
 }

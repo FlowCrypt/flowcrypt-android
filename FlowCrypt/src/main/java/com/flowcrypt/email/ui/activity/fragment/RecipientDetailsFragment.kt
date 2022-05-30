@@ -23,7 +23,7 @@ import com.flowcrypt.email.jetpack.viewmodel.RecipientDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.adapter.PubKeysRecyclerViewAdapter
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
  * @author Denis Bondarenko
@@ -31,18 +31,21 @@ import kotlinx.coroutines.flow.collect
  *         Time: 1:03 PM
  *         E-mail: DenBond7@gmail.com
  */
-class RecipientDetailsFragment : BaseFragment(), ListProgressBehaviour {
+@ExperimentalCoroutinesApi
+class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>(),
+  ListProgressBehaviour {
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    FragmentRecipientDetailsBinding.inflate(inflater, container, false)
+
   private val args by navArgs<RecipientDetailsFragmentArgs>()
-  private var binding: FragmentRecipientDetailsBinding? = null
   private val recipientDetailsViewModel: RecipientDetailsViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
-      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return RecipientDetailsViewModel(args.recipientEntity, requireActivity().application) as T
       }
     }
   }
-  override val contentResourceId: Int = R.layout.fragment_recipient_details
 
   override val emptyView: View?
     get() = binding?.empty?.root
@@ -66,16 +69,8 @@ class RecipientDetailsFragment : BaseFragment(), ListProgressBehaviour {
       }
     })
 
-  override fun onCreateView(
-    inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-  ): View? {
-    binding = FragmentRecipientDetailsBinding.inflate(inflater, container, false)
-    return binding?.root
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.setTitle(R.string.recipient_detail)
     initViews()
     setupRecipientDetailsViewModel()
   }

@@ -13,14 +13,17 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
+import jakarta.mail.internet.InternetAddress
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -29,7 +32,6 @@ import org.pgpainless.util.Passphrase
 import java.time.Instant
 import java.util.TreeMap
 import java.util.concurrent.TimeUnit
-import javax.mail.internet.InternetAddress
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -235,6 +237,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   override fun getFingerprintsWithEmptyPassphrase(): List<String> {
     return passPhraseMap.filter { it.value.passphrase.isEmpty }.map { it.key }
+  }
+
+  override fun getFirstUsableForEncryptionPGPSecretKeyRing(user: String): PGPSecretKeyRing? {
+    return getPGPSecretKeyRingsByUserId(user).firstOrNull { KeyRingInfo(it).usableForEncryption() }
   }
 
   private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {

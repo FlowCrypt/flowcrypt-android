@@ -5,18 +5,26 @@
 
 package com.flowcrypt.email.extensions
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.IdRes
-import androidx.fragment.app.DialogFragment
+import androidx.appcompat.app.ActionBar
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
-import com.flowcrypt.email.NavGraphDirections
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.BaseActivity
+import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
+import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragmentArgs
+import com.flowcrypt.email.util.FlavorSettings
+import com.google.android.material.appbar.AppBarLayout
 
 /**
  * @author Denis Bondarenko
@@ -25,14 +33,24 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
  *         E-mail: DenBond7@gmail.com
  */
 
+val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
+  get() = activity?.findViewById(R.id.appBarLayout)
+
+val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
+  get() = FlavorSettings.getCountingIdlingResource()
+
+val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
+  get() = if (activity is AppCompatActivity) {
+    (activity as AppCompatActivity).supportActionBar
+  } else
+    null
+
 val androidx.fragment.app.Fragment.navController: NavController?
   get() = activity?.let {
     try {
       Navigation.findNavController(it, R.id.fragmentContainerView)
     } catch (e: Exception) {
-      //to prevent error in fragments which don't use navController
-      //todo-denbond7 remove this after the full migration
-      null
+      return@let null
     }
   }
 
@@ -42,8 +60,11 @@ val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
 val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
   get() = navController?.previousBackStackEntry?.savedStateHandle
 
-fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
-  text?.let { context?.toast(text, duration) }
+fun androidx.fragment.app.Fragment.doBaseUISetup(uiUxSettings: UiUxSettings) {
+  (activity as? BaseActivity<*>)?.setDrawerLockMode(uiUxSettings.isSideMenuLocked)
+  appBarLayout?.visibleOrGone(uiUxSettings.isToolbarVisible)
+  supportActionBar?.setDisplayHomeAsUpEnabled(uiUxSettings.isDisplayHomeAsUpEnabled)
+  supportActionBar?.subtitle = null
 }
 
 fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T) {
@@ -91,50 +112,54 @@ fun <T> androidx.fragment.app.Fragment.getNavigationResultForDialog(
   })
 }
 
+fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
+  text?.let { context?.toast(text, duration) }
+}
+
 fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGTH_SHORT) {
   if (resId != -1) {
-    activity?.toast(resId, duration)
+    context?.toast(resId, duration)
   }
 }
 
-fun androidx.fragment.app.Fragment.showDialogFragment(dialog: DialogFragment) {
-  dialog.show(parentFragmentManager, dialog.javaClass::class.java.simpleName)
-}
-
 fun androidx.fragment.app.Fragment.showInfoDialog(
+  requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
   buttonTitle: String? = null,
-  isPopBackStack: Boolean = false,
-  isCancelable: Boolean = false,
+  isCancelable: Boolean = true,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false,
-  requestCode: Int = 10000
+  useWebViewToRender: Boolean = false
 ) {
-  val fragment = InfoDialogFragment.newInstance(
+  showInfoDialog(
+    context = requireContext(),
+    navController = navController,
+    requestCode = requestCode,
     dialogTitle = dialogTitle,
     dialogMsg = dialogMsg,
     buttonTitle = buttonTitle,
-    isPopBackStack = isPopBackStack,
     isCancelable = isCancelable,
     hasHtml = hasHtml,
-    useLinkify = useLinkify
+    useLinkify = useLinkify,
+    useWebViewToRender = useWebViewToRender
   )
-  fragment.setTargetFragment(this, requestCode)
-  showDialogFragment(fragment)
 }
 
 fun androidx.fragment.app.Fragment.showTwoWayDialog(
+  requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
   positiveButtonTitle: String? = null,
   negativeButtonTitle: String? = null,
-  isCancelable: Boolean = false,
-  requestCode: Int = 10000,
+  isCancelable: Boolean = true,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false
 ) {
-  val fragment = TwoWayDialogFragment.newInstance(
+  showTwoWayDialog(
+    context = requireContext(),
+    navController = navController,
+    requestCode = requestCode,
     dialogTitle = dialogTitle,
     dialogMsg = dialogMsg,
     positiveButtonTitle = positiveButtonTitle,
@@ -143,31 +168,57 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
     hasHtml = hasHtml,
     useLinkify = useLinkify
   )
-  fragment.setTargetFragment(this, requestCode)
-  showDialogFragment(fragment)
 }
 
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
   fingerprints: List<String>,
-  requestCode: Int,
-  logicType: FixNeedPassphraseIssueDialogFragment.LogicType
-  = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
+  logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
 ) {
-  val tag = FixNeedPassphraseIssueDialogFragment::class.java.simpleName
-  if (parentFragmentManager.findFragmentByTag(tag) == null) {
-    val fragment = FixNeedPassphraseIssueDialogFragment.newInstance(fingerprints, logicType)
-    fragment.setTargetFragment(this, requestCode)
-    fragment.show(parentFragmentManager, tag)
+  showNeedPassphraseDialog(navController, fingerprints, logicType)
+}
+
+fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
+  e: Throwable?,
+  msgDetails: String? = null
+) {
+  showInfoDialogWithExceptionDetails(
+    context = requireContext(),
+    navController = navController,
+    throwable = e,
+    msgDetails = msgDetails
+  )
+}
+
+fun androidx.fragment.app.Fragment.showFeedbackFragment() {
+  showFeedbackFragment(requireActivity(), navController)
+}
+
+fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
+  isPrivateKeyMode: Boolean
+) {
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override fun getActionId() = R.id.find_keys_in_clipboard_dialog_graph
+      override fun getArguments() = FindKeysInClipboardDialogFragmentArgs(
+        isPrivateKeyMode = isPrivateKeyMode
+      ).toBundle()
+    }
   }
 }
 
-fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(e: Throwable?) {
-  val msg = e?.message ?: e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
-
-  navController?.navigate(
-    NavGraphDirections.actionGlobalInfoDialogFragment(
-      dialogTitle = "",
-      dialogMsg = msg
-    )
-  )
+fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
+  source: String? = null,
+  uri: Uri? = null,
+  @ParsePgpKeysFromSourceDialogFragment.FilterType filterType: Long
+) {
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override fun getActionId() = R.id.parse_keys_from_source_dialog_graph
+      override fun getArguments() = ParsePgpKeysFromSourceDialogFragmentArgs(
+        source = source,
+        uri = uri,
+        filterType = filterType
+      ).toBundle()
+    }
+  }
 }

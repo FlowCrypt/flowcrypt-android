@@ -6,9 +6,8 @@
     <string name="error_some_email_is_not_valid">Ошибка: неверный Email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Ошибка: нет подключения к Интернету</string>
     <string name="unknown_error">Неизвестная ошибка</string>
-    <string name="action_settings">Настройки</string>
     <string name="security">Безопасность</string>
-    <string name="title_activity_settings">Настройки</string>
+    <string name="settings">Настройки</string>
     <string name="contacts">Контакты</string>
     <string name="keys">Ключи</string>
     <string name="help">Поддержка</string>
@@ -61,14 +60,11 @@
     <string name="search">Поиск</string>
     <string name="key_successfully_copied">Ключ успешно скопирован</string>
     <string name="password_quality_perfect">идеальная</string>
-    <string name="yes">да</string>
-    <string name="no">нет</string>
     <string name="no_conn_msg_sent_later">Нет подключения. Сообщение будет отправлено позже</string>
     <string name="me">я</string>
     <string name="sending">Отправка&#8230;</string>
     <string name="queued">В очереди</string>
     <string name="show_private_key">Показать закрытый ключ</string>
-    <string name="file_not_found">Файл не найден</string>
     <string name="show_aliases">Показать псевдонимы</string>
     <string name="show_cc_bcc">Показать CC/BCC</string>
     <string name="system">Система</string>
@@ -78,7 +74,6 @@
     <string name="your_email_address">Ваш Email</string>
     <string name="mark_read">Отметить как прочитанное</string>
     <string name="undo">Отменить</string>
-    <string name="choose_email">Выбрать Email</string>
     <string name="users_">Пользователи: </string>
     <string name="create_new_message">Новое сообщение</string>
     <string name="all_mail">Все письма</string>
@@ -128,7 +123,6 @@
     <string name="recipient_does_not_use_pgp">Получатель не использует PGP</string>
     <string name="copy_from_other_contact">Скопировать из другого контакта</string>
     <string name="copy_to_clipboard">Скопировать в буфер обмена</string>
-    <string name="could_not_import_data">Не удалось импортировать данные</string>
     <string name="forget_passphrase">Забыть ключевую фразу</string>
     <string name="fingerprints_">Отпечатки:</string>
     <string name="connect_your_email_account_using_oauth_2_0">Подключите свою учетную запись\n с помощью OAuth 2.0</string>
@@ -142,7 +136,6 @@
     <string name="keys_have_different_pass_phrase">Ключи имеют разную ключевую фразу</string>
     <string name="source_has_wrong_pgp_structure">Предоставленное вами содержимое не похоже на действительный %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Содержимое Вашего файла не похоже на действительный %1$s ключ PGP.</string>
-    <string name="clipboard_has_wrong_structure">Содержимое Вашего буфера обмена не похоже на действительный %1$s ключ PGP.</string>
     <string name="attachment_not_found">Вложение не найдено</string>
     <string name="cannot_save_attachment_without_permission">Вложение нельзя сохранить без разрешения на запись во внешнее хранилище</string>
     <string name="sync">Синхронизация</string>
@@ -161,7 +154,6 @@
     <string name="show_original_message">Показать исходное сообщение</string>
     <string name="show_more">Показать еще</string>
     <string name="showing_only_encrypted_messages">Отображение только зашифрованных сообщений</string>
-    <string name="showing_all_messages">Отображение всех сообщений</string>
     <string name="server_settings_updated">Настройки сервера обновлены</string>
     <string name="server_settings">Настройки сервера</string>
     <string name="sent">Отправлено</string>
@@ -169,7 +161,6 @@
     <string name="sending_email">Отправка сообщения&#8230;</string>
     <string name="selection_text">Выбрано: %1$d</string>
     <string name="select_only_one_key">Выберите источник, в котором хранится только один ключ</string>
-    <string name="select_key_to_import">Выберите ключ для импорта</string>
     <string name="see_more_backup_options">Посмотреть другие варианты резервного копирования</string>
     <string name="decrypt_error_message_bad_mdc">Угроза безопасности - открытие этого сообщения опасно, поскольку оно было изменено при передаче.</string>
     <string name="decrypt_error_message_no_mdc">Угроза безопасности!\n\nВ сообщении отсутствует код проверки целостности (MDC). Отправитель должен обновить свое устаревшее программное обеспечение.\n\nОтображать сообщение на свой страх и риск</string>
@@ -178,14 +169,13 @@
     <string name="empty_trash">Очистить корзину</string>
     <string name="pref_summary_enabled">Включено</string>
     <string name="encrypted">зашифровано</string>
-    <string name="cannot_forward_encrypted_attachments">Зашифрованные вложения не пересылаются. Прикрепите файлы, если хотите, чтобы они были включены.</string>
     <string name="enter_a_new_public_key_for_this_contact">Введите новый открытый ключ для этого контакта</string>
     <string name="download">Загрузить</string>
     <string name="pref_summary_disabled">Отключен</string>
     <string name="details">Подробности</string>
     <string name="delete_quoted_text">Удалить цитируемый текст</string>
     <string name="delete_message">Удалить сообщение</string>
-    <string name="template_date">Дата: %1$s</string>
+    <string name="template_creation_date">Дата создания: %1$s</string>
     <string name="date">Дата</string>
     <string name="please_wait_while_key_will_be_created">Создание ключа, пожалуйста, подождите</string>
     <string name="template_created">Создано: %1$s</string>
@@ -254,7 +244,6 @@
     <string name="more_than_one_public_key_found">Мы нашли более одного открытого ключа в предоставленном источнике. Пожалуйста, выберите источник с единственным открытым ключом.</string>
     <string name="check">Проверить</string>
     <string name="new_pub_key">Новый открытый ключ</string>
-    <string name="contact_can_not_be_null">Контакт не может быть пустым</string>
     <string name="could_not_fetch_access_token">Не удалось получить токен доступа. Требуются правильные учетные данные. Пожалуйста, выйдите из системы и войдите снова.</string>
     <string name="refrech_token_was_corrupted">Токен обновления неверен или поврежден!</string>
     <string name="open_side_menu_and_do_logout">Откройте боковое меню и выйдите из системы, чтобы удалить %1$s</string>
@@ -276,7 +265,6 @@
     <string name="pub_key_for_updating_is_not_found">Открытый ключ для обновления не найден</string>
     <string name="pub_key_for_saving_not_found">Открытый ключ для сохранения не найден</string>
     <string name="source_is_empty_or_not_available">Источник пуст или недоступен</string>
-    <string name="error_loader_result_is_empty">Ошибка. Результат загрузки пуст</string>
     <string name="could_not_load_private_keys">Не удалось загрузить закрытые ключи</string>
     <string name="network_error">Сетевая ошибка</string>
     <string name="marked_for_archiving">Помечено для архивирования</string>
@@ -284,7 +272,6 @@
     <string name="access_was_not_granted">Доступ не предоставлен</string>
     <string name="reconnect">Переподключиться</string>
     <string name="key_already_imported_finishing_setup">Ключ уже импортирован, завершаем настройку.</string>
-    <string name="saving_prv_keys">Сохранение закрытого ключа(ей)</string>
     <string name="user_not_verified">Пользователь не прошел проверку</string>
     <string name="pending">В ожидании&#8230;</string>
     <string name="public_key_copied_to_clipboard">Открытый ключ скопирован в буфер обмена</string>
@@ -300,11 +287,7 @@
     <string name="system_notifications_notification_channel">Канал системных уведомлений</string>
     <string name="errors_notifications">Уведомления об ошибках</string>
     <string name="no_pub_keys">Нет открытых ключей</string>
-    <string name="please_use_another_app_to_choose_file">Пожалуйста, используйте другое приложение, чтобы выбрать файл</string>
     <string name="no_message_with_this_attachment">Нет сообщения с этим вложением</string>
-    <string name="reset_app_storage">Сбросить хранилище приложения</string>
-    <string name="wipe_app_settings">Очистите  %1$s  хранилище приложения и снова настройте его, чтобы продолжить использование %1$s на этом устройстве.</string>
-    <string name="store_space_was_corrupted">Хранилище приложения повреждено. Это может произойти в определенных системах с открытым доступом суперпользователя, неофициальных системах или из-за вмешательства пользователя, других подобных причин. Напишите нам по адресу %1$s, если вам понадобится помощь.</string>
     <string name="no_key_available">Нет ключа для Вашей учетной записи электронной почты</string>
     <string name="saved">Сохранено</string>
     <string name="copied">Скопировано</string>
@@ -352,9 +335,7 @@
     <string name="save_to_file">Сохранить в файл</string>
     <string name="search_by_key_id_or_email">Поиск по идентификатору ключа или электронной почте</string>
     <string name="cyrillic_search_not_support_yet">Поиск с иностранными алфавитами пока не поддерживается</string>
-    <string name="sign_in">ВОЙТИ</string>
     <string name="submitted_can_receive_encrypted_email">Отправлено, можно получать зашифрованную электронную почту.</string>
-    <string name="submitting_pub_key">Отправка открытого ключа</string>
     <string name="download_attachments_notification_channel">Канал уведомлений о скачивании вложений</string>
     <string name="messages_notification_channel">Канал уведомления о сообщениях</string>
     <string name="no_details_about_given_key">Подробных сведений о данном ключе нет.</string>
@@ -379,7 +360,6 @@
     <string name="feedback">Обратная связь</string>
     <string name="forward_template">\n\n---------- Пересылаемое сообщение ----------\nОт: %1$s\nДата: %2$s\nТема: %3$s\nКому: %4$s\n</string>
     <string name="forward_encrypted">Переслать\nс шифрованием</string>
-    <string name="get_access_to_gmail">Получите доступ к Gmail</string>
     <string name="password_quality_good">хорошая</string>
     <string name="password_quality_great">отличная</string>
     <string name="hide_original_message">Скрыть исходное сообщение</string>
@@ -404,13 +384,11 @@
     <string name="message_failed_to_send">Не удалось отправить сообщение: неизвестная ошибка\n\n%1$s</string>
     <string name="message_failed_to_forward">Сообщение не удалось отправить. Пожалуйста, перешлите сообщение еще раз</string>
     <string name="decrypt_error_message_badly_formatted">Сообщение либо плохо отформатировано, либо несовместимо с %1$s.</string>
-    <string name="email_does_not_available_in_this_folder">Сообщение не найдено, возможно, оно было перемещено в другую папку.</string>
     <string name="messages">Сообщения</string>
     <string name="your_message_must_be_non_empty">Сообщение не должно быть пустым</string>
     <string name="move_to_inbox">Переместить во входящие</string>
     <string name="no_connection">Нет соединения</string>
     <string name="no_connection_or_server_is_not_reachable">Нет соединения или сервер недоступен</string>
-    <string name="no_encrypted_messages">Нет зашифрованных сообщений</string>
     <string name="no_key_available_for_your_email_account">Нет ключа для Вашей учетной записи электронной почты. Чтобы получить помощь, напишите %1$s</string>
     <string name="no_key_available_for_your_emails">Нет ключа для Ваших адресов электронной почты %1$s и %2$s. Чтобы получить помощь, напишите  %3$s</string>
     <string name="no_public_key_recorded">Открытый ключ не записан. Ваши контакты могут не знать, что Вы используете шифрование.</string>
@@ -428,7 +406,6 @@
     <string name="public_key_below_is_safe_to_share">Открытыми ключами можно безопасно делиться</string>
     <string name="password_quality_reasonable">разумная</string>
     <string name="receive_notifications_for">Получать уведомления для:</string>
-    <string name="recipient_already_exist">Получатель %1$s уже существует</string>
     <string name="to_receiver">Кому %1$s</string>
     <string name="template_warning_max_total_attachments_size">Общий размер добавленных вложений не должен превышать %1$s</string>
     <string name="use_public_key_from">Использовать открытый ключ из</string>
@@ -450,11 +427,9 @@
     <string name="select_stronger_pass_phrase">Пожалуйста, выберите более надежную ключевую фразу. Лучше всего использовать сочетание из 4 или 5 необычных слов.</string>
     <string name="reconnect_your_account">Пожалуйста, повторно подключите свою учетную запись, чтобы продолжить использование %1$s\nс\n%2$s</string>
     <string name="provide_passphrase_to_decrypt_file">Пожалуйста, укажите ключевую фразу для расшифровки этого файла</string>
-    <string name="failed_load_message_from_email_server">Не удалось загрузить сообщение с почтового сервера</string>
     <string name="failed_please_try_again_later">Не удалось завершить операцию. Пожалуйста, повторите попытку позже</string>
     <string name="experimental_settings">Экспериментальные настройки</string>
     <string name="expand_an_account_managment">Развернуть управление учетной записью</string>
-    <string name="evaluating">Обработка…</string>
     <string name="error_occurred_please_try_again">Произошла ошибка, попробуйте еще раз</string>
     <string name="backup_was_not_sent">Ошибка создание резервной копии, попробуйте еще раз</string>
     <string name="found_not_fully_encrypted_key">Ошибка. Ключ %1$s зашифрован не полностью</string>
@@ -467,7 +442,6 @@
     <string name="silent">Беззвучный</string>
     <string name="mixed_signed">разные подписи</string>
     <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, которое защищено паролем. Вы можете открыт его используя эту ссылку: %2$s</string>
-    <string name="hint">Подсказка</string>
     <string name="can_not_send_password_protected">Сбой при отправке: защищено паролем</string>
     <string name="enter_web_portal_password">Введите web-пароль</string>
     <string name="set_password">Установить пароль</string>
@@ -494,4 +468,19 @@
     <string name="error_occurred_during_downloading_att">Произошла ошибка при загрузке.\n\nДетали ошибки:  %1$s</string>
     <string name="no_apps_that_can_handle_intent">Извините, у Вас нет приложений, которые могут открыть этот файл</string>
     <string name="warning_don_not_have_content_app">Просмотр вложения невозможен. Ваша организация требует использовать Content для просмотра вложений, но приложение Content не установлено.\n\nПожалуйста, обратитесь в службу поддержки.</string>
+    <string name="error">Ошибка</string>
+    <string name="import_keys_from_different_sources">Вы пытаетесь импортировать ключи из разных источников</string>
+    <string name="thank_you_for_feedback">Спасибо за Ваш отзыв</string>
+    <string name="no_private_keys_suitable_for_encryption">Извините, Вы не можете отправить зашифрованное сообщение. У Вас нет ни одного закрытого ключей, который пригоден для шифрования.</string>
+    <string name="revoked">отозван</string>
+    <string name="key_expiration">Срок действия ключа: %1$s</string>
+    <string name="key_does_not_expire">бессрочно</string>
+    <string name="status">Статус:</string>
+    <string name="valid">валидный</string>
+    <string name="undefined">не определен</string>
+    <string name="not_valid">не валидный</string>
+    <string name="expired">просроченный</string>
+    <string name="refreshing_keys_from_ekm_failed">Не удалось обновить ключи с сервера EKM</string>
+    <string name="source_contains_more_than_one_key">Источник содержит более одного закрытого ключа</string>
+    <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Пожалуйста, введите Вашу ключевую фразу, чтобы поддерживать Ваши ключи в актуальном состоянии</string>
 </resources>

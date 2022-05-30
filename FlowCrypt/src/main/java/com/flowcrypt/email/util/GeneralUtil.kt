@@ -36,15 +36,23 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
+import com.flowcrypt.email.util.exception.CommonConnectionException
+import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.apache.commons.io.IOUtils
 import retrofit2.Retrofit
 import java.io.File
 import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.UUID
@@ -464,5 +472,50 @@ class GeneralUtil {
         .setDataAndType(uri, Intent.normalizeMimeType(attachmentInfo.type))
         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+    suspend fun getGoogleIdToken(
+      context: Context,
+      maxRetryAttemptCount: Int = 0,
+      retryAttempt: Int = 0
+    ): String =
+      withContext(Dispatchers.IO) {
+        //before fetch idToken from [GoogleSignInClient]
+        //we try to get IdToken from the flavor settings
+        FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
+
+        val googleSignInClient = GoogleSignIn.getClient(
+          context,
+          GoogleApiClientHelper.generateGoogleSignInOptions()
+        )
+        val silentSignIn = googleSignInClient.silentSignIn()
+        if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
+          if (retryAttempt <= maxRetryAttemptCount) {
+            //do delay for 10 seconds and try again. Max attempts == maxRetryAttemptCount
+            delay(TimeUnit.SECONDS.toMillis(10))
+            return@withContext getGoogleIdToken(context, maxRetryAttemptCount, retryAttempt + 1)
+          } else throw IllegalStateException("Could not receive idToken")
+        }
+        return@withContext requireNotNull(silentSignIn.result.idToken)
+      }
+
+    suspend fun preProcessException(
+      context: Context,
+      causedException: Throwable
+    ): Throwable = withContext(Dispatchers.IO) {
+      return@withContext when (causedException) {
+        is UnknownHostException, is SocketTimeoutException, is ConnectException -> {
+          if (context.hasActiveConnection()) {
+            CommonConnectionException(
+              cause = causedException,
+              hasInternetAccess = hasInternetAccess()
+            )
+          } else {
+            CommonConnectionException(cause = causedException, hasInternetAccess = false)
+          }
+        }
+
+        else -> causedException
+      }
+    }
   }
 }
