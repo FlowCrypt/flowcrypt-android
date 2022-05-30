@@ -45,7 +45,7 @@ class EmailAndNameWorker(context: Context, params: WorkerParameters) : BaseWorke
     for (i in emails.indices) {
       val email = emails[i].lowercase()
       val name = names[i]
-      val recipientEntity = recipientDao.getRecipientByEmail(email)
+      val recipientEntity = recipientDao.getRecipientByEmailSuspend(email)
       if (recipientEntity != null) {
         if (recipientEntity.name.isNullOrEmpty()) {
           recipientDao.updateSuspend(recipientEntity.copy(name = name))
