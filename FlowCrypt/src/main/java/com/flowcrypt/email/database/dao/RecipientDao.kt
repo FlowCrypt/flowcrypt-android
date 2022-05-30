@@ -30,13 +30,26 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients")
   fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
 
-  @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient GROUP BY recipients.email ORDER BY recipients._id")
+  @Query(
+    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
+        "ON recipients.email = public_keys.recipient " +
+        "GROUP BY recipients.email ORDER BY recipients._id"
+  )
   fun getAllRecipientsWithPgpFlow(): Flow<List<RecipientEntity>>
 
-  @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient GROUP BY recipients.email ORDER BY recipients._id")
+  @Query(
+    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
+        "ON recipients.email = public_keys.recipient " +
+        "GROUP BY recipients.email ORDER BY recipients._id"
+  )
   suspend fun getAllRecipientsWithPgp(): List<RecipientEntity>
 
-  @Query("SELECT recipients.* FROM recipients INNER JOIN public_keys ON recipients.email = public_keys.recipient WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) GROUP BY recipients.email ORDER BY recipients._id")
+  @Query(
+    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
+        "ON recipients.email = public_keys.recipient " +
+        "WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) " +
+        "GROUP BY recipients.email ORDER BY recipients._id"
+  )
   suspend fun getAllRecipientsWithPgpWhichMatched(searchPattern: String): List<RecipientEntity>
 
   @Query("SELECT * FROM recipients WHERE email = :email")
@@ -58,7 +71,8 @@ interface RecipientDao : BaseDao<RecipientEntity> {
 
   @Transaction
   @Query("SELECT * FROM recipients WHERE email IN (:emails)")
-  suspend fun getRecipientsWithPubKeysByEmailsSuspend(emails: Collection<String>): List<RecipientWithPubKeys>
+  suspend fun getRecipientsWithPubKeysByEmailsSuspend(emails: Collection<String>):
+      List<RecipientWithPubKeys>
 
   @Query("SELECT * FROM recipients WHERE email LIKE :searchPattern ORDER BY last_use DESC")
   fun getFilteredCursor(searchPattern: String): Cursor?
