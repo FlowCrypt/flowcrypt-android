@@ -30,15 +30,14 @@ import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSetting
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
-import java.util.ArrayList
+import jakarta.mail.Flags
+import jakarta.mail.Message
+import jakarta.mail.MessageRemovedException
+import jakarta.mail.MessagingException
+import jakarta.mail.Session
+import jakarta.mail.internet.AddressException
+import jakarta.mail.internet.InternetAddress
 import java.util.Properties
-import javax.mail.Flags
-import javax.mail.Message
-import javax.mail.MessageRemovedException
-import javax.mail.MessagingException
-import javax.mail.Session
-import javax.mail.internet.AddressException
-import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko

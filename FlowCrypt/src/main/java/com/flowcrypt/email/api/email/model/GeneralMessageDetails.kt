@@ -8,8 +8,7 @@ package com.flowcrypt.email.api.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.MessageState
-import java.util.ArrayList
-import javax.mail.internet.InternetAddress
+import jakarta.mail.internet.InternetAddress
 
 /**
  * Simple POJO class which describe a general message details.

@@ -12,8 +12,8 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
+import jakarta.mail.internet.InternetAddress
 import java.util.Date
-import javax.mail.internet.InternetAddress
 
 /**
  * The class which describe an incoming message model.

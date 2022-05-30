@@ -16,17 +16,17 @@ import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.rawMimeType
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
+import jakarta.mail.Flags
+import jakarta.mail.Multipart
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetHeaders
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.SharedInputStream
 import java.io.FilterInputStream
 import java.io.InputStream
 import java.util.Date
 import java.util.Properties
-import javax.mail.Flags
-import javax.mail.Multipart
-import javax.mail.Session
-import javax.mail.internet.InternetHeaders
-import javax.mail.internet.MimeBodyPart
-import javax.mail.internet.MimeMessage
-import javax.mail.internet.SharedInputStream
 
 /**
  * @author Denis Bondarenko

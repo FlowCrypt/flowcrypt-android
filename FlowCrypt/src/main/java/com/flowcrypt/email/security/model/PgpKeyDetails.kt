@@ -19,8 +19,8 @@ import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import javax.mail.internet.AddressException
-import javax.mail.internet.InternetAddress
+import jakarta.mail.internet.AddressException
+import jakarta.mail.internet.InternetAddress
 
 /**
  * This class collects base info of [org.bouncycastle.openpgp.PGPKeyRing]

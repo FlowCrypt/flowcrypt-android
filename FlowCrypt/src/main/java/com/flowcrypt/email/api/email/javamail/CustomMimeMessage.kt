@@ -5,11 +5,11 @@
 
 package com.flowcrypt.email.api.email.javamail
 
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetHeaders
+import jakarta.mail.internet.MimeMessage
 import java.io.ByteArrayInputStream
 import java.util.Properties
-import javax.mail.Session
-import javax.mail.internet.InternetHeaders
-import javax.mail.internet.MimeMessage
 
 /**
  * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]

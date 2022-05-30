@@ -5,11 +5,11 @@
 
 package com.flowcrypt.email.api.email
 
-import com.flowcrypt.email.extensions.javax.mail.internet.domain
+import com.flowcrypt.email.extensions.jakarta.mail.internet.domain
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 import java.io.InputStream
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
 
 /**
  * A custom realization of [MimeMessage] that overrides <code>MessageID</code> header

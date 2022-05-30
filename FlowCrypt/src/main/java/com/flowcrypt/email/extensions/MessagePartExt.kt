@@ -6,9 +6,9 @@
 package com.flowcrypt.email.extensions
 
 import com.google.api.services.gmail.model.MessagePart
-import javax.mail.internet.ContentDisposition
-import javax.mail.internet.ContentType
-import javax.mail.internet.ParseException
+import jakarta.mail.internet.ContentDisposition
+import jakarta.mail.internet.ContentType
+import jakarta.mail.internet.ParseException
 
 /**
  * @author Denis Bondarenko
@@ -17,7 +17,7 @@ import javax.mail.internet.ParseException
  *         E-mail: DenBond7@gmail.com
  */
 /**
- * This method is similar to [javax.mail.internet.MimeBodyPart.isMimeType]
+ * This method is similar to [jakarta.mail.internet.MimeBodyPart.isMimeType]
  */
 fun MessagePart.isMimeType(inputMimeType: String): Boolean {
   val type: String = mimeType
@@ -35,7 +35,7 @@ fun MessagePart.isMimeType(inputMimeType: String): Boolean {
 }
 
 /**
- * This method is similar to [javax.mail.internet.MimeBodyPart.getDisposition]
+ * This method is similar to [jakarta.mail.internet.MimeBodyPart.getDisposition]
  */
 fun MessagePart.disposition(): String? {
   try {

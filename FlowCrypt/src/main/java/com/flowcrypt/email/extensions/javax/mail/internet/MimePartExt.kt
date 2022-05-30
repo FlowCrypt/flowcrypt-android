@@ -4,10 +4,10 @@
  *   Ivan Pizhenko
  */
 
-package com.flowcrypt.email.extensions.javax.mail.internet
+package com.flowcrypt.email.extensions.jakarta.mail.internet
 
-import javax.mail.MessagingException
-import javax.mail.internet.MimePart
+import jakarta.mail.MessagingException
+import jakarta.mail.internet.MimePart
 
 fun MimePart.hasFileName(): Boolean {
   return try {

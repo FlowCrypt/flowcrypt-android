@@ -9,11 +9,11 @@ import android.content.Context
 import androidx.annotation.WorkerThread
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
-import javax.mail.Session
-import javax.mail.Store
+import jakarta.mail.Session
+import jakarta.mail.Store
 
 /**
- * That's an interface which helps to manage an instance of [javax.mail.Store]. All of methods
+ * That's an interface which helps to manage an instance of [jakarta.mail.Store]. All of methods
  * should be suspended and should be run out of the main thread.
  *
  * @author Denis Bondarenko

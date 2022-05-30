@@ -15,8 +15,8 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.google.api.services.gmail.model.Label
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.MessagingException
 import java.util.*
-import javax.mail.MessagingException
 
 /**
  * The [FoldersManager] describes a logic of work with remote folders. This class helps as
@@ -222,7 +222,7 @@ class FoldersManager constructor(val account: String) {
     sentFolder?.let { return it }
 
     for (localFolder in allFolders) {
-      if (localFolder.fullName.toUpperCase(Locale.US) in arrayOf("INBOX/SENT", "SENT")) {
+      if (localFolder.fullName.uppercase(Locale.US) in arrayOf("INBOX/SENT", "SENT")) {
         sentFolder = localFolder
       }
     }
@@ -400,7 +400,7 @@ class FoldersManager constructor(val account: String) {
     /**
      * Get a [FolderType] using folder attributes.
      *
-     * @param localFolder Some [javax.mail.Folder].
+     * @param localFolder Some [jakarta.mail.Folder].
      * @return [FolderType].
      */
     fun getFolderType(localFolder: LocalFolder?): FolderType? {

@@ -382,7 +382,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-rc01'
     implementation 'androidx.room:room-runtime:2.4.2'
     implementation 'androidx.room:room-ktx:2.4.2'
-    implementation 'androidx.paging:paging-runtime-ktx:3.1.1'
+    implementation 'androidx.paging:paging-runtime-ktx:2.1.2'
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.core:core-splashscreen:1.0.0-rc01'
@@ -415,10 +415,10 @@ dependencies {
     implementation 'com.squareup.okio:okio:3.1.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
 
-    implementation 'com.sun.mail:android-mail:1.6.7'
-    implementation 'com.sun.mail:android-activation:1.6.7'
-    implementation('com.sun.mail:gimap:1.6.7') {
-        //exclude group: 'com.sun.mail' because it exists in 'com.sun.mail:android-mail'
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+    implementation 'com.sun.activation:jakarta.activation:2.0.1'
+    implementation('com.sun.mail:gimap:2.0.1') {
+        //exclude group: 'com.sun.mail' to prevent compilation errors
         exclude group: 'com.sun.mail'
     }
 
@@ -441,7 +441,7 @@ dependencies {
         }
     }
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2'
 
     implementation('org.pgpainless:pgpainless-core:1.2.2') {
         /*exclude group: 'org.bouncycastle' because we have to specify it manually and update

@@ -12,14 +12,14 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.FetchProfile
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.UIDFolder
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.io.IOException
-import javax.mail.FetchProfile
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.UIDFolder
 
 /**
  * @author Denis Bondarenko
