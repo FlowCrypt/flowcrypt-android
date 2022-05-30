@@ -592,7 +592,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
    * Generate a list of [Pair] objects from the input message.
    * This information will be retrieved from "to" and "cc" headers.
    *
-   * @param msg The input [javax.mail.Message].
+   * @param msg The input [jakarta.mail.Message].
    * @return <tt>[List]</tt> of [Pair] objects, which contains information
    * about
    * emails and names.
