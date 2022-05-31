@@ -24,10 +24,10 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.javax.mail.isMultipart
-import com.flowcrypt.email.extensions.javax.mail.isMultipartAlternative
-import com.flowcrypt.email.extensions.javax.mail.isOpenPGPMimeSigned
-import com.flowcrypt.email.extensions.javax.mail.isPlainText
+import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
+import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
+import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
+import com.flowcrypt.email.extensions.jakarta.mail.isPlainText
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.escapeHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
@@ -36,6 +36,12 @@ import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
+import jakarta.mail.Multipart
+import jakarta.mail.Part
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimePart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRing
@@ -56,12 +62,6 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.Properties
-import javax.mail.Multipart
-import javax.mail.Part
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimePart
 import kotlin.random.Random
 
 object PgpMsg {

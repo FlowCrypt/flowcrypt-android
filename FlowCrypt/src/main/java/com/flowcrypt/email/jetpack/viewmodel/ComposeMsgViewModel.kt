@@ -8,12 +8,12 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.model.MessageEncryptionType
+import jakarta.mail.Message
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import java.io.InvalidObjectException
-import javax.mail.Message
 
 /**
  * @author Denis Bondarenko

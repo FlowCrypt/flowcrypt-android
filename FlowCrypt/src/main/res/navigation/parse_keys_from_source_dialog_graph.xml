@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parse_keys_from_source_dialog_graph"
+    app:startDestination="@id/parsePgpKeysFromSourceDialogFragment">
+    <dialog
+        android:id="@+id/parsePgpKeysFromSourceDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment"
+        tools:layout="@layout/fragment_parse_pgp_keys_from_source">
+        <argument
+            android:name="source"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="uri"
+            android:defaultValue="@null"
+            app:argType="android.net.Uri"
+            app:nullable="true" />
+        <argument
+            android:name="filterType"
+            android:defaultValue="0L"
+            app:argType="long" />
+    </dialog>
+</navigation>

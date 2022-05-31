@@ -18,6 +18,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportRecipientsFromSourceBinding
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
@@ -74,9 +75,7 @@ class ImportRecipientsFromSourceFragment :
     }
 
     binding?.btLoadFromClipboard?.setOnClickListener {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(false)
-      )
+      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
     }
 
     binding?.btLoadFromFile?.setOnClickListener {

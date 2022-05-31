@@ -8,6 +8,8 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.util.TestUtil
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertEquals
@@ -17,8 +19,6 @@ import org.junit.Test
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.util.Properties
-import javax.mail.Session
-import javax.mail.internet.MimeMessage
 
 /**
  * @author Denis Bondarenko

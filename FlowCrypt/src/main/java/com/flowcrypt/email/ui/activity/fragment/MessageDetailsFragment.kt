@@ -36,6 +36,8 @@ import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -64,8 +66,8 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.javax.mail.internet.getFormattedString
-import com.flowcrypt.email.extensions.javax.mail.internet.personalOrEmail
+import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
+import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -77,7 +79,6 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
@@ -112,12 +113,12 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import jakarta.mail.AuthenticationFailedException
+import jakarta.mail.internet.InternetAddress
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
-import javax.mail.AuthenticationFailedException
-import javax.mail.internet.InternetAddress
 
 /**
  * This fragment describe msgEntity of some message.
@@ -141,7 +142,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private val args by navArgs<MessageDetailsFragmentArgs>()
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
-    MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
+    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return MsgDetailsViewModel(
+          args.localFolder, args.messageEntity, requireActivity().application
+        ) as T
+      }
+    }
   }
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(

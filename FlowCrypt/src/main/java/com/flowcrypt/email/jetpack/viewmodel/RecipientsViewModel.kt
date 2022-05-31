@@ -28,6 +28,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +37,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
-import javax.mail.Message
 
 /**
  * This is used in the message compose/reply view when recipient public keys need to be retrieved,

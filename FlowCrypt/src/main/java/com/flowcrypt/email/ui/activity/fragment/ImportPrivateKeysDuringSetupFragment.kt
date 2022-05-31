@@ -13,10 +13,11 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportPrivateKeysDuringSetupBinding
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
+import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
@@ -46,9 +47,7 @@ class ImportPrivateKeysDuringSetupFragment :
 
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
-      )
+      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -57,20 +56,16 @@ class ImportPrivateKeysDuringSetupFragment :
   }
 
   override fun handleSelectedFile(uri: Uri) {
-    navController?.navigate(
-      NavGraphDirections.actionGlobalParsePgpKeysFromSourceDialogFragment(
-        uri = uri,
-        filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
-      )
+    showParsePgpKeysFromSourceDialogFragment(
+      uri = uri,
+      filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
   }
 
   override fun handleClipboard(pgpKeysAsString: String?) {
-    navController?.navigate(
-      NavGraphDirections.actionGlobalParsePgpKeysFromSourceDialogFragment(
-        source = pgpKeysAsString,
-        filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
-      )
+    showParsePgpKeysFromSourceDialogFragment(
+      source = pgpKeysAsString,
+      filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
   }
 

@@ -209,8 +209,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
-        //need for ACRA, maybe will be deleted in the upcoming updates
-        freeCompilerArgs = ['-Xjvm-default=enable']
     }
 
     packagingOptions {
@@ -329,13 +327,13 @@ easylauncher {
 }
 
 dependencies {
-    kapt 'com.github.bumptech.glide:compiler:4.12.0'
+    kapt 'com.github.bumptech.glide:compiler:4.13.2'
     kapt 'androidx.annotation:annotation:1.3.0'
     kapt 'androidx.room:room-compiler:2.4.2'
     //ACRA needs the following dependency to use a custom report sender
     kapt 'com.google.auto.service:auto-service:1.0.1'
 
-    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8.1'
+    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
     debugImplementation 'androidx.fragment:fragment-testing:1.4.1'
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
@@ -350,15 +348,15 @@ dependencies {
     androidTestImplementation 'androidx.test:core-ktx:1.4.0'
     androidTestImplementation 'androidx.test.ext:junit-ktx:1.1.3'
     androidTestImplementation 'androidx.work:work-testing:2.7.1'
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.9.2'
-    androidTestImplementation 'com.squareup.okhttp3:okhttp-tls:4.9.2'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.9.3'
+    androidTestImplementation 'com.squareup.okhttp3:okhttp-tls:4.9.3'
     androidTestUtil 'androidx.test:orchestrator:1.4.1'
 
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.2'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.room:room-testing:2.4.2'
     testImplementation 'org.robolectric:robolectric:4.8.1'
-    testImplementation 'io.github.classgraph:classgraph:4.8.146'
+    testImplementation 'io.github.classgraph:classgraph:4.8.147'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
@@ -373,19 +371,19 @@ dependencies {
     implementation 'androidx.browser:browser:1.4.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.recyclerview:recyclerview-selection:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.test.espresso:espresso-idling-resource:3.4.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
     implementation 'androidx.lifecycle:lifecycle-process:2.4.1'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-beta01'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-rc01'
     implementation 'androidx.room:room-runtime:2.4.2'
     implementation 'androidx.room:room-ktx:2.4.2'
     implementation 'androidx.paging:paging-runtime-ktx:2.1.2'
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.core:core-splashscreen:1.0.0-beta02'
+    implementation 'androidx.core:core-splashscreen:1.0.0-rc01'
     implementation 'androidx.activity:activity-ktx:1.4.0'
     implementation 'androidx.fragment:fragment-ktx:1.4.1'
     implementation 'androidx.work:work-runtime-ktx:2.7.1'
@@ -405,24 +403,24 @@ dependencies {
     //https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.9.0'
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-    implementation 'com.google.api-client:google-api-client-android:1.34.0'
+    implementation 'com.google.api-client:google-api-client-android:1.34.1'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
     implementation 'com.google.apis:google-api-services-gmail:v1-rev20220404-1.32.1'
 
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
-    implementation 'com.squareup.okio:okio:2.10.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.2'
+    implementation 'com.squareup.okio:okio:3.1.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
 
-    implementation 'com.sun.mail:android-mail:1.6.7'
-    implementation 'com.sun.mail:android-activation:1.6.7'
-    implementation('com.sun.mail:gimap:1.6.7') {
-        //exclude group: 'com.sun.mail' because it exists in 'com.sun.mail:android-mail'
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+    implementation 'com.sun.activation:jakarta.activation:2.0.1'
+    implementation('com.sun.mail:gimap:2.0.1') {
+        //exclude group: 'com.sun.mail' to prevent compilation errors
         exclude group: 'com.sun.mail'
     }
 
-    implementation 'com.github.bumptech.glide:glide:4.12.0'
+    implementation 'com.github.bumptech.glide:glide:4.13.2'
     implementation 'com.hootsuite.android:nachos:1.2.0'
     implementation 'com.nulab-inc:zxcvbn:1.7.0'
     implementation 'commons-io:commons-io:2.11.0'
@@ -431,7 +429,7 @@ dependencies {
     implementation 'org.bitbucket.b_c:jose4j:0.7.12'
     implementation 'me.everything:overscroll-decor-android:1.1.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20211018.2'
-    implementation 'org.jsoup:jsoup:1.14.3'
+    implementation 'org.jsoup:jsoup:1.15.1'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
 
     constraints {
@@ -441,7 +439,7 @@ dependencies {
         }
     }
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2'
 
     implementation('org.pgpainless:pgpainless-core:1.2.2') {
         /*exclude group: 'org.bouncycastle' because we have to specify it manually and update

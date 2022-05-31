@@ -12,7 +12,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import javax.mail.internet.InternetAddress
+import jakarta.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko

@@ -41,7 +41,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
   private val downloadAttachmentViewModel: DownloadAttachmentViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
-      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return DownloadAttachmentViewModel(args.attachmentInfo, requireActivity().application) as T
       }
     }

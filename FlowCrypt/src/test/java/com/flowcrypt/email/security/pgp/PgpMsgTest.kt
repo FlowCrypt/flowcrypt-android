@@ -16,6 +16,8 @@ import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.util.TestUtil
 import com.google.gson.JsonParser
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -32,8 +34,6 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.Properties
-import javax.mail.Session
-import javax.mail.internet.MimeMessage
 
 class PgpMsgTest {
   private data class MessageInfo(

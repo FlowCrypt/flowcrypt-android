@@ -41,7 +41,7 @@ class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>()
   private val recipientDetailsViewModel: RecipientDetailsViewModel by viewModels {
     object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
-      override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return RecipientDetailsViewModel(args.recipientEntity, requireActivity().application) as T
       }
     }

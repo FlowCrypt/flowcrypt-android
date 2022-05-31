@@ -25,14 +25,14 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Folder
+import jakarta.mail.MessagingException
+import jakarta.mail.Session
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
-import javax.mail.Folder
-import javax.mail.MessagingException
-import javax.mail.Session
 
 /**
  * This loader finds and returns a user backup of private keys from the mail.

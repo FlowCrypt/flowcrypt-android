@@ -15,10 +15,10 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.google.android.gms.auth.GoogleAuthException
+import jakarta.mail.MessagingException
+import jakarta.mail.Session
+import jakarta.mail.Transport
 import java.io.IOException
-import javax.mail.MessagingException
-import javax.mail.Session
-import javax.mail.Transport
 
 /**
  * This class describes methods for a work with SMTP protocol.

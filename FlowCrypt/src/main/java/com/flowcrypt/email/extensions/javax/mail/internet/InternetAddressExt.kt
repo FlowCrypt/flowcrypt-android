@@ -3,13 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.extensions.javax.mail.internet
+package com.flowcrypt.email.extensions.jakarta.mail.internet
 
 import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.StyleSpan
-import javax.mail.internet.InternetAddress
+import jakarta.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko

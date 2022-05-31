@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.api.email.javamail
 
-import javax.mail.internet.MimeMultipart
+import jakarta.mail.internet.MimeMultipart
 
 /**
  * @author Denis Bondarenko

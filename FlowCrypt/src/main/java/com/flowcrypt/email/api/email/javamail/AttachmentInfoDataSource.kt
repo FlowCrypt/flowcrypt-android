@@ -10,10 +10,10 @@ import android.net.Uri
 import android.text.TextUtils
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import jakarta.activation.DataSource
 import java.io.BufferedInputStream
 import java.io.InputStream
 import java.io.OutputStream
-import javax.activation.DataSource
 
 /**
  * The [DataSource] realization for a file which received from [Uri]

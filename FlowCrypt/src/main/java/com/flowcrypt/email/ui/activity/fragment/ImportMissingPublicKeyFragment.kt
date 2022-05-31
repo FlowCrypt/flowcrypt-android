@@ -15,7 +15,6 @@ import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportMissingPublicKeyBinding
@@ -23,6 +22,8 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
+import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
@@ -49,20 +50,16 @@ class ImportMissingPublicKeyFragment :
   }
 
   override fun handleSelectedFile(uri: Uri) {
-    navController?.navigate(
-      NavGraphDirections.actionGlobalParsePgpKeysFromSourceDialogFragment(
-        uri = uri,
-        filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
-      )
+    showParsePgpKeysFromSourceDialogFragment(
+      uri = uri,
+      filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
   }
 
   override fun handleClipboard(pgpKeysAsString: String?) {
-    navController?.navigate(
-      NavGraphDirections.actionGlobalParsePgpKeysFromSourceDialogFragment(
-        source = pgpKeysAsString,
-        filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
-      )
+    showParsePgpKeysFromSourceDialogFragment(
+      source = pgpKeysAsString,
+      filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
   }
 
@@ -102,9 +99,7 @@ class ImportMissingPublicKeyFragment :
 
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      navController?.navigate(
-        NavGraphDirections.actionGlobalFindKeysInClipboardDialogFragment(false)
-      )
+      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {

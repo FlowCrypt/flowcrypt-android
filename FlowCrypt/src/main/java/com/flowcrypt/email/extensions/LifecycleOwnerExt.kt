@@ -26,6 +26,19 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 4:11 PM
  *         E-mail: DenBond7@gmail.com
  */
+fun LifecycleOwner.showDialogFragment(
+  navController: NavController?,
+  action: () -> NavDirections
+) {
+  //to show the current dialog we should be sure there is no active dialogs
+  if (navController?.currentDestination?.navigatorName == "dialog") {
+    navController.navigateUp()
+  }
+
+  val navDirections = action.invoke()
+  navController?.navigate(navDirections)
+}
+
 fun LifecycleOwner.showInfoDialog(
   context: Context,
   navController: NavController?,
@@ -38,26 +51,21 @@ fun LifecycleOwner.showInfoDialog(
   useLinkify: Boolean = false,
   useWebViewToRender: Boolean = false
 ) {
-  //to show the current dialog we should be sure there is no active dialogs
-  if (navController?.currentDestination?.navigatorName == "dialog") {
-    navController.navigateUp()
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override fun getActionId() = R.id.info_dialog_graph
+      override fun getArguments() = InfoDialogFragmentArgs(
+        requestCode = requestCode,
+        dialogTitle = dialogTitle,
+        dialogMsg = dialogMsg,
+        buttonTitle = buttonTitle ?: context.getString(android.R.string.ok),
+        isCancelable = isCancelable,
+        hasHtml = hasHtml,
+        useLinkify = useLinkify,
+        useWebViewToRender = useWebViewToRender
+      ).toBundle()
+    }
   }
-
-  val navDirections = object : NavDirections {
-    override val actionId: Int = R.id.info_dialog_graph
-    override val arguments: Bundle = InfoDialogFragmentArgs(
-      requestCode = requestCode,
-      dialogTitle = dialogTitle,
-      dialogMsg = dialogMsg,
-      buttonTitle = buttonTitle ?: context.getString(android.R.string.ok),
-      isCancelable = isCancelable,
-      hasHtml = hasHtml,
-      useLinkify = useLinkify,
-      useWebViewToRender = useWebViewToRender
-    ).toBundle()
-  }
-
-  navController?.navigate(navDirections)
 }
 
 fun LifecycleOwner.showTwoWayDialog(
@@ -72,26 +80,21 @@ fun LifecycleOwner.showTwoWayDialog(
   hasHtml: Boolean = false,
   useLinkify: Boolean = false
 ) {
-  //to show the current dialog we should be sure there is no active dialogs
-  if (navController?.currentDestination?.navigatorName == "dialog") {
-    navController.navigateUp()
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override fun getActionId() = R.id.two_way_dialog_graph
+      override fun getArguments() = TwoWayDialogFragmentArgs(
+        requestCode = requestCode,
+        dialogTitle = dialogTitle,
+        dialogMsg = dialogMsg,
+        positiveButtonTitle = positiveButtonTitle ?: context.getString(android.R.string.ok),
+        negativeButtonTitle = negativeButtonTitle ?: context.getString(android.R.string.cancel),
+        isCancelable = isCancelable,
+        hasHtml = hasHtml,
+        useLinkify = useLinkify
+      ).toBundle()
+    }
   }
-
-  val navDirections = object : NavDirections {
-    override val actionId: Int = R.id.two_way_dialog_graph
-    override val arguments: Bundle = TwoWayDialogFragmentArgs(
-      requestCode = requestCode,
-      dialogTitle = dialogTitle,
-      dialogMsg = dialogMsg,
-      positiveButtonTitle = positiveButtonTitle ?: context.getString(android.R.string.ok),
-      negativeButtonTitle = negativeButtonTitle ?: context.getString(android.R.string.cancel),
-      isCancelable = isCancelable,
-      hasHtml = hasHtml,
-      useLinkify = useLinkify
-    ).toBundle()
-  }
-
-  navController?.navigate(navDirections)
 }
 
 fun LifecycleOwner.showNeedPassphraseDialog(
@@ -102,22 +105,18 @@ fun LifecycleOwner.showNeedPassphraseDialog(
   customTitle: String? = null,
   showKeys: Boolean = true
 ) {
-  if (navController?.currentDestination?.navigatorName == "dialog") {
-    navController.navigateUp()
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override fun getActionId() = R.id.fix_need_pass_phrase_dialog_graph
+      override fun getArguments() = FixNeedPassphraseIssueDialogFragmentArgs(
+        fingerprints = fingerprints.toTypedArray(),
+        logicType = logicType,
+        requestCode = requestCode,
+        customTitle = customTitle,
+        showKeys = showKeys
+      ).toBundle()
+    }
   }
-
-  val navDirections = object : NavDirections {
-    override val actionId: Int = R.id.fix_need_pass_phrase_dialog_graph
-    override val arguments: Bundle = FixNeedPassphraseIssueDialogFragmentArgs(
-      fingerprints = fingerprints.toTypedArray(),
-      logicType = logicType,
-      requestCode = requestCode,
-      customTitle = customTitle,
-      showKeys = showKeys
-    ).toBundle()
-  }
-
-  navController?.navigate(navDirections)
 }
 
 fun LifecycleOwner.showInfoDialogWithExceptionDetails(

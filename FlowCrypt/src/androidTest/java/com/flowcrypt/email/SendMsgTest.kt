@@ -35,6 +35,14 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.Multipart
+import jakarta.mail.Part
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
+import jakarta.mail.internet.MimePart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -54,14 +62,6 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.Multipart
-import javax.mail.Part
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimeMultipart
-import javax.mail.internet.MimePart
 
 /**
  * @author Denis Bondarenko

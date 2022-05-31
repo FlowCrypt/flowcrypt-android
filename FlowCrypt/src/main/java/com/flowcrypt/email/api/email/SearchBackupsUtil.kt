@@ -5,14 +5,14 @@
 
 package com.flowcrypt.email.api.email
 
-import javax.mail.Message
-import javax.mail.internet.InternetAddress
-import javax.mail.search.AndTerm
-import javax.mail.search.FromTerm
-import javax.mail.search.OrTerm
-import javax.mail.search.RecipientTerm
-import javax.mail.search.SearchTerm
-import javax.mail.search.SubjectTerm
+import jakarta.mail.Message
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.search.AndTerm
+import jakarta.mail.search.FromTerm
+import jakarta.mail.search.OrTerm
+import jakarta.mail.search.RecipientTerm
+import jakarta.mail.search.SearchTerm
+import jakarta.mail.search.SubjectTerm
 
 /**
  * This class describes methods for search private key backups.

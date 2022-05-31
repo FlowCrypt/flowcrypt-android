@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.extensions.javax.mail
+package com.flowcrypt.email.extensions.jakarta.mail
 
-import javax.mail.Multipart
+import jakarta.mail.Multipart
 
 /**
  * @author Denis Bondarenko
