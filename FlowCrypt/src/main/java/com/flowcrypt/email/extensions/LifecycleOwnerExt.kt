@@ -7,7 +7,6 @@ package com.flowcrypt.email.extensions
 
 import android.app.Activity
 import android.content.Context
-import android.os.Bundle
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -144,8 +143,8 @@ fun LifecycleOwner.showFeedbackFragment(
   val screenShotByteArray = UIUtil.getScreenShotByteArray(activity)
   screenShotByteArray?.let {
     val navDirections = object : NavDirections {
-      override val actionId: Int = R.id.feedback_graph
-      override val arguments: Bundle = FeedbackFragmentArgs(
+      override fun getActionId() = R.id.feedback_graph
+      override fun getArguments() = FeedbackFragmentArgs(
         screenshot = FeedbackFragment.Screenshot(it)
       ).toBundle()
     }
