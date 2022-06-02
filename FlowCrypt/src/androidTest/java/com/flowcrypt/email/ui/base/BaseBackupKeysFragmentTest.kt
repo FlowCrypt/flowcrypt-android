@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base
+package com.flowcrypt.email.ui.base
 
 import android.app.Activity
 import android.app.Instrumentation
@@ -11,11 +11,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.ext.junit.rules.activityScenarioRule
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers
 import java.io.File
 
@@ -27,11 +24,6 @@ import java.io.File
  */
 abstract class BaseBackupKeysFragmentTest : BaseTest(), AddAccountToDatabaseRuleInterface {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/make_backup"
-    )
-  )
 
   protected fun intendingFileChoose(file: File) {
     val resultData = Intent()

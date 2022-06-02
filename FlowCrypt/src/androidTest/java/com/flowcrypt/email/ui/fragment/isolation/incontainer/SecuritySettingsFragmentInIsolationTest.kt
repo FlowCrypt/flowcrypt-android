@@ -17,8 +17,8 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.AddAccountToDatabaseRuleInterface
 import com.flowcrypt.email.ui.activity.fragment.preferences.SecuritySettingsFragment
+import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

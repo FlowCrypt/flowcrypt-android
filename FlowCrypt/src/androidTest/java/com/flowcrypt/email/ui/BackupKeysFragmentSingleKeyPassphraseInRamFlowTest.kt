@@ -3,32 +3,38 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
+import android.view.Gravity
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.DrawerActions
+import androidx.test.espresso.contrib.DrawerMatchers.isClosed
+import androidx.test.espresso.contrib.NavigationViewActions
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
-import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
+import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.base.BaseBackupKeysFragmentTest
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
@@ -38,15 +44,16 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 6/22/21
- *         Time: 11:36 AM
+ *         Date: 6/17/21
+ *         Time: 5:05 PM
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentTwoKeysDiffPassphraseInRamTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentSingleKeyPassphraseInRamFlowTest : BaseBackupKeysFragmentTest() {
   val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule(passphraseType = KeyEntity.PassphraseType.RAM)
+  override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -54,38 +61,46 @@ class BackupKeysFragmentTwoKeysDiffPassphraseInRamTest : BaseBackupKeysFragmentT
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(
-      AddPrivateKeyToDatabaseRule(
-        accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_second.asc",
-        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
-        sourceType = KeyImportDetails.SourceType.EMAIL,
-        passphraseType = KeyEntity.PassphraseType.RAM
-      )
-    )
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  @Test
-  @DependsOnMailServer
-  @NotReadyForCI
-  fun testNeedPassphraseEmailOptionMultiplyFingerprints() {
-    onView(withId(R.id.btBackup))
-      .check(matches(isDisplayed()))
+  override fun setupFlowTest() {
+    super.setupFlowTest()
+    onView(withId(R.id.drawer_layout))
+      .check(matches(isClosed(Gravity.LEFT)))
+      .perform(DrawerActions.open())
+
+    onView(withId(R.id.navigationView))
+      .perform(NavigationViewActions.navigateTo(R.id.navMenuActionSettings))
+
+    Thread.sleep(500)
+    onView(withText(getResString(R.string.backups)))
       .perform(click())
 
-    checkMultiplyFingerprintsWithSuccess()
-
+    Thread.sleep(500)
     onView(withId(R.id.btBackup))
-      .check(matches(isDisplayed()))
       .perform(click())
-
-    checkIsSnackBarDisplayed(getResString(R.string.different_pass_phrases))
   }
 
   @Test
-  @NotReadyForCI
-  fun testNeedPassphraseDownloadOptionMultiplyFingerprints() {
+  @DependsOnMailServer
+  fun testNeedPassphraseEmailOptionSingleFingerprint() {
+    onView(withId(R.id.btBackup))
+      .perform(click())
+
+    checkSingleFingerprintWithSuccess()
+
+    onView(withId(R.id.btBackup))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    onView(withId(R.id.btBackup))
+      .check(doesNotExist())
+  }
+
+  @Test
+  @DependsOnMailServer
+  fun testNeedPassphraseDownloadOptionSingleFingerprint() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -97,7 +112,7 @@ class BackupKeysFragmentTwoKeysDiffPassphraseInRamTest : BaseBackupKeysFragmentT
       .check(matches(isDisplayed()))
       .perform(click())
 
-    checkMultiplyFingerprintsWithSuccess()
+    checkSingleFingerprintWithSuccess()
 
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
@@ -105,20 +120,29 @@ class BackupKeysFragmentTwoKeysDiffPassphraseInRamTest : BaseBackupKeysFragmentT
 
     TestGeneralUtil.deleteFiles(listOf(file))
 
-    checkIsSnackBarDisplayed(getResString(R.string.different_pass_phrases))
+    onView(withId(R.id.btBackup))
+      .check(doesNotExist())
   }
 
-  private fun checkMultiplyFingerprintsWithSuccess() {
+  private fun checkSingleFingerprintWithSuccess() {
+    val fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+    val fingerprintFormatted = GeneralUtil.doSectionsInText(
+      originalString = fingerprint, groupSize = 4
+    )
+
     val tVStatusMessageText = getQuantityString(
-      resId = R.plurals.please_provide_passphrase_for_all_following_keys,
-      quantity = 2
+      R.plurals.please_provide_passphrase_for_all_following_keys,
+      1
     )
     onView(withId(R.id.tVStatusMessage))
       .check(matches(withText(tVStatusMessageText)))
 
     onView(withId(R.id.rVKeys))
       .check(matches(isDisplayed()))
-      .check(matches(withRecyclerViewItemCount(2)))
+      .check(matches(withRecyclerViewItemCount(1)))
+
+    onView(withText(fingerprintFormatted))
+      .check(matches(isDisplayed()))
 
     onView(withId(R.id.eTKeyPassword))
       .inRoot(isDialog())
@@ -127,18 +151,5 @@ class BackupKeysFragmentTwoKeysDiffPassphraseInRamTest : BaseBackupKeysFragmentT
         replaceText(TestConstants.DEFAULT_STRONG_PASSWORD),
         pressImeActionButton()
       )
-
-    onView(withId(R.id.rVKeys))
-      .check(matches(isDisplayed()))
-      .check(matches(withRecyclerViewItemCount(1)))
-
-    onView(withId(R.id.eTKeyPassword))
-      .inRoot(isDialog())
-      .perform(
-        clearText(),
-        replaceText(TestConstants.DEFAULT_SECOND_STRONG_PASSWORD),
-        pressImeActionButton()
-      )
   }
 }
-

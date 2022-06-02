@@ -19,8 +19,8 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
 import com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment
+import com.flowcrypt.email.ui.base.BaseBackupKeysFragmentTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers.not
 import org.junit.Before

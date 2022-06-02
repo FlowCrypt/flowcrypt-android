@@ -27,4 +27,9 @@ interface BaseActivityTestImplementation {
 
   val useIntents: Boolean
     get() = false
+
+  /**
+   * Do preparation for flow tests(navigation to a requested screen)
+   */
+  fun setupFlowTest()
 }

@@ -101,6 +101,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
     }
   }
 
+  @Before
+  override fun setupFlowTest() {
+    //the base implementation should not contain any code
+  }
+
   @After
   fun intentsRelease() {
     if (useIntents && isIntentsInitialized) {
