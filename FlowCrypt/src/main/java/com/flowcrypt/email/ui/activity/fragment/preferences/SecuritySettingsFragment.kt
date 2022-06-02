@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment.preferences
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.setFragmentResultListener
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
@@ -15,6 +14,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
@@ -32,8 +32,7 @@ import com.flowcrypt.email.util.UIUtil
 class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    (activity as AppCompatActivity?)?.supportActionBar?.title =
-      getString(R.string.security_and_privacy)
+    supportActionBar?.title = getString(R.string.security_and_privacy)
 
     observeOnResultLiveData()
     subscribeFixNeedPassphraseIssueDialogFragment()

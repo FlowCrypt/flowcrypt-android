@@ -21,7 +21,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.doBaseUISetup
 import com.flowcrypt.email.extensions.hasActiveConnection
-import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
@@ -137,10 +136,6 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
    */
   open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     // nothing to do here in the base implementation
-  }
-
-  fun setSupportActionBarTitle(title: String) {
-    supportActionBar?.title = title
   }
 
   /**
