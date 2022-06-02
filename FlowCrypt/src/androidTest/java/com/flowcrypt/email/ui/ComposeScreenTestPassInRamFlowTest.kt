@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -22,7 +22,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
@@ -44,7 +44,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageActivityTestPassInRamTest : BaseCreateMessageActivityTest() {
+class ComposeScreenTestPassInRamFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule(passphraseType = KeyEntity.PassphraseType.RAM)
 

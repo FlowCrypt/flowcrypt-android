@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.app.Activity
 import android.app.Instrumentation
@@ -55,7 +55,8 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
+import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -98,7 +99,7 @@ import java.time.Instant
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageActivityTest : BaseCreateMessageActivityTest() {
+class ComposeScreenFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val temporaryFolderRule = TemporaryFolder()
 

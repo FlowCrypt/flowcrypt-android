@@ -24,7 +24,7 @@ import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -43,7 +43,7 @@ import java.io.File
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ComposeScreenImportRecipientPubKeyFlowTest : BaseCreateMessageActivityTest() {
+class ComposeScreenImportRecipientPubKeyFlowTest : BaseComposeScreenTest() {
   override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? = null
   override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(intent = intent)
   override val activityScenario: ActivityScenario<*>?

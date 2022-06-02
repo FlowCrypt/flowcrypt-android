@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -21,7 +21,8 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -51,7 +52,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageActivityWkdTest : BaseCreateMessageActivityTest() {
+class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? = null
   override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(intent = intent)
   override val activityScenario: ActivityScenario<*>?

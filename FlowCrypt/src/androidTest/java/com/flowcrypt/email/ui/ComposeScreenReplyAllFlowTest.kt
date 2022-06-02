@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.content.Intent
 import androidx.test.core.app.ActivityScenario
@@ -23,6 +23,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.not
@@ -40,7 +41,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageFragmentReplyAllTest : BaseTest() {
+class ComposeScreenReplyAllFlowTest : BaseTest() {
   override val activeActivityRule =
     lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?

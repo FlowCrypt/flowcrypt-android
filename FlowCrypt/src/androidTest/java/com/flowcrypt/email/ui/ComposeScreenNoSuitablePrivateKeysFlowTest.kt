@@ -22,7 +22,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.activity.base.BaseCreateMessageActivityTest
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
@@ -47,7 +47,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseCreateMessageActivityTest() {
+class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule("pgp/default@flowcrypt.test_secondKey_prv_strong_revoked.asc")
 

@@ -61,7 +61,7 @@ import java.util.UUID
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageExternalIntentsFlowTest : BaseTest() {
+class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   override val activeActivityRule =
     lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?

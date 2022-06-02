@@ -39,7 +39,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageReplyFlowTest : BaseTest() {
+class ComposeScreenReplyFlowTest : BaseTest() {
   private val msgInfo = getMsgInfo(
     "messages/info/standard_msg_reply_to_header.json",
     "messages/mime/standard_msg_reply_to_header.txt"
