@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.app.Activity
 import android.app.Instrumentation
@@ -26,6 +26,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -51,7 +52,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
+class ImportPrivateKeyActivityNoPubOrgRulesFlowTest : BaseTest() {
   private val account = AccountDaoManager.getAccountDao("no.pub@org-rules-test.flowcrypt.com.json")
 
   override val useIntents: Boolean = true
