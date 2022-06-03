@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.app.Activity
 import android.app.Instrumentation
@@ -37,6 +37,7 @@ import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers
@@ -59,14 +60,14 @@ import java.util.Date
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class PublicKeyDetailsFragmentTest : BaseTest() {
+class PublicKeyDetailsFlowTest : BaseTest() {
   private val keyDetails =
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/recipient_details/pubkey_details",
+      R.id.publicKeyDetailsFragment,
       extras = Bundle().apply {
         putParcelable(
           "recipientEntity", RecipientEntity(email = EMAIL_DENBOND7, name = USER_DENBOND7)
