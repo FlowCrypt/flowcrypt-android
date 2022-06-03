@@ -14,6 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -52,6 +53,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@NotReadyForCI
 class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? = null
   override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(intent = intent)
