@@ -3,14 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
+import android.view.Gravity
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.clearText
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.DrawerActions
+import androidx.test.espresso.contrib.DrawerMatchers
+import androidx.test.espresso.contrib.NavigationViewActions
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -24,8 +28,8 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,7 +44,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ImportRecipientsFromSourceFragmentDisallowAttesterSearchTest : BaseTest() {
+class ImportRecipientDisallowAttesterSearchFlowTest : BaseTest() {
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
       flags = listOf(
@@ -58,11 +62,7 @@ class ImportRecipientsFromSourceFragmentDisallowAttesterSearchTest : BaseTest() 
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
-    )
-  )
+  override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -72,17 +72,32 @@ class ImportRecipientsFromSourceFragmentDisallowAttesterSearchTest : BaseTest() 
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
+  override fun setupFlowTest() {
+    super.setupFlowTest()
+    onView(withId(R.id.drawer_layout))
+      .check(matches(DrawerMatchers.isClosed(Gravity.LEFT)))
+      .perform(DrawerActions.open())
+
+    onView(withId(R.id.navigationView))
+      .perform(NavigationViewActions.navigateTo(R.id.navMenuActionSettings))
+
+    Thread.sleep(500)
+    onView(withText(getResString(R.string.contacts)))
+      .perform(ViewActions.click())
+
+    Thread.sleep(500)
+    onView(withId(R.id.fABtImportPublicKey))
+      .perform(ViewActions.click())
+  }
+
   @Test
   fun testDisallowLookupOnAttester() {
     onView(withId(R.id.eTKeyIdOrEmail))
       .perform(
         clearText(),
         typeText("user@$DISALLOWED_DOMAIN"),
-        closeSoftKeyboard()
+        pressImeActionButton()
       )
-    onView(withId(R.id.iBSearchKey))
-      .check(matches(isDisplayed()))
-      .perform(click())
 
     onView(withText(R.string.supported_public_key_not_found))
       .check(matches((isDisplayed())))
