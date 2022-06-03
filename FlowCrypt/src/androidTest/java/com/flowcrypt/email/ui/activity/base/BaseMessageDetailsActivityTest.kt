@@ -89,7 +89,7 @@ abstract class BaseMessageDetailsActivityTest : BaseTest() {
   protected fun launchActivity(msgEntity: MessageEntity) {
     activeActivityRule.launch(
       TestGeneralUtil.genIntentForNavigationComponent(
-        uri = "flowcrypt://email.flowcrypt.com/msg_details",
+        destinationId = R.id.messageDetailsFragment,
         extras = MessageDetailsFragmentArgs(
           localFolder = localFolder,
           messageEntity = msgEntity
