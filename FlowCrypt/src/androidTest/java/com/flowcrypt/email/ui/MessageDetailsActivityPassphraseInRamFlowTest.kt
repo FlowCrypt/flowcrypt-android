@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -50,7 +50,7 @@ import java.util.UUID
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MessageDetailsActivityPassphraseInRamTest : BaseMessageDetailsActivityTest() {
+class MessageDetailsActivityPassphraseInRamFlowTest : BaseMessageDetailsActivityTest() {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
