@@ -5,16 +5,12 @@
 
 package com.flowcrypt.email.ui
 
-import android.view.Gravity
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.DrawerActions
-import androidx.test.espresso.contrib.DrawerMatchers
-import androidx.test.espresso.contrib.NavigationViewActions
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -53,7 +49,11 @@ import org.junit.runner.RunWith
 class BackupKeysFragmentTwoKeysDiffPassphraseInRamFlowTest : BaseBackupKeysFragmentTest() {
   val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule(passphraseType = KeyEntity.PassphraseType.RAM)
-  override val activityScenarioRule = activityScenarioRule<MainActivity>()
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      destinationId = R.id.backupKeysFragment
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -72,24 +72,6 @@ class BackupKeysFragmentTwoKeysDiffPassphraseInRamFlowTest : BaseBackupKeysFragm
     )
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
-
-  override fun setupFlowTest() {
-    super.setupFlowTest()
-    onView(withId(R.id.drawer_layout))
-      .check(matches(DrawerMatchers.isClosed(Gravity.LEFT)))
-      .perform(DrawerActions.open())
-
-    onView(withId(R.id.navigationView))
-      .perform(NavigationViewActions.navigateTo(R.id.navMenuActionSettings))
-
-    Thread.sleep(500)
-    onView(withText(getResString(R.string.backups)))
-      .perform(click())
-
-    Thread.sleep(500)
-    onView(withId(R.id.btBackup))
-      .perform(click())
-  }
 
   @Test
   @DependsOnMailServer

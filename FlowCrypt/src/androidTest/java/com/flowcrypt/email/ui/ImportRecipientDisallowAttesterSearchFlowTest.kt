@@ -5,16 +5,11 @@
 
 package com.flowcrypt.email.ui
 
-import android.view.Gravity
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.DrawerActions
-import androidx.test.espresso.contrib.DrawerMatchers
-import androidx.test.espresso.contrib.NavigationViewActions
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -30,6 +25,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -62,7 +58,11 @@ class ImportRecipientDisallowAttesterSearchFlowTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>()
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      destinationId = R.id.importRecipientsFromSourceFragment
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -71,24 +71,6 @@ class ImportRecipientDisallowAttesterSearchFlowTest : BaseTest() {
     .around(addAccountToDatabaseRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
-
-  override fun setupFlowTest() {
-    super.setupFlowTest()
-    onView(withId(R.id.drawer_layout))
-      .check(matches(DrawerMatchers.isClosed(Gravity.LEFT)))
-      .perform(DrawerActions.open())
-
-    onView(withId(R.id.navigationView))
-      .perform(NavigationViewActions.navigateTo(R.id.navMenuActionSettings))
-
-    Thread.sleep(500)
-    onView(withText(getResString(R.string.contacts)))
-      .perform(ViewActions.click())
-
-    Thread.sleep(500)
-    onView(withId(R.id.fABtImportPublicKey))
-      .perform(ViewActions.click())
-  }
 
   @Test
   fun testDisallowLookupOnAttester() {
