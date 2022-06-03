@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.text.format.DateUtils
 import androidx.test.espresso.Espresso.onData
@@ -38,9 +38,10 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
+import com.flowcrypt.email.ui.base.BaseMessageDetailsFlowTest
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -65,7 +66,7 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MessageDetailsActivityTest : BaseMessageDetailsActivityTest() {
+class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val simpleAttInfo = TestGeneralUtil.getObjectFromJson(
     "messages/attachments/simple_att.json",

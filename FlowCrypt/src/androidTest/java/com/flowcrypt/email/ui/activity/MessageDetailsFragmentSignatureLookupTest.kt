@@ -13,8 +13,8 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
+import com.flowcrypt.email.ui.base.BaseMessageDetailsFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -35,7 +35,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MessageDetailsFragmentSignatureLookupTest : BaseMessageDetailsActivityTest() {
+class MessageDetailsFragmentSignatureLookupTest : BaseMessageDetailsFlowTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   @get:Rule
