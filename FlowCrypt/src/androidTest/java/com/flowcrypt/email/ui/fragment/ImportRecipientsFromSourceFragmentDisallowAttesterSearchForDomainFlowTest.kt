@@ -61,7 +61,7 @@ class ImportRecipientsFromSourceFragmentDisallowAttesterSearchForDomainFlowTest 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
+      destinationId = R.id.importRecipientsFromSourceFragment
     )
   )
 

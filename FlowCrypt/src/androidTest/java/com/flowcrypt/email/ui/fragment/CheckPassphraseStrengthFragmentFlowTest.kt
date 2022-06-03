@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.fragment
 
-import android.os.Bundle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
@@ -26,6 +25,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
@@ -43,14 +43,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CheckPassphraseStrengthFragmentFlowTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/security/check_passphrase",
-      extras = Bundle().apply {
-        putInt("popBackStackIdIfSuccess", R.id.securitySettingsFragment)
-        putString("title", getResString(R.string.change_pass_phrase))
-      }
+      destinationId = R.id.checkPassphraseStrengthFragment,
+      extras = CheckPassphraseStrengthFragmentArgs(
+        popBackStackIdIfSuccess = R.id.securitySettingsFragment,
+        title = getResString(R.string.change_pass_phrase)
+      ).toBundle()
     )
   )
 

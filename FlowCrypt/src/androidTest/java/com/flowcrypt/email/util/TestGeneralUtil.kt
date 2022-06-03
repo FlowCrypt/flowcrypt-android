@@ -7,7 +7,6 @@ package com.flowcrypt.email.util
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import androidx.core.content.FileProvider
@@ -169,21 +168,6 @@ object TestGeneralUtil {
       data = uri
       flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
           Intent.FLAG_GRANT_READ_URI_PERMISSION
-    }
-  }
-
-  fun genIntentForNavigationComponent(uri: String, extras: Bundle? = null): Intent {
-    return Intent(
-      Intent.ACTION_VIEW,
-      Uri.parse(uri)
-    ).apply {
-      extras?.let { putExtra("android-support-nav:controller:deepLinkExtras", it) }
-    }
-  }
-
-  fun genIntentForNavigationComponent(intent: Intent, extras: Bundle? = null): Intent {
-    return intent.apply {
-      extras?.let { putExtra("android-support-nav:controller:deepLinkExtras", it) }
     }
   }
 

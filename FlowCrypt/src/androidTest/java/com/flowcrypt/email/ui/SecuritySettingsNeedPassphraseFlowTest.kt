@@ -46,7 +46,7 @@ import org.junit.runner.RunWith
 class SecuritySettingsNeedPassphraseFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/security"
+      destinationId = R.id.securitySettingsFragment
     )
   )
   private val addPrivateKeyToDatabaseRule =

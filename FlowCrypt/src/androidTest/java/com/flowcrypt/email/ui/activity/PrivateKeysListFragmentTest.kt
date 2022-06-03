@@ -52,7 +52,7 @@ class PrivateKeysListFragmentTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/keys"
+      destinationId = R.id.privateKeysListFragment
     )
   )
 
