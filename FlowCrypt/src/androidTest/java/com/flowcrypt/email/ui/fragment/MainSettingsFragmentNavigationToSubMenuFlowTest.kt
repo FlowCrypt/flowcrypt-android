@@ -43,7 +43,7 @@ import org.junit.runner.RunWith
 class MainSettingsFragmentNavigationToSubMenuFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings"
+      destinationId = R.id.mainSettingsFragment
     )
   )
 

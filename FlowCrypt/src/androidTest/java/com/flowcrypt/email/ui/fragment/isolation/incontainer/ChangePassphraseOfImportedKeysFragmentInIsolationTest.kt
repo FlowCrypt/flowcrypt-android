@@ -3,14 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import android.os.Bundle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -21,7 +19,9 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.ui.activity.fragment.ChangePassphraseOfImportedKeysFragment
+import com.flowcrypt.email.ui.activity.fragment.ChangePassphraseOfImportedKeysFragmentArgs
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -36,21 +36,8 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ChangePassphraseOfImportedKeysFragmentTest : BaseTest() {
+class ChangePassphraseOfImportedKeysFragmentInIsolationTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/security/change_passphrase",
-      extras = Bundle().apply {
-        putInt("popBackStackIdIfSuccess", R.id.securitySettingsFragment)
-        putString("title", getResString(R.string.pass_phrase_changed))
-        putString("subTitle", getResString(R.string.passphrase_was_changed))
-        putString("passphrase", PERFECT_PASSWORD)
-        putParcelable("accountEntity", addAccountToDatabaseRule.account)
-      }
-    )
-  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -58,8 +45,20 @@ class ChangePassphraseOfImportedKeysFragmentTest : BaseTest() {
     .around(ClearAppSettingsRule())
     .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun launchFragmentInContainerWithPredefinedArgs() {
+    launchFragmentInContainer<ChangePassphraseOfImportedKeysFragment>(
+      fragmentArgs = ChangePassphraseOfImportedKeysFragmentArgs(
+        popBackStackIdIfSuccess = R.id.backupKeysFragment,
+        title = getResString(R.string.pass_phrase_changed),
+        subTitle = getResString(R.string.passphrase_was_changed),
+        passphrase = PERFECT_PASSWORD,
+        accountEntity = addAccountToDatabaseRule.account
+      ).toBundle()
+    )
+  }
 
   @Test
   @DependsOnMailServer

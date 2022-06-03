@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base
+package com.flowcrypt.email.ui.base
 
 import android.text.format.Formatter
 import androidx.recyclerview.widget.RecyclerView
@@ -62,7 +62,7 @@ import org.junit.After
  *         Time: 1:25 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseMessageDetailsActivityTest : BaseTest() {
+abstract class BaseMessageDetailsFlowTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activeActivityRule =
     lazyActivityScenarioRule<MainActivity>(launchActivity = false)
@@ -89,7 +89,7 @@ abstract class BaseMessageDetailsActivityTest : BaseTest() {
   protected fun launchActivity(msgEntity: MessageEntity) {
     activeActivityRule.launch(
       TestGeneralUtil.genIntentForNavigationComponent(
-        uri = "flowcrypt://email.flowcrypt.com/msg_details",
+        destinationId = R.id.messageDetailsFragment,
         extras = MessageDetailsFragmentArgs(
           localFolder = localFolder,
           messageEntity = msgEntity

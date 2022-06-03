@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -15,22 +15,22 @@ import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseBackupKeysFragmentTest
+import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.base.BaseBackupKeysFragmentTest
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -45,9 +45,14 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class BackupKeysFragmentSingleKeyPassphraseInRamTest : BaseBackupKeysFragmentTest() {
+class BackupKeysFragmentSingleKeyPassphraseInRamFlowTest : BaseBackupKeysFragmentTest() {
   val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule(passphraseType = KeyEntity.PassphraseType.RAM)
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      destinationId = R.id.backupKeysFragment
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -60,10 +65,8 @@ class BackupKeysFragmentSingleKeyPassphraseInRamTest : BaseBackupKeysFragmentTes
 
   @Test
   @DependsOnMailServer
-  @NotReadyForCI
   fun testNeedPassphraseEmailOptionSingleFingerprint() {
     onView(withId(R.id.btBackup))
-      .check(matches(isDisplayed()))
       .perform(click())
 
     checkSingleFingerprintWithSuccess()
@@ -71,15 +74,10 @@ class BackupKeysFragmentSingleKeyPassphraseInRamTest : BaseBackupKeysFragmentTes
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
-
-    onView(withId(R.id.btBackup))
-      .check(matches(not(isDisplayed())))
-
-    isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 
   @Test
-  @NotReadyForCI
+  @DependsOnMailServer
   fun testNeedPassphraseDownloadOptionSingleFingerprint() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
@@ -99,11 +97,6 @@ class BackupKeysFragmentSingleKeyPassphraseInRamTest : BaseBackupKeysFragmentTes
       .perform(click())
 
     TestGeneralUtil.deleteFiles(listOf(file))
-
-    onView(withId(R.id.btBackup))
-      .check(matches(not(isDisplayed())))
-
-    isToastDisplayed(getResString(R.string.backed_up_successfully))
   }
 
   private fun checkSingleFingerprintWithSuccess() {

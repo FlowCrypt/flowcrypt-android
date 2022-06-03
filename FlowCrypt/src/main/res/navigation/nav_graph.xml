@@ -536,12 +536,12 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment"
         tools:layout="@layout/fragment_download_attachment">
         <argument
+            android:name="attachmentInfo"
+            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
+        <argument
             android:name="requestCode"
             android:defaultValue="0"
             app:argType="integer" />
-        <argument
-            android:name="attachmentInfo"
-            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
     </dialog>
 
     <dialog

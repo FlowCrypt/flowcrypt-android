@@ -7,6 +7,7 @@ package com.flowcrypt.email.extensions
 
 import android.app.Activity
 import android.content.Context
+import android.os.Bundle
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -52,8 +53,8 @@ fun LifecycleOwner.showInfoDialog(
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
-      override fun getActionId() = R.id.info_dialog_graph
-      override fun getArguments() = InfoDialogFragmentArgs(
+      override val actionId = R.id.info_dialog_graph
+      override val arguments = InfoDialogFragmentArgs(
         requestCode = requestCode,
         dialogTitle = dialogTitle,
         dialogMsg = dialogMsg,
@@ -81,8 +82,8 @@ fun LifecycleOwner.showTwoWayDialog(
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
-      override fun getActionId() = R.id.two_way_dialog_graph
-      override fun getArguments() = TwoWayDialogFragmentArgs(
+      override val actionId = R.id.two_way_dialog_graph
+      override val arguments = TwoWayDialogFragmentArgs(
         requestCode = requestCode,
         dialogTitle = dialogTitle,
         dialogMsg = dialogMsg,
@@ -106,8 +107,8 @@ fun LifecycleOwner.showNeedPassphraseDialog(
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
-      override fun getActionId() = R.id.fix_need_pass_phrase_dialog_graph
-      override fun getArguments() = FixNeedPassphraseIssueDialogFragmentArgs(
+      override val actionId = R.id.fix_need_pass_phrase_dialog_graph
+      override val arguments = FixNeedPassphraseIssueDialogFragmentArgs(
         fingerprints = fingerprints.toTypedArray(),
         logicType = logicType,
         requestCode = requestCode,
@@ -143,8 +144,8 @@ fun LifecycleOwner.showFeedbackFragment(
   val screenShotByteArray = UIUtil.getScreenShotByteArray(activity)
   screenShotByteArray?.let {
     val navDirections = object : NavDirections {
-      override fun getActionId() = R.id.feedback_graph
-      override fun getArguments() = FeedbackFragmentArgs(
+      override val actionId: Int = R.id.feedback_graph
+      override val arguments: Bundle = FeedbackFragmentArgs(
         screenshot = FeedbackFragment.Screenshot(it)
       ).toBundle()
     }

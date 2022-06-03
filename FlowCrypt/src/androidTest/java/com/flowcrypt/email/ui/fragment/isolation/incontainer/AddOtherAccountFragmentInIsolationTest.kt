@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
@@ -18,7 +18,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -27,18 +26,14 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
-import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.util.AuthCredentialsManager
-import com.flowcrypt.email.util.PrivateKeysManager
-import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
@@ -46,6 +41,7 @@ import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.startsWith
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -61,22 +57,21 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class AddOtherAccountFragmentTest : BaseTest() {
+class AddOtherAccountFragmentInIsolationTest : BaseTest() {
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/sign-in/other"
-    )
-  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
-    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
+
+  @Before
+  fun launchFragmentInContainerWithPredefinedArgs() {
+    launchFragmentInContainer<AddOtherAccountFragment>()
+  }
 
   @Test
   fun testShowSnackBarIfFieldEmpty() {
@@ -345,27 +340,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
       onView(withId(fieldIdentifiersWithIncorrectData[i]))
         .perform(scrollTo(), clearText(), typeText(correctData[i]), closeSoftKeyboard())
     }
-  }
-
-  @Test
-  fun testAddingExistedAccount() {
-    val existedUser = AccountDaoManager.getDefaultAccountDao()
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(existedUser)
-    PrivateKeysManager.saveKeyFromAssetsToDatabase(
-      accountEntity = existedUser,
-      keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc",
-      passphrase = TestConstants.DEFAULT_PASSWORD,
-      sourceType = KeyImportDetails.SourceType.EMAIL
-    )
-
-    onView(withId(R.id.editTextEmail))
-      .perform(clearText(), typeText(existedUser.email), closeSoftKeyboard())
-    onView(withId(R.id.editTextPassword))
-      .perform(clearText(), typeText(existedUser.password), closeSoftKeyboard())
-    onView(withId(R.id.buttonTryToConnect))
-      .perform(scrollTo(), click())
-
-    checkIsSnackBarDisplayed(getResString(R.string.template_email_already_added, existedUser.email))
   }
 
   private fun checkSecurityTypeOpt(

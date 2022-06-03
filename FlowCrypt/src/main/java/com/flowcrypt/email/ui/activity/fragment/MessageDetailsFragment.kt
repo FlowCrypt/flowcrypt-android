@@ -211,7 +211,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             navController?.navigate(
               MessageDetailsFragmentDirections
                 .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                  REQUEST_CODE_PREVIEW_ATTACHMENT, attachmentInfo
+                  attachmentInfo, REQUEST_CODE_PREVIEW_ATTACHMENT
                 )
             )
           }
@@ -1587,8 +1587,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           navController?.navigate(
             MessageDetailsFragmentDirections
               .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                REQUEST_CODE_SAVE_ATTACHMENT,
-                attInfo
+                attInfo, REQUEST_CODE_SAVE_ATTACHMENT
               )
           )
         } else {

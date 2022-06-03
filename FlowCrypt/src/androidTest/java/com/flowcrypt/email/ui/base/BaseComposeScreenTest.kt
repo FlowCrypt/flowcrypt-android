@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base
+package com.flowcrypt.email.ui.base
 
 import android.content.Intent
 import androidx.test.core.app.ActivityScenario
@@ -28,7 +28,7 @@ import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
  *         Time: 4:28 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseCreateMessageActivityTest : BaseTest() {
+abstract class BaseComposeScreenTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? =
     lazyActivityScenarioRule(launchActivity = false)
@@ -46,7 +46,6 @@ abstract class BaseCreateMessageActivityTest : BaseTest() {
         ).toBundle()
       )
     }
-
 
   protected fun fillInAllFields(recipient: String) {
     onView(withId(R.id.layoutTo))

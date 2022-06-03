@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -23,7 +23,7 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseMessageDetailsActivityTest
+import com.flowcrypt.email.ui.base.BaseMessageDetailsFlowTest
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.not
@@ -41,7 +41,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MessageDetailsActivityEkmTest : BaseMessageDetailsActivityTest() {
+class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
   private val simpleAttInfo = TestGeneralUtil.getObjectFromJson(
     "messages/attachments/simple_att.json",
     AttachmentInfo::class.java

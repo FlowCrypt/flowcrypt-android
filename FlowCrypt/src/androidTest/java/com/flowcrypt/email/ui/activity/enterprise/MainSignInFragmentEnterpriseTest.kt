@@ -63,7 +63,7 @@ class MainSignInFragmentEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/sign-in/main"
+      destinationId = R.id.mainSignInFragment
     )
   )
 

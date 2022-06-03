@@ -7,16 +7,18 @@ package com.flowcrypt.email.util
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import androidx.core.content.FileProvider
+import androidx.navigation.NavDeepLinkBuilder
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.Gson
 import org.apache.commons.io.IOUtils
@@ -169,19 +171,13 @@ object TestGeneralUtil {
     }
   }
 
-  fun genIntentForNavigationComponent(uri: String, extras: Bundle? = null): Intent {
-    return Intent(
-      Intent.ACTION_VIEW,
-      Uri.parse(uri)
-    ).apply {
-      extras?.let { putExtra("android-support-nav:controller:deepLinkExtras", it) }
-    }
-  }
-
-  fun genIntentForNavigationComponent(intent: Intent, extras: Bundle? = null): Intent {
-    return intent.apply {
-      extras?.let { putExtra("android-support-nav:controller:deepLinkExtras", it) }
-    }
+  fun genIntentForNavigationComponent(destinationId: Int, extras: Bundle? = null): Intent? {
+    return NavDeepLinkBuilder(InstrumentationRegistry.getInstrumentation().targetContext)
+      .setGraph(R.navigation.nav_graph)
+      .setDestination(destinationId)
+      .setArguments(extras)
+      .setComponentName(MainActivity::class.java)
+      .createTaskStackBuilder().editIntentAt(0)
   }
 
   fun clearApp(context: Context) {

@@ -3,12 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -24,6 +23,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
@@ -40,7 +40,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ImportRecipientsFromSourceFragmentDisallowAttesterSearchTest : BaseTest() {
+class ImportRecipientDisallowAttesterSearchFlowTest : BaseTest() {
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
       flags = listOf(
@@ -60,7 +60,7 @@ class ImportRecipientsFromSourceFragmentDisallowAttesterSearchTest : BaseTest() 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
+      destinationId = R.id.importRecipientsFromSourceFragment
     )
   )
 
@@ -78,11 +78,8 @@ class ImportRecipientsFromSourceFragmentDisallowAttesterSearchTest : BaseTest() 
       .perform(
         clearText(),
         typeText("user@$DISALLOWED_DOMAIN"),
-        closeSoftKeyboard()
+        pressImeActionButton()
       )
-    onView(withId(R.id.iBSearchKey))
-      .check(matches(isDisplayed()))
-      .perform(click())
 
     onView(withText(R.string.supported_public_key_not_found))
       .check(matches((isDisplayed())))
