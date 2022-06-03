@@ -3,18 +3,23 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
+import android.view.Gravity
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.DrawerActions
+import androidx.test.espresso.contrib.DrawerMatchers
+import androidx.test.espresso.contrib.NavigationViewActions
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
@@ -33,6 +38,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -59,15 +65,11 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ImportRecipientsFromSourceFragmentTest : BaseTest() {
+class ImportRecipientsFromSourceFragmentFlowTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
-    TestGeneralUtil.genIntentForNavigationComponent(
-      uri = "flowcrypt://email.flowcrypt.com/settings/contacts/import"
-    )
-  )
+  override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
   private lateinit var fileWithPublicKey: File
   private lateinit var publicKey: String
@@ -120,6 +122,24 @@ class ImportRecipientsFromSourceFragmentTest : BaseTest() {
       fileName = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
       fileText = publicKey
     )
+  }
+
+  override fun setupFlowTest() {
+    super.setupFlowTest()
+    onView(withId(R.id.drawer_layout))
+      .check(matches(DrawerMatchers.isClosed(Gravity.LEFT)))
+      .perform(DrawerActions.open())
+
+    onView(withId(R.id.navigationView))
+      .perform(NavigationViewActions.navigateTo(R.id.navMenuActionSettings))
+
+    Thread.sleep(500)
+    onView(withText(getResString(R.string.contacts)))
+      .perform(ViewActions.click())
+
+    Thread.sleep(500)
+    onView(withId(R.id.fABtImportPublicKey))
+      .perform(ViewActions.click())
   }
 
   @After
