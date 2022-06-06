@@ -1462,8 +1462,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     handleUpdatingRecipients(
       recipientsViewModel.recipientsToLiveData,
       Message.RecipientType.TO,
-      binding?.progressBarTo,
-      binding?.editTextRecipientTo
+      binding?.progressBarTo
     ) {
       isUpdateToCompleted = it
     }
@@ -1471,8 +1470,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     handleUpdatingRecipients(
       recipientsViewModel.recipientsCcLiveData,
       Message.RecipientType.CC,
-      binding?.progressBarCc,
-      binding?.editTextRecipientCc
+      binding?.progressBarCc
     ) {
       isUpdateCcCompleted = it
     }
@@ -1480,8 +1478,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     handleUpdatingRecipients(
       recipientsViewModel.recipientsBccLiveData,
       Message.RecipientType.BCC,
-      binding?.progressBarBcc,
-      binding?.editTextRecipientBcc
+      binding?.progressBarBcc
     ) {
       isUpdateBccCompleted = it
     }
@@ -1491,7 +1488,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     liveData: LiveData<Result<List<RecipientWithPubKeys>>>,
     recipientType: Message.RecipientType,
     progressBar: ProgressBar?,
-    nachoTextView: PgpContactsNachoTextView?,
     updateState: (state: Boolean) -> Unit
   ) {
     liveData.observe(viewLifecycleOwner) {
