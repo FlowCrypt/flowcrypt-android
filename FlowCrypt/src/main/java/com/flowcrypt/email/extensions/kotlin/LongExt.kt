@@ -7,8 +7,6 @@
 
 package com.flowcrypt.email.extensions.kotlin
 
-import java.util.Locale
-
 /**
  * @author Denis Bondarenko
  *         Date: 1/20/21
@@ -16,5 +14,5 @@ import java.util.Locale
  *         E-mail: DenBond7@gmail.com
  */
 fun Long.toHex(): String {
-  return java.lang.Long.toHexString(this).toLowerCase(Locale.US)
+  return java.lang.Long.toHexString(this).lowercase()
 }

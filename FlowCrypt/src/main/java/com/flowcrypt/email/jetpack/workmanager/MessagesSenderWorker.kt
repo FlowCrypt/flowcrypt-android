@@ -343,8 +343,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           val attachments = roomDatabase.attachmentDao()
             .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
-          val mimeMsg =
-            EmailUtil.createMimeMsg(applicationContext, sess, account, msgEntity, attachments)
+          val mimeMsg = EmailUtil.createMimeMsg(applicationContext, sess, msgEntity, attachments)
 
           roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
           roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENDING.value))
@@ -424,7 +423,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     atts: List<AttachmentEntity>, sess: Session?, store: Store?
   ): Boolean =
     withContext(Dispatchers.IO) {
-      val mimeMsg = EmailUtil.createMimeMsg(applicationContext, sess, account, msgEntity, atts)
+      val mimeMsg = EmailUtil.createMimeMsg(applicationContext, sess, msgEntity, atts)
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
       when (account.accountType) {

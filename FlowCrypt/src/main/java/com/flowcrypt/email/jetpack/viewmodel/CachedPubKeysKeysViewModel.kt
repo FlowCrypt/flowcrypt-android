@@ -15,6 +15,7 @@ import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +39,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
   private val setOfRecipientsAndFingerprintsStateFlow =
     setOfRecipientsAndFingerprintsMutableStateFlow.asStateFlow()
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   private val automaticallyFetchedFromDatabasePubKeysStateFlow =
     allPubKeysFlow.flatMapLatest { fullList ->
       flow {
@@ -58,6 +60,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
       initialValue = emptyMap()
     )
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   private val manuallyFetchedFromDatabasePubKeysStateFlow =
     setOfRecipientsAndFingerprintsStateFlow.flatMapLatest { set ->
       allPubKeysFlow.flatMapLatest { fullList ->

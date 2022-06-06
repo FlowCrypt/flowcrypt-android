@@ -12,6 +12,7 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -30,6 +31,7 @@ object IMAPStoreManager {
   private val RETRY_TIMEOUT = TimeUnit.MILLISECONDS.toMillis(200)
   private val activeConnections = ConcurrentHashMap<Long, IMAPStoreConnection>()
 
+  @OptIn(DelicateCoroutinesApi::class)
   fun init(context: Context) {
     val applicationContext = context.applicationContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)

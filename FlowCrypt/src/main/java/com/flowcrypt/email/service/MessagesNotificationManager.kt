@@ -34,6 +34,7 @@ import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -83,6 +84,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     notifyWithGroupSupport(context, account, localFolder, msgs)
   }
 
+  @OptIn(DelicateCoroutinesApi::class)
   fun cancelAll(context: Context, account: AccountEntity, foldersManager: FoldersManager) {
     cancel(NOTIFICATIONS_GROUP_MESSAGES)
     val localFolder = foldersManager.findInboxFolder()

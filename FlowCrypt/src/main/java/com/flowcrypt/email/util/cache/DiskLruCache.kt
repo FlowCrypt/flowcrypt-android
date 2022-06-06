@@ -36,7 +36,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.Flushable
 import java.io.IOException
-import java.util.*
 
 /**
  * A cache that uses a bounded amount of space on a filesystem. Each cache entry has a string key
@@ -78,7 +77,6 @@ import java.util.*
  * @constructor Create a cache which will reside in [directory]. This cache is lazily initialized on
  *     first access and will be created if it does not exist.
  * @param directory a writable directory.
- * @param valueCount the number of values per cache entry. Must be positive.
  * @param maxSize the maximum number of bytes this cache should use to store.
  */
 class DiskLruCache internal constructor(
@@ -389,22 +387,22 @@ class DiskLruCache internal constructor(
     journalWriter?.close()
 
     fileSystem.sink(journalFileTmp).buffer().use { sink ->
-      sink.writeUtf8(MAGIC).writeByte('\n'.toInt())
-      sink.writeUtf8(VERSION_1).writeByte('\n'.toInt())
-      sink.writeDecimalLong(appVersion.toLong()).writeByte('\n'.toInt())
-      sink.writeDecimalLong(valueCount.toLong()).writeByte('\n'.toInt())
-      sink.writeByte('\n'.toInt())
+      sink.writeUtf8(MAGIC).writeByte('\n'.code)
+      sink.writeUtf8(VERSION_1).writeByte('\n'.code)
+      sink.writeDecimalLong(appVersion.toLong()).writeByte('\n'.code)
+      sink.writeDecimalLong(valueCount.toLong()).writeByte('\n'.code)
+      sink.writeByte('\n'.code)
 
       for (entry in lruEntries.values) {
         if (entry.currentEditor != null) {
-          sink.writeUtf8(DIRTY).writeByte(' '.toInt())
+          sink.writeUtf8(DIRTY).writeByte(' '.code)
           sink.writeUtf8(entry.key)
-          sink.writeByte('\n'.toInt())
+          sink.writeByte('\n'.code)
         } else {
-          sink.writeUtf8(CLEAN).writeByte(' '.toInt())
+          sink.writeUtf8(CLEAN).writeByte(' '.code)
           sink.writeUtf8(entry.key)
           entry.writeLengths(sink)
-          sink.writeByte('\n'.toInt())
+          sink.writeByte('\n'.code)
         }
       }
     }
@@ -437,9 +435,9 @@ class DiskLruCache internal constructor(
 
     redundantOpCount++
     journalWriter!!.writeUtf8(READ)
-      .writeByte(' '.toInt())
+      .writeByte(' '.code)
       .writeUtf8(key)
-      .writeByte('\n'.toInt())
+      .writeByte('\n'.code)
     if (journalRebuildRequired()) {
       cleanupQueue.schedule(cleanupTask)
     }
@@ -480,9 +478,9 @@ class DiskLruCache internal constructor(
     // Flush the journal before creating files to prevent file leaks.
     val journalWriter = this.journalWriter!!
     journalWriter.writeUtf8(DIRTY)
-      .writeByte(' '.toInt())
+      .writeByte(' '.code)
       .writeUtf8(key)
-      .writeByte('\n'.toInt())
+      .writeByte('\n'.code)
     journalWriter.flush()
 
     if (hasJournalErrors) {
@@ -550,19 +548,19 @@ class DiskLruCache internal constructor(
     journalWriter?.apply {
       if (entry.readable || success) {
         entry.readable = true
-        writeUtf8(CLEAN).writeByte(' '.toInt())
+        writeUtf8(CLEAN).writeByte(' '.code)
         writeUtf8(entry.key)
         entry.writeLengths(this)
         entry.writeCreationDate(this)
-        writeByte('\n'.toInt())
+        writeByte('\n'.code)
         if (success) {
           entry.sequenceNumber = nextSequenceNumber++
         }
       } else {
         lruEntries.remove(entry.key)
-        writeUtf8(REMOVE).writeByte(' '.toInt())
+        writeUtf8(REMOVE).writeByte(' '.code)
         writeUtf8(entry.key)
-        writeByte('\n'.toInt())
+        writeByte('\n'.code)
       }
       flush()
     }
@@ -613,9 +611,9 @@ class DiskLruCache internal constructor(
 
     redundantOpCount++
     journalWriter!!.writeUtf8(REMOVE)
-      .writeByte(' '.toInt())
+      .writeByte(' '.code)
       .writeUtf8(entry.key)
-      .writeByte('\n'.toInt())
+      .writeByte('\n'.code)
     lruEntries.remove(entry.key)
 
     if (journalRebuildRequired()) {
@@ -987,14 +985,14 @@ class DiskLruCache internal constructor(
     @Throws(IOException::class)
     internal fun writeLengths(writer: BufferedSink) {
       for (length in lengths) {
-        writer.writeByte(' '.toInt()).writeDecimalLong(length)
+        writer.writeByte(' '.code).writeDecimalLong(length)
       }
     }
 
     /** Append space-prefixed creation date in milliseconds to [writer]. */
     @Throws(IOException::class)
     internal fun writeCreationDate(writer: BufferedSink) {
-      writer.writeByte(' '.toInt()).writeDecimalLong(creatingDateInMilliseconds)
+      writer.writeByte(' '.code).writeDecimalLong(creatingDateInMilliseconds)
     }
 
     @Throws(IOException::class)

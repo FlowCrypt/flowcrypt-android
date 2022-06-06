@@ -31,10 +31,10 @@ class CustomScreenCaptureProcessor : BasicScreenCaptureProcessor() {
     try {
       val context = getInstrumentation().targetContext
       var filename = if (capture.name == null) defaultFilename else getFilename(capture.name)
-      filename += "." + capture.format.toString().toLowerCase()
+      filename += "." + capture.format.toString().lowercase(Locale.getDefault())
 
       val contentResolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(filename).toLowerCase(Locale.getDefault())
+      val fileExtension = FilenameUtils.getExtension(filename).lowercase()
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {

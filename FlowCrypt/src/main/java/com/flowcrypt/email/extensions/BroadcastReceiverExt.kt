@@ -7,6 +7,7 @@ package com.flowcrypt.email.extensions
 
 import android.content.BroadcastReceiver
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 /**
  * See details here https://github.com/romannurik/muzei/blob/master/extensions/src/main/java/com/google/android/apps/muzei/util/BroadcastReceiverExt.kt
  */
+@DelicateCoroutinesApi
 fun BroadcastReceiver.goAsync(
   coroutineScope: CoroutineScope = GlobalScope,
   block: suspend () -> Unit

@@ -20,15 +20,15 @@ import org.acra.sender.HttpSender
  *         E-mail: DenBond7@gmail.com
  */
 class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, null) {
-  override fun send(context: Context, report: CrashReportData) {
-    for (entry in report.toMap()) {
+  override fun send(context: Context, errorContent: CrashReportData) {
+    for (entry in errorContent.toMap()) {
       if (entry.key == ReportField.LOGCAT.name || entry.key == ReportField.STACK_TRACE.name) {
         val element = (entry.value as? String) ?: continue
-        report.put(entry.key, filterFileNames(element))
+        errorContent.put(entry.key, filterFileNames(element))
       }
     }
 
-    super.send(context, report)
+    super.send(context, errorContent)
   }
 
   /**

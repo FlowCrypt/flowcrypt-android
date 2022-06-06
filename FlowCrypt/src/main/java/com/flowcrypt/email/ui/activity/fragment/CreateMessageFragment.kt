@@ -1887,7 +1887,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeFixNeedPassphraseIssueDialogFragment() {
-    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, _ ->
       sendMsg()
     }
   }

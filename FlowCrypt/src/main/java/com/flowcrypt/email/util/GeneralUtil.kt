@@ -25,6 +25,7 @@ import android.provider.Settings
 import android.text.TextUtils
 import android.util.Patterns
 import android.webkit.MimeTypeMap
+import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
@@ -370,7 +371,11 @@ class GeneralUtil {
     fun openCustomTab(context: Context, url: String) {
       val builder = CustomTabsIntent.Builder()
       val customTabsIntent = builder.build()
-      builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary))
+      builder.setDefaultColorSchemeParams(
+        CustomTabColorSchemeParams.Builder()
+          .setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary))
+          .build()
+      )
 
       val intent = Intent(Intent.ACTION_VIEW)
       intent.data = Uri.parse(url)

@@ -23,7 +23,6 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
-import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -141,7 +140,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
             continue
           }
 
-          val msgState = getNewMsgState(account, msgEntity, msgAttsDir, atts, store)
+          val msgState = getNewMsgState(account, msgAttsDir, atts, store)
 
           val updateResult = roomDatabase.msgDao().updateSuspend(
             msgEntity.copy(
@@ -180,8 +179,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     }
 
   private suspend fun getNewMsgState(
-    account: AccountEntity, msgEntity: MessageEntity,
-    msgAttsDir: File, atts: List<AttachmentEntity>, store: Store?
+    account: AccountEntity, msgAttsDir: File, atts: List<AttachmentEntity>, store: Store?
   ): MessageState =
     withContext(Dispatchers.IO) {
       return@withContext if (account.useAPI) {
@@ -191,7 +189,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
               ?.let { GmailApiHelper.loadMsgFullInfoSuspend(applicationContext, account, it) }
               ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING
 
-            loadAttachments(account, msgEntity, atts, msgAttsDir) { attachmentEntity ->
+            loadAttachments(atts, msgAttsDir) { attachmentEntity ->
               GmailApiHelper.getAttPartByPath(msg.payload, neededPath = attachmentEntity.path)
                 ?.let { attPart ->
                   GmailApiHelper.getAttInputStream(
@@ -212,7 +210,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
             val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
             val fwdMsg = atts.first().forwardedUid?.let { uid -> imapFolder.getMessageByUID(uid) }
               ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING
-            loadAttachments(account, msgEntity, atts, msgAttsDir) { attachmentEntity ->
+            loadAttachments(atts, msgAttsDir) { attachmentEntity ->
               ImapProtocolUtil.getAttPartByPath(
                 fwdMsg,
                 neededPath = attachmentEntity.path
@@ -224,7 +222,6 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
     }
 
   private suspend fun loadAttachments(
-    account: AccountEntity, msgEntity: MessageEntity,
     atts: List<AttachmentEntity>, msgAttsDir: File,
     action: suspend (attachmentEntity: AttachmentEntity)
     -> InputStream?
