@@ -14,6 +14,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
@@ -123,7 +124,11 @@ class EmailWebView : WebView {
     private fun showUrlUsingChromeCustomTabs(uri: Uri) {
       val builder = CustomTabsIntent.Builder()
       val customTabsIntent = builder.build()
-      builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary))
+      builder.setDefaultColorSchemeParams(
+        CustomTabColorSchemeParams.Builder()
+          .setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary))
+          .build()
+      )
 
       val intent = Intent(Intent.ACTION_VIEW)
       intent.data = uri

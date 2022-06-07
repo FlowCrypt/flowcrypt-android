@@ -6,10 +6,10 @@
 package com.flowcrypt.email.extensions.kotlin
 
 object ByteExtHelper {
-  const val tab = '\t'.toByte()
-  const val space = ' '.toByte()
-  const val cr = '\r'.toByte()
-  const val lf = '\n'.toByte()
+  const val tab = '\t'.code.toByte()
+  const val space = ' '.code.toByte()
+  const val cr = '\r'.code.toByte()
+  const val lf = '\n'.code.toByte()
   const val hexTable = "0123456789ABCDEF"
 }
 

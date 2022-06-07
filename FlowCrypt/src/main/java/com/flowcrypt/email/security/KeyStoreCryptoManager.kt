@@ -152,7 +152,7 @@ object KeyStoreCryptoManager {
     while (true) {
       if (bufferedInputStreamSource.read(buffer, 1) != -1L) {
         val b = buffer[buffer.size - 1]
-        if (b == (-1).toByte() || b == '\n'.toByte()) {
+        if (b == (-1).toByte() || b == '\n'.code.toByte()) {
           break
         }
       } else break

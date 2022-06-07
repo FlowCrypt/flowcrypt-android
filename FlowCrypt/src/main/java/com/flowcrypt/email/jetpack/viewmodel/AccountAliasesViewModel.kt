@@ -21,8 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * @author Denis Bondarenko
@@ -66,9 +64,9 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
         for (alias in response.sendAs) {
           if (alias.verificationStatus != null) {
             val accountAliasesDao = AccountAliasesEntity(
-              email = account.name.toLowerCase(Locale.getDefault()),
+              email = account.name.lowercase(),
               accountType = account.type ?: AccountEntity.ACCOUNT_TYPE_GOOGLE,
-              sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
+              sendAsEmail = alias.sendAsEmail.lowercase(),
               displayName = alias.displayName,
               isDefault = alias.isDefault,
               verificationStatus = alias.verificationStatus

@@ -91,6 +91,7 @@ object PgpDecryptAndOrVerify {
     }
   }
 
+  @Suppress("DEPRECATION")
   fun genDecryptionStream(
     srcInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection? = null,

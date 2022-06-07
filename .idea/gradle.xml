@@ -14,7 +14,6 @@
             <option value="$PROJECT_DIR$/FlowCrypt" />
           </set>
         </option>
-        <option name="resolveModulePerSourceSet" value="false" />
       </GradleProjectSettings>
     </option>
   </component>

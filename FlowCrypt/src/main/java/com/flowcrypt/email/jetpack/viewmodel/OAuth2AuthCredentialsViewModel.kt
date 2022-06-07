@@ -34,7 +34,6 @@ import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
-import java.util.*
 
 
 /**
@@ -143,7 +142,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
           jwks = authRequest.configuration.discoveryDoc?.jwksUri.toString()
         )
 
-        val email: String? = claims.getClaimValueAsString(CLAIM_EMAIL)?.toLowerCase(Locale.US)
+        val email: String? = claims.getClaimValueAsString(CLAIM_EMAIL)?.lowercase()
         val displayName: String? = claims.getClaimValueAsString(CLAIM_NAME)
 
         if (email == null) {

@@ -10,10 +10,9 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.OnLifecycleEvent
 
 /**
  * @author Denis Bondarenko
@@ -21,7 +20,7 @@ import androidx.lifecycle.OnLifecycleEvent
  *         Time: 4:10 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ConnectionLifecycleObserver(context: Context?) : LifecycleObserver {
+class ConnectionLifecycleObserver(context: Context?) : DefaultLifecycleObserver {
   val connectionLiveData: MutableLiveData<Boolean> = MutableLiveData(false)
 
   private val connectivityManager =
@@ -47,13 +46,13 @@ class ConnectionLifecycleObserver(context: Context?) : LifecycleObserver {
     }
   }
 
-  @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-  fun onCreate() {
+  override fun onCreate(owner: LifecycleOwner) {
+    super.onCreate(owner)
     connectivityManager?.registerNetworkCallback(networkRequest, networkCallback)
   }
 
-  @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-  fun onDestroy() {
+  override fun onDestroy(owner: LifecycleOwner) {
+    super.onDestroy(owner)
     connectivityManager?.unregisterNetworkCallback(networkCallback)
   }
 }

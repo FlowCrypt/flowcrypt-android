@@ -119,7 +119,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val attachments = getAttachments(msgEntity)
 
             //create MimeMessage from content + attachments
-            val plainMimeMsgWithAttachments = getMimeMessage(account, msgEntity, attachments)
+            val plainMimeMsgWithAttachments = getMimeMessage(msgEntity, attachments)
 
             //get recipients that will be used to create password-encrypted msg
             val toCandidates =
@@ -288,13 +288,11 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   }
 
   private suspend fun getMimeMessage(
-    account: AccountEntity,
     msgEntity: MessageEntity,
     attachments: List<AttachmentEntity>
   ) = EmailUtil.createMimeMsg(
     context = applicationContext,
     sess = Session.getDefaultInstance(Properties()),
-    account = account,
     msgEntity = msgEntity.copy(isEncrypted = false),
     atts = attachments
   )

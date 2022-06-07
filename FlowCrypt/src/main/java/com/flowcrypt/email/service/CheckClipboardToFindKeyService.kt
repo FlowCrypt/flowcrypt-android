@@ -73,7 +73,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
     checkClipboard()
   }
 
-  override fun onBind(intent: Intent): IBinder? {
+  override fun onBind(intent: Intent): IBinder {
     LogsUtil.d(TAG, "onBind:$intent")
     return localBinder
   }
@@ -115,7 +115,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
    * service and the worker thread.
    */
   private class ReplyHandler(checkClipboardToFindKeyService: CheckClipboardToFindKeyService) :
-    Handler() {
+    Handler(Looper.getMainLooper()) {
     private val weakRef: WeakReference<CheckClipboardToFindKeyService> =
       WeakReference(checkClipboardToFindKeyService)
 

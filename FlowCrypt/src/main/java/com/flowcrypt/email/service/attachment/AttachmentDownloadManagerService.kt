@@ -177,10 +177,9 @@ class AttachmentDownloadManagerService : Service() {
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  //todo-denbond7 need to fix deprecation
   private class ReplyHandler(
     attDownloadManagerService: AttachmentDownloadManagerService
-  ) : Handler() {
+  ) : Handler(Looper.getMainLooper()) {
 
     private val weakRef: WeakReference<AttachmentDownloadManagerService> =
       WeakReference(attDownloadManagerService)

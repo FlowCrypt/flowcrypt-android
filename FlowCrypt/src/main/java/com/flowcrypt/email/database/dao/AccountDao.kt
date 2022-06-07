@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import java.util.Locale
 
 /**
  * This class describe creating of table which has name
@@ -75,7 +74,7 @@ abstract class AccountDao : BaseDao<AccountEntity> {
 
     insertSuspend(
       accountEntity.copy(
-        email = accountEntity.email.toLowerCase(Locale.US),
+        email = accountEntity.email.lowercase(),
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
         uuid = encryptedUuid,
@@ -97,7 +96,7 @@ abstract class AccountDao : BaseDao<AccountEntity> {
 
     insert(
       accountEntity.copy(
-        email = accountEntity.email.toLowerCase(Locale.US),
+        email = accountEntity.email.lowercase(),
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
         uuid = encryptedUuid,
@@ -184,11 +183,11 @@ abstract class AccountDao : BaseDao<AccountEntity> {
       existedAccount.copy(
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
-        imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
+        imapServer = authCredentials.imapServer.lowercase(),
         imapPort = authCredentials.imapPort,
         imapUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
         imapUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
-        smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
+        smtpServer = authCredentials.smtpServer.lowercase(),
         smtpPort = authCredentials.smtpPort,
         smtpUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
         smtpUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,

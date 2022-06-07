@@ -28,6 +28,7 @@ class CustomStableIdKeyProvider(private val recyclerView: RecyclerView) :
   }
 
   override fun getPosition(key: Long): Int {
-    return recyclerView.findViewHolderForItemId(key)?.adapterPosition ?: RecyclerView.NO_POSITION
+    return recyclerView.findViewHolderForItemId(key)?.bindingAdapterPosition
+      ?: RecyclerView.NO_POSITION
   }
 }

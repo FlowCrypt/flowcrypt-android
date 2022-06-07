@@ -8,7 +8,6 @@ import android.text.InputFilter
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextUtils
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -30,7 +29,7 @@ interface InputFilters {
         if (Character.isUpperCase(source[i])) {
           val v = CharArray(end - start)
           TextUtils.getChars(source, start, end, v, 0)
-          val s = String(v).toLowerCase(Locale.US)
+          val s = String(v).lowercase()
           return if (source is Spanned) {
             val sp = SpannableString(s)
             TextUtils.copySpansFrom(

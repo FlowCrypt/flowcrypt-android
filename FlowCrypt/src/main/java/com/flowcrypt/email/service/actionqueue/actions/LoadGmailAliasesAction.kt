@@ -14,8 +14,6 @@ import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.SerializedName
-import java.util.ArrayList
-import java.util.Locale
 
 /**
  * This action describes a task which loads Gmail aliases for the given account and save them to
@@ -58,9 +56,9 @@ data class LoadGmailAliasesAction(
       for (alias in response.sendAs) {
         if (alias.verificationStatus != null) {
           val accountAliasesDao = AccountAliasesEntity(
-            email = account.email.toLowerCase(Locale.getDefault()),
+            email = account.email.lowercase(),
             accountType = account.accountType,
-            sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
+            sendAsEmail = alias.sendAsEmail.lowercase(),
             displayName = alias.displayName,
             isDefault = alias.isDefault,
             verificationStatus = alias.verificationStatus

@@ -13,6 +13,7 @@ import com.flowcrypt.email.extensions.goAsync
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
+import kotlinx.coroutines.DelicateCoroutinesApi
 
 /**
  * This [BroadcastReceiver] will be used by [MessagesNotificationManager] to mark messages as old.
@@ -24,6 +25,7 @@ import com.flowcrypt.email.util.LogsUtil
  */
 class MarkMessagesAsOldBroadcastReceiver : BroadcastReceiver() {
 
+  @OptIn(DelicateCoroutinesApi::class)
   override fun onReceive(context: Context, intent: Intent?) {
     LogsUtil.d(TAG, "onReceive")
     if (intent == null || ACTION_MARK_MESSAGES_AS_OLD != intent.action) {

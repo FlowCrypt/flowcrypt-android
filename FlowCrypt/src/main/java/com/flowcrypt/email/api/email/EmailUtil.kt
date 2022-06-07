@@ -1019,7 +1019,6 @@ class EmailUtil {
     suspend fun createMimeMsg(
       context: Context,
       sess: Session?,
-      account: AccountEntity,
       msgEntity: MessageEntity,
       atts: List<AttachmentEntity>
     ): MimeMessage = withContext(Dispatchers.IO) {

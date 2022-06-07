@@ -13,7 +13,6 @@ import com.flowcrypt.email.service.actionqueue.actions.Action
 import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -47,7 +46,7 @@ data class ActionQueueEntity(
       val gson: Gson =
         GsonBuilder().registerTypeAdapter(Action::class.java, ActionJsonDeserializer()).create()
       return ActionQueueEntity(
-        email = email.toLowerCase(Locale.getDefault()),
+        email = email.lowercase(),
         actionType = action.type.value,
         actionJson = gson.toJson(action)
       )

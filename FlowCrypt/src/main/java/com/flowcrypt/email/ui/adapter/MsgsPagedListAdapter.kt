@@ -414,8 +414,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
     fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> =
       object : ItemDetailsLookup.ItemDetails<Long>() {
-        override fun getPosition(): Int = adapterPosition
-        override fun getSelectionKey(): Long? = itemId
+        override fun getPosition(): Int = bindingAdapterPosition
+        override fun getSelectionKey(): Long = itemId
       }
 
     fun setActivatedState(isActivated: Boolean) {
