@@ -198,7 +198,9 @@ data class OrgRules constructor(
       allowedDomains.any { it.equals(userDomain, true) }
     } else {
       val disallowedDomains = disallowAttesterSearchForDomains ?: emptyList()
-      !disallowedDomains.any { it.equals(userDomain, true) }
+      if (disallowedDomains.contains("*")) {
+        false
+      } else disallowedDomains.none { it.equals(userDomain, true) }
     }
   }
 
