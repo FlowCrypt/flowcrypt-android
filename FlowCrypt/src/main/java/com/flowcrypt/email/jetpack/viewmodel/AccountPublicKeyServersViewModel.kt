@@ -104,7 +104,7 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
         for (email in emails) {
           val pubResponseResult = apiRepository.pubLookup(
             context = getApplication(),
-            identData = email,
+            email = email,
             orgRules = accountEntity.clientConfiguration
           )
           pubResponseResult.data?.pubkey?.let { key ->

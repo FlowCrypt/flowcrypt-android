@@ -112,7 +112,7 @@ class FlowcryptApiRepository : ApiRepository {
   override suspend fun pubLookup(
     requestCode: Long,
     context: Context,
-    identData: String,
+    email: String,
     orgRules: OrgRules?
   ): Result<PubResponse> =
     withContext(Dispatchers.IO) {
@@ -139,9 +139,9 @@ class FlowcryptApiRepository : ApiRepository {
         }
       }
 
-      if (identData.isValidEmail()) {
+      if (email.isValidEmail()) {
         val wkdResult = getResult(requestCode = requestCode) {
-          val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, identData)
+          val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, email)
 
           //For now, we just peak at the first matching key. It should be improved inthe future.
           // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
@@ -159,21 +159,19 @@ class FlowcryptApiRepository : ApiRepository {
           return@withContext resultWrapperFun(wkdResult)
         }
 
-        if (orgRules?.canLookupThisRecipientOnAttester(identData) == false) {
+        if (orgRules?.canLookupThisRecipientOnAttester(email) == false) {
           return@withContext Result.success(
             requestCode = requestCode,
             data = PubResponse(null, null)
           )
         }
-      } else if (orgRules?.disallowLookupOnAttester() == true) {
-        return@withContext Result.success(
-          requestCode = requestCode,
-          data = PubResponse(null, null)
-        )
-      }
+      } else return@withContext Result.exception(
+        requestCode = requestCode,
+        throwable = IllegalStateException(context.getString(R.string.error_email_is_not_valid))
+      )
 
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      val result = getResult(requestCode = requestCode) { apiService.getPubFromAttester(identData) }
+      val result = getResult(requestCode = requestCode) { apiService.getPubFromAttester(email) }
       return@withContext resultWrapperFun(result)
     }
 
