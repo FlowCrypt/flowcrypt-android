@@ -197,8 +197,8 @@ data class OrgRules constructor(
       throw IllegalStateException("Not a valid email $emailAddr")
     }
 
-    val allowedDomains = allowAttesterSearchOnlyForDomains ?: emptyList()
-    return if (allowedDomains.isNotEmpty()) {
+    val allowedDomains = allowAttesterSearchOnlyForDomains
+    return if (allowedDomains != null) {
       allowedDomains.any { it.equals(userDomain, true) }
     } else {
       val disallowedDomains = disallowAttesterSearchForDomains ?: emptyList()
@@ -211,7 +211,7 @@ data class OrgRules constructor(
    * Some orgs might want to disallow lookup on attester completely
    */
   fun disallowLookupOnAttester(): Boolean {
-    return allowAttesterSearchOnlyForDomains.isNullOrEmpty()
+    return allowAttesterSearchOnlyForDomains == null
         && (disallowAttesterSearchForDomains ?: emptyList()).contains("*")
   }
 
