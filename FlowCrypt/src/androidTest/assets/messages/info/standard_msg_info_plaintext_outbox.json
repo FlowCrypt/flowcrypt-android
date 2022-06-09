@@ -1,0 +1,55 @@
+{
+  "encryptionType": "STANDARD",
+  "inlineSubject": "Standard message - plaintext",
+  "msgBlocks": [
+    {
+      "complete": true,
+      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock plain\" style\u003d\"background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: none;\"\u003e\n\n    \n  \n  \n    \u003cpre\u003eIt\u0027s a standard message with plaintext\u003c/pre\u003e\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n  \u003c/html\u003e",
+      "type": "plainHtml"
+    }
+  ],
+  "msgEntity": {
+    "cc": [],
+    "email": "default@flowcrypt.test",
+    "flags": "\\SEEN",
+    "folder": "Outbox",
+    "from": [
+      {
+        "address": "denbond7@flowcrypt.test",
+        "encodedPersonal": "Denis Bondarenko",
+        "personal": "Denis Bondarenko"
+      }
+    ],
+    "fromAddress": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
+    "hasAttachments": false,
+    "id": 50,
+    "isSeen": true,
+    "msgState": "NONE",
+    "replyTo": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
+    "replyToAddress": [
+      {
+        "address": "denbond7@flowcrypt.test",
+        "encodedPersonal": "Denis Bondarenko"
+      }
+    ],
+    "sentDate": 1601886754000,
+    "subject": "Standard message - plaintext",
+    "to": [
+      {
+        "address": "default@flowcrypt.test"
+      }
+    ],
+    "toAddress": "default@flowcrypt.test",
+    "uid": 5
+  },
+  "verificationResult": {
+    "isEncrypted": false,
+    "isSigned": false,
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "hasUnverifiedSignatures": false,
+    "hasBadSignatures": false
+  },
+  "origMsgHeaders": "Return-Path: \u003cdenbond7@flowcrypt.test\u003e\r\nDelivered-To: default@flowcrypt.test\r\nReceived: from mail.flowcrypt.test\r\n\tby mail.flowcrypt.test with LMTP\r\n\tid WF4PDSLael+dCQAAZlazJA\r\n\t(envelope-from \u003cdenbond7@flowcrypt.test\u003e)\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon, 05 Oct 2020 08:32:34 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.flowcrypt.test (Postfix) with ESMTP id 347E7A20940\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon,  5 Oct 2020 08:32:34 +0000 (UTC)\r\nTo: default@flowcrypt.test\r\nFrom: Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e\r\nX-Pep-Version: 2.0\r\nMessage-ID: \u003c8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@flowcrypt.test\u003e\r\nDate: Mon, 5 Oct 2020 11:32:34 +0300\r\nMime-Version: 1.0\r\nSubject: Standard message - plaintext\r\nContent-Type: multipart/alternative;\r\n boundary\u003d\"------------D3F69D95534F587EC1BE35A3\"\r\nContent-Language: en-US",
+  "text": "It\u0027s a standard message with plaintext"
+}
