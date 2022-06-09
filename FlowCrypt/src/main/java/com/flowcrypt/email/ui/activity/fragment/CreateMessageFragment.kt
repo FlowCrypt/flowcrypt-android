@@ -66,6 +66,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -185,11 +186,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
+
     subscribeToSetWebPortalPassword()
     subscribeToSelectRecipients()
     subscribeToAddMissingRecipientPublicKey()
     subscribeToFixNeedPassphraseIssueDialogFragment()
     subscribeToNoPgpFoundDialogFragment()
+    subscribeToChoosePublicKeyDialogFragment()
 
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
@@ -212,27 +215,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           }
         }
       }
-    }
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_SHOW_PUB_KEY_DIALOG -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          if (data != null) {
-            val keyList: List<AttachmentInfo> =
-              data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
-                ?: return
-            val key = keyList.first()
-            if (attachments.none { it.name == key.name && it.encodedSize == key.encodedSize }) {
-              attachments.add(key)
-              showAtts()
-            }
-          }
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
@@ -407,7 +389,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.imageButtonAliases -> if (fromAddressesAdapter?.count ?: 0 > 1) {
+      R.id.imageButtonAliases -> if ((fromAddressesAdapter?.count ?: 0) > 1) {
         binding?.spinnerFrom?.performClick()
       }
 
@@ -471,7 +453,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
           val selectedItemPosition = binding?.spinnerFrom?.selectedItemPosition
           if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
-            && binding?.spinnerFrom?.adapter?.count ?: 0 > selectedItemPosition
+            && (binding?.spinnerFrom?.adapter?.count ?: 0) > selectedItemPosition
           ) {
             val isItemEnabled = fromAddressesAdapter?.isEnabled(selectedItemPosition) ?: true
             binding?.editTextFrom?.setTextColor(if (isItemEnabled) originalColor else colorGray)
@@ -1319,12 +1301,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * Show a dialog where the user can select a public key which will be attached to a message.
    */
   private fun showPubKeyDialog() {
-    if (!account?.email.isNullOrEmpty()) {
-      val fragment = ChoosePublicKeyDialogFragment.newInstance(
-        account?.email!!, ListView.CHOICE_MODE_SINGLE, R.plurals.choose_pub_key, true
+    account?.email?.let {
+      showChoosePublicKeyDialogFragment(
+        it,
+        ListView.CHOICE_MODE_SINGLE,
+        R.plurals.choose_pub_key,
+        true
       )
-      fragment.setTargetFragment(this@CreateMessageFragment, REQUEST_CODE_SHOW_PUB_KEY_DIALOG)
-      fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
     }
   }
 
@@ -1875,8 +1858,21 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private fun subscribeToChoosePublicKeyDialogFragment() {
+    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      val keyList = bundle.getParcelableArrayList<AttachmentInfo>(
+        ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
+      ) ?: return@setFragmentResultListener
+
+      val key = keyList.first()
+      if (attachments.none { it.name == key.name && it.encodedSize == key.encodedSize }) {
+        attachments.add(key)
+        showAtts()
+      }
+    }
+  }
+
   companion object {
-    private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
 }
