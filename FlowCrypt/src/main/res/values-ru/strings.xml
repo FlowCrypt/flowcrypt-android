@@ -36,7 +36,6 @@
     <string name="import_their_public_key">Импортировать его открытый ключ</string>
     <string name="download_complete">Загрузка завершена</string>
     <string name="waiting_to_load">Ожидание загрузки</string>
-    <string name="choose_attachment">Выберите вложение</string>
     <string name="can_not_attach_this_file">Невозможно прикрепить этот файл!</string>
     <string name="attach_file">Прикрепить файл</string>
     <string name="attachment">Вложение</string>

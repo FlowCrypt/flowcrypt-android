@@ -32,6 +32,7 @@ import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -138,6 +139,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
   }
+
+  private val openDocumentActivityResultLauncher =
+    registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+      uri?.let { addAttachmentInfoFromUri(it) }
+    }
 
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
@@ -267,12 +273,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
         NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
           binding?.btnSetWebPortalPassword?.callOnClick()
-        }
-      }
-
-      REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          addAttachmentInfoFromIntent(data)
         }
       }
 
@@ -551,14 +551,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun attachFile() {
-    val intent = Intent()
-    intent.action = Intent.ACTION_OPEN_DOCUMENT
-    intent.addCategory(Intent.CATEGORY_OPENABLE)
-    intent.type = "*/*"
-    startActivityForResult(
-      Intent.createChooser(intent, getString(R.string.choose_attachment)),
-      REQUEST_CODE_GET_CONTENT_FOR_SENDING
-    )
+    openDocumentActivityResultLauncher.launch(arrayOf("*/*"))
   }
 
   private fun initExtras(intent: Intent?) {
@@ -1532,33 +1525,28 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * in the data field or the ClipData object of the Intent used to launch that
    * component. Additionally, we need to add [Intent.FLAG_GRANT_READ_URI_PERMISSION] to the Intent.
    */
-  private fun addAttachmentInfoFromIntent(intent: Intent?) {
-    val uri = intent?.data
-    if (uri != null) {
-      val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
-      if (hasAbilityToAddAtt(attachmentInfo)) {
-        try {
-          context?.contentResolver?.takePersistableUriPermission(
-            uri,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION
-          )
-        } catch (e: Exception) {
-          showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
-          return
-        }
-        attachmentInfo?.let { attachments.add(it) }
-        showAtts()
-      } else {
-        showInfoSnackbar(
-          view, getString(
-            R.string.template_warning_max_total_attachments_size,
-            FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
-          ),
-          Snackbar.LENGTH_LONG
+  private fun addAttachmentInfoFromUri(uri: Uri) {
+    val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
+    if (hasAbilityToAddAtt(attachmentInfo)) {
+      try {
+        context?.contentResolver?.takePersistableUriPermission(
+          uri,
+          Intent.FLAG_GRANT_READ_URI_PERMISSION
         )
+      } catch (e: Exception) {
+        showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+        return
       }
+      attachmentInfo?.let { attachments.add(it) }
+      showAtts()
     } else {
-      showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+      showInfoSnackbar(
+        view, getString(
+          R.string.template_warning_max_total_attachments_size,
+          FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
+        ),
+        Snackbar.LENGTH_LONG
+      )
     }
   }
 
@@ -1890,7 +1878,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   companion object {
     private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
-    private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
