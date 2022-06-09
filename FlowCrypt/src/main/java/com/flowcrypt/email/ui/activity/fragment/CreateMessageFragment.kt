@@ -188,7 +188,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToSetWebPortalPassword()
     subscribeToSelectRecipients()
     subscribeToAddMissingRecipientPublicKey()
-    subscribeFixNeedPassphraseIssueDialogFragment()
+    subscribeToFixNeedPassphraseIssueDialogFragment()
+    subscribeToNoPgpFoundDialogFragment()
 
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
@@ -216,66 +217,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_NO_PGP_FOUND_DIALOG -> when (resultCode) {
-        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL -> {
-          composeMsgViewModel.switchMessageEncryptionType(MessageEncryptionType.STANDARD)
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> if (data != null) {
-          val recipientWithPubKeys = data.getParcelableExtra<RecipientWithPubKeys>(
-            NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
-          )
-
-          recipientWithPubKeys?.let {
-            navController?.navigate(
-              CreateMessageFragmentDirections
-                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
-            )
-          }
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT -> if (data != null) {
-          cachedRecipientWithoutPubKeys =
-            data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
-
-          cachedRecipientWithoutPubKeys?.let {
-            navController?.navigate(
-              CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
-                title = getString(R.string.use_public_key_from)
-              )
-            )
-          }
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT -> if (data != null) {
-          val recipientWithPubKeys = data.getParcelableExtra<RecipientWithPubKeys>(
-            NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
-          )
-
-          if (recipientWithPubKeys != null) {
-            removeRecipientWithPubKey(
-              recipientWithPubKeys,
-              binding?.editTextRecipientTo,
-              Message.RecipientType.TO
-            )
-            removeRecipientWithPubKey(
-              recipientWithPubKeys,
-              binding?.editTextRecipientCc,
-              Message.RecipientType.CC
-            )
-            removeRecipientWithPubKey(
-              recipientWithPubKeys,
-              binding?.editTextRecipientBcc,
-              Message.RecipientType.BCC
-            )
-          }
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
-          binding?.btnSetWebPortalPassword?.callOnClick()
-        }
-      }
-
       REQUEST_CODE_SHOW_PUB_KEY_DIALOG -> when (resultCode) {
         Activity.RESULT_OK -> {
           if (data != null) {
@@ -1297,13 +1238,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * @param recipient The [RecipientWithPubKeys] which will be used when we select the remove action.
    */
   private fun showNoPgpFoundDialog(recipient: RecipientWithPubKeys) {
-    val dialogFragment = NoPgpFoundDialogFragment.newInstance(
-      RecipientWithPubKeys = recipient,
-      isRemoveActionEnabled = true,
-      isProtectingWithPasswordEnabled = isPasswordProtectedFunctionalityEnabled()
+    navController?.navigate(
+      CreateMessageFragmentDirections.actionCreateMessageFragmentToNoPgpFoundDialogFragment(
+        recipientWithPubKeys = recipient,
+        isRemoveActionEnabled = true,
+        isProtectingWithPasswordEnabled = isPasswordProtectedFunctionalityEnabled()
+      )
     )
-    dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
-    dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
   }
 
   /**
@@ -1870,14 +1811,71 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun subscribeFixNeedPassphraseIssueDialogFragment() {
+  private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
     setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, _ ->
       sendMsg()
     }
   }
 
+  private fun subscribeToNoPgpFoundDialogFragment() {
+    setFragmentResultListener(NoPgpFoundDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      val recipientWithPubKeys = bundle.getParcelable<RecipientWithPubKeys>(
+        NoPgpFoundDialogFragment.KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS
+      )
+
+      when (bundle.getInt(NoPgpFoundDialogFragment.KEY_REQUEST_RESULT_CODE)) {
+        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL -> {
+          composeMsgViewModel.switchMessageEncryptionType(MessageEncryptionType.STANDARD)
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> {
+          recipientWithPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections
+                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
+            )
+          }
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT -> {
+          cachedRecipientWithoutPubKeys = recipientWithPubKeys
+          cachedRecipientWithoutPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
+                title = getString(R.string.use_public_key_from)
+              )
+            )
+          }
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT -> {
+          if (recipientWithPubKeys != null) {
+            removeRecipientWithPubKey(
+              recipientWithPubKeys,
+              binding?.editTextRecipientTo,
+              Message.RecipientType.TO
+            )
+            removeRecipientWithPubKey(
+              recipientWithPubKeys,
+              binding?.editTextRecipientCc,
+              Message.RecipientType.CC
+            )
+            removeRecipientWithPubKey(
+              recipientWithPubKeys,
+              binding?.editTextRecipientBcc,
+              Message.RecipientType.BCC
+            )
+          }
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
+          binding?.btnSetWebPortalPassword?.callOnClick()
+        }
+      }
+    }
+  }
+
   companion object {
-    private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
