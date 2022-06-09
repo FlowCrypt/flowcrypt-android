@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -37,6 +35,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.activity.result.contract.CreateCustomDocument
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -70,6 +69,18 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
   private var areBackupsSavingNow: Boolean = false
   private var destinationUri: Uri? = null
 
+  private val createDocumentActivityResultLauncher =
+    registerForActivityResult(CreateCustomDocument(Constants.MIME_TYPE_PGP_KEY)) { uri: Uri? ->
+      try {
+        destinationUri = uri
+        destinationUri?.let { privateKeysViewModel.saveBackupsAsFile(it) }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        showInfoSnackbar(binding?.root, e.message ?: "")
+      }
+    }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     requireActivity().onBackPressedDispatcher.addCallback(this) {
@@ -87,24 +98,6 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     setupPrivateKeysViewModel()
     setupBackupsViewModel()
     observeOnResultLiveData()
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    when (requestCode) {
-      REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> if (data != null && data.data != null) {
-          try {
-            destinationUri = data.data
-            destinationUri?.let { privateKeysViewModel.saveBackupsAsFile(it) }
-          } catch (e: Exception) {
-            e.printStackTrace()
-            ExceptionUtil.handleError(e)
-            showInfoSnackbar(binding?.root, e.message ?: "")
-          }
-        }
-      }
-    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -133,7 +126,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
 
     binding?.btBackup?.setOnClickListener {
       if (account?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)?.not() == true) {
-        if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isNullOrEmpty()) {
+        if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isEmpty()) {
           showInfoSnackbar(
             view = binding?.root,
             msgText = getString(
@@ -317,11 +310,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
    */
   private fun chooseDestForExportedKey() {
     account?.let {
-      val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-      intent.addCategory(Intent.CATEGORY_OPENABLE)
-      intent.type = Constants.MIME_TYPE_PGP_KEY
-      intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(it.email))
-      startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY)
+      createDocumentActivityResultLauncher.launch(SecurityUtils.genPrivateKeyName(it.email))
     } ?: ExceptionUtil.handleError(NullPointerException("account is null"))
   }
 
@@ -362,9 +351,5 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     if (accountEntity?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
       binding?.btBackup?.gone()
     }
-  }
-
-  companion object {
-    private const val REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10
   }
 }
