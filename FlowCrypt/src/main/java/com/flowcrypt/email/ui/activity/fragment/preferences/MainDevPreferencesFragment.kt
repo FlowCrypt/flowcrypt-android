@@ -50,6 +50,9 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
       BuildConfig.FLAVOR == "dev"
   }
 
+  @Suppress("DEPRECATION")
+  //we have to suppress deprecation for "setTargetFragment"
+  //because we can not switch to NavController here due to PreferenceDialogFragmentCompat
   override fun onDisplayPreferenceDialog(preference: Preference) {
     if (preference is BuildConfInfoPreference) {
       val dialogFragment = BuildConfigInfoPreferencesFragment.newInstance(preference.getKey())
