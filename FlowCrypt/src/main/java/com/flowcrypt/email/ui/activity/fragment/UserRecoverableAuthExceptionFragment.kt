@@ -15,6 +15,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
@@ -55,6 +57,38 @@ class UserRecoverableAuthExceptionFragment :
 
   private val args by navArgs<UserRecoverableAuthExceptionFragmentArgs>()
 
+  private val forActivityResultSignInError = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { result: ActivityResult ->
+    when (result.resultCode) {
+      Activity.RESULT_OK -> {
+        lifecycleScope.launch {
+          accountViewModel.activeAccountLiveData.value?.let { accountEntity ->
+            context?.let { context ->
+              val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+              roomDatabase.msgDao().changeMsgsStateSuspend(
+                accountEntity.email,
+                JavaEmailConstants.FOLDER_OUTBOX,
+                MessageState.AUTH_FAILURE.value,
+                MessageState.QUEUED.value
+              )
+              MessagesSenderWorker.enqueue(context)
+              navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
+            }
+          }
+        }
+      }
+
+      Activity.RESULT_CANCELED -> {
+        Toast.makeText(
+          requireContext(),
+          getString(R.string.access_was_not_granted),
+          Toast.LENGTH_SHORT
+        ).show()
+      }
+    }
+  }
+
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
@@ -79,42 +113,6 @@ class UserRecoverableAuthExceptionFragment :
     ErrorNotificationManager.isShowingAuthErrorEnabled = true
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_RUN_GMAIL_RECOVERABLE_INTENT -> {
-        when (resultCode) {
-          Activity.RESULT_OK -> {
-            lifecycleScope.launch {
-              accountViewModel.activeAccountLiveData.value?.let { accountEntity ->
-                context?.let { context ->
-                  val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-                  roomDatabase.msgDao().changeMsgsStateSuspend(
-                    accountEntity.email,
-                    JavaEmailConstants.FOLDER_OUTBOX,
-                    MessageState.AUTH_FAILURE.value,
-                    MessageState.QUEUED.value
-                  )
-                  MessagesSenderWorker.enqueue(context)
-                  navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
-                }
-              }
-            }
-          }
-
-          Activity.RESULT_CANCELED -> {
-            Toast.makeText(
-              requireContext(),
-              getString(R.string.access_was_not_granted),
-              Toast.LENGTH_SHORT
-            ).show()
-          }
-        }
-      }
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-
-  }
-
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     binding?.textViewExplanation?.text = getString(
@@ -129,7 +127,7 @@ class UserRecoverableAuthExceptionFragment :
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
             val recoverableIntent = args.recoverableIntent ?: return@setOnClickListener
-            startActivityForResult(recoverableIntent, REQUEST_CODE_RUN_GMAIL_RECOVERABLE_INTENT)
+            forActivityResultSignInError.launch(recoverableIntent)
           }
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
@@ -256,7 +254,6 @@ class UserRecoverableAuthExceptionFragment :
   }
 
   companion object {
-    private const val REQUEST_CODE_RUN_GMAIL_RECOVERABLE_INTENT = 101
     private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
   }
 }
