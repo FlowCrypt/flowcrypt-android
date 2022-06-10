@@ -25,6 +25,8 @@ data class OrgRules constructor(
   @Expose val keyManagerUrl: String? = null,
   @SerializedName("disallow_attester_search_for_domains")
   @Expose val disallowAttesterSearchForDomains: List<String>? = null,
+  @SerializedName("allow_attester_search_only_for_domains")
+  @Expose val allowAttesterSearchOnlyForDomains: List<String>? = null,
   @SerializedName("enforce_keygen_algo")
   @Expose val enforceKeygenAlgo: KeyAlgo? = null,
   @SerializedName("enforce_keygen_expire_months")
@@ -36,6 +38,7 @@ data class OrgRules constructor(
     parcel.readString(),
     parcel.readString(),
     parcel.createStringArrayList(),
+    parcel.createStringArrayList(),
     parcel.readParcelable(KeyAlgo::class.java.classLoader),
     parcel.readValue(Int::class.java.classLoader) as? Int
   )
@@ -45,6 +48,7 @@ data class OrgRules constructor(
     parcel.writeString(customKeyserverUrl)
     parcel.writeString(keyManagerUrl)
     parcel.writeStringList(disallowAttesterSearchForDomains)
+    parcel.writeStringList(allowAttesterSearchOnlyForDomains)
     parcel.writeParcelable(enforceKeygenAlgo, flagsList)
     parcel.writeValue(enforceKeygenExpireMonths)
   }
@@ -179,30 +183,25 @@ data class OrgRules constructor(
   }
 
   /**
-   * Some orgs have a list of email domains where they do NOT want such emails to be looked up on
+   * Some orgs have a list of email domains where they do NOT want OR want such emails to be looked up on
    * public sources (such as Attester). This is because they already have other means to obtain
-   * public keys for these domains, such as from their own internal keyserver
+   * public keys for these domains, such as from their own internal keyserver.
    */
   fun canLookupThisRecipientOnAttester(emailAddr: String): Boolean {
-    if (disallowLookupOnAttester()) {
-      return false
-    }
-
     val userDomain = EmailUtil.getDomain(emailAddr)
     if (userDomain.isEmpty()) {
       throw IllegalStateException("Not a valid email $emailAddr")
     }
 
-    val disallowedDomains = disallowAttesterSearchForDomains ?: emptyList()
-    return !disallowedDomains.any { it.equals(userDomain, true) }
-  }
-
-  /**
-   *
-   * Some orgs might want to disallow lookup on attester completely
-   */
-  fun disallowLookupOnAttester(): Boolean {
-    return (disallowAttesterSearchForDomains ?: emptyList()).contains("*")
+    val allowedDomains = allowAttesterSearchOnlyForDomains
+    return if (allowedDomains != null) {
+      allowedDomains.any { it.equals(userDomain, true) }
+    } else {
+      val disallowedDomains = disallowAttesterSearchForDomains ?: emptyList()
+      if (disallowedDomains.contains("*")) {
+        false
+      } else disallowedDomains.none { it.equals(userDomain, true) }
+    }
   }
 
   /**

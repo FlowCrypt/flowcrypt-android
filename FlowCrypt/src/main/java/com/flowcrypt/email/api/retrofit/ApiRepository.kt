@@ -85,14 +85,14 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param requestCode A unique request code for this call
-   * @param context Interface to global information about an application environment.
-   * @param identData A key id or the user email or a fingerprint.
-   * @param orgRules Contains client configurations.
+   * @param context     Interface to global information about an application environment.
+   * @param email       A user email.
+   * @param orgRules    Contains client configurations.
    */
   suspend fun pubLookup(
     requestCode: Long = 0L,
     context: Context,
-    identData: String,
+    email: String,
     orgRules: OrgRules? = null
   ): Result<PubResponse>
 

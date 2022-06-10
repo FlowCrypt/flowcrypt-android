@@ -447,8 +447,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
-    binding?.imageButtonReplyAll?.visibility = View.VISIBLE
-    binding?.imageButtonMoreOptions?.visibility = View.VISIBLE
+    binding?.imageButtonReplyAll?.visibleOrGone(!args.messageEntity.isOutboxMsg())
+    binding?.imageButtonMoreOptions?.visibleOrGone(!args.messageEntity.isOutboxMsg())
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
@@ -1001,7 +1001,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.root?.visibility = View.VISIBLE
+      binding?.layoutReplyButtons?.root?.visibleOrGone(!args.messageEntity.isOutboxMsg())
     }
   }
 

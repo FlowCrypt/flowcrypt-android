@@ -823,4 +823,24 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       )
     )
   }
+
+  @Test
+  fun testViewsVisibilityOfOutgoingMessages() {
+    val incomingMsgInfo = requireNotNull(
+      getMsgInfo(
+        "messages/info/standard_msg_info_plaintext_outbox.json",
+        "messages/mime/standard_msg_info_plaintext.txt"
+      )
+    )
+
+    val msgEntity = incomingMsgInfo.msgEntity
+    launchActivity(msgEntity)
+
+    onView(withId(R.id.imageButtonReplyAll))
+      .check(matches(not(isDisplayed())))
+    onView(withId(R.id.imageButtonMoreOptions))
+      .check(matches(not(isDisplayed())))
+    onView(withId(R.id.layoutReplyButtons))
+      .check(matches(not(isDisplayed())))
+  }
 }
