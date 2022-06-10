@@ -6,10 +6,8 @@
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Dialog
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +15,10 @@ import android.view.ViewGroup
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -25,7 +26,9 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -43,16 +46,14 @@ import com.google.android.gms.common.util.CollectionUtils
  * E-mail: DenBond7@gmail.com
  */
 class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener {
+  private val args by navArgs<ChoosePublicKeyDialogFragmentArgs>()
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+
   private var atts: MutableList<AttachmentInfo> = mutableListOf()
   private var listViewKeys: ListView? = null
   private var textViewMsg: TextView? = null
   private var progressBar: View? = null
   private var buttonOk: View? = null
-  private var email: String? = null
-  private var title: Int? = null
-  private var choiceMode: Int = ListView.CHOICE_MODE_NONE
-  private var returnResultImmediatelyIfSingle: Boolean = false
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var onLoadKeysProgressListener: OnLoadKeysProgressListener? = null
 
   override fun onAttach(context: Context) {
@@ -67,13 +68,6 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setupPrivateKeysViewModel()
-
-    this.email = arguments?.getString(KEY_EMAIL)
-    this.title = arguments?.getInt(KEY_TITLE_RESOURCE_ID)
-    this.choiceMode = arguments?.getInt(KEY_CHOICE_MODE, ListView.CHOICE_MODE_NONE)
-      ?: ListView.CHOICE_MODE_NONE
-    this.returnResultImmediatelyIfSingle =
-      arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -130,8 +124,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             val matchedKeys = getMatchedKeys(pgpKeyDetailsList)
             if (CollectionUtils.isEmpty(matchedKeys)) {
               for (pgpKeyDetails in pgpKeyDetailsList) {
-                val nonNullEmail = email ?: continue
-                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, nonNullEmail)
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, args.email)
                 if (att != null) {
                   atts.add(att)
                 }
@@ -139,29 +132,28 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             } else {
               atts.clear()
               for (pgpKeyDetails in matchedKeys) {
-                val nonNullEmail = email ?: continue
-                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, nonNullEmail)
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, args.email)
                 if (att != null) {
                   atts.add(att)
                 }
               }
             }
 
-            title?.let {
-              textViewMsg?.text = resources.getQuantityString(it, atts.size)
+            if (args.titleResourceId > 0) {
+              textViewMsg?.text = resources.getQuantityString(args.titleResourceId, atts.size)
             }
 
             if (atts.size > 1) {
-              val adapter = PubKeysArrayAdapter(requireContext(), atts, choiceMode)
-              listViewKeys?.choiceMode = choiceMode
+              val adapter = PubKeysArrayAdapter(requireContext(), atts, args.choiceMode)
+              listViewKeys?.choiceMode = args.choiceMode
               listViewKeys?.adapter = adapter
               listViewKeys?.setItemChecked(0, true)
             } else {
-              if (returnResultImmediatelyIfSingle) {
+              if (args.returnResultImmediatelyIfSingle) {
                 sendResult(atts)
                 dismiss()
               } else {
-                listViewKeys!!.visibility = View.GONE
+                listViewKeys?.gone()
               }
             }
           }
@@ -182,7 +174,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   private fun sendResult() {
     val selectedAtts = ArrayList<AttachmentInfo>()
-    val checkedItemPositions = listViewKeys!!.checkedItemPositions
+    val checkedItemPositions = listViewKeys?.checkedItemPositions
     if (checkedItemPositions != null) {
       for (i in 0 until checkedItemPositions.size()) {
         val key = checkedItemPositions.keyAt(i)
@@ -195,20 +187,16 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     if (selectedAtts.isEmpty()) {
       toast(R.string.please_select_key)
     } else {
+      navController?.navigateUp()
       sendResult(selectedAtts)
-      dismiss()
     }
   }
 
   private fun sendResult(atts: MutableList<AttachmentInfo>) {
-    if (targetFragment == null) {
-      return
-    }
-
-    val intent = Intent()
-    intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, ArrayList(atts))
-
-    targetFragment?.onActivityResult(targetRequestCode, Activity.RESULT_OK, intent)
+    setFragmentResult(
+      REQUEST_KEY_RESULT,
+      bundleOf(KEY_ATTACHMENT_INFO_LIST to atts)
+    )
   }
 
   /**
@@ -222,7 +210,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
     for (pgpKeyDetails in pgpKeyDetailsList) {
       val addresses = pgpKeyDetails.mimeAddresses.map { it.address.lowercase() }
-      if (email?.lowercase() in addresses) {
+      if (args.email.lowercase() in addresses) {
         keyDetails.add(pgpKeyDetails)
       }
     }
@@ -235,47 +223,15 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   companion object {
+    val REQUEST_KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_RESULT",
+      ChoosePublicKeyDialogFragment::class.java
+    )
+
     val KEY_ATTACHMENT_INFO_LIST =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_ATTACHMENT_INFO_LIST",
         ChoosePublicKeyDialogFragment::class.java
       )
-
-    private val KEY_EMAIL = GeneralUtil.generateUniqueExtraKey(
-      "KEY_EMAIL",
-      ChoosePublicKeyDialogFragment::class.java
-    )
-
-    private val KEY_CHOICE_MODE = GeneralUtil.generateUniqueExtraKey(
-      "KEY_CHOICE_MODE",
-      ChoosePublicKeyDialogFragment::class.java
-    )
-
-    private val KEY_TITLE_RESOURCE_ID = GeneralUtil.generateUniqueExtraKey(
-      "KEY_TITLE_RESOURCE_ID",
-      ChoosePublicKeyDialogFragment::class.java
-    )
-
-    private val KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE =
-      GeneralUtil.generateUniqueExtraKey(
-        "KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
-        ChoosePublicKeyDialogFragment::class.java
-      )
-
-    fun newInstance(
-      email: String, choiceMode: Int,
-      titleResourceId: Int?,
-      returnResultImmediatelyIfSingle: Boolean = false
-    ): ChoosePublicKeyDialogFragment {
-      val args = Bundle()
-      args.putString(KEY_EMAIL, email)
-      args.putInt(KEY_CHOICE_MODE, choiceMode)
-      titleResourceId?.let { args.putInt(KEY_TITLE_RESOURCE_ID, it) }
-      args.putBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, returnResultImmediatelyIfSingle)
-
-      val fragment = ChoosePublicKeyDialogFragment()
-      fragment.arguments = args
-      return fragment
-    }
   }
 }

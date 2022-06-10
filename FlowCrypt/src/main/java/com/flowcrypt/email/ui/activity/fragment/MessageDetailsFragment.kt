@@ -69,6 +69,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
@@ -250,31 +251,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     setupRecipientsViewModel()
     collectReVerifySignaturesStateFlow()
     subscribeToTwoWayDialog()
+    subscribeToChoosePublicKeyDialogFragment()
   }
 
   override fun onDestroy() {
     super.onDestroy()
     FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(
-            ChoosePublicKeyDialogFragment
-              .KEY_ATTACHMENT_INFO_LIST
-          ) ?: emptyList()
-
-          if (atts.isNotEmpty()) {
-            makeAttsProtected(atts)
-            sendTemplateMsgWithPublicKey(atts[0])
-          }
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -559,15 +541,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private fun showSendersPublicKeyDialog() {
-    val fragment = ChoosePublicKeyDialogFragment.newInstance(
+    showChoosePublicKeyDialogFragment(
       args.messageEntity.email,
       ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings
     )
-    fragment.setTargetFragment(
-      this@MessageDetailsFragment,
-      REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION
-    )
-    fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
   }
 
   /**
@@ -1578,6 +1555,19 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  private fun subscribeToChoosePublicKeyDialogFragment() {
+    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      val keyList = bundle.getParcelableArrayList<AttachmentInfo>(
+        ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
+      ) ?: return@setFragmentResultListener
+
+      if (keyList.isNotEmpty()) {
+        makeAttsProtected(keyList)
+        sendTemplateMsgWithPublicKey(keyList[0])
+      }
+    }
+  }
+
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
       if (attInfo.rawData?.isNotEmpty() == true) {
@@ -1717,7 +1707,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   companion object {
     private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
-    private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10

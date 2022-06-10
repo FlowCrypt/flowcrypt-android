@@ -15,6 +15,7 @@
     <include app:graph="@navigation/feedback_graph" />
     <include app:graph="@navigation/parse_keys_from_source_dialog_graph" />
     <include app:graph="@navigation/find_keys_in_clipboard_dialog_graph" />
+    <include app:graph="@navigation/choose_public_key_dialog_graph" />
 
     <fragment
         android:id="@+id/createMessageFragment"
@@ -47,6 +48,9 @@
         <action
             android:id="@+id/action_createMessageFragment_to_selectRecipientsFragment"
             app:destination="@id/selectRecipientsFragment" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_noPgpFoundDialogFragment"
+            app:destination="@id/noPgpFoundDialogFragment" />
     </fragment>
 
     <fragment
@@ -85,4 +89,19 @@
             app:nullable="true" />
     </fragment>
 
+    <dialog
+        android:id="@+id/noPgpFoundDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment"
+        android:label="NoPgpFoundDialogFragment">
+        <argument
+            android:name="recipientWithPubKeys"
+            app:argType="com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys" />
+        <argument
+            android:name="isRemoveActionEnabled"
+            app:argType="boolean" />
+        <argument
+            android:name="isProtectingWithPasswordEnabled"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </dialog>
 </navigation>

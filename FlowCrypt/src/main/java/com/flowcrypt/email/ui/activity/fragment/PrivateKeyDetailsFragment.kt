@@ -5,11 +5,10 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.format.DateFormat
@@ -50,6 +49,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.activity.result.contract.CreateCustomDocument
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import org.pgpainless.util.Passphrase
@@ -80,6 +80,11 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
       }
     }
   }
+
+  private val createDocumentActivityResultLauncher =
+    registerForActivityResult(CreateCustomDocument(Constants.MIME_TYPE_PGP_KEY)) { uri: Uri? ->
+      uri?.let { saveKey(it) }
+    }
 
   override val progressView: View?
     get() = binding?.progress?.root
@@ -134,18 +139,6 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     subscribeToTwoWayDialog()
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> if (data != null && data.data != null) {
-          saveKey(data)
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     activity?.invalidateOptionsMenu()
@@ -155,11 +148,11 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     }
   }
 
-  private fun saveKey(data: Intent) {
+  private fun saveKey(uri: Uri) {
     try {
       GeneralUtil.writeFileFromStringToUri(
         context = requireContext(),
-        uri = data.data!!,
+        uri = uri,
         data = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
       )
       toast(R.string.saved, Toast.LENGTH_SHORT)
@@ -173,12 +166,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           showInfoSnackbar(requireView(), error, Snackbar.LENGTH_LONG)
 
           try {
-            data.data?.let {
-              DocumentsContract.deleteDocument(
-                requireContext().contentResolver,
-                it
-              )
-            }
+            DocumentsContract.deleteDocument(requireContext().contentResolver, uri)
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
           }
@@ -291,14 +279,9 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   }
 
   private fun chooseDest() {
-    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-    intent.addCategory(Intent.CATEGORY_OPENABLE)
-    intent.type = Constants.MIME_TYPE_PGP_KEY
-    intent.putExtra(
-      Intent.EXTRA_TITLE,
-      "0x" + pgpKeyDetailsViewModel.getPgpKeyDetails()!!.fingerprint + ".asc"
+    createDocumentActivityResultLauncher.launch(
+      "0x" + requireNotNull(pgpKeyDetailsViewModel.getPgpKeyDetails()).fingerprint + ".asc"
     )
-    startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
   }
 
   private fun setupPgpKeyDetailsViewModel() {
@@ -453,7 +436,6 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   }
 
   companion object {
-    private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
     private const val REQUEST_CODE_DELETE_KEY_DIALOG = 100
   }
 }

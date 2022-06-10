@@ -13,6 +13,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import com.flowcrypt.email.BuildConfig
@@ -95,6 +97,20 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
 
+  private val forActivityResultSignIn = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { result: ActivityResult ->
+    handleSignInResult(result.resultCode, GoogleSignIn.getSignedInAccountFromIntent(result.data))
+  }
+
+  private val forActivityResultSignInError = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { result: ActivityResult ->
+    if (result.resultCode == Activity.RESULT_OK) {
+      signInWithGmail()
+    }
+  }
+
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
@@ -124,22 +140,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     initEnterpriseViewModels()
     initPrivateKeysViewModel()
     initProtectPrivateKeysLiveData()
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_RESOLVE_SIGN_IN_ERROR -> {
-        if (resultCode == Activity.RESULT_OK) {
-          signInWithGmail()
-        }
-      }
-
-      REQUEST_CODE_SIGN_IN -> {
-        handleSignInResult(resultCode, GoogleSignIn.getSignedInAccountFromIntent(data))
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun getTempAccount(): AccountEntity? {
@@ -203,9 +203,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun signInWithGmail() {
     googleSignInAccount = null
-
     client.signOut()
-    startActivityForResult(client.signInIntent, REQUEST_CODE_SIGN_IN)
+    forActivityResultSignIn.launch(client.signInIntent)
   }
 
   private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {
@@ -343,7 +342,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             showContent()
 
             if (result.exception is UserRecoverableAuthIOException) {
-              startActivityForResult(result.exception.intent, REQUEST_CODE_RESOLVE_SIGN_IN_ERROR)
+              forActivityResultSignInError.launch(result.exception.intent)
             } else {
               showInfoSnackbar(
                 msgText =
@@ -814,8 +813,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   companion object {
-    private const val REQUEST_CODE_SIGN_IN = 100
-    private const val REQUEST_CODE_RESOLVE_SIGN_IN_ERROR = 101
     private const val REQUEST_CODE_RETRY_LOGIN = 104
     private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106

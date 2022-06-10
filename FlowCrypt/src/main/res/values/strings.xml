@@ -129,7 +129,6 @@
     <string name="template_attachment_already_loading">Attachment \"%1$s\" already loading </string>
     <string name="cannot_save_attachment_without_permission">The attachment cannot be saved without the write external
         storage permission</string>
-    <string name="choose_attachment">Choose an attachment</string>
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>

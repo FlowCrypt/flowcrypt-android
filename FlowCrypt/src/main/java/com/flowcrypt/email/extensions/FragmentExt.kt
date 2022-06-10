@@ -19,6 +19,7 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
@@ -218,6 +219,25 @@ fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
         source = source,
         uri = uri,
         filterType = filterType
+      ).toBundle()
+    }
+  }
+}
+
+fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
+  email: String,
+  choiceMode: Int,
+  titleResourceId: Int,
+  returnResultImmediatelyIfSingle: Boolean = false
+) {
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override val actionId = R.id.choose_public_key_dialog_graph
+      override val arguments = ChoosePublicKeyDialogFragmentArgs(
+        email = email,
+        choiceMode = choiceMode,
+        titleResourceId = titleResourceId,
+        returnResultImmediatelyIfSingle = returnResultImmediatelyIfSingle
       ).toBundle()
     }
   }

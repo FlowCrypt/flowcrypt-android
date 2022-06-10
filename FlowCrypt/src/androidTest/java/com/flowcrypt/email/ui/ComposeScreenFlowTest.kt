@@ -21,9 +21,7 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
@@ -39,7 +37,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
@@ -47,7 +44,6 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBac
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -71,8 +67,6 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.not
 import org.junit.Assert
 import org.junit.BeforeClass
@@ -89,9 +83,6 @@ import java.net.HttpURLConnection
 import java.time.Instant
 
 /**
- * A test for [CreateMessageActivity]. By default, this test describes running an activity with type
- * [MessageType.NEW] and empty [IncomingMessageInfo]
- *
  * @author Denis Bondarenko
  * Date: 06.02.2018
  * Time: 10:11
@@ -762,15 +753,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
     intending(
       allOf(
-        hasAction(Intent.ACTION_CHOOSER),
-        hasExtra(
-          `is`(Intent.EXTRA_INTENT),
-          allOf(
-            hasAction(Intent.ACTION_OPEN_DOCUMENT),
-            hasType("*/*"),
-            hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))
-          )
-        )
+        hasAction(Intent.ACTION_OPEN_DOCUMENT),
+        hasType("*/*")
       )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
     onView(withId(R.id.menuActionAttachFile))

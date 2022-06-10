@@ -32,6 +32,7 @@ import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -65,6 +66,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -139,6 +141,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private val openDocumentActivityResultLauncher =
+    registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+      uri?.let { addAttachmentInfoFromUri(it) }
+    }
+
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
@@ -179,10 +186,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
+
     subscribeToSetWebPortalPassword()
     subscribeToSelectRecipients()
     subscribeToAddMissingRecipientPublicKey()
-    subscribeFixNeedPassphraseIssueDialogFragment()
+    subscribeToFixNeedPassphraseIssueDialogFragment()
+    subscribeToNoPgpFoundDialogFragment()
+    subscribeToChoosePublicKeyDialogFragment()
 
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
@@ -205,93 +215,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           }
         }
       }
-    }
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_NO_PGP_FOUND_DIALOG -> when (resultCode) {
-        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL -> {
-          composeMsgViewModel.switchMessageEncryptionType(MessageEncryptionType.STANDARD)
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> if (data != null) {
-          val recipientWithPubKeys = data.getParcelableExtra<RecipientWithPubKeys>(
-            NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
-          )
-
-          recipientWithPubKeys?.let {
-            navController?.navigate(
-              CreateMessageFragmentDirections
-                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
-            )
-          }
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT -> if (data != null) {
-          cachedRecipientWithoutPubKeys =
-            data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
-
-          cachedRecipientWithoutPubKeys?.let {
-            navController?.navigate(
-              CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
-                title = getString(R.string.use_public_key_from)
-              )
-            )
-          }
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT -> if (data != null) {
-          val recipientWithPubKeys = data.getParcelableExtra<RecipientWithPubKeys>(
-            NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT
-          )
-
-          if (recipientWithPubKeys != null) {
-            removeRecipientWithPubKey(
-              recipientWithPubKeys,
-              binding?.editTextRecipientTo,
-              Message.RecipientType.TO
-            )
-            removeRecipientWithPubKey(
-              recipientWithPubKeys,
-              binding?.editTextRecipientCc,
-              Message.RecipientType.CC
-            )
-            removeRecipientWithPubKey(
-              recipientWithPubKeys,
-              binding?.editTextRecipientBcc,
-              Message.RecipientType.BCC
-            )
-          }
-        }
-
-        NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
-          binding?.btnSetWebPortalPassword?.callOnClick()
-        }
-      }
-
-      REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          addAttachmentInfoFromIntent(data)
-        }
-      }
-
-      REQUEST_CODE_SHOW_PUB_KEY_DIALOG -> when (resultCode) {
-        Activity.RESULT_OK -> {
-          if (data != null) {
-            val keyList: List<AttachmentInfo> =
-              data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
-                ?: return
-            val key = keyList.first()
-            if (attachments.none { it.name == key.name && it.encodedSize == key.encodedSize }) {
-              attachments.add(key)
-              showAtts()
-            }
-          }
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
@@ -466,7 +389,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.imageButtonAliases -> if (fromAddressesAdapter?.count ?: 0 > 1) {
+      R.id.imageButtonAliases -> if ((fromAddressesAdapter?.count ?: 0) > 1) {
         binding?.spinnerFrom?.performClick()
       }
 
@@ -530,7 +453,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
           val selectedItemPosition = binding?.spinnerFrom?.selectedItemPosition
           if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
-            && binding?.spinnerFrom?.adapter?.count ?: 0 > selectedItemPosition
+            && (binding?.spinnerFrom?.adapter?.count ?: 0) > selectedItemPosition
           ) {
             val isItemEnabled = fromAddressesAdapter?.isEnabled(selectedItemPosition) ?: true
             binding?.editTextFrom?.setTextColor(if (isItemEnabled) originalColor else colorGray)
@@ -551,14 +474,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun attachFile() {
-    val intent = Intent()
-    intent.action = Intent.ACTION_OPEN_DOCUMENT
-    intent.addCategory(Intent.CATEGORY_OPENABLE)
-    intent.type = "*/*"
-    startActivityForResult(
-      Intent.createChooser(intent, getString(R.string.choose_attachment)),
-      REQUEST_CODE_GET_CONTENT_FOR_SENDING
-    )
+    openDocumentActivityResultLauncher.launch(arrayOf("*/*"))
   }
 
   private fun initExtras(intent: Intent?) {
@@ -1304,13 +1220,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * @param recipient The [RecipientWithPubKeys] which will be used when we select the remove action.
    */
   private fun showNoPgpFoundDialog(recipient: RecipientWithPubKeys) {
-    val dialogFragment = NoPgpFoundDialogFragment.newInstance(
-      RecipientWithPubKeys = recipient,
-      isRemoveActionEnabled = true,
-      isProtectingWithPasswordEnabled = isPasswordProtectedFunctionalityEnabled()
+    navController?.navigate(
+      CreateMessageFragmentDirections.actionCreateMessageFragmentToNoPgpFoundDialogFragment(
+        recipientWithPubKeys = recipient,
+        isRemoveActionEnabled = true,
+        isProtectingWithPasswordEnabled = isPasswordProtectedFunctionalityEnabled()
+      )
     )
-    dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
-    dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
   }
 
   /**
@@ -1385,12 +1301,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * Show a dialog where the user can select a public key which will be attached to a message.
    */
   private fun showPubKeyDialog() {
-    if (!account?.email.isNullOrEmpty()) {
-      val fragment = ChoosePublicKeyDialogFragment.newInstance(
-        account?.email!!, ListView.CHOICE_MODE_SINGLE, R.plurals.choose_pub_key, true
+    account?.email?.let {
+      showChoosePublicKeyDialogFragment(
+        it,
+        ListView.CHOICE_MODE_SINGLE,
+        R.plurals.choose_pub_key,
+        true
       )
-      fragment.setTargetFragment(this@CreateMessageFragment, REQUEST_CODE_SHOW_PUB_KEY_DIALOG)
-      fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
     }
   }
 
@@ -1532,33 +1449,28 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * in the data field or the ClipData object of the Intent used to launch that
    * component. Additionally, we need to add [Intent.FLAG_GRANT_READ_URI_PERMISSION] to the Intent.
    */
-  private fun addAttachmentInfoFromIntent(intent: Intent?) {
-    val uri = intent?.data
-    if (uri != null) {
-      val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
-      if (hasAbilityToAddAtt(attachmentInfo)) {
-        try {
-          context?.contentResolver?.takePersistableUriPermission(
-            uri,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION
-          )
-        } catch (e: Exception) {
-          showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
-          return
-        }
-        attachmentInfo?.let { attachments.add(it) }
-        showAtts()
-      } else {
-        showInfoSnackbar(
-          view, getString(
-            R.string.template_warning_max_total_attachments_size,
-            FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
-          ),
-          Snackbar.LENGTH_LONG
+  private fun addAttachmentInfoFromUri(uri: Uri) {
+    val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
+    if (hasAbilityToAddAtt(attachmentInfo)) {
+      try {
+        context?.contentResolver?.takePersistableUriPermission(
+          uri,
+          Intent.FLAG_GRANT_READ_URI_PERMISSION
         )
+      } catch (e: Exception) {
+        showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+        return
       }
+      attachmentInfo?.let { attachments.add(it) }
+      showAtts()
     } else {
-      showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+      showInfoSnackbar(
+        view, getString(
+          R.string.template_warning_max_total_attachments_size,
+          FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
+        ),
+        Snackbar.LENGTH_LONG
+      )
     }
   }
 
@@ -1882,16 +1794,85 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun subscribeFixNeedPassphraseIssueDialogFragment() {
+  private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
     setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, _ ->
       sendMsg()
     }
   }
 
+  private fun subscribeToNoPgpFoundDialogFragment() {
+    setFragmentResultListener(NoPgpFoundDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      val recipientWithPubKeys = bundle.getParcelable<RecipientWithPubKeys>(
+        NoPgpFoundDialogFragment.KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS
+      )
+
+      when (bundle.getInt(NoPgpFoundDialogFragment.KEY_REQUEST_RESULT_CODE)) {
+        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL -> {
+          composeMsgViewModel.switchMessageEncryptionType(MessageEncryptionType.STANDARD)
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> {
+          recipientWithPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections
+                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
+            )
+          }
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT -> {
+          cachedRecipientWithoutPubKeys = recipientWithPubKeys
+          cachedRecipientWithoutPubKeys?.let {
+            navController?.navigate(
+              CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
+                title = getString(R.string.use_public_key_from)
+              )
+            )
+          }
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT -> {
+          if (recipientWithPubKeys != null) {
+            removeRecipientWithPubKey(
+              recipientWithPubKeys,
+              binding?.editTextRecipientTo,
+              Message.RecipientType.TO
+            )
+            removeRecipientWithPubKey(
+              recipientWithPubKeys,
+              binding?.editTextRecipientCc,
+              Message.RecipientType.CC
+            )
+            removeRecipientWithPubKey(
+              recipientWithPubKeys,
+              binding?.editTextRecipientBcc,
+              Message.RecipientType.BCC
+            )
+          }
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
+          binding?.btnSetWebPortalPassword?.callOnClick()
+        }
+      }
+    }
+  }
+
+  private fun subscribeToChoosePublicKeyDialogFragment() {
+    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      val keyList = bundle.getParcelableArrayList<AttachmentInfo>(
+        ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
+      ) ?: return@setFragmentResultListener
+
+      val key = keyList.first()
+      if (attachments.none { it.name == key.name && it.encodedSize == key.encodedSize }) {
+        attachments.add(key)
+        showAtts()
+      }
+    }
+  }
+
   companion object {
-    private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
-    private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
-    private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
 }
