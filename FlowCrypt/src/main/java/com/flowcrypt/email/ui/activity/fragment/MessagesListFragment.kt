@@ -46,6 +46,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentMessagesListBinding
+import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
@@ -375,11 +376,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             )
           } else {
             currentFolder?.let { localFolder ->
-              navController?.navigate(
-                MessagesListFragmentDirections.actionMessagesListFragmentToMessageDetailsFragment(
-                  messageEntity = msgEntity,
-                  localFolder = localFolder
-                )
+              navController?.navigateSafe(
+                currentDestinationId = R.id.messagesListFragment,
+                directions = MessagesListFragmentDirections
+                  .actionMessagesListFragmentToMessageDetailsFragment(
+                    messageEntity = msgEntity,
+                    localFolder = localFolder
+                  )
               )
             }
           }
@@ -863,7 +866,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private fun setupMsgsViewModel() {
     msgsViewModel.msgsCountLiveData.observe(viewLifecycleOwner) {
-      if (it ?: 0 == 0) {
+      if ((it ?: 0) == 0) {
         showEmptyView()
       } else {
         showContent()
@@ -871,7 +874,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
 
     msgsViewModel.msgsLiveData?.observe(viewLifecycleOwner) {
-      if (it?.size ?: 0 != 0) {
+      if ((it?.size ?: 0) != 0) {
         showContent()
       }
 
