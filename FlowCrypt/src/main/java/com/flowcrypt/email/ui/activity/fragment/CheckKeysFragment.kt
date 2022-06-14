@@ -255,11 +255,11 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   private fun returnResult(@CheckingState checkingState: Int) {
+    navController?.navigateUp()
     setFragmentResult(
       REQUEST_KEY_CHECK_PRIVATE_KEYS,
       bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to ArrayList(unlockedKeys), KEY_STATE to checkingState)
     )
-    navController?.navigateUp()
   }
 
   /**

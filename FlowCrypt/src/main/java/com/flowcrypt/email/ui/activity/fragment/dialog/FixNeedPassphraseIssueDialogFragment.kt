@@ -234,19 +234,19 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
               when (args.logicType) {
                 ALL -> {
                   if (countOfMatchedPassphrases == checkResults.size) {
+                    navController?.navigateUp()
                     setFragmentResult(
                       REQUEST_KEY_RESULT,
                       bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                     )
-                    navController?.navigateUp()
                   }
                 }
                 AT_LEAST_ONE -> {
+                  navController?.navigateUp()
                   setFragmentResult(
                     REQUEST_KEY_RESULT,
                     bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                   )
-                  navController?.navigateUp()
                 }
               }
             }

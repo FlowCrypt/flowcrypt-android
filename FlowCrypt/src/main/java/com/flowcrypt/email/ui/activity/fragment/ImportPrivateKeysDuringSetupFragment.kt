@@ -105,6 +105,7 @@ class ImportPrivateKeysDuringSetupFragment :
         bundle.getParcelableArrayList<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
+          navController?.navigateUp()
           setFragmentResult(
             REQUEST_KEY_PRIVATE_KEYS,
             bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys?.map {
@@ -117,7 +118,6 @@ class ImportPrivateKeysDuringSetupFragment :
               )
             })
           )
-          navController?.navigateUp()
         }
       }
     }
