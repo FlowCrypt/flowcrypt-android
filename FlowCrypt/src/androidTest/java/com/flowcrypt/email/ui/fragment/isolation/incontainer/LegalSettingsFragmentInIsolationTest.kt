@@ -80,7 +80,7 @@ class LegalSettingsFragmentInIsolationTest : BaseTest() {
     )
       .check(matches(isDisplayed())).check(matches(isSelected()))
     for (i in 1 until titleNames.size) {
-      onView(withId(R.id.viewPager)).perform(swipeLeft())
+      onView(withId(R.id.viewPager2)).perform(swipeLeft())
       onView(
         allOf(
           withParent(withParent(withParent(withId(R.id.tabLayout)))),

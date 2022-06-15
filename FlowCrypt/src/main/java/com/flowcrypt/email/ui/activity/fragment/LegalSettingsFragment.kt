@@ -15,14 +15,15 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentStatePagerAdapter
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentLegalBinding
 import com.flowcrypt.email.databinding.SwipeToRefrechWithWebviewBinding
+import com.flowcrypt.email.extensions.androidx.viewpager2.widget.reduceDragSensitivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.google.android.material.tabs.TabLayoutMediator
 
 /**
  * This [Fragment] consists information about a legal.
@@ -36,14 +37,37 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentLegalBinding.inflate(inflater, container, false)
 
+  private lateinit var adapter: TabPagerAdapter
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    adapter = TabPagerAdapter(this)
+  }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
   }
 
   private fun initViews() {
-    binding?.viewPager?.adapter = TabPagerAdapter(childFragmentManager)
-    binding?.tabLayout?.setupWithViewPager(binding?.viewPager)
+    binding?.viewPager2?.adapter = adapter
+    binding?.viewPager2?.reduceDragSensitivity()
+    binding?.tabLayout?.let { tabLayout ->
+      binding?.viewPager2?.let { viewPager2 ->
+        TabLayoutMediator(tabLayout, viewPager2) { tab, position ->
+          tab.text = when (position) {
+            TAB_POSITION_PRIVACY -> getString(R.string.privacy)
+
+            TAB_POSITION_TERMS -> getString(R.string.terms)
+
+            TAB_POSITION_LICENCE -> getString(R.string.licence)
+
+            TAB_POSITION_SOURCES -> getString(R.string.sources)
+            else -> ""
+          }
+        }.attach()
+      }
+    }
   }
 
   /**
@@ -147,11 +171,10 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
   /**
    * The adapter which contains information about tabs.
    */
-  private inner class TabPagerAdapter(fragmentManager: FragmentManager) :
-    FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+  private inner class TabPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
-    override fun getItem(i: Int): Fragment {
-      when (i) {
+    override fun createFragment(position: Int): Fragment {
+      when (position) {
         TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(
           Uri.parse(
             Constants
@@ -174,23 +197,7 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
       return WebViewFragment.newInstance("")
     }
 
-    override fun getCount(): Int {
-      return 4
-    }
-
-    override fun getPageTitle(position: Int): CharSequence? {
-      var title: String? = null
-      when (position) {
-        TAB_POSITION_PRIVACY -> title = getString(R.string.privacy)
-
-        TAB_POSITION_TERMS -> title = getString(R.string.terms)
-
-        TAB_POSITION_LICENCE -> title = getString(R.string.licence)
-
-        TAB_POSITION_SOURCES -> title = getString(R.string.sources)
-      }
-      return title
-    }
+    override fun getItemCount(): Int = 4
   }
 
   companion object {
