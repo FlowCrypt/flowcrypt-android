@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.Manifest
 import android.accounts.AuthenticatorException
-import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -29,6 +28,7 @@ import android.widget.CompoundButton
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -153,6 +153,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  val requestPermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+      if (isGranted) {
+        downloadAttachment()
+      } else {
+        toast(R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG)
+      }
+    }
+
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
@@ -183,10 +192,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         ) {
           downloadAttachment()
         } else {
-          requestPermissions(
-            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE
-          )
+          requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
       }
 
@@ -408,28 +414,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           )
         )
       }
-    }
-  }
-
-  override fun onRequestPermissionsResult(
-    requestCode: Int,
-    permissions: Array<String>,
-    grantResults: IntArray
-  ) {
-    when (requestCode) {
-      REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
-        if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-          downloadAttachment()
-        } else {
-          Toast.makeText(
-            activity,
-            R.string.cannot_save_attachment_without_permission,
-            Toast.LENGTH_LONG
-          ).show()
-        }
-      }
-
-      else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
   }
 
@@ -1706,7 +1690,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   companion object {
-    private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
