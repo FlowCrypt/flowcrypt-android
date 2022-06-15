@@ -84,6 +84,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
     keys: List<PgpKeyDetails>,
     account: AccountEntity
   ) {
+    navController?.navigateUp()
     setFragmentResult(
       REQUEST_KEY_PRIVATE_KEYS,
       bundleOf(
@@ -92,7 +93,6 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
         KEY_ACCOUNT to account
       )
     )
-    navController?.navigateUp()
   }
 
   private fun subscribeToCheckPrivateKeysFromImport() {

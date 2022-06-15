@@ -30,6 +30,7 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentMainSignInBinding
+import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
@@ -174,7 +175,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
 
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
-      navController?.navigate(
+      navController?.navigateSafe(
+        R.id.mainSignInFragment,
         MainSignInFragmentDirections.actionMainSignInFragmentToAddOtherAccountFragment()
       )
     }
@@ -188,7 +190,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
 
     view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
-      navController?.navigate(
+      navController?.navigateSafe(
+        R.id.mainSignInFragment,
         NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
           title = getString(R.string.security),
           resourceIdAsString = "html/security.htm"

@@ -195,12 +195,12 @@ class ImportAdditionalPrivateKeysFragment :
           }
 
           Result.Status.SUCCESS -> {
+            navController?.navigateUp()
             it.data?.let { pair ->
               setFragmentResult(
                 REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
                 bundleOf(KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second))
               )
-              navController?.navigateUp()
             }
             countingIdlingResource?.decrementSafely()
           }

@@ -92,12 +92,12 @@ class AuthorizeAndSearchBackupsFragment :
           }
 
           else -> {
+            navController?.navigateUp()
             setFragmentResult(
               REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
               bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
             )
             countingIdlingResource?.decrementSafely()
-            navController?.navigateUp()
           }
         }
       }
@@ -113,12 +113,12 @@ class AuthorizeAndSearchBackupsFragment :
         }
 
         else -> {
+          navController?.navigateUp()
           setFragmentResult(
             REQUEST_KEY_SEARCH_BACKUPS,
             bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it)
           )
           countingIdlingResource?.decrementSafely()
-          navController?.navigateUp()
         }
       }
     }
