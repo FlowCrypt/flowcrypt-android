@@ -233,7 +233,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
           if (existingPublicKeyEntity == null) {
             val isNewRecipientAdded =
               roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = primaryAddress)) > 0
-            if (isNewRecipientAdded) {
+            if (isNewRecipientAdded && !pgpKeyDetails.isRevoked) {
               roomDatabase.pubKeyDao()
                 .insertSuspend(pgpKeyDetails.toPublicKeyEntity(primaryAddress))
             }
