@@ -1052,14 +1052,26 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             it.fingerprint.equals(keyDetails.fingerprint, true)
           }
           if (matchingKeyByFingerprint != null) {
-            if (keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyDetails)) {
-              textViewManualImportWarning?.visible()
-              initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
-            } else {
-              textViewManualImportWarning?.gone()
-              textViewStatus?.text = getString(R.string.already_imported)
-              textViewStatus.visible()
-              button.gone()
+            when {
+              matchingKeyByFingerprint.pgpKeyDetails?.isRevoked == true -> {
+                textViewStatus?.text = getString(R.string.key_is_revoked_unable_to_update)
+                textViewStatus?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
+                textViewStatus?.visible()
+                textViewManualImportWarning?.gone()
+                button.gone()
+              }
+
+              keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyDetails) -> {
+                textViewManualImportWarning?.visible()
+                initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
+              }
+
+              else -> {
+                textViewStatus?.text = getString(R.string.already_imported)
+                textViewStatus.visible()
+                textViewManualImportWarning?.gone()
+                button.gone()
+              }
             }
           } else {
             button.gone()
@@ -1070,8 +1082,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       textViewStatus.text = getString(R.string.cannot_be_used_for_encryption)
       textViewStatus.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
       textViewManualImportWarning?.gone()
-      textViewStatus.visible()
       button?.gone()
+      textViewStatus.visible()
     }
 
     return pubKeyView
