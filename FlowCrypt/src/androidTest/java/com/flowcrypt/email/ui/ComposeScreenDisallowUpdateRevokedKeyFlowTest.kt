@@ -6,12 +6,18 @@
 package com.flowcrypt.email.ui
 
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -20,14 +26,18 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.util.UIUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
@@ -53,8 +63,10 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
   override val addAccountToDatabaseRule: AddAccountToDatabaseRule
     get() = AddAccountToDatabaseRule(AccountDaoManager.getUserFromBaseSettings(ACCOUNT))
 
-  private val addPrivateKeyToDatabaseRule =
-    AddPrivateKeyToDatabaseRule("pgp/denbond7@flowcrypt.test_prv_strong_primary.asc")
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
+    keyPath = "pgp/denbond7@flowcrypt.test_prv_strong_primary.asc",
+    accountEntity = addAccountToDatabaseRule.account
+  )
 
   val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
     "pgp/default@flowcrypt.test_secondKey_pub_revoked.asc"
@@ -80,20 +92,39 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  fun test() {
-    fillInAllFields(requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address))
+  fun testDisallowUpdateRevokedKeyFromLookup() {
+    val userWithRevokedKey = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
 
-    /*onView(withId(R.id.editTextRecipientTo))
+    //check the recipient pub key before call lookupEmail
+    val existingRecipientBefore = roomDatabase.recipientDao()
+      .getRecipientWithPubKeysByEmail(userWithRevokedKey)
+    assertNotNull(existingRecipientBefore)
+    val pubKeyBefore = requireNotNull(existingRecipientBefore?.publicKeys?.first()?.publicKey)
+    val pgpKeyDetailsBefore = PgpKey.parseKeys(pubKeyBefore)
+      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyDetails()
+    assertTrue(pgpKeyDetailsBefore.isRevoked)
+
+    fillInAllFields(userWithRevokedKey)
+
+    //check that UI shows a revoked key after call lookupEmail
+    onView(withId(R.id.editTextRecipientTo))
       .check(
         matches(
           withChipsBackgroundColor(
-            internetAddress.address,
-            UIUtil.getColor(getTargetContext(), R.color.colorPrimary)
+            userWithRevokedKey,
+            UIUtil.getColor(getTargetContext(), R.color.red)
           )
         )
-      )*/
+      )
 
-    Thread.sleep(20000)
+    //check the recipient pub key after call lookupEmail
+    val existingRecipientAfter = roomDatabase.recipientDao()
+      .getRecipientWithPubKeysByEmail(userWithRevokedKey)
+    assertNotNull(existingRecipientAfter)
+    val pubKeyAfter = requireNotNull(existingRecipientBefore?.publicKeys?.first()?.publicKey)
+    val pgpKeyDetailsAfter = PgpKey.parseKeys(pubKeyAfter)
+      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyDetails()
+    assertTrue(pgpKeyDetailsAfter.isRevoked)
   }
 
   companion object {
@@ -110,28 +141,12 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
             val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
             when {
-              TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(
-                lastSegment, true
-              ) -> {
-                return MockResponse()
-                  .setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-                  .setBody(TestGeneralUtil.readResourceAsString("2.txt"))
-              }
-
-              TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(
-                lastSegment, true
-              ) -> {
-                return MockResponse()
-                  .setResponseCode(HttpURLConnection.HTTP_OK)
-                  .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
-              }
-
-              "95FC072E853C9C333C68EDD34B9CA2FBCA5B5FE7".equals(lastSegment, true) -> {
+              RECIPIENT_WITH_REVOKED_KEY.equals(lastSegment, true) -> {
                 return MockResponse()
                   .setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(
                     TestGeneralUtil.readFileFromAssetsAsString(
-                      "pgp/expired_fixed@flowcrypt.test_not_expired_pub.asc"
+                      "pgp/default@flowcrypt.test_secondKey_pub_mod_06_16_2022.asc"
                     )
                   )
               }

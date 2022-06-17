@@ -49,8 +49,9 @@ class ComposeScreenImportRecipientPubKeyFlowTest : BaseComposeScreenTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activityScenarioRule.scenario
 
-  private val addPrivateKeyToDatabaseRule =
-    AddPrivateKeyToDatabaseRule("pgp/default@flowcrypt.test_secondKey_prv_strong_revoked.asc")
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
+    keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_revoked.asc"
+  )
 
   private val publicKey = TestGeneralUtil.readFileFromAssetsAsString(
     "pgp/not_attested_user@flowcrypt.test-pub.asc"
