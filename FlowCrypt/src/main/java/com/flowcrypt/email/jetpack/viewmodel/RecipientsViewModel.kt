@@ -378,8 +378,10 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       val existingPublicKeyEntity = cachedRecipientEntity.publicKeys.firstOrNull {
         it.fingerprint == fetchedPgpKeyDetails.fingerprint
       }
-      if (existingPublicKeyEntity != null) {
-        if (fetchedPgpKeyDetails.isNewerThan(existingPublicKeyEntity.pgpKeyDetails)) {
+      val existingPgpKeyDetails = existingPublicKeyEntity?.pgpKeyDetails
+      if (existingPgpKeyDetails != null) {
+        val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
+        if (!isExistingKeyRevoked && fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
           roomDatabase.pubKeyDao().updateSuspend(
             existingPublicKeyEntity.copy(publicKey = fetchedPgpKeyDetails.publicKey.toByteArray())
           )

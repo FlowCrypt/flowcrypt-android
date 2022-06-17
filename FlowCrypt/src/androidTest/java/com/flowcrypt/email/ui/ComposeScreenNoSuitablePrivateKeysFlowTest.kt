@@ -48,8 +48,9 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
-  private val addPrivateKeyToDatabaseRule =
-    AddPrivateKeyToDatabaseRule("pgp/default@flowcrypt.test_secondKey_prv_strong_revoked.asc")
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
+    keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_revoked.asc"
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

@@ -178,29 +178,39 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
               .pgpKeyDetailsList.firstOrNull()
         }
 
-        if (pgpKeyDetails.isNewerThan(existingPublicKeyEntity.pgpKeyDetails)) {
-          val publicKeyEntity =
-            existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
+        when {
+          existingPublicKeyEntity.pgpKeyDetails?.isRevoked == true -> {
+            updateExistingPubKeyMutableStateFlow.value = Result.exception(
+              IllegalStateException(context.getString(R.string.key_is_revoked_unable_to_update))
+            )
+          }
 
-          val isPubKeyUpdated = roomDatabase.pubKeyDao().updateSuspend(publicKeyEntity) > 0
-          if (isPubKeyUpdated) {
-            updateExistingPubKeyMutableStateFlow.value = Result.success(true)
-          } else {
+          pgpKeyDetails.isNewerThan(existingPublicKeyEntity.pgpKeyDetails) -> {
+            val publicKeyEntity =
+              existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
+
+            val isPubKeyUpdated = roomDatabase.pubKeyDao().updateSuspend(publicKeyEntity) > 0
+            if (isPubKeyUpdated) {
+              updateExistingPubKeyMutableStateFlow.value = Result.success(true)
+            } else {
+              updateExistingPubKeyMutableStateFlow.value = Result.exception(
+                IllegalStateException(
+                  context.getString(
+                    R.string.could_not_update_pub_key_for_recipient,
+                    publicKeyEntity.recipient
+                  )
+                )
+              )
+            }
+          }
+
+          else -> {
             updateExistingPubKeyMutableStateFlow.value = Result.exception(
               IllegalStateException(
-                context.getString(
-                  R.string.could_not_update_pub_key_for_recipient,
-                  publicKeyEntity.recipient
-                )
+                context.getString(R.string.you_trying_replace_pub_key_with_older_version)
               )
             )
           }
-        } else {
-          updateExistingPubKeyMutableStateFlow.value = Result.exception(
-            IllegalStateException(
-              context.getString(R.string.you_trying_replace_pub_key_with_older_version)
-            )
-          )
         }
       } catch (e: Exception) {
         updateExistingPubKeyMutableStateFlow.value = Result.exception(e)
@@ -229,7 +239,10 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
 
           if (existingPublicKeyEntity == null) {
             val isNewRecipientAdded =
-              roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = primaryAddress)) > 0
+              if (roomDatabase.recipientDao().getRecipientByEmailSuspend(primaryAddress) == null) {
+                roomDatabase.recipientDao()
+                  .insertSuspend(RecipientEntity(email = primaryAddress)) > 0
+              } else true
             if (isNewRecipientAdded) {
               roomDatabase.pubKeyDao()
                 .insertSuspend(pgpKeyDetails.toPublicKeyEntity(primaryAddress))
@@ -239,7 +252,8 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
               val result = PgpKey.parseKeys(pgpKeyDetails.publicKey, false).pgpKeyDetailsList
               result.firstOrNull()
             } ?: continue
-            if (pgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
+            val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
+            if (!isExistingKeyRevoked && pgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
               roomDatabase.pubKeyDao().updateSuspend(
                 existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
               )

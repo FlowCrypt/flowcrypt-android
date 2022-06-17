@@ -39,7 +39,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class Test : BaseTest() {
+class ImportRecipientAllowAttesterSearchOnlyForDomainsEmptyFlowTest : BaseTest() {
   private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
     OrgRules(
       flags = listOf(

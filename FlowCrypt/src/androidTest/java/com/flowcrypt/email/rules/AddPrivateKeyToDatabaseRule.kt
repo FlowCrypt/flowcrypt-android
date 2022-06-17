@@ -37,11 +37,12 @@ class AddPrivateKeyToDatabaseRule(
   }
 
   constructor(
+    accountEntity: AccountEntity = AccountDaoManager.getDefaultAccountDao(),
     keyPath: String = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",
     passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
   ) : this(
-    accountEntity = AccountDaoManager.getDefaultAccountDao(),
-    keyPath,
+    accountEntity = accountEntity,
+    keyPath = keyPath,
     passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
     sourceType = KeyImportDetails.SourceType.EMAIL,
     passphraseType = passphraseType
