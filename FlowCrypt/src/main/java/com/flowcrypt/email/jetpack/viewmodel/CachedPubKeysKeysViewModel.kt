@@ -178,7 +178,10 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
               .pgpKeyDetailsList.firstOrNull()
         }
 
-        if (pgpKeyDetails.isNewerThan(existingPublicKeyEntity.pgpKeyDetails)) {
+        val isExistingKeyRevoked = requireNotNull(existingPublicKeyEntity.pgpKeyDetails).isRevoked
+        val isCandidateNewer = pgpKeyDetails.isNewerThan(existingPublicKeyEntity.pgpKeyDetails)
+
+        if (!isExistingKeyRevoked && isCandidateNewer) {
           val publicKeyEntity =
             existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
 
@@ -239,7 +242,8 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
               val result = PgpKey.parseKeys(pgpKeyDetails.publicKey, false).pgpKeyDetailsList
               result.firstOrNull()
             } ?: continue
-            if (pgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
+            val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
+            if (!isExistingKeyRevoked && pgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
               roomDatabase.pubKeyDao().updateSuspend(
                 existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
               )
