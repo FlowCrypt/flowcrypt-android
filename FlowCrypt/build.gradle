@@ -439,7 +439,7 @@ dependencies {
         }
     }
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3'
 
     implementation('org.pgpainless:pgpainless-core:1.2.2') {
         /*exclude group: 'org.bouncycastle' because we have to specify it manually and update
