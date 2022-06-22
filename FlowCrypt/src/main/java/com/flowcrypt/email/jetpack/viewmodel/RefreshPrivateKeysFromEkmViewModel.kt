@@ -164,7 +164,8 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
       }
 
       if (existingPgpKeyDetails != null) {
-        if (fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
+        val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
+        if (!isExistingKeyRevoked && fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
           keysToUpdate.add(fetchedPgpKeyDetails)
         }
       } else {
@@ -199,6 +200,26 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
         storedPassphrase = null
       )
       roomDatabase.keysDao().insertSuspend(keyEntity)
+    }
+
+    val fingerprintsOfFetchedKeys = fetchedPgpKeyDetailsList.map { it.fingerprint.uppercase() }
+    val fingerprintsOfKeysToDelete = existingPgpKeyDetailsList.filter {
+      !it.isRevoked && it.fingerprint.uppercase() !in fingerprintsOfFetchedKeys
+    }.map { it.fingerprint }
+
+    val keysToDelete = existingKeyEntities.filter {
+      it.fingerprint.uppercase() in fingerprintsOfKeysToDelete
+    }
+
+    if (keysToDelete.isNotEmpty() && keysToDelete.size == existingKeyEntities.size) {
+      /*
+      it means we are going to delete all existing keys. It looks like a bug on EKM side.
+      To prevent unexpected issues we should be sure that at least one private key
+      is existing in the app.
+      */
+      roomDatabase.keysDao().deleteSuspend(keysToDelete.dropLast(1))
+    } else {
+      roomDatabase.keysDao().deleteSuspend(keysToDelete)
     }
   }
 
