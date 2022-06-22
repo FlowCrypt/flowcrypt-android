@@ -12,42 +12,32 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.ui.base.BaseRefreshKeysFromEkmFlowTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.exception.ApiException
 import com.google.gson.Gson
-import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
-import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.util.Passphrase
@@ -61,22 +51,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class RefreshKeysFromEkmFlowTest : BaseTest() {
-  private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
-    OrgRules(
-      flags = listOf(
-        OrgRules.DomainRule.NO_PRV_CREATE,
-        OrgRules.DomainRule.NO_PRV_BACKUP,
-        OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
-      ),
-      customKeyserverUrl = null,
-      keyManagerUrl = EKM_URL,
-      enforceKeygenAlgo = null,
-      enforceKeygenExpireMonths = null
-    )
-  ).copy(email = "ekm@localhost:1212")
-
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
     keyPath = "pgp/expired@flowcrypt.test_prv_default.asc",
@@ -84,23 +59,6 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
     sourceType = KeyImportDetails.SourceType.EMAIL,
     passphraseType = KeyEntity.PassphraseType.RAM
   )
-  private val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
-    object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(getTargetContext()).gson
-
-        if (request.path?.startsWith("/ekm") == true) {
-          return handleEkmAPI(gson)
-        }
-
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-      }
-    })
-
-  override val activityScenarioRule = activityScenarioRule<MainActivity>()
-
-  @get:Rule
-  val testNameRule = TestName()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -115,7 +73,10 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
   @Test
   fun testUpdatePrvKeyFromEkmSuccessSilent() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
-    addPassphraseToRamCache(keysStorage)
+    addPassphraseToRamCache(
+      keysStorage = keysStorage,
+      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+    )
 
     //check existing key before updating
     val existingPgpKeyDetailsBeforeUpdating = checkExistingKeyBeforeUpdating(keysStorage)
@@ -169,7 +130,10 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
   @Test
   fun testUpdatePrvKeyFromEkmShowApiError() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
-    addPassphraseToRamCache(keysStorage)
+    addPassphraseToRamCache(
+      keysStorage = keysStorage,
+      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+    )
 
     //check existing key before updating
     val existingPgpKeyDetailsBeforeUpdating = checkExistingKeyBeforeUpdating(keysStorage)
@@ -200,19 +164,7 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
     return existingPgpKeyDetailsBeforeUpdating
   }
 
-  private fun addPassphraseToRamCache(keysStorage: KeysStorageImpl) {
-    keysStorage.putPassphraseToCache(
-      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint,
-      passphrase = Passphrase.fromPassword(TestConstants.DEFAULT_PASSWORD),
-      validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
-      passphraseType = KeyEntity.PassphraseType.RAM
-    )
-  }
-
-  private fun handleEkmAPI(gson: Gson): MockResponse {
-    //simulate network operation to prevent too fast response
-    Thread.sleep(500)
-
+  override fun handleEkmAPI(gson: Gson): MockResponse {
     return when (testNameRule.methodName) {
       "testUpdatePrvKeyFromEkmSuccessSilent", "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
@@ -227,7 +179,6 @@ class RefreshKeysFromEkmFlowTest : BaseTest() {
   }
 
   companion object {
-    private const val EKM_URL = "https://localhost:1212/ekm/"
     private val EKM_KEY_WITH_EXTENDED_EXPIRATION = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/expired_extended@flowcrypt.test_prv_default.asc"
     )
