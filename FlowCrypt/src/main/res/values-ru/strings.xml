@@ -482,5 +482,5 @@
     <string name="refreshing_keys_from_ekm_failed">Не удалось обновить ключи с сервера EKM</string>
     <string name="source_contains_more_than_one_key">Источник содержит более одного закрытого ключа</string>
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Пожалуйста, введите Вашу ключевую фразу, чтобы поддерживать Ваши ключи в актуальном состоянии</string>
-    <string name="key_is_revoked_unable_to_update">Предупреждение: ключ отозван. Обновление невозможно</string>
+    <string name="key_is_revoked_unable_to_update">Вы уже имеете отозванную версию этого открытого ключа. Дальнейшие обновления запрещены. Пожалуйста, запросите другой открытый ключ у этого получателя.</string>
 </resources>
