@@ -10,12 +10,18 @@ package com.flowcrypt.email.api.email
 import com.flowcrypt.email.api.wkd.WkdClient
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
+@Ignore(
+  "Should be rewritten to don't use a real server." +
+      "Sometimes https://openpgpkey.flowcrypt.com/.well-known/openpgpkey/flowcrypt.com/policy" +
+      "is down and tests fail"
+)
 class WkdClientTest {
   @Test
   fun existingEmailTest() = runBlocking {
