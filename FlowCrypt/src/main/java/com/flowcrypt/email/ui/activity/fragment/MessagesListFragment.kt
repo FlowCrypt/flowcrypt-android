@@ -145,8 +145,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       when {
         tracker?.hasSelection() == true -> {
           if (actionMode == null) {
-            actionMode = (this@MessagesListFragment.activity as AppCompatActivity)
-              .startSupportActionMode(genActionModeForMsgs())
+            actionMode = (this@MessagesListFragment.activity as? AppCompatActivity)
+              ?.startSupportActionMode(genActionModeForMsgs())
           }
           actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
         }
