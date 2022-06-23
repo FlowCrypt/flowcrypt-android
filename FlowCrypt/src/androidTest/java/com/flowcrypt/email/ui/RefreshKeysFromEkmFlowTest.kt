@@ -70,6 +70,20 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
+  override fun handleEkmAPI(gson: Gson): MockResponse {
+    return when (testNameRule.methodName) {
+      "testUpdatePrvKeyFromEkmSuccessSilent", "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
+
+      "testUpdatePrvKeyFromEkmShowApiError" ->
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(EKM_ERROR_RESPONSE))
+
+      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+  }
+
   @Test
   fun testUpdatePrvKeyFromEkmSuccessSilent() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
@@ -162,20 +176,6 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
       keysStorage.getPassphraseByFingerprint(existingPgpKeyDetailsBeforeUpdating.fingerprint)?.asString
     )
     return existingPgpKeyDetailsBeforeUpdating
-  }
-
-  override fun handleEkmAPI(gson: Gson): MockResponse {
-    return when (testNameRule.methodName) {
-      "testUpdatePrvKeyFromEkmSuccessSilent", "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
-
-      "testUpdatePrvKeyFromEkmShowApiError" ->
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(gson.toJson(EKM_ERROR_RESPONSE))
-
-      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-    }
   }
 
   companion object {

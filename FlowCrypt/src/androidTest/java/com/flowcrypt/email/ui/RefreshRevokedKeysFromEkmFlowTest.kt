@@ -16,14 +16,12 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.base.BaseRefreshKeysFromEkmFlowTest
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -90,7 +88,8 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     )
 
     //check existing key before updating
-    val existingPgpKeyDetailsBeforeUpdating = checkExistingKeyBeforeUpdating(keysStorage)
+    val existingPgpKeyDetailsBeforeUpdating = keysStorage.getPgpKeyDetailsList().first()
+    assertTrue(existingPgpKeyDetailsBeforeUpdating.isRevoked)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
     Thread.sleep(2000)
@@ -120,7 +119,8 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     )
 
     //check existing key before updating
-    val firstPgpKeyDetailsBeforeUpdating = checkExistingKeyBeforeUpdating(keysStorage)
+    val firstPgpKeyDetailsBeforeUpdating = keysStorage.getPgpKeyDetailsList().first()
+    assertTrue(firstPgpKeyDetailsBeforeUpdating.isRevoked)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
     Thread.sleep(2000)
@@ -150,16 +150,6 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
 
     onView(withId(R.id.toolbar))
       .check(matches(isDisplayed()))
-  }
-
-  private fun checkExistingKeyBeforeUpdating(keysStorage: KeysStorageImpl): PgpKeyDetails {
-    val existingPgpKeyDetailsBeforeUpdating = keysStorage.getPgpKeyDetailsList().first()
-    assertTrue(existingPgpKeyDetailsBeforeUpdating.isRevoked)
-    assertEquals(
-      addPrivateKeyToDatabaseRule.passphrase,
-      keysStorage.getPassphraseByFingerprint(existingPgpKeyDetailsBeforeUpdating.fingerprint)?.asString
-    )
-    return existingPgpKeyDetailsBeforeUpdating
   }
 
   companion object {
