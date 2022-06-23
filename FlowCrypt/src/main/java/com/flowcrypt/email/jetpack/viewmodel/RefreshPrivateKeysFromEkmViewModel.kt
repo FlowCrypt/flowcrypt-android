@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -157,25 +158,12 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
     val existingPgpKeyDetailsList = keysStorage.getPgpKeyDetailsList()
     val keysToUpdate = mutableListOf<PgpKeyDetails>()
     val keysToAdd = mutableListOf<PgpKeyDetails>()
-
     val fingerprintsOfFetchedKeys = fetchedPgpKeyDetailsList.map { it.fingerprint.uppercase() }
     val fingerprintsOfKeysToDelete = existingPgpKeyDetailsList.filter {
       !it.isRevoked && it.fingerprint.uppercase() !in fingerprintsOfFetchedKeys
     }.map { it.fingerprint }
-
     val keysToDelete = existingKeyEntities.filter {
       it.fingerprint.uppercase() in fingerprintsOfKeysToDelete
-    }
-
-    if (keysToDelete.isNotEmpty() && keysToDelete.size == existingKeyEntities.size) {
-      /*
-      it means we are going to delete all existing keys. It looks like a bug on EKM side.
-      To prevent unexpected issues we should be sure that at least one private key
-      is existing in the app.
-      */
-      roomDatabase.keysDao().deleteSuspend(keysToDelete.dropLast(1))
-    } else {
-      roomDatabase.keysDao().deleteSuspend(keysToDelete)
     }
 
     for (fetchedPgpKeyDetails in fetchedPgpKeyDetailsList) {
@@ -193,33 +181,37 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
       }
     }
 
-    if (keysToUpdate.isEmpty() && keysToAdd.isEmpty()) {
+    if (keysToUpdate.isEmpty() && keysToAdd.isEmpty() && keysToDelete.isEmpty()) {
       return@withContext
     }
 
-    val passphrase: Passphrase = getUsablePassphraseFromCache()
+    roomDatabase.withTransaction {
+      val passphrase: Passphrase = getUsablePassphraseFromCache()
 
-    for (pgpKeyDetails in keysToUpdate) {
-      val existingKeyEntity = existingKeyEntities.first {
-        it.fingerprint == pgpKeyDetails.fingerprint
+      for (pgpKeyDetails in keysToUpdate) {
+        val existingKeyEntity = existingKeyEntities.first {
+          it.fingerprint == pgpKeyDetails.fingerprint
+        }
+
+        val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
+        roomDatabase.keysDao().updateSuspend(
+          existingKeyEntity.copy(
+            privateKey = safeVersionOfPrvKey,
+            publicKey = pgpKeyDetails.publicKey.toByteArray()
+          )
+        )
       }
 
-      val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
-      roomDatabase.keysDao().updateSuspend(
-        existingKeyEntity.copy(
+      for (pgpKeyDetails in keysToAdd) {
+        val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
+        val keyEntity = pgpKeyDetails.toKeyEntity(activeAccount).copy(
           privateKey = safeVersionOfPrvKey,
-          publicKey = pgpKeyDetails.publicKey.toByteArray()
+          storedPassphrase = null
         )
-      )
-    }
+        roomDatabase.keysDao().insertSuspend(keyEntity)
+      }
 
-    for (pgpKeyDetails in keysToAdd) {
-      val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
-      val keyEntity = pgpKeyDetails.toKeyEntity(activeAccount).copy(
-        privateKey = safeVersionOfPrvKey,
-        storedPassphrase = null
-      )
-      roomDatabase.keysDao().insertSuspend(keyEntity)
+      roomDatabase.keysDao().deleteSuspend(keysToDelete)
     }
   }
 
