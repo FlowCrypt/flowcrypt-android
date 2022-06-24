@@ -5,7 +5,7 @@
 
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light">
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -16,6 +16,9 @@
         <item name="actionModeStyle">@style/AppWidget.ActionMode</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+
+        <!--we use the following parameters to prevent UI issues after migration to Material 3.0-->
+        <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
     </style>
 
     <style name="AppTheme.Starting" parent="Theme.SplashScreen">
