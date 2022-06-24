@@ -7,28 +7,50 @@
 
     <style name="AppWidget" />
 
-    <style name="AppWidget.ActionMode" parent="Base.Widget.AppCompat.ActionMode">
-        <item name="background">@color/gray</item>
-        <item name="android:background">@color/gray</item>
-    </style>
-
-    <style name="AppWidget.Button">
+    <!-- Base widget styles. -->
+    <style name="AppWidget.Button" parent="Widget.Material3.Button">
         <item name="android:layout_height">@dimen/default_button_height</item>
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="AppWidget.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextAppearance">@style/AppTextAppearance.Toolbar.Title</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Toolbar</item>
+    </style>
+
+    <style name="AppWidget.TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="tabIndicatorColor">@android:color/white</item>
+        <item name="tabTextAppearance">@style/AppTextAppearance.Design.Tab</item>
+        <item name="tabSelectedTextColor">@android:color/white</item>
+        <item name="tabIndicatorHeight">4dp</item>
+    </style>
+
+    <style name="AppWidget.ActionMode" parent="Widget.Material3.ActionMode">
+        <item name="background">@color/gray</item>
+    </style>
+
+    <!-- Theme Overlay -->
+    <style name="ThemeOverlay" tools:ignore="UnusedResources" />
+
+    <style name="ThemeOverlay.App" tools:ignore="UnusedResources" />
+
+    <style name="ThemeOverlay.App.Toolbar" parent="">
+        <item name="colorControlNormal">@color/white</item>
+    </style>
+
+    <!-- Other -->
     <style name="AppWidget.Button.Green">
         <item name="android:textColor">@android:color/white</item>
         <item name="colorButtonNormal">@color/colorPrimary</item>
     </style>
 
+    <style name="AppWidget.Button.Green.WithDisabled">
+        <item name="colorOnSurface">@color/dark</item>
+    </style>
+
     <style name="AppWidget.Button.Orange">
         <item name="android:textColor">@android:color/white</item>
         <item name="colorButtonNormal">@color/orange</item>
-    </style>
-
-    <style name="AppWidget.Button.Green.WithDisabled" parent="Widget.MaterialComponents.Button">
-        <item name="colorOnSurface">@color/dark</item>
     </style>
 
     <style name="AppWidget.Button.White">
@@ -57,7 +79,6 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/margin_top_main_screen_button</item>
-
     </style>
 
     <style name="AppWidget.Button.White.ConnectAccount">
@@ -68,27 +89,6 @@
         <item name="android:gravity">center</item>
         <item name="android:textSize">@dimen/default_text_size_medium</item>
         <item name="android:textColor">@color/dark</item>
-    </style>
-
-    <style name="AppWidget.RadioButton" parent="AppTheme">
-        <item name="colorAccent">@color/colorPrimary</item>
-    </style>
-
-    <style name="AppTheme.NoActionBar.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
-
-    <style name="AppTheme.NoActionBar.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
-
-    <style name="AppTheme.TabLayout" parent="Widget.Design.TabLayout">
-        <item name="tabIndicatorColor">@android:color/white</item>
-        <item name="tabTextAppearance">@style/TabTextAppearance</item>
-        <item name="tabSelectedTextColor">@android:color/white</item>
-        <item name="tabIndicatorHeight">4dp</item>
-    </style>
-
-    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/transparent_white</item>
-        <item name="textAllCaps">false</item>
     </style>
 
     <style name="ScreenHeading">
@@ -127,12 +127,8 @@
 
     <style name="AppWidget.ProgressBar.Linear" tools:ignore="UnusedResources" />
 
-    <style name="AppWidget.ProgressBar.Linear.Green" parent="AppTheme">
+    <style name="AppWidget.ProgressBar.Linear.Green">
         <item name="colorAccent">@color/colorPrimary</item>
-    </style>
-
-    <style name="AppWidget.Switch" parent="AppTheme">
-        <item name="colorAccent">@color/colorPrimaryLight</item>
     </style>
 
     <style name="AppWidget.CheckedTextView" tools:ignore="UnusedResources" />
@@ -141,5 +137,22 @@
         <item name="android:gravity">center</item>
         <item name="android:textColor">@color/orange</item>
         <item name="drawableStartCompat">@drawable/selector_list_item_condition</item>
+    </style>
+
+    <!-- Text appearance -->
+    <style name="AppTextAppearance" tools:ignore="UnusedResources" />
+
+    <style name="AppTextAppearance.Toolbar" tools:ignore="UnusedResources" />
+
+    <style name="AppTextAppearance.Toolbar.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="AppTextAppearance.Design" tools:ignore="UnusedResources" />
+
+    <style name="AppTextAppearance.Design.Tab" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/transparent_white</item>
+        <item name="textAllCaps">false</item>
     </style>
 </resources>

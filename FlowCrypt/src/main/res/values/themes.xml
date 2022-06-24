@@ -5,17 +5,24 @@
 
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light">
+    <style name="AppTheme" parent="Theme.Material3.DayNight">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowBackground">@android:color/white</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
-        <item name="windowActionModeOverlay">true</item>
-        <item name="actionModeStyle">@style/AppWidget.ActionMode</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+
+        <!-- Widget styles. -->
+        <item name="materialButtonStyle">@style/AppWidget.Button</item>
+        <item name="tabStyle">@style/AppWidget.TabLayout</item>
+        <item name="toolbarStyle">@style/AppWidget.Toolbar</item>
+
+        <!-- Action Bars. -->
+        <item name="actionModeStyle">@style/AppWidget.ActionMode</item>
+        <item name="windowActionModeOverlay">true</item>
 
         <!--we use the following parameters to prevent UI issues after migration to Material 3.0-->
         <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
