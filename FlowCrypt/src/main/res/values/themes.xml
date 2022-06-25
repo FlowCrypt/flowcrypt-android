@@ -18,6 +18,7 @@
         <!-- Widget styles. -->
         <item name="materialButtonStyle">@style/AppWidget.Button</item>
         <item name="tabStyle">@style/AppWidget.TabLayout</item>
+        <item name="appBarLayoutStyle">@style/AppWidget.AppBarLayout</item>
         <item name="toolbarStyle">@style/AppWidget.Toolbar</item>
 
         <!-- Action Bars. -->

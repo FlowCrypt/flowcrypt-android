@@ -13,6 +13,10 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="AppWidget.AppBarLayout" parent="Widget.Material3.AppBarLayout">
+        <item name="android:background">?attr/colorPrimary</item>
+    </style>
+
     <style name="AppWidget.Toolbar" parent="Widget.Material3.Toolbar">
         <item name="titleTextAppearance">@style/AppTextAppearance.Toolbar.Title</item>
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Toolbar</item>
