@@ -29,6 +29,10 @@
         <item name="tabIndicatorHeight">4dp</item>
     </style>
 
+    <style name="AppWidget.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">@color/colorPrimary</item>
+    </style>
+
     <style name="AppWidget.ActionMode" parent="Widget.Material3.ActionMode">
         <item name="background">@color/gray</item>
     </style>

@@ -20,19 +20,22 @@
         <item name="tabStyle">@style/AppWidget.TabLayout</item>
         <item name="appBarLayoutStyle">@style/AppWidget.AppBarLayout</item>
         <item name="toolbarStyle">@style/AppWidget.Toolbar</item>
+        <item name="floatingActionButtonStyle">@style/AppWidget.FloatingActionButton</item>
 
         <!-- Action Bars. -->
         <item name="actionModeStyle">@style/AppWidget.ActionMode</item>
         <item name="windowActionModeOverlay">true</item>
 
         <!--we use the following parameters to prevent UI issues after migration to Material 3.0-->
+        <!--Should be removed in the future-->
         <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
     </style>
 
     <style name="AppTheme.Starting" parent="Theme.SplashScreen">
         <!--Set the splash screen background, animated icon, and animation duration.-->
         <item name="windowSplashScreenBackground">@color/white</item>
-        <!--Use windowSplashScreenAnimatedIcon to add either a drawable or an animated drawable. One of these is required.-->
+        <!--Use windowSplashScreenAnimatedIcon to add either a drawable or an animated drawable.-->
+        <!--One of these is required.-->
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <!--Set the theme of the Activity that directly follows your splash screen.-->
         <item name="postSplashScreenTheme">@style/AppTheme</item>
