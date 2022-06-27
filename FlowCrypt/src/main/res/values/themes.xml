@@ -24,6 +24,7 @@
         <item name="toolbarStyle">@style/AppWidget.Toolbar</item>
         <item name="floatingActionButtonStyle">@style/AppWidget.FloatingActionButton</item>
         <item name="navigationViewStyle">@style/AppWidget.NavigationView</item>
+        <item name="linearProgressIndicatorStyle">@style/AppWidget.LinearProgressIndicator</item>
 
         <!-- Action Bars. -->
         <item name="actionModeStyle">@style/AppWidget.ActionMode</item>

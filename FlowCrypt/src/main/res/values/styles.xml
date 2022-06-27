@@ -38,6 +38,10 @@
         <item name="drawerLayoutCornerSize">0dp</item>
     </style>
 
+    <style name="AppWidget.LinearProgressIndicator" parent="Widget.Material3.LinearProgressIndicator">
+        <item name="trackColor">?attr/colorPrimary</item>
+    </style>
+
     <style name="AppWidget.ActionMode" parent="Widget.Material3.ActionMode">
         <item name="background">@color/gray</item>
     </style>
@@ -161,14 +165,6 @@
 
     <style name="AppWidget.TextInputLayout.PgpBlock.Other">
         <item name="android:background">@drawable/bg_message_part_other</item>
-    </style>
-
-    <style name="AppWidget.ProgressBar" tools:ignore="UnusedResources" />
-
-    <style name="AppWidget.ProgressBar.Linear" tools:ignore="UnusedResources" />
-
-    <style name="AppWidget.ProgressBar.Linear.Green">
-        <item name="colorAccent">@color/colorPrimary</item>
     </style>
 
     <style name="AppWidget.CheckedTextView" tools:ignore="UnusedResources" />
