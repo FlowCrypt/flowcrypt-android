@@ -34,6 +34,10 @@
         <item name="tint">@color/white</item>
     </style>
 
+    <style name="AppWidget.NavigationView" parent="Widget.Material3.NavigationView">
+        <item name="drawerLayoutCornerSize">0dp</item>
+    </style>
+
     <style name="AppWidget.ActionMode" parent="Widget.Material3.ActionMode">
         <item name="background">@color/gray</item>
     </style>

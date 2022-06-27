@@ -22,6 +22,7 @@
         <item name="appBarLayoutStyle">@style/AppWidget.AppBarLayout</item>
         <item name="toolbarStyle">@style/AppWidget.Toolbar</item>
         <item name="floatingActionButtonStyle">@style/AppWidget.FloatingActionButton</item>
+        <item name="navigationViewStyle">@style/AppWidget.NavigationView</item>
 
         <!-- Action Bars. -->
         <item name="actionModeStyle">@style/AppWidget.ActionMode</item>
