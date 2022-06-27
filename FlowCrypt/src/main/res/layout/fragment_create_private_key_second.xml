@@ -74,11 +74,10 @@
 
         <Button
             android:id="@+id/buttonConfirmPassPhrases"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/default_margin_content_big"
             android:text="@string/confirm_pass_phrase"
-            android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
@@ -86,11 +85,10 @@
 
         <Button
             android:id="@+id/buttonUseAnotherPassPhrase"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big.SilverWithWhiteText"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_between_buttons"
             android:text="@string/use_another_pass_phrase"
-            android:theme="@style/AppWidget.Button.SilverWithWhiteText"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"

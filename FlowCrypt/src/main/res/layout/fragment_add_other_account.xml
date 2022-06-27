@@ -45,11 +45,10 @@
 
             <Button
                 android:id="@+id/buttonSignInWithOutlook"
-                style="@style/AppWidget.Button.White.ConnectAccount"
+                style="@style/AppWidget.Button.Big.OutlinedWithIcon"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:drawableStart="@drawable/ic_outlook_24dp"
                 android:text="@string/continue_with_outlook_hotmail"
-                android:theme="@style/AppWidget.Button.White.ConnectAccount"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
@@ -438,18 +437,17 @@
 
             <Button
                 android:id="@+id/buttonTryToConnect"
-                style="@style/AppWidget.Button"
+                style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_marginBottom="@dimen/default_margin_content_big"
                 android:text="@string/try_to_connect"
-                android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintBottom_toTopOf="@+id/buttonHelp"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
 
             <Button
                 android:id="@+id/buttonHelp"
-                style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+                style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
                 android:layout_marginBottom="@dimen/default_margin_content"
                 android:text="@string/help"
                 app:layout_constraintBottom_toBottomOf="parent"

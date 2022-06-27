@@ -41,13 +41,12 @@
 
     <Button
         android:id="@+id/btImportAll"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="0dp"
         android:layout_marginStart="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_small"
         android:layout_marginEnd="@dimen/default_margin_content_small"
         android:text="@string/import_all"
-        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

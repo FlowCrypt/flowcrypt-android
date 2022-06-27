@@ -33,11 +33,10 @@
 
     <Button
         android:id="@+id/btContinue"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_top_button_continue"
         android:text="@string/continue_"
-        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"

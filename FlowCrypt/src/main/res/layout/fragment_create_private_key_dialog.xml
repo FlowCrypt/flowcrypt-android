@@ -33,7 +33,7 @@
 
     <Button
         android:id="@+id/btRetry"
-        style="@style/AppWidget.Button.Green"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin_content"
@@ -41,7 +41,6 @@
         android:layout_marginEnd="@dimen/default_margin_content"
         android:text="@string/retry"
         android:textAllCaps="true"
-        android:theme="@style/AppWidget.Button.Green"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

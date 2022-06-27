@@ -70,10 +70,9 @@
 
     <Button
         android:id="@+id/btnUpdatePassphrase"
-        style="@style/AppWidget.Button.Green"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="match_parent"
         android:text="@string/check_passphrase"
         android:textAllCaps="true"
-        android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone" />
 </LinearLayout>

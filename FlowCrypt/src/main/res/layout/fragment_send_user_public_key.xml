@@ -44,13 +44,12 @@
 
     <Button
         android:id="@+id/buttonOk"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin_content_small"
         android:layout_marginEnd="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:text="@android:string/ok"
-        android:theme="@style/AppWidget.Button.Green" />
+        android:text="@android:string/ok" />
 
 </LinearLayout>

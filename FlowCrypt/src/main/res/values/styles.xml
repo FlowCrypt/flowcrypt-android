@@ -9,8 +9,8 @@
 
     <!-- Base widget styles. -->
     <style name="AppWidget.Button" parent="Widget.Material3.Button">
-        <item name="android:layout_height">@dimen/default_button_height</item>
         <item name="android:textAllCaps">true</item>
+        <item name="shapeAppearanceOverlay">@style/AppShapeAppearanceOverlay.App.Button</item>
     </style>
 
     <style name="AppWidget.AppBarLayout" parent="Widget.Material3.AppBarLayout">
@@ -43,61 +43,88 @@
 
     <style name="ThemeOverlay.App" tools:ignore="UnusedResources" />
 
+    <style name="ThemeOverlay.App.Button" parent="ThemeOverlay.Material3.Button" tools:ignore="UnusedResources" />
+
+    <style name="ThemeOverlay.App.Button.Orange">
+        <item name="colorContainer">@color/orange</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.Red">
+        <item name="colorContainer">@color/red</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.Silver">
+        <item name="colorContainer">@color/silver</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.White">
+        <item name="colorContainer">@color/light</item>
+    </style>
+
     <style name="ThemeOverlay.App.Toolbar" parent="">
         <item name="colorControlNormal">@color/white</item>
     </style>
 
+    <style name="AppShapeAppearanceOverlay" tools:ignore="UnusedResources" />
+
+    <style name="AppShapeAppearanceOverlay.App.Button" parent="ShapeAppearanceOverlay.Material3.Button">
+        <item name="cornerSize">5%</item>
+    </style>
+
     <!-- Other -->
-    <style name="AppWidget.Button.Green">
+    <style name="AppWidget.Button.Big" tools:ignore="UnusedResources">
+        <item name="android:layout_height">@dimen/default_button_height</item>
+    </style>
+
+    <style name="AppWidget.Button.Big.Orange">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Orange</item>
+    </style>
+
+    <style name="AppWidget.Button.Big.Red">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Red</item>
+    </style>
+
+    <style name="AppWidget.Button.Big.SilverWithWhiteText">
         <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/colorPrimary</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Silver</item>
     </style>
 
-    <style name="AppWidget.Button.Green.WithDisabled">
-        <item name="colorOnSurface">@color/dark</item>
-    </style>
-
-    <style name="AppWidget.Button.Orange">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/orange</item>
-    </style>
-
-    <style name="AppWidget.Button.White">
+    <style name="AppWidget.Button.OutlinedButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:textColor">@color/gray</item>
-        <item name="colorButtonNormal">@color/light</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="shapeAppearanceOverlay">@style/AppShapeAppearanceOverlay.App.Button</item>
     </style>
 
-    <style name="AppWidget.Button.Red">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/red</item>
+    <style name="AppWidget.Button.OutlinedButton.Big">
+        <item name="android:layout_height">@dimen/default_button_height</item>
     </style>
 
-    <style name="AppWidget.Button.SilverWithWhiteText">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/silver</item>
+    <style name="AppWidget.Button.Big.OutlinedWithIcon" parent="Widget.Material3.Button.OutlinedButton.Icon">
+        <item name="iconTint">@null</item>
+        <item name="iconGravity">start</item>
+        <item name="iconPadding">@dimen/default_margin_content_large</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="shapeAppearanceOverlay">@style/AppShapeAppearanceOverlay.App.Button</item>
+        <item name="android:layout_height">@dimen/default_button_height</item>
+        <item name="android:layout_width">@dimen/default_button_width</item>
+        <item name="android:paddingLeft">@dimen/padding_left_main_screen_sign_button</item>
+        <item name="android:paddingRight">@dimen/padding_right_main_screen_sign_button</item>
+        <item name="android:textSize">@dimen/default_text_size_medium</item>
+        <item name="android:textColor">@color/dark</item>
     </style>
 
-    <style name="AppWidget.Button.Transparent">
+    <style name="AppWidget.Button.Big.Transparent">
         <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
 
-    <style name="AppWidget.Button.Transparent.MainScreenTopButton">
+    <style name="AppWidget.Button.Big.Transparent.MainScreenTopButton">
         <item name="android:textColor">@color/dark</item>
         <item name="android:textSize">@dimen/default_text_size_big</item>
         <item name="android:fontFamily">sans-serif-light</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/margin_top_main_screen_button</item>
-    </style>
-
-    <style name="AppWidget.Button.White.ConnectAccount">
-        <item name="android:layout_width">@dimen/default_button_width</item>
-        <item name="android:paddingLeft">@dimen/padding_left_main_screen_sign_button</item>
-        <item name="android:paddingRight">@dimen/padding_right_main_screen_sign_button</item>
-        <item name="android:drawablePadding">@dimen/drawable_padding_main_screen_sign_button</item>
-        <item name="android:gravity">center</item>
-        <item name="android:textSize">@dimen/default_text_size_medium</item>
-        <item name="android:textColor">@color/dark</item>
     </style>
 
     <style name="ScreenHeading">

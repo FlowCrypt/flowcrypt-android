@@ -88,12 +88,11 @@
 
     <Button
         android:id="@+id/buttonKeyAction"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big.Orange"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:theme="@style/AppWidget.Button.Orange"
         app:layout_constraintEnd_toEndOf="@+id/textViewFingerprintTemplate"
         app:layout_constraintStart_toStartOf="@+id/textViewFingerprintTemplate"
         app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
