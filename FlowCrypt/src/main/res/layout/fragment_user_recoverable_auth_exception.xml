@@ -91,7 +91,7 @@
 
         <Button
             android:id="@+id/buttonReconnect"
-            style="@style/AppWidget.Button.Big.OutlinedWithIcon"
+            style="@style/AppWidget.Button.OutlinedButton.Big"
             android:layout_marginBottom="@dimen/default_margin_content"
             android:paddingLeft="0dp"
             android:paddingRight="0dp"
@@ -102,7 +102,7 @@
 
         <Button
             android:id="@+id/buttonLogout"
-            style="@style/AppWidget.Button.Big.OutlinedWithIcon"
+            style="@style/AppWidget.Button.OutlinedButton.Big"
             android:layout_marginBottom="@dimen/default_margin_content_big"
             android:paddingLeft="0dp"
             android:paddingRight="0dp"
