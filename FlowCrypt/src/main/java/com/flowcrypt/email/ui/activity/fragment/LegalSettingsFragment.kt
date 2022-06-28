@@ -16,6 +16,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -124,7 +126,15 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
           binding?.swipeRefreshLayout?.isRefreshing = false
         }
       }
-      assetsPath?.let { binding?.webView?.loadUrl(it) }
+      assetsPath?.let {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+          binding?.webView?.settings?.let { settings ->
+            WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_ON)
+          }
+        }
+
+        binding?.webView?.loadUrl(it)
+      }
     }
 
     companion object {

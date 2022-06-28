@@ -10,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.navArgs
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import com.flowcrypt.email.databinding.FragmentHtmlViewFromAssetsRawBinding
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -29,6 +31,13 @@ class HtmlViewFromAssetsRawFragment : BaseFragment<FragmentHtmlViewFromAssetsRaw
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = args.title
+
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+      binding?.webView?.settings?.let {
+        WebSettingsCompat.setForceDark(it, WebSettingsCompat.FORCE_DARK_ON)
+      }
+    }
+
     binding?.webView?.loadUrl("file:///android_asset/" + args.resourceIdAsString)
   }
 }

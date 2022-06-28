@@ -17,6 +17,8 @@ import android.webkit.WebViewClient
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import com.flowcrypt.email.R
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
@@ -67,6 +69,10 @@ class EmailWebView : WebView {
     webSettings.loadsImagesAutomatically = true
     webSettings.blockNetworkLoads = true
     webSettings.javaScriptEnabled = false
+
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+      WebSettingsCompat.setForceDark(webSettings, WebSettingsCompat.FORCE_DARK_ON)
+    }
   }
 
   fun setOnPageLoadingListener(onPageLoadingListener: OnPageLoadingListener) {

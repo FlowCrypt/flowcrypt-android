@@ -391,7 +391,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.4.2'
     implementation 'androidx.navigation:navigation-ui-ktx:2.4.2'
     implementation 'androidx.navigation:navigation-runtime-ktx:2.4.2'
-
+    implementation 'androidx.webkit:webkit:1.4.0'
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:18.0.1'
