@@ -38,25 +38,23 @@
 
     <Button
         android:id="@+id/buttonSaveContact"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
         android:text="@string/import_pub_key"
-        android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
         tools:visibility="visible" />
 
     <Button
         android:id="@+id/buttonUpdateContact"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
         android:text="@string/update_pub_key"
-        android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
         tools:visibility="visible" />
 

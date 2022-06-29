@@ -40,36 +40,32 @@
 
             <Button
                 android:id="@+id/btnShowPubKey"
-                style="@style/AppWidget.Button.Green"
+                style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:text="@string/show_public_key"
-                android:textAllCaps="true"
-                android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/tVHeader" />
 
             <Button
                 android:id="@+id/btnCopyToClipboard"
-                style="@style/AppWidget.Button.Green"
+                style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:text="@string/copy_to_clipboard"
                 android:textAllCaps="true"
-                android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/btnShowPubKey" />
 
             <Button
                 android:id="@+id/btnSaveToFile"
-                style="@style/AppWidget.Button.Green"
+                style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:text="@string/save_to_file"
                 android:textAllCaps="true"
-                android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
@@ -178,24 +174,22 @@
 
             <Button
                 android:id="@+id/btnUpdatePassphrase"
-                style="@style/AppWidget.Button.Green"
+                style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:text="@string/check_passphrase"
                 android:textAllCaps="true"
-                android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/tILKeyPassword" />
 
             <Button
                 android:id="@+id/btnForgetPassphrase"
-                style="@style/AppWidget.Button.Red"
+                style="@style/AppWidget.Button.Big.Red"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:text="@string/forget_passphrase"
                 android:textAllCaps="true"
-                android:theme="@style/AppWidget.Button.Green"
                 android:visibility="gone"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
@@ -203,12 +197,11 @@
 
             <Button
                 android:id="@+id/btnShowPrKey"
-                style="@style/AppWidget.Button.Red"
+                style="@style/AppWidget.Button.Big.Red"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:text="@string/show_private_key"
                 android:textAllCaps="true"
-                android:theme="@style/AppWidget.Button.Red"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/btnForgetPassphrase" />

@@ -145,10 +145,9 @@
 
         <Button
             android:id="@+id/buttonPositiveAction"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_top_load_account"
-            android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
@@ -157,11 +156,10 @@
 
         <Button
             android:id="@+id/buttonSkipRemainingBackups"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_top_load_account"
             android:text="@string/skip_remaining_backups"
-            android:theme="@style/AppWidget.Button.Green"
             android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
@@ -170,11 +168,10 @@
 
         <Button
             android:id="@+id/buttonNegativeAction"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.OutlinedButton.Big"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_top_button_select_another_account"
             android:layout_marginBottom="@dimen/margin_top_button_select_another_account"
-            android:theme="@style/AppWidget.Button.White"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"

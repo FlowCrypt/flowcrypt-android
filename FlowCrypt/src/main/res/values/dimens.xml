@@ -37,7 +37,6 @@
 
     <dimen name="margin_top_main_screen_button">32dp</dimen>
     <dimen name="text_size_logo_crypt">48sp</dimen>
-    <dimen name="drawable_padding_main_screen_sign_button">24dp</dimen>
     <dimen name="padding_left_main_screen_sign_button">24dp</dimen>
     <dimen name="padding_right_main_screen_sign_button">60dp</dimen>
     <dimen name="nav_header_height">160dp</dimen>

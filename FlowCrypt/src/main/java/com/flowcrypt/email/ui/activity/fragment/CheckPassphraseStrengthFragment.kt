@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -51,8 +52,10 @@ class CheckPassphraseStrengthFragment :
     initPasswordStrengthViewModel()
   }
 
-  override fun onButtonContinueColorChanged(colorFilter: ColorFilter) {
-    binding?.btSetPassphrase?.background?.colorFilter = colorFilter
+  override fun onButtonContinueColorChanged(colorRes: Int) {
+    context?.let {
+      binding?.btSetPassphrase?.backgroundTintList = ContextCompat.getColorStateList(it, colorRes)
+    }
   }
 
   override fun onPassphraseQualityChanged(progress: Int) {

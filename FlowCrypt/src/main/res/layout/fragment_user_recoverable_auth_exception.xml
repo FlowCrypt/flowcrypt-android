@@ -27,7 +27,7 @@
 
         <Button
             android:id="@+id/buttonPrivacy"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:layout_marginTop="0dp"
             android:text="@string/privacy"
             app:layout_constraintEnd_toStartOf="@+id/buttonTerms"
@@ -37,7 +37,7 @@
 
         <Button
             android:id="@+id/buttonTerms"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:layout_marginTop="0dp"
             android:text="@string/terms"
             app:layout_constraintEnd_toStartOf="@+id/buttonSecurity"
@@ -47,7 +47,7 @@
 
         <Button
             android:id="@+id/buttonSecurity"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:layout_marginTop="0dp"
             android:text="@string/security"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
@@ -91,24 +91,22 @@
 
         <Button
             android:id="@+id/buttonReconnect"
-            style="@style/AppWidget.Button.White.ConnectAccount"
+            style="@style/AppWidget.Button.OutlinedButton.Big"
             android:layout_marginBottom="@dimen/default_margin_content"
             android:paddingLeft="0dp"
             android:paddingRight="0dp"
             android:text="@string/reconnect"
-            android:theme="@style/AppWidget.Button.White.ConnectAccount"
             app:layout_constraintBottom_toTopOf="@+id/buttonLogout"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
 
         <Button
             android:id="@+id/buttonLogout"
-            style="@style/AppWidget.Button.White.ConnectAccount"
+            style="@style/AppWidget.Button.OutlinedButton.Big"
             android:layout_marginBottom="@dimen/default_margin_content_big"
             android:paddingLeft="0dp"
             android:paddingRight="0dp"
             android:text="@string/log_out"
-            android:theme="@style/AppWidget.Button.White.ConnectAccount"
             app:layout_constraintBottom_toTopOf="@+id/buttonHelp"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.491"
@@ -116,7 +114,7 @@
 
         <Button
             android:id="@+id/buttonHelp"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:layout_marginBottom="@dimen/default_margin_content"
             android:text="@string/help"
             app:layout_constraintBottom_toBottomOf="parent"

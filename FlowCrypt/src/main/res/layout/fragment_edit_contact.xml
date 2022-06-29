@@ -57,14 +57,12 @@
 
         <Button
             android:id="@+id/buttonCheck"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big"
             android:layout_width="0dp"
-            android:layout_height="@dimen/default_button_height"
             android:layout_marginBottom="@dimen/default_margin_content"
             android:enabled="false"
             android:text="@string/check"
             android:textColor="@color/white"
-            android:theme="@style/AppWidget.Button.Green.WithDisabled"
             app:layout_constraintBottom_toTopOf="@+id/textView"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
@@ -82,21 +80,19 @@
 
         <Button
             android:id="@+id/buttonLoadFromFile"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big"
             android:layout_width="0dp"
             android:text="@string/load_from_a_file"
-            android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintBottom_toTopOf="@+id/buttonLoadFromClipboard"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
 
         <Button
             android:id="@+id/buttonLoadFromClipboard"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big"
             android:layout_width="0dp"
             android:layout_marginBottom="@dimen/default_margin_content_big"
             android:text="@string/load_from_clipboard"
-            android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />

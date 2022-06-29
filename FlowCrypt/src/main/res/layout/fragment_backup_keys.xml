@@ -21,8 +21,7 @@
             android:layout_weight="1"
             android:checked="true"
             android:text="@string/email"
-            android:textAllCaps="true"
-            android:theme="@style/AppWidget.RadioButton" />
+            android:textAllCaps="true" />
 
         <RadioButton
             android:id="@+id/rBDownloadOption"
@@ -31,18 +30,16 @@
             android:layout_marginTop="@dimen/default_margin_medium"
             android:layout_weight="1"
             android:text="@string/download"
-            android:textAllCaps="true"
-            android:theme="@style/AppWidget.RadioButton" />
+            android:textAllCaps="true" />
     </RadioGroup>
 
     <Button
         android:id="@+id/btBackup"
-        style="@style/AppWidget.Button.Green"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/default_margin_content"
         android:text="@string/backup_as_email"
         android:textAllCaps="true"
-        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/rGBackupOptions" />

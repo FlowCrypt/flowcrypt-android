@@ -92,11 +92,10 @@
 
         <Button
             android:id="@+id/buttonSetPassPhrase"
-            style="@style/AppWidget.Button"
+            style="@style/AppWidget.Button.Big.SilverWithWhiteText"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/default_margin_content_big"
             android:text="@string/set_pass_phrase"
-            android:theme="@style/AppWidget.Button.SilverWithWhiteText"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
