@@ -12,9 +12,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
-import androidx.webkit.WebSettingsCompat
-import androidx.webkit.WebViewFeature
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -60,10 +59,7 @@ class InfoDialogFragment : BaseDialogFragment() {
     if (args.useWebViewToRender) {
       val webView = WebView(requireContext())
       webView.id = R.id.webView
-
-      if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-        WebSettingsCompat.setForceDark(webView.settings, WebSettingsCompat.FORCE_DARK_ON)
-      }
+      webView.setupDayNight()
 
       args.dialogMsg?.let {
         webView.loadDataWithBaseURL(

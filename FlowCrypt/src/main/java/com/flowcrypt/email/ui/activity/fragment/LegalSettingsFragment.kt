@@ -16,13 +16,12 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.webkit.WebSettingsCompat
-import androidx.webkit.WebViewFeature
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentLegalBinding
 import com.flowcrypt.email.databinding.SwipeToRefrechWithWebviewBinding
+import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.extensions.androidx.viewpager2.widget.reduceDragSensitivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.google.android.material.tabs.TabLayoutMediator
@@ -127,12 +126,7 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
         }
       }
       assetsPath?.let {
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-          binding?.webView?.settings?.let { settings ->
-            WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_ON)
-          }
-        }
-
+        binding?.webView?.setupDayNight()
         binding?.webView?.loadUrl(it)
       }
     }
