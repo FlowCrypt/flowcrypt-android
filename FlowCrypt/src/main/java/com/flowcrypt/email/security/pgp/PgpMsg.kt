@@ -66,8 +66,7 @@ import kotlin.random.Random
 
 object PgpMsg {
   private const val GENERAL_CSS =
-    "background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;" +
-        "padding-bottom: 4px;width: 100%;"
+    "padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;"
   private const val SEAMLESS_LOCK_BG = "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw" +
       "8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD" +
       "w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8P" +
