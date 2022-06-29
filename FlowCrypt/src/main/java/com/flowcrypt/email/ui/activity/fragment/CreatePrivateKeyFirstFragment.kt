@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResult
@@ -47,8 +48,11 @@ class CreatePrivateKeyFirstFragment :
     subscribeToCreatePrivateKey()
   }
 
-  override fun onButtonContinueColorChanged(colorFilter: ColorFilter) {
-    binding?.buttonSetPassPhrase?.background?.colorFilter = colorFilter
+  override fun onButtonContinueColorChanged(colorRes: Int) {
+    context?.let {
+      binding?.buttonSetPassPhrase?.backgroundTintList =
+        ContextCompat.getColorStateList(it, colorRes)
+    }
   }
 
   override fun onPassphraseQualityChanged(progress: Int) {
