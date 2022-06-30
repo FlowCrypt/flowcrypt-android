@@ -22,11 +22,10 @@
 
     <Button
         android:id="@+id/buttonLoadFromFile"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_top_first_button"
         android:text="@string/load_from_a_file"
-        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
@@ -34,11 +33,10 @@
 
     <Button
         android:id="@+id/buttonLoadFromClipboard"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/load_from_clipboard"
-        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"

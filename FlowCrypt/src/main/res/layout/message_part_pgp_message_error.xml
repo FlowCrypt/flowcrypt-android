@@ -25,12 +25,11 @@ Recusandae velit sit veniam asperiores nisi. Eius tempore ab voluptatum dolorum 
 
     <Button
         android:id="@+id/btAction"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
         tools:text="@string/have_not_any_other_key" />
 </LinearLayout>

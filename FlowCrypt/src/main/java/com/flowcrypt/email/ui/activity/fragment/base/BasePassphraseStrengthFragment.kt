@@ -16,7 +16,7 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.annotation.ColorRes
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.fragment.app.viewModels
@@ -48,7 +48,7 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
   protected val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
   protected var pwdStrengthResult: PgpPwd.PwdStrengthResult? = null
 
-  abstract fun onButtonContinueColorChanged(colorFilter: ColorFilter)
+  abstract fun onButtonContinueColorChanged(@ColorRes colorRes: Int)
   abstract fun onPassphraseQualityChanged(progress: Int)
   abstract fun onPassphraseQualityProgressDrawableColorChanged(colorFilter: ColorFilter)
   abstract fun onPassphraseQualityTextChanged(charSequence: CharSequence)
@@ -132,17 +132,11 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
     when (word?.word) {
       Constants.PASSWORD_QUALITY_WEAK,
       Constants.PASSWORD_QUALITY_POOR -> {
-        val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-          ContextCompat.getColor(requireContext(), R.color.silver), BlendModeCompat.MODULATE
-        )
-        colorFilter?.let { onButtonContinueColorChanged(it) }
+        onButtonContinueColorChanged(R.color.silver)
       }
 
       else -> {
-        val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-          ContextCompat.getColor(requireContext(), R.color.colorPrimary), BlendModeCompat.MODULATE
-        )
-        colorFilter?.let { onButtonContinueColorChanged(it) }
+        onButtonContinueColorChanged(R.color.colorPrimary)
       }
     }
 

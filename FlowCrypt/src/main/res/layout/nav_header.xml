@@ -8,8 +8,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/nav_header_height"
-    android:background="@drawable/side_nav_bar"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+    android:background="@drawable/side_nav_bar">
 
     <ImageView
         android:id="@+id/imageViewActiveUserPhoto"
@@ -53,6 +52,7 @@
                 android:ellipsize="middle"
                 android:singleLine="true"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="@color/white"
                 tools:text="Android Studio" />
 
             <TextView
@@ -61,6 +61,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="middle"
                 android:singleLine="true"
+                android:textColor="@color/aluminum"
                 tools:text="android.studio@android.com" />
         </LinearLayout>
 

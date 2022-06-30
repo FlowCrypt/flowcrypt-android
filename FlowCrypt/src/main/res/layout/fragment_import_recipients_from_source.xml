@@ -68,22 +68,20 @@
 
     <Button
         android:id="@+id/btLoadFromFile"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big.Orange"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/load_from_a_file"
-        android:theme="@style/AppWidget.Button.Orange"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/tILKeyIdOrEmail" />
 
     <Button
         android:id="@+id/btLoadFromClipboard"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Big.Orange"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/load_from_clipboard"
-        android:theme="@style/AppWidget.Button.Orange"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/btLoadFromFile" />

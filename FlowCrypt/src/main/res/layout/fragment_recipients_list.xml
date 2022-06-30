@@ -36,8 +36,7 @@
         android:layout_marginEnd="@dimen/default_margin_content"
         android:layout_marginBottom="@dimen/default_margin_content"
         android:contentDescription="@string/add_new_contact"
-        android:src="@mipmap/ic_white_plus"
-        app:backgroundTint="@color/colorPrimary"
+        android:src="@drawable/ic_plus_white_24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

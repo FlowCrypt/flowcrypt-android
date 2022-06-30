@@ -26,7 +26,7 @@
 
         <Button
             android:id="@+id/buttonPrivacy"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:text="@string/privacy"
             app:layout_constraintEnd_toStartOf="@+id/buttonTerms"
             app:layout_constraintStart_toStartOf="parent"
@@ -35,7 +35,7 @@
 
         <Button
             android:id="@+id/buttonTerms"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:text="@string/terms"
             app:layout_constraintEnd_toStartOf="@+id/buttonSecurity"
             app:layout_constraintStart_toEndOf="@+id/buttonPrivacy"
@@ -44,7 +44,7 @@
 
         <Button
             android:id="@+id/buttonSecurity"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:text="@string/security"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/buttonTerms"
@@ -87,27 +87,22 @@
 
         <Button
             android:id="@+id/buttonSignInWithGmail"
-            style="@style/AppWidget.Button.White.ConnectAccount"
-            android:drawableStart="@mipmap/ic_gmail"
+            style="@style/AppWidget.Button.Big.OutlinedWithIcon"
             android:text="@string/continue_with_gmail"
-            android:theme="@style/AppWidget.Button.White.ConnectAccount"
+            app:icon="@mipmap/ic_gmail"
             app:layout_constraintBottom_toTopOf="@+id/buttonOtherEmailProvider"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewConnectYourEmail"
-            app:layout_constraintVertical_chainStyle="packed"
-            tools:layout_constraintLeft_creator="1"
-            tools:layout_constraintRight_creator="1"
-            tools:layout_constraintTop_creator="1" />
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <Button
             android:id="@+id/buttonOtherEmailProvider"
-            style="@style/AppWidget.Button.White.ConnectAccount"
-            android:layout_marginTop="16dp"
-            android:drawableStart="@mipmap/ic_email"
+            style="@style/AppWidget.Button.Big.OutlinedWithIcon"
+            android:layout_marginTop="@dimen/default_margin_content"
+            app:icon="@mipmap/ic_email"
             android:text="@string/other_email_provider"
-            android:theme="@style/AppWidget.Button.White.ConnectAccount"
             app:layout_constraintBottom_toTopOf="@+id/buttonHelp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -116,7 +111,7 @@
 
         <Button
             android:id="@+id/buttonHelp"
-            style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+            style="@style/AppWidget.Button.Big.Transparent.MainScreenTopButton"
             android:layout_marginBottom="@dimen/default_margin_content"
             android:text="@string/help"
             app:layout_constraintBottom_toBottomOf="parent"

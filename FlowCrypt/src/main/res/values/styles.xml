@@ -7,88 +7,128 @@
 
     <style name="AppWidget" />
 
-    <style name="AppWidget.ActionMode" parent="Base.Widget.AppCompat.ActionMode">
-        <item name="background">@color/gray</item>
-        <item name="android:background">@color/gray</item>
-    </style>
-
-    <style name="AppWidget.Button">
-        <item name="android:layout_height">@dimen/default_button_height</item>
+    <!-- Base widget styles. -->
+    <style name="AppWidget.Button" parent="Widget.Material3.Button">
         <item name="android:textAllCaps">true</item>
+        <item name="shapeAppearanceOverlay">@style/AppShapeAppearanceOverlay.App.Button</item>
     </style>
 
-    <style name="AppWidget.Button.Green">
+    <style name="AppWidget.AppBarLayout" parent="Widget.Material3.AppBarLayout">
+        <item name="android:background">?attr/colorPrimary</item>
+    </style>
+
+    <style name="AppWidget.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextAppearance">@style/AppTextAppearance.Toolbar.Title</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Toolbar</item>
+    </style>
+
+    <style name="AppWidget.TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="tabIndicatorColor">@android:color/white</item>
+        <item name="tabTextAppearance">@style/AppTextAppearance.Design.Tab</item>
+        <item name="tabSelectedTextColor">@android:color/white</item>
+        <item name="tabIndicatorHeight">4dp</item>
+    </style>
+
+    <style name="AppWidget.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">@color/colorPrimary</item>
+        <item name="tint">@color/white</item>
+    </style>
+
+    <style name="AppWidget.NavigationView" parent="Widget.Material3.NavigationView">
+        <item name="drawerLayoutCornerSize">0dp</item>
+    </style>
+
+    <style name="AppWidget.LinearProgressIndicator" parent="Widget.Material3.LinearProgressIndicator">
+        <item name="trackColor">?attr/colorPrimary</item>
+    </style>
+
+    <style name="AppWidget.ActionMode" parent="Widget.Material3.ActionMode">
+        <item name="background">@color/gray</item>
+    </style>
+
+    <!-- Theme Overlay -->
+    <style name="ThemeOverlay" tools:ignore="UnusedResources" />
+
+    <style name="ThemeOverlay.App" tools:ignore="UnusedResources" />
+
+    <style name="ThemeOverlay.App.Button" parent="ThemeOverlay.Material3.Button" tools:ignore="UnusedResources" />
+
+    <style name="ThemeOverlay.App.Button.Orange">
+        <item name="colorContainer">@color/orange</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.Red">
+        <item name="colorContainer">@color/red</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.Silver">
+        <item name="colorContainer">@color/silver</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Toolbar" parent="">
+        <item name="colorControlNormal">@color/white</item>
+    </style>
+
+    <style name="AppShapeAppearanceOverlay" tools:ignore="UnusedResources" />
+
+    <style name="AppShapeAppearanceOverlay.App.Button" parent="ShapeAppearanceOverlay.Material3.Button">
+        <item name="cornerSize">5%</item>
+    </style>
+
+    <!-- Other -->
+    <style name="AppWidget.Button.Big" tools:ignore="UnusedResources">
+        <item name="android:layout_height">@dimen/default_button_height</item>
+    </style>
+
+    <style name="AppWidget.Button.Big.Orange">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Orange</item>
+    </style>
+
+    <style name="AppWidget.Button.Big.Red">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Red</item>
+    </style>
+
+    <style name="AppWidget.Button.Big.SilverWithWhiteText">
         <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/colorPrimary</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Silver</item>
     </style>
 
-    <style name="AppWidget.Button.Orange">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/orange</item>
-    </style>
-
-    <style name="AppWidget.Button.Green.WithDisabled" parent="Widget.MaterialComponents.Button">
-        <item name="colorOnSurface">@color/dark</item>
-    </style>
-
-    <style name="AppWidget.Button.White">
+    <style name="AppWidget.Button.OutlinedButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:textColor">@color/gray</item>
-        <item name="colorButtonNormal">@color/light</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="shapeAppearanceOverlay">@style/AppShapeAppearanceOverlay.App.Button</item>
     </style>
 
-    <style name="AppWidget.Button.Red">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/red</item>
+    <style name="AppWidget.Button.OutlinedButton.Big">
+        <item name="android:layout_height">@dimen/default_button_height</item>
     </style>
 
-    <style name="AppWidget.Button.SilverWithWhiteText">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="colorButtonNormal">@color/silver</item>
+    <style name="AppWidget.Button.Big.OutlinedWithIcon" parent="Widget.Material3.Button.OutlinedButton.Icon">
+        <item name="iconTint">@null</item>
+        <item name="iconGravity">start</item>
+        <item name="iconPadding">@dimen/default_margin_content_large</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="shapeAppearanceOverlay">@style/AppShapeAppearanceOverlay.App.Button</item>
+        <item name="android:layout_height">@dimen/default_button_height</item>
+        <item name="android:layout_width">@dimen/default_button_width</item>
+        <item name="android:paddingLeft">@dimen/padding_left_main_screen_sign_button</item>
+        <item name="android:paddingRight">@dimen/padding_right_main_screen_sign_button</item>
+        <item name="android:textSize">@dimen/default_text_size_medium</item>
+        <item name="android:textColor">@color/dark</item>
     </style>
 
-    <style name="AppWidget.Button.Transparent">
+    <style name="AppWidget.Button.Big.Transparent">
         <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
 
-    <style name="AppWidget.Button.Transparent.MainScreenTopButton">
+    <style name="AppWidget.Button.Big.Transparent.MainScreenTopButton">
         <item name="android:textColor">@color/dark</item>
         <item name="android:textSize">@dimen/default_text_size_big</item>
         <item name="android:fontFamily">sans-serif-light</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/margin_top_main_screen_button</item>
-
-    </style>
-
-    <style name="AppWidget.Button.White.ConnectAccount">
-        <item name="android:layout_width">@dimen/default_button_width</item>
-        <item name="android:paddingLeft">@dimen/padding_left_main_screen_sign_button</item>
-        <item name="android:paddingRight">@dimen/padding_right_main_screen_sign_button</item>
-        <item name="android:drawablePadding">@dimen/drawable_padding_main_screen_sign_button</item>
-        <item name="android:gravity">center</item>
-        <item name="android:textSize">@dimen/default_text_size_medium</item>
-        <item name="android:textColor">@color/dark</item>
-    </style>
-
-    <style name="AppWidget.RadioButton" parent="AppTheme">
-        <item name="colorAccent">@color/colorPrimary</item>
-    </style>
-
-    <style name="AppTheme.NoActionBar.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="AppTheme.NoActionBar.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
-    <style name="AppTheme.TabLayout" parent="Widget.Design.TabLayout">
-        <item name="tabIndicatorColor">@android:color/white</item>
-        <item name="tabTextAppearance">@style/TabTextAppearance</item>
-        <item name="tabSelectedTextColor">@android:color/white</item>
-        <item name="tabIndicatorHeight">4dp</item>
-    </style>
-
-    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/transparent_white</item>
-        <item name="textAllCaps">false</item>
     </style>
 
     <style name="ScreenHeading">
@@ -123,23 +163,28 @@
         <item name="android:background">@drawable/bg_message_part_other</item>
     </style>
 
-    <style name="AppWidget.ProgressBar" tools:ignore="UnusedResources" />
-
-    <style name="AppWidget.ProgressBar.Linear" tools:ignore="UnusedResources" />
-
-    <style name="AppWidget.ProgressBar.Linear.Green" parent="AppTheme">
-        <item name="colorAccent">@color/colorPrimary</item>
-    </style>
-
-    <style name="AppWidget.Switch" parent="AppTheme">
-        <item name="colorAccent">@color/colorPrimaryLight</item>
-    </style>
-
     <style name="AppWidget.CheckedTextView" tools:ignore="UnusedResources" />
 
     <style name="AppWidget.CheckedTextView.Password">
         <item name="android:gravity">center</item>
         <item name="android:textColor">@color/orange</item>
         <item name="drawableStartCompat">@drawable/selector_list_item_condition</item>
+    </style>
+
+    <!-- Text appearance -->
+    <style name="AppTextAppearance" tools:ignore="UnusedResources" />
+
+    <style name="AppTextAppearance.Toolbar" tools:ignore="UnusedResources" />
+
+    <style name="AppTextAppearance.Toolbar.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="AppTextAppearance.Design" tools:ignore="UnusedResources" />
+
+    <style name="AppTextAppearance.Design.Tab" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/transparent_white</item>
+        <item name="textAllCaps">false</item>
     </style>
 </resources>

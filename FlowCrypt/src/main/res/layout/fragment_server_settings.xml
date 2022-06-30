@@ -325,11 +325,10 @@
 
             <Button
                 android:id="@+id/buttonCheckAndSave"
-                style="@style/AppWidget.Button"
+                style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content_big"
                 android:text="@string/check_and_save"
-                android:theme="@style/AppWidget.Button.Green"
                 android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
@@ -338,12 +337,11 @@
 
             <View
                 android:id="@+id/bottom"
-                style="@style/AppWidget.Button"
+                style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_big"
                 android:text="@string/try_to_connect"
-                android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/layoutSmtpPassword" />
