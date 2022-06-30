@@ -15,7 +15,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -27,6 +26,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
+import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.DownloadAttachmentViewModel
 
 /**
@@ -39,7 +39,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
   private var binding: FragmentDownloadAttachmentBinding? = null
   private val args by navArgs<DownloadAttachmentDialogFragmentArgs>()
   private val downloadAttachmentViewModel: DownloadAttachmentViewModel by viewModels {
-    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return DownloadAttachmentViewModel(args.attachmentInfo, requireActivity().application) as T
