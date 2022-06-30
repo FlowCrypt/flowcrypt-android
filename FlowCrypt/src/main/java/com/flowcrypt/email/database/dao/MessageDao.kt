@@ -116,7 +116,11 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
 
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
-  abstract suspend fun deleteSuspend(email: String?, label: String?, msgsUID: Collection<Long>): Int
+  abstract suspend fun deleteSuspendByUIDs(
+    email: String?,
+    label: String?,
+    msgsUID: Collection<Long>
+  ): Int
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
   abstract fun getOutboxMsgs(
@@ -391,7 +395,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   open suspend fun deleteByUIDsSuspend(email: String?, label: String?, msgsUID: Collection<Long>) =
     withContext(Dispatchers.IO) {
       doOperationViaStepsSuspend(list = ArrayList(msgsUID)) { stepUIDs: Collection<Long> ->
-        deleteSuspend(email, label, stepUIDs)
+        deleteSuspendByUIDs(email, label, stepUIDs)
       }
     }
 
