@@ -33,11 +33,12 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -77,6 +78,7 @@ import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
@@ -143,7 +145,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private val args by navArgs<MessageDetailsFragmentArgs>()
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
-    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return MsgDetailsViewModel(
@@ -242,7 +244,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
     subscribeToDownloadAttachmentViaDialog()
     subscribeToImportingAdditionalPrivateKeys()
     updateActionsVisibility(args.localFolder, null)
@@ -265,90 +266,101 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
   }
 
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_message_details, menu)
-  }
-
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-
-    val menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage)
-    val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
-    val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
-    val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
-
-    menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
-    menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
-    menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
-    menuActionMarkUnread?.isVisible =
-      !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
-
-    menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
-    menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
-    menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
-    menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
-
-    args.localFolder.searchQuery?.let {
-      menuItemArchiveMsg?.isVisible = false
-      menuItemDeleteMsg?.isVisible = false
-      menuActionMoveToInbox?.isVisible = false
-      menuActionMarkUnread?.isVisible = false
-    }
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.menuActionArchiveMessage -> {
-        msgDetailsViewModel.changeMsgState(MessageState.PENDING_ARCHIVING)
-        true
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_message_details, menu)
       }
 
-      R.id.menuActionDeleteMessage -> {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-          val msgEntity = args.messageEntity
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        val menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage)
+        val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
+        val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
+        val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
 
-          msgEntity.let {
-            if (msgEntity.msgState === MessageState.SENDING) {
-              Toast.makeText(context, R.string.can_not_delete_sending_message, Toast.LENGTH_LONG)
-                .show()
-            } else {
-              msgDetailsViewModel.deleteMsg()
-              Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
-            }
-          }
-        } else {
-          if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
-            showTwoWayDialog(
-              requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
-              dialogTitle = "",
-              dialogMsg = requireContext().resources.getQuantityString(
-                R.plurals.delete_msg_question,
-                1,
-                1
-              ),
-              positiveButtonTitle = getString(android.R.string.ok),
-              negativeButtonTitle = getString(android.R.string.cancel),
-            )
-          } else {
-            msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
-          }
+        menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
+        menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
+        menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
+        menuActionMarkUnread?.isVisible =
+          !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
+
+        menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
+        menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
+        menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
+        menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
+
+        args.localFolder.searchQuery?.let {
+          menuItemArchiveMsg?.isVisible = false
+          menuItemDeleteMsg?.isVisible = false
+          menuActionMoveToInbox?.isVisible = false
+          menuActionMarkUnread?.isVisible = false
         }
-        true
       }
 
-      R.id.menuActionMoveToInbox -> {
-        msgDetailsViewModel.changeMsgState(MessageState.PENDING_MOVE_TO_INBOX)
-        true
-      }
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+          R.id.menuActionArchiveMessage -> {
+            msgDetailsViewModel.changeMsgState(MessageState.PENDING_ARCHIVING)
+            true
+          }
 
-      R.id.menuActionMarkUnread -> {
-        msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_UNREAD)
-        true
-      }
+          R.id.menuActionDeleteMessage -> {
+            if (JavaEmailConstants.FOLDER_OUTBOX.equals(
+                args.messageEntity.folder,
+                ignoreCase = true
+              )
+            ) {
+              val msgEntity = args.messageEntity
 
-      else -> super.onOptionsItemSelected(item)
-    }
+              msgEntity.let {
+                if (msgEntity.msgState === MessageState.SENDING) {
+                  Toast.makeText(
+                    context,
+                    R.string.can_not_delete_sending_message,
+                    Toast.LENGTH_LONG
+                  )
+                    .show()
+                } else {
+                  msgDetailsViewModel.deleteMsg()
+                  Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
+                }
+              }
+            } else {
+              if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
+                showTwoWayDialog(
+                  requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
+                  dialogTitle = "",
+                  dialogMsg = requireContext().resources.getQuantityString(
+                    R.plurals.delete_msg_question,
+                    1,
+                    1
+                  ),
+                  positiveButtonTitle = getString(android.R.string.ok),
+                  negativeButtonTitle = getString(android.R.string.cancel),
+                )
+              } else {
+                msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
+              }
+            }
+            true
+          }
+
+          R.id.menuActionMoveToInbox -> {
+            msgDetailsViewModel.changeMsgState(MessageState.PENDING_MOVE_TO_INBOX)
+            true
+          }
+
+          R.id.menuActionMarkUnread -> {
+            msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_UNREAD)
+            true
+          }
+
+          else -> false
+        }
+      }
+    })
   }
 
   override fun onClick(v: View) {

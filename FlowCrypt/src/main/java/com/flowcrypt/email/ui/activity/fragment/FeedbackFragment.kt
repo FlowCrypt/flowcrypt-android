@@ -17,6 +17,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -48,7 +50,6 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
     bitmapRaw = args.screenshot.byteArray
     bitmap = BitmapFactory.decodeByteArray(
       args.screenshot.byteArray, 0, args.screenshot.byteArray.size
@@ -61,60 +62,64 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
     subscribeToEditScreenshot()
   }
 
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_feedback, menu)
-  }
-
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-    menu.findItem(R.id.menuActionHelp).isVisible = false
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    when (item.itemId) {
-      R.id.menuActionSend -> {
-        if (account == null) {
-          if (binding?.editTextUserEmail?.text?.isEmpty() == true) {
-            binding?.editTextUserEmail?.requestFocus()
-            toast(R.string.email_must_be_non_empty, Toast.LENGTH_LONG)
-            return true
-          } else if (!GeneralUtil.isEmailValid(binding?.editTextUserEmail?.text)) {
-            binding?.editTextUserEmail?.requestFocus()
-            toast(R.string.error_email_is_not_valid, Toast.LENGTH_LONG)
-            return true
-          }
-        }
-
-        if (binding?.editTextUserMessage?.text?.isEmpty() == true) {
-          binding?.editTextUserMessage?.requestFocus()
-          toast(R.string.your_message_must_be_non_empty, Toast.LENGTH_LONG)
-        } else {
-          val screenShotBytes = UIUtil.getCompressedByteArrayOfBitmap(
-            if (binding?.checkBoxScreenshot?.isChecked == true) {
-              bitmap
-            } else {
-              null
-            }, 100
-          )
-
-          val nonNullAccount =
-            account ?: AccountEntity(email = binding?.editTextUserEmail?.text.toString())
-
-          FeedbackJobIntentService.enqueueWork(
-            context = requireContext(),
-            account = nonNullAccount,
-            userComment = binding?.editTextUserMessage?.text.toString(),
-            screenShotBytes = screenShotBytes
-          )
-          toast(getString(R.string.thank_you_for_feedback))
-          navController?.navigateUp()
-        }
-        return true
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_feedback, menu)
       }
 
-      else -> return super.onOptionsItemSelected(item)
-    }
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        menu.findItem(R.id.menuActionHelp).isVisible = false
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        when (menuItem.itemId) {
+          R.id.menuActionSend -> {
+            if (account == null) {
+              if (binding?.editTextUserEmail?.text?.isEmpty() == true) {
+                binding?.editTextUserEmail?.requestFocus()
+                toast(R.string.email_must_be_non_empty, Toast.LENGTH_LONG)
+                return true
+              } else if (!GeneralUtil.isEmailValid(binding?.editTextUserEmail?.text)) {
+                binding?.editTextUserEmail?.requestFocus()
+                toast(R.string.error_email_is_not_valid, Toast.LENGTH_LONG)
+                return true
+              }
+            }
+
+            if (binding?.editTextUserMessage?.text?.isEmpty() == true) {
+              binding?.editTextUserMessage?.requestFocus()
+              toast(R.string.your_message_must_be_non_empty, Toast.LENGTH_LONG)
+            } else {
+              val screenShotBytes = UIUtil.getCompressedByteArrayOfBitmap(
+                if (binding?.checkBoxScreenshot?.isChecked == true) {
+                  bitmap
+                } else {
+                  null
+                }, 100
+              )
+
+              val nonNullAccount =
+                account ?: AccountEntity(email = binding?.editTextUserEmail?.text.toString())
+
+              FeedbackJobIntentService.enqueueWork(
+                context = requireContext(),
+                account = nonNullAccount,
+                userComment = binding?.editTextUserMessage?.text.toString(),
+                screenShotBytes = screenShotBytes
+              )
+              toast(getString(R.string.thank_you_for_feedback))
+              navController?.navigateUp()
+            }
+            return true
+          }
+
+          else -> return false
+        }
+      }
+    })
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

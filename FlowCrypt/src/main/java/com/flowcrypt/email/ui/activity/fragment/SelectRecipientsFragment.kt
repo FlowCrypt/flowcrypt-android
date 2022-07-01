@@ -9,11 +9,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.bundleOf
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -74,11 +77,6 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
   override val emptyView: View?
     get() = binding?.layoutEmpty?.root
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = args.title
@@ -87,34 +85,40 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
     setupRecipientsViewModel()
   }
 
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_select_recipients, menu)
-  }
-
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-    val searchItem = menu.findItem(R.id.menuSearch)
-    val searchView = searchItem.actionView as SearchView
-    if (searchPattern.isNotEmpty()) {
-      searchItem.expandActionView()
-    }
-    searchView.setQuery(searchPattern, true)
-    searchView.queryHint = getString(R.string.search)
-    searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-      override fun onQueryTextSubmit(query: String?): Boolean {
-        searchPattern = query ?: ""
-        recipientsViewModel.filterContacts(searchPattern)
-        return true
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_select_recipients, menu)
       }
 
-      override fun onQueryTextChange(newText: String?): Boolean {
-        searchPattern = newText ?: ""
-        recipientsViewModel.filterContacts(searchPattern)
-        return true
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        val searchItem = menu.findItem(R.id.menuSearch)
+        val searchView = searchItem.actionView as SearchView
+        if (searchPattern.isNotEmpty()) {
+          searchItem.expandActionView()
+        }
+        searchView.setQuery(searchPattern, true)
+        searchView.queryHint = getString(R.string.search)
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+          override fun onQueryTextSubmit(query: String?): Boolean {
+            searchPattern = query ?: ""
+            recipientsViewModel.filterContacts(searchPattern)
+            return true
+          }
+
+          override fun onQueryTextChange(newText: String?): Boolean {
+            searchPattern = newText ?: ""
+            recipientsViewModel.filterContacts(searchPattern)
+            return true
+          }
+        })
+        searchView.clearFocus()
       }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
     })
-    searchView.clearFocus()
   }
 
   private fun initViews() {
