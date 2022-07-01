@@ -37,9 +37,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
@@ -173,7 +176,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
     initExtras(activity?.intent)
   }
 
@@ -218,90 +220,95 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_compose, menu)
-  }
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_compose, menu)
+      }
 
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-    val menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType)
-    val titleRes = if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.STANDARD)
-      R.string.switch_to_secure_email
-    else
-      R.string
-        .switch_to_standard_email
-    menuActionSwitchType.setTitle(titleRes)
-
-    if (args.serviceInfo?.isMsgTypeSwitchable == false) {
-      menu.removeItem(R.id.menuActionSwitchType)
-    }
-
-    if (args.serviceInfo?.hasAbilityToAddNewAtt == false) {
-      menu.removeItem(R.id.menuActionAttachFile)
-    }
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    when (item.itemId) {
-      R.id.menuActionSend -> {
-        snackBar?.dismiss()
-
-        if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
-          UIUtil.hideSoftInput(context, view)
-          if (isDataCorrect()) {
-            if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
-              val keysStorage = KeysStorageImpl.getInstance(requireContext())
-              val senderEmail = binding?.editTextFrom?.text.toString()
-              val usableSecretKey =
-                keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
-              if (usableSecretKey != null) {
-                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(usableSecretKey)
-                val fingerprint = openPgpV4Fingerprint.toString()
-                val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
-                if (passphrase?.isEmpty == true) {
-                  showNeedPassphraseDialog(listOf(fingerprint))
-                  return true
-                }
-              } else {
-                showInfoDialog(dialogMsg = getString(R.string.no_private_keys_suitable_for_encryption))
-                return true
-              }
-            }
-
-            sendMsg()
-            this.isMsgSentToQueue = true
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        val menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType)
+        val titleRes =
+          if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.STANDARD) {
+            R.string.switch_to_secure_email
+          } else {
+            R.string.switch_to_standard_email
           }
-        } else {
-          toast(R.string.please_wait_while_information_about_recipients_will_be_updated)
+        menuActionSwitchType?.setTitle(titleRes)
+
+        if (args.serviceInfo?.isMsgTypeSwitchable == false) {
+          menu.removeItem(R.id.menuActionSwitchType)
         }
-        return true
-      }
 
-      R.id.menuActionAttachFile -> {
-        attachFile()
-        return true
-      }
-
-      R.id.menuActionIncludePubKey -> {
-        showPubKeyDialog()
-        return true
-      }
-
-      R.id.menuActionSwitchType -> {
-        when (composeMsgViewModel.msgEncryptionType) {
-          MessageEncryptionType.ENCRYPTED -> composeMsgViewModel.switchMessageEncryptionType(
-            MessageEncryptionType.STANDARD
-          )
-          MessageEncryptionType.STANDARD -> composeMsgViewModel.switchMessageEncryptionType(
-            MessageEncryptionType.ENCRYPTED
-          )
+        if (args.serviceInfo?.hasAbilityToAddNewAtt == false) {
+          menu.removeItem(R.id.menuActionAttachFile)
         }
-        return true
       }
 
-      else -> return super.onOptionsItemSelected(item)
-    }
+      override fun onMenuItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+          R.id.menuActionSend -> {
+            snackBar?.dismiss()
+
+            if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
+              UIUtil.hideSoftInput(context, view)
+              if (isDataCorrect()) {
+                if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
+                  val keysStorage = KeysStorageImpl.getInstance(requireContext())
+                  val senderEmail = binding?.editTextFrom?.text.toString()
+                  val usableSecretKey =
+                    keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
+                  if (usableSecretKey != null) {
+                    val openPgpV4Fingerprint = OpenPgpV4Fingerprint(usableSecretKey)
+                    val fingerprint = openPgpV4Fingerprint.toString()
+                    val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
+                    if (passphrase?.isEmpty == true) {
+                      showNeedPassphraseDialog(listOf(fingerprint))
+                      return true
+                    }
+                  } else {
+                    showInfoDialog(dialogMsg = getString(R.string.no_private_keys_suitable_for_encryption))
+                    return true
+                  }
+                }
+
+                sendMsg()
+                isMsgSentToQueue = true
+              }
+            } else {
+              toast(R.string.please_wait_while_information_about_recipients_will_be_updated)
+            }
+            return true
+          }
+
+          R.id.menuActionAttachFile -> {
+            attachFile()
+            return true
+          }
+
+          R.id.menuActionIncludePubKey -> {
+            showPubKeyDialog()
+            return true
+          }
+
+          R.id.menuActionSwitchType -> {
+            when (composeMsgViewModel.msgEncryptionType) {
+              MessageEncryptionType.ENCRYPTED -> composeMsgViewModel.switchMessageEncryptionType(
+                MessageEncryptionType.STANDARD
+              )
+              MessageEncryptionType.STANDARD -> composeMsgViewModel.switchMessageEncryptionType(
+                MessageEncryptionType.ENCRYPTED
+              )
+            }
+            return true
+          }
+
+          else -> return true
+        }
+      }
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   override fun onCreateContextMenu(

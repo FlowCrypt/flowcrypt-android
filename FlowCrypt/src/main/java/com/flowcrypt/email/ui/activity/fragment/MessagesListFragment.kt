@@ -25,6 +25,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -161,7 +163,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
     adapter = MsgsPagedListAdapter(this)
   }
 
@@ -193,102 +194,107 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     snackBar?.dismiss()
   }
 
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_messages_list, menu)
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_messages_list, menu)
 
-    val menuItemSearch = menu.findItem(R.id.menuSearch)
-    menuItemSearch?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
-      override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-        binding?.swipeRefreshLayout?.isEnabled = false
-        return true
-      }
+        val menuItemSearch = menu.findItem(R.id.menuSearch)
+        menuItemSearch?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+          override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+            binding?.swipeRefreshLayout?.isEnabled = false
+            return true
+          }
 
-      override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-        binding?.swipeRefreshLayout?.isEnabled = true
-        currentFolder?.searchQuery = null
-        onFolderChanged(true)
-        return true
-      }
-    })
+          override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+            binding?.swipeRefreshLayout?.isEnabled = true
+            currentFolder?.searchQuery = null
+            onFolderChanged(true)
+            return true
+          }
+        })
 
-    val searchView = menuItemSearch?.actionView as? SearchView
-    searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-      override fun onQueryTextSubmit(query: String?): Boolean {
-        if (
-          AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)
-          && !SearchSequence.isAscii(query)
-        ) {
-          toast(R.string.cyrillic_search_not_support_yet)
-          return true
+        val searchView = menuItemSearch?.actionView as? SearchView
+        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+          override fun onQueryTextSubmit(query: String?): Boolean {
+            if (
+              AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)
+              && !SearchSequence.isAscii(query)
+            ) {
+              toast(R.string.cyrillic_search_not_support_yet)
+              return true
+            }
+
+            currentFolder?.searchQuery = query
+            onFolderChanged(true)
+            return false
+          }
+
+          override fun onQueryTextChange(newText: String?): Boolean {
+            return false
+          }
+        })
+
+        val searchManager = context?.getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        searchView?.setSearchableInfo(searchManager.getSearchableInfo(activity?.componentName))
+
+        if (currentFolder?.searchQuery?.isNotEmpty() == true) {
+          menuItemSearch?.expandActionView()
+          searchView?.setQuery(currentFolder?.searchQuery, false)
+          searchView?.queryHint = getString(R.string.search)
         }
-
-        currentFolder?.searchQuery = query
-        onFolderChanged(true)
-        return false
       }
 
-      override fun onQueryTextChange(newText: String?): Boolean {
-        return false
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        val itemSearch = menu.findItem(R.id.menuSearch)
+        val itemForceSending = menu.findItem(R.id.menuForceSending)
+        val itemEmptyTrash = menu.findItem(R.id.menuEmptyTrash)
+        itemEmptyTrash?.isVisible =
+          currentFolder?.getFolderType() == FoldersManager.FolderType.TRASH
+        itemForceSending?.isEnabled = isForceSendingEnabled
+
+        when {
+          JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
+            itemSearch?.isVisible = false
+            itemForceSending?.isVisible = true
+          }
+
+          else -> {
+            itemSearch?.isVisible = true
+            itemForceSending?.isVisible = false
+          }
+        }
+      }
+
+      override fun onMenuItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+          R.id.menuForceSending -> {
+            showTwoWayDialog(
+              requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
+              dialogTitle = getString(R.string.restart_sending),
+              dialogMsg = getString(R.string.restart_sending_process_warning)
+            )
+            return true
+          }
+
+          R.id.menuEmptyTrash -> {
+            showTwoWayDialog(
+              requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
+              dialogTitle = getString(R.string.empty_trash),
+              dialogMsg = getString(R.string.empty_trash_warning),
+              positiveButtonTitle = getString(android.R.string.ok),
+              negativeButtonTitle = getString(android.R.string.cancel),
+              isCancelable = false
+            )
+            return true
+          }
+
+          else -> false
+        }
       }
     })
-
-    val searchManager = context?.getSystemService(Context.SEARCH_SERVICE) as SearchManager
-    searchView?.setSearchableInfo(searchManager.getSearchableInfo(activity?.componentName))
-
-    if (currentFolder?.searchQuery?.isNotEmpty() == true) {
-      menuItemSearch?.expandActionView()
-      searchView?.setQuery(currentFolder?.searchQuery, false)
-      searchView?.queryHint = getString(R.string.search)
-    }
-  }
-
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-    val itemSearch = menu.findItem(R.id.menuSearch)
-    val itemForceSending = menu.findItem(R.id.menuForceSending)
-    val itemEmptyTrash = menu.findItem(R.id.menuEmptyTrash)
-    itemEmptyTrash?.isVisible = currentFolder?.getFolderType() == FoldersManager.FolderType.TRASH
-    itemForceSending?.isEnabled = isForceSendingEnabled
-
-    when {
-      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
-        itemSearch?.isVisible = false
-        itemForceSending?.isVisible = true
-      }
-
-      else -> {
-        itemSearch?.isVisible = true
-        itemForceSending?.isVisible = false
-      }
-    }
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.menuForceSending -> {
-        showTwoWayDialog(
-          requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
-          dialogTitle = getString(R.string.restart_sending),
-          dialogMsg = getString(R.string.restart_sending_process_warning)
-        )
-        return true
-      }
-
-      R.id.menuEmptyTrash -> {
-        showTwoWayDialog(
-          requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
-          dialogTitle = getString(R.string.empty_trash),
-          dialogMsg = getString(R.string.empty_trash_warning),
-          positiveButtonTitle = getString(android.R.string.ok),
-          negativeButtonTitle = getString(android.R.string.cancel),
-          isCancelable = false
-        )
-        return true
-      }
-
-      else -> super.onOptionsItemSelected(item)
-    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

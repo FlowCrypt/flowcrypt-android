@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base
 
+import androidx.core.view.MenuHost
+
 /**
  * @author Denis Bondarenko
  *         Date: 3/8/22
@@ -20,4 +22,6 @@ interface UiUxSettings {
 
   val isSideMenuLocked: Boolean
     get() = true
+
+  fun onSetupActionBarMenu(menuHost: MenuHost) {}
 }

@@ -9,11 +9,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.MenuProvider
 import androidx.core.view.allViews
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
@@ -54,6 +56,30 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     LogsUtil.d(tag, "onCreate")
 
+    addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.activity_base, menu)
+      }
+
+      override fun onMenuItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+          android.R.id.home -> if (isNavigationArrowDisplayed) {
+            onBackPressed()
+            true
+          } else {
+            false
+          }
+
+          R.id.menuActionHelp -> {
+            showFeedbackFragment()
+            true
+          }
+
+          else -> false
+        }
+      }
+    })
+
     initViews()
     setupNavigation()
     initAccountViewModel()
@@ -92,29 +118,6 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   override fun onDestroy() {
     super.onDestroy()
     LogsUtil.d(tag, "onDestroy")
-  }
-
-  override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    menuInflater.inflate(R.menu.activity_base, menu)
-    return true
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      android.R.id.home -> if (isNavigationArrowDisplayed) {
-        onBackPressed()
-        true
-      } else {
-        super.onOptionsItemSelected(item)
-      }
-
-      R.id.menuActionHelp -> {
-        showFeedbackFragment()
-        true
-      }
-
-      else -> super.onOptionsItemSelected(item)
-    }
   }
 
   protected open fun initViews() {

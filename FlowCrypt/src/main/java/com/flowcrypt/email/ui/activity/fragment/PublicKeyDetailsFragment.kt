@@ -22,6 +22,8 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
@@ -88,14 +90,66 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   override val statusView: View?
     get() = binding?.status?.root
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     setupPublicKeyDetailsViewModel()
+  }
+
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_pub_key_details, menu)
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+          R.id.menuActionCopy -> {
+            val clipboard =
+              requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(
+              ClipData.newPlainText(
+                "pubKey",
+                String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
+              )
+            )
+            toast(R.string.public_key_copied_to_clipboard)
+            true
+          }
+
+          R.id.menuActionSave -> {
+            chooseDest()
+            true
+          }
+
+          R.id.menuActionDelete -> {
+            lifecycleScope.launch {
+              val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+              roomDatabase.pubKeyDao().deleteSuspend(args.publicKeyEntity)
+              navController?.navigateUp()
+            }
+            true
+          }
+
+          R.id.menuActionEdit -> {
+            account?.let { accountEntity ->
+              cachedPublicKeyEntity?.let { publicKeyEntity ->
+                navController?.navigate(
+                  PublicKeyDetailsFragmentDirections
+                    .actionPublicKeyDetailsFragmentToEditContactFragment(
+                      accountEntity,
+                      publicKeyEntity
+                    )
+                )
+              }
+            }
+            true
+          }
+
+          else -> false
+        }
+      }
+    })
   }
 
   private fun setupPublicKeyDetailsViewModel() {
@@ -138,59 +192,6 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           else -> {}
         }
       }
-    }
-  }
-
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_pub_key_details, menu)
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    when (item.itemId) {
-      R.id.menuActionCopy -> {
-        val clipboard =
-          requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(
-          ClipData.newPlainText(
-            "pubKey",
-            String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
-          )
-        )
-        toast(R.string.public_key_copied_to_clipboard)
-        return true
-      }
-
-      R.id.menuActionSave -> {
-        chooseDest()
-        return true
-      }
-
-      R.id.menuActionDelete -> {
-        lifecycleScope.launch {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-          roomDatabase.pubKeyDao().deleteSuspend(args.publicKeyEntity)
-          navController?.navigateUp()
-        }
-        return true
-      }
-
-      R.id.menuActionEdit -> {
-        account?.let { accountEntity ->
-          cachedPublicKeyEntity?.let { publicKeyEntity ->
-            navController?.navigate(
-              PublicKeyDetailsFragmentDirections
-                .actionPublicKeyDetailsFragmentToEditContactFragment(
-                  accountEntity,
-                  publicKeyEntity
-                )
-            )
-          }
-        }
-        return true
-      }
-
-      else -> return super.onOptionsItemSelected(item)
     }
   }
 
