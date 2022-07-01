@@ -236,8 +236,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           }
         })
 
-        val searchManager = context?.getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        searchView?.setSearchableInfo(searchManager.getSearchableInfo(activity?.componentName))
+        val searchManager = context?.getSystemService(Context.SEARCH_SERVICE) as? SearchManager
+        searchView?.setSearchableInfo(searchManager?.getSearchableInfo(activity?.componentName))
 
         if (currentFolder?.searchQuery?.isNotEmpty() == true) {
           menuItemSearch?.expandActionView()
