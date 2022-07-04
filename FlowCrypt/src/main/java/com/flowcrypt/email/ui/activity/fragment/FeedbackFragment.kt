@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.setFragmentResultListener
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -119,7 +120,7 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
           else -> return false
         }
       }
-    })
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

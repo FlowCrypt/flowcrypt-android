@@ -30,6 +30,7 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
@@ -294,7 +295,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           else -> false
         }
       }
-    })
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
