@@ -24,7 +24,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:text="@string/see_choosing_secure_pass_phrases"
-        android:textColor="@android:color/black"
+        android:textColor="?attr/colorOnSurface"
         app:layout_constraintBottom_toBottomOf="@+id/iBShowPasswordHint"
         app:layout_constraintEnd_toStartOf="@+id/iBShowPasswordHint"
         app:layout_constraintHorizontal_bias="0.5"

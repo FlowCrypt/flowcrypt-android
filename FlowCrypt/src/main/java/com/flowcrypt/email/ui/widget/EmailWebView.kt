@@ -71,8 +71,8 @@ class EmailWebView : WebView {
     webSettings.blockNetworkLoads = true
     webSettings.javaScriptEnabled = false
 
-    setBackgroundColor(MaterialColors.getColor(context, R.attr.colorSurface, Color.WHITE))
     setupDayNight()
+    setBackgroundColor(MaterialColors.getColor(context, R.attr.colorSurface, Color.WHITE))
   }
 
   fun setOnPageLoadingListener(onPageLoadingListener: OnPageLoadingListener) {

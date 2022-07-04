@@ -38,7 +38,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="@string/see_choosing_secure_pass_phrases"
-                android:textColor="@android:color/black" />
+                android:textColor="?attr/colorOnSurface" />
 
             <ImageButton
                 android:id="@+id/imageButtonShowPasswordHint"

@@ -11,7 +11,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/default_margin_medium"
     android:autoLink="web"
-    android:textColor="@android:color/black"
+    android:textColor="?attr/colorOnSurface"
     android:textIsSelectable="true"
     android:textSize="@dimen/default_text_size_medium"
     tools:text="At nihil sequi quo maiores molestiae consequatur. Id aut nam voluptate doloribus saepe consequatur molestias. Eos sunt est ipsam accusantium saepe doloribus veritatis.

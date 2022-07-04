@@ -89,7 +89,6 @@
     </style>
 
     <style name="AppWidget.Button.Big.SilverWithWhiteText">
-        <item name="android:textColor">@android:color/white</item>
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Silver</item>
     </style>
 

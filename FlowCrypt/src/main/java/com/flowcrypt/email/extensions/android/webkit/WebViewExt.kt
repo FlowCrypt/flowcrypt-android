@@ -6,6 +6,7 @@
 package com.flowcrypt.email.extensions.android.webkit
 
 import android.content.res.Configuration
+import android.graphics.Color
 import android.webkit.WebView
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
@@ -18,6 +19,7 @@ import androidx.webkit.WebViewFeature
  */
 fun WebView.setupDayNight() {
   if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+    setBackgroundColor(Color.TRANSPARENT)
     when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
       Configuration.UI_MODE_NIGHT_YES -> {
         WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_ON)
