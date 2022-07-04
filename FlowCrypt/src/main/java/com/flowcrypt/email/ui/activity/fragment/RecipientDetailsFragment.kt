@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,6 +18,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentRecipientDetailsBinding
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.RecipientDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -39,7 +39,7 @@ class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>()
 
   private val args by navArgs<RecipientDetailsFragmentArgs>()
   private val recipientDetailsViewModel: RecipientDetailsViewModel by viewModels {
-    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return RecipientDetailsViewModel(args.recipientEntity, requireActivity().application) as T

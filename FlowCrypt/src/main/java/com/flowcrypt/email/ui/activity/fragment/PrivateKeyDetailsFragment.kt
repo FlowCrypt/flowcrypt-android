@@ -19,11 +19,12 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -40,6 +41,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
+import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PgpKeyDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -73,7 +75,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
   private val pgpKeyDetailsViewModel: PgpKeyDetailsViewModel by viewModels {
-    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return PgpKeyDetailsViewModel(args.fingerprint, requireActivity().application) as T
@@ -93,42 +95,6 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   override val statusView: View?
     get() = binding?.status?.root
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
-  }
-
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_key_details, menu)
-  }
-
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-    if (account?.clientConfiguration?.usesKeyManager() == true) {
-      menu.findItem(R.id.menuActionDeleteKey).isEnabled = false
-    }
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.menuActionDeleteKey -> {
-        showTwoWayDialog(
-          requestCode = REQUEST_CODE_DELETE_KEY_DIALOG,
-          dialogTitle = "",
-          dialogMsg = requireContext().resources.getQuantityString(
-            R.plurals.delete_key_question, 1, 1
-          ),
-          positiveButtonTitle = getString(android.R.string.ok),
-          negativeButtonTitle = getString(android.R.string.cancel)
-        )
-        true
-      }
-
-      else -> super.onOptionsItemSelected(item)
-    }
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
@@ -137,6 +103,41 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     setupPrivateKeysViewModel()
     setupCheckPrivateKeysViewModel()
     subscribeToTwoWayDialog()
+  }
+
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_key_details, menu)
+      }
+
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        if (account?.clientConfiguration?.usesKeyManager() == true) {
+          menu.findItem(R.id.menuActionDeleteKey).isEnabled = false
+        }
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+          R.id.menuActionDeleteKey -> {
+            showTwoWayDialog(
+              requestCode = REQUEST_CODE_DELETE_KEY_DIALOG,
+              dialogTitle = "",
+              dialogMsg = requireContext().resources.getQuantityString(
+                R.plurals.delete_key_question, 1, 1
+              ),
+              positiveButtonTitle = getString(android.R.string.ok),
+              negativeButtonTitle = getString(android.R.string.cancel)
+            )
+            true
+          }
+
+          else -> false
+        }
+      }
+    })
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

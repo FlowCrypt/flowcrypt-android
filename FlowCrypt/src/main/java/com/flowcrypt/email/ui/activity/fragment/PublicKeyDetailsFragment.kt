@@ -21,10 +21,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
@@ -39,6 +40,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -67,7 +69,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
 
   private val args by navArgs<PublicKeyDetailsFragmentArgs>()
   private val publicKeyDetailsViewModel: PublicKeyDetailsViewModel by viewModels {
-    object : ViewModelProvider.AndroidViewModelFactory(requireActivity().application) {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return PublicKeyDetailsViewModel(args.publicKeyEntity, requireActivity().application) as T
@@ -88,14 +90,66 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   override val statusView: View?
     get() = binding?.status?.root
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     setupPublicKeyDetailsViewModel()
+  }
+
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_pub_key_details, menu)
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+          R.id.menuActionCopy -> {
+            val clipboard =
+              requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(
+              ClipData.newPlainText(
+                "pubKey",
+                String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
+              )
+            )
+            toast(R.string.public_key_copied_to_clipboard)
+            true
+          }
+
+          R.id.menuActionSave -> {
+            chooseDest()
+            true
+          }
+
+          R.id.menuActionDelete -> {
+            lifecycleScope.launch {
+              val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+              roomDatabase.pubKeyDao().deleteSuspend(args.publicKeyEntity)
+              navController?.navigateUp()
+            }
+            true
+          }
+
+          R.id.menuActionEdit -> {
+            account?.let { accountEntity ->
+              cachedPublicKeyEntity?.let { publicKeyEntity ->
+                navController?.navigate(
+                  PublicKeyDetailsFragmentDirections
+                    .actionPublicKeyDetailsFragmentToEditContactFragment(
+                      accountEntity,
+                      publicKeyEntity
+                    )
+                )
+              }
+            }
+            true
+          }
+
+          else -> false
+        }
+      }
+    })
   }
 
   private fun setupPublicKeyDetailsViewModel() {
@@ -138,59 +192,6 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           else -> {}
         }
       }
-    }
-  }
-
-  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    super.onCreateOptionsMenu(menu, inflater)
-    inflater.inflate(R.menu.fragment_pub_key_details, menu)
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    when (item.itemId) {
-      R.id.menuActionCopy -> {
-        val clipboard =
-          requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(
-          ClipData.newPlainText(
-            "pubKey",
-            String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
-          )
-        )
-        toast(R.string.public_key_copied_to_clipboard)
-        return true
-      }
-
-      R.id.menuActionSave -> {
-        chooseDest()
-        return true
-      }
-
-      R.id.menuActionDelete -> {
-        lifecycleScope.launch {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-          roomDatabase.pubKeyDao().deleteSuspend(args.publicKeyEntity)
-          navController?.navigateUp()
-        }
-        return true
-      }
-
-      R.id.menuActionEdit -> {
-        account?.let { accountEntity ->
-          cachedPublicKeyEntity?.let { publicKeyEntity ->
-            navController?.navigate(
-              PublicKeyDetailsFragmentDirections
-                .actionPublicKeyDetailsFragmentToEditContactFragment(
-                  accountEntity,
-                  publicKeyEntity
-                )
-            )
-          }
-        }
-        return true
-      }
-
-      else -> return super.onOptionsItemSelected(item)
     }
   }
 
@@ -263,7 +264,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   }
 
   inner class ExportPubKeyCreateDocument :
-    ActivityResultContracts.CreateDocument() {
+    CreateDocument("todo/todo") {
     override fun createIntent(context: Context, input: String): Intent {
 
       return super.createIntent(context, input)
