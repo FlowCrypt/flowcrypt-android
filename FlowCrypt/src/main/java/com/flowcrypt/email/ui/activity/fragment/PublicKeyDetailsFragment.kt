@@ -25,6 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
@@ -149,7 +150,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           else -> false
         }
       }
-    })
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   private fun setupPublicKeyDetailsViewModel() {

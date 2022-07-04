@@ -38,6 +38,7 @@ import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
@@ -360,7 +361,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           else -> false
         }
       }
-    })
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   override fun onClick(v: View) {

@@ -19,6 +19,7 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -118,7 +119,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
       }
 
       override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
-    })
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   private fun initViews() {
