@@ -13,7 +13,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -125,9 +124,6 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
   private fun initViews() {
     val manager = LinearLayoutManager(requireContext())
     val decoration = DividerItemDecoration(requireContext(), manager.orientation)
-    val drawable =
-      ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, requireActivity().theme)
-    drawable?.let { decoration.setDrawable(drawable) }
     binding?.recyclerViewContacts?.addItemDecoration(decoration)
     binding?.recyclerViewContacts?.layoutManager = manager
     binding?.recyclerViewContacts?.adapter = recipientsRecyclerViewAdapter
