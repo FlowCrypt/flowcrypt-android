@@ -76,7 +76,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/default_margin_small"
-                    android:background="?attr/colorOnSurface"
+                    android:background="@android:color/black"
                     android:checked="true" />
 
                 <RadioButton

@@ -56,6 +56,10 @@
         <!--we use the following parameters to prevent UI issues after migration to Material 3.0-->
         <!--Should be removed in the future-->
         <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
+
+        <!--Custom attrs-->
+        <item name="messageTitleColor">?attr/colorOnSurface</item>
+        <item name="messageSubTitleColor">@color/messageSubTitleColor</item>
     </style>
 
     <style name="AppTheme.Starting" parent="Theme.SplashScreen">

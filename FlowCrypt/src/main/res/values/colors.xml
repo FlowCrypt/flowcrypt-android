@@ -20,4 +20,7 @@
     <color name="yellow">#FFEB3B</color>
     <color name="white">#FFFFFF</color>
     <color name="nobel">#B7B7B7</color>
+
+    <!--Used in themes-->
+    <color name="messageSubTitleColor">@color/gray</color>
 </resources>
