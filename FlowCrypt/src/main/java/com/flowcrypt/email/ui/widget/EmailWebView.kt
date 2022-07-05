@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.widget
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
@@ -22,7 +21,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.google.android.material.color.MaterialColors
 
 /**
  * The custom realization of [WebView]
@@ -72,7 +70,6 @@ class EmailWebView : WebView {
     webSettings.javaScriptEnabled = false
 
     setupDayNight()
-    setBackgroundColor(MaterialColors.getColor(context, R.attr.colorSurface, Color.WHITE))
   }
 
   fun setOnPageLoadingListener(onPageLoadingListener: OnPageLoadingListener) {
