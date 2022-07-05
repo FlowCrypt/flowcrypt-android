@@ -58,8 +58,8 @@
         <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
 
         <!--Custom attrs-->
-        <item name="messageTitleColor">?attr/colorOnSurface</item>
-        <item name="messageSubTitleColor">@color/messageSubTitleColor</item>
+        <item name="itemTitleColor">?attr/colorOnSurface</item>
+        <item name="itemSubTitleColor">@color/messageSubTitleColor</item>
     </style>
 
     <style name="AppTheme.Starting" parent="Theme.SplashScreen">

@@ -173,15 +173,15 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           MaterialColors.getColor(context, R.attr.colorOnSurfaceVariant, Color.BLACK)
         )
         viewHolder.textViewDate?.setTextColor(
-          MaterialColors.getColor(context, R.attr.messageSubTitleColor, Color.BLACK)
+          MaterialColors.getColor(context, R.attr.itemSubTitleColor, Color.BLACK)
         )
       } else {
         changeViewsTypeface(viewHolder, Typeface.BOLD)
         viewHolder.textViewSenderAddress?.setTextColor(
-          MaterialColors.getColor(context, R.attr.messageTitleColor, Color.BLACK)
+          MaterialColors.getColor(context, R.attr.itemTitleColor, Color.BLACK)
         )
         viewHolder.textViewDate?.setTextColor(
-          MaterialColors.getColor(context, R.attr.messageTitleColor, Color.BLACK)
+          MaterialColors.getColor(context, R.attr.itemTitleColor, Color.BLACK)
         )
       }
 

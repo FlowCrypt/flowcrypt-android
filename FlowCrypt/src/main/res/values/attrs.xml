@@ -4,6 +4,6 @@
   -->
 
 <resources>
-    <attr name="messageTitleColor" format="color" />
-    <attr name="messageSubTitleColor" format="color" />
+    <attr name="itemTitleColor" format="color" />
+    <attr name="itemSubTitleColor" format="color" />
 </resources>
