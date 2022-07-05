@@ -24,6 +24,7 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
@@ -137,7 +138,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           else -> false
         }
       }
-    })
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
