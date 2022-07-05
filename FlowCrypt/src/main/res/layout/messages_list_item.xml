@@ -8,7 +8,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/layout_height_message_item"
-    android:background="@drawable/selector_msg_item"
+    android:background="@color/selector_msg_item"
     android:foreground="?attr/selectableItemBackground"
     android:orientation="vertical">
 
