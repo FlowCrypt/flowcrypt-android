@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -167,9 +166,6 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
       setHasFixedSize(true)
       val manager = LinearLayoutManager(context)
       val decoration = DividerItemDecoration(context, manager.orientation)
-      val drawable =
-        ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, requireContext().theme)
-      drawable?.let { decoration.setDrawable(drawable) }
       addItemDecoration(decoration)
       layoutManager = manager
       adapter = recyclerViewAdapter

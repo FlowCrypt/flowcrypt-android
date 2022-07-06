@@ -18,6 +18,7 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 
@@ -67,6 +68,8 @@ class EmailWebView : WebView {
     webSettings.loadsImagesAutomatically = true
     webSettings.blockNetworkLoads = true
     webSettings.javaScriptEnabled = false
+
+    setupDayNight()
   }
 
   fun setOnPageLoadingListener(onPageLoadingListener: OnPageLoadingListener) {

@@ -81,7 +81,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:lineSpacingExtra="@dimen/default_margin_small"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="@dimen/default_text_size_big"
             app:layout_constraintBottom_toTopOf="@+id/buttonReconnect"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"

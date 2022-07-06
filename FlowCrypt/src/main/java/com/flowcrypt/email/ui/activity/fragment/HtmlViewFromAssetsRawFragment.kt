@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.databinding.FragmentHtmlViewFromAssetsRawBinding
+import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 
@@ -29,6 +30,8 @@ class HtmlViewFromAssetsRawFragment : BaseFragment<FragmentHtmlViewFromAssetsRaw
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = args.title
+
+    binding?.webView?.setupDayNight()
     binding?.webView?.loadUrl("file:///android_asset/" + args.resourceIdAsString)
   }
 }

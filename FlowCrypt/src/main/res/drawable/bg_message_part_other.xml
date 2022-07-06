@@ -11,7 +11,7 @@
 
     <item android:gravity="left">
         <shape>
-            <solid android:color="@android:color/white" />
+            <solid android:color="?attr/colorSurface" />
         </shape>
     </item>
 

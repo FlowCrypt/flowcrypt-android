@@ -83,7 +83,7 @@ class EditScreenshotDialogFragment : BaseDialogFragment() {
     binding?.radioGroupColors?.setOnCheckedChangeListener { _, checkedId ->
       when (checkedId) {
         R.id.radioButtonFullColor -> {
-          photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
+          photoEditor.brushColor = ContextCompat.getColor(requireContext(), android.R.color.black)
           photoEditor.setOpacity(100)
         }
 
@@ -98,7 +98,7 @@ class EditScreenshotDialogFragment : BaseDialogFragment() {
 
     photoEditor = PhotoEditor.Builder(context, binding?.photoEditorView).build()
     photoEditor.setBrushDrawingMode(true)
-    photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
+    photoEditor.brushColor = ContextCompat.getColor(requireContext(), android.R.color.black)
     photoEditor.setOpacity(100)
   }
 

@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -73,8 +72,6 @@ class AttesterSettingsFragment : BaseFragment<FragmentAttesterSettingsBinding>()
     context?.let {
       val manager = LinearLayoutManager(it)
       val decoration = DividerItemDecoration(it, manager.orientation)
-      val drawable = ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, it.theme)
-      drawable?.let { decoration.setDrawable(drawable) }
       rVAttester?.addItemDecoration(decoration)
       rVAttester?.layoutManager = manager
       rVAttester?.adapter = attesterKeyAdapter

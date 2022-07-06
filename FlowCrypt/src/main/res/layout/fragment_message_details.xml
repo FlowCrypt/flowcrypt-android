@@ -39,7 +39,7 @@
                     android:layout_marginEnd="@dimen/default_margin_small"
                     android:ellipsize="middle"
                     android:maxLines="1"
-                    android:textColor="@color/black"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="@dimen/default_text_size_big"
                     app:layout_constraintEnd_toStartOf="@+id/imageButtonReplyAll"
                     app:layout_constraintStart_toStartOf="parent"

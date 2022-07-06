@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.adapter
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.Spanned
@@ -34,7 +35,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.LogsUtil
-import com.flowcrypt.email.util.UIUtil
+import com.google.android.material.color.MaterialColors
 import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
 
@@ -168,17 +169,20 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
       if (messageEntity.isSeen) {
         changeViewsTypeface(viewHolder, Typeface.NORMAL)
-        viewHolder.textViewSenderAddress?.setTextColor(UIUtil.getColor(context, R.color.dark))
-        viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, R.color.gray))
+        viewHolder.textViewSenderAddress?.setTextColor(
+          MaterialColors.getColor(context, R.attr.colorOnSurfaceVariant, Color.BLACK)
+        )
+        viewHolder.textViewDate?.setTextColor(
+          MaterialColors.getColor(context, R.attr.itemSubTitleColor, Color.BLACK)
+        )
       } else {
         changeViewsTypeface(viewHolder, Typeface.BOLD)
         viewHolder.textViewSenderAddress?.setTextColor(
-          UIUtil.getColor(
-            context,
-            android.R.color.black
-          )
+          MaterialColors.getColor(context, R.attr.itemTitleColor, Color.BLACK)
         )
-        viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, android.R.color.black))
+        viewHolder.textViewDate?.setTextColor(
+          MaterialColors.getColor(context, R.attr.itemTitleColor, Color.BLACK)
+        )
       }
 
       viewHolder.imageViewAtts?.visibility =

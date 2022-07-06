@@ -3,6 +3,6 @@
   ~ Contributors: DenBond7
   -->
 
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/silver" android:state_activated="true" />
-</selector>
+<resources>
+    <color name="messageSubTitleColor">#66989898</color>
+</resources>
