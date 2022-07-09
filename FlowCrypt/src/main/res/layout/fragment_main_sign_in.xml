@@ -79,7 +79,7 @@
             android:gravity="center"
             android:lineSpacingExtra="@dimen/default_margin_small"
             android:text="@string/connect_your_email_account_to_start_sending_encrypted_messages"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="@dimen/default_text_size_big"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

@@ -62,7 +62,6 @@
             android:layout_marginBottom="@dimen/default_margin_content"
             android:enabled="false"
             android:text="@string/check"
-            android:textColor="@color/white"
             app:layout_constraintBottom_toTopOf="@+id/textView"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />

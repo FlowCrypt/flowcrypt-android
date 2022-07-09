@@ -21,6 +21,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentLegalBinding
 import com.flowcrypt.email.databinding.SwipeToRefrechWithWebviewBinding
+import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.extensions.androidx.viewpager2.widget.reduceDragSensitivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.google.android.material.tabs.TabLayoutMediator
@@ -124,7 +125,10 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
           binding?.swipeRefreshLayout?.isRefreshing = false
         }
       }
-      assetsPath?.let { binding?.webView?.loadUrl(it) }
+      assetsPath?.let {
+        binding?.webView?.setupDayNight()
+        binding?.webView?.loadUrl(it)
+      }
     }
 
     companion object {

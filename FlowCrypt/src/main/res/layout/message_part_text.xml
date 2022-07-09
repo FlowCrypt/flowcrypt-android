@@ -13,7 +13,7 @@
     android:paddingLeft="@dimen/default_margin_medium"
     android:paddingRight="@dimen/default_margin_medium"
     android:paddingBottom="@dimen/default_margin_medium"
-    android:textColor="@android:color/black"
+    android:textColor="?attr/colorOnSurface"
     android:textIsSelectable="true"
     android:textSize="@dimen/default_text_size_medium"
     tools:ignore="Overdraw"
