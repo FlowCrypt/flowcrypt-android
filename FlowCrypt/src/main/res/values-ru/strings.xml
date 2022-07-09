@@ -131,7 +131,7 @@
     <string name="outgoing_mail_settings">Настройки исходящей почты</string>
     <string name="security_type">Тип протокола безопасности</string>
     <string name="require_custom_sign_in">Использовать другие учетные данные для SMTP</string>
-    <string name="template_email_already_added">Сообщение  \"%1$s\" уже добавлено</string>
+    <string name="template_email_already_added">Сообщение \"%1$s\" уже добавлено</string>
     <string name="keys_have_different_pass_phrase">Ключи имеют разную ключевую фразу</string>
     <string name="source_has_wrong_pgp_structure">Предоставленное вами содержимое не похоже на действительный %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Содержимое Вашего файла не похоже на действительный %1$s ключ PGP.</string>
@@ -162,7 +162,7 @@
     <string name="select_only_one_key">Выберите источник, в котором хранится только один ключ</string>
     <string name="see_more_backup_options">Посмотреть другие варианты резервного копирования</string>
     <string name="decrypt_error_message_bad_mdc">Угроза безопасности - открытие этого сообщения опасно, поскольку оно было изменено при передаче.</string>
-    <string name="decrypt_error_message_no_mdc">Угроза безопасности!\n\nВ сообщении отсутствует код проверки целостности (MDC). Отправитель должен обновить свое устаревшее программное обеспечение.\n\nОтображать сообщение на свой страх и риск</string>
+    <string name="decrypt_error_message_no_mdc">Угроза безопасности!\n\nВ сообщении отсутствует код проверки целостности (MDC). Отправитель должен обновить свое устаревшее программное обеспечение.\n\nВы можете отобразить это сообщение на свой страх и риск.</string>
     <string name="email_must_be_non_empty">Адрес не должен быть пустым</string>
     <string name="empty_pass_phrase">Отсутствует ключевая фраза</string>
     <string name="empty_trash">Очистить корзину</string>
