@@ -90,6 +90,8 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDia
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientAdapter
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
@@ -97,6 +99,9 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import com.hootsuite.nachos.NachoTextView
@@ -113,6 +118,7 @@ import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.IOException
 import java.util.regex.Pattern
+
 
 /**
  * This fragment describe a logic of sent an encrypted or standard message.
@@ -149,6 +155,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       uri?.let { addAttachmentInfoFromUri(it) }
     }
 
+  private lateinit var recipientChipRecyclerViewAdapter: RecipientChipRecyclerViewAdapter
+
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
@@ -176,6 +184,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    recipientChipRecyclerViewAdapter =
+      RecipientChipRecyclerViewAdapter(recipientAdapter = prepareRecipientsAdapter())
     initExtras(activity?.intent)
   }
 
@@ -840,6 +850,19 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * Init fragment views
    */
   private fun initViews() {
+    binding?.rVChips?.apply {
+      val layoutManager = FlexboxLayoutManager(context)
+      layoutManager.flexDirection = FlexDirection.ROW
+      layoutManager.justifyContent = JustifyContent.FLEX_START
+      setLayoutManager(layoutManager)
+      adapter = recipientChipRecyclerViewAdapter
+      addItemDecoration(
+        MarginItemDecoration(
+          marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+        )
+      )
+    }
+
     initChipsView(binding?.editTextRecipientTo)
     initChipsView(binding?.editTextRecipientCc)
     initChipsView(binding?.editTextRecipientBcc)
@@ -1523,6 +1546,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
         updateChips(binding?.editTextRecipientTo, recipients.map { it.recipientWithPubKeys })
+        recipientChipRecyclerViewAdapter.submitList(recipients.map { it.recipientWithPubKeys })
       }
     }
 
