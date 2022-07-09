@@ -52,7 +52,7 @@
     <string name="add_account">Добавить учетную запись</string>
     <string name="attachments">Вложения</string>
     <string name="from">От</string>
-    <string name="message_was_encrypted_for_wrong_key">Здравствуйте, \n\nмне не удалось прочитать Ваше зашифрованное сообщение,
+    <string name="message_was_encrypted_for_wrong_key">Здравствуйте,\n\nмне не удалось прочитать Ваше зашифрованное сообщение,
         потому что оно было зашифровано неверным ключом. \n\nМой текущий открытый ключ прилагается ниже.
         Пожалуйста, обновите свои записи и отправьте мне новое зашифрованное сообщение. \n\nСпасибо</string>
     <string name="please_select_key">Пожалуйста, выберите ключ</string>
