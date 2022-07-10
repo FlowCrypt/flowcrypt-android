@@ -389,7 +389,7 @@
     <string name="no_connection">Нет соединения</string>
     <string name="no_connection_or_server_is_not_reachable">Нет соединения или сервер недоступен</string>
     <string name="no_key_available_for_your_email_account">Нет ключа для Вашей учетной записи электронной почты. Чтобы получить помощь, напишите %1$s</string>
-    <string name="no_key_available_for_your_emails">Нет ключа для Ваших адресов электронной почты %1$s и %2$s. Чтобы получить помощь, напишите  %3$s</string>
+    <string name="no_key_available_for_your_emails">Нет ключей для Ваших адресов электронной почты %1$s и %2$s. Чтобы получить помощь, напишите %3$s</string>
     <string name="no_public_key_recorded">Открытый ключ не записан. Ваши контакты могут не знать, что Вы используете шифрование.</string>
     <string name="notification_level">Уровень уведомления</string>
     <string name="notifications">Уведомления</string>

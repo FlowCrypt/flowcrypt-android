@@ -250,7 +250,7 @@
     <string name="notification_level">Notification level</string>
     <string name="receive_notifications_for">Receive notifications for:</string>
     <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
-    <string name="no_key_available_for_your_emails">No key available for your email addresses %1$s and %2$s. Please write %3$s for help.</string>
+    <string name="no_key_available_for_your_emails">No keys available for your email addresses %1$s and %2$s. Please write %3$s for help.</string>
     <string name="pass_phrase_changed">Pass phrase successfully changed.</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>
     <string name="backup_options">Backup options</string>
