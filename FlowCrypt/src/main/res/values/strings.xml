@@ -378,7 +378,7 @@
     </plurals>
     <string name="delete_message">Delete message</string>
     <string name="write_us">Write us</string>
-    <string name="message_failed_to_create">The message failed to create. Please create the message again</string>
+    <string name="message_failed_to_create">The message failed to create. Please try to create the message again</string>
     <string name="sync">Sync</string>
     <string name="sending_email">Sending email&#8230;</string>
     <string name="restart_sending">Restart sending</string>

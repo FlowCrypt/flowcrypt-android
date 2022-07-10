@@ -258,7 +258,7 @@
     <string name="empty_trash_warning">Вы собираетесь навсегда удалить все сообщения в этой папке. Вы уверены?</string>
     <string name="restart_sending_process_warning">Это повторит попытку отправки сообщения. Вы хотите продолжить?</string>
     <string name="restart_sending">Начать отправку заново</string>
-    <string name="message_failed_to_create">Не удалось создать сообщение. Пожалуйста, создайте сообщение еще раз</string>
+    <string name="message_failed_to_create">Не удалось создать сообщение. Пожалуйста, попробуйте создать сообщение еще раз</string>
     <string name="write_us">Напишите нам</string>
     <string name="cannot_save_copy_in_sent_folder">Не удается сохранить копию в папке Отправленные</string>
     <string name="pub_key_for_updating_is_not_found">Открытый ключ для обновления не найден</string>
