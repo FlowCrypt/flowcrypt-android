@@ -417,7 +417,7 @@
     <string name="your_key_backup">Ваша резервная копия FlowCrypt</string>
     <string name="your_keys_cannot_open_this_message">Ваши ключи не могут открыть это сообщение</string>
     <string name="pass_phrase_is_too_weak">Ваша ключевая фраза слишком слабая</string>
-    <string name="passphrase_was_changed">Ваша ключевая фраза была изменена. Отныне новые резервные копии будут защищены заданной ключ-фразой.</string>
+    <string name="passphrase_was_changed">Ваша ключевая фраза была изменена. Отныне новые резервные копии будут защищены заданной ключевой фразой.</string>
     <string name="different_pass_phrases">У Ваших закрытых ключей различные ключевые фразы</string>
     <string name="primary_address_not_defined">Основной адрес не определен</string>
     <string name="preparing">Подготовка&#8230;</string>
@@ -425,7 +425,7 @@
     <string name="setup_app">Пожалуйста, настройте приложение, прежде чем использовать эту опцию</string>
     <string name="select_stronger_pass_phrase">Пожалуйста, выберите более надежную ключевую фразу. Лучше всего использовать сочетание из 4 или 5 необычных слов.</string>
     <string name="reconnect_your_account">Пожалуйста, повторно подключите свою учетную запись, чтобы продолжить использование %1$s\nс\n%2$s</string>
-    <string name="provide_passphrase_to_decrypt_file">Пожалуйста, укажите ключевую фразу для расшифровки этого файла</string>
+    <string name="provide_passphrase_to_decrypt_file">Пожалуйста, укажите ключевую фразу для расшифрования этого файла</string>
     <string name="failed_please_try_again_later">Не удалось завершить операцию. Пожалуйста, повторите попытку позже</string>
     <string name="experimental_settings">Экспериментальные настройки</string>
     <string name="expand_an_account_managment">Развернуть управление учетной записью</string>
@@ -440,7 +440,7 @@
     <string name="loading_labels">Загрузка ярлыков</string>
     <string name="silent">Беззвучный</string>
     <string name="mixed_signed">разные подписи</string>
-    <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, которое защищено паролем. Вы можете открыт его используя эту ссылку: %2$s</string>
+    <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, защищенное паролем. Вы можете открыть его, используя эту ссылку: %2$s</string>
     <string name="can_not_send_password_protected">Сбой при отправке: защищено паролем</string>
     <string name="enter_web_portal_password">Введите web-пароль</string>
     <string name="set_password">Установить пароль</string>
