@@ -82,7 +82,7 @@
     <string name="touch_to_preview_and_edit">Натисніть, щоб подивитися та відредагувати</string>
     <string name="privacy">Конфіденційність</string>
     <string name="hint_when_found_keys_in_email">FlowCrypt знайшов одну чи декілька резервних копій ключів Вашого облікового запису. \n\nРезервні копії ключів зашифровані для вашого захисту. Це робить їх некорисними без пароля. \n\nВведіть пароль, котрий Ви використовували при резервному копіюванні.</string>
-    <string name="connect_your_email_account_to_start_sending_encrypted_messages">Подключите Ваш Email\n для отправки зашифрованных сообщений</string>
+    <string name="connect_your_email_account_to_start_sending_encrypted_messages">Підключіть Ваш Email\n для відправки зашифрованих повідомлень</string>
     <string name="continue_with_gmail">Продовжити з Gmail</string>
     <string name="continue_with_outlook_hotmail">Продовжити з Outlook, Hotmail</string>
     <string name="other_email_provider">Інший провайдер</string>
@@ -97,7 +97,7 @@
     <string name="enter_your_pass_phrase">Введіть Вашу ключову фразу</string>
     <string name="loss_of_this_pass_phrase_cannot_be_recovered">Якщо Ви забудете ключову фразу, то її неможливо буде відновити</string>
     <string name="passphrase_must_be_non_empty">Ключова фраза не може бути пустою</string>
-    <string name="see_choosing_secure_pass_phrases">Подивіться, як выбрати надійну ключову фразу</string>
+    <string name="see_choosing_secure_pass_phrases">Подивіться, як вибрати надійну ключову фразу</string>
     <string name="set_pass_phrase">Встановити ключову фразу</string>
     <string name="checking_imap_settings">Перевірка налаштувань IMAP &#8230;</string>
     <string name="checking_smtp_settings">Перевірка налаштувань SMTP &#8230;</string>
@@ -179,7 +179,7 @@
     <string name="date">Дата</string>
     <string name="please_wait_while_key_will_be_created">Створення ключа, будь ласка, зачекайте</string>
     <string name="template_created">Створено: %1$s</string>
-    <string name="error_occurred_while_receiving_private_keys">Не вдалося отримати Ваш закрытий ключ</string>
+    <string name="error_occurred_while_receiving_private_keys">Не вдалося отримати Ваш закритий ключ</string>
     <string name="decrypt_error_could_not_open_message">Не вдалося відкрити це повідомлення за допомогою %1$s.</string>
     <string name="original_attachment_not_found">Не вдалося переслати: деякі вкладення недоступні</string>
     <string name="original_message_missing">Не вдалося переслати: відсутнє оригінальне повідомлення</string>
@@ -233,10 +233,10 @@
     <string name="server_settings_were_not_updated">Помилка. Налаштування сервера не оновлені</string>
     <string name="settings_oauth_note">Ці налаштування визначені наперед постачальником OAuth і не можуть бути змінені.</string>
     <string name="check_and_save">Перевірити та зберегти</string>
-    <string name="please_leave_at_least_one_key">Вы не можете видалити усі ключі. Будь ласка, залиште хоча б один ключ для цілей зашифрування / розшифрування.</string>
+    <string name="please_leave_at_least_one_key">Ви не можете видалити усі ключі. Будь ласка, залиште хоча б один ключ для цілей зашифрування / розшифрування.</string>
     <string name="could_not_add_new_account">Не вдалося додати новий обліковий запис</string>
     <string name="add_new_private_key">Додати новий закритий ключ</string>
-    <string name="add_new_contact">Додати новый контакт</string>
+    <string name="add_new_contact">Додати новий контакт</string>
     <string name="warning_one_of_recipients_has_not_usable_pub_key">Відкритий ключ одного з Ваших отримувачів невірний або не може бути використаний з міркувань безпеки. \n\nПопрохайте отримувача прислати Вам новий відкритий ключ.</string>
     <string name="warning_no_expected_email">Попередження: схоже, що цей ключ не відноситься до очікуваної адреси електронної пошти %1$s</string>
     <string name="warning_key_expired">Попередження: строк дії цього ключа минув %1$s</string>
@@ -304,7 +304,7 @@
     <string name="template_message_part_public_key_fingerprint"><![CDATA[(Відбиток: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
     <string name="template_fingerprint"><![CDATA[Відбиток: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
     <string name="password_quality_subtext">(час зламу:</string>
-    <string name="there_are_no_backups_on_this_account"><b>Резервні копії відсутні</b>\n\n Якщо Вы втратите свій пристрій або він перестане працювати, Ваші зашифровані повідомлення стануть нечитанними.</string>
+    <string name="there_are_no_backups_on_this_account"><b>Резервні копії відсутні</b>\n\n Якщо Ви втратите свій пристрій або він перестане працювати, Ваші зашифровані повідомлення стануть недоступними для читання.</string>
     <string name="active_passphrase_session">Активна сесія ключової фрази</string>
     <string name="add_public_keys_of_your_contacts">Додайте відкриті ключі Ваших контактів, щоб відправляти їм зашифровані повідомлення.</string>
     <string name="pref_title_allow_anonymous_crash_reports">Дозволити анонімні звіти про помилки</string>
@@ -327,7 +327,7 @@
     <string name="could_not_save_new_recipient">Не вдалося зберегти нового отримувача</string>
     <string name="could_not_update_pub_key_for_recipient">Не вдалося оновити відкритий ключ для %1$s</string>
     <string name="could_not_change_pass_phrase">Не вдалося змінити ключову фразу</string>
-    <string name="reply_all_encrypted">Відповісти всем\nзашифрованным повідомленням</string>
+    <string name="reply_all_encrypted">Відповісти усім\nзашифрованим повідомленням</string>
     <string name="reply_all">Відповісти усім</string>
     <string name="reply">Відповісти</string>
     <string name="reply_encrypted">Відповісти\nзашифрованим повідомленням</string>
@@ -352,7 +352,7 @@
     <string name="this_message_will_not_be_encrypted">Це повідомлення не буде зашифровано</string>
     <string name="key_sha1_warning_msg">Цей ключ OpenPGP не підтримується. Подробиці: відповідних підписів для ключа не знайдено. Це може бути через те, що відсутні внутрішні підписи, або підписи зроблені невірно, або він може використовувати застарілі алгоритми, які більше не є безпечним и більше не підримуються (наприклад, SHA-1).</string>
     <string name="backup_as_email_hint">Це створить резервну копію закритих ключів у Вашій поштовій скриньці. Ступінь безпеки залежить від сили Вашого пароля, котрий має бути дуже довгим та таким, що трудно вгадати. Найкращий варіант для більшості користувачів.</string>
-    <string name="backup_as_download_hint">Це збереже Ваші ключі у вигляді файлу. Дуже безпечний варіант, якщо Ваш пристрій зашифрований або якщо Ви можете зберігати цей файл у безпеці. Якщо Ви втратите і Ваш пристрій, і файл, Ваші зашифровані електронні повідомлення стануть нечитанними, тому Вам необхідно зберегти цей файл в надійному місці.</string>
+    <string name="backup_as_download_hint">Це збереже Ваші ключі у вигляді файлу. Дуже безпечний варіант, якщо Ваш пристрій зашифрований або якщо Ви можете зберігати цей файл у безпеці. Якщо Ви втратите і Ваш пристрій, і файл, Ваші зашифровані електронні повідомлення стануть недоступними для читання, тому Вам необхідно зберегти цей файл в надійному місці.</string>
     <string name="forward">Переслати</string>
     <string name="fix">виправити</string>
     <string name="template_fingerprint_2">Відбиток %1$d: %2$s</string>
@@ -424,7 +424,7 @@
     <string name="preparing">Підготовка&#8230;</string>
     <string name="decrypt_error_please_write_me">Будь ласка, напишіть нам на адресу %1$s, щоб ми могли виправити це для Вас.</string>
     <string name="setup_app">Будь ласка, налаштуйте застосунок, перш ніж використовувати цю опцію</string>
-    <string name="select_stronger_pass_phrase">Будь ласка, выберіть більш надійну ключову фразу. Краще за все використовувати сполучення з 4 або 5 незвичайних слів.</string>
+    <string name="select_stronger_pass_phrase">Будь ласка, виберіть більш надійну ключову фразу. Краще за все використовувати сполучення з 4 або 5 незвичайних слів.</string>
     <string name="reconnect_your_account">Будь ласка, знов підключіть свій обліковий запис, щоб продовжить використання %1$s\nз\n%2$s</string>
     <string name="provide_passphrase_to_decrypt_file">Будь ласка, вкажіть ключову фразу для розшифрування цього файлу</string>
     <string name="failed_please_try_again_later">Не вдалося завершити операцію. Будь ласка, повторіть спробу пізніше</string>
@@ -471,7 +471,7 @@
     <string name="error">Помилка</string>
     <string name="import_keys_from_different_sources">Ви намагаєтеся імпортувати ключі з різних джерел</string>
     <string name="thank_you_for_feedback">Дякуємо за Ваш відгук</string>
-    <string name="no_private_keys_suitable_for_encryption">Вибачте, Вы не можете відправити зашифроване повідомлення. У Вас немає ні одного закритого ключа, придатного для шифрування.</string>
+    <string name="no_private_keys_suitable_for_encryption">Вибачте, Ви не можете відправити зашифроване повідомлення. У Вас немає ні одного закритого ключа, придатного для шифрування.</string>
     <string name="revoked">відкликаний</string>
     <string name="key_expiration">Строк дії ключа: %1$s</string>
     <string name="key_does_not_expire">безстроково</string>
@@ -483,5 +483,5 @@
     <string name="refreshing_keys_from_ekm_failed">Не вдалося оновить ключі з сервера EKM</string>
     <string name="source_contains_more_than_one_key">Джерело містить більш ніж один закритий ключ</string>
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Будь ласка, введіть Вашу ключову фразу, щоб підтимувати Ваші ключі в актуальному стані</string>
-    <string name="key_is_revoked_unable_to_update">Ви вже имеете відкликану версію цього відкритого ключа. Подальші оновлення заборонені. Будь ласка, запросіть інший відкритий ключ у цього отримувача.</string>
+    <string name="key_is_revoked_unable_to_update">Ви вже маєте відкликану версію цього відкритого ключа. Подальші оновлення заборонені. Будь ласка, запросіть інший відкритий ключ у цього отримувача.</string>
 </resources>
