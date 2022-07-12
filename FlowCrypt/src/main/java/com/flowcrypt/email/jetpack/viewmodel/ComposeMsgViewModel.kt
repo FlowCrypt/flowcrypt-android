@@ -6,6 +6,8 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import com.flowcrypt.email.api.retrofit.ApiRepository
+import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.model.MessageEncryptionType
 import jakarta.mail.Message
@@ -23,6 +25,7 @@ import java.io.InvalidObjectException
  */
 class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Application) :
   BaseAndroidViewModel(application) {
+  private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val messageEncryptionTypeMutableStateFlow: MutableStateFlow<MessageEncryptionType> =
     MutableStateFlow(
       if (isCandidateToEncrypt) {
@@ -138,6 +141,8 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   data class Recipient(
     val recipientType: Message.RecipientType,
     val recipientWithPubKeys: RecipientWithPubKeys,
-    val creationTime: Long = System.currentTimeMillis()
+    val creationTime: Long = System.currentTimeMillis(),
+    var isUpdating: Boolean = true,
+    var isUpdateFailed: Boolean = false
   )
 }

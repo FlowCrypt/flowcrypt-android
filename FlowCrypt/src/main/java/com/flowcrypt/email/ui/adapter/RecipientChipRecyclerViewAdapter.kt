@@ -5,18 +5,19 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.database.Cursor
-import android.text.InputType
+import android.text.Editable
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.annotation.IntDef
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.databinding.ComposeAddRecipientItemBinding
 import com.google.android.material.chip.Chip
 
 
@@ -28,7 +29,7 @@ import com.google.android.material.chip.Chip
  */
 class RecipientChipRecyclerViewAdapter(
   var showGroupEnabled: Boolean = false,
-  private val recipientAdapter: RecipientAdapter
+  private val onChipsListener: OnChipsListener
 ) :
   ListAdapter<RecipientWithPubKeys, RecipientChipRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   override fun onCreateViewHolder(
@@ -38,20 +39,10 @@ class RecipientChipRecyclerViewAdapter(
     val chip = Chip(parent.context)
 
     return when (viewType) {
-      ADD -> AddViewHolder(AutoCompleteTextView(parent.context).apply {
-        dropDownAnchor = R.id.rVChips
-        threshold = 2
-        inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-        setAdapter(recipientAdapter)
-        minWidth = resources.getDimensionPixelOffset(R.dimen.activity_horizontal_margin)
-        textSize = 16f
-        setBackgroundColor(android.R.color.transparent)
-        setOnItemClickListener { parent, view, position, id ->
-          val adapter = parent.adapter as RecipientAdapter
-          val s = adapter.getItem(position) as Cursor
-          Toast.makeText(context, "s = ${adapter.convertToString(s)}", Toast.LENGTH_SHORT).show()
-        }
-      })
+      ADD -> AddViewHolder(
+        LayoutInflater.from(parent.context)
+          .inflate(R.layout.compose_add_recipient_item, parent, false)
+      )
       else -> ChipViewHolder(chip.apply { textSize = 16f })
     }
   }
@@ -79,10 +70,14 @@ class RecipientChipRecyclerViewAdapter(
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-  inner class AddViewHolder(private val autoCompleteTextView: AutoCompleteTextView) :
-    BaseViewHolder(autoCompleteTextView) {
-    fun bind() {
+  inner class AddViewHolder(itemView: View) : BaseViewHolder(itemView) {
+    private val binding: ComposeAddRecipientItemBinding =
+      ComposeAddRecipientItemBinding.bind(itemView)
 
+    fun bind() {
+      binding.editTextTextEmailAddress.addTextChangedListener {
+        onChipsListener.onEmailAddressTyped(it)
+      }
     }
   }
 
@@ -114,6 +109,10 @@ class RecipientChipRecyclerViewAdapter(
     }
   }
 
+  interface OnChipsListener {
+    fun onEmailAddressTyped(email: Editable?)
+  }
+
   companion object {
     private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RecipientWithPubKeys>() {
       override fun areItemsTheSame(old: RecipientWithPubKeys, new: RecipientWithPubKeys): Boolean {
@@ -121,7 +120,8 @@ class RecipientChipRecyclerViewAdapter(
       }
 
       override fun areContentsTheSame(
-        old: RecipientWithPubKeys, new: RecipientWithPubKeys
+        old: RecipientWithPubKeys,
+        new: RecipientWithPubKeys
       ): Boolean {
         return old == new
       }

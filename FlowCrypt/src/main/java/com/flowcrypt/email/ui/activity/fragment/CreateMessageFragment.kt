@@ -5,13 +5,13 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
 import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
@@ -28,11 +28,13 @@ import android.widget.ArrayAdapter
 import android.widget.FilterQueryProvider
 import android.widget.FrameLayout
 import android.widget.ListView
+import android.widget.PopupWindow
 import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.ListPopupWindow
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -79,6 +81,7 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -117,6 +120,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.IOException
+import java.lang.reflect.Method
 import java.util.regex.Pattern
 
 
@@ -141,6 +145,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val args by navArgs<CreateMessageFragmentArgs>()
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
+  private val recipientsAutoCompleteViewModel: RecipientsAutoCompleteViewModel by viewModels()
   private val composeMsgViewModel: ComposeMsgViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -184,8 +189,14 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    recipientChipRecyclerViewAdapter =
-      RecipientChipRecyclerViewAdapter(recipientAdapter = prepareRecipientsAdapter())
+    recipientChipRecyclerViewAdapter = RecipientChipRecyclerViewAdapter(
+      showGroupEnabled = false,
+      onChipsListener = object : RecipientChipRecyclerViewAdapter.OnChipsListener {
+        override fun onEmailAddressTyped(email: Editable?) {
+          recipientsAutoCompleteViewModel.updateAutoCompleteResults(email?.toString() ?: "")
+        }
+      }
+    )
     initExtras(activity?.intent)
   }
 
@@ -195,6 +206,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     updateActionBar()
     initViews()
     setupComposeMsgViewModel()
+    setupRecipientsAutoCompleteViewModel()
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
@@ -1193,12 +1205,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     return stringBuilder.toString()
   }
 
-  /**
-   * Prepare a [RecipientAdapter] for the [NachoTextView] object.
-   *
-   * @return <tt>[RecipientAdapter]</tt>
-   */
-  @SuppressLint("Recycle")
   private fun prepareRecipientsAdapter(): RecipientAdapter {
     val pgpContactAdapter = RecipientAdapter(requireContext(), null, true)
     //setup a search contacts logic in the database
@@ -1592,6 +1598,48 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               )
             }
           }
+        }
+      }
+    }
+  }
+
+  private fun setupRecipientsAutoCompleteViewModel() {
+    val listPopupWindow = ListPopupWindow(requireContext(), null, R.attr.listPopupWindowStyle)
+    listPopupWindow.anchorView = binding?.chipLayout
+    listPopupWindow.promptPosition = android.widget.ListPopupWindow.POSITION_PROMPT_BELOW
+    listPopupWindow.inputMethodMode = PopupWindow.INPUT_METHOD_NEEDED
+    listPopupWindow.listView?.overScrollMode = View.OVER_SCROLL_ALWAYS
+
+    try {
+      //to make OVER SCROLL after 3 items
+      val setListItemExpandMax: Method =
+        listPopupWindow.javaClass.getDeclaredMethod("setListItemExpandMax", Integer.TYPE)
+      setListItemExpandMax.isAccessible = true
+      setListItemExpandMax.invoke(listPopupWindow, 3)
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+
+    lifecycleScope.launchWhenStarted {
+      recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource?.incrementSafely()
+          }
+          Result.Status.SUCCESS -> {
+            val names = it.data?.map { recipientEntity -> recipientEntity.email } ?: emptyList()
+            val adapter =
+              ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, names)
+            listPopupWindow.setAdapter(adapter)
+            if (names.isEmpty()) {
+              listPopupWindow.dismiss()
+            } else {
+              listPopupWindow.show()
+            }
+            toast("s:" + names.size)
+            countingIdlingResource?.decrementSafely()
+          }
+          else -> {}
         }
       }
     }
