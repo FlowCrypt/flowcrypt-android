@@ -61,7 +61,7 @@ class RecipientAdapter(
 
   private fun getStringValue(columnName: String, cursor: Cursor): String {
     val columnIndex = cursor.getColumnIndex(columnName)
-    return if (columnIndex != -1) {
+    return if (cursor.position < count && columnIndex != -1) {
       cursor.getString(columnIndex) ?: ""
     } else {
       ""

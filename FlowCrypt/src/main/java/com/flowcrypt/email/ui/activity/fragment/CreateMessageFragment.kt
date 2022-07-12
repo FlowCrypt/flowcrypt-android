@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
 import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
@@ -28,13 +27,11 @@ import android.widget.ArrayAdapter
 import android.widget.FilterQueryProvider
 import android.widget.FrameLayout
 import android.widget.ListView
-import android.widget.PopupWindow
 import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.widget.ListPopupWindow
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -81,7 +78,6 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
-import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -120,7 +116,6 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
 import java.io.File
 import java.io.IOException
-import java.lang.reflect.Method
 import java.util.regex.Pattern
 
 
@@ -145,7 +140,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val args by navArgs<CreateMessageFragmentArgs>()
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
-  private val recipientsAutoCompleteViewModel: RecipientsAutoCompleteViewModel by viewModels()
   private val composeMsgViewModel: ComposeMsgViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -191,9 +185,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     super.onCreate(savedInstanceState)
     recipientChipRecyclerViewAdapter = RecipientChipRecyclerViewAdapter(
       showGroupEnabled = false,
+      anchorResId = R.id.chipLayout,
       onChipsListener = object : RecipientChipRecyclerViewAdapter.OnChipsListener {
-        override fun onEmailAddressTyped(email: Editable?) {
-          recipientsAutoCompleteViewModel.updateAutoCompleteResults(email?.toString() ?: "")
+        override fun onEmailAddressTyped(email: CharSequence) {
+          toast(email.toString())
         }
       }
     )
@@ -206,7 +201,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     updateActionBar()
     initViews()
     setupComposeMsgViewModel()
-    setupRecipientsAutoCompleteViewModel()
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
@@ -1603,33 +1597,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun setupRecipientsAutoCompleteViewModel() {
-    val listPopupWindow = prepareListPopupWindowForAutoComplete()
-
-    lifecycleScope.launchWhenStarted {
-      recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
-          }
-          Result.Status.SUCCESS -> {
-            val names = it.data?.map { recipientEntity -> recipientEntity.email } ?: emptyList()
-            val adapter =
-              ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, names)
-            listPopupWindow.setAdapter(adapter)
-            if (names.isEmpty()) {
-              listPopupWindow.dismiss()
-            } else {
-              listPopupWindow.show()
-            }
-            countingIdlingResource?.decrementSafely()
-          }
-          else -> {}
-        }
-      }
-    }
-  }
-
   private fun initNonEncryptedHintView() {
     nonEncryptedHintView =
       layoutInflater.inflate(R.layout.under_toolbar_line_with_text, appBarLayout, false)
@@ -1934,24 +1901,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         showAtts()
       }
     }
-  }
-
-  private fun prepareListPopupWindowForAutoComplete(): ListPopupWindow {
-    val listPopupWindow = ListPopupWindow(requireContext(), null, R.attr.listPopupWindowStyle)
-    listPopupWindow.anchorView = binding?.chipLayout
-    listPopupWindow.promptPosition = android.widget.ListPopupWindow.POSITION_PROMPT_BELOW
-    listPopupWindow.inputMethodMode = PopupWindow.INPUT_METHOD_NEEDED
-
-    try {
-      //to make OVER SCROLL after 3 items
-      val setListItemExpandMax: Method =
-        listPopupWindow.javaClass.getDeclaredMethod("setListItemExpandMax", Integer.TYPE)
-      setListItemExpandMax.isAccessible = true
-      setListItemExpandMax.invoke(listPopupWindow, 3)
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
-    return listPopupWindow
   }
 
   companion object {
