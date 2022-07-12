@@ -1604,21 +1604,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupRecipientsAutoCompleteViewModel() {
-    val listPopupWindow = ListPopupWindow(requireContext(), null, R.attr.listPopupWindowStyle)
-    listPopupWindow.anchorView = binding?.chipLayout
-    listPopupWindow.promptPosition = android.widget.ListPopupWindow.POSITION_PROMPT_BELOW
-    listPopupWindow.inputMethodMode = PopupWindow.INPUT_METHOD_NEEDED
-    listPopupWindow.listView?.overScrollMode = View.OVER_SCROLL_ALWAYS
-
-    try {
-      //to make OVER SCROLL after 3 items
-      val setListItemExpandMax: Method =
-        listPopupWindow.javaClass.getDeclaredMethod("setListItemExpandMax", Integer.TYPE)
-      setListItemExpandMax.isAccessible = true
-      setListItemExpandMax.invoke(listPopupWindow, 3)
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
+    val listPopupWindow = prepareListPopupWindowForAutoComplete()
 
     lifecycleScope.launchWhenStarted {
       recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
@@ -1636,7 +1622,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             } else {
               listPopupWindow.show()
             }
-            toast("s:" + names.size)
             countingIdlingResource?.decrementSafely()
           }
           else -> {}
@@ -1949,6 +1934,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         showAtts()
       }
     }
+  }
+
+  private fun prepareListPopupWindowForAutoComplete(): ListPopupWindow {
+    val listPopupWindow = ListPopupWindow(requireContext(), null, R.attr.listPopupWindowStyle)
+    listPopupWindow.anchorView = binding?.chipLayout
+    listPopupWindow.promptPosition = android.widget.ListPopupWindow.POSITION_PROMPT_BELOW
+    listPopupWindow.inputMethodMode = PopupWindow.INPUT_METHOD_NEEDED
+
+    try {
+      //to make OVER SCROLL after 3 items
+      val setListItemExpandMax: Method =
+        listPopupWindow.javaClass.getDeclaredMethod("setListItemExpandMax", Integer.TYPE)
+      setListItemExpandMax.isAccessible = true
+      setListItemExpandMax.invoke(listPopupWindow, 3)
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+    return listPopupWindow
   }
 
   companion object {
