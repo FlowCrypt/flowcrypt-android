@@ -15,7 +15,6 @@
     <string name="help_feedback_or_question">Помощь, вопросы, обратная связь</string>
     <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Спасибо, что используете FlowCrypt! Мы здесь, чтобы помочь Вам.</string>
     <string name="your_message">Ваше сообщение</string>
-    <string name="email">Email</string>
     <string name="edit">Редактировать</string>
     <string name="delete">Удалить</string>
     <string name="sending_message_must_not_be_empty">Сообщение не должно быть пустым</string>
@@ -48,7 +47,7 @@
     <string name="smtp_username">Имя пользователя SMTP</string>
     <string name="smtp_password">Пароль SMTP</string>
     <string name="try_to_connect">Подключиться</string>
-    <string name="none">Нет</string>
+    <string name="none">Отсутствует</string>
     <string name="add_account">Добавить учетную запись</string>
     <string name="attachments">Вложения</string>
     <string name="from">От</string>
@@ -112,7 +111,7 @@
     <string name="prompt_compose_security_email">Написать безопасное сообщение</string>
     <string name="prompt_recipients_cc">Добавить получателей (Копия)</string>
     <string name="prompt_recipients_bcc">Добавить получателей (Скрытая копия)</string>
-    <string name="prompt_recipients_to">Добавить получателей (От кого)</string>
+    <string name="prompt_recipients_to">Добавить получателей (Кому)</string>
     <string name="include_public_key">Приложить открытый ключ</string>
     <string name="switch_to_standard_email">Переключиться на обычное сообщение</string>
     <string name="text_must_not_be_empty">Ошибка: \"%1$s\" не может быть пустым!</string>
@@ -131,7 +130,7 @@
     <string name="outgoing_mail_settings">Настройки исходящей почты</string>
     <string name="security_type">Тип протокола безопасности</string>
     <string name="require_custom_sign_in">Использовать другие учетные данные для SMTP</string>
-    <string name="template_email_already_added">Сообщение \"%1$s\" уже добавлено</string>
+    <string name="template_email_already_added">Учетная запись \"%1$s\" уже добавлена</string>
     <string name="keys_have_different_pass_phrase">Ключи имеют разную ключевую фразу</string>
     <string name="source_has_wrong_pgp_structure">Предоставленное вами содержимое не похоже на действительный %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Содержимое Вашего файла не похоже на действительный %1$s ключ PGP.</string>
@@ -158,7 +157,7 @@
     <string name="sent">Отправлено</string>
     <string name="please_wait_while_message_will_be_sent">Отправка сообщения, пожалуйста, подождите</string>
     <string name="sending_email">Отправка сообщения&#8230;</string>
-    <string name="selection_text">Выбрано: %1$d</string>
+    <string name="selection_text">Выделено: %1$d</string>
     <string name="select_only_one_key">Выберите источник, в котором хранится только один ключ</string>
     <string name="see_more_backup_options">Посмотреть другие варианты резервного копирования</string>
     <string name="decrypt_error_message_bad_mdc">Угроза безопасности - открытие этого сообщения опасно, поскольку оно было изменено при передаче.</string>
@@ -326,11 +325,11 @@
     <string name="could_not_save_new_recipient">Не удалось сохранить нового получателя</string>
     <string name="could_not_update_pub_key_for_recipient">Не удалось обновить открытый ключ для %1$s</string>
     <string name="could_not_change_pass_phrase">Не удалось изменить ключевую фразу</string>
-    <string name="reply_all_encrypted">Ответить всем\nзашифрованным сообщением</string>
+    <string name="reply_all_encrypted">Ответить всем\nс шифрованием</string>
     <string name="reply_all">Ответить всем</string>
     <string name="reply">Ответить</string>
-    <string name="reply_encrypted">Ответить\nзашифрованным сообщением</string>
-    <string name="retry">Повторить попытку</string>
+    <string name="reply_encrypted">Ответить\nс шифрованием</string>
+    <string name="retry">Повторить</string>
     <string name="save_to_file">Сохранить в файл</string>
     <string name="search_by_key_id_or_email">Поиск по идентификатору ключа или электронной почте</string>
     <string name="cyrillic_search_not_support_yet">Поиск с иностранными алфавитами пока не поддерживается</string>
@@ -351,7 +350,7 @@
     <string name="this_message_will_not_be_encrypted">Это сообщение не будет зашифровано</string>
     <string name="key_sha1_warning_msg">Этот ключ OpenPGP не поддерживается. Подробности: подходящие подписи для ключа не найдены. Это может быть из-за того, что отсутствуют внутренние подписи, или подписи сделаны неправильно, или он может использовать устаревшие алгоритмы, которые больше не являются безопасными и больше не поддерживаются (например, SHA-1).</string>
     <string name="backup_as_email_hint">Это создаст резервную копию закрытых ключей в Вашем почтовом ящике. Степень безопасности зависит от силы Вашего пароля, который должен быть очень длинным, и трудноугадываемым. Лучший вариант для большинства пользователей.</string>
-    <string name="backup_as_download_hint">Это сохранит Ваши ключи в виде файла. Очень безопасный вариант, если Ваше устройство зашифровано или если Вы можете хранить этот файл в безопасности. Если Вы потеряете и Ваше устройство, и файл, Ваши зашифрованные электронные сообщения станут нечитаемымыми, поэтому Вам необходимо сохранить этот файл в надежном месте.</string>
+    <string name="backup_as_download_hint">Это сохранит Ваши ключи в виде файла. Очень безопасный вариант, если Ваше устройство зашифровано или если Вы можете хранить этот файл в безопасности. Если Вы потеряете и Ваше устройство, и файл, Ваши зашифрованные электронные сообщения станут нечитаемыми, поэтому Вам необходимо сохранить этот файл в надежном месте.</string>
     <string name="forward">Переслать</string>
     <string name="fix">исправить</string>
     <string name="template_fingerprint_2">Отпечаток %1$d: %2$s</string>
@@ -445,7 +444,7 @@
     <string name="enter_web_portal_password">Введите web-пароль</string>
     <string name="set_password">Установить пароль</string>
     <string name="web_portal_password_added">Web-пароль добавлен</string>
-    <string name="type_text_to_start_measuring">Пожалуйста, введите текст чтобы начать измерение</string>
+    <string name="type_text_to_start_measuring">Пожалуйста, введите текст чтобы начать вычисление</string>
     <string name="password_cannot_be_empty">Пароль не может быть пустым</string>
     <string name="tap_to_protect_with_web_portal_password">Нажмите, чтобы защитить web-паролем</string>
     <string name="password_protection_usage_explanation">Получатели получат ссылку, используя которую смогут прочесть Ваше сообщение на web-портале. Для этого им нужно будет ввести этот пароль. Они будут иметь доступ к данному сообщению на протяжении 180 дней.</string>

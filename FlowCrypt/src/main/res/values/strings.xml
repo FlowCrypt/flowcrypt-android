@@ -64,7 +64,7 @@
     <string name="your_message">Your message</string>
     <string name="see_more_backup_options">See more backup options</string>
     <string name="there_are_no_backups_on_this_account"><b>There are no backups on this account</b>\n\n If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
-    <string name="email">Email</string>
+    <string name="email" translatable="false">Email</string>
     <string name="download">Download</string>
     <string name="backup_as_a_file">backup as a file</string>
     <string name="backup_as_email">backup as email</string>
