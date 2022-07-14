@@ -5,7 +5,8 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.text.TextUtils
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,10 +18,15 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.databinding.ChipRecipientItemBinding
 import com.flowcrypt.email.databinding.ComposeAddRecipientItemBinding
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.chip.Chip
+import com.google.android.material.color.MaterialColors
+import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
+import com.google.android.material.progressindicator.IndeterminateDrawable
 import jakarta.mail.Message
 
 
@@ -60,7 +66,10 @@ class RecipientChipRecyclerViewAdapter(
 
         requireNotNull(addViewHolder)
       }
-      else -> ChipViewHolder(Chip(parent.context).apply { textSize = 16f })
+      else -> ChipViewHolder(
+        LayoutInflater.from(parent.context)
+          .inflate(R.layout.chip_recipient_item, parent, false)
+      )
     }
   }
 
@@ -88,7 +97,7 @@ class RecipientChipRecyclerViewAdapter(
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
   inner class AddViewHolder(itemView: View) : BaseViewHolder(itemView) {
-    val binding: ComposeAddRecipientItemBinding = ComposeAddRecipientItemBinding.bind(itemView)
+    val binding = ComposeAddRecipientItemBinding.bind(itemView)
 
     fun bind() {
       binding.editTextEmailAddress.addTextChangedListener { editable ->
@@ -121,28 +130,79 @@ class RecipientChipRecyclerViewAdapter(
   }
 
   inner class ChipViewHolder(itemView: View) : BaseViewHolder(itemView) {
+    val binding = ChipRecipientItemBinding.bind(itemView)
     fun bind(recipientInfo: RecipientInfo) {
-      val chip = itemView as Chip
-      chip.ellipsize = TextUtils.TruncateAt.MIDDLE
+      val chip = binding.chip
       chip.text = recipientInfo.recipientWithPubKeys.recipient.name
         ?: recipientInfo.recipientWithPubKeys.recipient.email
-      chip.isCloseIconVisible = true
 
-      /*val progressIndicatorSpec = CircularProgressIndicatorSpec(
-        itemView.context,
-        null,
-        0,
-        R.style.Widget_MaterialComponents_CircularProgressIndicator_ExtraSmall
-      )
-
-      progressIndicatorSpec.indicatorInset = 1
-
-      chip.chipIcon =
-        IndeterminateDrawable.createCircularDrawable(itemView.context, progressIndicatorSpec)*/
+      updateChipBackgroundColor(chip, recipientInfo)
+      updateChipTextColor(chip, recipientInfo)
+      updateChipIcon(chip, recipientInfo)
 
       chip.setOnCloseIconClickListener {
         onChipsListener.onChipDeleted(recipientInfo)
       }
+    }
+
+    private fun updateChipBackgroundColor(chip: Chip, recipientInfo: RecipientInfo) {
+      val recipientWithPubKeys = recipientInfo.recipientWithPubKeys
+
+      val color = when {
+        recipientInfo.isUpdating -> {
+          MaterialColors.getColor(chip.context, R.attr.colorSurface, Color.WHITE)
+        }
+
+        recipientWithPubKeys.hasAtLeastOnePubKey() -> {
+          val colorResId = when {
+            !recipientWithPubKeys.hasUsablePubKey() -> CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY
+            recipientWithPubKeys.hasNotRevokedPubKey() -> CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED
+            recipientWithPubKeys.hasNotExpiredPubKey() -> CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED
+            else -> CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+          }
+          UIUtil.getColor(chip.context, colorResId)
+        }
+
+        else -> {
+          UIUtil.getColor(chip.context, CHIP_COLOR_RES_ID_NO_PUB_KEY)
+        }
+      }
+
+      chip.chipBackgroundColor = ColorStateList.valueOf(color)
+    }
+
+    private fun updateChipTextColor(chip: Chip, recipientInfo: RecipientInfo) {
+      val color = when {
+        recipientInfo.isUpdating -> {
+          MaterialColors.getColor(chip.context, R.attr.colorOnSurface, Color.BLACK)
+        }
+
+        else -> {
+          MaterialColors.getColor(chip.context, R.attr.colorOnSurfaceInverse, Color.WHITE)
+        }
+      }
+
+      chip.setTextColor(color)
+    }
+
+    private fun updateChipIcon(chip: Chip, recipientInfo: RecipientInfo) {
+      if (recipientInfo.isUpdating) {
+        chip.chipIcon = prepareProgressDrawable()
+      } else {
+        chip.chipIcon = null
+      }
+    }
+
+    private fun prepareProgressDrawable(): IndeterminateDrawable<CircularProgressIndicatorSpec> {
+      val progressIndicatorSpec = CircularProgressIndicatorSpec(
+        itemView.context,
+        null,
+        0,
+        R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall
+      ).apply {
+        indicatorInset = 1
+      }
+      return IndeterminateDrawable.createCircularDrawable(itemView.context, progressIndicatorSpec)
     }
   }
 
@@ -161,6 +221,12 @@ class RecipientChipRecyclerViewAdapter(
   )
 
   companion object {
+    const val CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY = R.color.colorPrimary
+    const val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED = R.color.orange
+    const val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED = R.color.red
+    const val CHIP_COLOR_RES_ID_NO_PUB_KEY = R.color.gray
+    const val CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY = R.color.red
+
     private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RecipientInfo>() {
       override fun areItemsTheSame(old: RecipientInfo, new: RecipientInfo): Boolean {
         return old.recipientWithPubKeys.recipient.id == new.recipientWithPubKeys.recipient.id
