@@ -332,13 +332,13 @@
     <string name="reply_encrypted">Відповісти\nз шифруванням</string>
     <string name="retry">Повторити</string>
     <string name="save_to_file">зберегти у файл</string>
-    <string name="search_by_key_id_or_email">Пошук за ідентифікатором ключа або електронною почтою</string>
-    <string name="cyrillic_search_not_support_yet">Пошук з іноземними алфавітами поки не підтримується</string>
+    <string name="search_by_key_id_or_email">Пошук за ідентифікатором ключа або Email адресою</string>
+    <string name="cyrillic_search_not_support_yet">Пошук кирилицею поки не підтримується</string>
     <string name="submitted_can_receive_encrypted_email">Відправлено, можна отримувати зашифровану электронну пошту.</string>
     <string name="download_attachments_notification_channel">Канал сповіщень про завантаження вкладень</string>
     <string name="messages_notification_channel">Канал сповіщень про повідомлення</string>
     <string name="no_details_about_given_key">Докладних відомостей про даний ключ немає.</string>
-    <string name="there_are_no_private_keys">Немає імпортованиї закритих ключів для %1$s</string>
+    <string name="there_are_no_private_keys">Немає імпортованих закритих ключів для %1$s</string>
     <string name="no_prv_keys_ask_admin">Для Вас не налаштовані закриті ключі. Зверніться до системного администратора або до служби підтримки</string>
     <string name="there_is_problem_with_cache">Проблема з текою тимчасового кеша. Будь ласка, створіть повідомлення ще раз</string>
     <string name="silent_notifications_notification_channel">Канал тихих сповіщень</string>
@@ -350,7 +350,7 @@
     <string name="msg_contains_not_valid_pub_key">Це повідомлення містить недійсний відкритий ключ.\n\n%1$s</string>
     <string name="this_message_will_not_be_encrypted">Це повідомлення не буде зашифровано</string>
     <string name="key_sha1_warning_msg">Цей ключ OpenPGP не підтримується. Подробиці: відповідних підписів для ключа не знайдено. Це може бути через те, що відсутні внутрішні підписи, або підписи зроблені невірно, або він може використовувати застарілі алгоритми, які більше не є безпечним и більше не підримуються (наприклад, SHA-1).</string>
-    <string name="backup_as_email_hint">Це створить резервну копію закритих ключів у Вашій поштовій скриньці. Ступінь безпеки залежить від сили Вашого пароля, котрий має бути дуже довгим та таким, що трудно вгадати. Найкращий варіант для більшості користувачів.</string>
+    <string name="backup_as_email_hint">Це створить резервну копію закритих ключів у Вашій поштовій скриньці. Ступінь безпеки залежить від сили Вашого пароля, котрий має бути дуже довгим та таким, що важко вгадати. Найкращий варіант для більшості користувачів.</string>
     <string name="backup_as_download_hint">Це збереже Ваші ключі у вигляді файлу. Дуже безпечний варіант, якщо Ваш пристрій зашифрований або якщо Ви можете зберігати цей файл у безпеці. Якщо Ви втратите і Ваш пристрій, і файл, Ваші зашифровані електронні повідомлення стануть недоступними для читання, тому Вам необхідно зберегти цей файл в надійному місці.</string>
     <string name="forward">Переслати</string>
     <string name="fix">виправити</string>
@@ -374,7 +374,7 @@
     <string name="key_successfully_imported">Ключі успішно імпортовані</string>
     <string name="key_details">Інформація про ключ</string>
     <string name="the_key_successfully_imported">Ключ успішно імпортовано</string>
-    <string name="less_secure_login_is_not_allowed">У Вашому обліковому запису Gmail неможна використовувати менш безпечний вхід. Перехід до безпечного входу.</string>
+    <string name="less_secure_login_is_not_allowed">У Вашому обліковому записі Gmail неможна використовувати менш безпечний вхід. Перехід до безпечного входу.</string>
     <string name="licence">Ліцензія</string>
     <string name="loading_backups">Завантаження резервних копій</string>
     <string name="please_wait_while_information_about_recipients_will_be_updated">Завантаження інформації про отримувачів, будь ласка, зачекайте</string>
