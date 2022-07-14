@@ -78,7 +78,7 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   fun getFilteredCursor(searchPattern: String): Cursor?
 
   @Query("SELECT * FROM recipients WHERE email LIKE :searchPattern ORDER BY last_use DESC")
-  suspend fun findMatchingRecipients(searchPattern: String): List<RecipientEntity>
+  suspend fun findMatchingRecipients(searchPattern: String): List<RecipientWithPubKeys>
 
   @Query("DELETE FROM recipients")
   suspend fun deleteAll(): Int

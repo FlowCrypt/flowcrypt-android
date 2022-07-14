@@ -570,4 +570,5 @@
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Please enter pass phrase to keep your account keys up to date</string>
     <string name="key_is_revoked_unable_to_update">You already have a revoked version of this Public Key. Further updates are not allowed. Please request another Public Key from this person.</string>
     <string name="add_recipient">Add recipient</string>
+    <string name="type_valid_email_or_select_from_dropdown">Please type a valid email address or choose from a dropdown list</string>
 </resources>

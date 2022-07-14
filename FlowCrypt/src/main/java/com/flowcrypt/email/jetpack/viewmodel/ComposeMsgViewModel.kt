@@ -6,15 +6,18 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
 import jakarta.mail.Message
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import java.io.InvalidObjectException
 
 /**
@@ -24,7 +27,7 @@ import java.io.InvalidObjectException
  *         E-mail: DenBond7@gmail.com
  */
 class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Application) :
-  BaseAndroidViewModel(application) {
+  RoomBasicViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val messageEncryptionTypeMutableStateFlow: MutableStateFlow<MessageEncryptionType> =
     MutableStateFlow(
@@ -43,21 +46,21 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     webPortalPasswordMutableStateFlow.asStateFlow()
 
   //session cache for recipients
-  private val recipientsTo = mutableMapOf<String, Recipient>()
-  private val recipientsCc = mutableMapOf<String, Recipient>()
-  private val recipientsBcc = mutableMapOf<String, Recipient>()
+  private val recipientsTo = mutableMapOf<String, RecipientInfo>()
+  private val recipientsCc = mutableMapOf<String, RecipientInfo>()
+  private val recipientsBcc = mutableMapOf<String, RecipientInfo>()
 
-  private val recipientsToMutableStateFlow: MutableStateFlow<List<Recipient>> =
+  private val recipientsToMutableStateFlow: MutableStateFlow<List<RecipientInfo>> =
     MutableStateFlow(emptyList())
-  val recipientsToStateFlow: StateFlow<List<Recipient>> =
+  val recipientsToStateFlow: StateFlow<List<RecipientInfo>> =
     recipientsToMutableStateFlow.asStateFlow()
-  private val recipientsCcMutableStateFlow: MutableStateFlow<List<Recipient>> =
+  private val recipientsCcMutableStateFlow: MutableStateFlow<List<RecipientInfo>> =
     MutableStateFlow(emptyList())
-  val recipientsCcStateFlow: StateFlow<List<Recipient>> =
+  val recipientsCcStateFlow: StateFlow<List<RecipientInfo>> =
     recipientsCcMutableStateFlow.asStateFlow()
-  private val recipientsBccMutableStateFlow: MutableStateFlow<List<Recipient>> =
+  private val recipientsBccMutableStateFlow: MutableStateFlow<List<RecipientInfo>> =
     MutableStateFlow(emptyList())
-  val recipientsBccStateFlow: StateFlow<List<Recipient>> =
+  val recipientsBccStateFlow: StateFlow<List<RecipientInfo>> =
     recipientsBccMutableStateFlow.asStateFlow()
 
   val recipientsStateFlow = combine(
@@ -70,13 +73,13 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
   val msgEncryptionType: MessageEncryptionType
     get() = messageEncryptionTypeStateFlow.value
-  val recipientWithPubKeysTo: List<Recipient>
+  val recipientWithPubKeysTo: List<RecipientInfo>
     get() = recipientsTo.values.toList()
-  val recipientWithPubKeysCc: List<Recipient>
+  val recipientWithPubKeysCc: List<RecipientInfo>
     get() = recipientsCc.values.toList()
-  val recipientWithPubKeysBcc: List<Recipient>
+  val recipientWithPubKeysBcc: List<RecipientInfo>
     get() = recipientsBcc.values.toList()
-  val recipientWithPubKeys: List<Recipient>
+  val recipientWithPubKeys: List<RecipientInfo>
     get() = recipientWithPubKeysTo + recipientWithPubKeysCc + recipientWithPubKeysBcc
 
   fun switchMessageEncryptionType(messageEncryptionType: MessageEncryptionType) {
@@ -92,41 +95,62 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       Message.RecipientType.TO -> recipientsTo
       Message.RecipientType.CC -> recipientsCc
       Message.RecipientType.BCC -> recipientsBcc
-      else -> throw InvalidObjectException(
-        "unknown RecipientType: $recipientType"
-      )
+      else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
     }
 
     existingRecipients.clear()
     existingRecipients.putAll(
       list.associateBy(
         { it.recipient.email },
-        { Recipient(recipientType, it) })
+        { RecipientInfo(recipientType, it) })
     )
 
     notifyDataChanges(recipientType, existingRecipients)
   }
 
+  fun addRecipientByEmail(
+    recipientType: Message.RecipientType,
+    email: CharSequence
+  ) {
+    viewModelScope.launch {
+      val normalizedEmail = email.toString().lowercase()
+      val existingRecipient = roomDatabase.recipientDao()
+        .getRecipientWithPubKeysByEmailSuspend(normalizedEmail)
+
+      existingRecipient?.let {
+        val existingRecipients = when (recipientType) {
+          Message.RecipientType.TO -> recipientsTo
+          Message.RecipientType.CC -> recipientsCc
+          Message.RecipientType.BCC -> recipientsBcc
+          else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
+        }
+
+        existingRecipients[it.recipient.email] = RecipientInfo(recipientType, it)
+        notifyDataChanges(recipientType, existingRecipients)
+      }
+    }
+  }
+
   fun removeRecipient(
     recipientType: Message.RecipientType,
-    recipientWithPubKeys: RecipientWithPubKeys
+    recipientEmail: String
   ) {
+    val normalizedEmail = recipientEmail.lowercase()
+
     val existingRecipients = when (recipientType) {
       Message.RecipientType.TO -> recipientsTo
       Message.RecipientType.CC -> recipientsCc
       Message.RecipientType.BCC -> recipientsBcc
-      else -> throw InvalidObjectException(
-        "unknown RecipientType: $recipientType"
-      )
+      else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
     }
 
-    existingRecipients.remove(recipientWithPubKeys.recipient.email)
+    existingRecipients.remove(normalizedEmail)
     notifyDataChanges(recipientType, existingRecipients)
   }
 
   private fun notifyDataChanges(
     recipientType: Message.RecipientType,
-    recipients: MutableMap<String, Recipient>
+    recipients: MutableMap<String, RecipientInfo>
   ) {
     when (recipientType) {
       Message.RecipientType.TO -> recipientsToMutableStateFlow
@@ -137,12 +161,4 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       )
     }.value = recipients.values.toList()
   }
-
-  data class Recipient(
-    val recipientType: Message.RecipientType,
-    val recipientWithPubKeys: RecipientWithPubKeys,
-    val creationTime: Long = System.currentTimeMillis(),
-    var isUpdating: Boolean = true,
-    var isUpdateFailed: Boolean = false
-  )
 }

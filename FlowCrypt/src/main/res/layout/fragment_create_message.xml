@@ -108,6 +108,16 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewAutocomplete"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/rVChips" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <FrameLayout

@@ -46,6 +46,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -78,6 +79,7 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -87,6 +89,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
+import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
@@ -140,6 +143,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val args by navArgs<CreateMessageFragmentArgs>()
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
+  private val recipientsAutoCompleteViewModel: RecipientsAutoCompleteViewModel by viewModels()
   private val composeMsgViewModel: ComposeMsgViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -154,7 +158,37 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       uri?.let { addAttachmentInfoFromUri(it) }
     }
 
-  private lateinit var recipientChipRecyclerViewAdapter: RecipientChipRecyclerViewAdapter
+  private val recipientChipRecyclerViewAdapter: RecipientChipRecyclerViewAdapter =
+    RecipientChipRecyclerViewAdapter(
+      showGroupEnabled = false,
+      anchorResId = R.id.chipLayout,
+      onChipsListener = object : RecipientChipRecyclerViewAdapter.OnChipsListener {
+        override fun onEmailAddressTyped(email: CharSequence) {
+          recipientsAutoCompleteViewModel.updateAutoCompleteResults(email.toString())
+        }
+
+        override fun onEmailAddressAdded(email: CharSequence) {
+          composeMsgViewModel.addRecipientByEmail(Message.RecipientType.TO, email)
+        }
+
+        override fun onChipDeleted(recipientInfo: RecipientChipRecyclerViewAdapter.RecipientInfo) {
+          composeMsgViewModel.removeRecipient(
+            Message.RecipientType.TO,
+            recipientInfo.recipientWithPubKeys.recipient.email
+          )
+        }
+      }
+    )
+
+  private val autoCompleteResultRecyclerViewAdapter = AutoCompleteResultRecyclerViewAdapter(
+    object : AutoCompleteResultRecyclerViewAdapter.OnResultListener {
+      override fun onResultClick(recipientWithPubKeys: RecipientWithPubKeys) {
+        composeMsgViewModel.addRecipientByEmail(
+          Message.RecipientType.TO,
+          recipientWithPubKeys.recipient.email
+        )
+      }
+    })
 
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
@@ -183,15 +217,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    recipientChipRecyclerViewAdapter = RecipientChipRecyclerViewAdapter(
-      showGroupEnabled = false,
-      anchorResId = R.id.chipLayout,
-      onChipsListener = object : RecipientChipRecyclerViewAdapter.OnChipsListener {
-        override fun onEmailAddressTyped(email: CharSequence) {
-          toast(email.toString())
-        }
-      }
-    )
     initExtras(activity?.intent)
   }
 
@@ -201,6 +226,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     updateActionBar()
     initViews()
     setupComposeMsgViewModel()
+    setupRecipientsAutoCompleteViewModel()
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
     setupRecipientsViewModel()
@@ -849,7 +875,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    composeMsgViewModel.removeRecipient(recipientType, recipientWithPubKeys)
+    composeMsgViewModel.removeRecipient(recipientType, recipientWithPubKeys.recipient.email)
   }
 
   /**
@@ -867,6 +893,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
         )
       )
+    }
+
+    binding?.recyclerViewAutocomplete?.apply {
+      val layoutManager = LinearLayoutManager(context)
+      setLayoutManager(layoutManager)
+      adapter = autoCompleteResultRecyclerViewAdapter
     }
 
     initChipsView(binding?.editTextRecipientTo)
@@ -1546,7 +1578,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
         updateChips(binding?.editTextRecipientTo, recipients.map { it.recipientWithPubKeys })
-        recipientChipRecyclerViewAdapter.submitList(recipients.map { it.recipientWithPubKeys })
+        recipientChipRecyclerViewAdapter.submitList(recipients)
       }
     }
 
@@ -1899,6 +1931,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       if (attachments.none { it.name == key.name && it.encodedSize == key.encodedSize }) {
         attachments.add(key)
         showAtts()
+      }
+    }
+  }
+
+  private fun setupRecipientsAutoCompleteViewModel() {
+    lifecycleScope.launchWhenStarted {
+      recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource?.incrementSafely()
+          }
+          Result.Status.SUCCESS -> {
+            val results = it.data ?: emptyList()
+            autoCompleteResultRecyclerViewAdapter.submitList(results)
+            countingIdlingResource?.decrementSafely()
+          }
+          else -> {}
+        }
       }
     }
   }

@@ -6,22 +6,23 @@
 package com.flowcrypt.email.ui.adapter
 
 import android.database.Cursor
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FilterQueryProvider
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
 import androidx.annotation.IntDef
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.databinding.ComposeAddRecipientItemBinding
+import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.toast
 import com.google.android.material.chip.Chip
+import jakarta.mail.Message
 
 
 /**
@@ -35,7 +36,9 @@ class RecipientChipRecyclerViewAdapter(
   val anchorResId: Int,
   private val onChipsListener: OnChipsListener
 ) :
-  ListAdapter<RecipientWithPubKeys, RecipientChipRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
+  ListAdapter<RecipientChipRecyclerViewAdapter.RecipientInfo, RecipientChipRecyclerViewAdapter.BaseViewHolder>(
+    DIFF_CALLBACK
+  ) {
   override fun onCreateViewHolder(
     parent: ViewGroup,
     viewType: Int
@@ -79,38 +82,53 @@ class RecipientChipRecyclerViewAdapter(
       ComposeAddRecipientItemBinding.bind(itemView)
 
     fun bind() {
-      val pgpContactAdapter = RecipientAdapter(itemView.context, null, true)
-      //setup a search contacts logic in the database
-      pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
-        val dao = FlowCryptRoomDatabase.getDatabase(itemView.context).recipientDao()
-        dao.getFilteredCursor("%$constraint%")
+      binding.autoCompleteTextViewEmailAddress.addTextChangedListener { editable ->
+        editable?.let { onChipsListener.onEmailAddressTyped(it) }
       }
-      binding.autoCompleteTextViewEmailAddress.dropDownAnchor = anchorResId
-      binding.autoCompleteTextViewEmailAddress.dropDownVerticalOffset =
-        itemView.resources.getDimensionPixelOffset(R.dimen.default_margin_content_small)
-      binding.autoCompleteTextViewEmailAddress.setAdapter(pgpContactAdapter)
-      binding.autoCompleteTextViewEmailAddress.addTextChangedListener {
-        if (it?.contains("\\s".toRegex()) == true) {
-          itemView.context.toast("white")
+
+      binding.autoCompleteTextViewEmailAddress.setOnFocusChangeListener { v, hasFocus ->
+        if (!hasFocus) {
+          onChipsListener.onEmailAddressTyped("")
         }
       }
-      binding.autoCompleteTextViewEmailAddress.setOnItemClickListener { parent, view, position, id ->
+
+      binding.autoCompleteTextViewEmailAddress.setOnEditorActionListener { v, actionId, _ ->
+        return@setOnEditorActionListener when (actionId) {
+          EditorInfo.IME_ACTION_DONE, EditorInfo.IME_ACTION_NEXT -> {
+            if (v.text.toString().isValidEmail()) {
+              onChipsListener.onEmailAddressAdded(v.text)
+              v.text = null
+              false
+            } else {
+              v.context.toast(
+                text = v.context.getString(R.string.type_valid_email_or_select_from_dropdown)
+              )
+              true
+            }
+          }
+          else -> false
+        }
+      }
+
+      binding.autoCompleteTextViewEmailAddress.setOnItemClickListener { parent, _, position, _ ->
         val adapter = parent.adapter as? RecipientAdapter
         val selectedItem = adapter?.getItem(position) as? Cursor
         selectedItem?.let { item ->
-          onChipsListener.onEmailAddressTyped(
+          onChipsListener.onEmailAddressAdded(
             adapter.convertToString(item)
           )
         }
-        binding.autoCompleteTextViewEmailAddress.setText(null)
+        binding.autoCompleteTextViewEmailAddress.text = null
       }
     }
   }
 
   inner class ChipViewHolder(itemView: View) : BaseViewHolder(itemView) {
-    fun bind(recipientWithPubKeys: RecipientWithPubKeys) {
+    fun bind(recipientInfo: RecipientInfo) {
       val chip = itemView as Chip
-      chip.text = recipientWithPubKeys.recipient.email
+      chip.ellipsize = TextUtils.TruncateAt.MIDDLE
+      chip.text = recipientInfo.recipientWithPubKeys.recipient.name
+        ?: recipientInfo.recipientWithPubKeys.recipient.email
       chip.isCloseIconVisible = true
 
       /*val progressIndicatorSpec = CircularProgressIndicatorSpec(
@@ -126,28 +144,34 @@ class RecipientChipRecyclerViewAdapter(
         IndeterminateDrawable.createCircularDrawable(itemView.context, progressIndicatorSpec)*/
 
       chip.setOnCloseIconClickListener {
-        Toast.makeText(
-          itemView.context,
-          recipientWithPubKeys.recipient.email,
-          Toast.LENGTH_SHORT
-        ).show()
+        onChipsListener.onChipDeleted(recipientInfo)
       }
     }
   }
 
   interface OnChipsListener {
     fun onEmailAddressTyped(email: CharSequence)
+    fun onEmailAddressAdded(email: CharSequence)
+    fun onChipDeleted(recipientInfo: RecipientInfo)
   }
 
+  data class RecipientInfo(
+    val recipientType: Message.RecipientType,
+    val recipientWithPubKeys: RecipientWithPubKeys,
+    val creationTime: Long = System.currentTimeMillis(),
+    var isUpdating: Boolean = true,
+    var isUpdateFailed: Boolean = false
+  )
+
   companion object {
-    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RecipientWithPubKeys>() {
-      override fun areItemsTheSame(old: RecipientWithPubKeys, new: RecipientWithPubKeys): Boolean {
-        return old.recipient.id == new.recipient.id
+    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RecipientInfo>() {
+      override fun areItemsTheSame(old: RecipientInfo, new: RecipientInfo): Boolean {
+        return old.recipientWithPubKeys.recipient.id == new.recipientWithPubKeys.recipient.id
       }
 
       override fun areContentsTheSame(
-        old: RecipientWithPubKeys,
-        new: RecipientWithPubKeys
+        old: RecipientInfo,
+        new: RecipientInfo
       ): Boolean {
         return old == new
       }

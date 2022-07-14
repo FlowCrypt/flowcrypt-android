@@ -484,4 +484,5 @@
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Пожалуйста, введите Вашу ключевую фразу, чтобы поддерживать Ваши ключи в актуальном состоянии</string>
     <string name="key_is_revoked_unable_to_update">Вы уже имеете отозванную версию этого открытого ключа. Дальнейшие обновления запрещены. Пожалуйста, запросите другой открытый ключ у этого получателя.</string>
     <string name="add_recipient">Добавить получателя</string>
+    <string name="type_valid_email_or_select_from_dropdown">Пожалуйста, введите коректный Email аддресс или выберите с выпадающего списка</string>
 </resources>
