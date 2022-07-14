@@ -4,8 +4,8 @@
  */
 
 ext {
-    appVersionCode = 134
-    appVersionName = '1.3.4'
+    appVersionCode = 135
+    appVersionName = '1.3.5'
     buildToolsVersion = '32.0.0'
     compileSdkVersion = 32
     targetSdkVersion = 32
