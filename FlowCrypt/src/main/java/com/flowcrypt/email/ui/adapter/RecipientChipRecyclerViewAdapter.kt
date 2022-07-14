@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.database.Cursor
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -33,24 +32,35 @@ import jakarta.mail.Message
  */
 class RecipientChipRecyclerViewAdapter(
   var showGroupEnabled: Boolean = false,
-  val anchorResId: Int,
   private val onChipsListener: OnChipsListener
-) :
-  ListAdapter<RecipientChipRecyclerViewAdapter.RecipientInfo, RecipientChipRecyclerViewAdapter.BaseViewHolder>(
-    DIFF_CALLBACK
-  ) {
+) : ListAdapter<RecipientChipRecyclerViewAdapter.RecipientInfo,
+    RecipientChipRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
+  private var addViewHolder: AddViewHolder? = null
+
+  var resetTypedText = false
+    set(value) {
+      field = value
+      if (value) {
+        addViewHolder?.binding?.editTextEmailAddress?.text = null
+      }
+    }
+
   override fun onCreateViewHolder(
     parent: ViewGroup,
     viewType: Int
   ): RecipientChipRecyclerViewAdapter.BaseViewHolder {
-    val chip = Chip(parent.context)
-
     return when (viewType) {
-      ADD -> AddViewHolder(
-        LayoutInflater.from(parent.context)
-          .inflate(R.layout.compose_add_recipient_item, parent, false)
-      )
-      else -> ChipViewHolder(chip.apply { textSize = 16f })
+      ADD -> {
+        if (addViewHolder == null) {
+          addViewHolder = AddViewHolder(
+            LayoutInflater.from(parent.context)
+              .inflate(R.layout.compose_add_recipient_item, parent, false)
+          )
+        }
+
+        requireNotNull(addViewHolder)
+      }
+      else -> ChipViewHolder(Chip(parent.context).apply { textSize = 16f })
     }
   }
 
@@ -78,21 +88,21 @@ class RecipientChipRecyclerViewAdapter(
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
   inner class AddViewHolder(itemView: View) : BaseViewHolder(itemView) {
-    private val binding: ComposeAddRecipientItemBinding =
-      ComposeAddRecipientItemBinding.bind(itemView)
+    val binding: ComposeAddRecipientItemBinding = ComposeAddRecipientItemBinding.bind(itemView)
 
     fun bind() {
-      binding.autoCompleteTextViewEmailAddress.addTextChangedListener { editable ->
+      binding.editTextEmailAddress.addTextChangedListener { editable ->
         editable?.let { onChipsListener.onEmailAddressTyped(it) }
       }
 
-      binding.autoCompleteTextViewEmailAddress.setOnFocusChangeListener { v, hasFocus ->
+      binding.editTextEmailAddress.setOnFocusChangeListener { _, hasFocus ->
         if (!hasFocus) {
+          binding.editTextEmailAddress.text = null
           onChipsListener.onEmailAddressTyped("")
         }
       }
 
-      binding.autoCompleteTextViewEmailAddress.setOnEditorActionListener { v, actionId, _ ->
+      binding.editTextEmailAddress.setOnEditorActionListener { v, actionId, _ ->
         return@setOnEditorActionListener when (actionId) {
           EditorInfo.IME_ACTION_DONE, EditorInfo.IME_ACTION_NEXT -> {
             if (v.text.toString().isValidEmail()) {
@@ -100,25 +110,12 @@ class RecipientChipRecyclerViewAdapter(
               v.text = null
               false
             } else {
-              v.context.toast(
-                text = v.context.getString(R.string.type_valid_email_or_select_from_dropdown)
-              )
+              v.context.toast(v.context.getString(R.string.type_valid_email_or_select_from_dropdown))
               true
             }
           }
           else -> false
         }
-      }
-
-      binding.autoCompleteTextViewEmailAddress.setOnItemClickListener { parent, _, position, _ ->
-        val adapter = parent.adapter as? RecipientAdapter
-        val selectedItem = adapter?.getItem(position) as? Cursor
-        selectedItem?.let { item ->
-          onChipsListener.onEmailAddressAdded(
-            adapter.convertToString(item)
-          )
-        }
-        binding.autoCompleteTextViewEmailAddress.text = null
       }
     }
   }

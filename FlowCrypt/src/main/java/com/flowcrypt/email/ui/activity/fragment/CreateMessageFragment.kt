@@ -161,7 +161,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val recipientChipRecyclerViewAdapter: RecipientChipRecyclerViewAdapter =
     RecipientChipRecyclerViewAdapter(
       showGroupEnabled = false,
-      anchorResId = R.id.chipLayout,
       onChipsListener = object : RecipientChipRecyclerViewAdapter.OnChipsListener {
         override fun onEmailAddressTyped(email: CharSequence) {
           recipientsAutoCompleteViewModel.updateAutoCompleteResults(email.toString())
@@ -183,6 +182,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val autoCompleteResultRecyclerViewAdapter = AutoCompleteResultRecyclerViewAdapter(
     object : AutoCompleteResultRecyclerViewAdapter.OnResultListener {
       override fun onResultClick(recipientWithPubKeys: RecipientWithPubKeys) {
+        recipientChipRecyclerViewAdapter.resetTypedText = true
         composeMsgViewModel.addRecipientByEmail(
           Message.RecipientType.TO,
           recipientWithPubKeys.recipient.email
