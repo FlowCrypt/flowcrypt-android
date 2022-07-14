@@ -28,6 +28,7 @@ class AutoCompleteResultRecyclerViewAdapter(
   private val resultListener: OnResultListener
 ) : ListAdapter<RecipientWithPubKeys,
     AutoCompleteResultRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
+  private val alreadyAddedRecipientsSet = mutableSetOf<String>()
 
   override fun onCreateViewHolder(
     parent: ViewGroup,
@@ -45,6 +46,15 @@ class AutoCompleteResultRecyclerViewAdapter(
   ) {
     val item = getItem(position)
     (holder as ResultViewHolder).bind(item)
+  }
+
+  fun submitList(
+    list: List<RecipientWithPubKeys>?,
+    alreadyAddedRecipientsSet: Set<String>
+  ) {
+    this.alreadyAddedRecipientsSet.clear()
+    this.alreadyAddedRecipientsSet.addAll(alreadyAddedRecipientsSet)
+    submitList(list)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
@@ -69,6 +79,8 @@ class AutoCompleteResultRecyclerViewAdapter(
           if (recipientWithPubKeys.hasUsablePubKey()) R.color.colorPrimary else R.color.gray
         ), android.graphics.PorterDuff.Mode.SRC_IN
       )
+
+      binding.textViewUsed.visibleOrGone(recipientWithPubKeys.recipient.email in alreadyAddedRecipientsSet)
     }
   }
 
