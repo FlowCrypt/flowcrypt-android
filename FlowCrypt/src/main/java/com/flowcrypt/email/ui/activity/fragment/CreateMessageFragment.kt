@@ -1943,7 +1943,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             countingIdlingResource?.incrementSafely()
           }
           Result.Status.SUCCESS -> {
-            val results = it.data ?: emptyList()
+            val results = (it.data?.results ?: emptyList())
             autoCompleteResultRecyclerViewAdapter.submitList(
               results,
               composeMsgViewModel.recipientWithPubKeysTo.map { recipientInfo ->

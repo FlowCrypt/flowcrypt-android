@@ -23,11 +23,11 @@ import kotlinx.coroutines.launch
  */
 class RecipientsAutoCompleteViewModel(application: Application) : RoomBasicViewModel(application) {
   private val controlledRunnerForAutoCompleteResult =
-    ControlledRunner<Result<List<RecipientWithPubKeys>>>()
+    ControlledRunner<Result<AutoCompleteResults>>()
 
-  private val autoCompleteResultMutableStateFlow: MutableStateFlow<Result<List<RecipientWithPubKeys>>> =
+  private val autoCompleteResultMutableStateFlow: MutableStateFlow<Result<AutoCompleteResults>> =
     MutableStateFlow(Result.none())
-  val autoCompleteResultStateFlow: StateFlow<Result<List<RecipientWithPubKeys>>> =
+  val autoCompleteResultStateFlow: StateFlow<Result<AutoCompleteResults>> =
     autoCompleteResultMutableStateFlow.asStateFlow()
 
   fun updateAutoCompleteResults(email: String) {
@@ -37,8 +37,15 @@ class RecipientsAutoCompleteViewModel(application: Application) : RoomBasicViewM
         controlledRunnerForAutoCompleteResult.cancelPreviousThenRun {
           val autoCompleteResult = roomDatabase.recipientDao()
             .findMatchingRecipients(if (email.isEmpty()) "" else "%$email%")
-          return@cancelPreviousThenRun Result.success(autoCompleteResult)
+          return@cancelPreviousThenRun Result.success(
+            AutoCompleteResults(
+              pattern = email,
+              results = autoCompleteResult
+            )
+          )
         }
     }
   }
+
+  data class AutoCompleteResults(val pattern: String, val results: List<RecipientWithPubKeys>)
 }
