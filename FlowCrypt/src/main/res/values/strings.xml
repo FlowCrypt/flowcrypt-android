@@ -64,12 +64,12 @@
     <string name="your_message">Your message</string>
     <string name="see_more_backup_options">See more backup options</string>
     <string name="there_are_no_backups_on_this_account"><b>There are no backups on this account</b>\n\n If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
-    <string name="email">Email</string>
+    <string name="email" translatable="false">Email</string>
     <string name="download">Download</string>
     <string name="backup_as_a_file">backup as a file</string>
     <string name="backup_as_email">backup as email</string>
     <string name="backup_as_download_hint">This will download your key(s) as a file. Very secure option if your device
-        is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place.</string>
+        is encrypted, or if you can keep a file stored securely. If you lose both your device and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place.</string>
     <string name="backup_as_email_hint">This will back up private key(s) in your Email Inbox. The security depends on
         the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
@@ -250,7 +250,7 @@
     <string name="notification_level">Notification level</string>
     <string name="receive_notifications_for">Receive notifications for:</string>
     <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
-    <string name="no_key_available_for_your_emails">No key available for your email addresses %1$s and %2$s. Please write %3$s for help.</string>
+    <string name="no_key_available_for_your_emails">No keys available for your email addresses %1$s and %2$s. Please write %3$s for help.</string>
     <string name="pass_phrase_changed">Pass phrase successfully changed.</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>
     <string name="backup_options">Backup options</string>
@@ -378,7 +378,7 @@
     </plurals>
     <string name="delete_message">Delete message</string>
     <string name="write_us">Write us</string>
-    <string name="message_failed_to_create">The message failed to create. Please create the message again</string>
+    <string name="message_failed_to_create">The message failed to create. Please try to create the message again</string>
     <string name="sync">Sync</string>
     <string name="sending_email">Sending email&#8230;</string>
     <string name="restart_sending">Restart sending</string>
