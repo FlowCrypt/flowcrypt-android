@@ -27,7 +27,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
-import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.UIUtil
 import org.junit.Ignore

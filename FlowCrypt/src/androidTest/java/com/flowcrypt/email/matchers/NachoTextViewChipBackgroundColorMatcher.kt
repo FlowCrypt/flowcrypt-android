@@ -7,7 +7,6 @@ package com.flowcrypt.email.matchers
 
 import android.view.View
 import androidx.test.espresso.matcher.BoundedMatcher
-import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.hootsuite.nachos.NachoTextView
 import org.hamcrest.Description
 

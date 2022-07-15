@@ -16,7 +16,6 @@ import androidx.test.espresso.Root
 import androidx.test.espresso.matcher.BoundedMatcher
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
-import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.google.android.material.appbar.AppBarLayout
 import com.hootsuite.nachos.NachoTextView
 import org.hamcrest.BaseMatcher

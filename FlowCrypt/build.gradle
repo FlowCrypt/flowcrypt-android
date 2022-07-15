@@ -419,7 +419,6 @@ dependencies {
     }
 
     implementation 'com.github.bumptech.glide:glide:4.13.2'
-    implementation 'com.hootsuite.android:nachos:1.2.0'
     implementation 'com.nulab-inc:zxcvbn:1.7.0'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'ja.burhanrashid52:photoeditor:1.1.1'
