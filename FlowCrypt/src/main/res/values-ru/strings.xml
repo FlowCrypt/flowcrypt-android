@@ -486,4 +486,5 @@
     <string name="add_recipient">Добавить получателя</string>
     <string name="type_valid_email_or_select_from_dropdown">Пожалуйста, введите коректный Email аддресс или выберите с выпадающего списка</string>
     <string name="added">Добавлен</string>
+    <string name="already_added">Уже добавлен</string>
 </resources>

@@ -603,8 +603,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * Check that all recipients are usable.
    */
   private fun hasUnusableRecipient(): Boolean {
-    for (recipient in composeMsgViewModel.recipientWithPubKeys) {
-      val recipientWithPubKeys = recipient.recipientWithPubKeys
+    for (recipient in composeMsgViewModel.allRecipients) {
+      val recipientWithPubKeys = recipient.value.recipientWithPubKeys
       if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
         return if (isPasswordProtectedFunctionalityEnabled()) {
           if (composeMsgViewModel.webPortalPasswordStateFlow.value.isEmpty()) {
@@ -1213,7 +1213,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
         if (isPasswordProtectedFunctionalityEnabled()) {
           val hasRecipientsWithoutPgp =
-            recipients.any { recipient -> !recipient.recipientWithPubKeys.hasAtLeastOnePubKey() }
+            recipients.any { recipient -> !recipient.value.recipientWithPubKeys.hasAtLeastOnePubKey() }
           if (hasRecipientsWithoutPgp) {
             binding?.btnSetWebPortalPassword?.visible()
           } else {
@@ -1226,7 +1226,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
-        recipientChipRecyclerViewAdapter.submitList(recipients)
+        recipientChipRecyclerViewAdapter.submitList(recipients.values.toList())
+
+        val emails = recipients.keys
+        autoCompleteResultRecyclerViewAdapter.submitList(
+          autoCompleteResultRecyclerViewAdapter.currentList.map {
+            it.copy(isAdded = it.recipientWithPubKeys.recipient.email in emails)
+          })
       }
     }
 
@@ -1430,8 +1436,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun usePasswordIfNeeded(): CharArray? {
     return if (isPasswordProtectedFunctionalityEnabled()) {
-      for (recipient in composeMsgViewModel.recipientWithPubKeys) {
-        val recipientWithPubKeys = recipient.recipientWithPubKeys
+      for (recipient in composeMsgViewModel.allRecipients) {
+        val recipientWithPubKeys = recipient.value.recipientWithPubKeys
         if (!recipientWithPubKeys.hasAtLeastOnePubKey()) {
           return composeMsgViewModel.webPortalPasswordStateFlow.value.toString().toCharArray()
         }
@@ -1589,12 +1595,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           }
           Result.Status.SUCCESS -> {
             val results = (it.data?.results ?: emptyList())
-            autoCompleteResultRecyclerViewAdapter.submitList(
-              results,
-              composeMsgViewModel.recipientWithPubKeysTo.map { recipientInfo ->
-                recipientInfo.recipientWithPubKeys.recipient.email
-              }.toSet()
-            )
+            val emails = composeMsgViewModel.recipientsTo.keys
+            autoCompleteResultRecyclerViewAdapter.submitList(results.map { recipientWithPubKeys ->
+              AutoCompleteResultRecyclerViewAdapter.AutoCompleteItem(
+                recipientWithPubKeys.recipient.email in emails,
+                recipientWithPubKeys
+              )
+            })
             countingIdlingResource?.decrementSafely()
           }
           else -> {}

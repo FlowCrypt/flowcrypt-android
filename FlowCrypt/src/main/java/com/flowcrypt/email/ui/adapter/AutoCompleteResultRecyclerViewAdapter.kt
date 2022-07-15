@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.databinding.RecipientAutoCompleteItemBinding
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
 
 /**
@@ -26,9 +27,8 @@ import com.flowcrypt.email.extensions.visibleOrGone
  */
 class AutoCompleteResultRecyclerViewAdapter(
   private val resultListener: OnResultListener
-) : ListAdapter<RecipientWithPubKeys,
+) : ListAdapter<AutoCompleteResultRecyclerViewAdapter.AutoCompleteItem,
     AutoCompleteResultRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
-  private val alreadyAddedRecipientsSet = mutableSetOf<String>()
 
   override fun onCreateViewHolder(
     parent: ViewGroup,
@@ -48,25 +48,21 @@ class AutoCompleteResultRecyclerViewAdapter(
     (holder as ResultViewHolder).bind(item)
   }
 
-  fun submitList(
-    list: List<RecipientWithPubKeys>?,
-    alreadyAddedRecipientsSet: Set<String>
-  ) {
-    this.alreadyAddedRecipientsSet.clear()
-    this.alreadyAddedRecipientsSet.addAll(alreadyAddedRecipientsSet)
-    submitList(list)
-  }
-
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
   inner class ResultViewHolder(itemView: View) : BaseViewHolder(itemView) {
     private val binding: RecipientAutoCompleteItemBinding =
       RecipientAutoCompleteItemBinding.bind(itemView)
 
-    fun bind(recipientWithPubKeys: RecipientWithPubKeys) {
+    fun bind(autoCompleteItem: AutoCompleteItem) {
+      val recipientWithPubKeys = autoCompleteItem.recipientWithPubKeys
       itemView.setOnClickListener {
-        resultListener.onResultClick(recipientWithPubKeys)
-        submitList(null)
+        if (autoCompleteItem.isAdded) {
+          itemView.context.toast(itemView.context.getString(R.string.already_added))
+        } else {
+          resultListener.onResultClick(recipientWithPubKeys)
+          submitList(null)
+        }
       }
 
       binding.textViewEmail.text = recipientWithPubKeys.recipient.email
@@ -80,7 +76,7 @@ class AutoCompleteResultRecyclerViewAdapter(
         ), android.graphics.PorterDuff.Mode.SRC_IN
       )
 
-      binding.textViewUsed.visibleOrGone(recipientWithPubKeys.recipient.email in alreadyAddedRecipientsSet)
+      binding.textViewUsed.visibleOrGone(autoCompleteItem.isAdded)
     }
   }
 
@@ -88,15 +84,17 @@ class AutoCompleteResultRecyclerViewAdapter(
     fun onResultClick(recipientWithPubKeys: RecipientWithPubKeys)
   }
 
+  data class AutoCompleteItem(val isAdded: Boolean, val recipientWithPubKeys: RecipientWithPubKeys)
+
   companion object {
-    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RecipientWithPubKeys>() {
-      override fun areItemsTheSame(old: RecipientWithPubKeys, new: RecipientWithPubKeys): Boolean {
-        return old.recipient.id == new.recipient.id
+    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AutoCompleteItem>() {
+      override fun areItemsTheSame(old: AutoCompleteItem, new: AutoCompleteItem): Boolean {
+        return old.recipientWithPubKeys.recipient.id == new.recipientWithPubKeys.recipient.id
       }
 
       override fun areContentsTheSame(
-        old: RecipientWithPubKeys,
-        new: RecipientWithPubKeys
+        old: AutoCompleteItem,
+        new: AutoCompleteItem
       ): Boolean {
         return old == new
       }
