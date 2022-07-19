@@ -1249,7 +1249,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
     val newFolder = currentFolder
     adapter.currentFolder = newFolder
-    adapter.submitList(null)
 
     val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
     val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
