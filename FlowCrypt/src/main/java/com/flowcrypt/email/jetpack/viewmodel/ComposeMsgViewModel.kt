@@ -16,6 +16,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -145,6 +146,10 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       val normalizedEmail = email.toString().lowercase()
       val existingRecipient = roomDatabase.recipientDao()
         .getRecipientWithPubKeysByEmailSuspend(normalizedEmail)
+        ?: if (normalizedEmail.isValidEmail()) {
+          roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = normalizedEmail))
+          roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(normalizedEmail)
+        } else null
 
       existingRecipient?.let {
         val recipientInfo = RecipientInfo(recipientType, it)

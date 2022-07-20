@@ -156,8 +156,8 @@ class RecipientChipRecyclerViewAdapter(
         recipientWithPubKeys.hasAtLeastOnePubKey() -> {
           val colorResId = when {
             !recipientWithPubKeys.hasUsablePubKey() -> CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY
-            recipientWithPubKeys.hasNotRevokedPubKey() -> CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED
-            recipientWithPubKeys.hasNotExpiredPubKey() -> CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED
+            !recipientWithPubKeys.hasNotRevokedPubKey() -> CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED
+            !recipientWithPubKeys.hasNotExpiredPubKey() -> CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED
             else -> CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
           }
           UIUtil.getColor(chip.context, colorResId)
