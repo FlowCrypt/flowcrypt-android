@@ -9,13 +9,22 @@ import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
+import com.flowcrypt.email.util.exception.ApiException
 import jakarta.mail.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +32,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.io.InvalidObjectException
 import java.util.concurrent.ConcurrentHashMap
 
@@ -34,11 +44,12 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Application) :
   RoomBasicViewModel(application) {
-  private val recipientLookUpManager = RecipientLookUpManager(roomDatabase, viewModelScope) {
-    replaceRecipient(Message.RecipientType.TO, it)
-    replaceRecipient(Message.RecipientType.CC, it)
-    replaceRecipient(Message.RecipientType.BCC, it)
-  }
+  private val recipientLookUpManager =
+    RecipientLookUpManager(application, roomDatabase, viewModelScope) {
+      replaceRecipient(Message.RecipientType.TO, it)
+      replaceRecipient(Message.RecipientType.CC, it)
+      replaceRecipient(Message.RecipientType.BCC, it)
+    }
 
   private val messageEncryptionTypeMutableStateFlow: MutableStateFlow<MessageEncryptionType> =
     MutableStateFlow(
@@ -170,41 +181,211 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   }
 
   class RecipientLookUpManager(
+    private val application: Application,
     private val roomDatabase: FlowCryptRoomDatabase,
     private val viewModelScope: CoroutineScope,
     private val updateListener: (recipientInfo: RecipientInfo) -> Unit
   ) {
     private val apiRepository: ApiRepository = FlowcryptApiRepository()
-    private val lookUpCandidates = mutableMapOf<String, RecipientInfo>()
+    private val lookUpCandidates = ConcurrentHashMap<String, RecipientInfo>()
     private val recipientsSessionCache = ConcurrentHashMap<String, RecipientWithPubKeys>()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val lookUpLimitedParallelismDispatcher =
+      Dispatchers.IO.limitedParallelism(PARALLELISM_COUNT)
+
     suspend fun enqueue(recipientInfo: RecipientInfo) = withContext(Dispatchers.IO) {
-      val email = recipientInfo.recipientWithPubKeys.recipient.email
-      if (recipientsSessionCache.containsKey(email)) {
-        updateListener.invoke(
-          recipientInfo.copy(
-            isUpdating = false,
-            recipientWithPubKeys = requireNotNull(recipientsSessionCache[email])
-          )
-        )
-      } else {
-        lookUpCandidates[email] = recipientInfo
-        val existingValue = roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(email)
-        if (existingValue != null) {
-          lookUpCandidates.remove(email)
-          recipientsSessionCache[email] = existingValue
+      viewModelScope.launch {
+        val email = recipientInfo.recipientWithPubKeys.recipient.email
+        if (recipientsSessionCache.containsKey(email)) {
+          //we return a value from the session cache
           updateListener.invoke(
             recipientInfo.copy(
               isUpdating = false,
-              recipientWithPubKeys = existingValue
+              recipientWithPubKeys = requireNotNull(recipientsSessionCache[email])
             )
           )
+        } else {
+          lookUpCandidates[email] = recipientInfo
+          try {
+            val recipientWithPubKeysAfterLookUp = lookUp(email)
+            lookUpCandidates.remove(email)
+            if (recipientWithPubKeysAfterLookUp.hasUsablePubKey()) {
+              recipientsSessionCache[email] = recipientWithPubKeysAfterLookUp
+            }
+            updateListener.invoke(
+              recipientInfo.copy(
+                isUpdating = false,
+                recipientWithPubKeys = recipientWithPubKeysAfterLookUp
+              )
+            )
+          } catch (e: Exception) {
+            e.printStackTrace()
+          }
         }
       }
     }
 
+    private suspend fun lookUp(email: String): RecipientWithPubKeys =
+      withContext(Dispatchers.IO) {
+        val emailLowerCase = email.lowercase()
+        var cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
+
+        if (cachedRecipientWithPubKeys == null) {
+          roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = emailLowerCase))
+          cachedRecipientWithPubKeys =
+            roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
+        } else {
+          for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
+            try {
+              val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+              publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+            } catch (e: Exception) {
+              e.printStackTrace()
+              publicKeyEntity.isNotUsable = true
+            }
+          }
+        }
+
+        getPublicKeysFromRemoteServersInternal(email = emailLowerCase)?.let { pgpKeyDetailsList ->
+          cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
+            updateCachedInfoWithPubKeysFromLookUp(
+              recipientWithPubKeys,
+              pgpKeyDetailsList
+            )
+          }
+        }
+        cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
+
+        return@withContext requireNotNull(cachedRecipientWithPubKeys)
+      }
+
     fun dequeue(email: String) {
       lookUpCandidates.remove(email)
+    }
+
+    private suspend fun getCachedRecipientWithPubKeys(emailLowerCase: String): RecipientWithPubKeys? =
+      withContext(Dispatchers.IO) {
+        val cachedRecipientWithPubKeys = roomDatabase.recipientDao()
+          .getRecipientWithPubKeysByEmailSuspend(emailLowerCase) ?: return@withContext null
+
+        for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
+          try {
+            val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+            publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+          } catch (e: Exception) {
+            e.printStackTrace()
+            publicKeyEntity.isNotUsable = true
+          }
+        }
+        return@withContext cachedRecipientWithPubKeys
+      }
+
+    private suspend fun getPublicKeysFromRemoteServersInternal(email: String):
+        List<PgpKeyDetails>? = withContext(Dispatchers.IO) {
+      try {
+        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        if (!lookUpCandidates.containsKey(email)) {
+          return@withContext null
+        }
+        val response = pubLookup(email, activeAccount)
+
+        when (response.status) {
+          Result.Status.SUCCESS -> {
+            val pubKeyString = response.data?.pubkey
+            if (pubKeyString?.isNotEmpty() == true) {
+              val parsedResult = PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList
+              if (parsedResult.isNotEmpty()) {
+                return@withContext parsedResult
+              }
+            }
+          }
+
+          Result.Status.ERROR -> {
+            throw ApiException(
+              response.data?.apiError ?: ApiError(
+                code = -1,
+                msg = "Unknown API error"
+              )
+            )
+          }
+
+          else -> {
+            throw response.exception ?: java.lang.Exception()
+          }
+        }
+      } catch (e: IOException) {
+        e.printStackTrace()
+      }
+
+      null
+    }
+
+    private suspend fun pubLookup(
+      email: String,
+      activeAccount: AccountEntity?
+    ): Result<PubResponse> = withContext(lookUpLimitedParallelismDispatcher) {
+      return@withContext apiRepository.pubLookup(
+        context = application,
+        email = email,
+        orgRules = activeAccount?.clientConfiguration
+      )
+    }
+
+    private suspend fun updateCachedInfoWithPubKeysFromLookUp(
+      cachedRecipientEntity: RecipientWithPubKeys, fetchedPgpKeyDetailsList: List<PgpKeyDetails>
+    ) = withContext(Dispatchers.IO) {
+      val email = cachedRecipientEntity.recipient.email
+      val uniqueMapOfFetchedPubKeys =
+        deduplicateFetchedPubKeysByFingerprint(fetchedPgpKeyDetailsList)
+
+      val deDuplicatedListOfFetchedPubKeys = uniqueMapOfFetchedPubKeys.values
+      for (fetchedPgpKeyDetails in deDuplicatedListOfFetchedPubKeys) {
+        if (!fetchedPgpKeyDetails.usableForEncryption) {
+          //we skip a key that is not usable for encryption
+          continue
+        }
+
+        val existingPublicKeyEntity = cachedRecipientEntity.publicKeys.firstOrNull {
+          it.fingerprint == fetchedPgpKeyDetails.fingerprint
+        }
+        val existingPgpKeyDetails = existingPublicKeyEntity?.pgpKeyDetails
+        if (existingPgpKeyDetails != null) {
+          val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
+          if (!isExistingKeyRevoked && fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
+            roomDatabase.pubKeyDao().updateSuspend(
+              existingPublicKeyEntity.copy(publicKey = fetchedPgpKeyDetails.publicKey.toByteArray())
+            )
+          }
+        } else {
+          roomDatabase.pubKeyDao()
+            .insertWithReplaceSuspend(fetchedPgpKeyDetails.toPublicKeyEntity(email))
+        }
+      }
+    }
+
+    private fun deduplicateFetchedPubKeysByFingerprint(
+      fetchedPgpKeyDetailsList: List<PgpKeyDetails>
+    ): Map<String, PgpKeyDetails> {
+      val uniqueMapOfFetchedPubKeys = mutableMapOf<String, PgpKeyDetails>()
+
+      for (fetchedPgpKeyDetails in fetchedPgpKeyDetailsList) {
+        val fetchedFingerprint = fetchedPgpKeyDetails.fingerprint
+        val alreadyEncounteredFetchedPgpKeyDetails = uniqueMapOfFetchedPubKeys[fetchedFingerprint]
+        if (alreadyEncounteredFetchedPgpKeyDetails == null) {
+          uniqueMapOfFetchedPubKeys[fetchedFingerprint] = fetchedPgpKeyDetails
+        } else {
+          if (fetchedPgpKeyDetails.isNewerThan(alreadyEncounteredFetchedPgpKeyDetails)) {
+            uniqueMapOfFetchedPubKeys[fetchedFingerprint] = fetchedPgpKeyDetails
+          }
+        }
+      }
+
+      return uniqueMapOfFetchedPubKeys
+    }
+
+    companion object {
+      const val PARALLELISM_COUNT = 10
     }
   }
 }
