@@ -1596,12 +1596,40 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           Result.Status.SUCCESS -> {
             val results = (it.data?.results ?: emptyList())
             val emails = composeMsgViewModel.recipientsTo.keys
-            autoCompleteResultRecyclerViewAdapter.submitList(results.map { recipientWithPubKeys ->
+            val pattern = it.data?.pattern?.lowercase() ?: ""
+
+            val autoCompleteList = results.map { recipientWithPubKeys ->
               AutoCompleteResultRecyclerViewAdapter.AutoCompleteItem(
                 recipientWithPubKeys.recipient.email in emails,
                 recipientWithPubKeys
               )
-            })
+            }
+
+            val finalList = if (pattern.isEmpty()) {
+              autoCompleteList
+            } else {
+              val hasMatchingEmail = autoCompleteList.map { autoCompleteItem ->
+                autoCompleteItem.recipientWithPubKeys.recipient.email.lowercase()
+              }.toSet().contains(pattern.lowercase())
+
+              if (hasMatchingEmail) {
+                autoCompleteList
+              } else {
+                autoCompleteList.toMutableList().apply {
+                  add(
+                    AutoCompleteResultRecyclerViewAdapter.AutoCompleteItem(
+                      isAdded = false,
+                      recipientWithPubKeys = RecipientWithPubKeys(
+                        RecipientEntity(email = pattern), emptyList()
+                      ),
+                      type = AutoCompleteResultRecyclerViewAdapter.ADD
+                    )
+                  )
+                }
+              }
+            }
+
+            autoCompleteResultRecyclerViewAdapter.submitList(finalList)
             countingIdlingResource?.decrementSafely()
           }
           else -> {}
