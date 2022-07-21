@@ -15,7 +15,6 @@
     <string name="help_feedback_or_question">Помощь, вопросы, обратная связь</string>
     <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Спасибо, что используете FlowCrypt! Мы здесь, чтобы помочь Вам.</string>
     <string name="your_message">Ваше сообщение</string>
-    <string name="email">Email</string>
     <string name="edit">Редактировать</string>
     <string name="delete">Удалить</string>
     <string name="sending_message_must_not_be_empty">Сообщение не должно быть пустым</string>
@@ -48,11 +47,11 @@
     <string name="smtp_username">Имя пользователя SMTP</string>
     <string name="smtp_password">Пароль SMTP</string>
     <string name="try_to_connect">Подключиться</string>
-    <string name="none">Нет</string>
+    <string name="none">Отсутствует</string>
     <string name="add_account">Добавить учетную запись</string>
     <string name="attachments">Вложения</string>
     <string name="from">От</string>
-    <string name="message_was_encrypted_for_wrong_key">Здравствуйте, \n\nмне не удалось прочитать Ваше зашифрованное сообщение,
+    <string name="message_was_encrypted_for_wrong_key">Здравствуйте,\n\nмне не удалось прочитать Ваше зашифрованное сообщение,
         потому что оно было зашифровано неверным ключом. \n\nМой текущий открытый ключ прилагается ниже.
         Пожалуйста, обновите свои записи и отправьте мне новое зашифрованное сообщение. \n\nСпасибо</string>
     <string name="please_select_key">Пожалуйста, выберите ключ</string>
@@ -112,7 +111,7 @@
     <string name="prompt_compose_security_email">Написать безопасное сообщение</string>
     <string name="prompt_recipients_cc">Добавить получателей (Копия)</string>
     <string name="prompt_recipients_bcc">Добавить получателей (Скрытая копия)</string>
-    <string name="prompt_recipients_to">Добавить получателей (От кого)</string>
+    <string name="prompt_recipients_to">Добавить получателей (Кому)</string>
     <string name="include_public_key">Приложить открытый ключ</string>
     <string name="switch_to_standard_email">Переключиться на обычное сообщение</string>
     <string name="text_must_not_be_empty">Ошибка: \"%1$s\" не может быть пустым!</string>
@@ -131,7 +130,7 @@
     <string name="outgoing_mail_settings">Настройки исходящей почты</string>
     <string name="security_type">Тип протокола безопасности</string>
     <string name="require_custom_sign_in">Использовать другие учетные данные для SMTP</string>
-    <string name="template_email_already_added">Сообщение  \"%1$s\" уже добавлено</string>
+    <string name="template_email_already_added">Учетная запись \"%1$s\" уже добавлена</string>
     <string name="keys_have_different_pass_phrase">Ключи имеют разную ключевую фразу</string>
     <string name="source_has_wrong_pgp_structure">Предоставленное вами содержимое не похоже на действительный %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Содержимое Вашего файла не похоже на действительный %1$s ключ PGP.</string>
@@ -158,11 +157,11 @@
     <string name="sent">Отправлено</string>
     <string name="please_wait_while_message_will_be_sent">Отправка сообщения, пожалуйста, подождите</string>
     <string name="sending_email">Отправка сообщения&#8230;</string>
-    <string name="selection_text">Выбрано: %1$d</string>
+    <string name="selection_text">Выделено: %1$d</string>
     <string name="select_only_one_key">Выберите источник, в котором хранится только один ключ</string>
     <string name="see_more_backup_options">Посмотреть другие варианты резервного копирования</string>
     <string name="decrypt_error_message_bad_mdc">Угроза безопасности - открытие этого сообщения опасно, поскольку оно было изменено при передаче.</string>
-    <string name="decrypt_error_message_no_mdc">Угроза безопасности!\n\nВ сообщении отсутствует код проверки целостности (MDC). Отправитель должен обновить свое устаревшее программное обеспечение.\n\nОтображать сообщение на свой страх и риск</string>
+    <string name="decrypt_error_message_no_mdc">Угроза безопасности!\n\nВ сообщении отсутствует код проверки целостности (MDC). Отправитель должен обновить свое устаревшее программное обеспечение.\n\nВы можете отобразить это сообщение на свой страх и риск.</string>
     <string name="email_must_be_non_empty">Адрес не должен быть пустым</string>
     <string name="empty_pass_phrase">Отсутствует ключевая фраза</string>
     <string name="empty_trash">Очистить корзину</string>
@@ -195,8 +194,8 @@
     <string name="navigation_drawer_open">Открыть панель навигации</string>
     <string name="only_partially_signed">подписано только частично</string>
     <string name="warning_one_of_recipients_has_revoked_pub_key">Один или несколько Ваших получателей отозвали открытые ключи (отмечены красным).\n\nПопросите их прислать Вам новый открытый ключ. Если это корпоративная установка, обратитесь к системному администратору.</string>
-    <string name="warning_one_of_recipients_has_expired_pub_key">У одного или нескольких Ваших получателей истек срок действия открытых ключей (отмечен оранжевым).\n\nПопросите их прислать вам обновленный открытый ключ. Если это корпоративная установка, обратитесь к системному администратору.</string>
-    <string name="partially_encrypted_private_key_error_msg">Один из предоставленных закрытых ключей - это частично зашифрованный закрытый ключ (некоторые пакеты зашифрованы, некоторые нет). Такие ключи не поддерживаются. Пожалуйста, импортируйте только полностью зашифрованные ключи с одной и той же парольной фразой для всех секретных пакетов.</string>
+    <string name="warning_one_of_recipients_has_expired_pub_key">У одного или нескольких Ваших получателей истек срок действия открытых ключей (отмечен оранжевым).\n\nПопросите их прислать Вам обновленный открытый ключ. Если это корпоративная установка, обратитесь к системному администратору.</string>
+    <string name="partially_encrypted_private_key_error_msg">Один из предоставленных закрытых ключей - это частично зашифрованный закрытый ключ (некоторые пакеты зашифрованы, некоторые нет). Такие ключи не поддерживаются. Пожалуйста, импортируйте только полностью зашифрованные ключи с одной и той же ключевой фразой для всех секретных пакетов.</string>
     <string name="not_signed">не подписано</string>
     <string name="oauth_error">Ошибка OAuth</string>
     <string name="not_saved_file_already_exists">Не сохранено, потому что файл уже существует</string>
@@ -236,8 +235,8 @@
     <string name="could_not_add_new_account">Не удалось добавить новую учетную запись</string>
     <string name="add_new_private_key">Добавить новый закрытый ключ</string>
     <string name="add_new_contact">Добавить новый контакт</string>
-    <string name="warning_one_of_recipients_has_not_usable_pub_key">Открытый ключ одного из Ваших получателей неверен или не может использоваться по соображениям безопасности. \n\nПопросите получателя прислать вам новый открытый ключ.</string>
-    <string name="warning_no_expected_email">Предупреждение: похоже, этот ключ не относится к ожидаемому адресу электронной почты %1$s</string>
+    <string name="warning_one_of_recipients_has_not_usable_pub_key">Открытый ключ одного из Ваших получателей неверен или не может использоваться по соображениям безопасности. \n\nПопросите получателя прислать Вам новый открытый ключ.</string>
+    <string name="warning_no_expected_email">Предупреждение: похоже, что этот ключ не относится к ожидаемому адресу электронной почты %1$s</string>
     <string name="warning_key_expired">Предупреждение: срок действия этого ключа истек %1$s</string>
     <string name="use_this_key">Использовать этот ключ</string>
     <string name="more_than_one_public_key_found">Мы нашли более одного открытого ключа в предоставленном источнике. Пожалуйста, выберите источник с единственным открытым ключом.</string>
@@ -258,7 +257,7 @@
     <string name="empty_trash_warning">Вы собираетесь навсегда удалить все сообщения в этой папке. Вы уверены?</string>
     <string name="restart_sending_process_warning">Это повторит попытку отправки сообщения. Вы хотите продолжить?</string>
     <string name="restart_sending">Начать отправку заново</string>
-    <string name="message_failed_to_create">Не удалось создать сообщение. Пожалуйста, создайте сообщение еще раз</string>
+    <string name="message_failed_to_create">Не удалось создать сообщение. Пожалуйста, попробуйте создать сообщение еще раз</string>
     <string name="write_us">Напишите нам</string>
     <string name="cannot_save_copy_in_sent_folder">Не удается сохранить копию в папке Отправленные</string>
     <string name="pub_key_for_updating_is_not_found">Открытый ключ для обновления не найден</string>
@@ -326,11 +325,11 @@
     <string name="could_not_save_new_recipient">Не удалось сохранить нового получателя</string>
     <string name="could_not_update_pub_key_for_recipient">Не удалось обновить открытый ключ для %1$s</string>
     <string name="could_not_change_pass_phrase">Не удалось изменить ключевую фразу</string>
-    <string name="reply_all_encrypted">Ответить всем\nзашифрованным сообщением</string>
+    <string name="reply_all_encrypted">Ответить всем\nс шифрованием</string>
     <string name="reply_all">Ответить всем</string>
     <string name="reply">Ответить</string>
-    <string name="reply_encrypted">Ответить\nзашифрованным сообщением</string>
-    <string name="retry">Повторить попытку</string>
+    <string name="reply_encrypted">Ответить\nс шифрованием</string>
+    <string name="retry">Повторить</string>
     <string name="save_to_file">Сохранить в файл</string>
     <string name="search_by_key_id_or_email">Поиск по идентификатору ключа или электронной почте</string>
     <string name="cyrillic_search_not_support_yet">Поиск с иностранными алфавитами пока не поддерживается</string>
@@ -340,7 +339,7 @@
     <string name="no_details_about_given_key">Подробных сведений о данном ключе нет.</string>
     <string name="there_are_no_private_keys">Нет импортированных закрытых ключей для %1$s</string>
     <string name="no_prv_keys_ask_admin">Для Вас не настроены закрытые ключи. Обратитесь к системному администратору или в службу поддержки</string>
-    <string name="there_is_problem_with_cache">Проблема с каталогом временного кэша. Пожалуйста, создайте сообщение еще раз</string>
+    <string name="there_is_problem_with_cache">Проблема с папкой временного кэша. Пожалуйста, создайте сообщение еще раз</string>
     <string name="silent_notifications_notification_channel">Канал тихих уведомлений</string>
     <string name="pass_phrases_do_not_match">Две ключевые фразы не совпадают, попробуйте еще раз.</string>
     <string name="user_photo">Фото пользователя</string>
@@ -350,8 +349,8 @@
     <string name="msg_contains_not_valid_pub_key">Это сообщение содержит недействительный открытый ключ.\n\n%1$s</string>
     <string name="this_message_will_not_be_encrypted">Это сообщение не будет зашифровано</string>
     <string name="key_sha1_warning_msg">Этот ключ OpenPGP не поддерживается. Подробности: подходящие подписи для ключа не найдены. Это может быть из-за того, что отсутствуют внутренние подписи, или подписи сделаны неправильно, или он может использовать устаревшие алгоритмы, которые больше не являются безопасными и больше не поддерживаются (например, SHA-1).</string>
-    <string name="backup_as_email_hint">Это создаст резервную копию закрытых ключей в Вашем почтовом ящике.  Степень безопасности зависит от силы Вашего пароля, который должен быть очень длинным, и трудноугадываемым. Лучший вариант для большинства пользователей.</string>
-    <string name="backup_as_download_hint">Это сохранит Ваши ключи в виде файла. Очень безопасный вариант, если Ваше устройство зашифровано или если Вы можете хранить этот файл в безопасности. Если Вы потеряете и телефон, и файл, Ваше зашифрованное электронное письмо станет нечитаемым, поэтому Вам необходимо сохранить этот файл в надежном месте.</string>
+    <string name="backup_as_email_hint">Это создаст резервную копию закрытых ключей в Вашем почтовом ящике. Степень безопасности зависит от силы Вашего пароля, который должен быть очень длинным, и трудноугадываемым. Лучший вариант для большинства пользователей.</string>
+    <string name="backup_as_download_hint">Это сохранит Ваши ключи в виде файла. Очень безопасный вариант, если Ваше устройство зашифровано или если Вы можете хранить этот файл в безопасности. Если Вы потеряете и Ваше устройство, и файл, Ваши зашифрованные электронные сообщения станут нечитаемыми, поэтому Вам необходимо сохранить этот файл в надежном месте.</string>
     <string name="forward">Переслать</string>
     <string name="fix">исправить</string>
     <string name="template_fingerprint_2">Отпечаток %1$d: %2$s</string>
@@ -389,7 +388,7 @@
     <string name="no_connection">Нет соединения</string>
     <string name="no_connection_or_server_is_not_reachable">Нет соединения или сервер недоступен</string>
     <string name="no_key_available_for_your_email_account">Нет ключа для Вашей учетной записи электронной почты. Чтобы получить помощь, напишите %1$s</string>
-    <string name="no_key_available_for_your_emails">Нет ключа для Ваших адресов электронной почты %1$s и %2$s. Чтобы получить помощь, напишите  %3$s</string>
+    <string name="no_key_available_for_your_emails">Нет ключей для Ваших адресов электронной почты %1$s и %2$s. Чтобы получить помощь, напишите %3$s</string>
     <string name="no_public_key_recorded">Открытый ключ не записан. Ваши контакты могут не знать, что Вы используете шифрование.</string>
     <string name="notification_level">Уровень уведомления</string>
     <string name="notifications">Уведомления</string>
@@ -417,7 +416,7 @@
     <string name="your_key_backup">Ваша резервная копия FlowCrypt</string>
     <string name="your_keys_cannot_open_this_message">Ваши ключи не могут открыть это сообщение</string>
     <string name="pass_phrase_is_too_weak">Ваша ключевая фраза слишком слабая</string>
-    <string name="passphrase_was_changed">Ваша ключевая фраза была изменена. Отныне новые резервные копии будут защищены заданной ключ-фразой.</string>
+    <string name="passphrase_was_changed">Ваша ключевая фраза была изменена. Отныне новые резервные копии будут защищены заданной ключевой фразой.</string>
     <string name="different_pass_phrases">У Ваших закрытых ключей различные ключевые фразы</string>
     <string name="primary_address_not_defined">Основной адрес не определен</string>
     <string name="preparing">Подготовка&#8230;</string>
@@ -425,7 +424,7 @@
     <string name="setup_app">Пожалуйста, настройте приложение, прежде чем использовать эту опцию</string>
     <string name="select_stronger_pass_phrase">Пожалуйста, выберите более надежную ключевую фразу. Лучше всего использовать сочетание из 4 или 5 необычных слов.</string>
     <string name="reconnect_your_account">Пожалуйста, повторно подключите свою учетную запись, чтобы продолжить использование %1$s\nс\n%2$s</string>
-    <string name="provide_passphrase_to_decrypt_file">Пожалуйста, укажите ключевую фразу для расшифровки этого файла</string>
+    <string name="provide_passphrase_to_decrypt_file">Пожалуйста, укажите ключевую фразу для расшифрования этого файла</string>
     <string name="failed_please_try_again_later">Не удалось завершить операцию. Пожалуйста, повторите попытку позже</string>
     <string name="experimental_settings">Экспериментальные настройки</string>
     <string name="expand_an_account_managment">Развернуть управление учетной записью</string>
@@ -440,16 +439,16 @@
     <string name="loading_labels">Загрузка ярлыков</string>
     <string name="silent">Беззвучный</string>
     <string name="mixed_signed">разные подписи</string>
-    <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, которое защищено паролем. Вы можете открыт его используя эту ссылку: %2$s</string>
+    <string name="password_protected_msg_promo">%1$s отправил Вам сообщение, защищенное паролем. Вы можете открыть его, используя эту ссылку: %2$s</string>
     <string name="can_not_send_password_protected">Сбой при отправке: защищено паролем</string>
     <string name="enter_web_portal_password">Введите web-пароль</string>
     <string name="set_password">Установить пароль</string>
     <string name="web_portal_password_added">Web-пароль добавлен</string>
-    <string name="type_text_to_start_measuring">Пожалуйста, введите текст чтобы начать измерение</string>
+    <string name="type_text_to_start_measuring">Пожалуйста, введите текст чтобы начать вычисление</string>
     <string name="password_cannot_be_empty">Пароль не может быть пустым</string>
     <string name="tap_to_protect_with_web_portal_password">Нажмите, чтобы защитить web-паролем</string>
     <string name="password_protection_usage_explanation">Получатели получат ссылку, используя которую смогут прочесть Ваше сообщение на web-портале. Для этого им нужно будет ввести этот пароль. Они будут иметь доступ к данному сообщению на протяжении 180 дней.</string>
-    <string name="warning_about_password_usage">Не используйте Вашу ключевую фразу(которую вы используете во время настройки FlowCrypt). Используйте какой-то другой пароль, которым можно поделиться с другими. На Вас лежит ответственность за распространение этого пароля между получателями(не используйте почту, чтобы поделится этим паролем)</string>
+    <string name="warning_about_password_usage">Не используйте Вашу ключевую фразу (которую вы используете во время настройки FlowCrypt). Используйте какой-то другой пароль, которым можно поделиться с другими. На Вас лежит ответственность за распространение этого пароля между получателями (не используйте почту, чтобы поделится этим паролем).</string>
     <string name="protect_with_password">Защитить паролем</string>
     <string name="web_portal_password">Web-пароль</string>
     <string name="password_should_fit_the_following_requirements">Пароль должен соответствовать следующим требованиям:</string>
@@ -463,14 +462,14 @@
     <string name="synchronization">Синхронизация&#8230;</string>
     <string name="warning_when_import_invalid_prv_key">Найден недействительный ключ. Импорт невозможен.\n\nЕсли это случится еще раз, пожалуйста, напишите нам на %1$s</string>
     <string name="downloading">Скачивание&#8230;</string>
-    <string name="decrypting">Расшифровка&#8230;</string>
-    <string name="error_occurred_during_downloading_att">Произошла ошибка при загрузке.\n\nДетали ошибки:  %1$s</string>
-    <string name="no_apps_that_can_handle_intent">Извините, у Вас нет приложений, которые могут открыть этот файл</string>
+    <string name="decrypting">Расшифрование&#8230;</string>
+    <string name="error_occurred_during_downloading_att">Произошла ошибка при загрузке.\n\nПодробности:  %1$s</string>
+    <string name="no_apps_that_can_handle_intent">Извините, у Вас нет приложения, которое могло бы открыть этот файл</string>
     <string name="warning_don_not_have_content_app">Просмотр вложения невозможен. Ваша организация требует использовать Content для просмотра вложений, но приложение Content не установлено.\n\nПожалуйста, обратитесь в службу поддержки.</string>
     <string name="error">Ошибка</string>
     <string name="import_keys_from_different_sources">Вы пытаетесь импортировать ключи из разных источников</string>
     <string name="thank_you_for_feedback">Спасибо за Ваш отзыв</string>
-    <string name="no_private_keys_suitable_for_encryption">Извините, Вы не можете отправить зашифрованное сообщение. У Вас нет ни одного закрытого ключей, который пригоден для шифрования.</string>
+    <string name="no_private_keys_suitable_for_encryption">Извините, Вы не можете отправить зашифрованное сообщение. У Вас нет ни одного закрытого ключа, пригодного для шифрования.</string>
     <string name="revoked">отозван</string>
     <string name="key_expiration">Срок действия ключа: %1$s</string>
     <string name="key_does_not_expire">бессрочно</string>

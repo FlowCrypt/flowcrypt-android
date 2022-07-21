@@ -98,6 +98,11 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
     LogsUtil.d(loggingTag, "onSaveInstanceState")
   }
 
+  override fun onViewStateRestored(savedInstanceState: Bundle?) {
+    super.onViewStateRestored(savedInstanceState)
+    LogsUtil.d(loggingTag, "onViewStateRestored")
+  }
+
   override fun onStop() {
     super.onStop()
     LogsUtil.d(loggingTag, "onStop")
