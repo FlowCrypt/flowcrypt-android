@@ -125,19 +125,6 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
-  fun replaceRecipients(recipientType: Message.RecipientType, list: List<RecipientWithPubKeys>) {
-    when (recipientType) {
-      Message.RecipientType.TO -> recipientsToMutableStateFlow
-      Message.RecipientType.CC -> recipientsCcMutableStateFlow
-      Message.RecipientType.BCC -> recipientsBccMutableStateFlow
-      else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
-    }.update {
-      list.associateBy(
-        { it.recipient.email },
-        { RecipientInfo(recipientType, it) }).toMutableMap()
-    }
-  }
-
   fun addRecipientByEmail(
     recipientType: Message.RecipientType,
     email: CharSequence
@@ -214,7 +201,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
           lookUpCandidates[email] = recipientInfo
           try {
             val recipientWithPubKeysAfterLookUp = lookUp(email)
-            lookUpCandidates.remove(email)
+            dequeue(email)
             if (recipientWithPubKeysAfterLookUp.hasUsablePubKey()) {
               recipientsSessionCache[email] = recipientWithPubKeysAfterLookUp
             }
@@ -231,39 +218,27 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       }
     }
 
-    private suspend fun lookUp(email: String): RecipientWithPubKeys =
-      withContext(Dispatchers.IO) {
-        val emailLowerCase = email.lowercase()
-        var cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
-
-        if (cachedRecipientWithPubKeys == null) {
-          roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = emailLowerCase))
-          cachedRecipientWithPubKeys =
-            roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
-        } else {
-          for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
-            try {
-              val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
-              publicKeyEntity.pgpKeyDetails = result.firstOrNull()
-            } catch (e: Exception) {
-              e.printStackTrace()
-              publicKeyEntity.isNotUsable = true
-            }
-          }
-        }
-
-        getPublicKeysFromRemoteServersInternal(email = emailLowerCase)?.let { pgpKeyDetailsList ->
-          cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
-            updateCachedInfoWithPubKeysFromLookUp(
-              recipientWithPubKeys,
-              pgpKeyDetailsList
-            )
-          }
-        }
-        cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
-
-        return@withContext requireNotNull(cachedRecipientWithPubKeys)
+    private suspend fun lookUp(email: String): RecipientWithPubKeys = withContext(Dispatchers.IO) {
+      val emailLowerCase = email.lowercase()
+      var cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
+      if (cachedRecipientWithPubKeys == null) {
+        roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = emailLowerCase))
+        cachedRecipientWithPubKeys =
+          roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
       }
+
+      getPublicKeysFromRemoteServersInternal(email = emailLowerCase)?.let { pgpKeyDetailsList ->
+        cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
+          updateCachedInfoWithPubKeysFromLookUp(
+            recipientWithPubKeys,
+            pgpKeyDetailsList
+          )
+        }
+      }
+      cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
+
+      return@withContext requireNotNull(cachedRecipientWithPubKeys)
+    }
 
     fun dequeue(email: String) {
       lookUpCandidates.remove(email)
