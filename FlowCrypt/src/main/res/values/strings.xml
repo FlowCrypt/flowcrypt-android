@@ -573,4 +573,5 @@
     <string name="type_valid_email_or_select_from_dropdown">Please type a valid email address or choose from a dropdown list</string>
     <string name="added">Added</string>
     <string name="already_added">Already added</string>
+    <string name="more_recipients">+%1$d more</string>
 </resources>

@@ -139,7 +139,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private val recipientChipRecyclerViewAdapter: RecipientChipRecyclerViewAdapter =
     RecipientChipRecyclerViewAdapter(
-      showGroupEnabled = false,
       onChipsListener = object : RecipientChipRecyclerViewAdapter.OnChipsListener {
         override fun onEmailAddressTyped(email: CharSequence) {
           recipientsAutoCompleteViewModel.updateAutoCompleteResults(email.toString())
@@ -154,6 +153,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             Message.RecipientType.TO,
             recipientInfo.recipientWithPubKeys.recipient.email
           )
+        }
+
+        override fun onAddFieldFocusChanged(hasFocus: Boolean) {
+          updateChipAdapter(composeMsgViewModel.recipientsToStateFlow.value)
         }
       }
     )
@@ -1226,7 +1229,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
-        recipientChipRecyclerViewAdapter.submitList(recipients.values.toList())
+        updateChipAdapter(recipients)
 
         val emails = recipients.keys
         autoCompleteResultRecyclerViewAdapter.submitList(
@@ -1281,6 +1284,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
       }
     }
+  }
+
+  private fun updateChipAdapter(
+    recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>
+  ) {
+    recipientChipRecyclerViewAdapter.submitList(recipients)
   }
 
   private fun initNonEncryptedHintView() {

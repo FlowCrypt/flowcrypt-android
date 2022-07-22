@@ -483,4 +483,5 @@
     <string name="source_contains_more_than_one_key">Джерело містить більш ніж один закритий ключ</string>
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Будь ласка, введіть Вашу ключову фразу, щоб підтримувати Ваші ключі в актуальному стані</string>
     <string name="key_is_revoked_unable_to_update">Ви вже маєте відкликану версію цього відкритого ключа. Подальші оновлення заборонені. Будь ласка, запросіть інший відкритий ключ у цього отримувача.</string>
+    <string name="more_recipients">+%1$d ще</string>
 </resources>
