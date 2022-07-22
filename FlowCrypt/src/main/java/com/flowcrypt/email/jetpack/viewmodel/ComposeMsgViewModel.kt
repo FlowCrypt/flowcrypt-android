@@ -121,7 +121,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       Message.RecipientType.BCC -> recipientsBccMutableStateFlow
       else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
     }.update { map ->
-      map.toMutableMap().apply { put(normalizedEmail, recipientInfo) }
+      map.toMutableMap().apply { replace(normalizedEmail, recipientInfo) }
     }
   }
 
