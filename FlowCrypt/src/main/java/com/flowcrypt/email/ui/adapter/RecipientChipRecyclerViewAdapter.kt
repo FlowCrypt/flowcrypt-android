@@ -7,15 +7,19 @@ package com.flowcrypt.email.ui.adapter
 
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.annotation.IntDef
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.databinding.ChipMoreItemBinding
@@ -26,8 +30,6 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
-import com.google.android.material.progressindicator.IndeterminateDrawable
 import jakarta.mail.Message
 
 
@@ -211,16 +213,14 @@ class RecipientChipRecyclerViewAdapter(private val onChipsListener: OnChipsListe
       }
     }
 
-    private fun prepareProgressDrawable(): IndeterminateDrawable<CircularProgressIndicatorSpec> {
-      val progressIndicatorSpec = CircularProgressIndicatorSpec(
-        itemView.context,
-        null,
-        0,
-        R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall
-      ).apply {
-        indicatorInset = 1
+    private fun prepareProgressDrawable(): Drawable {
+      return CircularProgressDrawable(itemView.context).apply {
+        setStyle(CircularProgressDrawable.DEFAULT)
+        colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+          UIUtil.getColor(itemView.context, R.color.colorPrimary), BlendModeCompat.SRC_IN
+        )
+        start()
       }
-      return IndeterminateDrawable.createCircularDrawable(itemView.context, progressIndicatorSpec)
     }
   }
 
