@@ -39,9 +39,11 @@ import jakarta.mail.Message
  *         Time: 5:35 PM
  *         E-mail: DenBond7@gmail.com
  */
-class RecipientChipRecyclerViewAdapter(private val onChipsListener: OnChipsListener) :
-  ListAdapter<RecipientChipRecyclerViewAdapter.Item,
-      RecipientChipRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
+class RecipientChipRecyclerViewAdapter(
+  val recipientType: Message.RecipientType,
+  private val onChipsListener: OnChipsListener
+) : ListAdapter<RecipientChipRecyclerViewAdapter.Item,
+    RecipientChipRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private var addViewHolder: AddViewHolder? = null
 
   var resetTypedText = false
@@ -109,7 +111,7 @@ class RecipientChipRecyclerViewAdapter(private val onChipsListener: OnChipsListe
     submitList(finalList)
   }
 
-  fun hasInputFocus(): Boolean {
+  private fun hasInputFocus(): Boolean {
     return addViewHolder?.binding?.editTextEmailAddress?.hasFocus() == true
   }
 
@@ -120,14 +122,14 @@ class RecipientChipRecyclerViewAdapter(private val onChipsListener: OnChipsListe
 
     fun bind() {
       binding.editTextEmailAddress.addTextChangedListener { editable ->
-        editable?.let { onChipsListener.onEmailAddressTyped(it) }
+        editable?.let { onChipsListener.onEmailAddressTyped(recipientType, it) }
       }
 
       binding.editTextEmailAddress.setOnFocusChangeListener { _, hasFocus ->
-        onChipsListener.onAddFieldFocusChanged(hasFocus)
+        onChipsListener.onAddFieldFocusChanged(recipientType, hasFocus)
         if (!hasFocus) {
           binding.editTextEmailAddress.text = null
-          onChipsListener.onEmailAddressTyped("")
+          onChipsListener.onEmailAddressTyped(recipientType, "")
         }
       }
 
@@ -135,7 +137,7 @@ class RecipientChipRecyclerViewAdapter(private val onChipsListener: OnChipsListe
         return@setOnEditorActionListener when (actionId) {
           EditorInfo.IME_ACTION_DONE, EditorInfo.IME_ACTION_NEXT -> {
             if (v.text.toString().isValidEmail()) {
-              onChipsListener.onEmailAddressAdded(v.text)
+              onChipsListener.onEmailAddressAdded(recipientType, v.text)
               v.text = null
               false
             } else {
@@ -161,7 +163,7 @@ class RecipientChipRecyclerViewAdapter(private val onChipsListener: OnChipsListe
       updateChipIcon(chip, recipientInfo)
 
       chip.setOnCloseIconClickListener {
-        onChipsListener.onChipDeleted(recipientInfo)
+        onChipsListener.onChipDeleted(recipientType, recipientInfo)
       }
     }
 
@@ -236,10 +238,10 @@ class RecipientChipRecyclerViewAdapter(private val onChipsListener: OnChipsListe
   }
 
   interface OnChipsListener {
-    fun onEmailAddressTyped(email: CharSequence)
-    fun onEmailAddressAdded(email: CharSequence)
-    fun onChipDeleted(recipientInfo: RecipientInfo)
-    fun onAddFieldFocusChanged(hasFocus: Boolean)
+    fun onEmailAddressTyped(recipientType: Message.RecipientType, email: CharSequence)
+    fun onEmailAddressAdded(recipientType: Message.RecipientType, email: CharSequence)
+    fun onChipDeleted(recipientType: Message.RecipientType, recipientInfo: RecipientInfo)
+    fun onAddFieldFocusChanged(recipientType: Message.RecipientType, hasFocus: Boolean)
   }
 
   data class RecipientInfo(

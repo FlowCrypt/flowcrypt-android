@@ -76,6 +76,8 @@
     <string name="create_new_message">Новое сообщение</string>
     <string name="all_mail">Все письма</string>
     <string name="to">Кому</string>
+    <string name="cc">Копия</string>
+    <string name="bcc">Скрытая копия</string>
     <string name="include_app_screenshot">Добавить снимок экрана приложения</string>
     <string name="touch_to_preview_and_edit">Нажмите, чтобы просмотреть и отредактировать</string>
     <string name="privacy">Конфиденциальность</string>
@@ -109,9 +111,6 @@
     <string name="log_out">Выйти</string>
     <string name="report_problem">Сообщить об ошибке</string>
     <string name="prompt_compose_security_email">Написать безопасное сообщение</string>
-    <string name="prompt_recipients_cc">Добавить получателей (Копия)</string>
-    <string name="prompt_recipients_bcc">Добавить получателей (Скрытая копия)</string>
-    <string name="prompt_recipients_to">Добавить получателей (Кому)</string>
     <string name="include_public_key">Приложить открытый ключ</string>
     <string name="switch_to_standard_email">Переключиться на обычное сообщение</string>
     <string name="text_must_not_be_empty">Ошибка: \"%1$s\" не может быть пустым!</string>
@@ -221,7 +220,6 @@
     <string name="remember_pass_phrase_temporarily">Времено запомнить ключевую фразу</string>
     <string name="save_pass_phrase">Сохранить ключевую фразу</string>
     <string name="and_others">и другие&#8230;</string>
-    <string name="cc">Копия</string>
     <string name="reply_to">Ответить</string>
     <string name="connection_lost">Соединение потеряно</string>
     <string name="auth_failure_hint_regular_accounts">Не удалось войти, пожалуйста, проверьте имя Вашей учетной записи и пароль в настройках сервера.</string>
@@ -483,7 +481,7 @@
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Пожалуйста, введите Вашу ключевую фразу, чтобы поддерживать Ваши ключи в актуальном состоянии</string>
     <string name="key_is_revoked_unable_to_update">Вы уже имеете отозванную версию этого открытого ключа. Дальнейшие обновления запрещены. Пожалуйста, запросите другой открытый ключ у этого получателя.</string>
     <string name="add_recipient">Добавить получателя</string>
-    <string name="type_valid_email_or_select_from_dropdown">Пожалуйста, введите коректный Email аддресс или выберите с выпадающего списка</string>
+    <string name="type_valid_email_or_select_from_dropdown">Пожалуйста, введите корректный Email адрес или выберите из выпадающего списка</string>
     <string name="added">Добавлен</string>
     <string name="already_added">Уже добавлен</string>
     <string name="more_recipients">+%1$d ещё</string>

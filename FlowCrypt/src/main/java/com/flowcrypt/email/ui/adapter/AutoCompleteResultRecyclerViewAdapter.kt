@@ -20,6 +20,7 @@ import com.flowcrypt.email.databinding.RecipientAutoCompleteItemBinding
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
+import jakarta.mail.Message
 
 /**
  * @author Denis Bondarenko
@@ -28,6 +29,7 @@ import com.flowcrypt.email.extensions.visibleOrGone
  *         E-mail: DenBond7@gmail.com
  */
 class AutoCompleteResultRecyclerViewAdapter(
+  val recipientType: Message.RecipientType,
   private val resultListener: OnResultListener
 ) : ListAdapter<AutoCompleteResultRecyclerViewAdapter.AutoCompleteItem,
     AutoCompleteResultRecyclerViewAdapter.BaseViewHolder>(DIFF_CALLBACK) {
@@ -85,7 +87,7 @@ class AutoCompleteResultRecyclerViewAdapter(
       val typedText = autoCompleteItem.recipientWithPubKeys.recipient.email
       itemView.setOnClickListener {
         if (typedText.isValidEmail()) {
-          resultListener.onResultClick(autoCompleteItem.recipientWithPubKeys)
+          resultListener.onResultClick(recipientType, autoCompleteItem.recipientWithPubKeys)
           submitList(null)
         } else {
           context.toast(context.getString(R.string.type_valid_email_or_select_from_dropdown))
@@ -110,7 +112,7 @@ class AutoCompleteResultRecyclerViewAdapter(
         if (autoCompleteItem.isAdded) {
           itemView.context.toast(itemView.context.getString(R.string.already_added))
         } else {
-          resultListener.onResultClick(recipientWithPubKeys)
+          resultListener.onResultClick(recipientType, recipientWithPubKeys)
           submitList(null)
         }
       }
@@ -131,7 +133,10 @@ class AutoCompleteResultRecyclerViewAdapter(
   }
 
   interface OnResultListener {
-    fun onResultClick(recipientWithPubKeys: RecipientWithPubKeys)
+    fun onResultClick(
+      recipientType: Message.RecipientType,
+      recipientWithPubKeys: RecipientWithPubKeys
+    )
   }
 
   data class AutoCompleteItem(

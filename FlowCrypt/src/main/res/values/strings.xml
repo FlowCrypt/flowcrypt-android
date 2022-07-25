@@ -8,9 +8,6 @@
     <string name="support_email" translatable="false">human@flowcrypt.com</string>
 
     <string name="compose">Compose</string>
-    <string name="prompt_recipients_to">Add recipients (To)</string>
-    <string name="prompt_recipients_cc">Add recipients (Cc)</string>
-    <string name="prompt_recipients_bcc">Add recipients (Bcc)</string>
     <string name="prompt_subject">Subject</string>
     <string name="prompt_compose_security_email">Compose secure message</string>
     <string name="prompt_compose_standard_email">Compose standard message</string>
@@ -463,6 +460,7 @@
     <string name="reply_to">Reply To</string>
     <string name="to">To</string>
     <string name="cc">Cc</string>
+    <string name="bcc">Bcc</string>
     <string name="date">Date</string>
     <string name="to_receiver">To %1$s</string>
     <string name="and_others">and others&#8230;</string>

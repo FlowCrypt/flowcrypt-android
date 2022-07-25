@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import jakarta.mail.Message
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,7 @@ class RecipientsAutoCompleteViewModel(application: Application) : RoomBasicViewM
   val autoCompleteResultStateFlow: StateFlow<Result<AutoCompleteResults>> =
     autoCompleteResultMutableStateFlow.asStateFlow()
 
-  fun updateAutoCompleteResults(email: String) {
+  fun updateAutoCompleteResults(recipientType: Message.RecipientType, email: String) {
     viewModelScope.launch {
       autoCompleteResultMutableStateFlow.value = Result.loading()
       autoCompleteResultMutableStateFlow.value =
@@ -39,6 +40,7 @@ class RecipientsAutoCompleteViewModel(application: Application) : RoomBasicViewM
             .findMatchingRecipients(if (email.isEmpty()) "" else "%$email%")
           return@cancelPreviousThenRun Result.success(
             AutoCompleteResults(
+              recipientType = recipientType,
               pattern = email,
               results = autoCompleteResult
             )
@@ -47,5 +49,9 @@ class RecipientsAutoCompleteViewModel(application: Application) : RoomBasicViewM
     }
   }
 
-  data class AutoCompleteResults(val pattern: String, val results: List<RecipientWithPubKeys>)
+  data class AutoCompleteResults(
+    val recipientType: Message.RecipientType,
+    val pattern: String,
+    val results: List<RecipientWithPubKeys>
+  )
 }
