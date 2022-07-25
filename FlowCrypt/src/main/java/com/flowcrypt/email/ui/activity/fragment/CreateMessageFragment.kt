@@ -420,19 +420,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         binding?.spinnerFrom?.performClick()
       }
 
-      /*R.id.imageButtonAdditionalRecipientsVisibility -> {
-        binding?.layoutCc?.visible()
-        binding?.layoutBcc?.visible()
-        val layoutParams = FrameLayout.LayoutParams(
-          FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.MATCH_PARENT
-        )
-        layoutParams.gravity = Gravity.TOP or Gravity.END
-
-        binding?.progressBarAndButtonLayout?.layoutParams = layoutParams
-        v.visibility = View.GONE
-        binding?.editTextRecipientCc?.requestFocus()
-      }*/
-
       R.id.iBShowQuotedText -> {
         val currentCursorPosition = binding?.editTextEmailMessage?.selectionStart ?: 0
         if (binding?.editTextEmailMessage?.text?.isNotEmpty() == true) {
@@ -701,8 +688,25 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.chipLayoutBcc?.visible()
     }
 
-    //binding?.editTextEmailSubject?.onFocusChangeListener = this
-    //binding?.editTextEmailMessage?.onFocusChangeListener = this
+    val onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+      if (hasFocus) {
+        var isExpandButtonNeeded = false
+        if (composeMsgViewModel.recipientsCc.isEmpty()) {
+          binding?.chipLayoutCc?.gone()
+          isExpandButtonNeeded = true
+        }
+
+        if (composeMsgViewModel.recipientsBcc.isEmpty()) {
+          binding?.chipLayoutBcc?.gone()
+          isExpandButtonNeeded = true
+        }
+
+        binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(isExpandButtonNeeded)
+      }
+    }
+
+    binding?.editTextEmailSubject?.onFocusChangeListener = onFocusChangeListener
+    binding?.editTextEmailMessage?.onFocusChangeListener = onFocusChangeListener
     binding?.iBShowQuotedText?.setOnClickListener(this)
     binding?.btnSetWebPortalPassword?.setOnClickListener {
       navController?.navigate(
@@ -793,26 +797,25 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsFromExtraActionInfo() {
-    /*setupPgpFromExtraActionInfo(
-      binding?.editTextRecipientTo,
-      extraActionInfo?.toAddresses?.toTypedArray()
-    )
-    setupPgpFromExtraActionInfo(
-      binding?.editTextRecipientCc,
-      extraActionInfo?.ccAddresses?.toTypedArray()
-    )
-    setupPgpFromExtraActionInfo(
-      binding?.editTextRecipientBcc,
-      extraActionInfo?.bccAddresses?.toTypedArray()
-    )*/
+    extraActionInfo?.toAddresses?.forEach {
+      composeMsgViewModel.addRecipientByEmail(Message.RecipientType.TO, it)
+    }
+
+    extraActionInfo?.ccAddresses?.forEach {
+      composeMsgViewModel.addRecipientByEmail(Message.RecipientType.CC, it)
+    }
+
+    extraActionInfo?.bccAddresses?.forEach {
+      composeMsgViewModel.addRecipientByEmail(Message.RecipientType.BCC, it)
+    }
 
     binding?.editTextEmailSubject?.setText(extraActionInfo?.subject)
     binding?.editTextEmailMessage?.setText(extraActionInfo?.body)
 
-    /*if (binding?.editTextRecipientTo?.text?.isEmpty() == true) {
-      binding?.editTextRecipientTo?.requestFocus()
+    if (extraActionInfo?.toAddresses?.isEmpty() == true) {
+      toRecipientsChipRecyclerViewAdapter.requestFocus()
       return
-    }*/
+    }
 
     if (binding?.editTextEmailSubject?.text?.isEmpty() == true) {
       binding?.editTextEmailSubject?.requestFocus()
@@ -1304,6 +1307,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsCcStateFlow.collect { recipients ->
         binding?.chipLayoutCc?.visibleOrGone(recipients.isNotEmpty())
+        binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.CC, recipients)
         updateAutoCompleteAdapter(recipients)
       }
@@ -1312,6 +1316,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsBccStateFlow.collect { recipients ->
         binding?.chipLayoutBcc?.visibleOrGone(recipients.isNotEmpty())
+        binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.BCC, recipients)
         updateAutoCompleteAdapter(recipients)
       }

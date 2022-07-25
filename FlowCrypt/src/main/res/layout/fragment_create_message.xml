@@ -133,14 +133,16 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/textViewTo"
                     app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/default_single_dip"
-                android:layout_marginTop="@dimen/default_margin_small"
-                android:layout_marginBottom="@dimen/default_margin_small"
-                android:background="@drawable/bg_bottom_line_gray" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/default_single_dip"
+                    android:layout_marginTop="@dimen/default_margin_small"
+                    android:background="@drawable/bg_bottom_line_gray"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewAutocompleteTo" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/chipLayoutCc"
@@ -168,7 +170,9 @@
                     app:layout_constraintTop_toBottomOf="@+id/textViewCc"
                     tools:itemCount="3"
                     tools:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
-                    tools:listitem="@layout/chip_recipient_item" />
+                    tools:listitem="@layout/chip_recipient_item">
+
+                </androidx.recyclerview.widget.RecyclerView>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerViewAutocompleteCc"
@@ -180,14 +184,16 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/recyclerViewChipsCc"
                     tools:itemCount="0" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/default_single_dip"
-                android:layout_marginTop="@dimen/default_margin_small"
-                android:layout_marginBottom="@dimen/default_margin_small"
-                android:background="@drawable/bg_bottom_line_gray" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/default_single_dip"
+                    android:layout_marginTop="@dimen/default_margin_small"
+                    android:background="@drawable/bg_bottom_line_gray"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewAutocompleteCc" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/chipLayoutBcc"
@@ -227,6 +233,15 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/recyclerViewChipsBcc"
                     tools:itemCount="0" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/default_single_dip"
+                    android:layout_marginTop="@dimen/default_margin_small"
+                    android:background="@drawable/bg_bottom_line_gray"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewAutocompleteBcc" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <com.google.android.material.button.MaterialButton

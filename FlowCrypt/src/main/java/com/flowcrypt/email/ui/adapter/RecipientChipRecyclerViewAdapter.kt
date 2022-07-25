@@ -111,6 +111,10 @@ class RecipientChipRecyclerViewAdapter(
     submitList(finalList)
   }
 
+  fun requestFocus() {
+    addViewHolder?.binding?.editTextEmailAddress?.requestFocus()
+  }
+
   private fun hasInputFocus(): Boolean {
     return addViewHolder?.binding?.editTextEmailAddress?.hasFocus() == true
   }
