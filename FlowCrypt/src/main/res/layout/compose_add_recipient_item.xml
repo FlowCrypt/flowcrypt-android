@@ -9,7 +9,7 @@
     android:layout_height="wrap_content"
     android:autofillHints="emailAddress"
     android:background="@null"
-    android:hint="@null"
+    android:hint="@string/add_recipient"
     android:imeOptions="actionDone"
     android:inputType="textEmailAddress"
     android:minWidth="@dimen/default_margin_super_huge" />

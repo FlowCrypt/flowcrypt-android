@@ -572,4 +572,5 @@
     <string name="added">Added</string>
     <string name="already_added">Already added</string>
     <string name="more_recipients">+%1$d more</string>
+    <string name="add_recipient_to_send_message">Please add at least one recipient in \"To\" to send this message</string>
 </resources>

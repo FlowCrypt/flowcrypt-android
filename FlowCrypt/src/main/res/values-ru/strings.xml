@@ -485,4 +485,5 @@
     <string name="added">Добавлен</string>
     <string name="already_added">Уже добавлен</string>
     <string name="more_recipients">+%1$d ещё</string>
+    <string name="add_recipient_to_send_message">Пожалуйста, добавьте хотя бы одного получателя в поле \"Кому\" для отправки этого сообщения</string>
 </resources>

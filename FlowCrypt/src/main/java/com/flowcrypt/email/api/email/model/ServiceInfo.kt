@@ -18,6 +18,8 @@ import android.os.Parcelable
  */
 data class ServiceInfo constructor(
   val isToFieldEditable: Boolean = false,
+  val isCcFieldEditable: Boolean = false,
+  val isBccFieldEditable: Boolean = false,
   val isFromFieldEditable: Boolean = false,
   val isMsgEditable: Boolean = false,
   val isSubjectEditable: Boolean = false,
@@ -33,12 +35,16 @@ data class ServiceInfo constructor(
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
+    parcel.readByte() != 0.toByte(),
+    parcel.readByte() != 0.toByte(),
     parcel.readString(),
     parcel.createTypedArrayList(AttachmentInfo.CREATOR)
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeByte(if (isToFieldEditable) 1 else 0)
+    parcel.writeByte(if (isCcFieldEditable) 1 else 0)
+    parcel.writeByte(if (isBccFieldEditable) 1 else 0)
     parcel.writeByte(if (isFromFieldEditable) 1 else 0)
     parcel.writeByte(if (isMsgEditable) 1 else 0)
     parcel.writeByte(if (isSubjectEditable) 1 else 0)

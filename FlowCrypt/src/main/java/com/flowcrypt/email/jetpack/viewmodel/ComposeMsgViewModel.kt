@@ -110,22 +110,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     webPortalPasswordMutableStateFlow.value = webPortalPassword
   }
 
-  fun replaceRecipient(
-    recipientType: Message.RecipientType,
-    recipientInfo: RecipientInfo
-  ) {
-    val normalizedEmail = recipientInfo.recipientWithPubKeys.recipient.email
-    when (recipientType) {
-      Message.RecipientType.TO -> recipientsToMutableStateFlow
-      Message.RecipientType.CC -> recipientsCcMutableStateFlow
-      Message.RecipientType.BCC -> recipientsBccMutableStateFlow
-      else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
-    }.update { map ->
-      map.toMutableMap().apply { replace(normalizedEmail, recipientInfo) }
-    }
-  }
-
-  fun addRecipientByEmail(
+  fun addRecipient(
     recipientType: Message.RecipientType,
     email: CharSequence
   ) {
@@ -158,18 +143,75 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     recipientType: Message.RecipientType,
     recipientEmail: String
   ) {
-    val normalizedEmail = recipientEmail.lowercase()
+    viewModelScope.launch {
+      val normalizedEmail = recipientEmail.lowercase()
 
-    when (recipientType) {
-      Message.RecipientType.TO -> recipientsToMutableStateFlow
-      Message.RecipientType.CC -> recipientsCcMutableStateFlow
-      Message.RecipientType.BCC -> recipientsBccMutableStateFlow
-      else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
-    }.update { map ->
-      map.toMutableMap().apply { remove(normalizedEmail) }
+      when (recipientType) {
+        Message.RecipientType.TO -> recipientsToMutableStateFlow
+        Message.RecipientType.CC -> recipientsCcMutableStateFlow
+        Message.RecipientType.BCC -> recipientsBccMutableStateFlow
+        else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
+      }.update { map ->
+        map.toMutableMap().apply { remove(normalizedEmail) }
+      }
+
+      recipientLookUpManager.dequeue(normalizedEmail)
     }
+  }
 
-    recipientLookUpManager.dequeue(normalizedEmail)
+  fun reCacheRecipient(
+    recipientType: Message.RecipientType,
+    email: CharSequence
+  ) {
+    viewModelScope.launch {
+      val normalizedEmail = email.toString().lowercase()
+      val existingRecipientWithPubKeys = roomDatabase.recipientDao()
+        .getRecipientWithPubKeysByEmailSuspend(normalizedEmail) ?: return@launch
+      val existingRecipientInfo = when (recipientType) {
+        Message.RecipientType.TO -> recipientsToMutableStateFlow
+        Message.RecipientType.CC -> recipientsCcMutableStateFlow
+        Message.RecipientType.BCC -> recipientsBccMutableStateFlow
+        else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
+      }.value[normalizedEmail] ?: return@launch
+      when (recipientType) {
+        Message.RecipientType.TO -> recipientsToMutableStateFlow
+        Message.RecipientType.CC -> recipientsCcMutableStateFlow
+        Message.RecipientType.BCC -> recipientsBccMutableStateFlow
+        else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
+      }.update { map ->
+        map.toMutableMap().apply {
+          replace(
+            normalizedEmail,
+            existingRecipientInfo.copy(recipientWithPubKeys = existingRecipientWithPubKeys)
+          )
+        }
+      }
+    }
+  }
+
+  private fun replaceRecipient(
+    recipientType: Message.RecipientType,
+    recipientInfo: RecipientInfo
+  ) {
+    viewModelScope.launch {
+      val normalizedEmail = recipientInfo.recipientWithPubKeys.recipient.email
+      when (recipientType) {
+        Message.RecipientType.TO -> recipientsToMutableStateFlow
+        Message.RecipientType.CC -> recipientsCcMutableStateFlow
+        Message.RecipientType.BCC -> recipientsBccMutableStateFlow
+        else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
+      }.update { map ->
+        map.toMutableMap().apply { replace(normalizedEmail, recipientInfo) }
+      }
+    }
+  }
+
+  fun callLookUpForMissedPubKeys() {
+    viewModelScope.launch {
+      allRecipients.forEach { entry ->
+        recipientLookUpManager.enqueue(entry.value)
+      }
+    }
   }
 
   class RecipientLookUpManager(
@@ -199,6 +241,9 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
           )
         } else {
           lookUpCandidates[email] = recipientInfo
+          if (!recipientInfo.isUpdating) {
+            updateListener.invoke(recipientInfo.copy(isUpdating = true))
+          }
           try {
             val recipientWithPubKeysAfterLookUp = lookUp(email)
             dequeue(email)
@@ -213,6 +258,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
             )
           } catch (e: Exception) {
             e.printStackTrace()
+            updateListener.invoke(recipientInfo.copy(isUpdating = false))
           }
         }
       }

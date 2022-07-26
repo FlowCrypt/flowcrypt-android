@@ -486,4 +486,5 @@
     <string name="type_valid_email_or_select_from_dropdown">Будь ласка, введіть коректну Email адресу або виберіть зі списку</string>
     <string name="added">Додано</string>
     <string name="already_added">Вже додано</string>
+    <string name="add_recipient_to_send_message">Щоб надіслати це повідомлення, додайте принаймні одного одержувача в поле \"Кому\"</string>
 </resources>
