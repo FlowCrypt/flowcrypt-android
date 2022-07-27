@@ -60,13 +60,10 @@ class RecipientChipRecyclerViewAdapter(
   ): RecipientChipRecyclerViewAdapter.BaseViewHolder {
     return when (viewType) {
       ADD -> {
-        if (addViewHolder == null) {
-          addViewHolder = AddViewHolder(
-            LayoutInflater.from(parent.context)
-              .inflate(R.layout.compose_add_recipient_item, parent, false)
-          )
-        }
-
+        addViewHolder = AddViewHolder(
+          LayoutInflater.from(parent.context)
+            .inflate(R.layout.compose_add_recipient_item, parent, false)
+        )
         requireNotNull(addViewHolder)
       }
 
@@ -295,7 +292,6 @@ class RecipientChipRecyclerViewAdapter(
     const val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED = R.color.red
     const val CHIP_COLOR_RES_ID_NO_PUB_KEY = R.color.gray
     const val CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY = R.color.red
-
     private const val MAX_VISIBLE_ITEMS_COUNT = 3
 
     private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Item>() {
