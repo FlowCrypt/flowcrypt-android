@@ -98,13 +98,22 @@ class RecipientChipRecyclerViewAdapter(
   }
 
   fun submitList(recipients: Map<String, RecipientInfo>) {
-    val recipientInfoList = recipients.values
-      .map { Item(CHIP, it) }
+    val filteredList = recipients.values
       .take(if (hasInputFocus()) recipients.size else MAX_VISIBLE_ITEMS_COUNT)
-
+    val hasUpdatingInHiddenItems = (recipients.values - filteredList.toSet()).any { it.isUpdating }
+    val recipientInfoList = filteredList
+      .map { Item(CHIP, it) }
     val finalList = recipientInfoList.toMutableList().apply {
       if (recipients.size > MAX_VISIBLE_ITEMS_COUNT && !hasInputFocus()) {
-        add(Item(MORE, ItemData.More(recipients.size - recipientInfoList.size)))
+        add(
+          Item(
+            MORE,
+            ItemData.More(
+              value = recipients.size - filteredList.size,
+              hasUpdatingInHiddenItems = hasUpdatingInHiddenItems
+            )
+          )
+        )
       }
       add(Item(ADD, ItemData.ADD))
     }
@@ -124,7 +133,17 @@ class RecipientChipRecyclerViewAdapter(
     return addViewHolder?.binding?.editTextEmailAddress?.hasFocus() == true
   }
 
-  abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+  abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    fun prepareProgressDrawable(): Drawable {
+      return CircularProgressDrawable(itemView.context).apply {
+        setStyle(CircularProgressDrawable.DEFAULT)
+        colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+          UIUtil.getColor(itemView.context, R.color.colorPrimary), BlendModeCompat.SRC_IN
+        )
+        start()
+      }
+    }
+  }
 
   inner class AddViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ComposeAddRecipientItemBinding.bind(itemView)
@@ -217,21 +236,7 @@ class RecipientChipRecyclerViewAdapter(
     }
 
     private fun updateChipIcon(chip: Chip, recipientInfo: RecipientInfo) {
-      if (recipientInfo.isUpdating) {
-        chip.chipIcon = prepareProgressDrawable()
-      } else {
-        chip.chipIcon = null
-      }
-    }
-
-    private fun prepareProgressDrawable(): Drawable {
-      return CircularProgressDrawable(itemView.context).apply {
-        setStyle(CircularProgressDrawable.DEFAULT)
-        colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-          UIUtil.getColor(itemView.context, R.color.colorPrimary), BlendModeCompat.SRC_IN
-        )
-        start()
-      }
+      chip.chipIcon = if (recipientInfo.isUpdating) prepareProgressDrawable() else null
     }
   }
 
@@ -240,6 +245,8 @@ class RecipientChipRecyclerViewAdapter(
 
     fun bind(more: ItemData.More) {
       binding.chipMore.text = itemView.context.getString(R.string.more_recipients, more.value)
+      binding.chipMore.chipIcon =
+        if (more.hasUpdatingInHiddenItems) prepareProgressDrawable() else null
       itemView.setOnClickListener {
         addViewHolder?.binding?.editTextEmailAddress?.requestFocus()
       }
@@ -268,7 +275,11 @@ class RecipientChipRecyclerViewAdapter(
   interface ItemData {
     val uniqueId: Long
 
-    data class More(val value: Int, override val uniqueId: Long = Long.MAX_VALUE) : ItemData
+    data class More(
+      val value: Int,
+      val hasUpdatingInHiddenItems: Boolean,
+      override val uniqueId: Long = Long.MAX_VALUE
+    ) : ItemData
 
     companion object {
       val ADD = object : ItemData {
