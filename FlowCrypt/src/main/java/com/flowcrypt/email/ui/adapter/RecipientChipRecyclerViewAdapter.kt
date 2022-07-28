@@ -94,12 +94,12 @@ class RecipientChipRecyclerViewAdapter(
     return getItem(position).type
   }
 
-  fun submitList(recipients: Map<String, RecipientInfo>) {
+  fun submitList(recipients: Map<String, RecipientInfo>, isModifyingEnabled: Boolean = true) {
     val filteredList = recipients.values
       .take(if (hasInputFocus()) recipients.size else MAX_VISIBLE_ITEMS_COUNT)
     val hasUpdatingInHiddenItems = (recipients.values - filteredList.toSet()).any { it.isUpdating }
     val recipientInfoList = filteredList
-      .map { Item(CHIP, it) }
+      .map { Item(CHIP, it.copy(isModifyingEnabled = isModifyingEnabled)) }
     val finalList = recipientInfoList.toMutableList().apply {
       if (recipients.size > MAX_VISIBLE_ITEMS_COUNT && !hasInputFocus()) {
         add(
@@ -112,18 +112,15 @@ class RecipientChipRecyclerViewAdapter(
           )
         )
       }
-      add(Item(ADD, ItemData.ADD))
+      if (isModifyingEnabled) {
+        add(Item(ADD, ItemData.ADD))
+      }
     }
     submitList(finalList)
   }
 
   fun requestFocus() {
     addViewHolder?.binding?.editTextEmailAddress?.requestFocus()
-  }
-
-  fun changeAbilityToAddNewRecipient(isAllowed: Boolean) {
-    addViewHolder?.binding?.editTextEmailAddress?.isFocusable = isAllowed
-    addViewHolder?.binding?.editTextEmailAddress?.isFocusableInTouchMode = isAllowed
   }
 
   private fun hasInputFocus(): Boolean {
@@ -187,6 +184,7 @@ class RecipientChipRecyclerViewAdapter(
       updateChipTextColor(chip, recipientInfo)
       updateChipIcon(chip, recipientInfo)
 
+      chip.isCloseIconVisible = recipientInfo.isModifyingEnabled
       chip.setOnCloseIconClickListener {
         onChipsListener.onChipDeleted(recipientType, recipientInfo)
       }
@@ -262,7 +260,8 @@ class RecipientChipRecyclerViewAdapter(
     val recipientWithPubKeys: RecipientWithPubKeys,
     val creationTime: Long = System.currentTimeMillis(),
     var isUpdating: Boolean = true,
-    var isUpdateFailed: Boolean = false
+    var isUpdateFailed: Boolean = false,
+    val isModifyingEnabled: Boolean = true
   ) : ItemData {
     override val uniqueId: Long = requireNotNull(recipientWithPubKeys.recipient.id)
   }

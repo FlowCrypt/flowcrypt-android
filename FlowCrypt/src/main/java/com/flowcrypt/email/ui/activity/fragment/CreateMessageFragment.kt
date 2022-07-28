@@ -819,16 +819,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsFromServiceInfo() {
-    toRecipientsChipRecyclerViewAdapter.changeAbilityToAddNewRecipient(
-      args.serviceInfo?.isToFieldEditable ?: false
-    )
-    ccRecipientsChipRecyclerViewAdapter.changeAbilityToAddNewRecipient(
-      args.serviceInfo?.isCcFieldEditable ?: false
-    )
-    bccRecipientsChipRecyclerViewAdapter.changeAbilityToAddNewRecipient(
-      args.serviceInfo?.isBccFieldEditable ?: false
-    )
-
     binding?.editTextEmailSubject?.isFocusable = args.serviceInfo?.isSubjectEditable ?: false
     binding?.editTextEmailSubject?.isFocusableInTouchMode =
       args.serviceInfo?.isSubjectEditable ?: false
@@ -1349,7 +1339,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>
   ) {
     when (recipientType) {
-      Message.RecipientType.TO -> toRecipientsChipRecyclerViewAdapter.submitList(recipients)
+      Message.RecipientType.TO -> toRecipientsChipRecyclerViewAdapter.submitList(
+        recipients,
+        args.serviceInfo?.isToFieldEditable ?: true
+      )
       Message.RecipientType.CC -> ccRecipientsChipRecyclerViewAdapter.submitList(recipients)
       Message.RecipientType.BCC -> bccRecipientsChipRecyclerViewAdapter.submitList(recipients)
     }

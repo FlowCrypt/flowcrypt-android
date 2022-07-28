@@ -10,6 +10,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -48,10 +49,10 @@ abstract class BaseComposeScreenTest : BaseTest() {
     }
 
   protected fun fillInAllFields(recipient: String) {
-    onView(withId(R.id.layoutTo))
+    onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(typeText(recipient), closeSoftKeyboard())
+    onView(withId(R.id.editTextEmailAddress))
+      .perform(typeText(recipient), pressImeActionButton(), closeSoftKeyboard())
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(

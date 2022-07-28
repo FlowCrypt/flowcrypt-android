@@ -6,11 +6,13 @@
 package com.flowcrypt.email.ui.activity
 
 import android.text.TextUtils
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isFocusable
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -26,6 +28,8 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
+import com.flowcrypt.email.matchers.CustomMatchers
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipCloseIconAvailability
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -34,7 +38,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
@@ -85,7 +88,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   )
 
   override val useIntents: Boolean = true
-  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+  override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(
     intent = CreateMessageActivity.generateIntent(
       getTargetContext(),
       msgInfo = incomingMsgInfo,
@@ -119,24 +122,20 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   fun testToRecipients() {
-    val chipSeparator = SpanChipTokenizer.CHIP_SPAN_SEPARATOR.toString()
-    val autoCorrectSeparator = SpanChipTokenizer.AUTOCORRECT_SEPARATOR.toString()
-    val textWithSeparator = (autoCorrectSeparator
-        + chipSeparator
-        + incomingMsgInfo.getFrom().first().address
-        + chipSeparator
-        + autoCorrectSeparator)
-
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(scrollTo())
-      .check(
-        matches(
+    Thread.sleep(1000)
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
           allOf(
-            isDisplayed(), withText(textWithSeparator),
-            if (serviceInfo.isToFieldEditable) isFocusable() else not(isFocusable())
+            withText(incomingMsgInfo.getFrom().first().address),
+            withChipCloseIconAvailability(false)
           )
         )
       )
+
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(isDisplayed()))
+      .check(matches(CustomMatchers.withRecyclerViewItemCount(incomingMsgInfo.getFrom().size)))
   }
 
   @Test

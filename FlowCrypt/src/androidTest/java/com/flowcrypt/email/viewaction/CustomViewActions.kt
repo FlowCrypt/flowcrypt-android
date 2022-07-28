@@ -41,11 +41,12 @@ import com.google.android.material.navigation.NavigationView
  * @return a [ViewAction] that navigates on a menu item
  */
 
-class CustomViewActions {
-  companion object {
-    @JvmStatic
-    fun navigateToItemWithName(menuItemName: String): ViewAction {
-      return NavigateToItemViewAction(menuItemName)
-    }
+object CustomViewActions {
+  fun doNothing(): ViewAction {
+    return EmptyAction()
+  }
+
+  fun clickOnChipCloseIcon(): ViewAction {
+    return ChipCloseIconClickViewAction()
   }
 }

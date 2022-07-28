@@ -102,6 +102,10 @@ class CustomMatchers {
       return ChipBackgroundColorMatcher(ContextCompat.getColor(context, resourceId))
     }
 
+    fun withChipCloseIconAvailability(isCloseIconVisible: Boolean): BoundedMatcher<View, Chip> {
+      return ChipCloseIconAvailabilityMatcher(isCloseIconVisible)
+    }
+
     fun withPgpBadge(pgpBadge: PgpBadgeListAdapter.PgpBadge): PgpBadgeMatcher {
       return PgpBadgeMatcher(pgpBadge)
     }
