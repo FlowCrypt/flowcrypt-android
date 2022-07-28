@@ -5,10 +5,12 @@
 
 package com.flowcrypt.email.ui
 
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -23,13 +25,14 @@ import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.TestGeneralUtil
-import com.flowcrypt.email.util.UIUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import okio.Buffer
+import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -101,7 +104,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdAdvancedNoResult() {
     check(
       recipient = "wkd_advanced_no_result@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -109,7 +112,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdAdvancedPub() {
     check(
       recipient = "wkd_advanced_pub@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
     )
   }
 
@@ -117,7 +120,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdAdvancedSkippedWkdDirectNoPolicyPub() {
     check(
       recipient = "wkd_direct_no_policy@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -125,7 +128,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdAdvancedSkippedWkdDirectNoResult() {
     check(
       recipient = "wkd_direct_no_result@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -133,7 +136,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdAdvancedSkippedWkdDirectPub() {
     check(
       recipient = "wkd_direct_pub@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
     )
   }
 
@@ -141,7 +144,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdAdvancedTimeOutWkdDirectAvailable() {
     check(
       recipient = "wkd_direct_pub@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
     )
   }
 
@@ -149,7 +152,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdAdvancedTimeOutWkdDirectTimeOut() {
     check(
       recipient = "wkd_advanced_direct_timeout@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -157,7 +160,7 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   fun testWkdPrv() {
     check(
       recipient = "wkd_prv@localhost",
-      colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+      colorResourcesId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
   }
 
@@ -235,16 +238,10 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
 
   private fun check(recipient: String, colorResourcesId: Int) {
     fillInAllFields(recipient)
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = recipient,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = colorResourcesId
-            )
-          )
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        scrollTo<RecyclerView.ViewHolder>(
+          allOf(withText(recipient), withChipsBackgroundColor(getTargetContext(), colorResourcesId))
         )
       )
   }

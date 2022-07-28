@@ -17,7 +17,7 @@ import androidx.test.espresso.matcher.BoundedMatcher
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.google.android.material.appbar.AppBarLayout
-import com.hootsuite.nachos.NachoTextView
+import com.google.android.material.chip.Chip
 import org.hamcrest.BaseMatcher
 import org.hamcrest.Matcher
 
@@ -98,17 +98,8 @@ class CustomMatchers {
       return RecyclerViewItemCountMatcher(itemCount)
     }
 
-    /**
-     * Match a color of the given [PGPContactChipSpan] in [NachoTextView].
-     *
-     * @param chipText The given chip text.
-     * @param backgroundColor The given chip background color.
-     * @return true if matched, otherwise false
-     */
-    @JvmStatic
-    fun withChipsBackgroundColor(chipText: String, backgroundColor: Int):
-        BoundedMatcher<View, NachoTextView> {
-      return NachoTextViewChipBackgroundColorMatcher(chipText, backgroundColor)
+    fun withChipsBackgroundColor(context: Context, resourceId: Int): BoundedMatcher<View, Chip> {
+      return ChipBackgroundColorMatcher(ContextCompat.getColor(context, resourceId))
     }
 
     fun withPgpBadge(pgpBadge: PgpBadgeListAdapter.PgpBadge): PgpBadgeMatcher {

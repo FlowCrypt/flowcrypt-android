@@ -89,7 +89,7 @@ class ComposeScreenReplyAllFlowTest : BaseTest() {
 
     registerAllIdlingResources()
 
-    onView(withId(R.id.editTextRecipientCc))
+    onView(withId(R.id.chipLayoutCc))
       .check(matches(not(isDisplayed())))
   }
 }

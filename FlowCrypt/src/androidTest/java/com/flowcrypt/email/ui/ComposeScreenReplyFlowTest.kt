@@ -6,9 +6,9 @@
 package com.flowcrypt.email.ui
 
 import android.content.Intent
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
@@ -24,7 +24,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
-import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -70,18 +69,12 @@ class ComposeScreenReplyFlowTest : BaseTest() {
 
   @Test
   fun testReplyToHeader() {
-    onView(withId(R.id.editTextRecipientTo))
-      .check(matches(isDisplayed()))
-      .check(matches(withText(prepareChipText(msgInfo?.getReplyTo()?.first()?.address))))
-  }
-
-  private fun prepareChipText(text: String?): String {
-    val chipSeparator = SpanChipTokenizer.CHIP_SPAN_SEPARATOR.toString()
-    val autoCorrectSeparator = SpanChipTokenizer.AUTOCORRECT_SEPARATOR.toString()
-    return (autoCorrectSeparator
-        + chipSeparator
-        + text
-        + chipSeparator
-        + autoCorrectSeparator)
+    Thread.sleep(1000)
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        scrollTo<RecyclerView.ViewHolder>(
+          withText(msgInfo?.getReplyTo()?.first()?.address)
+        )
+      )
   }
 }
