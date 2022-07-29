@@ -5,12 +5,15 @@
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.typeText
-import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -27,9 +30,9 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.UIUtil
-import org.junit.Ignore
+import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -77,16 +80,19 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("fix me. Fails sometimes")
   fun testDisallowLookupOnAttester() {
     launchFragmentInContainer<CreateMessageFragment>(
       fragmentArgs = CreateMessageFragmentArgs().toBundle()
     )
 
     val recipient = "recipient@example.test"
+    onView(withId(R.id.editTextEmailAddress))
+      .perform(
+        typeText(recipient),
+        pressImeActionButton(),
+        closeSoftKeyboard()
+      )
 
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(typeText(recipient), closeSoftKeyboard())
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(
@@ -100,14 +106,14 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
         closeSoftKeyboard()
       )
 
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            recipient,
-            UIUtil.getColor(
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(recipient),
+            withChipsBackgroundColor(
               getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
             )
           )
         )

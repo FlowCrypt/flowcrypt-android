@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
-import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
@@ -74,7 +73,7 @@ class ComposeScreenPasswordProtectedFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.editTextEmailAddress))
       .perform(
         typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
-        ViewActions.pressImeActionButton(),
+        pressImeActionButton(),
         closeSoftKeyboard()
       )
 

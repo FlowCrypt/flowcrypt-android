@@ -7,7 +7,6 @@ package com.flowcrypt.email.matchers
 
 import android.content.Context
 import android.view.View
-import android.widget.ListView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
@@ -67,27 +66,11 @@ class CustomMatchers {
     }
 
     /**
-     * Match is [ListView] empty.
-     */
-    @JvmStatic
-    fun withEmptyListView(): BaseMatcher<View> {
-      return EmptyListViewMather()
-    }
-
-    /**
      * Match is [androidx.recyclerview.widget.RecyclerView] empty.
      */
     @JvmStatic
     fun withEmptyRecyclerView(): BaseMatcher<View> {
       return EmptyRecyclerViewMatcher()
-    }
-
-    /**
-     * Match is an items count of [ListView] empty.
-     */
-    @JvmStatic
-    fun withListViewItemCount(itemCount: Int): BaseMatcher<View> {
-      return ListViewItemCountMatcher(itemCount)
     }
 
     /**
@@ -119,6 +102,10 @@ class CustomMatchers {
       @TextViewDrawableMatcher.DrawablePosition drawablePosition: Int
     ): Matcher<View> {
       return TextViewDrawableMatcher(resourceId, drawablePosition)
+    }
+
+    fun hasItem(matcher: Matcher<View>): Matcher<View> {
+      return RecyclerViewItemMatcher(matcher)
     }
 
     fun withTextViewBackgroundTint(

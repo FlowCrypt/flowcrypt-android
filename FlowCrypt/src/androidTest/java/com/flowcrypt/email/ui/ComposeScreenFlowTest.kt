@@ -9,16 +9,19 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
@@ -40,8 +43,10 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -52,6 +57,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -64,7 +70,6 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.not
 import org.junit.Assert
@@ -113,16 +118,17 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   fun testEmptyRecipient() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
-    onView(withId(R.id.editTextRecipientTo))
-      .check(matches(withText(`is`(emptyString()))))
+
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(1)))
+
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(
-      withText(
-        getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_recipients_to))
-      )
-    )
+      .check(matches(isDisplayed()))
+
+    onView(withText(getResString(R.string.add_recipient_to_send_message)))
       .check(matches(isDisplayed()))
   }
 
@@ -131,10 +137,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
+    onView(withId(R.id.editTextEmailAddress))
+      .perform(
+        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        pressImeActionButton()
+      )
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click(), typeText("subject"), clearText())
       .check(matches(withText(`is`(emptyString()))))
@@ -142,14 +149,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
     onView(
-      withText(
-        getResString(
-          R.string.text_must_not_be_empty,
-          getResString(R.string.prompt_subject)
-        )
-      )
-    )
-      .check(matches(isDisplayed()))
+      withText(getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_subject)))
+    ).check(matches(isDisplayed()))
   }
 
   @Test
@@ -157,10 +158,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
+    onView(withId(R.id.editTextEmailAddress))
+      .perform(
+        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        pressImeActionButton()
+      )
     onView(withId(R.id.editTextEmailSubject))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT))
@@ -237,10 +239,9 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.editTextFrom))
       .perform(scrollTo())
       .check(matches(withText(not(`is`(emptyString())))))
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .check(matches(withText(`is`(emptyString()))))
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(1)))
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo())
       .check(matches(withText(`is`(emptyString()))))
@@ -254,18 +255,17 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val invalidEmailAddresses = arrayOf("test", "test@", "test@@flowcrypt.test", "@flowcrypt.test")
 
     for (invalidEmailAddress in invalidEmailAddresses) {
-      onView(withId(R.id.layoutTo))
-        .perform(scrollTo())
-      onView(withId(R.id.editTextRecipientTo))
-        .perform(clearText(), typeText(invalidEmailAddress), closeSoftKeyboard())
-      onView(withId(R.id.menuActionSend))
+      onView(withId(R.id.editTextEmailAddress))
+        .perform(
+          clearText(),
+          typeText(invalidEmailAddress),
+          pressImeActionButton()
+        )
+
+      //after selecting typed text we check that new items were not added
+      onView(withId(R.id.recyclerViewChipsTo))
         .check(matches(isDisplayed()))
-        .perform(click())
-      onView(withText(getResString(R.string.error_some_email_is_not_valid, invalidEmailAddress)))
-        .check(matches(isDisplayed()))
-      onView(withId(com.google.android.material.R.id.snackbar_action))
-        .check(matches(isDisplayed()))
-        .perform(click())
+        .check(matches(withRecyclerViewItemCount(1)))
     }
   }
 
@@ -274,10 +274,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(closeSoftKeyboard())
+    onView(withId(R.id.editTextEmailAddress))
+      .perform(
+        clearText(),
+        pressImeActionButton()
+      )
 
     for (att in atts) {
       addAttAndCheck(att)
@@ -289,10 +290,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(closeSoftKeyboard())
+    onView(withId(R.id.editTextEmailAddress))
+      .perform(
+        clearText(),
+        pressImeActionButton()
+      )
 
     val fileWithBiggerSize = TestGeneralUtil.createFileWithGivenSize(
       Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule
@@ -318,10 +320,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(closeSoftKeyboard())
+    onView(withId(R.id.editTextEmailAddress))
+      .perform(
+        clearText(),
+        pressImeActionButton()
+      )
 
     for (att in atts) {
       addAttAndCheck(att)
@@ -348,15 +351,14 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
     fillInAllFields(email)
 
-    //check that we show the right background for a chip
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = email,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(email),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
             )
           )
         )
@@ -374,19 +376,14 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       pgpKeyDetails.toPublicKeyEntity(email)
     )
 
-    //move focus to request the field updates
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(scrollTo(), click())
-    onView(withId(R.id.editTextEmailSubject))
-      .perform(scrollTo(), click())
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = email,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(email),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
             )
           )
         )
@@ -413,12 +410,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
+    onView(withId(R.id.editTextEmailAddress))
       .perform(
         typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
-        closeSoftKeyboard()
+        pressImeActionButton()
       )
     //move the focus to the next view
     onView(withId(R.id.editTextEmailMessage))
@@ -439,19 +434,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     )
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(R.id.layoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextRecipientTo))
-      .check(matches(isDisplayed()))
+
+    onView(withId(R.id.recyclerViewChipsTo))
       .check(
         matches(
-          withText(
-            not(
-              containsString(
-                TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
-              )
-            )
-          )
+          not(hasItem(withText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))
         )
       )
   }
@@ -487,20 +474,17 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(scrollTo(), click(), closeSoftKeyboard())
-
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
 
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            chipText = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
             )
           )
         )
@@ -591,6 +575,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val keyDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
     val email = requireNotNull(keyDetails.getPrimaryInternetAddress()).address
+    val personal = requireNotNull(keyDetails.getPrimaryInternetAddress()).personal
     roomDatabase.recipientDao().insert(requireNotNull(keyDetails.toRecipientEntity()))
     roomDatabase.pubKeyDao().insert(keyDetails.toPublicKeyEntity(email))
 
@@ -599,14 +584,14 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     fillInAllFields(email)
 
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            email,
-            UIUtil.getColor(
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(personal),
+            withChipsBackgroundColor(
               getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED
+              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED
             )
           )
         )
@@ -640,19 +625,18 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     fillInAllFields(email)
 
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            email,
-            UIUtil.getColor(
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(email),
+            withChipsBackgroundColor(
               getTargetContext(),
-              CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
             )
           )
         )
       )
-
 
     /*temporary disabled due too https://github.com/FlowCrypt/flowcrypt-android/issues/1478
     onView(withId(R.id.menuActionSend))
@@ -690,12 +674,15 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     fillInAllFields(internetAddress.address)
 
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          withChipsBackgroundColor(
-            internetAddress.address,
-            UIUtil.getColor(getTargetContext(), R.color.colorPrimary)
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(internetAddress.personal),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              R.color.colorPrimary
+            )
           )
         )
       )
@@ -706,10 +693,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.editTextRecipientTo))
+    onView(withId(R.id.editTextEmailAddress))
       .perform(
         typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
-        closeSoftKeyboard()
+        pressImeActionButton()
       )
 
     //need to leave focus from 'To' field. move the focus to the next view
