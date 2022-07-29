@@ -48,7 +48,6 @@
     <dimen name="margin_top_key_password">60dp</dimen>
     <dimen name="margin_top_load_account">32dp</dimen>
     <dimen name="margin_top_button_select_another_account">24dp</dimen>
-    <dimen name="size_of_small_progressbar">16dp</dimen>
     <dimen name="margin_top_first_button">96dp</dimen>
     <dimen name="margin_between_buttons">32dp</dimen>
     <dimen name="user_photo_size">48dp</dimen>
@@ -66,7 +65,6 @@
     <dimen name="layout_height_action_button">72dp</dimen>
     <dimen name="drop_down_vertical_offset_spinner_from">56dp</dimen>
     <dimen name="drop_down_size">32dp</dimen>
-    <dimen name="padding_recipients_to">48dp</dimen>
     <dimen name="height_screenshot">150dp</dimen>
     <dimen name="width_screenshot">100dp</dimen>
     <dimen name="max_width_field_to">200dp</dimen>

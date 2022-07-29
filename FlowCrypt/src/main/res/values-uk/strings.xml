@@ -4,7 +4,6 @@
     <string name="prompt_subject">Тема</string>
     <string name="send">Відправити</string>
     <string name="error_email_is_not_valid">Помилка: невірна Email адреса</string>
-    <string name="error_some_email_is_not_valid">Помилка: невірний Email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Помилка: намає підключення до Інтернету</string>
     <string name="unknown_error">Невідома помилка</string>
     <string name="security">Безпека</string>

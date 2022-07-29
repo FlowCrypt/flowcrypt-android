@@ -3,7 +3,6 @@
     <string name="prompt_subject">Тема</string>
     <string name="send">Отправить</string>
     <string name="error_email_is_not_valid">Ошибка: неверный Email адрес</string>
-    <string name="error_some_email_is_not_valid">Ошибка: неверный Email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Ошибка: нет подключения к Интернету</string>
     <string name="unknown_error">Неизвестная ошибка</string>
     <string name="security">Безопасность</string>
