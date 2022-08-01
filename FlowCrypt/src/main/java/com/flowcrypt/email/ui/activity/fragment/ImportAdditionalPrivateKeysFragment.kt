@@ -152,15 +152,17 @@ class ImportAdditionalPrivateKeysFragment :
                 )
                 binding?.buttonImportBackup?.setOnClickListener {
                   importSourceType = KeyImportDetails.SourceType.EMAIL
-                  ImportAdditionalPrivateKeysFragmentDirections
-                    .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
-                      privateKeys = keys.toTypedArray(),
-                      initSubTitlePlurals = R.plurals.found_backup_of_your_account_key,
-                      sourceType = importSourceType,
-                      positiveBtnTitle = getString(R.string.continue_),
-                      negativeBtnTitle = getString(R.string.choose_another_key),
-                      skipImportedKeys = true
-                    )
+                  navController?.navigate(
+                    ImportAdditionalPrivateKeysFragmentDirections
+                      .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
+                        privateKeys = keys.toTypedArray(),
+                        initSubTitlePlurals = R.plurals.found_backup_of_your_account_key,
+                        sourceType = importSourceType,
+                        positiveBtnTitle = getString(R.string.continue_),
+                        negativeBtnTitle = getString(R.string.choose_another_key),
+                        skipImportedKeys = true
+                      )
+                  )
                 }
               }
             } else {
