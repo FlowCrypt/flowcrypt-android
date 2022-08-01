@@ -5,10 +5,12 @@
 
 package com.flowcrypt.email.ui
 
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -17,17 +19,17 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.matchers.CustomMatchers
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.LazyActivityScenarioRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.util.TestGeneralUtil
-import com.flowcrypt.email.util.UIUtil
+import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -115,14 +117,14 @@ class ComposeScreenImportRecipientPubKeyFlowTest : BaseComposeScreenTest() {
   }
 
   private fun checkThatRecipientHasPublicKey() {
-    onView(withId(R.id.editTextRecipientTo))
-      .check(
-        matches(
-          CustomMatchers.withChipsBackgroundColor(
-            chipText = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
-            backgroundColor = UIUtil.getColor(
-              context = getTargetContext(),
-              colorResourcesId = CustomChipSpanChipCreator.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
             )
           )
         )

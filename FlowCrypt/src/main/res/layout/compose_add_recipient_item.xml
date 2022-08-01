@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<EditText xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/editTextEmailAddress"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:autofillHints="emailAddress"
+    android:background="@null"
+    android:hint="@string/add_recipient"
+    android:imeOptions="actionDone"
+    android:inputType="textEmailAddress"
+    android:minWidth="@dimen/default_margin_super_huge" />

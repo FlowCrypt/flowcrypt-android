@@ -7,7 +7,6 @@ package com.flowcrypt.email.matchers
 
 import android.content.Context
 import android.view.View
-import android.widget.ListView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
@@ -16,9 +15,8 @@ import androidx.test.espresso.Root
 import androidx.test.espresso.matcher.BoundedMatcher
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
-import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.google.android.material.appbar.AppBarLayout
-import com.hootsuite.nachos.NachoTextView
+import com.google.android.material.chip.Chip
 import org.hamcrest.BaseMatcher
 import org.hamcrest.Matcher
 
@@ -68,27 +66,11 @@ class CustomMatchers {
     }
 
     /**
-     * Match is [ListView] empty.
-     */
-    @JvmStatic
-    fun withEmptyListView(): BaseMatcher<View> {
-      return EmptyListViewMather()
-    }
-
-    /**
      * Match is [androidx.recyclerview.widget.RecyclerView] empty.
      */
     @JvmStatic
     fun withEmptyRecyclerView(): BaseMatcher<View> {
       return EmptyRecyclerViewMatcher()
-    }
-
-    /**
-     * Match is an items count of [ListView] empty.
-     */
-    @JvmStatic
-    fun withListViewItemCount(itemCount: Int): BaseMatcher<View> {
-      return ListViewItemCountMatcher(itemCount)
     }
 
     /**
@@ -99,17 +81,12 @@ class CustomMatchers {
       return RecyclerViewItemCountMatcher(itemCount)
     }
 
-    /**
-     * Match a color of the given [PGPContactChipSpan] in [NachoTextView].
-     *
-     * @param chipText The given chip text.
-     * @param backgroundColor The given chip background color.
-     * @return true if matched, otherwise false
-     */
-    @JvmStatic
-    fun withChipsBackgroundColor(chipText: String, backgroundColor: Int):
-        BoundedMatcher<View, NachoTextView> {
-      return NachoTextViewChipBackgroundColorMatcher(chipText, backgroundColor)
+    fun withChipsBackgroundColor(context: Context, resourceId: Int): BoundedMatcher<View, Chip> {
+      return ChipBackgroundColorMatcher(ContextCompat.getColor(context, resourceId))
+    }
+
+    fun withChipCloseIconAvailability(isCloseIconVisible: Boolean): BoundedMatcher<View, Chip> {
+      return ChipCloseIconAvailabilityMatcher(isCloseIconVisible)
     }
 
     fun withPgpBadge(pgpBadge: PgpBadgeListAdapter.PgpBadge): PgpBadgeMatcher {
@@ -125,6 +102,10 @@ class CustomMatchers {
       @TextViewDrawableMatcher.DrawablePosition drawablePosition: Int
     ): Matcher<View> {
       return TextViewDrawableMatcher(resourceId, drawablePosition)
+    }
+
+    fun hasItem(matcher: Matcher<View>): Matcher<View> {
+      return RecyclerViewItemMatcher(matcher)
     }
 
     fun withTextViewBackgroundTint(

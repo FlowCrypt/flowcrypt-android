@@ -5,14 +5,16 @@
 
 package com.flowcrypt.email.ui
 
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
-import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -29,6 +31,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.viewaction.CustomViewActions.clickOnChipCloseIcon
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -67,9 +70,10 @@ class ComposeScreenPasswordProtectedFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.editTextRecipientTo))
+    onView(withId(R.id.editTextEmailAddress))
       .perform(
         typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        pressImeActionButton(),
         closeSoftKeyboard()
       )
 
@@ -95,18 +99,22 @@ class ComposeScreenPasswordProtectedFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    onView(withId(R.id.editTextRecipientTo))
+    onView(withId(R.id.editTextEmailAddress))
       .perform(
         typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
-        closeSoftKeyboard()
+        pressImeActionButton()
       )
+
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
-    onView(withId(R.id.editTextRecipientTo))
-      .perform(
-        clearText(), typeText("some text"), clearText(),
-      )
+
+    onView(withId(R.id.btnSetWebPortalPassword))
+      .check(matches(isDisplayed()))
+
+    onView(withId(R.id.recyclerViewChipsTo)).perform(
+      actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickOnChipCloseIcon())
+    )
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())

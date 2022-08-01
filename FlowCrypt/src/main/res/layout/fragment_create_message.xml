@@ -10,10 +10,7 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin">
+    android:padding="@dimen/default_margin_content">
 
     <ProgressBar
         android:id="@id/viewIdProgressView"
@@ -87,133 +84,165 @@
                     tools:visibility="visible" />
             </FrameLayout>
 
-            <FrameLayout
-                android:id="@+id/layoutTo"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/chipLayoutTo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/textViewTo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:text="@string/to"
+                    android:textColor="@color/nobel"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewChipsTo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toStartOf="@+id/imageButtonAdditionalRecipientsVisibility"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewTo"
+                    tools:itemCount="3"
+                    tools:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
+                    tools:listitem="@layout/chip_recipient_item" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewAutocompleteTo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewChipsTo"
+                    tools:itemCount="0" />
+
+                <ImageButton
+                    android:id="@+id/imageButtonAdditionalRecipientsVisibility"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/show_cc_bcc"
+                    android:padding="@dimen/default_margin_content_small"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/textViewTo"
+                    app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/default_single_dip"
+                    android:layout_marginTop="@dimen/default_margin_small"
+                    android:background="@drawable/bg_bottom_line_gray"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewAutocompleteTo" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/chipLayoutCc"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/textViewCc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:text="@string/cc"
+                    android:textColor="@color/nobel"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewChipsCc"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewCc"
+                    tools:itemCount="3"
+                    tools:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
+                    tools:listitem="@layout/chip_recipient_item">
+
+                </androidx.recyclerview.widget.RecyclerView>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewAutocompleteCc"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewChipsCc"
+                    tools:itemCount="0" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/default_single_dip"
+                    android:layout_marginTop="@dimen/default_margin_small"
+                    android:background="@drawable/bg_bottom_line_gray"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewAutocompleteCc" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/chipLayoutBcc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/prompt_recipients_to">
-
-                    <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
-                        android:id="@+id/editTextRecipientTo"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@android:color/transparent"
-                        android:completionThreshold="2"
-                        android:inputType="textEmailAddress"
-                        android:paddingTop="@dimen/default_margin_small"
-                        android:paddingEnd="@dimen/padding_recipients_to"
-                        android:shrinkColumns="0, true"
-                        tools:ignore="RtlSymmetry">
-
-                        <requestFocus />
-                    </com.flowcrypt.email.ui.widget.PgpContactsNachoTextView>
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <LinearLayout
-                    android:id="@+id/progressBarAndButtonLayout"
+                <TextView
+                    android:id="@+id/textViewBcc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="top|end"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:text="@string/bcc"
+                    android:textColor="@color/nobel"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                    <ProgressBar
-                        android:id="@+id/progressBarTo"
-                        style="?android:attr/progressBarStyleSmall"
-                        android:layout_width="@dimen/size_of_small_progressbar"
-                        android:layout_height="@dimen/size_of_small_progressbar"
-                        android:layout_gravity="center_vertical"
-                        android:visibility="gone"
-                        tools:visibility="visible" />
-
-                    <ImageButton
-                        android:id="@+id/imageButtonAdditionalRecipientsVisibility"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/show_cc_bcc"
-                        android:padding="@dimen/default_margin_content_small"
-                        app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
-                </LinearLayout>
-
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/layoutCc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
-                    android:layout_width="match_parent"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewChipsBcc"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="@string/prompt_recipients_cc">
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewBcc"
+                    tools:itemCount="3"
+                    tools:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
+                    tools:listitem="@layout/chip_recipient_item" />
 
-                    <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
-                        android:id="@+id/editTextRecipientCc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@android:color/transparent"
-                        android:completionThreshold="2"
-                        android:inputType="textEmailAddress"
-                        android:paddingTop="@dimen/default_margin_small"
-                        android:paddingEnd="@dimen/size_of_small_progressbar"
-                        android:shrinkColumns="0, true"
-                        tools:ignore="RtlSymmetry" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <ProgressBar
-                    android:id="@+id/progressBarCc"
-                    style="?android:attr/progressBarStyleSmall"
-                    android:layout_width="@dimen/size_of_small_progressbar"
-                    android:layout_height="@dimen/size_of_small_progressbar"
-                    android:layout_gravity="center_vertical|end"
-                    android:visibility="gone" />
-
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/layoutBcc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
-                    android:layout_width="match_parent"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewAutocompleteBcc"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="@string/prompt_recipients_bcc">
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewChipsBcc"
+                    tools:itemCount="0" />
 
-                    <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
-                        android:id="@+id/editTextRecipientBcc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@android:color/transparent"
-                        android:completionThreshold="2"
-                        android:inputType="textEmailAddress"
-                        android:paddingTop="@dimen/default_margin_small"
-                        android:paddingEnd="@dimen/size_of_small_progressbar"
-                        android:shrinkColumns="0, true"
-                        tools:ignore="RtlSymmetry" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <ProgressBar
-                    android:id="@+id/progressBarBcc"
-                    style="?android:attr/progressBarStyleSmall"
-                    android:layout_width="@dimen/size_of_small_progressbar"
-                    android:layout_height="@dimen/size_of_small_progressbar"
-                    android:layout_gravity="center_vertical|end"
-                    android:visibility="gone" />
-
-            </FrameLayout>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/default_single_dip"
+                    android:layout_marginTop="@dimen/default_margin_small"
+                    android:background="@drawable/bg_bottom_line_gray"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewAutocompleteBcc" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSetWebPortalPassword"

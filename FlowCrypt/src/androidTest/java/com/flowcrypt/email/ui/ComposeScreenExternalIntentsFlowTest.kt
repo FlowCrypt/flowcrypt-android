@@ -9,11 +9,13 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.core.net.MailTo
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
 import androidx.test.espresso.matcher.ViewMatchers.hasChildCount
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -24,6 +26,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -35,7 +38,6 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.junit.After
@@ -438,13 +440,18 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
 
   private fun checkRecipients(recipientsCount: Int) {
     if (recipientsCount > 0) {
+      onView(withId(R.id.recyclerViewChipsTo))
+        .check(matches(isDisplayed()))
+        .check(matches(withRecyclerViewItemCount(recipientsCount + 1)))
+
       for (i in 0 until recipientsCount) {
-        onView(withId(R.id.editTextRecipientTo))
-          .check(matches(isDisplayed())).check(matches(withText(containsString(recipients[i]))))
+        onView(withId(R.id.recyclerViewChipsTo))
+          .perform(scrollTo<RecyclerView.ViewHolder>(withText(recipients[i])))
       }
     } else {
-      onView(withId(R.id.editTextRecipientTo))
-        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+      onView(withId(R.id.recyclerViewChipsTo))
+        .check(matches(isDisplayed()))
+        .check(matches(withRecyclerViewItemCount(1)))
     }
   }
 

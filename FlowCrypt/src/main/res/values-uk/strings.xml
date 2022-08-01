@@ -4,7 +4,6 @@
     <string name="prompt_subject">Тема</string>
     <string name="send">Відправити</string>
     <string name="error_email_is_not_valid">Помилка: невірна Email адреса</string>
-    <string name="error_some_email_is_not_valid">Помилка: невірний Email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Помилка: намає підключення до Інтернету</string>
     <string name="unknown_error">Невідома помилка</string>
     <string name="security">Безпека</string>
@@ -77,6 +76,8 @@
     <string name="create_new_message">Нове повідомлення</string>
     <string name="all_mail">Всі листи</string>
     <string name="to">Кому</string>
+    <string name="cc">Копія</string>
+    <string name="bcc">Прихована копія</string>
     <string name="include_app_screenshot">Додати знімок екрана застосунку</string>
     <string name="touch_to_preview_and_edit">Натисніть, щоб подивитися та відредагувати</string>
     <string name="privacy">Конфіденційність</string>
@@ -110,9 +111,6 @@
     <string name="log_out">Вийти</string>
     <string name="report_problem">Повідомити про помилку</string>
     <string name="prompt_compose_security_email">Написати безпечне повідомлення</string>
-    <string name="prompt_recipients_cc">Додати отримувачів (Копія)</string>
-    <string name="prompt_recipients_bcc">Додати отримувачів (Прихована копія)</string>
-    <string name="prompt_recipients_to">Додати отримувачів (Кому)</string>
     <string name="include_public_key">Додати відкритий ключ</string>
     <string name="switch_to_standard_email">Переключитись на звичайне повідомлення</string>
     <string name="text_must_not_be_empty">Помилка: \"%1$s\" не може бути порожнім!</string>
@@ -222,7 +220,6 @@
     <string name="remember_pass_phrase_temporarily">Тимчасово запам\'ятати ключову фразу</string>
     <string name="save_pass_phrase">Зберегти ключову фразу</string>
     <string name="and_others">та інші&#8230;</string>
-    <string name="cc">Копія</string>
     <string name="reply_to">Відповісти</string>
     <string name="connection_lost">З\'єдання втрачено</string>
     <string name="auth_failure_hint_regular_accounts">Не вдалося увійти, будь ласка, перевірте ім\'я Вашого облікового запису та пароль у налаштуваннях сервера.</string>
@@ -483,4 +480,10 @@
     <string name="source_contains_more_than_one_key">Джерело містить більш ніж один закритий ключ</string>
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Будь ласка, введіть Вашу ключову фразу, щоб підтримувати Ваші ключі в актуальному стані</string>
     <string name="key_is_revoked_unable_to_update">Ви вже маєте відкликану версію цього відкритого ключа. Подальші оновлення заборонені. Будь ласка, запросіть інший відкритий ключ у цього отримувача.</string>
+    <string name="more_recipients">+%1$d ще</string>
+    <string name="add_recipient">Додати отримувача</string>
+    <string name="type_valid_email_or_select_from_dropdown">Будь ласка, введіть коректну Email адресу або виберіть зі списку</string>
+    <string name="added">Додано</string>
+    <string name="already_added">Вже додано</string>
+    <string name="add_recipient_to_send_message">Щоб надіслати це повідомлення, додайте принаймні одного одержувача в поле \"Кому\"</string>
 </resources>

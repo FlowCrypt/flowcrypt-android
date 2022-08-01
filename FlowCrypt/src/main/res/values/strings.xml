@@ -8,16 +8,12 @@
     <string name="support_email" translatable="false">human@flowcrypt.com</string>
 
     <string name="compose">Compose</string>
-    <string name="prompt_recipients_to">Add recipients (To)</string>
-    <string name="prompt_recipients_cc">Add recipients (Cc)</string>
-    <string name="prompt_recipients_bcc">Add recipients (Bcc)</string>
     <string name="prompt_subject">Subject</string>
     <string name="prompt_compose_security_email">Compose secure message</string>
     <string name="prompt_compose_standard_email">Compose standard message</string>
     <string name="text_must_not_be_empty">Error: \"%1$s\" must not be empty!</string>
     <string name="send">Send</string>
     <string name="error_email_is_not_valid">Error: invalid email</string>
-    <string name="error_some_email_is_not_valid">Error: invalid email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Error: no internet</string>
     <string name="unknown_error">Unknown error</string>
     <string name="privacy">Privacy</string>
@@ -463,6 +459,7 @@
     <string name="reply_to">Reply To</string>
     <string name="to">To</string>
     <string name="cc">Cc</string>
+    <string name="bcc">Bcc</string>
     <string name="date">Date</string>
     <string name="to_receiver">To %1$s</string>
     <string name="and_others">and others&#8230;</string>
@@ -569,4 +566,10 @@
     <string name="source_contains_more_than_one_key">Source contains more than one private key</string>
     <string name="please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date">Please enter pass phrase to keep your account keys up to date</string>
     <string name="key_is_revoked_unable_to_update">You already have a revoked version of this Public Key. Further updates are not allowed. Please request another Public Key from this person.</string>
+    <string name="add_recipient">Add recipient</string>
+    <string name="type_valid_email_or_select_from_dropdown">Please type a valid email address or choose from a dropdown list</string>
+    <string name="added">Added</string>
+    <string name="already_added">Already added</string>
+    <string name="more_recipients" tools:ignore="PluralsCandidate">+%1$d more</string>
+    <string name="add_recipient_to_send_message">Please add at least one recipient in \"To\" to send this message</string>
 </resources>

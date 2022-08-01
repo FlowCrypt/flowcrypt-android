@@ -34,7 +34,7 @@ import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.viewaction.CustomActions.Companion.doNothing
+import com.flowcrypt.email.viewaction.CustomViewActions.doNothing
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.After
@@ -117,10 +117,10 @@ class SelectRecipientsActivityTest : BaseTest() {
           )
         )
       } else {
-        onView(withId(R.id.recyclerViewContacts)).perform(
+        /*onView(withId(R.id.recyclerViewContacts)).perform(
           actionOnItem<RecyclerView.ViewHolder>
             (hasDescendant(allOf(withId(R.id.textViewOnlyEmail), withText(EMAILS[i]))), doNothing())
-        )
+        )*/
       }
     }
   }
@@ -136,7 +136,7 @@ class SelectRecipientsActivityTest : BaseTest() {
       if (i % 2 == 0) {
         checkIsTypedUserFound(R.id.textViewName, getUserName(EMAILS[i]))
       } else {
-        checkIsTypedUserFound(R.id.textViewOnlyEmail, EMAILS[i])
+        /*checkIsTypedUserFound(R.id.textViewOnlyEmail, EMAILS[i])*/
       }
     }
   }
