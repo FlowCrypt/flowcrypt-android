@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.util.Locale
 
 /**
  * This is used in the message compose/reply view when recipient public keys need to be retrieved,
@@ -105,7 +104,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       try {
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
-            val emailLowerCase = email.lowercase(Locale.getDefault())
+            val emailLowerCase = email.lowercase()
             var cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
 
             if (cachedRecipientWithPubKeys == null) {

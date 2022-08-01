@@ -23,7 +23,6 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import java.io.InterruptedIOException
 import java.net.UnknownHostException
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 object WkdClient {
@@ -59,8 +58,8 @@ object WkdClient {
     }
 
     val parts = email.split('@')
-    val user = parts[0].lowercase(Locale.ROOT)
-    val directDomain = parts[1].lowercase(Locale.ROOT)
+    val user = parts[0].lowercase()
+    val directDomain = parts[1].lowercase()
 
     val advancedDomainPrefix = if (directDomain == "localhost") "" else "openpgpkey."
     val hu = ZBase32().encodeAsString(DigestUtils.sha1(user.toByteArray()))

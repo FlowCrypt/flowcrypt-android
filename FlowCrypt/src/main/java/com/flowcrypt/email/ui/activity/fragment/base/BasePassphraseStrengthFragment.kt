@@ -36,7 +36,6 @@ import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuringExcepti
 import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.nio.charset.StandardCharsets
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -202,6 +201,6 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
       Constants.PASSWORD_QUALITY_POOR -> getString(R.string.password_quality_poor)
       Constants.PASSWORD_QUALITY_WEAK -> getString(R.string.password_quality_weak)
       else -> word?.word
-    }?.uppercase(Locale.getDefault())
+    }?.uppercase()
   }
 }

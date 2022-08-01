@@ -15,7 +15,6 @@ import androidx.test.runner.screenshot.BasicScreenCaptureProcessor
 import androidx.test.runner.screenshot.ScreenCapture
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedOutputStream
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -31,7 +30,7 @@ class CustomScreenCaptureProcessor : BasicScreenCaptureProcessor() {
     try {
       val context = getInstrumentation().targetContext
       var filename = if (capture.name == null) defaultFilename else getFilename(capture.name)
-      filename += "." + capture.format.toString().lowercase(Locale.getDefault())
+      filename += "." + capture.format.toString().lowercase()
 
       val contentResolver = context.contentResolver
       val fileExtension = FilenameUtils.getExtension(filename).lowercase()

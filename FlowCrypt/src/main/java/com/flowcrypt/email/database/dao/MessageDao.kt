@@ -19,7 +19,6 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import jakarta.mail.Flags
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 /**
  * This class describes available methods for [MessageEntity]
@@ -428,9 +427,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       val msgEntity =
         getMsgSuspend(account = email, folder = label, uid = uid) ?: return@withContext
       val modifiedMsgEntity = if (flags.contains(Flags.Flag.SEEN)) {
-        msgEntity.copy(flags = flags.toString().uppercase(Locale.getDefault()), isNew = false)
+        msgEntity.copy(flags = flags.toString().uppercase(), isNew = false)
       } else {
-        msgEntity.copy(flags = flags.toString().uppercase(Locale.getDefault()))
+        msgEntity.copy(flags = flags.toString().uppercase())
       }
       updateSuspend(modifiedMsgEntity)
     }
@@ -515,9 +514,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       val flags = flagsMap[msgEntity.uid]
       flags?.let {
         val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
-          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()), isNew = false)
+          msgEntity.copy(flags = it.toString().uppercase(), isNew = false)
         } else {
-          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()))
+          msgEntity.copy(flags = it.toString().uppercase())
         }
         modifiedMsgEntities.add(modifiedMsgEntity)
       }
@@ -537,9 +536,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       val flags = flagsMap[msgEntity.uid]
       flags?.let {
         val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
-          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()), isNew = false)
+          msgEntity.copy(flags = it.toString().uppercase(), isNew = false)
         } else {
-          msgEntity.copy(flags = it.toString().uppercase(Locale.getDefault()))
+          msgEntity.copy(flags = it.toString().uppercase())
         }
         modifiedMsgEntities.add(modifiedMsgEntity)
       }

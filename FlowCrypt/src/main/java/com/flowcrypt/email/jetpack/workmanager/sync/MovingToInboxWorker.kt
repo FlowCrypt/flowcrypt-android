@@ -26,7 +26,6 @@ import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 /**
  * This task moves messages back to INBOX
@@ -71,7 +70,7 @@ class MovingToInboxWorker(context: Context, params: WorkerParameters) :
         GmailApiHelper.changeLabels(
           context = applicationContext,
           accountEntity = account,
-          ids = uidList.map { java.lang.Long.toHexString(it).lowercase(Locale.US) },
+          ids = uidList.map { java.lang.Long.toHexString(it).lowercase() },
           addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
           removeLabelIds = if (GmailApiHelper.LABEL_TRASH.equals(folderName, true)) listOf(
             GmailApiHelper.LABEL_TRASH
