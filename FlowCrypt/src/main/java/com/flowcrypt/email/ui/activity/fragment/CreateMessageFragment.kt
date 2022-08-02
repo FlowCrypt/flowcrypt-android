@@ -217,6 +217,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private var isIncomingMsgInfoUsed: Boolean = false
   private var isMsgSentToQueue: Boolean = false
+  private var updatingRecipientsMarker: Boolean = false
   private var originalColor: Int = 0
 
   override fun onAttach(context: Context) {
@@ -1255,15 +1256,27 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
+        if (recipients.any { it.value.isUpdating } && !updatingRecipientsMarker) {
+          updatingRecipientsMarker = true
+          countingIdlingResource?.incrementSafely()
+        }
+
         if (isPasswordProtectedFunctionalityEnabled()) {
           val hasRecipientsWithoutPgp =
             recipients.any { recipient -> !recipient.value.recipientWithPubKeys.hasAtLeastOnePubKey() }
-          if (hasRecipientsWithoutPgp) {
+          if (hasRecipientsWithoutPgp &&
+            composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED
+          ) {
             binding?.btnSetWebPortalPassword?.visible()
           } else {
             binding?.btnSetWebPortalPassword?.gone()
             composeMsgViewModel.setWebPortalPassword()
           }
+        }
+
+        if (recipients.none { it.value.isUpdating }) {
+          updatingRecipientsMarker = false
+          countingIdlingResource?.decrementSafely()
         }
       }
     }
