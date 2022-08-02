@@ -27,7 +27,6 @@ import jakarta.mail.Session
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 /**
  * This [ViewModel] checks [AuthCredentials]. If incoming [AuthCredentials] is valid
@@ -45,7 +44,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
     viewModelScope.launch {
       val context: Context = getApplication()
       val existedAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao()
-        .getAccountSuspend(accountEntity.email.lowercase(Locale.US))
+        .getAccountSuspend(accountEntity.email.lowercase())
 
       if (existedAccount != null && failIfDuplicateFound) {
         checkEmailSettingsLiveData.postValue(

@@ -20,7 +20,6 @@ import com.flowcrypt.email.base.BaseTest
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.startsWith
 import org.junit.Test
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -137,7 +136,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(replaceText(passPhrases[i]))
       onView(withId(R.id.textViewPasswordQualityInfo))
-        .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].toUpperCase(Locale.getDefault())))))
+        .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].uppercase()))))
       onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))
         .perform(clearText())

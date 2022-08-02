@@ -222,7 +222,7 @@ class FoldersManager constructor(val account: String) {
     sentFolder?.let { return it }
 
     for (localFolder in allFolders) {
-      if (localFolder.fullName.uppercase(Locale.US) in arrayOf("INBOX/SENT", "SENT")) {
+      if (localFolder.fullName.uppercase() in arrayOf("INBOX/SENT", "SENT")) {
         sentFolder = localFolder
       }
     }

@@ -62,7 +62,6 @@ import com.sun.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
 import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -834,7 +833,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     getTempAccount().let { accountEntity ->
       val accountManager = AccountManager.get(requireContext())
       val account = Account(
-        accountEntity.email.lowercase(Locale.US),
+        accountEntity.email.lowercase(),
         FlowcryptAccountAuthenticator.ACCOUNT_TYPE
       )
       accountManager.addAccountExplicitly(account, null, Bundle().apply {

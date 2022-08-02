@@ -42,7 +42,6 @@ import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationService
-import java.util.Locale
 
 /**
  * @author Denis Bondarenko
@@ -215,7 +214,7 @@ class UserRecoverableAuthExceptionFragment :
             account?.let { accountEntity ->
               val accountManager = AccountManager.get(requireContext())
               val account = Account(
-                accountEntity.email.lowercase(Locale.US),
+                accountEntity.email.lowercase(),
                 FlowcryptAccountAuthenticator.ACCOUNT_TYPE
               )
               accountManager.setUserData(

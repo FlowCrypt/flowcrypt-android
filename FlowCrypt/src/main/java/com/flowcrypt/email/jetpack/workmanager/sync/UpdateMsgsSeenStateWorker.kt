@@ -24,7 +24,6 @@ import jakarta.mail.Message
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 /**
  * This task mark candidates as read/unread.
@@ -74,14 +73,14 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
             GmailApiHelper.changeLabels(
               context = applicationContext,
               accountEntity = account,
-              ids = uidList.map { java.lang.Long.toHexString(it).lowercase(Locale.US) },
+              ids = uidList.map { java.lang.Long.toHexString(it).lowercase() },
               removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
             )
           } else {
             GmailApiHelper.changeLabels(
               context = applicationContext,
               accountEntity = account,
-              ids = uidList.map { java.lang.Long.toHexString(it).lowercase(Locale.US) },
+              ids = uidList.map { java.lang.Long.toHexString(it).lowercase() },
               addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
             )
           }

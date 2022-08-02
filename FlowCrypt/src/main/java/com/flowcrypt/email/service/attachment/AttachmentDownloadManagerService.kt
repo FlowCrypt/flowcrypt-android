@@ -56,7 +56,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.lang.ref.WeakReference
-import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -557,7 +556,7 @@ class AttachmentDownloadManagerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(att.name).lowercase(Locale.getDefault())
+      val fileExtension = FilenameUtils.getExtension(att.name).lowercase()
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {

@@ -27,7 +27,6 @@ import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 
 /**
@@ -57,7 +56,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
         GmailApiHelper.moveToTrash(
           context = applicationContext,
           accountEntity = account,
-          ids = uidList.map { java.lang.Long.toHexString(it).lowercase(Locale.US) })
+          ids = uidList.map { java.lang.Long.toHexString(it).lowercase() })
         //need to wait while the Gmail server will update labels
         delay(2000)
       }

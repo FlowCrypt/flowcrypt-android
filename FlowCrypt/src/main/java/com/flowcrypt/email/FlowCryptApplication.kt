@@ -35,7 +35,6 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import java.util.Calendar
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -173,7 +172,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     ) ?: "unknown"
 
     ACRA.errorReporter.putCustomData(
-      key = Constants.PREF_KEY_INSTALL_VERSION.uppercase(Locale.getDefault()),
+      key = Constants.PREF_KEY_INSTALL_VERSION.uppercase(),
       value = installVersion
     )
   }
