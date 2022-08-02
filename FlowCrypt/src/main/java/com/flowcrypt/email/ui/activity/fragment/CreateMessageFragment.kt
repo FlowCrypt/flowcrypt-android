@@ -1258,7 +1258,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         if (isPasswordProtectedFunctionalityEnabled()) {
           val hasRecipientsWithoutPgp =
             recipients.any { recipient -> !recipient.value.recipientWithPubKeys.hasAtLeastOnePubKey() }
-          if (hasRecipientsWithoutPgp) {
+          if (hasRecipientsWithoutPgp &&
+            composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED
+          ) {
             binding?.btnSetWebPortalPassword?.visible()
           } else {
             binding?.btnSetWebPortalPassword?.gone()
