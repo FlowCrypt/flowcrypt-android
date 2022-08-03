@@ -92,9 +92,9 @@ class AttesterSettingsFragment : BaseFragment<FragmentAttesterSettingsBinding>()
 
           Result.Status.SUCCESS -> {
             binding?.sRL?.isRefreshing = false
-            it.data?.let { responses ->
-              if (responses.isNotEmpty()) {
-                attesterKeyAdapter.setData(responses)
+            it.data?.let { pairs ->
+              attesterKeyAdapter.submitList(pairs)
+              if (pairs.isNotEmpty()) {
                 showContent()
               } else {
                 showEmptyView()

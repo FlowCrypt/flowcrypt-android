@@ -9,10 +9,11 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.databinding.AttesterKeyItemBinding
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.UIUtil
@@ -26,9 +27,8 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 9:42
  * E-mail: DenBond7@gmail.com
  */
-class AttesterKeyAdapter(
-  private val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()
-) : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
+class AttesterKeyAdapter :
+  ListAdapter<Pair<String, PgpKeyDetails>, AttesterKeyAdapter.ViewHolder>(DIFF_CALLBACK) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
@@ -36,91 +36,78 @@ class AttesterKeyAdapter(
     )
   }
 
-  override fun getItemCount(): Int {
-    return pgpKeyDetailsList.size
-  }
-
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-    val context = viewHolder.itemView.context
-    val pgpKeyDetails = pgpKeyDetailsList[position]
-    updateView(pgpKeyDetails, context, viewHolder)
-  }
-
-  fun setData(newList: List<PgpKeyDetails>) {
-    val productDiffUtilCallback = ResponseDiffUtilCallback(pgpKeyDetailsList, newList)
-    val productDiffResult = DiffUtil.calculateDiff(productDiffUtilCallback)
-
-    pgpKeyDetailsList.clear()
-    pgpKeyDetailsList.addAll(newList)
-    productDiffResult.dispatchUpdatesTo(this)
-  }
-
-  private fun updateView(pgpKeyDetails: PgpKeyDetails, context: Context, viewHolder: ViewHolder) {
-    viewHolder.textViewKeyOwner.text = pgpKeyDetails.getUserIdsAsSingleString()
-
-    when {
-      pgpKeyDetails.publicKey.isEmpty() -> {
-        viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded)
-        viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange))
-      }
-
-      isPublicKeyMatched(viewHolder.itemView.context, pgpKeyDetails) -> {
-        viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email)
-        viewHolder.textViewKeyAttesterStatus.setTextColor(
-          UIUtil.getColor(
-            context,
-            R.color.colorPrimary
-          )
-        )
-      }
-
-      else -> {
-        viewHolder.textViewKeyAttesterStatus.setText(R.string.wrong_public_key_recorded)
-        viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.red))
-      }
-    }
-  }
-
-  /**
-   * Check is public key found, and the fingerprint does not match any fingerprints of saved keys.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param pgpKeyDetails The [PgpKeyDetails] object which contains info about a public key.
-   * @return true if public key found, and the fingerprint does not match any
-   * fingerprints of saved keys, otherwise false.
-   */
-  private fun isPublicKeyMatched(context: Context, pgpKeyDetails: PgpKeyDetails): Boolean {
-    return pgpKeyDetails.fingerprint.let {
-      KeysStorageImpl.getInstance(context).getPGPSecretKeyRingByFingerprint(it) != null
-    }
+    viewHolder.bind(getItem(position))
   }
 
   /**
    * The view holder implementation for a better performance.
    */
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    var textViewKeyOwner: TextView = itemView.findViewById(R.id.textViewKeyOwner)
-    var textViewKeyAttesterStatus: TextView = itemView.findViewById(R.id.textViewKeyAttesterStatus)
-  }
+    val binding = AttesterKeyItemBinding.bind(itemView)
+    fun bind(pair: Pair<String, PgpKeyDetails>) {
+      val context = itemView.context
+      binding.textViewKeyOwner.text = pair.first
 
-  inner class ResponseDiffUtilCallback(
-    private val oldList: List<PgpKeyDetails>,
-    private val newList: List<PgpKeyDetails>
-  ) : DiffUtil.Callback() {
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-      val oldProduct = oldList[oldItemPosition]
-      val newProduct = newList[newItemPosition]
-      return oldProduct.fingerprint == newProduct.fingerprint
+      when {
+        pair.second.publicKey.isEmpty() -> {
+          binding.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded)
+          binding.textViewKeyAttesterStatus.setTextColor(
+            UIUtil.getColor(
+              context,
+              R.color.orange
+            )
+          )
+        }
+
+        isPublicKeyMatching(context, pair.second) -> {
+          binding.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email)
+          binding.textViewKeyAttesterStatus.setTextColor(
+            UIUtil.getColor(
+              context,
+              R.color.colorPrimary
+            )
+          )
+        }
+
+        else -> {
+          binding.textViewKeyAttesterStatus.setText(R.string.wrong_public_key_recorded)
+          binding.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.red))
+        }
+      }
     }
 
-    override fun getOldListSize(): Int = oldList.size
+    /**
+     * Check is public key found, and the fingerprint does not match any fingerprints of saved keys.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param pgpKeyDetails The [PgpKeyDetails] object which contains info about a public key.
+     * @return true if public key found, and the fingerprint does not match any
+     * fingerprints of saved keys, otherwise false.
+     */
+    private fun isPublicKeyMatching(context: Context, pgpKeyDetails: PgpKeyDetails): Boolean {
+      return pgpKeyDetails.fingerprint.let {
+        KeysStorageImpl.getInstance(context).getPGPSecretKeyRingByFingerprint(it) != null
+      }
+    }
+  }
 
-    override fun getNewListSize(): Int = newList.size
+  companion object {
+    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Pair<String, PgpKeyDetails>>() {
+      override fun areItemsTheSame(
+        oldItem: Pair<String, PgpKeyDetails>,
+        newItem: Pair<String, PgpKeyDetails>
+      ): Boolean {
+        return oldItem.first == newItem.first
+            && oldItem.second.fingerprint == newItem.second.fingerprint
+      }
 
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-      val oldProduct = oldList[oldItemPosition]
-      val newProduct = newList[newItemPosition]
-      return oldProduct == newProduct
+      override fun areContentsTheSame(
+        oldItem: Pair<String, PgpKeyDetails>,
+        newItem: Pair<String, PgpKeyDetails>
+      ): Boolean {
+        return oldItem.first == newItem.first && oldItem.second == newItem.second
+      }
     }
   }
 }
