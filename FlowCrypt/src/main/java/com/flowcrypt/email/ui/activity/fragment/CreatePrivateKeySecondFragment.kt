@@ -45,6 +45,8 @@ class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySeco
   }
 
   private fun initViews() {
+    binding?.textViewSecondPasswordCheckTitle?.text =
+      getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
     binding?.editTextKeyPasswordSecond?.setOnEditorActionListener { v, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {

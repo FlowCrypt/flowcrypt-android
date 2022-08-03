@@ -700,7 +700,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             MainSignInFragmentDirections
               .actionMainSignInFragmentToCheckPassphraseStrengthFragment(
                 popBackStackIdIfSuccess = R.id.mainSignInFragment,
-                title = getString(R.string.set_up_flow_crypt)
+                title = getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
               )
           )
           ekmViewModel.ekmLiveData.value = Result.none()

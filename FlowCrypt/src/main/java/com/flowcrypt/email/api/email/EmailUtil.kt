@@ -1188,7 +1188,8 @@ class EmailUtil {
 
       msg.setFrom(InternetAddress(account.email))
       msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
-      msg.subject = context.getString(R.string.your_key_backup)
+      msg.subject =
+        context.getString(R.string.your_key_backup, context.getString(R.string.app_name))
       return msg
     }
   }

@@ -14,6 +14,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.navArgs
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentCreateOrImportPrivateKeyDuringSetupBinding
@@ -51,6 +52,8 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   }
 
   private fun initViews() {
+    binding?.textViewTitle?.text =
+      getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
     binding?.buttonImportMyKey?.setOnClickListener {
       navController?.navigate(
         CreateOrImportPrivateKeyDuringSetupFragmentDirections

@@ -105,6 +105,8 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   private fun initViews() {
+    binding?.textViewTitle?.text =
+      getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
     binding?.buttonPositiveAction?.text = args.positiveBtnTitle
     binding?.buttonPositiveAction?.setOnClickListener {
       UIUtil.hideSoftInput(requireContext(), binding?.editTextKeyPassword)
@@ -137,7 +139,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     binding?.imageButtonHint?.setOnClickListener {
       showInfoDialog(
         dialogTitle = getString(R.string.info),
-        dialogMsg = getString(R.string.hint_when_found_keys_in_email)
+        dialogMsg = getString(R.string.hint_when_found_keys_in_email, getString(R.string.app_name))
       )
     }
     binding?.imageButtonHint?.visibleOrGone(

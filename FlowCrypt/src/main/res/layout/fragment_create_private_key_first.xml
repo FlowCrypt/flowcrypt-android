@@ -16,10 +16,10 @@
         <TextView
             android:id="@+id/textViewFirstPasswordCheckTitle"
             style="@style/ScreenHeading"
-            android:text="@string/set_up_flow_crypt"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Set up FlowCrypt" />
 
         <LinearLayout
             android:id="@+id/layoutPasswordHint"

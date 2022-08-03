@@ -14,7 +14,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="@string/set_up_flow_crypt" />
+        tools:text="Set up FlowCrypt" />
 
     <TextView
         android:id="@+id/tVChoosingSecurePass"

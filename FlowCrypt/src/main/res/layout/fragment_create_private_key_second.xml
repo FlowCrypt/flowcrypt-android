@@ -5,6 +5,7 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -15,10 +16,10 @@
         <TextView
             android:id="@+id/textViewSecondPasswordCheckTitle"
             style="@style/ScreenHeading"
-            android:text="@string/set_up_flow_crypt"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Set up FlowCrypt" />
 
         <TextView
             android:id="@+id/layoutPasswordHintSecond"
