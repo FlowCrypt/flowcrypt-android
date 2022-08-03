@@ -38,7 +38,7 @@ import java.io.IOException
  */
 class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
-  val accountKeysInfoLiveData = MediatorLiveData<Result<List<PgpKeyDetails>>>()
+  val accountKeysInfoLiveData = MediatorLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
   private val initLiveData = Transformations
     .switchMap(activeAccountLiveData) { accountEntity ->
       liveData {
@@ -46,7 +46,7 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
         emit(getResult(accountEntity))
       }
     }
-  private val refreshingLiveData = MutableLiveData<Result<List<PgpKeyDetails>>>()
+  private val refreshingLiveData = MutableLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
 
   init {
     accountKeysInfoLiveData.addSource(initLiveData) { accountKeysInfoLiveData.value = it }
@@ -90,10 +90,10 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
   }
 
   private suspend fun getResult(accountEntity: AccountEntity?):
-      Result<List<PgpKeyDetails>> = withContext(Dispatchers.IO) {
+      Result<List<Pair<String, PgpKeyDetails>>> = withContext(Dispatchers.IO) {
     return@withContext if (accountEntity != null) {
       try {
-        val results = mutableListOf<PgpKeyDetails>()
+        val results = mutableListOf<Pair<String, PgpKeyDetails>>()
         val emails = ArrayList<String>()
         emails.add(accountEntity.email)
 
@@ -102,13 +102,16 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
         }
 
         for (email in emails) {
+          val normalizedEmail = email.lowercase()
           val pubResponseResult = apiRepository.pubLookup(
             context = getApplication(),
-            email = email,
+            email = normalizedEmail,
             orgRules = accountEntity.clientConfiguration
           )
           pubResponseResult.data?.pubkey?.let { key ->
-            results.addAll(PgpKey.parseKeys(key).pgpKeyDetailsList)
+            results.addAll(PgpKey.parseKeys(key).pgpKeyDetailsList.map {
+              Pair(normalizedEmail, it)
+            })
           }
         }
 
