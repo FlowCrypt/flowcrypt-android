@@ -43,6 +43,9 @@ class ProvidePasswordToProtectMsgFragment :
   }
 
   private fun initViews() {
+    binding?.tVLostPassphraseWarning?.text =
+      getString(R.string.warning_about_password_usage, getString(R.string.app_name))
+
     binding?.eTPassphrase?.addTextChangedListener { editable ->
       webPortalPasswordStrengthViewModel.check(editable.toString())
     }

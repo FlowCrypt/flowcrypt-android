@@ -28,7 +28,7 @@
     <string name="log_out">Log out</string>
     <string name="all_labels">All labels</string>
     <string name="no_results">No results</string>
-    <string name="set_up_flow_crypt">Set up FlowCrypt</string>
+    <string name="set_up_flow_crypt">Set up %1$s</string>
     <plurals name="found_backup_of_your_account_key">
         <item quantity="one">We found a backup of your key</item>
         <item quantity="other">We found backups of %1$d keys</item>
@@ -56,7 +56,7 @@
     <string name="the_contact_was_deleted">Contact \"%1$s\" deleted</string>
     <string name="the_key_already_added">Key already added</string>
     <string name="help_feedback_or_question">Help, feedback, question</string>
-    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Thank you for trying FlowCrypt! We\'re here to help.</string>
+    <string name="feedback_thank_you_for_trying_message">Thank you for trying %1$s! We\'re here to help.</string>
     <string name="your_message">Your message</string>
     <string name="see_more_backup_options">See more backup options</string>
     <string name="there_are_no_backups_on_this_account"><b>There are no backups on this account</b>\n\n If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
@@ -69,7 +69,7 @@
     <string name="backup_as_email_hint">This will back up private key(s) in your Email Inbox. The security depends on
         the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
-    <string name="your_key_backup">Your FlowCrypt Backup</string>
+    <string name="your_key_backup">Your %1$s Backup</string>
     <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
     <string name="message_was_deleted">The message was deleted</string>
@@ -221,7 +221,7 @@
         <item quantity="one">%1$d of %2$d keys successfully unlocked. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
         <item quantity="other">%1$d of %2$d keys successfully unlocked. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
     </plurals>
-    <string name="hint_when_found_keys_in_email">FlowCrypt found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\nPlease enter pass phrase(s) that you used when the backup was made.</string>
+    <string name="hint_when_found_keys_in_email">%1$s found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\nPlease enter pass phrase(s) that you used when the backup was made.</string>
     <string name="forward">Forward</string>
     <string name="forward_encrypted">Forward\nEncrypted</string>
     <string name="reply_encrypted">Reply\nEncrypted</string>
@@ -530,7 +530,7 @@
     <string name="password_protection_usage_explanation">The recipients will receive a link to read your message on a web portal, where they will need to enter this password.\n\nThey will have access to this message for 180 days.</string>
     <string name="enter_web_portal_password">Enter web portal password</string>
     <string name="set_password">set password</string>
-    <string name="warning_about_password_usage">Do not use your Pass Phrase (that you chose during FlowCrypt Setup). Use some other password that you can share with others.\n\nYou are responsible for sharing this password with recipients (use other medium to share the password - not email).</string>
+    <string name="warning_about_password_usage">Do not use your Pass Phrase (that you chose during %1$s Setup). Use some other password that you can share with others.\n\nYou are responsible for sharing this password with recipients (use other medium to share the password - not email).</string>
     <string name="web_portal_password_added">Web portal password added</string>
     <string name="type_text_to_start_measuring">Please type text to start measuring</string>
     <string name="password_cannot_be_empty">Password cannot be empty</string>

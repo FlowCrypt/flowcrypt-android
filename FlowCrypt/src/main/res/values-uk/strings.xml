@@ -13,7 +13,7 @@
     <string name="help">Підтримка</string>
     <string name="the_key_already_added">Такий ключ вже добавлено</string>
     <string name="help_feedback_or_question">Допомога, питання, зворотній зв\'язок</string>
-    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Дякуємо, що користуєтеся FlowCrypt! Ми тут, щоб допомогти Вам.</string>
+    <string name="feedback_thank_you_for_trying_message">Дякуємо, що користуєтеся %1$s! Ми тут, щоб допомогти Вам.</string>
     <string name="your_message">Ваше повідомлення</string>
     <string name="edit">Редагувати</string>
     <string name="delete">Видалити</string>
@@ -81,7 +81,7 @@
     <string name="include_app_screenshot">Додати знімок екрана застосунку</string>
     <string name="touch_to_preview_and_edit">Натисніть, щоб подивитися та відредагувати</string>
     <string name="privacy">Конфіденційність</string>
-    <string name="hint_when_found_keys_in_email">FlowCrypt знайшов одну чи декілька резервних копій ключів Вашого облікового запису. \n\nРезервні копії ключів зашифровані для вашого захисту. Це робить їх некорисними без пароля. \n\nВведіть пароль, котрий Ви використовували при резервному копіюванні.</string>
+    <string name="hint_when_found_keys_in_email">%1$s знайшов одну чи декілька резервних копій ключів Вашого облікового запису. \n\nРезервні копії ключів зашифровані для вашого захисту. Це робить їх некорисними без пароля. \n\nВведіть пароль, котрий Ви використовували при резервному копіюванні.</string>
     <string name="connect_your_email_account_to_start_sending_encrypted_messages">Підключіть Ваш Email\n для відправки зашифрованих повідомлень</string>
     <string name="continue_with_gmail">Продовжити з Gmail</string>
     <string name="continue_with_outlook_hotmail">Продовжити з Outlook, Hotmail</string>
@@ -92,7 +92,7 @@
     <string name="create_a_new_key">Створити новий ключ</string>
     <string name="import_my_key">Імпортувати мій ключ</string>
     <string name="use_another_account">Використати інший обліковий запис</string>
-    <string name="set_up_flow_crypt">Налаштування FlowCrypt</string>
+    <string name="set_up_flow_crypt">Налаштування %1$s</string>
     <string name="enter_new_pass_phrase">Введіть нову ключову фразу</string>
     <string name="enter_your_pass_phrase">Введіть Вашу ключову фразу</string>
     <string name="loss_of_this_pass_phrase_cannot_be_recovered">Якщо Ви забудете ключову фразу, то її неможливо буде відновити</string>
@@ -411,7 +411,7 @@
     <string name="wrong_public_key_recorded">Записаний невірний відкритий ключ. Вхідна зашифрована електронна пошта може бути недоступна для читання.</string>
     <string name="can_not_delete_sending_message">Ви не можете видалити повідомлення, що зараз відправляється</string>
     <string name="decrypt_error_current_key_cannot_open_message">Ваш поточний ключ не може відкрити це повідомлення. Якщо у Вас є інші ключі, імпортуйте їх.</string>
-    <string name="your_key_backup">Ваша резервна копія FlowCrypt</string>
+    <string name="your_key_backup">Ваша резервна копія %1$s</string>
     <string name="your_keys_cannot_open_this_message">Ваші ключі не можуть відкрити це повідомлення</string>
     <string name="pass_phrase_is_too_weak">Ваша ключова фраза занадто слабка</string>
     <string name="passphrase_was_changed">Ваша ключова фраза була змінена. Відтепер нові резервні копії будуть захищені заданою ключовою фразою.</string>
@@ -446,7 +446,7 @@
     <string name="password_cannot_be_empty">Пароль не може бути порожнім</string>
     <string name="tap_to_protect_with_web_portal_password">Натисніть, щоб захистити web-паролем</string>
     <string name="password_protection_usage_explanation">Отримувачі отримають посилання, користуючись яким зможуть прочитати Ваше повідомлення на web-порталі. Для цього їм буде потрібно ввести цей пароль. Вони будуть мати доступ до даного повідомлення напротязі 180 днів.</string>
-    <string name="warning_about_password_usage">Не використовуйте Вашу ключову фразу (котру ви використовуєте під час налаштування FlowCrypt). Використовуйте якийсь інший пароль, котрим можна поділитися с іншими. На Вас лежить відповідальність за разповсюдження цього пароля між отримувачами (не використовуйте пошту, щоб поділитися цим паролем).</string>
+    <string name="warning_about_password_usage">Не використовуйте Вашу ключову фразу (котру ви використовуєте під час налаштування %1$s). Використовуйте якийсь інший пароль, котрим можна поділитися с іншими. На Вас лежить відповідальність за разповсюдження цього пароля між отримувачами (не використовуйте пошту, щоб поділитися цим паролем).</string>
     <string name="protect_with_password">Захистити паролем</string>
     <string name="web_portal_password">Web-пароль</string>
     <string name="password_should_fit_the_following_requirements">Пароль має відповідати наступним вимогам:</string>

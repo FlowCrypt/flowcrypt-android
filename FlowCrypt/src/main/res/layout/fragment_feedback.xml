@@ -64,12 +64,12 @@
         android:id="@+id/textViewAuthorHint"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/i_will_usually_reply_within_an_hour_except_when_i_sleep_tom"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
         android:textColor="@color/gray"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-        app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        tools:text="@string/feedback_thank_you_for_trying_message" />
 
     <CheckBox
         android:id="@+id/checkBoxScreenshot"

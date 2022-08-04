@@ -148,7 +148,16 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
     onView(withId(R.id.textViewAuthorHint))
       .check(matches(isDisplayed()))
-      .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)))
+      .check(
+        matches(
+          withText(
+            getResString(
+              R.string.feedback_thank_you_for_trying_message,
+              getResString(R.string.app_name)
+            )
+          )
+        )
+      )
 
     onView(withText(R.string.help_feedback_or_question))
       .check(matches(isDisplayed()))

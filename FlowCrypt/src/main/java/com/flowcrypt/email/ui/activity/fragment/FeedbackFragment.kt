@@ -129,6 +129,10 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
   }
 
   private fun initViews() {
+    binding?.textViewAuthorHint?.text = getString(
+      R.string.feedback_thank_you_for_trying_message,
+      getString(R.string.app_name)
+    )
     binding?.imageButtonScreenshot?.setOnClickListener {
       navController?.navigate(
         FeedbackFragmentDirections.actionFeedbackFragmentToEditScreenshotDialogFragment(

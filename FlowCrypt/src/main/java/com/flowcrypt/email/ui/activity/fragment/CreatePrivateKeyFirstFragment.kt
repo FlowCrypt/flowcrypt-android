@@ -77,6 +77,8 @@ class CreatePrivateKeyFirstFragment :
   }
 
   private fun initViews() {
+    binding?.textViewFirstPasswordCheckTitle?.text =
+      getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
     binding?.imageButtonShowPasswordHint?.setOnClickListener { showPassphraseHint() }
 
     binding?.editTextKeyPassword?.addTextChangedListener { editable ->
