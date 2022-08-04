@@ -8,8 +8,6 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.app.Activity
-import android.app.PendingIntent
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -35,13 +33,11 @@ import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
-import net.openid.appauth.AuthorizationService
 
 /**
  * @author Denis Bondarenko
@@ -174,18 +170,7 @@ class UserRecoverableAuthExceptionFragment :
             showContent()
 
             authRequest = authorizationRequest
-            authRequest?.let { request ->
-              AuthorizationService(requireContext())
-                .performAuthorizationRequest(
-                  request,
-                  PendingIntent.getActivity(
-                    requireContext(), 0, Intent(
-                      requireContext(),
-                      MainActivity::class.java
-                    ), PendingIntent.FLAG_IMMUTABLE
-                  )
-                )
-            }
+            authRequest?.let { request -> processAuthorizationRequest(request) }
           }
         }
 
