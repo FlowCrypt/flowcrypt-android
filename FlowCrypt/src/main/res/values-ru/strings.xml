@@ -12,7 +12,7 @@
     <string name="help">Поддержка</string>
     <string name="the_key_already_added">Такой ключ уже добавлен</string>
     <string name="help_feedback_or_question">Помощь, вопросы, обратная связь</string>
-    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Спасибо, что используете %1$s! Мы здесь, чтобы помочь Вам.</string>
+    <string name="feedback_thank_you_for_trying_message">Спасибо, что используете %1$s! Мы здесь, чтобы помочь Вам.</string>
     <string name="your_message">Ваше сообщение</string>
     <string name="edit">Редактировать</string>
     <string name="delete">Удалить</string>

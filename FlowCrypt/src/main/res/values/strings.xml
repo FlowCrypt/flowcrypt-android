@@ -56,7 +56,7 @@
     <string name="the_contact_was_deleted">Contact \"%1$s\" deleted</string>
     <string name="the_key_already_added">Key already added</string>
     <string name="help_feedback_or_question">Help, feedback, question</string>
-    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Thank you for trying %1$s! We\'re here to help.</string>
+    <string name="feedback_thank_you_for_trying_message">Thank you for trying %1$s! We\'re here to help.</string>
     <string name="your_message">Your message</string>
     <string name="see_more_backup_options">See more backup options</string>
     <string name="there_are_no_backups_on_this_account"><b>There are no backups on this account</b>\n\n If you lose your device, or it stops working, your encrypted email will be unreadable.</string>

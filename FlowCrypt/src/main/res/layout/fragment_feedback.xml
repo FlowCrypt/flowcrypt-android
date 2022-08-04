@@ -69,7 +69,7 @@
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        tools:text="@string/i_will_usually_reply_within_an_hour_except_when_i_sleep_tom" />
+        tools:text="@string/feedback_thank_you_for_trying_message" />
 
     <CheckBox
         android:id="@+id/checkBoxScreenshot"

@@ -130,7 +130,7 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
 
   private fun initViews() {
     binding?.textViewAuthorHint?.text = getString(
-      R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom,
+      R.string.feedback_thank_you_for_trying_message,
       getString(R.string.app_name)
     )
     binding?.imageButtonScreenshot?.setOnClickListener {
