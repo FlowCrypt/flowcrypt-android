@@ -5,8 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
@@ -17,6 +20,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
+import net.openid.appauth.AuthorizationService
 
 /**
  * @author Denis Bondarenko
@@ -28,6 +32,15 @@ abstract class BaseOAuthFragment<T : ViewBinding> : BaseFragment<T>() {
   protected val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
 
   protected var authRequest: AuthorizationRequest? = null
+  private val forActivityResultAuthorizationRequest = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { result: ActivityResult ->
+    when (result.resultCode) {
+      Activity.RESULT_OK -> {
+        handleOAuth2Intent(result.data)
+      }
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -39,7 +52,15 @@ abstract class BaseOAuthFragment<T : ViewBinding> : BaseFragment<T>() {
     outState.putString(KEY_AUTH_REQUEST, authRequest?.jsonSerializeString())
   }
 
-  fun handleOAuth2Intent(intent: Intent?) {
+  protected fun processAuthorizationRequest(authorizationRequest: AuthorizationRequest) {
+    forActivityResultAuthorizationRequest.launch(
+      AuthorizationService(requireContext()).getAuthorizationRequestIntent(
+        authorizationRequest
+      )
+    )
+  }
+
+  private fun handleOAuth2Intent(intent: Intent?) {
     intent?.let {
       val authResponse = AuthorizationResponse.fromIntent(intent)
       val authException = AuthorizationException.fromIntent(intent)

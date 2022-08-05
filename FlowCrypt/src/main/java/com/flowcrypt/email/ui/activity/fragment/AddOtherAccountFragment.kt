@@ -7,9 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.accounts.Account
 import android.accounts.AccountManager
-import android.app.PendingIntent
-import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -44,7 +41,6 @@ import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_CREATED_KEY
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_RESOLVED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.USE_ANOTHER_ACCOUNT
@@ -60,7 +56,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
-import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
 
 /**
@@ -565,18 +560,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
             showContent()
 
             authRequest = authorizationRequest
-            authRequest?.let { request ->
-              AuthorizationService(requireContext())
-                .performAuthorizationRequest(
-                  request,
-                  PendingIntent.getActivity(
-                    requireContext(),
-                    0,
-                    Intent(requireContext(), MainActivity::class.java),
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
-                  )
-                )
-            }
+            authRequest?.let { request -> processAuthorizationRequest(request) }
           }
         }
 

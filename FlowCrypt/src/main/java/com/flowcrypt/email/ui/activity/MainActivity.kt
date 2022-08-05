@@ -62,11 +62,8 @@ import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
-import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
-import com.flowcrypt.email.ui.activity.fragment.UserRecoverableAuthExceptionFragment
-import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
@@ -158,15 +155,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     super.onNewIntent(intent)
     if (!handleLogoutFromSystemSettings(intent)) {
       navController.handleDeepLink(intent)
-      val fragments =
-        supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments
-      val fragment = fragments?.firstOrNull {
-        it is UserRecoverableAuthExceptionFragment
-      } ?: fragments?.firstOrNull {
-        it is AddOtherAccountFragment
-      }
-      val oAuthFragment = fragment as? BaseOAuthFragment<*>
-      oAuthFragment?.handleOAuth2Intent(intent)
     }
   }
 
