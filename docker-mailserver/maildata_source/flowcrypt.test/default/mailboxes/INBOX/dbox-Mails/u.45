@@ -1,0 +1,41 @@
+2 M1e C62ecd71e
+N          000000000000046A
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id JqcgIx7X7GL6BAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Fri, 05 Aug 2022 08:38:54 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 8C816D00F3E
+	for <default@flowcrypt.test>; Fri,  5 Aug 2022 08:38:54 +0000 (UTC)
+Message-ID: <f69640bd-a7be-c4cb-7fe2-5ac4bc3c9f4e@flowcrypt.test>
+Date: Fri, 5 Aug 2022 11:38:54 +0300
+Mime-Version: 1.0
+Content-Language: en-US
+To: default@flowcrypt.test
+From: DenBond7 <denbond7@flowcrypt.test>
+Subject: Not encrypted + signed(cleartext)
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+It's a cleartext signed message
+-----BEGIN PGP SIGNATURE-----
+Version: PGPainless
+
+iHUEARYKACcFAmLs1kUJEMMgic1q+NbOFiEEwWQo1gHLOTeJz2HUwyCJzWr41s4A
+AG8wAP44Q3Zzr7sDM9V34A3CdDxMjUFSJcOsPZUuUi1kIZzv6wD/cxdthjQpC7uN
+Hwvo1OGuQBE7TENCj1cW4P9AdOFxSAQ=
+=McWq
+-----END PGP SIGNATURE-----
+
+
+
+R62ecd71e
+V48b
+G511031231ed7ec62fa04000073f46975
+

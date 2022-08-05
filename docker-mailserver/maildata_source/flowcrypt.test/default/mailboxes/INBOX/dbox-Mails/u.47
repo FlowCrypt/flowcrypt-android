@@ -1,0 +1,54 @@
+2 M1e C62ed233b
+N          00000000000005D1
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id 1iRWDzsj7WK+BAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Fri, 05 Aug 2022 14:03:39 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 3B997D01018
+	for <default@flowcrypt.test>; Fri,  5 Aug 2022 14:03:39 +0000 (UTC)
+Message-ID: <db3861af-3ed4-bc96-336c-59ae60f14b8a@flowcrypt.test>
+Date: Fri, 5 Aug 2022 17:03:39 +0300
+Mime-Version: 1.0
+Content-Language: en-US
+To: default@flowcrypt.test
+From: DenBond7 <denbond7@flowcrypt.test>
+Subject: NOT encrypted + signed mixed(cleartext)
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+It's a cleartext signed with the first key
+-----BEGIN PGP SIGNATURE-----
+Version: PGPainless
+
+iHUEARYKACcFAmLtIhoJEMMgic1q+NbOFiEEwWQo1gHLOTeJz2HUwyCJzWr41s4A
+AGbhAQCjeeeTorr1KoSke1EbWfizp+eg13I23zSZQ3MeDOTa0AD/QzK0illvrpZK
+KeXwpfKtlJdcWpzdL5MvbQz6tH6lkAU=
+=S5jc
+-----END PGP SIGNATURE-----
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+It's a cleartext signed with the second key
+-----BEGIN PGP SIGNATURE-----
+Version: PGPainless
+
+iHUEARYKACcFAmLtIncJEIE/vu8WkLVTFiEE3DfiElQCETVkRcs3gT++7xaQtVMA
+AM79AQDlj5w/Q+yjUXA6MwsFPBLaun3rxZ7pEy2UyC9nlXewhwD/RsjGvq+VujMl
+B/+xFWaGiGZfim6Ay340/19fJRq46AY=
+=nI+g
+-----END PGP SIGNATURE-----
+
+
+
+R62ed233b
+V5ff
+Gd1c86b0f3b23ed62be04000073f46975
+
