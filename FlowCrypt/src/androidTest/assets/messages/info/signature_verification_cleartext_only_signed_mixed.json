@@ -1,0 +1,58 @@
+{
+  "encryptionType": "STANDARD",
+  "msgBlocks": [
+    {
+      "content": "          \u003c!DOCTYPE html\u003e\n          \u003chtml\u003e\n          \u003chead\u003e\n              \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\"/\u003e\n              \u003cstyle\u003e\n                body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n                body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n                body pre { white-space: pre-wrap !important; }\n                body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n              \u003c/style\u003e\n          \u003c/head\u003e\n          \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock GRAY\" style\u003d\"padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: 1px solid #f0f0f0;border-left: 8px solid #989898;border-right: none;\"\u003e\u003chtml\u003e\u003chead\u003e\u003c/head\u003e\u003cbody\u003eIt\u0027s a cleartext signed with the first key\u003c/body\u003e\u003c/html\u003e\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003cdiv class\u003d\"MsgBlock GRAY\" style\u003d\"padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: 1px solid #f0f0f0;border-left: 8px solid #989898;border-right: none;\"\u003e\u003chtml\u003e\u003chead\u003e\u003c/head\u003e\u003cbody\u003eIt\u0027s a cleartext signed with the second key\u003c/body\u003e\u003c/html\u003e\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n          \u003c/html\u003e",
+      "isOpenPGPMimeSigned": false,
+      "type": "plainHtml"
+    }
+  ],
+  "msgEntity": {
+    "cc": [],
+    "email": "default@flowcrypt.test",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
+    "from": [
+      {
+        "address": "denbond7@flowcrypt.test",
+        "encodedPersonal": "DenBond7",
+        "personal": "DenBond7"
+      }
+    ],
+    "fromAddress": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
+    "hasAttachments": false,
+    "id": 39,
+    "isPasswordProtected": false,
+    "isSeen": true,
+    "msgState": "NONE",
+    "receivedDate": 1659708219000,
+    "replyTo": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
+    "replyToAddress": [
+      {
+        "address": "denbond7@flowcrypt.test",
+        "encodedPersonal": "DenBond7",
+        "personal": "DenBond7"
+      }
+    ],
+    "sentDate": 1659708219000,
+    "subject": "NOT encrypted + signed mixed(cleartext)",
+    "to": [
+      {
+        "address": "default@flowcrypt.test"
+      }
+    ],
+    "toAddress": "default@flowcrypt.test",
+    "uid": 47,
+    "uidAsHEX": "2f"
+  },
+  "text": "It\u0026#39;s a cleartext signed with the first key\nIt\u0026#39;s a cleartext signed with the second key",
+  "verificationResult": {
+    "hasBadSignatures": false,
+    "hasEncryptedParts": false,
+    "hasMixedSignatures": true,
+    "hasSignedParts": true,
+    "hasUnverifiedSignatures": false,
+    "isPartialSigned": false,
+    "keyIdOfSigningKeys": []
+  }
+}
