@@ -843,4 +843,70 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.layoutReplyButtons))
       .check(matches(not(isDisplayed())))
   }
+
+  @Test
+  fun testSignatureVerificationCleartextOnlySigned() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_cleartext_only_signed.json",
+      "messages/mime/signature_verification_cleartext_only_signed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationCleartextOnlySignedPartially() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_cleartext_only_signed_partially.json",
+      "messages/mime/signature_verification_cleartext_only_signed_partially.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.ONLY_PARTIALLY_SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationCleartextOnlySignedMixed() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_second.asc")
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_cleartext_only_signed_mixed.json",
+      "messages/mime/signature_verification_cleartext_only_signed_mixed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.MIXED_SIGNED
+    )
+  }
+
+  @Test
+  fun testSignatureVerificationCleartextMissingPubKeyOnlySigned() {
+    val msgInfo = getMsgInfo(
+      "messages/info/signature_verification_cleartext_missing_pub_key_only_signed.json",
+      "messages/mime/signature_verification_cleartext_missing_pub_key_only_signed.txt"
+    )
+    baseCheck(msgInfo)
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE
+    )
+  }
 }

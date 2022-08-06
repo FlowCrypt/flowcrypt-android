@@ -1,0 +1,33 @@
+2 M1e C62ecd71e
+N          00000000000002FB
+Message-ID: <f69640bd-a7be-c4cb-7fe2-5ac4bc3c9f4e@flowcrypt.test>
+Date: Fri, 5 Aug 2022 11:38:54 +0300
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Content-Language: en-US
+To: default@flowcrypt.test
+From: DenBond7 <denbond7@flowcrypt.test>
+Subject: Not encrypted + signed(cleartext)
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+It's a cleartext signed message
+-----BEGIN PGP SIGNATURE-----
+Version: PGPainless
+
+iHUEARYKACcFAmLs1kUJEMMgic1q+NbOFiEEwWQo1gHLOTeJz2HUwyCJzWr41s4A
+AG8wAP44Q3Zzr7sDM9V34A3CdDxMjUFSJcOsPZUuUi1kIZzv6wD/cxdthjQpC7uN
+Hwvo1OGuQBE7TENCj1cW4P9AdOFxSAQ=
+=McWq
+-----END PGP SIGNATURE-----
+
+
+
+R62ecd71e
+V314
+G600284281ed7ec62dc03000073f46975
+
