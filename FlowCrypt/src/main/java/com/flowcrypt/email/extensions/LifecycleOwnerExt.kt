@@ -12,7 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ui.activity.fragment.FeedbackFragment
+import com.flowcrypt.email.model.Screenshot
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragmentArgs
@@ -146,7 +146,7 @@ fun LifecycleOwner.showFeedbackFragment(
     val navDirections = object : NavDirections {
       override val actionId: Int = R.id.feedback_graph
       override val arguments: Bundle = FeedbackFragmentArgs(
-        screenshot = FeedbackFragment.Screenshot(it)
+        screenshot = Screenshot(it)
       ).toBundle()
     }
     navController?.navigate(navDirections)

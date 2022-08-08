@@ -15,10 +15,13 @@
         tools:layout="@layout/fragment_feedback">
         <argument
             android:name="screenshot"
-            app:argType="com.flowcrypt.email.ui.activity.fragment.FeedbackFragment$Screenshot" />
+            app:argType="com.flowcrypt.email.model.Screenshot" />
         <action
             android:id="@+id/action_feedbackFragment_to_editScreenshotDialogFragment"
             app:destination="@id/editScreenshotDialogFragment" />
+        <action
+            android:id="@+id/action_feedbackFragment_to_sendFeedbackDialogFragment"
+            app:destination="@id/sendFeedbackDialogFragment" />
     </fragment>
 
     <dialog
@@ -27,6 +30,23 @@
         tools:layout="@layout/fragment_screenshot_editor">
         <argument
             android:name="screenshot"
-            app:argType="com.flowcrypt.email.ui.activity.fragment.FeedbackFragment$Screenshot" />
+            app:argType="com.flowcrypt.email.model.Screenshot" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/sendFeedbackDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.SendFeedbackDialogFragment"
+        tools:layout="@layout/fragment_send_feedback_dialog">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="feedbackMsg"
+            app:argType="string" />
+        <argument
+            android:name="screenshot"
+            android:defaultValue="@null"
+            app:argType="com.flowcrypt.email.model.Screenshot"
+            app:nullable="true" />
     </dialog>
 </navigation>

@@ -572,4 +572,5 @@
     <string name="already_added">Already added</string>
     <string name="more_recipients" tools:ignore="PluralsCandidate">+%1$d more</string>
     <string name="add_recipient_to_send_message">Please add at least one recipient in \"To\" to send this message</string>
+    <string name="send_feedback_failed_hint">There was an error sending message. Our direct email is %1$s.\n\nError details:\n%2$s</string>
 </resources>

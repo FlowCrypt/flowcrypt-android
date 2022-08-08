@@ -10,12 +10,14 @@ import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
+import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
+import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
@@ -167,4 +169,15 @@ interface ApiRepository : BaseApiRepository {
     messageUploadRequest: MessageUploadRequest,
     msg: String
   ): Result<MessageUploadResponse>
+
+  /**
+   * Post a user feedback to our server
+   *
+   * @param context Interface to global information about an application environment.
+   * @param postHelpFeedbackModel an instance of [PostHelpFeedbackModel]
+   */
+  suspend fun postHelpFeedback(
+    context: Context,
+    postHelpFeedbackModel: PostHelpFeedbackModel
+  ): Result<PostHelpFeedbackResponse>
 }

@@ -8,8 +8,6 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.Parcel
-import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -29,9 +27,10 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.service.FeedbackJobIntentService
+import com.flowcrypt.email.model.Screenshot
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.EditScreenshotDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.SendFeedbackDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -61,6 +60,7 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
     super.onViewCreated(view, savedInstanceState)
     initViews()
     subscribeToEditScreenshot()
+    subscribeToSendFeedback()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -105,14 +105,13 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
               val nonNullAccount =
                 account ?: AccountEntity(email = binding?.editTextUserEmail?.text.toString())
 
-              FeedbackJobIntentService.enqueueWork(
-                context = requireContext(),
-                account = nonNullAccount,
-                userComment = binding?.editTextUserMessage?.text.toString(),
-                screenShotBytes = screenShotBytes
+              navController?.navigate(
+                FeedbackFragmentDirections.actionFeedbackFragmentToSendFeedbackDialogFragment(
+                  nonNullAccount,
+                  binding?.editTextUserMessage?.text.toString(),
+                  screenShotBytes?.let { Screenshot(it) }
+                )
               )
-              toast(getString(R.string.thank_you_for_feedback))
-              navController?.navigateUp()
             }
             return true
           }
@@ -160,35 +159,13 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
     }
   }
 
-  data class Screenshot(val byteArray: ByteArray) : Parcelable {
-    constructor(parcel: Parcel) : this(parcel.createByteArray() ?: byteArrayOf())
-
-    override fun equals(other: Any?): Boolean {
-      if (this === other) return true
-      if (javaClass != other?.javaClass) return false
-
-      other as Screenshot
-
-      if (!byteArray.contentEquals(other.byteArray)) return false
-
-      return true
-    }
-
-    override fun hashCode(): Int {
-      return byteArray.contentHashCode()
-    }
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-      parcel.writeByteArray(byteArray)
-    }
-
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<Screenshot> {
-      override fun createFromParcel(parcel: Parcel) = Screenshot(parcel)
-      override fun newArray(size: Int): Array<Screenshot?> = arrayOfNulls(size)
+  private fun subscribeToSendFeedback() {
+    setFragmentResultListener(SendFeedbackDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+      val isSent = bundle.getBoolean(SendFeedbackDialogFragment.KEY_RESULT)
+      if (isSent) {
+        toast(getString(R.string.thank_you_for_feedback))
+        navController?.navigateUp()
+      }
     }
   }
 }
