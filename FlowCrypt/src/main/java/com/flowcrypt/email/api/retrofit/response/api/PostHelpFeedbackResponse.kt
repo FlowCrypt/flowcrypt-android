@@ -35,9 +35,9 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 data class PostHelpFeedbackResponse constructor(
-  @SerializedName("error") @Expose override val apiError: ApiError?,
-  @SerializedName("sent") @Expose val isSent: Boolean,
-  @Expose val text: String?
+  @SerializedName("error") @Expose override val apiError: ApiError? = null,
+  @SerializedName("sent") @Expose val isSent: Boolean? = null,
+  @Expose val text: String? = null
 ) : ApiResponse {
   constructor(source: Parcel) : this(
     source.readParcelable<ApiError>(ApiError::class.java.classLoader),
@@ -52,7 +52,7 @@ data class PostHelpFeedbackResponse constructor(
   override fun writeToParcel(dest: Parcel, flags: Int) =
     with(dest) {
       writeParcelable(apiError, 0)
-      writeInt((if (isSent) 1 else 0))
+      writeInt((if (isSent == true) 1 else 0))
       writeString(text)
     }
 
