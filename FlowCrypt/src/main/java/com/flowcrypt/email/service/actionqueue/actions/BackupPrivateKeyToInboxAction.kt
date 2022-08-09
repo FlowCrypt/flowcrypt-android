@@ -37,7 +37,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
-  override fun run(context: Context) {
+  override suspend fun run(context: Context) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return

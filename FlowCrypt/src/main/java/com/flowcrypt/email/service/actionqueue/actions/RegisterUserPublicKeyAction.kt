@@ -32,7 +32,7 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.REGISTER_USER_PUBLIC_KEY
 
-  override fun run(context: Context) {
+  override suspend fun run(context: Context) {
     val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
     val body = InitialLegacySubmitModel(email!!, publicKey)
     val response = apiService.postInitialLegacySubmit(body).execute()

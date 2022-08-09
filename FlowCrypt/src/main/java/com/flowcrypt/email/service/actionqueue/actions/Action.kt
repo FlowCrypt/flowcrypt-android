@@ -23,7 +23,7 @@ interface Action : Parcelable {
   val version: Int
   val type: Type
 
-  fun run(context: Context)
+  suspend fun run(context: Context)
 
   /**
    * This class contains information about all action types.

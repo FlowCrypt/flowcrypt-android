@@ -54,7 +54,6 @@ import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RefreshPrivateKeysFromEkmViewModel
@@ -62,6 +61,7 @@ import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
+import com.flowcrypt.email.service.actionqueue.ActionQueueIntentService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -85,7 +85,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private var navigationViewManager: NavigationViewManager? = null
 
   private val launcherViewModel: LauncherViewModel by viewModels()
-  private val actionsViewModel: ActionsViewModel by viewModels()
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val refreshPrivateKeysFromEkmViewModel: RefreshPrivateKeysFromEkmViewModel by viewModels()
 
@@ -288,7 +287,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private fun initAccountViewModel() {
     accountViewModel.activeAccountLiveData.observe(this) { accountEntity ->
       accountEntity?.let {
-        actionsViewModel.checkAndAddActionsToQueue(accountEntity)
+        ActionQueueIntentService.enqueue(this.applicationContext)
         invalidateOptionsMenu()
         binding.navigationView.getHeaderView(0)?.let { headerView ->
           navigationViewManager?.initUserProfileView(this@MainActivity, headerView, accountEntity)
