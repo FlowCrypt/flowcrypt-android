@@ -12,7 +12,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.service.actionqueue.actions.Action
 import com.flowcrypt.email.util.exception.ExceptionUtil
 
@@ -32,31 +31,41 @@ class ActionQueueWorker(context: Context, params: WorkerParameters) :
     val activeAccount =
       roomDatabase.accountDao().getActiveAccountSuspend() ?: return Result.success()
 
-    var actionQueueEntity: ActionQueueEntity?
-    while (roomDatabase.actionQueueDao().getActionsByEmailSuspend(activeAccount.email)
-        .firstOrNull().also { actionQueueEntity = it } != null
-    ) {
-      try {
-        actionQueueEntity?.toAction()?.run(applicationContext)
-        actionQueueEntity?.let { roomDatabase.actionQueueDao().delete(it) }
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-        result = Result.retry()
-      }
+    while (true) {
+      val notActionableActionsIds = attemptsMap.filter { it.value >= MAX_ATTEMPT_PER_ACTION }
+      val existingActions =
+        roomDatabase.actionQueueDao().getActionsByEmailSuspend(activeAccount.email)
+      val actionableActions = existingActions.filter { it.id !in notActionableActionsIds }
+      if (actionableActions.isNotEmpty()) {
+        for (actionQueueEntity in actionableActions) {
+          try {
+            actionQueueEntity.toAction()?.run(applicationContext)
+            roomDatabase.actionQueueDao().delete(actionQueueEntity)
+          } catch (e: Exception) {
+            e.printStackTrace()
+            ExceptionUtil.handleError(e)
+            result = Result.retry()
+            actionQueueEntity.id?.let {
+              val existingValue = attemptsMap[actionQueueEntity.id] ?: 0
+              attemptsMap[actionQueueEntity.id] = existingValue + 1
+            }
+          }
+        }
+      } else break
     }
 
     return result
   }
 
   companion object {
+    private const val MAX_ATTEMPT_PER_ACTION = 3
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".ACTIONS_QUEUE"
     fun enqueue(context: Context) {
       WorkManager
         .getInstance(context.applicationContext)
         .enqueueUniqueWork(
           EmailAndNameWorker.GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.KEEP,
+          ExistingWorkPolicy.REPLACE,
           OneTimeWorkRequestBuilder<ActionQueueWorker>()
             .addTag(GROUP_UNIQUE_TAG)
             .build()
