@@ -24,7 +24,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
  * Time: 16:54
  * E-mail: DenBond7@gmail.com
  */
-class ActionQueueIntentService(context: Context, params: WorkerParameters) :
+class ActionQueueWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {
   override suspend fun doWork(): Result {
     var result = Result.success()
@@ -57,7 +57,7 @@ class ActionQueueIntentService(context: Context, params: WorkerParameters) :
         .enqueueUniqueWork(
           EmailAndNameWorker.GROUP_UNIQUE_TAG,
           ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<ActionQueueIntentService>()
+          OneTimeWorkRequestBuilder<ActionQueueWorker>()
             .addTag(GROUP_UNIQUE_TAG)
             .build()
         )

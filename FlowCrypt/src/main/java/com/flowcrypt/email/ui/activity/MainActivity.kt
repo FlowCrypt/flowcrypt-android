@@ -57,7 +57,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RefreshPrivateKeysFromEkmViewModel
-import com.flowcrypt.email.jetpack.workmanager.ActionQueueIntentService
+import com.flowcrypt.email.jetpack.workmanager.ActionQueueWorker
 import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
@@ -287,7 +287,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private fun initAccountViewModel() {
     accountViewModel.activeAccountLiveData.observe(this) { accountEntity ->
       accountEntity?.let {
-        ActionQueueIntentService.enqueue(this.applicationContext)
+        ActionQueueWorker.enqueue(this.applicationContext)
         invalidateOptionsMenu()
         binding.navigationView.getHeaderView(0)?.let { headerView ->
           navigationViewManager?.initUserProfileView(this@MainActivity, headerView, accountEntity)
