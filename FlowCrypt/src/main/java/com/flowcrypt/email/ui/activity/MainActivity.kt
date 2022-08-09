@@ -57,11 +57,11 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RefreshPrivateKeysFromEkmViewModel
+import com.flowcrypt.email.jetpack.workmanager.ActionQueueIntentService
 import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
-import com.flowcrypt.email.service.actionqueue.ActionQueueIntentService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment

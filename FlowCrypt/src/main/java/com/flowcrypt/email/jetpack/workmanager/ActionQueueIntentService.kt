@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.actionqueue
+package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -13,8 +13,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.database.entity.ActionQueueEntity
-import com.flowcrypt.email.jetpack.workmanager.BaseWorker
-import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
 import com.flowcrypt.email.service.actionqueue.actions.Action
 import com.flowcrypt.email.util.exception.ExceptionUtil
 
