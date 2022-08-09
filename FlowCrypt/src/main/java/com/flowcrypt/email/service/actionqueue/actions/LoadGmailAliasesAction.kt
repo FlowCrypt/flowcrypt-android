@@ -39,7 +39,7 @@ data class LoadGmailAliasesAction(
     parcel.readInt()
   )
 
-  override fun run(context: Context) {
+  override suspend fun run(context: Context) {
     try {
       email ?: return
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)

@@ -42,7 +42,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.ENCRYPT_PRIVATE_KEYS
 
-  override fun run(context: Context) {
+  override suspend fun run(context: Context) {
     val keyEntities = KeysStorageImpl.getInstance(context).getRawKeys().map { it.copy() }
     val modifiedKeyEntities = mutableListOf<KeyEntity>()
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
