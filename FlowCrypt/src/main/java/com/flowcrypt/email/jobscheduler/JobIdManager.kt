@@ -24,6 +24,5 @@ class JobIdManager {
 
     const val JOB_TYPE_ACTION_QUEUE = 2
     const val JOB_TYPE_PREPARE_OUT_GOING_MESSAGE = 4
-    const val JOB_TYPE_FEEDBACK = 5
   }
 }
