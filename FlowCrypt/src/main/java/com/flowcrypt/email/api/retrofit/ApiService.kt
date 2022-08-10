@@ -93,7 +93,7 @@ interface ApiService {
    * @return [<]
    */
   @POST(BuildConfig.API_URL + "help/feedback")
-  fun postHelpFeedback(@Body body: PostHelpFeedbackModel): Call<PostHelpFeedbackResponse>
+  suspend fun postHelpFeedback(@Body body: PostHelpFeedbackModel): Response<PostHelpFeedbackResponse>
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/pub"

@@ -161,11 +161,6 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".service.FeedbackJobIntentService"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
-        <service
             android:name=".accounts.FlowcryptAuthenticatorService"
             android:exported="false">
             <intent-filter>

@@ -12,7 +12,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +40,6 @@ class LauncherViewModel(application: Application) : AccountViewModel(application
       )
       ForwardedAttachmentsDownloaderWorker.enqueue(application)
       MessagesSenderWorker.enqueue(application)
-      FeedbackJobIntentService.enqueueWork(application)
       FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
 
       isInitLoadingCompletedMutableStateFlow.value =

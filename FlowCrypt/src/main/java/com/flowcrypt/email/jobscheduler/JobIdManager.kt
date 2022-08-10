@@ -23,6 +23,5 @@ class JobIdManager {
     const val JOB_MAX_ID = 10
 
     const val JOB_TYPE_PREPARE_OUT_GOING_MESSAGE = 4
-    const val JOB_TYPE_FEEDBACK = 5
   }
 }

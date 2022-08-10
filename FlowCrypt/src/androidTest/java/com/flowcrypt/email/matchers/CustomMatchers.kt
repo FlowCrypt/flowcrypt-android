@@ -6,6 +6,7 @@
 package com.flowcrypt.email.matchers
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -29,17 +30,18 @@ import org.hamcrest.Matcher
 
 class CustomMatchers {
   companion object {
-    @JvmStatic
     fun withDrawable(resourceId: Int): Matcher<View> {
       return DrawableMatcher(resourceId)
     }
 
-    @JvmStatic
+    fun withBitmap(bitmap: Bitmap): Matcher<View> {
+      return BitmapMatcher(bitmap)
+    }
+
     fun emptyDrawable(): Matcher<View> {
       return DrawableMatcher(DrawableMatcher.EMPTY)
     }
 
-    @JvmStatic
     fun withToolBarText(textMatcher: String): Matcher<View> {
       return ToolBarTitleMatcher.withText(textMatcher)
     }
@@ -49,7 +51,6 @@ class CustomMatchers {
      *
      * @param option An input {@link SecurityType.Option}.
      */
-    @JvmStatic
     fun withSecurityTypeOption(option: SecurityType.Option): Matcher<SecurityType.Option> {
       return SecurityTypeOptionMatcher(option)
     }
@@ -60,7 +61,6 @@ class CustomMatchers {
      * @param color An input color value.
      * @return true if matched, otherwise false
      */
-    @JvmStatic
     fun withAppBarLayoutBackgroundColor(color: Int): BoundedMatcher<View, AppBarLayout> {
       return AppBarLayoutBackgroundColorMatcher(color)
     }
@@ -68,7 +68,6 @@ class CustomMatchers {
     /**
      * Match is [androidx.recyclerview.widget.RecyclerView] empty.
      */
-    @JvmStatic
     fun withEmptyRecyclerView(): BaseMatcher<View> {
       return EmptyRecyclerViewMatcher()
     }
@@ -76,7 +75,6 @@ class CustomMatchers {
     /**
      * Match is an items count of [RecyclerView] empty.
      */
-    @JvmStatic
     fun withRecyclerViewItemCount(itemCount: Int): BaseMatcher<View> {
       return RecyclerViewItemCountMatcher(itemCount)
     }
