@@ -90,7 +90,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 31
+    const val DB_VERSION = 32
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1058,6 +1058,17 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_31_32 = object : FlowCryptMigration(31, 32) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        database.execSQL(
+          "CREATE INDEX IF NOT EXISTS " +
+              "`account_account_type_in_keys` " +
+              "ON `keys` (`account`, `account_type`)"
+        )
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1102,7 +1113,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_27_28,
           MIGRATION_28_29,
           MIGRATION_29_30,
-          MIGRATION_30_31
+          MIGRATION_30_31,
+          MIGRATION_31_32
         ).build()
         INSTANCE = instance
         return instance
