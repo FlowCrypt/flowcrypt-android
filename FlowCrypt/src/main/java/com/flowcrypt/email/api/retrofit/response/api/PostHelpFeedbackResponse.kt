@@ -39,22 +39,21 @@ data class PostHelpFeedbackResponse constructor(
   @SerializedName("sent") @Expose val isSent: Boolean? = null,
   @Expose val text: String? = null
 ) : ApiResponse {
-  constructor(source: Parcel) : this(
-    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-    1 == source.readInt(),
-    source.readString()
+  constructor(parcel: Parcel) : this(
+    parcel.readParcelable(ApiError::class.java.classLoader),
+    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+    parcel.readString()
   )
 
   override fun describeContents(): Int {
     return 0
   }
 
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeParcelable(apiError, 0)
-      writeInt((if (isSent == true) 1 else 0))
-      writeString(text)
-    }
+  override fun writeToParcel(parcel: Parcel, flags: Int) {
+    parcel.writeParcelable(apiError, flags)
+    parcel.writeValue(isSent)
+    parcel.writeString(text)
+  }
 
   companion object {
     @JvmField
