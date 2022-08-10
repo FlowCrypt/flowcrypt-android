@@ -82,7 +82,9 @@ class AuthorizeAndSearchBackupsFragment :
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            if (it.progress == null) {
+              countingIdlingResource?.incrementSafely()
+            }
             showProgress(it.progressMsg)
           }
 
@@ -108,7 +110,9 @@ class AuthorizeAndSearchBackupsFragment :
     loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          if (it.progress == null) {
+            countingIdlingResource?.incrementSafely()
+          }
           showProgress(it.progressMsg)
         }
 
