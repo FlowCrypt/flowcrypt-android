@@ -16,7 +16,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.matchers.CustomMatchers
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -82,7 +82,7 @@ class ComposeScreenTestPassInRamFlowTest : BaseComposeScreenTest() {
 
     onView(withId(R.id.rVKeys))
       .check(matches(isDisplayed()))
-      .check(matches(CustomMatchers.withRecyclerViewItemCount(1)))
+      .check(matches(withRecyclerViewItemCount(1)))
 
     onView(withText(fingerprintFormatted))
       .check(matches(isDisplayed()))
