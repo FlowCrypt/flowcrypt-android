@@ -22,6 +22,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.AuthorizeAndSearchBackupsFragment
 import com.flowcrypt.email.ui.activity.fragment.AuthorizeAndSearchBackupsFragmentArgs
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -97,6 +98,6 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
     onView(withId(R.id.progress))
       .check(matches(isDisplayed()))
     assertEquals(Result.Status.SUCCESS, actualResult.status)
-    assertEquals(1, (actualResult.data as ArrayList<*>).size)
+    assertTrue((actualResult.data as ArrayList<*>).isNotEmpty())
   }
 }
