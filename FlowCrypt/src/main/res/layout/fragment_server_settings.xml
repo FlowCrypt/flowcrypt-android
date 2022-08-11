@@ -333,18 +333,8 @@
                 app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/layoutSmtpPassword" />
-
-            <View
-                android:id="@+id/bottom"
-                style="@style/AppWidget.Button.Big"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_big"
-                android:text="@string/try_to_connect"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/layoutSmtpPassword" />
+                app:layout_constraintTop_toBottomOf="@+id/layoutSmtpPassword"
+                tools:visibility="visible" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guidelineBottom"
