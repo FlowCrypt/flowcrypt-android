@@ -46,7 +46,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class PrivateKeysListFragmentTest : BaseTest() {
+class PrivateKeysListFragmentFlowTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
