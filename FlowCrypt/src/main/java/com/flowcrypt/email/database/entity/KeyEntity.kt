@@ -26,6 +26,10 @@ import org.pgpainless.util.Passphrase
   tableName = "keys",
   indices = [
     Index(
+      name = "account_account_type_in_keys",
+      value = ["account", "account_type"]
+    ),
+    Index(
       name = "fingerprint_account_account_type_in_keys",
       value = ["fingerprint", "account", "account_type"],
       unique = true

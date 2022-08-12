@@ -18,7 +18,7 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
-import android.net.NetworkInfo
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.provider.Settings
@@ -89,17 +89,19 @@ class GeneralUtil {
 
     /**
      * Checking for an Internet connection.
-     * See https://developer.android.com/training/monitoring-device-state/connectivity-monitoring#DetermineConnection.
-     * Because [NetworkInfo.isConnectedOrConnecting] is deprecated we will use [NetworkInfo.isConnected]
      *
      * @param context Interface to global information about an application environment.
-     * @return <tt>boolean</tt> true - a connection available, false if otherwise.
+     * @return true - a connection available, false if otherwise.
      */
-    //todo-denbond7 Need to fix deprecation
     fun isConnected(context: Context?): Boolean {
-      val cm = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-      val activeNetwork = cm?.activeNetworkInfo
-      return activeNetwork?.isConnected ?: false
+      val connectivityManager =
+        context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+      val network = connectivityManager.activeNetwork ?: return false
+      val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+      return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+          || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+          || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+          || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 
     suspend fun hasInternetAccess(): Boolean = withContext(Dispatchers.IO) {
