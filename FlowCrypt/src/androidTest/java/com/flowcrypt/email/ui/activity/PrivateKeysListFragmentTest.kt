@@ -20,7 +20,6 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -30,7 +29,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Matchers.not
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -96,14 +94,6 @@ class PrivateKeysListFragmentTest : BaseTest() {
     onView(withId(R.id.recyclerViewKeys))
       .check(matches(isDisplayed()))
       .check(matches(withRecyclerViewItemCount(2)))
-  }
-
-  @Test
-  fun testKeyExists() {
-    onView(withId(R.id.recyclerViewKeys))
-      .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
-    onView(withId(R.id.emptyView))
-      .check(matches(not(isDisplayed())))
   }
 
   @Test
