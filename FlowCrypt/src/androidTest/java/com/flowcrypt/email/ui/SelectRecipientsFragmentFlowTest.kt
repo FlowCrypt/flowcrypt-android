@@ -57,7 +57,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("will be fixed after migration to NavController")
-class SelectRecipientsActivityTest : BaseTest() {
+class SelectRecipientsFragmentFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
   private var filterIdlingResource: IdlingResource? = null
 
@@ -73,7 +73,7 @@ class SelectRecipientsActivityTest : BaseTest() {
   @Before
   fun registerFilterIdling() {
     activityScenario?.onActivity { activity ->
-      val baseActivity = (activity as? SelectRecipientsActivityTest) ?: return@onActivity
+      val baseActivity = (activity as? SelectRecipientsFragmentFlowTest) ?: return@onActivity
       filterIdlingResource = baseActivity.filterIdlingResource
       filterIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
