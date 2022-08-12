@@ -10,10 +10,8 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -101,25 +99,5 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
   fun testShowKeyDetailsScreen() {
     onView(withId(R.id.recyclerViewKeys))
       .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
-  }
-
-  @Test
-  fun testKeyDetailsTestPassPhraseMismatch() {
-    val details = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-      "pgp/default@flowcrypt.test_secondKey_prv_default.asc"
-    )
-    PrivateKeysManager.saveKeyToDatabase(
-      accountEntity = addAccountToDatabaseRule.account,
-      pgpKeyDetails = details,
-      passphrase = "wrong passphrase",
-      sourceType = KeyImportDetails.SourceType.EMAIL
-    )
-
-    onView(withId(R.id.recyclerViewKeys))
-      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
-
-    onView(withId(R.id.tVPassPhraseVerification))
-      .check(matches(withText(getResString(R.string.stored_pass_phrase_mismatch))))
-      .check(matches(hasTextColor(R.color.red)))
   }
 }
