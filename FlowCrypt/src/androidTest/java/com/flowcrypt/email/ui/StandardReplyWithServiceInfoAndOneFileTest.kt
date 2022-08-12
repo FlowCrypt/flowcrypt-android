@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.text.TextUtils
 import androidx.recyclerview.widget.RecyclerView
@@ -36,6 +36,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
