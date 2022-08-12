@@ -47,7 +47,7 @@ class DisallowUpdateRevokedKeyFromSettingsFlowTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      R.id.parseAndSavePubKeysFragment,
+      destinationId = R.id.parseAndSavePubKeysFragment,
       extras = ParseAndSavePubKeysFragmentArgs(
         TestGeneralUtil.readFileFromAssetsAsString(
           "pgp/default@flowcrypt.test_fisrtKey_pub_default_mod_06_17_2022.asc"

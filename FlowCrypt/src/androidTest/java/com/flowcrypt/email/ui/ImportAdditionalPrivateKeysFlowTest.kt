@@ -52,8 +52,8 @@ class ImportAdditionalPrivateKeysFlowTest : BaseTest() {
   )
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      R.id.importAdditionalPrivateKeysFragment,
-      ImportAdditionalPrivateKeysFragmentArgs(addAccountToDatabaseRule.account).toBundle()
+      destinationId = R.id.importAdditionalPrivateKeysFragment,
+      extras = ImportAdditionalPrivateKeysFragmentArgs(addAccountToDatabaseRule.account).toBundle()
     )
   )
 

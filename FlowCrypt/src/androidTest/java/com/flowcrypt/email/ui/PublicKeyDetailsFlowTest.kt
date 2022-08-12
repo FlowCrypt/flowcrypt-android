@@ -67,7 +67,7 @@ class PublicKeyDetailsFlowTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      R.id.publicKeyDetailsFragment,
+      destinationId = R.id.publicKeyDetailsFragment,
       extras = Bundle().apply {
         putParcelable(
           "recipientEntity", RecipientEntity(email = EMAIL_DENBOND7, name = USER_DENBOND7)
