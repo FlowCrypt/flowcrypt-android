@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -317,6 +318,31 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     )
   }
 
+  @Test
+  @Ignore("emulator can't resolve fes.localhost. Temporary disabled. Should be reviewed.")
+  fun testFailAttesterSubmit() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_ENFORCE_ATTESTER_SUBMIT))
+    val passphrase = "unconventional blueberry unlike any other"
+    onView(withId(R.id.eTPassphrase))
+      .check(matches(isDisplayed()))
+      .perform(ViewActions.replaceText(passphrase), ViewActions.closeSoftKeyboard())
+    onView(withId(R.id.btSetPassphrase))
+      .check(matches(isDisplayed()))
+      .perform(ViewActions.click())
+    onView(withId(R.id.eTRepeatedPassphrase))
+      .check(matches(isDisplayed()))
+      .perform(ViewActions.replaceText(passphrase), ViewActions.closeSoftKeyboard())
+    onView(withId(R.id.btConfirmPassphrase))
+      .check(matches(isDisplayed()))
+      .perform(ViewActions.click())
+
+    /* checkIsSnackbarDisplayedAndClick(SUBMIT_API_ERROR_RESPONSE.apiError?.msg!!)
+
+     checkIsSnackBarDisplayed()
+     onView(withText(SUBMIT_API_ERROR_RESPONSE.apiError?.msg))
+       .check(matches(isDisplayed()))*/
+  }
+
   private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
     return if (testNameRule.methodName == "testFesAvailabilityServerUpRequestTimeOut") {
       val delayInMilliseconds = 6000
@@ -542,6 +568,40 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       )
 
   companion object {
+    /*private val mockWebServerRule =
+      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+          val gson =
+            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+          val model = gson.fromJson(
+            InputStreamReader(request.body.inputStream()),
+            InitialLegacySubmitModel::class.java
+          )
+
+          if (request.path.equals("/initial/legacy_submit")) {
+            when (model.email) {
+              CreatePrivateKeyFlowEnterpriseFlowTest.EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(
+                HttpURLConnection.HTTP_OK
+              )
+                .setBody(gson.toJson(CreatePrivateKeyFlowEnterpriseFlowTest.SUBMIT_API_ERROR_RESPONSE))
+            }
+          }
+
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        }
+      })
+
+      const val EMAIL_ENFORCE_ATTESTER_SUBMIT = "enforce_attester_submit@flowcrypt.test"
+
+    val SUBMIT_API_ERROR_RESPONSE = InitialLegacySubmitResponse(
+      ApiError(
+        400, "Invalid email " +
+            "address", "internal_error"
+      ), false
+    )
+
+      */
+
     private const val EMAIL_EKM_URL_SUCCESS = "https://localhost:1212/ekm/"
     private const val EMAIL_EKM_URL_SUCCESS_EMPTY_LIST = "https://localhost:1212/ekm/empty/"
     private const val EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY =
@@ -572,6 +632,8 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "fes_client_configuration_success@localhost:1212"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_FAILED =
       "fes_client_configuration_failed@localhost:1212"
+    private const val EMAIL_FES_ENFORCE_ATTESTER_SUBMIT =
+      "enforce_attester_submit@localhost:1212"
 
     private val ACCEPTED_ORG_RULES = listOf(
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
