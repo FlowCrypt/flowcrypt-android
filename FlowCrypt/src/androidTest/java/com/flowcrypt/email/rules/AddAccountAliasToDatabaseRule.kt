@@ -7,8 +7,6 @@ package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -17,14 +15,8 @@ import org.junit.runners.model.Statement
  *         E-mail: DenBond7@gmail.com
  */
 class AddAccountAliasToDatabaseRule constructor(val alias: AccountAliasesEntity) : BaseRule() {
-
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        saveAliasToDatabase()
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    saveAliasToDatabase()
   }
 
   private fun saveAliasToDatabase() {

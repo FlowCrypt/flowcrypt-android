@@ -16,6 +16,7 @@ import org.junit.runners.model.Statement
  */
 
 class RepeatedRule : BaseRule() {
+  override fun execute() {}
 
   override fun apply(statement: Statement, description: Description): Statement {
     var result = statement

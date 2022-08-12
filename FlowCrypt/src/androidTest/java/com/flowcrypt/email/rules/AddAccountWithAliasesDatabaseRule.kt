@@ -8,8 +8,6 @@ package com.flowcrypt.email.rules
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -20,16 +18,9 @@ import org.junit.runners.model.Statement
 class AddAccountWithAliasesDatabaseRule constructor(
   val accountEntity: AccountEntity,
   val accountAliasesEntity: AccountAliasesEntity
-) :
-  BaseRule() {
-
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        storeDataToDatabase()
-        base.evaluate()
-      }
-    }
+) : BaseRule() {
+  override fun execute() {
+    storeDataToDatabase()
   }
 
   private fun storeDataToDatabase() {

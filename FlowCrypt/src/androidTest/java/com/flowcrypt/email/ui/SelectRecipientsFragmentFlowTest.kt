@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
@@ -38,8 +37,6 @@ import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.viewaction.CustomViewActions.doNothing
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -56,7 +53,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("will be fixed after migration to NavController")
 class SelectRecipientsFragmentFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
   private var filterIdlingResource: IdlingResource? = null
@@ -69,38 +65,6 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
     .around(AddRecipientsToDatabaseRule(CONTACTS))
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
-
-  @Before
-  fun registerFilterIdling() {
-    activityScenario?.onActivity { activity ->
-      val baseActivity = (activity as? SelectRecipientsFragmentFlowTest) ?: return@onActivity
-      filterIdlingResource = baseActivity.filterIdlingResource
-      filterIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
-    }
-  }
-
-  @After
-  fun unregisterFilterIdling() {
-    filterIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
-  }
-
-  @Before
-  fun waitData() {
-    //todo-denbond7 need to wait while activity loads data via ROOM.
-    // Need to improve this code after espresso updates
-    Thread.sleep(1000)
-  }
-
-  @Test
-  fun testShowEmptyView() {
-    clearContactsFromDatabase()
-
-    //Need to wait a little while data will be updated
-    Thread.sleep(1000)
-
-    onView(withId(R.id.emptyView))
-      .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
-  }
 
   @Test
   @Ignore("fix me")

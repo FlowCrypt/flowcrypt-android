@@ -17,11 +17,9 @@ import org.junit.runners.model.Statement
  *         E-mail: DenBond7@gmail.com
  */
 class RepeatRule(private val retryCount: Int = 3) : BaseRule() {
-  override fun apply(base: Statement, description: Description): Statement? {
-    return statement(base, description)
-  }
+  override fun execute() {}
 
-  private fun statement(base: Statement, description: Description): Statement? {
+  override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
         for (i in 0 until retryCount) {

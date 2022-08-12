@@ -8,8 +8,6 @@ package com.flowcrypt.email.rules
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -18,14 +16,8 @@ import org.junit.runners.model.Statement
  * E-mail: DenBond7@gmail.com
  */
 class AddAttachmentToDatabaseRule(val attInfo: AttachmentInfo) : BaseRule() {
-
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        saveAttToDatabase()
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    saveAttToDatabase()
   }
 
   private fun saveAttToDatabase() {

@@ -8,8 +8,6 @@ package com.flowcrypt.email.rules
 import android.content.ContentValues
 import com.flowcrypt.email.database.entity.AccountEntity
 import org.junit.Rule
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 /**
  * This [Rule] updates **an existed account** with given [ContentValues]
@@ -20,14 +18,8 @@ import org.junit.runners.model.Statement
  * E-mail: DenBond7@gmail.com
  */
 class UpdateAccountRule(private val account: AccountEntity) : BaseRule() {
-
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        updateAccount()
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    updateAccount()
   }
 
   private fun updateAccount() {

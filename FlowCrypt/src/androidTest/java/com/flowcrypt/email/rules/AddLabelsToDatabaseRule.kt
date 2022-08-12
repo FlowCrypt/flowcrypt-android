@@ -9,8 +9,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -22,14 +20,8 @@ class AddLabelsToDatabaseRule(
   private val account: AccountEntity,
   private val folders: List<LocalFolder>
 ) : BaseRule() {
-
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        saveLabelsToDatabase()
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    saveLabelsToDatabase()
   }
 
   private fun saveLabelsToDatabase() {
