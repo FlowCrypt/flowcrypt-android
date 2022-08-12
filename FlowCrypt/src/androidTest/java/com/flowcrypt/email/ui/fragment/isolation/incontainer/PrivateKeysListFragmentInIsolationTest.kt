@@ -23,8 +23,8 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextViewBackgroundTint
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextViewDrawable
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundTint
 import com.flowcrypt.email.matchers.TextViewDrawableMatcher
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -249,7 +249,7 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
                     TextViewDrawableMatcher.DrawablePosition.LEFT
                   )
                 },
-                statusLabelTintColor?.let { withTextViewBackgroundTint(getTargetContext(), it) }
+                statusLabelTintColor?.let { withViewBackgroundTint(getTargetContext(), it) }
               ),
             )
           )

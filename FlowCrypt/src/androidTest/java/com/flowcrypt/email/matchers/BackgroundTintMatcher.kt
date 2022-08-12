@@ -8,7 +8,6 @@ package com.flowcrypt.email.matchers
 import android.content.Context
 import android.content.res.ColorStateList
 import android.view.View
-import android.widget.TextView
 import androidx.test.espresso.matcher.BoundedDiagnosingMatcher
 import org.hamcrest.Description
 
@@ -19,16 +18,16 @@ import org.hamcrest.Description
  *         E-mail: DenBond7@gmail.com
  */
 class BackgroundTintMatcher(private val expectedBackgroundTintList: ColorStateList) :
-  BoundedDiagnosingMatcher<View?, TextView>(TextView::class.java) {
+  BoundedDiagnosingMatcher<View?, View>(View::class.java) {
   private var context: Context? = null
 
-  override fun matchesSafely(textView: TextView, mismatchDescription: Description): Boolean {
-    context = textView.context
-    val actualBackgroundTintList = textView.backgroundTintList
+  override fun matchesSafely(view: View, mismatchDescription: Description): Boolean {
+    context = view.context
+    val actualBackgroundTintList = view.backgroundTintList
     return actualBackgroundTintList == expectedBackgroundTintList
   }
 
   override fun describeMoreTo(description: Description) {
-    description.appendText("textView.backgroundTintList is color with $expectedBackgroundTintList")
+    description.appendText("view.backgroundTintList is color with $expectedBackgroundTintList")
   }
 }

@@ -106,7 +106,7 @@ class CustomMatchers {
       return RecyclerViewItemMatcher(matcher)
     }
 
-    fun withTextViewBackgroundTint(
+    fun withViewBackgroundTint(
       context: Context,
       @ColorRes resourceId: Int
     ): BackgroundTintMatcher {

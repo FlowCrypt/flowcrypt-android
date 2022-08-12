@@ -27,7 +27,6 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.CreatePrivateKeyViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeyDialogFragmentArgs
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
