@@ -5,10 +5,15 @@
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.closeSoftKeyboard
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -20,7 +25,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment
 import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragmentArgs
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.startsWith
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -59,10 +64,10 @@ class CheckPassphraseStrengthFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testEmptyPassPhrase() {
-    ViewActions.closeSoftKeyboard()
-    Espresso.onView(ViewMatchers.withId(R.id.btSetPassphrase))
-      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-      .perform(ViewActions.click())
+    closeSoftKeyboard()
+    onView(withId(R.id.btSetPassphrase))
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     checkIsNonEmptyHintShown()
   }
@@ -84,31 +89,31 @@ class CheckPassphraseStrengthFragmentInIsolationTest : BaseTest() {
     )
 
     for (i in passPhrases.indices) {
-      Espresso.onView(ViewMatchers.withId(R.id.eTPassphrase))
-        .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        .perform(ViewActions.replaceText(passPhrases[i]))
-      Espresso.onView(ViewMatchers.withId(R.id.tVPassphraseQuality))
+      onView(withId(R.id.eTPassphrase))
+        .check(matches(isDisplayed()))
+        .perform(replaceText(passPhrases[i]))
+      onView(withId(R.id.tVPassphraseQuality))
         .check(
-          ViewAssertions.matches(
-            ViewMatchers.withText(
-              Matchers.startsWith(
+          matches(
+            withText(
+              startsWith(
                 degreeOfReliabilityOfPassPhrase[i].uppercase()
               )
             )
           )
         )
-      Espresso.onView(ViewMatchers.withId(R.id.eTPassphrase))
-        .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+      onView(withId(R.id.eTPassphrase))
+        .check(matches(isDisplayed()))
         .perform(ViewActions.clearText())
     }
   }
 
   private fun checkIsNonEmptyHintShown() {
-    Espresso.onView(ViewMatchers.withText(getResString(R.string.passphrase_must_be_non_empty)))
-      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-    Espresso.onView(ViewMatchers.withId(com.google.android.material.R.id.snackbar_action))
-      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-      .perform(ViewActions.click())
+    onView(withText(getResString(R.string.passphrase_must_be_non_empty)))
+      .check(matches(isDisplayed()))
+    onView(withId(com.google.android.material.R.id.snackbar_action))
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 
   companion object {
