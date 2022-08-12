@@ -19,6 +19,7 @@ import com.flowcrypt.email.databinding.FragmentCreatePrivateKeySecondBinding
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.CreatePrivateKeyDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar

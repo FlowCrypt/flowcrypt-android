@@ -547,7 +547,7 @@
 
     <dialog
         android:id="@+id/createPrivateKeyDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeyDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.CreatePrivateKeyDialogFragment"
         tools:layout="@layout/fragment_create_private_key_dialog">
         <argument
             android:name="accountEntity"
