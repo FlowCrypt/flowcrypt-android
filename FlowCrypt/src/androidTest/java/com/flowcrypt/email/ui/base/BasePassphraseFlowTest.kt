@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base
+package com.flowcrypt.email.ui.base
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -15,7 +15,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
-import com.flowcrypt.email.ui.base.BaseCheckPassphraseOnFirstScreenFlowTest
 import org.hamcrest.Matchers.isEmptyString
 import org.junit.Test
 
