@@ -58,7 +58,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
+class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
   private val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule(
     AccountDaoManager.getDefaultAccountDao().copy(contactsLoaded = true)
   )
@@ -123,7 +123,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   fun testToRecipients() {
-    Thread.sleep(1000)
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
