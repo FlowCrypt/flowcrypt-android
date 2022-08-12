@@ -59,7 +59,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MainSignInFragmentEnterpriseTest : BaseSignTest() {
+class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
