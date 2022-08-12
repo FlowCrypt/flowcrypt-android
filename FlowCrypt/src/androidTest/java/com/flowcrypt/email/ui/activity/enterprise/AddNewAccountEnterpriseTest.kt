@@ -27,7 +27,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
+import com.flowcrypt.email.ui.activity.base.BaseSignTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -51,7 +51,7 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("Temporary disabled due to architecture changes")
-class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
+class AddNewAccountEnterpriseTest : BaseSignTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 

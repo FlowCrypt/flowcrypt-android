@@ -26,7 +26,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
  *         Time: 3:39 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSignActivityTest : BaseTest() {
+abstract class BaseSignTest : BaseTest() {
 
   protected fun setupAndClickSignInButton(signInAccountJson: String) {
     val intent = Intent()
