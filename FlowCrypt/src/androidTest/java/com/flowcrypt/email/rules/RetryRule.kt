@@ -60,7 +60,7 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
   }
 
   companion object {
-    private const val DEFAULT_RETRY_VALUE = 1
+    private const val DEFAULT_RETRY_VALUE = 3
     private const val MAX_RETRY_VALUE = 100
     val DEFAULT = RetryRule(DEFAULT_RETRY_VALUE)
   }
