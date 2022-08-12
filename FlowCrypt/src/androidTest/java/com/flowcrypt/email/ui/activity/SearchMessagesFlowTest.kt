@@ -53,7 +53,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("Temporary disabled due to architecture changes")
-class SearchMessagesActivityTest : BaseTest() {
+class SearchMessagesFlowTest : BaseTest() {
 
   private val accountRule = AddAccountToDatabaseRule(
     AccountDaoManager.getDefaultAccountDao().copy(contactsLoaded = true)
