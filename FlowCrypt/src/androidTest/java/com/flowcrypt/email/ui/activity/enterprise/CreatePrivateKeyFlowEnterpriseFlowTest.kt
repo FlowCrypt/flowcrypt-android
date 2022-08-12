@@ -50,7 +50,7 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("Temporary disabled due to architecture changes")
-class CreatePrivateKeyFlowEnterpriseTest : BasePassphraseFlowTest() {
+class CreatePrivateKeyFlowEnterpriseFlowTest : BasePassphraseFlowTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     /*intent = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java).apply {
       putExtra(
