@@ -28,7 +28,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
+import com.flowcrypt.email.ui.activity.base.BasePassphraseFlowTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -50,7 +50,7 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("Temporary disabled due to architecture changes")
-class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
+class CreatePrivateKeyFlowEnterpriseTest : BasePassphraseFlowTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     /*intent = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java).apply {
       putExtra(

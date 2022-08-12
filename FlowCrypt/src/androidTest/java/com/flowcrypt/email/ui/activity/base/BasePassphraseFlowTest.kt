@@ -25,7 +25,7 @@ import org.junit.Test
  * Time: 3:44 PM
  * E-mail: DenBond7@gmail.com
  */
-abstract class BasePassphraseActivityTest : BaseCheckPassphraseOnFirstScreenFlowTest() {
+abstract class BasePassphraseFlowTest : BaseCheckPassphraseOnFirstScreenFlowTest() {
 
   override val firstScreenContinueButtonResId: Int = R.id.buttonSetPassPhrase
   override val firstScreenEditTextResId: Int = R.id.editTextKeyPassword
