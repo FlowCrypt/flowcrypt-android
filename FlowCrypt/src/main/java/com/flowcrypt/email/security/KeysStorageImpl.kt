@@ -288,6 +288,15 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
+  fun calculateLifeTimeForPassphrase(): Instant {
+    val timeInSeconds =
+      pureActiveAccountLiveData.value?.clientConfiguration?.inMemoryPassPhraseSessionLength?.toLong()
+        ?: DEFAULT_MAX_LIFE_TIME_OF_KEYS_IN_RAM_IN_SECONDS
+
+    val timeInMilliseconds = TimeUnit.SECONDS.toMillis(timeInSeconds)
+    return Instant.ofEpochMilli(System.currentTimeMillis() + timeInMilliseconds)
+  }
+
   private data class PassPhraseInRAM(
     val passphrase: Passphrase,
     val validUntil: Instant,
@@ -295,11 +304,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   )
 
   companion object {
-    private val MAX_LIFE_TIME_OF_KEYS_IN_RAM = TimeUnit.HOURS.toMillis(4)
-
-    fun calculateLifeTimeForPassphrase(): Instant {
-      return Instant.ofEpochMilli(System.currentTimeMillis() + MAX_LIFE_TIME_OF_KEYS_IN_RAM)
-    }
+    private val DEFAULT_MAX_LIFE_TIME_OF_KEYS_IN_RAM_IN_SECONDS = TimeUnit.HOURS.toSeconds(4)
 
     @Volatile
     private var INSTANCE: KeysStorageImpl? = null

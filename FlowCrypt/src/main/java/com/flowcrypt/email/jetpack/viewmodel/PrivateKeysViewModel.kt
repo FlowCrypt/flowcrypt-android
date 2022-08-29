@@ -139,7 +139,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           keysStorage.putPassphraseToCache(
             fingerprint = rawKey.fingerprint,
             passphrase = newPassphrase,
-            validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
+            validUntil = keysStorage.calculateLifeTimeForPassphrase(),
             passphraseType = KeyEntity.PassphraseType.RAM
           )
         }
@@ -238,7 +238,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
                 keysStorage.putPassphraseToCache(
                   fingerprint = fingerprint,
                   passphrase = Passphrase(keyDetails.tempPassphrase),
-                  validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
+                  validUntil = keysStorage.calculateLifeTimeForPassphrase(),
                   passphraseType = KeyEntity.PassphraseType.RAM
                 )
               }

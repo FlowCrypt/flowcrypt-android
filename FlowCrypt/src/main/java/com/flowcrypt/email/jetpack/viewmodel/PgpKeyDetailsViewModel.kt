@@ -100,7 +100,7 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
       keysStorage.putPassphraseToCache(
         fingerprint = it,
         passphrase = passphrase,
-        validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
+        validUntil = keysStorage.calculateLifeTimeForPassphrase(),
         passphraseType = KeyEntity.PassphraseType.RAM
       )
     }
