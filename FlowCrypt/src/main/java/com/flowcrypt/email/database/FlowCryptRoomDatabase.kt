@@ -85,7 +85,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   @WorkerThread
   fun forceDatabaseCreationIfNeeded() {
-    super.getOpenHelper().readableDatabase
+    super.openHelper.readableDatabase
   }
 
   companion object {
