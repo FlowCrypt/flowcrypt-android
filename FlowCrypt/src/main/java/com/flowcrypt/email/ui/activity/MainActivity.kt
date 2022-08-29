@@ -319,9 +319,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun addOutboxLabel(foldersManager: FoldersManager, mailLabels: MenuItem?, label: String) {
-    val menuItem = mailLabels?.subMenu?.getItem(mailLabels.subMenu.size() - 1) ?: return
+    val itemPosition = mailLabels?.subMenu?.size() ?: return
+    if (itemPosition == 0) return
+    val menuItem = mailLabels.subMenu?.getItem(itemPosition - 1) ?: return
 
-    if (foldersManager.getFolderByAlias(label)?.msgCount ?: 0 > 0) {
+    if ((foldersManager.getFolderByAlias(label)?.msgCount ?: 0) > 0) {
       val folder = foldersManager.getFolderByAlias(label) ?: return
       val view = layoutInflater.inflate(
         R.layout.navigation_view_item_with_amount, binding.navigationView, false

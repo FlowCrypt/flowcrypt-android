@@ -203,12 +203,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         val menuItemSearch = menu.findItem(R.id.menuSearch)
         menuItemSearch?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
-          override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+          override fun onMenuItemActionExpand(item: MenuItem): Boolean {
             binding?.swipeRefreshLayout?.isEnabled = false
             return true
           }
 
-          override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+          override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
             binding?.swipeRefreshLayout?.isEnabled = true
             currentFolder?.searchQuery = null
             onFolderChanged(true)
