@@ -634,8 +634,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         val testWelcomeResult = apiRepository.postTestWelcome(getApplication(), model)
         when (testWelcomeResult.status) {
           Result.Status.SUCCESS -> {
-            val testWelcomeResponse = testWelcomeResult.data
-            testWelcomeResponse != null && testWelcomeResponse.isSent
+            testWelcomeResult.data?.apiError == null
           }
 
           else -> {
