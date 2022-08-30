@@ -32,8 +32,16 @@ data class OrgRules constructor(
   @SerializedName("enforce_keygen_expire_months")
   @Expose val enforceKeygenExpireMonths: Int? = null,
   @SerializedName("in_memory_pass_phrase_session_length")
-  @Expose val inMemoryPassPhraseSessionLength: Int? = null
+  @Expose val inMemoryPassPhraseSessionLength: Int? = 60
 ) : Parcelable {
+
+  val inMemoryPassPhraseSessionLengthNormalized: Int?
+    get() {
+      val value = inMemoryPassPhraseSessionLength ?: 0
+      return if (value > 0) {
+        minOf(value, Int.MAX_VALUE)
+      } else null
+    }
 
   constructor(parcel: Parcel) : this(
     parcel.createTypedArrayList(DomainRule.CREATOR),

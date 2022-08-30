@@ -290,7 +290,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   fun calculateLifeTimeForPassphrase(): Instant {
     val timeInSeconds =
-      pureActiveAccountLiveData.value?.clientConfiguration?.inMemoryPassPhraseSessionLength?.toLong()
+      pureActiveAccountLiveData.value?.clientConfiguration?.inMemoryPassPhraseSessionLengthNormalized?.toLong()
         ?: DEFAULT_MAX_LIFE_TIME_OF_KEYS_IN_RAM_IN_SECONDS
 
     val timeInMilliseconds = TimeUnit.SECONDS.toMillis(timeInSeconds)
