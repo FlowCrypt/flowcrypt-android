@@ -91,7 +91,7 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
     /**
      * We will run checking every minute.
      */
-    private val DELAY_TIMEOUT = TimeUnit.MINUTES.toMillis(1)
+    val DELAY_TIMEOUT = TimeUnit.MINUTES.toMillis(1)
 
     /**
      * Start [PassPhrasesInRAMService].
