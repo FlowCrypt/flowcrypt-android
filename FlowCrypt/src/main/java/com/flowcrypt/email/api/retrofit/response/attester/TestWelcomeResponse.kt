@@ -29,13 +29,11 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 data class TestWelcomeResponse constructor(
-  @SerializedName("error") @Expose override val apiError: ApiError?,
-  @Expose val isSent: Boolean
+  @SerializedName("error") @Expose override val apiError: ApiError?
 ) : ApiResponse {
 
   constructor(source: Parcel) : this(
-    source.readParcelable<ApiError>(ApiError::class.java.classLoader),
-    1 == source.readInt()
+    source.readParcelable<ApiError>(ApiError::class.java.classLoader)
   )
 
   override fun describeContents(): Int {
@@ -45,17 +43,13 @@ data class TestWelcomeResponse constructor(
   override fun writeToParcel(dest: Parcel, flags: Int) =
     with(dest) {
       writeParcelable(apiError, 0)
-      writeInt((if (isSent) 1 else 0))
     }
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<TestWelcomeResponse> =
-      object : Parcelable.Creator<TestWelcomeResponse> {
-        override fun createFromParcel(source: Parcel): TestWelcomeResponse =
-          TestWelcomeResponse(source)
-
-        override fun newArray(size: Int): Array<TestWelcomeResponse?> = arrayOfNulls(size)
-      }
+    val CREATOR = object : Parcelable.Creator<TestWelcomeResponse> {
+      override fun createFromParcel(source: Parcel) = TestWelcomeResponse(source)
+      override fun newArray(size: Int): Array<TestWelcomeResponse?> = arrayOfNulls(size)
+    }
   }
 }
