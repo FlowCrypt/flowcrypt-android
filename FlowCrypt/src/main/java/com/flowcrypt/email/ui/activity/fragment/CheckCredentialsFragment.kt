@@ -9,12 +9,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentCheckCredentialsBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.setNavigationResult
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -56,12 +60,19 @@ class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>()
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            if (it.progress == null) {
+              countingIdlingResource?.incrementSafely()
+            }
             showProgress(it.progressMsg)
           }
 
           else -> {
-            setNavigationResult(KEY_CHECK_ACCOUNT_SETTINGS_RESULT, it)
-            navController?.popBackStack()
+            navController?.navigateUp()
+            setFragmentResult(
+              REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
+              bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
+            )
+            countingIdlingResource?.decrementSafely()
           }
         }
       }
@@ -69,6 +80,11 @@ class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>()
   }
 
   companion object {
+    val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS",
+      CheckCredentialsFragment::class.java
+    )
+
     val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_CHECK_ACCOUNT_SETTINGS_RESULT",
       CheckCredentialsFragment::class.java

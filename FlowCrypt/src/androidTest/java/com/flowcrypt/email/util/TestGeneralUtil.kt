@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -171,12 +172,17 @@ object TestGeneralUtil {
     }
   }
 
-  fun genIntentForNavigationComponent(destinationId: Int, extras: Bundle? = null): Intent? {
+  fun genIntentForNavigationComponent(
+    navGraphId: Int = R.navigation.nav_graph,
+    activityClass: Class<out Activity?> = MainActivity::class.java,
+    destinationId: Int,
+    extras: Bundle? = null
+  ): Intent? {
     return NavDeepLinkBuilder(InstrumentationRegistry.getInstrumentation().targetContext)
-      .setGraph(R.navigation.nav_graph)
+      .setGraph(navGraphId)
       .setDestination(destinationId)
       .setArguments(extras)
-      .setComponentName(MainActivity::class.java)
+      .setComponentName(activityClass)
       .createTaskStackBuilder().editIntentAt(0)
   }
 

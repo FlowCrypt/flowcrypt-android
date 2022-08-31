@@ -3,69 +3,39 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.fragment.isolation.incontainer
+package com.flowcrypt.email.ui.base
 
-import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
-import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.RetryRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment
-import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragmentArgs
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundTint
 import org.hamcrest.Matchers.startsWith
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.RuleChain
-import org.junit.rules.TestRule
-import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 4/9/22
- *         Time: 3:04 PM
- *         E-mail: DenBond7@gmail.com
+ * Date: 3/13/19
+ * Time: 3:44 PM
+ * E-mail: DenBond7@gmail.com
  */
-@MediumTest
-@RunWith(AndroidJUnit4::class)
-class CheckPassphraseStrengthFragmentInIsolationTest : BaseTest() {
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+abstract class BaseCheckPassphraseOnFirstScreenTest : BaseTest() {
 
-  @get:Rule
-  var ruleChain: TestRule = RuleChain
-    .outerRule(RetryRule.DEFAULT)
-    .around(ClearAppSettingsRule())
-    .around(addAccountToDatabaseRule)
-    .around(AddPrivateKeyToDatabaseRule())
-    .around(ScreenshotTestRule())
-
-  @Before
-  fun launchFragmentInContainerWithPredefinedArgs() {
-    launchFragmentInContainer<CheckPassphraseStrengthFragment>(
-      fragmentArgs = CheckPassphraseStrengthFragmentArgs(
-        popBackStackIdIfSuccess = R.id.securitySettingsFragment,
-        title = getResString(R.string.change_pass_phrase)
-      ).toBundle()
-    )
-  }
+  abstract val firstScreenContinueButtonResId: Int
+  abstract val firstScreenEditTextResId: Int
+  abstract val firstScreenPasswordQualityInfoResId: Int
 
   @Test
-  fun testEmptyPassPhrase() {
+  fun testEmptyFirstPassPhrase() {
     closeSoftKeyboard()
-    onView(withId(R.id.btSetPassphrase))
+    onView(withId(firstScreenContinueButtonResId))
       .check(matches(isDisplayed()))
       .perform(click())
 
@@ -89,26 +59,29 @@ class CheckPassphraseStrengthFragmentInIsolationTest : BaseTest() {
     )
 
     for (i in passPhrases.indices) {
-      onView(withId(R.id.eTPassphrase))
+      val option = degreeOfReliabilityOfPassPhrase[i]
+      onView(withId(firstScreenEditTextResId))
         .check(matches(isDisplayed()))
         .perform(replaceText(passPhrases[i]))
-      onView(withId(R.id.tVPassphraseQuality))
-        .check(
-          matches(
-            withText(
-              startsWith(
-                degreeOfReliabilityOfPassPhrase[i].uppercase()
-              )
-            )
-          )
-        )
-      onView(withId(R.id.eTPassphrase))
+      onView(withId(firstScreenPasswordQualityInfoResId))
+        .check(matches(withText(startsWith(option.uppercase()))))
+      onView(withId(firstScreenEditTextResId))
         .check(matches(isDisplayed()))
-        .perform(ViewActions.clearText())
+        .perform(clearText())
+
+      val color = when (option) {
+        getResString(R.string.password_quality_weak),
+        getResString(R.string.password_quality_poor) -> R.color.silver
+
+        else -> R.color.colorPrimary
+      }
+
+      onView(withId(firstScreenContinueButtonResId))
+        .check(matches(withViewBackgroundTint(getTargetContext(), color)))
     }
   }
 
-  private fun checkIsNonEmptyHintShown() {
+  protected fun checkIsNonEmptyHintShown() {
     onView(withText(getResString(R.string.passphrase_must_be_non_empty)))
       .check(matches(isDisplayed()))
     onView(withId(com.google.android.material.R.id.snackbar_action))

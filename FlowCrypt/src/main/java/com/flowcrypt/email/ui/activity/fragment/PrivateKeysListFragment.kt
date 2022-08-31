@@ -275,9 +275,5 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
 
   companion object {
     private const val REQUEST_CODE_DELETE_KEYS_DIALOG = 100
-
-    fun newInstance(): PrivateKeysListFragment {
-      return PrivateKeysListFragment()
-    }
   }
 }

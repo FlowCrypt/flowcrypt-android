@@ -13,8 +13,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -48,18 +46,13 @@ class AddPrivateKeyToDatabaseRule(
     passphraseType = passphraseType
   )
 
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        PrivateKeysManager.saveKeyToDatabase(
-          accountEntity = accountEntity,
-          pgpKeyDetails = pgpKeyDetails,
-          passphrase = passphrase,
-          sourceType = sourceType,
-          passphraseType = passphraseType
-        )
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    PrivateKeysManager.saveKeyToDatabase(
+      accountEntity = accountEntity,
+      pgpKeyDetails = pgpKeyDetails,
+      passphrase = passphrase,
+      sourceType = sourceType,
+      passphraseType = passphraseType
+    )
   }
 }

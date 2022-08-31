@@ -26,7 +26,6 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentServerSettingsBinding
-import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
@@ -72,7 +71,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     ErrorNotificationManager(requireContext()).cancel(R.id.notification_id_auth_failure)
-    initViews(view)
+    initViews()
     updateViews(authCreds)
     initAccountViewModel()
     observeOnResultLiveData()
@@ -94,13 +93,13 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     }
   }
 
-  private fun initViews(view: View) {
+  private fun initViews() {
     binding?.editTextPassword?.doAfterTextChanged {
       binding?.editTextSmtpPassword?.text = it
     }
 
     binding?.checkBoxRequireSignInForSmtp?.setOnCheckedChangeListener { _, isChecked ->
-      view.findViewById<View>(R.id.groupRequireSignInForSmtp)?.isVisible = isChecked
+      binding?.groupRequireSignInForSmtp?.isVisible = isChecked
     }
 
     binding?.spinnerImapSecurityType?.adapter = ArrayAdapter(
@@ -176,10 +175,10 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
         binding?.editTextSmtpPort?.isEnabled = false
         binding?.checkBoxRequireSignInForSmtp?.isEnabled = false
         binding?.editTextSmtpUsername?.isEnabled = false
-        view?.findViewById<View>(R.id.spinnerImapSecurityType)?.isEnabled = false
-        view?.findViewById<View>(R.id.spinnerSmtpSecurityType)?.isEnabled = false
-        view?.findViewById<View>(R.id.layoutPassword)?.isVisible = false
-        view?.findViewById<View>(R.id.buttonCheckAndSave)?.isVisible = false
+        binding?.spinnerImapSecurityType?.isEnabled = false
+        binding?.spinnerSmtpSecurityType?.isEnabled = false
+        binding?.layoutPassword?.isVisible = false
+        binding?.buttonCheckAndSave?.isVisible = false
 
         if (!nonNullAuthCreds.hasCustomSignInForSmtp) {
           binding?.checkBoxRequireSignInForSmtp?.isVisible = false
@@ -187,7 +186,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
 
         toast(text = getString(R.string.settings_oauth_note), duration = Toast.LENGTH_LONG)
       } else {
-        view?.findViewById<View>(R.id.buttonCheckAndSave)?.isVisible = true
+        binding?.buttonCheckAndSave?.isVisible = true
         binding?.editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)
       }
 
@@ -316,12 +315,14 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   }
 
   private fun observeOnResultLiveData() {
-    getNavigationResult<Result<*>>(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) {
-      when (it.status) {
+    setFragmentResultListener(CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
+      val result: Result<*> =
+        bundle.getSerializable(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as Result<*>
+      when (result.status) {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
-          val exception = it.exception ?: return@getNavigationResult
-          val original = it.exception.cause
+          val exception = result.exception ?: return@setFragmentResultListener
+          val original = result.exception.cause
           var title: String? = null
           val msg: String? = if (exception.message.isNullOrEmpty()) {
             exception.javaClass.simpleName
@@ -351,7 +352,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
         }
 
         Result.Status.SUCCESS -> {
-          val isSuccess = it.data as? Boolean?
+          val isSuccess = result.data as? Boolean?
 
           if (isSuccess == true) {
             authCreds?.let { authCredentials ->

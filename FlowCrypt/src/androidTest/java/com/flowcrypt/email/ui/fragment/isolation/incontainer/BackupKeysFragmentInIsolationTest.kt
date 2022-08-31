@@ -58,6 +58,8 @@ class BackupKeysFragmentInIsolationTest : BaseBackupKeysFragmentTest() {
     onView(withId(R.id.rBEmailOption))
       .check(matches(isDisplayed()))
       .perform(click())
+    onView(withId(R.id.btBackup))
+      .check(matches(withText(R.string.backup_as_email)))
     onView(withText(getResString(R.string.backup_as_email_hint)))
       .check(matches(isDisplayed()))
   }
@@ -67,6 +69,8 @@ class BackupKeysFragmentInIsolationTest : BaseBackupKeysFragmentTest() {
     onView(withId(R.id.rBDownloadOption))
       .check(matches(isDisplayed()))
       .perform(click())
+    onView(withId(R.id.btBackup))
+      .check(matches(withText(R.string.backup_as_a_file)))
     onView(withText(getResString(R.string.backup_as_download_hint)))
       .check(matches(isDisplayed()))
   }

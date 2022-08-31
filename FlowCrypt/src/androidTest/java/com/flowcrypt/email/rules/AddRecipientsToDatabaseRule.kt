@@ -7,8 +7,6 @@ package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 /**
  * This [org.junit.Rule] can be used for saving [RecipientWithPubKeys] to the local database.
@@ -19,15 +17,9 @@ import org.junit.runners.model.Statement
  * E-mail: DenBond7@gmail.com
  */
 class AddRecipientsToDatabaseRule(val list: List<RecipientWithPubKeys>) : BaseRule() {
-
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(targetContext)
-        roomDatabase.recipientDao().insert(list.map { it.recipient })
-        roomDatabase.pubKeyDao().insert(list.map { it.publicKeys }.flatten())
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(targetContext)
+    roomDatabase.recipientDao().insert(list.map { it.recipient })
+    roomDatabase.pubKeyDao().insert(list.map { it.publicKeys }.flatten())
   }
 }

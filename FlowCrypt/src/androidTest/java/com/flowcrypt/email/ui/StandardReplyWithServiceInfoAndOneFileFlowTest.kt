@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import android.text.TextUtils
 import androidx.recyclerview.widget.RecyclerView
@@ -36,6 +36,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
@@ -57,7 +58,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
+class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
   private val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule(
     AccountDaoManager.getDefaultAccountDao().copy(contactsLoaded = true)
   )
@@ -122,7 +123,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   fun testToRecipients() {
-    Thread.sleep(1000)
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(

@@ -21,6 +21,8 @@ import org.junit.runners.model.Statement
  *         E-mail: DenBond7@gmail.com
  */
 class RetryRule(private val retryCount: Int = 0) : BaseRule() {
+  override fun execute() {}
+
   override fun apply(base: Statement, description: Description): Statement {
     return statement(base, description)
   }

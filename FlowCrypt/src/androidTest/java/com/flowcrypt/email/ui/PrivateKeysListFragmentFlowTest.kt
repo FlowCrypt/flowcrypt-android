@@ -5,27 +5,25 @@
 
 package com.flowcrypt.email.ui
 
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.ui.activity.fragment.ImportAdditionalPrivateKeysFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
@@ -35,27 +33,22 @@ import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
- *         Date: 8/1/22
- *         Time: 3:05 PM
- *         E-mail: DenBond7@gmail.com
+ * Date: 20.02.2018
+ * Time: 15:42
+ * E-mail: DenBond7@gmail.com
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ImportAdditionalPrivateKeysFlowTest : BaseTest() {
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
-    accountEntity = addAccountToDatabaseRule.account,
-    keyPath = "pgp/default@flowcrypt.test_secondKey_prv_default.asc",
-    passphrase = TestConstants.DEFAULT_PASSWORD,
-    sourceType = KeyImportDetails.SourceType.EMAIL,
-    passphraseType = KeyEntity.PassphraseType.RAM
-  )
+class PrivateKeysListFragmentFlowTest : BaseTest() {
+  override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
-      destinationId = R.id.importAdditionalPrivateKeysFragment,
-      extras = ImportAdditionalPrivateKeysFragmentArgs(addAccountToDatabaseRule.account).toBundle()
+      destinationId = R.id.privateKeysListFragment
     )
   )
+
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -67,15 +60,17 @@ class ImportAdditionalPrivateKeysFlowTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @DependsOnMailServer
-  fun testButtonImportBackup() {
-    onView(withId(R.id.buttonImportBackup))
+  fun testNavigationToImportKeyScreen() {
+    onView(withId(R.id.floatActionButtonAddKey))
       .check(matches(isDisplayed()))
       .perform(click())
+    onView(withText(R.string.import_private_key))
+      .check(matches(isDisplayed()))
+  }
 
-    //check that click on a button works well
-    onView(withId(R.id.editTextKeyPassword))
-      .check(matches(isDisplayed()))
-      .perform(click())
+  @Test
+  fun testShowKeyDetailsScreen() {
+    onView(withId(R.id.recyclerViewKeys))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
   }
 }

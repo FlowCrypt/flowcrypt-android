@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment
+package com.flowcrypt.email.ui.activity.fragment.dialog
 
 import android.app.Dialog
 import android.os.Bundle
@@ -27,7 +27,6 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.CreatePrivateKeyViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.ui.activity.fragment.dialog.BaseDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 
 /**

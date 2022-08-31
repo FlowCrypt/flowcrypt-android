@@ -17,8 +17,6 @@ import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.MessagingException
 import jakarta.mail.UIDFolder
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 import java.io.IOException
 
 /**
@@ -62,13 +60,8 @@ class AddMessageToDatabaseRule(val account: AccountEntity, val localFolder: Loca
     }
   }
 
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        saveMsgToDatabase()
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    saveMsgToDatabase()
   }
 
   private fun saveMsgToDatabase() {

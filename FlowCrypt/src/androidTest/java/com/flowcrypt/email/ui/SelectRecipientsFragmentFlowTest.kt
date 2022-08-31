@@ -3,13 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity
+package com.flowcrypt.email.ui
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
-import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.typeText
@@ -25,7 +23,6 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
@@ -34,12 +31,11 @@ import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.CustomViewActions.doNothing
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.After
-import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -55,10 +51,14 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("will be fixed after migration to NavController")
-class SelectRecipientsActivityTest : BaseTest() {
-  override val activityScenarioRule = activityScenarioRule<MainActivity>()
-  private var filterIdlingResource: IdlingResource? = null
+class SelectRecipientsFragmentFlowTest : BaseTest() {
+  override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      navGraphId = R.navigation.create_msg_graph,
+      activityClass = CreateMessageActivity::class.java,
+      destinationId = R.id.selectRecipientsFragment
+    )
+  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -69,42 +69,9 @@ class SelectRecipientsActivityTest : BaseTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  @Before
-  fun registerFilterIdling() {
-    activityScenario?.onActivity { activity ->
-      val baseActivity = (activity as? SelectRecipientsActivityTest) ?: return@onActivity
-      filterIdlingResource = baseActivity.filterIdlingResource
-      filterIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
-    }
-  }
-
-  @After
-  fun unregisterFilterIdling() {
-    filterIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
-  }
-
-  @Before
-  fun waitData() {
-    //todo-denbond7 need to wait while activity loads data via ROOM.
-    // Need to improve this code after espresso updates
-    Thread.sleep(1000)
-  }
-
   @Test
-  fun testShowEmptyView() {
-    clearContactsFromDatabase()
-
-    //Need to wait a little while data will be updated
-    Thread.sleep(1000)
-
-    onView(withId(R.id.emptyView))
-      .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
-  }
-
-  @Test
-  @Ignore("fix me")
   fun testShowListContacts() {
-    onView(withId(R.id.emptyView))
+    onView(withId(R.id.tVEmpty))
       .check(matches(not(isDisplayed())))
 
     for (i in EMAILS.indices) {
@@ -112,31 +79,30 @@ class SelectRecipientsActivityTest : BaseTest() {
         onView(withId(R.id.recyclerViewContacts)).perform(
           actionOnItem<RecyclerView.ViewHolder>
             (
-            hasDescendant(allOf(withId(R.id.textViewName), withText(getUserName(EMAILS[i])))),
+            hasDescendant(allOf(withId(R.id.tVName), withText(getUserName(EMAILS[i])))),
             doNothing()
           )
         )
       } else {
-        /*onView(withId(R.id.recyclerViewContacts)).perform(
+        onView(withId(R.id.recyclerViewContacts)).perform(
           actionOnItem<RecyclerView.ViewHolder>
-            (hasDescendant(allOf(withId(R.id.textViewOnlyEmail), withText(EMAILS[i]))), doNothing())
-        )*/
+            (hasDescendant(allOf(withId(R.id.tVOnlyEmail), withText(EMAILS[i]))), doNothing())
+        )
       }
     }
   }
 
   @Test
-  @Ignore("fix me")
-  fun testCheckSearchExistingContact() {
+  fun testSearchExistingContact() {
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
       .perform(click())
 
     for (i in EMAILS.indices) {
       if (i % 2 == 0) {
-        checkIsTypedUserFound(R.id.textViewName, getUserName(EMAILS[i]))
+        checkIsTypedUserFound(R.id.tVName, getUserName(EMAILS[i]))
       } else {
-        /*checkIsTypedUserFound(R.id.textViewOnlyEmail, EMAILS[i])*/
+        checkIsTypedUserFound(R.id.tVOnlyEmail, EMAILS[i])
       }
     }
   }
@@ -149,16 +115,8 @@ class SelectRecipientsActivityTest : BaseTest() {
     onView(withId(com.google.android.material.R.id.search_src_text))
       .perform(clearText(), typeText("some email"))
     closeSoftKeyboard()
-    onView(withId(R.id.emptyView))
+    onView(withId(R.id.tVEmpty))
       .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
-  }
-
-  private fun clearContactsFromDatabase() {
-    val dao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).recipientDao()
-    for (email in EMAILS) {
-      val contact = dao.getRecipientByEmail(email) ?: continue
-      dao.delete(contact)
-    }
   }
 
   private fun checkIsTypedUserFound(viewId: Int, viewText: String) {

@@ -24,6 +24,8 @@ import javax.net.ssl.SSLSocketFactory
  *         E-mail: DenBond7@gmail.com
  */
 class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatcher) : BaseRule() {
+  override fun execute() {}
+
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {

@@ -6,8 +6,6 @@
 package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 import java.io.IOException
 
 /**
@@ -20,14 +18,8 @@ import java.io.IOException
  */
 
 class ClearAppSettingsRule : BaseRule() {
-
-  override fun apply(base: Statement, description: Description): Statement {
-    return object : Statement() {
-      override fun evaluate() {
-        clearApp()
-        base.evaluate()
-      }
-    }
+  override fun execute() {
+    clearApp()
   }
 
   /**

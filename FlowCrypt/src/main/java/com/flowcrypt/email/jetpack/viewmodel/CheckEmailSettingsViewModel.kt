@@ -79,7 +79,12 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
       val session = OpenStoreHelper.getAccountSess(getApplication(), accountEntity)
 
       try {
-        checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_imap_settings)))
+        checkEmailSettingsLiveData.postValue(
+          Result.loading(
+            progressMsg = context.getString(R.string.checking_imap_settings),
+            progress = 0.0
+          )
+        )
         testImapConn(accountEntity, authCreds, session)
       } catch (e: Exception) {
         e.printStackTrace()
@@ -87,7 +92,12 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
       }
 
       try {
-        checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_smtp_settings)))
+        checkEmailSettingsLiveData.postValue(
+          Result.loading(
+            progressMsg = context.getString(R.string.checking_smtp_settings),
+            progress = 0.0
+          )
+        )
         testSmtpConn(accountEntity, authCreds, session)
       } catch (e: Exception) {
         e.printStackTrace()
