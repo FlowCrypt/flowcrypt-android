@@ -14,8 +14,8 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
   val emailAddress: String
 
   init {
-    val personalNameWithEmailMatch = validPersonalNameWithEmailRegex.find(str)
-    val emailMatch = str.matches(validEmailRegex)
+    val personalNameWithEmailMatch = VALID_PERSONAL_NAME_WITH_EMAIL_REGEX.find(str)
+    val emailMatch = str.matches(VALID_EMAIL_REGEX)
     when {
       personalNameWithEmailMatch != null -> {
         val group = personalNameWithEmailMatch.groupValues
@@ -23,8 +23,9 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
         emailAddress = group[2]
         if (
           verifySpecialCharacters &&
-          personalName.matches(containsSpecialCharacterRegex) &&
-          !personalName.matches(doubleQuotedTextRegex)
+          personalName.replace("(\")([^\"]*)(\")".toRegex(), "$2")
+            .matches(SPECIAL_CHARACTERS_REGEX) &&
+          !personalName.matches(DOUBLE_QUOTED_TEXT_REGEX)
         ) {
           throw IllegalArgumentException(
             "Invalid email $str - display name containing special characters must be fully double quoted"
@@ -56,19 +57,19 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
     private const val VALID_PERSONAL_NAME_WITH_EMAIL =
       "([$ALPHANUM\\p{Punct}\\p{Space}]*)<($VALID_EMAIL)>"
 
-    private val validEmailRegex = VALID_EMAIL.toRegex(RegexOption.IGNORE_CASE)
-    private val validPersonalNameWithEmailRegex = VALID_PERSONAL_NAME_WITH_EMAIL.toRegex()
+    private val VALID_EMAIL_REGEX = VALID_EMAIL.toRegex(RegexOption.IGNORE_CASE)
+    private val VALID_PERSONAL_NAME_WITH_EMAIL_REGEX = VALID_PERSONAL_NAME_WITH_EMAIL.toRegex()
 
     // if these appear in the display-name they must be double quoted
-    private val containsSpecialCharacterRegex = ".*[()<>\\[\\]:;@\\\\,.\"].*".toRegex()
+    private val SPECIAL_CHARACTERS_REGEX = ".*[()<>\\[\\]:;@\\\\,.\"].*".toRegex()
 
     // double quotes at ends only
-    private val doubleQuotedTextRegex = "\"[^\"]*\"".toRegex()
-    private const val maxLocalPartLength = 64
+    private val DOUBLE_QUOTED_TEXT_REGEX = "(^\")([\\S\\s]*)(\"\$)".toRegex()
+    private const val MAX_LOCAL_PART_LENGTH = 64
 
     fun isValidEmail(email: String): Boolean {
-      if (validEmailRegex.matchEntire(email) == null) return false
-      return email.indexOf('@') < maxLocalPartLength
+      if (VALID_EMAIL_REGEX.matchEntire(email) == null) return false
+      return email.indexOf('@') < MAX_LOCAL_PART_LENGTH
     }
 
     @Suppress("unused")

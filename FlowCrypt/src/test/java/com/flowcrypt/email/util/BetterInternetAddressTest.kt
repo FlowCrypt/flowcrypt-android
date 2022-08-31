@@ -124,4 +124,21 @@ class BetterInternetAddressTest {
       )
     }
   }
+
+  @Test
+  fun testFitRFC822() {
+    val invalidEmails = arrayOf(
+      // "("  ")"  "<"  ">"  "@"  ","  ";"  ":"  "\"  <">  "."  "["  "]"
+      // Must be in quoted-string, to use within a word.
+      //https://datatracker.ietf.org/doc/html/rfc822#section-3.3
+      "a(b)c<d>e@f,g;h:i\\j\"k.l[m]n <test@example.com>",
+    )
+
+    for (email in invalidEmails) {
+      assertThrows(
+        "invalid email '$email' detected as valid",
+        IllegalArgumentException::class.java
+      ) { BetterInternetAddress(email) }
+    }
+  }
 }

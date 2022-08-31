@@ -35,7 +35,7 @@ object WkdClient {
       val matchingKeys = pgpPublicKeyRingCollection?.keyRings?.asSequence()?.filter {
         for (userId in it.publicKey.userIDs) {
           try {
-            val parsed = BetterInternetAddress(userId)
+            val parsed = BetterInternetAddress(str = userId, verifySpecialCharacters = false)
             if (parsed.emailAddress.lowercase() == lowerCaseEmail) return@filter true
           } catch (ex: Exception) {
             ex.printStackTrace()
