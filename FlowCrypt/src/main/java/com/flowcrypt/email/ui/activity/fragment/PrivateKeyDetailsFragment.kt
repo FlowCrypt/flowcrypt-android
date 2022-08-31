@@ -379,6 +379,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
                   }
                   binding?.btnForgetPassphrase?.visible()
                   binding?.gCheckPassphrase?.gone()
+                  binding?.eTKeyPassword?.text = null
                 }
               } else {
                 if (pgpKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {

@@ -219,10 +219,11 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
               countOfMatchedPassphrases++
               val passphrase = Passphrase(rawPassphrase)
               context?.let { nonNullContext ->
-                KeysStorageImpl.getInstance(nonNullContext).putPassphraseToCache(
+                val keysStorage = KeysStorageImpl.getInstance(nonNullContext)
+                keysStorage.putPassphraseToCache(
                   fingerprint = checkResult.pgpKeyDetails.fingerprint,
                   passphrase = passphrase,
-                  validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
+                  validUntil = keysStorage.calculateLifeTimeForPassphrase(),
                   passphraseType = passphraseType
                 )
               }

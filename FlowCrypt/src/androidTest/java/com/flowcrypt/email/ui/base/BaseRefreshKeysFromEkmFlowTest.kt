@@ -78,7 +78,7 @@ abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
     keysStorage.putPassphraseToCache(
       fingerprint = fingerprint,
       passphrase = Passphrase.fromPassword(passphrase),
-      validUntil = KeysStorageImpl.calculateLifeTimeForPassphrase(),
+      validUntil = keysStorage.calculateLifeTimeForPassphrase(),
       passphraseType = KeyEntity.PassphraseType.RAM
     )
   }

@@ -30,8 +30,18 @@ data class OrgRules constructor(
   @SerializedName("enforce_keygen_algo")
   @Expose val enforceKeygenAlgo: KeyAlgo? = null,
   @SerializedName("enforce_keygen_expire_months")
-  @Expose val enforceKeygenExpireMonths: Int? = null
+  @Expose val enforceKeygenExpireMonths: Int? = null,
+  @SerializedName("in_memory_pass_phrase_session_length")
+  @Expose val inMemoryPassPhraseSessionLength: Int? = null
 ) : Parcelable {
+
+  val inMemoryPassPhraseSessionLengthNormalized: Int?
+    get() {
+      val value = inMemoryPassPhraseSessionLength ?: 0
+      return if (value > 0) {
+        minOf(value, Int.MAX_VALUE)
+      } else null
+    }
 
   constructor(parcel: Parcel) : this(
     parcel.createTypedArrayList(DomainRule.CREATOR),
@@ -40,6 +50,7 @@ data class OrgRules constructor(
     parcel.createStringArrayList(),
     parcel.createStringArrayList(),
     parcel.readParcelable(KeyAlgo::class.java.classLoader),
+    parcel.readValue(Int::class.java.classLoader) as? Int,
     parcel.readValue(Int::class.java.classLoader) as? Int
   )
 
@@ -51,6 +62,7 @@ data class OrgRules constructor(
     parcel.writeStringList(allowAttesterSearchOnlyForDomains)
     parcel.writeParcelable(enforceKeygenAlgo, flagsList)
     parcel.writeValue(enforceKeygenExpireMonths)
+    parcel.writeValue(inMemoryPassPhraseSessionLength)
   }
 
   override fun describeContents(): Int {
