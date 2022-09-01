@@ -11,6 +11,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
@@ -97,6 +99,7 @@ import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
+import kotlinx.coroutines.flow.collectIndexed
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -156,6 +159,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     ) {
       val email = recipientInfo.recipientWithPubKeys.recipient.email
       composeMsgViewModel.removeRecipient(recipientType, email)
+      composeMsgViewModel.changeMessageModificationState(true)
     }
 
     override fun onAddFieldFocusChanged(recipientType: Message.RecipientType, hasFocus: Boolean) {
@@ -208,6 +212,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val bccAutoCompleteResultRecyclerViewAdapter =
     AutoCompleteResultRecyclerViewAdapter(Message.RecipientType.BCC, onAutoCompleteResultListener)
 
+  private val messageContentChangedListener = object : TextWatcher {
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+      composeMsgViewModel.changeMessageModificationState(true)
+    }
+
+    override fun afterTextChanged(s: Editable?) {}
+  }
+
   private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
@@ -256,6 +270,14 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       composeMsgViewModel.callLookUpForMissedPubKeys()
+    }
+  }
+
+  override fun onStop() {
+    super.onStop()
+    if (composeMsgViewModel.messageChangedStateFlow.value) {
+      toast("message changed. Saving a draft...")
+      composeMsgViewModel.changeMessageModificationState(false)
     }
   }
 
@@ -760,17 +782,23 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     UIUtil.exchangeViewVisibility(false, binding?.viewIdProgressView, binding?.scrollView)
     if ((args.incomingMessageInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
       this.isIncomingMsgInfoUsed = true
-      updateViews()
+      updateViewsUsingIncomingData()
     }
 
     showAtts()
+    listenToMessageTextChanges()
+  }
+
+  private fun listenToMessageTextChanges() {
+    binding?.editTextEmailSubject?.addTextChangedListener(messageContentChangedListener)
+    binding?.editTextEmailMessage?.addTextChangedListener(messageContentChangedListener)
   }
 
   /**
    * Update views on the screen. This method can be called when we need to update the current
    * screen.
    */
-  private fun updateViews() {
+  private fun updateViewsUsingIncomingData() {
     onMsgEncryptionTypeChange(composeMsgViewModel.msgEncryptionType)
 
     if (extraActionInfo != null) {
@@ -1282,6 +1310,23 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
 
     lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.recipientsStateFlow.collectIndexed { index, recipients ->
+        //we skip the init value and listen to the next changes
+        when (args.messageType) {
+          MessageType.NEW, MessageType.FORWARD -> {
+            if (index > 0) {
+              composeMsgViewModel.changeMessageModificationState(true)
+            }
+          }
+
+          MessageType.REPLY, MessageType.REPLY_ALL -> {
+            val incomingRecipients = args.incomingMessageInfo?.msgEntity?.to
+          }
+        }
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
         updateChipAdapter(Message.RecipientType.TO, recipients)
         updateAutoCompleteAdapter(recipients)
@@ -1335,6 +1380,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             }
           }
         }
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.messageChangedStateFlow.collect {
+        //here we can show some label that message was changed or saved on a remote server
       }
     }
   }

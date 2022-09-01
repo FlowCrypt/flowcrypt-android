@@ -83,6 +83,9 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val recipientsBccStateFlow: StateFlow<Map<String, RecipientInfo>> =
     recipientsBccMutableStateFlow.asStateFlow()
 
+  private val messageChangedMutableStateFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+  val messageChangedStateFlow: StateFlow<Boolean> = messageChangedMutableStateFlow.asStateFlow()
+
   val recipientsStateFlow = combine(
     recipientsToStateFlow,
     recipientsCcStateFlow,
@@ -108,6 +111,10 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
   fun setWebPortalPassword(webPortalPassword: CharSequence = "") {
     webPortalPasswordMutableStateFlow.value = webPortalPassword
+  }
+
+  fun changeMessageModificationState(state: Boolean) {
+    messageChangedMutableStateFlow.value = state
   }
 
   fun addRecipient(
