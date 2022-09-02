@@ -74,6 +74,7 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
+import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -135,6 +136,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ComposeMsgViewModel(args.encryptedByDefault, requireActivity().application) as T
+      }
+    }
+  }
+
+  private val draftViewModel: DraftViewModel by viewModels {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return DraftViewModel(
+          originalMsgText = "",
+          originalMsgSubject = "",
+          originalToRecipients = emptySet(),
+          originalCcRecipients = emptySet(),
+          originalBccRecipients = emptySet(),
+          application = requireActivity().application
+        ) {
+          getOutgoingMsgInfo()
+        } as T
       }
     }
   }
@@ -256,6 +275,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     updateActionBar()
     initViews()
     setupComposeMsgViewModel()
+    setupDraftViewModel()
     setupRecipientsAutoCompleteViewModel()
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
@@ -1386,6 +1406,20 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.messageChangedStateFlow.collect {
         //here we can show some label that message was changed or saved on a remote server
+      }
+    }
+  }
+
+  private fun setupDraftViewModel() {
+    lifecycleScope.launchWhenStarted {
+      draftViewModel.draftStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {}
+          Result.Status.SUCCESS -> {}
+          Result.Status.ERROR -> {}
+          Result.Status.EXCEPTION -> {}
+          else -> {}
+        }
       }
     }
   }
