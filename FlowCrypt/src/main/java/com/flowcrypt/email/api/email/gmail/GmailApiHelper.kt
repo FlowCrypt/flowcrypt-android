@@ -47,6 +47,7 @@ import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
 import com.google.api.services.gmail.model.BatchDeleteMessagesRequest
 import com.google.api.services.gmail.model.BatchModifyMessagesRequest
+import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
@@ -850,6 +851,40 @@ class GmailApiHelper {
         Base64InputStream(GMailRawAttachmentFilterInputStream(request.executeAsInputStream()))
       } else {
         GMailRawAttachmentFilterInputStream(request.executeAsInputStream())
+      }
+    }
+
+    suspend fun uploadDraft(
+      context: Context,
+      account: AccountEntity,
+      mimeMessage: jakarta.mail.Message,
+      draftId: String? = null
+    ): String = withContext(Dispatchers.IO) {
+      val gmail = generateGmailApiService(context, account)
+      val outputStream = ByteArrayOutputStream()
+      mimeMessage.writeTo(outputStream)
+
+      val draftMsg = outputStream.use {
+        Message().apply {
+          raw = Base64.encodeToString(
+            it.toByteArray(),
+            Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+          )
+        }
+      }
+
+      val draft = Draft().apply { message = draftMsg }
+      val gmailUsersDrafts = gmail
+        .users()
+        .drafts()
+      return@withContext if (draftId == null) {
+        gmailUsersDrafts
+          .create(DEFAULT_USER_ID, draft)
+          .execute().id
+      } else {
+        gmailUsersDrafts
+          .update(DEFAULT_USER_ID, draftId, draft)
+          .execute().id
       }
     }
 
