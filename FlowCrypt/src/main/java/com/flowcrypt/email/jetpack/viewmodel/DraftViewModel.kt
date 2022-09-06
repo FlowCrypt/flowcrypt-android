@@ -33,8 +33,7 @@ class DraftViewModel(
   originalMsgSubject: String = "",
   originalToRecipients: Set<String> = emptySet(),
   originalCcRecipients: Set<String> = emptySet(),
-  originalBccRecipients: Set<String> = emptySet(),
-  outgoingMessageInfoGenerator: () -> OutgoingMessageInfo
+  originalBccRecipients: Set<String> = emptySet()
 ) : RoomBasicViewModel(application) {
   private var lastMsgText: String = originalMsgText
   private var lastMsgSubject: String = originalMsgSubject
@@ -42,7 +41,7 @@ class DraftViewModel(
   private val lastCcRecipients: MutableSet<String> = originalCcRecipients.toMutableSet()
   private val lastBccRecipients: MutableSet<String> = originalBccRecipients.toMutableSet()
 
-  private val repeatableActionFlow: Flow<Long> = flow {
+  val draftRepeatableCheckingFlow: Flow<Long> = flow {
     while (viewModelScope.isActive) {
       delay(DELAY_TIMEOUT)
       emit(System.currentTimeMillis())
@@ -52,45 +51,42 @@ class DraftViewModel(
   private val draftMutableStateFlow = MutableStateFlow<Result<Boolean?>>(Result.none())
   val draftStateFlow = draftMutableStateFlow.asStateFlow()
 
-  init {
+  fun processDraft(currentTimeMillis: Long, currentOutgoingMessageInfo: OutgoingMessageInfo) {
     viewModelScope.launch {
-      repeatableActionFlow.collect {
-        Log.d("DraftViewModel", "iteration = $it")
-        var isSavingDraftNeeded = false
-        val currentOutgoingMessageInfo = outgoingMessageInfoGenerator.invoke()
-        val currentToRecipients = currentOutgoingMessageInfo.toRecipients.map { internetAddress ->
-          internetAddress.address.lowercase()
-        }.toSet()
-        val currentCcRecipients = currentOutgoingMessageInfo.ccRecipients?.map { internetAddress ->
+      Log.d("DraftViewModel", "iteration = $currentTimeMillis")
+      var isSavingDraftNeeded = false
+      val currentToRecipients = currentOutgoingMessageInfo.toRecipients.map { internetAddress ->
+        internetAddress.address.lowercase()
+      }.toSet()
+      val currentCcRecipients = currentOutgoingMessageInfo.ccRecipients?.map { internetAddress ->
+        internetAddress.address.lowercase()
+      }?.toSet() ?: emptySet()
+      val currentBccRecipients =
+        currentOutgoingMessageInfo.bccRecipients?.map { internetAddress ->
           internetAddress.address.lowercase()
         }?.toSet() ?: emptySet()
-        val currentBccRecipients =
-          currentOutgoingMessageInfo.bccRecipients?.map { internetAddress ->
-            internetAddress.address.lowercase()
-          }?.toSet() ?: emptySet()
 
-        if (currentOutgoingMessageInfo.msg != lastMsgText
-          || currentOutgoingMessageInfo.subject != lastMsgSubject
-          || currentToRecipients != lastToRecipients
-          || currentCcRecipients != lastCcRecipients
-          || currentBccRecipients != lastBccRecipients
-        ) {
-          isSavingDraftNeeded = true
-        }
+      if (currentOutgoingMessageInfo.msg != lastMsgText
+        || currentOutgoingMessageInfo.subject != lastMsgSubject
+        || currentToRecipients != lastToRecipients
+        || currentCcRecipients != lastCcRecipients
+        || currentBccRecipients != lastBccRecipients
+      ) {
+        isSavingDraftNeeded = true
+      }
 
-        lastMsgText = currentOutgoingMessageInfo.msg ?: ""
-        lastMsgSubject = currentOutgoingMessageInfo.subject
-        lastToRecipients.clear()
-        lastToRecipients.addAll(currentToRecipients)
-        lastCcRecipients.clear()
-        lastCcRecipients.addAll(currentCcRecipients)
-        lastBccRecipients.clear()
-        lastBccRecipients.addAll(currentBccRecipients)
+      lastMsgText = currentOutgoingMessageInfo.msg ?: ""
+      lastMsgSubject = currentOutgoingMessageInfo.subject
+      lastToRecipients.clear()
+      lastToRecipients.addAll(currentToRecipients)
+      lastCcRecipients.clear()
+      lastCcRecipients.addAll(currentCcRecipients)
+      lastBccRecipients.clear()
+      lastBccRecipients.addAll(currentBccRecipients)
 
-        if (isSavingDraftNeeded) {
-          draftMutableStateFlow.value = Result.loading()
-          //save draft
-        }
+      if (isSavingDraftNeeded) {
+        draftMutableStateFlow.value = Result.loading()
+        draftMutableStateFlow.value = Result.success(true)
       }
     }
   }

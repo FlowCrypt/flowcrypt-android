@@ -40,6 +40,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -101,6 +102,7 @@ import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -151,9 +153,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           originalCcRecipients = emptySet(),
           originalBccRecipients = emptySet(),
           application = requireActivity().application
-        ) {
-          getOutgoingMsgInfo()
-        } as T
+        ) as T
       }
     }
   }
@@ -1099,7 +1099,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
-    val outgoingMessageInfo = getOutgoingMsgInfo()
+    val outgoingMessageInfo = getOutgoingMsgInfo(requireUid = true, requireWebPortalPassword = true)
     PrepareOutgoingMessagesJobIntentService.enqueueWork(requireContext(), outgoingMessageInfo)
     toast(
       if (GeneralUtil.isConnected(requireContext()))
@@ -1411,6 +1411,14 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupDraftViewModel() {
+    viewLifecycleOwner.lifecycleScope.launch {
+      viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        draftViewModel.draftRepeatableCheckingFlow.collect {
+          draftViewModel.processDraft(it, getOutgoingMsgInfo())
+        }
+      }
+    }
+
     lifecycleScope.launchWhenStarted {
       draftViewModel.draftStateFlow.collect {
         when (it.status) {
@@ -1545,7 +1553,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     return false
   }
 
-  private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
+  private fun getOutgoingMsgInfo(
+    requireUid: Boolean = false,
+    requireWebPortalPassword: Boolean = false
+  ): OutgoingMessageInfo {
     var msg = binding?.editTextEmailMessage?.text.toString()
     if (args.messageType == MessageType.REPLY || args.messageType == MessageType.REPLY_ALL) {
       if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
@@ -1584,8 +1595,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       encryptionType = composeMsgViewModel.msgEncryptionType,
       messageType = args.messageType,
       replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
-      uid = EmailUtil.genOutboxUID(requireContext()),
-      password = usePasswordIfNeeded()
+      uid = if (requireUid) EmailUtil.genOutboxUID(requireContext()) else 0,
+      password = if (requireWebPortalPassword) usePasswordIfNeeded() else null
     )
   }
 
