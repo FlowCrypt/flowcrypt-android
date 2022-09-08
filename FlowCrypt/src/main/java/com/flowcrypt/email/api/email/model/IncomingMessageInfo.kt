@@ -5,15 +5,22 @@
 
 package com.flowcrypt.email.api.email.model
 
+import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import com.google.android.gms.common.util.CollectionUtils
 import jakarta.mail.internet.InternetAddress
 import java.util.Date
+import java.util.regex.Pattern
 
 /**
  * The class which describe an incoming message model.
@@ -82,6 +89,133 @@ data class IncomingMessageInfo constructor(
 
   fun hasPlainText(): Boolean {
     return hasSomePart(MsgBlock.Type.PLAIN_TEXT)
+  }
+
+  fun toInitializationData(
+    context: Context,
+    @MessageType messageType: Int,
+    accountEmail: String,
+    aliases: List<String>
+  ): InitializationData {
+    val toAddresses: java.util.ArrayList<String> = arrayListOf()
+    val ccAddresses: java.util.ArrayList<String> = arrayListOf()
+    val bccAddresses: java.util.ArrayList<String> = arrayListOf()
+    var body = ""
+
+    val folderType = FoldersManager.getFolderType(localFolder)
+    when (messageType) {
+      MessageType.REPLY -> {
+        when (folderType) {
+          FoldersManager.FolderType.SENT,
+          FoldersManager.FolderType.OUTBOX -> {
+            toAddresses.addAll(getTo().map { it.address.lowercase() })
+          }
+
+          else -> {
+            toAddresses.addAll(getReplyToWithoutOwnerAddress().ifEmpty { getTo() }
+              .map { it.address.lowercase() })
+          }
+        }
+      }
+
+      MessageType.REPLY_ALL -> {
+        when (folderType) {
+          FoldersManager.FolderType.SENT, FoldersManager.FolderType.OUTBOX -> {
+            toAddresses.addAll(getTo().map { it.address.lowercase() })
+            ccAddresses.addAll(getCc().map { it.address.lowercase() })
+          }
+
+          else -> {
+            val toRecipients = getReplyToWithoutOwnerAddress().ifEmpty { getTo() }
+            toAddresses.addAll(toRecipients.map { it.address.lowercase() })
+
+            val ccSet = HashSet<InternetAddress>()
+
+            if (getTo().isNotEmpty()) {
+              ccSet.addAll(getTo().filter { !accountEmail.equals(it.address, ignoreCase = true) })
+
+              for (alias in aliases) {
+                val iterator = ccSet.iterator()
+                while (iterator.hasNext()) {
+                  if (iterator.next().address.equals(alias, ignoreCase = true)) {
+                    iterator.remove()
+                  }
+                }
+              }
+            }
+
+            ccSet.removeAll(toRecipients.toSet())
+            ccSet.addAll(getCc().filter { !accountEmail.equals(it.address, ignoreCase = true) })
+
+            //here we remove the owner address
+            val fromAddress = msgEntity.email
+            val finalCcSet = ccSet.filter { !fromAddress.equals(it.address, true) }
+            ccAddresses.addAll(finalCcSet.map { it.address.lowercase() })
+          }
+        }
+      }
+
+      MessageType.FORWARD -> {
+        val stringBuilder = StringBuilder()
+        stringBuilder.append(
+          context.getString(
+            R.string.forward_template,
+            getFrom().first().address ?: "",
+            EmailUtil.genForwardedMsgDate(getReceiveDate()),
+            getSubject(),
+            prepareRecipientsLineForForwarding(getTo())
+          )
+        )
+
+        if (getCc().isNotEmpty()) {
+          stringBuilder.append("Cc: ")
+          stringBuilder.append(prepareRecipientsLineForForwarding(getCc()))
+          stringBuilder.append("\n\n")
+        }
+
+        stringBuilder.append("\n\n" + text)
+
+        body = stringBuilder.toString()
+      }
+      else -> {}
+    }
+
+    return InitializationData(
+      subject = prepareReplySubject(messageType),
+      body = body,
+      toAddresses = toAddresses,
+      ccAddresses = ccAddresses,
+      bccAddresses = bccAddresses
+    )
+  }
+
+  private fun prepareRecipientsLineForForwarding(recipients: List<InternetAddress>?): String {
+    val stringBuilder = StringBuilder()
+    return if (!CollectionUtils.isEmpty(recipients)) {
+      stringBuilder.append(recipients!![0])
+
+      if (recipients.size > 1) {
+        for (i in 1 until recipients.size) {
+          val recipient = recipients[0].address
+          stringBuilder.append(", ")
+          stringBuilder.append(recipient)
+        }
+      }
+
+      stringBuilder.toString()
+    } else
+      ""
+  }
+
+  private fun prepareReplySubject(@MessageType messageType: Int): String {
+    val subject = getSubject() ?: ""
+    val prefix = when (messageType) {
+      MessageType.REPLY, MessageType.REPLY_ALL -> "Re"
+      MessageType.FORWARD -> "Fwd"
+      else -> return subject
+    }
+    val prefixMatcher = Pattern.compile("^($prefix: )", Pattern.CASE_INSENSITIVE).matcher(subject)
+    return if (prefixMatcher.find()) subject else "$prefix: $subject"
   }
 
   private fun hasSomePart(partType: MsgBlock.Type): Boolean {

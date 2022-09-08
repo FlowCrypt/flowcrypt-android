@@ -8,6 +8,7 @@ package com.flowcrypt.email.util
 import android.net.Uri
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.model.ExtraActionInfo
+import com.flowcrypt.email.api.email.model.InitializationData
 import java.util.Arrays
 
 /**
@@ -70,8 +71,14 @@ class RFC6068Parser {
       val body = getFirstParameterValue(params, BODY)
 
       return ExtraActionInfo(
-        emptyList(), toList, ccList, bccList,
-        subject ?: "", body ?: ""
+        atts = emptyList(),
+        initializationData = InitializationData(
+          subject = subject,
+          body = body,
+          toAddresses = toList,
+          ccAddresses = ccList,
+          bccAddresses = bccList
+        )
       )
     }
 

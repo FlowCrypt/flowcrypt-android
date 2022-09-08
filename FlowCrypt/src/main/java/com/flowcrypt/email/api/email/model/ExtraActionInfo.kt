@@ -10,7 +10,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
-import android.text.TextUtils
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.util.RFC6068Parser
 
@@ -28,22 +27,14 @@ import com.flowcrypt.email.util.RFC6068Parser
  * Time: 16:16
  * E-mail: DenBond7@gmail.com
  */
-data class ExtraActionInfo constructor(
-  var atts: List<AttachmentInfo> = emptyList(),
-  val toAddresses: List<String> = arrayListOf(),
-  val ccAddresses: List<String> = arrayListOf(),
-  val bccAddresses: List<String> = arrayListOf(),
-  var subject: String = "",
-  var body: String = ""
+data class ExtraActionInfo(
+  val atts: List<AttachmentInfo> = emptyList(),
+  val initializationData: InitializationData
 ) : Parcelable {
 
   constructor(parcel: Parcel) : this(
     mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
-    parcel.createStringArrayList()!!,
-    parcel.createStringArrayList()!!,
-    parcel.createStringArrayList()!!,
-    parcel.readString()!!,
-    parcel.readString()!!
+    requireNotNull(parcel.readParcelable(InitializationData::class.java.classLoader))
   )
 
   override fun describeContents(): Int {
@@ -52,11 +43,7 @@ data class ExtraActionInfo constructor(
 
   override fun writeToParcel(dest: Parcel, flags: Int) {
     dest.writeTypedList(atts)
-    dest.writeStringList(toAddresses)
-    dest.writeStringList(ccAddresses)
-    dest.writeStringList(bccAddresses)
-    dest.writeString(subject)
-    dest.writeString(body)
+    dest.writeParcelable(initializationData, flags)
   }
 
   companion object {
@@ -80,17 +67,16 @@ data class ExtraActionInfo constructor(
      * @param intent An incoming intent.
      */
     fun parseExtraActionInfo(context: Context, intent: Intent): ExtraActionInfo? {
-      var info: ExtraActionInfo? = null
+      var infoFromRFC6068Parser: ExtraActionInfo? = null
+      val attsList = ArrayList<AttachmentInfo>()
+      var finalBody: String? = null
+      var finalSubject: String? = null
 
       //parse mailto: URI
       if (intent.action in listOf(Intent.ACTION_VIEW, Intent.ACTION_SENDTO)) {
         if (RFC6068Parser.isMailTo(intent.data)) {
-          info = RFC6068Parser.parse(intent.data)
+          infoFromRFC6068Parser = RFC6068Parser.parse(intent.data)
         } else return null
-      }
-
-      if (info == null) {
-        info = ExtraActionInfo()
       }
 
       when (intent.action) {
@@ -98,17 +84,15 @@ data class ExtraActionInfo constructor(
 
           val extraText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)
           // Only use EXTRA_TEXT if the body hasn't already been set by the mailto: URI
-          if (extraText != null && TextUtils.isEmpty(info.body)) {
-            info.body = extraText.toString()
+          if (extraText != null && infoFromRFC6068Parser?.initializationData?.body.isNullOrEmpty()) {
+            finalBody = extraText.toString()
           }
 
           val subj = intent.getStringExtra(Intent.EXTRA_SUBJECT)
           // Only use EXTRA_SUBJECT if the subject hasn't already been set by the mailto: URI
-          if (subj != null && TextUtils.isEmpty(info.subject)) {
-            info.subject = subj
+          if (subj != null && infoFromRFC6068Parser?.initializationData?.subject.isNullOrEmpty()) {
+            finalSubject = subj
           }
-
-          val attsList = ArrayList<AttachmentInfo>()
 
           if (Intent.ACTION_SEND == intent.action) {
             val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
@@ -130,12 +114,16 @@ data class ExtraActionInfo constructor(
               }
             }
           }
-
-          info.atts = attsList
         }
       }
 
-      return info
+      return infoFromRFC6068Parser?.copy(
+        atts = attsList,
+        initializationData = infoFromRFC6068Parser.initializationData.copy(
+          subject = finalSubject ?: infoFromRFC6068Parser.initializationData.subject,
+          body = finalBody ?: infoFromRFC6068Parser.initializationData.body,
+        )
+      ) ?: ExtraActionInfo(attsList, InitializationData(subject = finalSubject, body = finalBody))
     }
   }
 }

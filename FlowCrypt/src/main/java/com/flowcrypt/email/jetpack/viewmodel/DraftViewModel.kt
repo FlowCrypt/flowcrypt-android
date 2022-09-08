@@ -6,8 +6,9 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
-import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.Dispatchers
@@ -27,19 +28,12 @@ import java.util.concurrent.TimeUnit
  *         Time: 3:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DraftViewModel(
-  application: Application,
-  originalMsgText: String = "",
-  originalMsgSubject: String = "",
-  originalToRecipients: Set<String> = emptySet(),
-  originalCcRecipients: Set<String> = emptySet(),
-  originalBccRecipients: Set<String> = emptySet()
-) : RoomBasicViewModel(application) {
-  private var lastMsgText: String = originalMsgText
-  private var lastMsgSubject: String = originalMsgSubject
-  private val lastToRecipients: MutableSet<String> = originalToRecipients.toMutableSet()
-  private val lastCcRecipients: MutableSet<String> = originalCcRecipients.toMutableSet()
-  private val lastBccRecipients: MutableSet<String> = originalBccRecipients.toMutableSet()
+class DraftViewModel(application: Application) : RoomBasicViewModel(application) {
+  private var lastMsgText: String = ""
+  private var lastMsgSubject: String = ""
+  private val lastToRecipients: MutableSet<String> = mutableSetOf()
+  private val lastCcRecipients: MutableSet<String> = mutableSetOf()
+  private val lastBccRecipients: MutableSet<String> = mutableSetOf()
 
   val draftRepeatableCheckingFlow: Flow<Long> = flow {
     while (viewModelScope.isActive) {
@@ -53,7 +47,6 @@ class DraftViewModel(
 
   fun processDraft(currentTimeMillis: Long, currentOutgoingMessageInfo: OutgoingMessageInfo) {
     viewModelScope.launch {
-      Log.d("DraftViewModel", "iteration = $currentTimeMillis")
       var isSavingDraftNeeded = false
       val currentToRecipients = currentOutgoingMessageInfo.toRecipients.map { internetAddress ->
         internetAddress.address.lowercase()
@@ -85,10 +78,21 @@ class DraftViewModel(
       lastBccRecipients.addAll(currentBccRecipients)
 
       if (isSavingDraftNeeded) {
+        Toast.makeText(getApplication(), "save draft", Toast.LENGTH_SHORT).show()
         draftMutableStateFlow.value = Result.loading()
         draftMutableStateFlow.value = Result.success(true)
       }
     }
+  }
+
+  fun setupWithInitializationData(
+    initializationData: InitializationData
+  ) {
+    lastMsgText = initializationData.body ?: ""
+    lastMsgSubject = initializationData.subject ?: ""
+    lastToRecipients.addAll(initializationData.toAddresses.map { it.lowercase() })
+    lastCcRecipients.addAll(initializationData.ccAddresses.map { it.lowercase() })
+    lastBccRecipients.addAll(initializationData.bccAddresses.map { it.lowercase() })
   }
 
   companion object {

@@ -128,7 +128,6 @@
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
-    <string name="template_reply_subject" translatable="false">%1$s: %2$s</string>
     <string name="other_email_provider">Other email provider</string>
     <string name="account_info">Account info</string>
     <string name="e_mail" translatable="false">E-mail</string>
