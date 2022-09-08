@@ -6,11 +6,16 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
-import android.widget.Toast
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import jakarta.mail.Message
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +25,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 /**
@@ -28,7 +35,8 @@ import java.util.concurrent.TimeUnit
  *         Time: 3:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DraftViewModel(application: Application) : RoomBasicViewModel(application) {
+class DraftViewModel(application: Application) : AccountViewModel(application) {
+  private var draftId: String? = null
   private var lastMsgText: String = ""
   private var lastMsgSubject: String = ""
   private val lastToRecipients: MutableSet<String> = mutableSetOf()
@@ -78,10 +86,47 @@ class DraftViewModel(application: Application) : RoomBasicViewModel(application)
       lastBccRecipients.addAll(currentBccRecipients)
 
       if (isSavingDraftNeeded) {
-        Toast.makeText(getApplication(), "save draft", Toast.LENGTH_SHORT).show()
-        draftMutableStateFlow.value = Result.loading()
-        draftMutableStateFlow.value = Result.success(true)
+        uploadOrUpdateDraftOnRemoteServer(currentOutgoingMessageInfo)
       }
+    }
+  }
+
+  private suspend fun uploadOrUpdateDraftOnRemoteServer(outgoingMessageInfo: OutgoingMessageInfo) =
+    withContext(Dispatchers.IO) {
+      draftMutableStateFlow.value = Result.loading()
+      try {
+        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        if (activeAccount == null) {
+          draftMutableStateFlow.value = Result.success(false)
+          return@withContext
+        }
+
+        draftId = GmailApiHelper.uploadDraft(
+          context = getApplication(),
+          account = activeAccount,
+          mimeMessage = prepareMimeMessage(outgoingMessageInfo),
+          draftId = draftId
+        )
+
+        draftMutableStateFlow.value = Result.success(true)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        draftMutableStateFlow.value = Result.exception(e)
+      }
+    }
+
+  private fun prepareMimeMessage(outgoingMessageInfo: OutgoingMessageInfo): Message {
+    return MimeMessage(Session.getInstance(Properties())).apply {
+      subject = outgoingMessageInfo.subject
+      setFrom(outgoingMessageInfo.from)
+      setRecipients(Message.RecipientType.TO, outgoingMessageInfo.toRecipients.toTypedArray())
+      setRecipients(Message.RecipientType.CC, outgoingMessageInfo.ccRecipients?.toTypedArray())
+      setRecipients(Message.RecipientType.BCC, outgoingMessageInfo.bccRecipients?.toTypedArray())
+      setContent(MimeMultipart().apply {
+        addBodyPart(MimeBodyPart().apply {
+          setText(outgoingMessageInfo.msg)
+        })
+      })
     }
   }
 
