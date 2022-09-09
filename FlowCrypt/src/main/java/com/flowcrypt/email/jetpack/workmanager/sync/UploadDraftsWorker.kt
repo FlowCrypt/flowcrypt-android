@@ -82,6 +82,9 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPLOAD_DRAFTS"
 
+    const val PREFIX_DELETE = "delete"
+    const val PREFIX_UPDATE = "update"
+
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -91,7 +94,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
         .getInstance(context.applicationContext)
         .enqueueUniqueWork(
           GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.REPLACE,
+          ExistingWorkPolicy.APPEND,
           OneTimeWorkRequestBuilder<UploadDraftsWorker>()
             .addTag(TAG_SYNC)
             .setConstraints(constraints)

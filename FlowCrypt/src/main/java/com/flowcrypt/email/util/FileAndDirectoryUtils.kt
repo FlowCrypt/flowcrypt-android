@@ -143,5 +143,22 @@ class FileAndDirectoryUtils {
     fun normalizeFileName(fileName: String?) =
       fileName?.replace("[^\\w._-]".toRegex(), "")
 
+    /**
+     * Get a directory. Create a new directory if it doesn't exist
+     *
+     * @param directoryName The directory name.
+     * @param parentDir A parent directory where the current directory will be created if it doesn't exist
+     */
+    fun getDir(directoryName: String, parentDir: File? = null): File {
+      val dir = if (parentDir == null) File(directoryName) else File(parentDir, directoryName)
+
+      if (!dir.exists()) {
+        if (!dir.mkdir()) {
+          throw IOException("Couldn't create a temp directory for the current message")
+        }
+      }
+
+      return dir
+    }
   }
 }

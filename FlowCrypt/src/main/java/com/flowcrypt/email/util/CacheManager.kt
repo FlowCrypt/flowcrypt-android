@@ -7,7 +7,6 @@ package com.flowcrypt.email.util
 
 import android.content.Context
 import java.io.File
-import java.io.IOException
 
 /**
  * This class will help to get references to the application specific directories on
@@ -29,22 +28,10 @@ object CacheManager {
    * @return directory
    */
   fun getCurrentMsgTempDirectory(context: Context): File {
-    return getDirectory(context, DIRECTORY_CURRENT_MESSAGE)
+    return FileAndDirectoryUtils.getDir(DIRECTORY_CURRENT_MESSAGE, context.cacheDir)
   }
 
   fun getDraftDirectory(context: Context): File {
-    return getDirectory(context, DIRECTORY_DRAFTS)
-  }
-
-  private fun getDirectory(context: Context, directoryName: String): File {
-    val dir = File(context.cacheDir, directoryName)
-
-    if (!dir.exists()) {
-      if (!dir.mkdir()) {
-        throw IOException("Couldn't create a temp directory for the current message")
-      }
-    }
-
-    return dir
+    return FileAndDirectoryUtils.getDir(DIRECTORY_DRAFTS, context.cacheDir)
   }
 }

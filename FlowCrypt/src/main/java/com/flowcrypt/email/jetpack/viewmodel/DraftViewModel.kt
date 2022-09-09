@@ -7,14 +7,12 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import jakarta.mail.Message
-import jakarta.mail.Session
-import jakarta.mail.internet.MimeBodyPart
-import jakarta.mail.internet.MimeMessage
-import jakarta.mail.internet.MimeMultipart
+import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
+import com.flowcrypt.email.util.CacheManager
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +21,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Properties
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -32,8 +30,9 @@ import java.util.concurrent.TimeUnit
  *         Time: 3:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DraftViewModel(application: Application) : AccountViewModel(application) {
-  private var draftId: String? = null
+class DraftViewModel(private val draftId: String? = null, application: Application) :
+  AccountViewModel(application) {
+  private val sessionDraftId = "${System.currentTimeMillis()}_"
   private var lastMsgText: String = ""
   private var lastMsgSubject: String = ""
   private val lastToRecipients: MutableSet<String> = mutableSetOf()
@@ -80,44 +79,34 @@ class DraftViewModel(application: Application) : AccountViewModel(application) {
       lastBccRecipients.addAll(currentBccRecipients)
 
       if (isSavingDraftNeeded) {
-        uploadOrUpdateDraftOnRemoteServer(currentOutgoingMessageInfo)
+        enqueueUploadingDraftToRemoteServer(currentOutgoingMessageInfo)
       }
     }
   }
 
-  private suspend fun uploadOrUpdateDraftOnRemoteServer(outgoingMessageInfo: OutgoingMessageInfo) =
+  private suspend fun enqueueUploadingDraftToRemoteServer(outgoingMessageInfo: OutgoingMessageInfo) =
     withContext(Dispatchers.IO) {
       try {
-        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
-        if (activeAccount == null) {
-          return@withContext
-        }
+        val activeAccount =
+          roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
+        val mimeMessage = EmailUtil.genMessage(getApplication(), activeAccount, outgoingMessageInfo)
+        val draftsDir = CacheManager.getDraftDirectory(getApplication())
 
-        draftId = GmailApiHelper.uploadDraft(
-          context = getApplication(),
-          account = activeAccount,
-          mimeMessage = prepareMimeMessage(outgoingMessageInfo),
-          draftId = draftId
-        )
+        val currentMsgDraftDir = draftsDir.walkTopDown().firstOrNull {
+          it.name.startsWith(sessionDraftId)
+        } ?: FileAndDirectoryUtils.getDir(sessionDraftId, draftsDir)
+
+        val draftFile = File(currentMsgDraftDir, "${System.currentTimeMillis()}_")
+        draftFile.outputStream().use {
+          mimeMessage.writeTo(it)
+        }
       } catch (e: Exception) {
         e.printStackTrace()
+        //need to think about
+      } finally {
+        UploadDraftsWorker.enqueue(getApplication())
       }
     }
-
-  private fun prepareMimeMessage(outgoingMessageInfo: OutgoingMessageInfo): Message {
-    return MimeMessage(Session.getInstance(Properties())).apply {
-      subject = outgoingMessageInfo.subject
-      setFrom(outgoingMessageInfo.from)
-      setRecipients(Message.RecipientType.TO, outgoingMessageInfo.toRecipients.toTypedArray())
-      setRecipients(Message.RecipientType.CC, outgoingMessageInfo.ccRecipients?.toTypedArray())
-      setRecipients(Message.RecipientType.BCC, outgoingMessageInfo.bccRecipients?.toTypedArray())
-      setContent(MimeMultipart().apply {
-        addBodyPart(MimeBodyPart().apply {
-          setText(outgoingMessageInfo.msg)
-        })
-      })
-    }
-  }
 
   fun setupWithInitializationData(
     initializationData: InitializationData
