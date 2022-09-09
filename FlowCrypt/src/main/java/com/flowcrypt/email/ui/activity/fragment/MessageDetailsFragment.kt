@@ -264,7 +264,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onDestroy() {
     super.onDestroy()
-    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(requireContext()))
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -1644,7 +1644,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun useFileProviderToGenerateUri(attInfo: AttachmentInfo): Pair<File, Uri> {
-    val tempDir = CacheManager.getCurrentMsgTempDir()
+    val tempDir = CacheManager.getCurrentMsgTempDirectory(requireContext())
     val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
     val file = if (fileName.isNullOrEmpty()) {
       File.createTempFile("tmp", null, tempDir)

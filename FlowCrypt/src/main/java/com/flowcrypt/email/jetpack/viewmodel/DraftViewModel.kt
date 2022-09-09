@@ -10,7 +10,6 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.response.base.Result
 import jakarta.mail.Message
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeBodyPart
@@ -19,8 +18,6 @@ import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
@@ -49,9 +46,6 @@ class DraftViewModel(application: Application) : AccountViewModel(application) {
       emit(System.currentTimeMillis())
     }
   }.flowOn(Dispatchers.Default)
-
-  private val draftMutableStateFlow = MutableStateFlow<Result<Boolean?>>(Result.none())
-  val draftStateFlow = draftMutableStateFlow.asStateFlow()
 
   fun processDraft(currentTimeMillis: Long, currentOutgoingMessageInfo: OutgoingMessageInfo) {
     viewModelScope.launch {
@@ -93,11 +87,9 @@ class DraftViewModel(application: Application) : AccountViewModel(application) {
 
   private suspend fun uploadOrUpdateDraftOnRemoteServer(outgoingMessageInfo: OutgoingMessageInfo) =
     withContext(Dispatchers.IO) {
-      draftMutableStateFlow.value = Result.loading()
       try {
         val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
         if (activeAccount == null) {
-          draftMutableStateFlow.value = Result.success(false)
           return@withContext
         }
 
@@ -107,11 +99,8 @@ class DraftViewModel(application: Application) : AccountViewModel(application) {
           mimeMessage = prepareMimeMessage(outgoingMessageInfo),
           draftId = draftId
         )
-
-        draftMutableStateFlow.value = Result.success(true)
       } catch (e: Exception) {
         e.printStackTrace()
-        draftMutableStateFlow.value = Result.exception(e)
       }
     }
 

@@ -409,7 +409,7 @@ class MsgDetailsViewModel(
     if (uri != null) {
       val context: Context = getApplication()
       try {
-        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
 
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
@@ -435,7 +435,7 @@ class MsgDetailsViewModel(
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       try {
-        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
 
         val processedMimeMessageResult =
           PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())

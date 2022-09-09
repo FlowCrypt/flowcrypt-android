@@ -5,8 +5,7 @@
 
 package com.flowcrypt.email.util
 
-import android.app.Application
-import androidx.annotation.UiThread
+import android.content.Context
 import java.io.File
 import java.io.IOException
 
@@ -20,30 +19,25 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 object CacheManager {
-  const val CURRENT_MESSAGE_TEMP_DIR = "current_msg"
-
-  var cacheDir: File? = null
-    private set
-
-  @UiThread
-  fun init(app: Application?) {
-    if (app != null) {
-      cacheDir = app.cacheDir
-    }
-  }
+  private const val DIRECTORY_CURRENT_MESSAGE = "current_msg"
+  private const val DIRECTORY_DRAFTS = "drafts"
 
   /**
    * Get a temp directory for the current active message
    *
    * @param context Interface to global information about an application environment;
-   * @return directory or null if the parent directory doesn't exist
+   * @return directory
    */
-  fun getCurrentMsgTempDir(): File? {
-    if (cacheDir == null) {
-      return null
-    }
+  fun getCurrentMsgTempDirectory(context: Context): File {
+    return getDirectory(context, DIRECTORY_CURRENT_MESSAGE)
+  }
 
-    val dir = File(cacheDir, CURRENT_MESSAGE_TEMP_DIR)
+  fun getDraftDirectory(context: Context): File {
+    return getDirectory(context, DIRECTORY_DRAFTS)
+  }
+
+  private fun getDirectory(context: Context, directoryName: String): File {
+    val dir = File(context.cacheDir, directoryName)
 
     if (!dir.exists()) {
       if (!dir.mkdir()) {

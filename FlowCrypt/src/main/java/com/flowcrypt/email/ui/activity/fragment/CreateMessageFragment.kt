@@ -1282,22 +1282,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
       }
     }
-
-    lifecycleScope.launchWhenStarted {
-      draftViewModel.draftStateFlow.collect {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            toast("saving draft")
-          }
-          Result.Status.SUCCESS -> {
-            if (it.data == true) toast("draft saved")
-          }
-          Result.Status.ERROR -> {}
-          Result.Status.EXCEPTION -> {}
-          else -> {}
-        }
-      }
-    }
   }
 
   private fun updateAutoCompleteAdapter(recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>) {
