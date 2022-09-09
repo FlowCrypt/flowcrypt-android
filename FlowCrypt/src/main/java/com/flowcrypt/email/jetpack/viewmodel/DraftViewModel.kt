@@ -8,11 +8,9 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
-import com.flowcrypt.email.util.CacheManager
-import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +19,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -30,9 +27,10 @@ import java.util.concurrent.TimeUnit
  *         Time: 3:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DraftViewModel(private val draftId: String? = null, application: Application) :
+class DraftViewModel(cachedDraftId: String? = null, application: Application) :
   AccountViewModel(application) {
   private val sessionDraftId = "${System.currentTimeMillis()}_"
+  private var draftId: String? = cachedDraftId
   private var lastMsgText: String = ""
   private var lastMsgSubject: String = ""
   private val lastToRecipients: MutableSet<String> = mutableSetOf()
@@ -79,32 +77,25 @@ class DraftViewModel(private val draftId: String? = null, application: Applicati
       lastBccRecipients.addAll(currentBccRecipients)
 
       if (isSavingDraftNeeded) {
-        enqueueUploadingDraftToRemoteServer(currentOutgoingMessageInfo)
+        uploadDraftToRemoteServer(currentOutgoingMessageInfo)
       }
     }
   }
 
-  private suspend fun enqueueUploadingDraftToRemoteServer(outgoingMessageInfo: OutgoingMessageInfo) =
+  private suspend fun uploadDraftToRemoteServer(outgoingMessageInfo: OutgoingMessageInfo) =
     withContext(Dispatchers.IO) {
       try {
         val activeAccount =
           roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
         val mimeMessage = EmailUtil.genMessage(getApplication(), activeAccount, outgoingMessageInfo)
-        val draftsDir = CacheManager.getDraftDirectory(getApplication())
-
-        val currentMsgDraftDir = draftsDir.walkTopDown().firstOrNull {
-          it.name.startsWith(sessionDraftId)
-        } ?: FileAndDirectoryUtils.getDir(sessionDraftId, draftsDir)
-
-        val draftFile = File(currentMsgDraftDir, "${System.currentTimeMillis()}_")
-        draftFile.outputStream().use {
-          mimeMessage.writeTo(it)
-        }
+        draftId = GmailApiHelper.uploadDraft(
+          context = getApplication(),
+          account = activeAccount,
+          mimeMessage = mimeMessage,
+          draftId = draftId
+        )
       } catch (e: Exception) {
         e.printStackTrace()
-        //need to think about
-      } finally {
-        UploadDraftsWorker.enqueue(getApplication())
       }
     }
 

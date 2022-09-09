@@ -15,13 +15,15 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.util.CacheManager
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import jakarta.mail.Session
 import jakarta.mail.Store
-import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
-import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileFilter
 import java.util.Properties
 
 class UploadDraftsWorker(context: Context, params: WorkerParameters) :
@@ -36,7 +38,9 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
 
   private suspend fun uploadDrafts(account: AccountEntity, store: Store) =
     withContext(Dispatchers.IO) {
-      uploadDraftsInternal(account) { mimeMessage ->
+      uploadDraftsInternal(account) { draftId, mimeMessage ->
+
+        return@uploadDraftsInternal ""
         //to update IMAP draft we have to delete the old one and add a new one
         /*val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
         val folderDrafts = foldersManager.folderDrafts ?: return@uploadDraftsInternal
@@ -52,13 +56,13 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     }
 
   private suspend fun uploadDrafts(account: AccountEntity) = withContext(Dispatchers.IO) {
-    uploadDraftsInternal(account) { mimeMessage ->
+    uploadDraftsInternal(account) { draftId, mimeMessage ->
       executeGMailAPICall(applicationContext) {
-        GmailApiHelper.uploadDraft(
+        return@executeGMailAPICall GmailApiHelper.uploadDraft(
           context = applicationContext,
           account = account,
           mimeMessage = mimeMessage,
-          draftId = null
+          draftId = draftId
         )
       }
     }
@@ -66,22 +70,36 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
 
   private suspend fun uploadDraftsInternal(
     account: AccountEntity,
-    action: suspend (mimeMessage: MimeMessage) -> Unit
+    action: suspend (draftId: String?, mimeMessage: MimeMessage) -> String
   ) = withContext(Dispatchers.IO) {
-    val mimeMessage = MimeMessage(Session.getInstance(Properties())).apply {
-      subject = "test drafts from Android:" + System.currentTimeMillis()
-      setContent(MimeMultipart().apply {
-        addBodyPart(MimeBodyPart().apply {
-          setText("some text + time:" + System.currentTimeMillis())
-        })
-      })
+    val draftsDir = CacheManager.getDraftDirectory(applicationContext)
+    val directories = draftsDir.listFiles(FileFilter { it.isDirectory }) ?: emptyArray()
+    for (directory in directories) {
+      val draftIdFile = directory.listFiles(
+        FileFilter { it.isFile && it.name.startsWith(PREFIX_FOR_DRAFT_ID) })?.firstOrNull()
+      val originalDraftId = draftIdFile?.name?.substringAfter(PREFIX_FOR_DRAFT_ID)
+      val files = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
+      try {
+        val lastVersion = files.maxBy { it.lastModified() }
+        val mimeMessage = MimeMessage(Session.getInstance(Properties()), lastVersion.inputStream())
+        val draftId = action.invoke(originalDraftId, mimeMessage)
+        if (originalDraftId == null) {
+          File(directory, PREFIX_FOR_DRAFT_ID + draftId).outputStream().use {
+            it.write(draftId.toByteArray())
+          }
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+      } finally {
+        files.forEach { FileAndDirectoryUtils.deleteFile(it) }
+      }
     }
-    action.invoke(mimeMessage)
   }
 
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPLOAD_DRAFTS"
 
+    const val PREFIX_FOR_DRAFT_ID = "draft_id_"
     const val PREFIX_DELETE = "delete"
     const val PREFIX_UPDATE = "update"
 
