@@ -35,6 +35,7 @@ import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -51,7 +52,6 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.InitializationData
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
@@ -102,6 +102,8 @@ import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
@@ -234,7 +236,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     override fun afterTextChanged(s: Editable?) {}
   }
 
-  private val attachments: MutableList<AttachmentInfo> = mutableListOf()
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
   private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
@@ -260,6 +261,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     initExtras(activity?.intent)
+    composeMsgViewModel.updateOutgoingMessageInfo(
+      composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+        messageType = args.messageType,
+        replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
+      )
+    )
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -299,10 +306,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     appBarLayout?.removeView(nonEncryptedHintView)
   }
 
+  @OptIn(DelicateCoroutinesApi::class)
   override fun onDestroy() {
     super.onDestroy()
     if (!isMsgSentToQueue) {
-      for (att in attachments) {
+      for (att in composeMsgViewModel.attachmentsStateFlow.value) {
         att.uri?.let { uri ->
           if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority, ignoreCase = true)) {
             context?.contentResolver?.delete(uri, null, null)
@@ -310,6 +318,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
       }
     }
+
+    draftViewModel.processDraft(
+      GlobalScope,
+      currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+    )
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -465,6 +478,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
+    composeMsgViewModel.updateOutgoingMessageInfo(
+      composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+        account = accountEntity?.email
+      )
+    )
+
     accountEntity?.email?.let { email ->
       if (fromAddressesAdapter?.objects?.contains(email) == false) {
         fromAddressesAdapter?.add(email)
@@ -515,7 +534,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           this.folderType = FoldersManager.getFolderType(it)
         }
 
-        this.args.serviceInfo?.atts?.let { attachments.addAll(it) }
+        this.args.serviceInfo?.atts?.let {
+          composeMsgViewModel.addAttachments(it)
+        }
       }
     }
   }
@@ -570,7 +591,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               draftAtt
             )
             attachmentInfo.uri = uri
-            attachments.add(attachmentInfo)
+            composeMsgViewModel.addAttachments(listOf(attachmentInfo))
           }
         } catch (e: IOException) {
           e.printStackTrace()
@@ -689,17 +710,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     return false
   }
 
-  private fun hasExternalStorageUris(attachmentInfoList: List<AttachmentInfo>?): Boolean {
-    attachmentInfoList?.let {
-      for (att in it) {
-        if (ContentResolver.SCHEME_FILE.equals(att.uri?.scheme, ignoreCase = true)) {
-          return true
-        }
-      }
-    }
-    return false
-  }
-
   private fun initViews() {
     setupChips()
 
@@ -707,6 +717,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     binding?.spinnerFrom?.adapter = fromAddressesAdapter
 
     originalColor = requireNotNull(binding?.editTextFrom?.currentTextColor)
+    binding?.editTextFrom?.doOnTextChanged { text, _, _, _ ->
+      composeMsgViewModel.updateOutgoingMessageInfo(
+        composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+          from = InternetAddress(text?.toString() ?: "")
+        )
+      )
+    }
 
     binding?.imageButtonAliases?.setOnClickListener(this)
 
@@ -734,7 +751,28 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
 
     binding?.editTextEmailSubject?.onFocusChangeListener = onFocusChangeListener
+    binding?.editTextEmailSubject?.doOnTextChanged { text, _, _, _ ->
+      composeMsgViewModel.updateOutgoingMessageInfo(
+        composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+          subject = text?.toString()
+        )
+      )
+    }
     binding?.editTextEmailMessage?.onFocusChangeListener = onFocusChangeListener
+    binding?.editTextEmailMessage?.doOnTextChanged { text, _, _, _ ->
+      var msg = binding?.editTextEmailMessage?.text.toString()
+      if (args.messageType == MessageType.REPLY || args.messageType == MessageType.REPLY_ALL) {
+        if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
+          msg += EmailUtil.genReplyContent(args.incomingMessageInfo)
+        }
+      }
+
+      composeMsgViewModel.updateOutgoingMessageInfo(
+        composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+          msg = msg
+        )
+      )
+    }
     binding?.iBShowQuotedText?.setOnClickListener(this)
     binding?.btnSetWebPortalPassword?.setOnClickListener {
       navController?.navigate(
@@ -801,7 +839,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       draftViewModel.setupWithInitializationData(initializationData = initializationData)
     }
 
-    showAtts()
     listenToMessageTextChanges()
   }
 
@@ -910,7 +947,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     if (!CollectionUtils.isEmpty(originalMsgInfo.atts)) {
       for (att in originalMsgInfo.atts!!) {
         if (hasAbilityToAddAtt(att)) {
-          attachments.add(att)
+          composeMsgViewModel.addAttachments(listOf(att))
         } else {
           showInfoSnackbar(
             requireView(), getString(
@@ -933,7 +970,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    val existedAttsSize = (attachments.sumOf { it.encodedSize.toInt() })
+    val existedAttsSize =
+      (composeMsgViewModel.attachmentsStateFlow.value.sumOf { it.encodedSize.toInt() })
     val newAttSize = newAttInfo?.encodedSize?.toInt() ?: 0
     return (existedAttsSize + newAttSize) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
@@ -959,12 +997,15 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
-    val outgoingMessageInfo = getOutgoingMsgInfo(
-      useReplyTemplate = true,
-      requireUid = true,
-      requireWebPortalPassword = true
+    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+    PrepareOutgoingMessagesJobIntentService.enqueueWork(
+      context = requireContext(),
+      outgoingMsgInfo = outgoingMessageInfo.copy(
+        uid = EmailUtil.genOutboxUID(requireContext()),
+        password = usePasswordIfNeeded()
+      )
     )
-    PrepareOutgoingMessagesJobIntentService.enqueueWork(requireContext(), outgoingMessageInfo)
+
     toast(
       if (GeneralUtil.isConnected(requireContext()))
         R.string.sending
@@ -977,7 +1018,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   /**
    * Show attachments which were added.
    */
-  private fun showAtts() {
+  private fun showAtts(attachments: List<AttachmentInfo>) {
     if (attachments.isNotEmpty()) {
       binding?.layoutAtts?.removeAllViews()
       val layoutInflater = LayoutInflater.from(context)
@@ -1003,7 +1044,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           val imageButtonClearAtt = rootView.findViewById<View>(R.id.imageButtonClearAtt)
           imageButtonClearAtt.visibility = View.VISIBLE
           imageButtonClearAtt.setOnClickListener {
-            attachments.remove(att)
+            composeMsgViewModel.removeAttachments(listOf(att))
             binding?.layoutAtts?.removeView(rootView)
 
             //Remove a temp file which was created by our app
@@ -1129,8 +1170,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         showInfoSnackbar(view, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
         return
       }
-      attachmentInfo?.let { attachments.add(it) }
-      showAtts()
+      attachmentInfo?.let { composeMsgViewModel.addAttachments(listOf(it)) }
     } else {
       showInfoSnackbar(
         view, getString(
@@ -1145,6 +1185,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun setupComposeMsgViewModel() {
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.messageEncryptionTypeStateFlow.collect {
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            encryptionType = it
+          )
+        )
+
         when (it) {
           MessageEncryptionType.ENCRYPTED -> {
             appBarLayout?.setBackgroundColor(
@@ -1212,6 +1258,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            toRecipients = recipients.values.map {
+              InternetAddress(
+                it.recipientWithPubKeys.recipient.email,
+                it.recipientWithPubKeys.recipient.name
+              )
+            }
+          )
+        )
+
         updateChipAdapter(Message.RecipientType.TO, recipients)
         updateAutoCompleteAdapter(recipients)
       }
@@ -1219,6 +1276,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsCcStateFlow.collect { recipients ->
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            ccRecipients = recipients.values.map {
+              InternetAddress(
+                it.recipientWithPubKeys.recipient.email,
+                it.recipientWithPubKeys.recipient.name
+              )
+            }
+          )
+        )
+
         binding?.chipLayoutCc?.visibleOrGone(recipients.isNotEmpty())
         binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.CC, recipients)
@@ -1228,6 +1296,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsBccStateFlow.collect { recipients ->
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            bccRecipients = recipients.values.map {
+              InternetAddress(
+                it.recipientWithPubKeys.recipient.email,
+                it.recipientWithPubKeys.recipient.name
+              )
+            }
+          )
+        )
+
         binding?.chipLayoutBcc?.visibleOrGone(recipients.isNotEmpty())
         binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.BCC, recipients)
@@ -1272,13 +1351,29 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         //here we can show some label that message was changed or saved on a remote server
       }
     }
+
+    lifecycleScope.launchWhenStarted {
+      composeMsgViewModel.attachmentsStateFlow.collect { attachments ->
+        val forwardedAtts = attachments.filter { it.id != null && it.isForwarded }
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            atts = attachments - forwardedAtts.toSet(),
+            forwardedAtts = forwardedAtts
+          )
+        )
+
+        showAtts(attachments)
+      }
+    }
   }
 
   private fun setupDraftViewModel() {
     viewLifecycleOwner.lifecycleScope.launch {
       viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
         draftViewModel.draftRepeatableCheckingFlow.collect {
-          draftViewModel.processDraft(it, getOutgoingMsgInfo())
+          draftViewModel.processDraft(
+            currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+          )
         }
       }
     }
@@ -1391,7 +1486,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.editTextEmailSubject?.requestFocus()
       return false
     }
-    if (attachments.isEmpty() && binding?.editTextEmailMessage?.text?.isEmpty() == true) {
+    if (composeMsgViewModel.attachmentsStateFlow.value.isEmpty() && binding?.editTextEmailMessage?.text?.isEmpty() == true) {
       showInfoSnackbar(
         binding?.editTextEmailMessage,
         getString(R.string.sending_message_must_not_be_empty)
@@ -1399,58 +1494,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.editTextEmailMessage?.requestFocus()
       return false
     }
-    if (attachments.isEmpty() || !hasExternalStorageUris(this.attachments)) {
+    if (composeMsgViewModel.attachmentsStateFlow.value.isEmpty()
+      || !composeMsgViewModel.hasAttachmentsWithExternalStorageUri
+    ) {
       return true
     }
     return false
-  }
-
-  private fun getOutgoingMsgInfo(
-    useReplyTemplate: Boolean = false,
-    requireUid: Boolean = false,
-    requireWebPortalPassword: Boolean = false
-  ): OutgoingMessageInfo {
-    var msg = binding?.editTextEmailMessage?.text.toString()
-    if (args.messageType == MessageType.REPLY || args.messageType == MessageType.REPLY_ALL) {
-      if (useReplyTemplate && binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
-        msg += EmailUtil.genReplyContent(args.incomingMessageInfo)
-      }
-    }
-
-    val attachments = attachments.minus(getForwardedAttachments().toSet())
-    attachments.forEachIndexed { index, attachmentInfo -> attachmentInfo.path = index.toString() }
-
-    return OutgoingMessageInfo(
-      account = accountViewModel.activeAccountLiveData.value?.email ?: "",
-      subject = binding?.editTextEmailSubject?.text.toString(),
-      msg = msg,
-      toRecipients = composeMsgViewModel.recipientsTo.values.map {
-        InternetAddress(
-          it.recipientWithPubKeys.recipient.email,
-          it.recipientWithPubKeys.recipient.name
-        )
-      },
-      ccRecipients = composeMsgViewModel.recipientsCc.values.map {
-        InternetAddress(
-          it.recipientWithPubKeys.recipient.email,
-          it.recipientWithPubKeys.recipient.name
-        )
-      },
-      bccRecipients = composeMsgViewModel.recipientsBcc.values.map {
-        InternetAddress(
-          it.recipientWithPubKeys.recipient.email,
-          it.recipientWithPubKeys.recipient.name
-        )
-      },
-      from = InternetAddress(binding?.editTextFrom?.text.toString()),
-      atts = attachments,
-      forwardedAtts = getForwardedAttachments(),
-      encryptionType = composeMsgViewModel.msgEncryptionType,
-      messageType = args.messageType,
-      replyToMsgEntity = args.incomingMessageInfo?.msgEntity,
-      uid = if (requireUid) EmailUtil.genOutboxUID(requireContext()) else 0,
-      password = if (requireWebPortalPassword) usePasswordIfNeeded() else null
-    )
   }
 
   private fun usePasswordIfNeeded(): CharArray? {
@@ -1467,10 +1516,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun isPasswordProtectedFunctionalityEnabled(): Boolean {
     return accountViewModel.activeAccountLiveData.value?.useFES ?: return false
-  }
-
-  private fun getForwardedAttachments(): List<AttachmentInfo> {
-    return attachments.filter { it.id != null && it.isForwarded }
   }
 
   private fun subscribeToSetWebPortalPassword() {
@@ -1595,9 +1640,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       ) ?: return@setFragmentResultListener
 
       val key = keyList.first()
-      if (attachments.none { it.name == key.name && it.encodedSize == key.encodedSize }) {
-        attachments.add(key)
-        showAtts()
+      if (composeMsgViewModel.attachmentsStateFlow.value.none {
+          it.name == key.name && it.encodedSize == key.encodedSize
+        }) {
+        composeMsgViewModel.addAttachments(listOf(key))
       }
     }
   }

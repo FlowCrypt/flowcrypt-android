@@ -645,7 +645,7 @@ class EmailUtil {
       outgoingMsgInfo: OutgoingMessageInfo
     ): Message {
       val session = Session.getInstance(Properties())
-      val senderEmail = outgoingMsgInfo.from.address
+      val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
       var pubKeys: List<String>? = null
       var prvKeys: List<String>? = null
       var ringProtector: SecretKeyRingProtector? = null
@@ -976,7 +976,7 @@ class EmailUtil {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
       msg.setFrom(info.from)
-      msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      msg.setRecipients(Message.RecipientType.TO, info.toRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       msg.setContent(MimeMultipart().apply {
@@ -997,7 +997,7 @@ class EmailUtil {
       reply.setContent(MimeMultipart().apply {
         addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
       })
-      reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      reply.setRecipients(Message.RecipientType.TO, info.toRecipients?.toTypedArray())
       reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       reply.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       return reply

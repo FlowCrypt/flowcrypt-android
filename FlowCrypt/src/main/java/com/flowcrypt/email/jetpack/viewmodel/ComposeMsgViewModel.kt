@@ -6,7 +6,10 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.ContentResolver
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
@@ -104,6 +107,41 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     get() = recipientsBccStateFlow.value
   val allRecipients: Map<String, RecipientInfo>
     get() = recipientsTo + recipientsCc + recipientsBcc
+
+  val hasAttachmentsWithExternalStorageUri: Boolean
+    get() = attachmentsStateFlow.value.any {
+      ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
+    }
+
+  private val outgoingMessageInfoMutableStateFlow: MutableStateFlow<OutgoingMessageInfo> =
+    MutableStateFlow(OutgoingMessageInfo())
+  val outgoingMessageInfoStateFlow: StateFlow<OutgoingMessageInfo> =
+    outgoingMessageInfoMutableStateFlow.asStateFlow()
+
+  private val attachmentsMutableStateFlow: MutableStateFlow<List<AttachmentInfo>> =
+    MutableStateFlow(emptyList())
+  val attachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
+    attachmentsMutableStateFlow.asStateFlow()
+
+  fun addAttachments(attachments: List<AttachmentInfo>) {
+    attachmentsMutableStateFlow.update { existingAttachments ->
+      existingAttachments.toMutableList().apply {
+        addAll(attachments)
+      }
+    }
+  }
+
+  fun removeAttachments(attachments: List<AttachmentInfo>) {
+    attachmentsMutableStateFlow.update { existingAttachments ->
+      existingAttachments.toMutableList().apply {
+        removeAll(attachments)
+      }
+    }
+  }
+
+  fun updateOutgoingMessageInfo(outgoingMessageInfo: OutgoingMessageInfo) {
+    outgoingMessageInfoMutableStateFlow.value = outgoingMessageInfo
+  }
 
   fun switchMessageEncryptionType(messageEncryptionType: MessageEncryptionType) {
     messageEncryptionTypeMutableStateFlow.value = messageEncryptionType

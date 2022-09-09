@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -44,12 +45,15 @@ class DraftViewModel(cachedDraftId: String? = null, application: Application) :
     }
   }.flowOn(Dispatchers.Default)
 
-  fun processDraft(currentTimeMillis: Long, currentOutgoingMessageInfo: OutgoingMessageInfo) {
-    viewModelScope.launch {
+  fun processDraft(
+    coroutineScope: CoroutineScope = viewModelScope,
+    currentOutgoingMessageInfo: OutgoingMessageInfo
+  ) {
+    coroutineScope.launch {
       var isSavingDraftNeeded = false
-      val currentToRecipients = currentOutgoingMessageInfo.toRecipients.map { internetAddress ->
+      val currentToRecipients = currentOutgoingMessageInfo.toRecipients?.map { internetAddress ->
         internetAddress.address.lowercase()
-      }.toSet()
+      }?.toSet() ?: emptySet()
       val currentCcRecipients = currentOutgoingMessageInfo.ccRecipients?.map { internetAddress ->
         internetAddress.address.lowercase()
       }?.toSet() ?: emptySet()
@@ -68,7 +72,7 @@ class DraftViewModel(cachedDraftId: String? = null, application: Application) :
       }
 
       lastMsgText = currentOutgoingMessageInfo.msg ?: ""
-      lastMsgSubject = currentOutgoingMessageInfo.subject
+      lastMsgSubject = currentOutgoingMessageInfo.subject ?: ""
       lastToRecipients.clear()
       lastToRecipients.addAll(currentToRecipients)
       lastCcRecipients.clear()
@@ -110,6 +114,6 @@ class DraftViewModel(cachedDraftId: String? = null, application: Application) :
   }
 
   companion object {
-    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)
+    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(15)
   }
 }
