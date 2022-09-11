@@ -100,6 +100,7 @@ class DraftViewModel(cachedDraftId: String? = null, application: Application) :
         )
       } catch (e: Exception) {
         e.printStackTrace()
+        //need to think about this one
       }
     }
 

@@ -22,6 +22,7 @@ import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
 import com.flowcrypt.email.database.dao.AttachmentDao
+import com.flowcrypt.email.database.dao.DraftDao
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
@@ -31,6 +32,7 @@ import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.database.entity.DraftEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -59,7 +61,8 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
     KeyEntity::class,
     LabelEntity::class,
     MessageEntity::class,
-    PublicKeyEntity::class
+    PublicKeyEntity::class,
+    DraftEntity::class
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
@@ -83,6 +86,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun pubKeyDao(): PubKeyDao
 
+  abstract fun draftDao(): DraftDao
+
   @WorkerThread
   fun forceDatabaseCreationIfNeeded() {
     super.openHelper.readableDatabase
@@ -90,7 +95,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 32
+    const val DB_VERSION = 33
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1069,6 +1074,27 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_32_33 = object : FlowCryptMigration(32, 33) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `drafts` " +
+              "(`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`account` TEXT NOT NULL, " +
+              "`account_type` TEXT NOT NULL, " +
+              "`draft_id` TEXT DEFAULT NULL, " +
+              "FOREIGN KEY(`account`, `account_type`) " +
+              "REFERENCES `accounts`(`email`, `account_type`) " +
+              "ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+
+        database.execSQL(
+          "CREATE INDEX IF NOT EXISTS `account_account_type_in_drafts` " +
+              "ON `drafts` (`account`, `account_type`)"
+        )
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1114,7 +1140,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_28_29,
           MIGRATION_29_30,
           MIGRATION_30_31,
-          MIGRATION_31_32
+          MIGRATION_31_32,
+          MIGRATION_32_33
         ).build()
         INSTANCE = instance
         return instance

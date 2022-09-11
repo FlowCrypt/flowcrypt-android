@@ -1,0 +1,1114 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 33,
+    "identityHash": "205e28332091dcd3a9498e63c7c4418a",
+    "entities": [
+      {
+        "tableName": "accounts_aliases",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT NOT NULL, `send_as_email` TEXT NOT NULL, `display_name` TEXT DEFAULT NULL, `is_default` INTEGER DEFAULT 0, `verification_status` TEXT NOT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountType",
+            "columnName": "account_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sendAsEmail",
+            "columnName": "send_as_email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "is_default",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "verificationStatus",
+            "columnName": "verification_status",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "email_account_type_send_as_email_in_accounts_aliases",
+            "unique": true,
+            "columnNames": [
+              "email",
+              "account_type",
+              "send_as_email"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_send_as_email_in_accounts_aliases` ON `${TABLE_NAME}` (`email`, `account_type`, `send_as_email`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "accounts",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "email",
+              "account_type"
+            ],
+            "referencedColumns": [
+              "email",
+              "account_type"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "accounts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `display_name` TEXT DEFAULT NULL, `given_name` TEXT DEFAULT NULL, `family_name` TEXT DEFAULT NULL, `photo_url` TEXT DEFAULT NULL, `is_enabled` INTEGER DEFAULT 1, `is_active` INTEGER DEFAULT 0, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `imap_server` TEXT NOT NULL, `imap_port` INTEGER DEFAULT 143, `imap_use_ssl_tls` INTEGER DEFAULT 0, `imap_use_starttls` INTEGER DEFAULT 0, `imap_auth_mechanisms` TEXT, `smtp_server` TEXT NOT NULL, `smtp_port` INTEGER DEFAULT 25, `smtp_use_ssl_tls` INTEGER DEFAULT 0, `smtp_use_starttls` INTEGER DEFAULT 0, `smtp_auth_mechanisms` TEXT, `smtp_use_custom_sign` INTEGER DEFAULT 0, `smtp_username` TEXT DEFAULT NULL, `smtp_password` TEXT DEFAULT NULL, `contacts_loaded` INTEGER DEFAULT 0, `show_only_encrypted` INTEGER DEFAULT 0, `uuid` TEXT DEFAULT NULL, `client_configuration` TEXT DEFAULT NULL, `use_api` INTEGER NOT NULL DEFAULT 0, `use_fes` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountType",
+            "columnName": "account_type",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "givenName",
+            "columnName": "given_name",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "familyName",
+            "columnName": "family_name",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "photoUrl",
+            "columnName": "photo_url",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "isEnabled",
+            "columnName": "is_enabled",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "is_active",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "username",
+            "columnName": "username",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "password",
+            "columnName": "password",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imapServer",
+            "columnName": "imap_server",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imapPort",
+            "columnName": "imap_port",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "143"
+          },
+          {
+            "fieldPath": "imapUseSslTls",
+            "columnName": "imap_use_ssl_tls",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "imapUseStarttls",
+            "columnName": "imap_use_starttls",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "imapAuthMechanisms",
+            "columnName": "imap_auth_mechanisms",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "smtpServer",
+            "columnName": "smtp_server",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "smtpPort",
+            "columnName": "smtp_port",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "25"
+          },
+          {
+            "fieldPath": "smtpUseSslTls",
+            "columnName": "smtp_use_ssl_tls",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "smtpUseStarttls",
+            "columnName": "smtp_use_starttls",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "smtpAuthMechanisms",
+            "columnName": "smtp_auth_mechanisms",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "smtpUseCustomSign",
+            "columnName": "smtp_use_custom_sign",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "smtpUsername",
+            "columnName": "smtp_username",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "smtpPassword",
+            "columnName": "smtp_password",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "contactsLoaded",
+            "columnName": "contacts_loaded",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "showOnlyEncrypted",
+            "columnName": "show_only_encrypted",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "uuid",
+            "columnName": "uuid",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "clientConfiguration",
+            "columnName": "client_configuration",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "useAPI",
+            "columnName": "use_api",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "useFES",
+            "columnName": "use_fes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "email_account_type_in_accounts",
+            "unique": true,
+            "columnNames": [
+              "email",
+              "account_type"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_in_accounts` ON `${TABLE_NAME}` (`email`, `account_type`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "action_queue",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `action_type` TEXT NOT NULL, `action_json` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionType",
+            "columnName": "action_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionJson",
+            "columnName": "action_json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "attachment",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `encodedSize` INTEGER DEFAULT 0, `type` TEXT NOT NULL, `attachment_id` TEXT, `file_uri` TEXT, `forwarded_folder` TEXT, `forwarded_uid` INTEGER DEFAULT -1, `decrypt_when_forward` INTEGER NOT NULL DEFAULT 0, `path` TEXT NOT NULL, FOREIGN KEY(`email`, `folder`, `uid`) REFERENCES `messages`(`email`, `folder`, `uid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "folder",
+            "columnName": "folder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encodedSize",
+            "columnName": "encodedSize",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "attachmentId",
+            "columnName": "attachment_id",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "fileUri",
+            "columnName": "file_uri",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "forwardedFolder",
+            "columnName": "forwarded_folder",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "forwardedUid",
+            "columnName": "forwarded_uid",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "-1"
+          },
+          {
+            "fieldPath": "decryptWhenForward",
+            "columnName": "decrypt_when_forward",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "path",
+            "columnName": "path",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "email_uid_folder_path_in_attachment",
+            "unique": true,
+            "columnNames": [
+              "email",
+              "uid",
+              "folder",
+              "path"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_uid_folder_path_in_attachment` ON `${TABLE_NAME}` (`email`, `uid`, `folder`, `path`)"
+          },
+          {
+            "name": "email_folder_uid_in_attachment",
+            "unique": false,
+            "columnNames": [
+              "email",
+              "folder",
+              "uid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `email_folder_uid_in_attachment` ON `${TABLE_NAME}` (`email`, `folder`, `uid`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "messages",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "email",
+              "folder",
+              "uid"
+            ],
+            "referencedColumns": [
+              "email",
+              "folder",
+              "uid"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "recipients",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "lastUse",
+            "columnName": "last_use",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "name_in_recipients",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `name_in_recipients` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "last_use_in_recipients",
+            "unique": false,
+            "columnNames": [
+              "last_use"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `last_use_in_recipients` ON `${TABLE_NAME}` (`last_use`)"
+          },
+          {
+            "name": "email_in_recipients",
+            "unique": true,
+            "columnNames": [
+              "email"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_in_recipients` ON `${TABLE_NAME}` (`email`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "keys",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `fingerprint` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, `passphrase_type` INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "fingerprint",
+            "columnName": "fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "account",
+            "columnName": "account",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountType",
+            "columnName": "account_type",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publicKey",
+            "columnName": "public_key",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "privateKey",
+            "columnName": "private_key",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "storedPassphrase",
+            "columnName": "passphrase",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "passphraseType",
+            "columnName": "passphrase_type",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "account_account_type_in_keys",
+            "unique": false,
+            "columnNames": [
+              "account",
+              "account_type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `account_account_type_in_keys` ON `${TABLE_NAME}` (`account`, `account_type`)"
+          },
+          {
+            "name": "fingerprint_account_account_type_in_keys",
+            "unique": true,
+            "columnNames": [
+              "fingerprint",
+              "account",
+              "account_type"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `fingerprint_account_account_type_in_keys` ON `${TABLE_NAME}` (`fingerprint`, `account`, `account_type`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "accounts",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "account",
+              "account_type"
+            ],
+            "referencedColumns": [
+              "email",
+              "account_type"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "labels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, `next_page_token` TEXT DEFAULT NULL, `history_id` TEXT DEFAULT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountType",
+            "columnName": "account_type",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alias",
+            "columnName": "alias",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "isCustom",
+            "columnName": "is_custom",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "messagesTotal",
+            "columnName": "messages_total",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "messagesUnread",
+            "columnName": "message_unread",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "attributes",
+            "columnName": "attributes",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "nextPageToken",
+            "columnName": "next_page_token",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "historyId",
+            "columnName": "history_id",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "email_account_type_name_in_labels",
+            "unique": true,
+            "columnNames": [
+              "email",
+              "account_type",
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_name_in_labels` ON `${TABLE_NAME}` (`email`, `account_type`, `name`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "accounts",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "email",
+              "account_type"
+            ],
+            "referencedColumns": [
+              "email",
+              "account_type"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "messages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `received_date` INTEGER DEFAULT NULL, `sent_date` INTEGER DEFAULT NULL, `from_address` TEXT DEFAULT NULL, `to_address` TEXT DEFAULT NULL, `cc_address` TEXT DEFAULT NULL, `subject` TEXT DEFAULT NULL, `flags` TEXT DEFAULT NULL, `raw_message_without_attachments` TEXT DEFAULT NULL, `is_message_has_attachments` INTEGER DEFAULT 0, `is_encrypted` INTEGER DEFAULT -1, `is_new` INTEGER DEFAULT -1, `state` INTEGER DEFAULT -1, `attachments_directory` TEXT, `error_msg` TEXT DEFAULT NULL, `reply_to` TEXT DEFAULT NULL, `thread_id` TEXT DEFAULT NULL, `history_id` TEXT DEFAULT NULL, `password` BLOB DEFAULT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "folder",
+            "columnName": "folder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receivedDate",
+            "columnName": "received_date",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "sentDate",
+            "columnName": "sent_date",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "fromAddress",
+            "columnName": "from_address",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "toAddress",
+            "columnName": "to_address",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "ccAddress",
+            "columnName": "cc_address",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "subject",
+            "columnName": "subject",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "flags",
+            "columnName": "flags",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "rawMessageWithoutAttachments",
+            "columnName": "raw_message_without_attachments",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "hasAttachments",
+            "columnName": "is_message_has_attachments",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "isEncrypted",
+            "columnName": "is_encrypted",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "-1"
+          },
+          {
+            "fieldPath": "isNew",
+            "columnName": "is_new",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "-1"
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "-1"
+          },
+          {
+            "fieldPath": "attachmentsDirectory",
+            "columnName": "attachments_directory",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "errorMsg",
+            "columnName": "error_msg",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "replyTo",
+            "columnName": "reply_to",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "threadId",
+            "columnName": "thread_id",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "historyId",
+            "columnName": "history_id",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "password",
+            "columnName": "password",
+            "affinity": "BLOB",
+            "notNull": false,
+            "defaultValue": "NULL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "email_in_messages",
+            "unique": false,
+            "columnNames": [
+              "email"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `email_in_messages` ON `${TABLE_NAME}` (`email`)"
+          },
+          {
+            "name": "email_uid_folder_in_messages",
+            "unique": true,
+            "columnNames": [
+              "email",
+              "uid",
+              "folder"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_uid_folder_in_messages` ON `${TABLE_NAME}` (`email`, `uid`, `folder`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "public_keys",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `recipient` TEXT NOT NULL, `fingerprint` TEXT NOT NULL, `public_key` BLOB NOT NULL, FOREIGN KEY(`recipient`) REFERENCES `recipients`(`email`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "recipient",
+            "columnName": "recipient",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fingerprint",
+            "columnName": "fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publicKey",
+            "columnName": "public_key",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "recipient_fingerprint_in_public_keys",
+            "unique": true,
+            "columnNames": [
+              "recipient",
+              "fingerprint"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `recipient_fingerprint_in_public_keys` ON `${TABLE_NAME}` (`recipient`, `fingerprint`)"
+          },
+          {
+            "name": "recipient_in_public_keys",
+            "unique": false,
+            "columnNames": [
+              "recipient"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `recipient_in_public_keys` ON `${TABLE_NAME}` (`recipient`)"
+          },
+          {
+            "name": "fingerprint_in_public_keys",
+            "unique": false,
+            "columnNames": [
+              "fingerprint"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `fingerprint_in_public_keys` ON `${TABLE_NAME}` (`fingerprint`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "recipients",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "recipient"
+            ],
+            "referencedColumns": [
+              "email"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "drafts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `account` TEXT NOT NULL, `account_type` TEXT NOT NULL, `draft_id` TEXT DEFAULT NULL, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "account",
+            "columnName": "account",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountType",
+            "columnName": "account_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "draftId",
+            "columnName": "draft_id",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "account_account_type_in_drafts",
+            "unique": false,
+            "columnNames": [
+              "account",
+              "account_type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `account_account_type_in_drafts` ON `${TABLE_NAME}` (`account`, `account_type`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "accounts",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "account",
+              "account_type"
+            ],
+            "referencedColumns": [
+              "email",
+              "account_type"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '205e28332091dcd3a9498e63c7c4418a')"
+    ]
+  }
+}
