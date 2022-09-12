@@ -34,7 +34,7 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
   val addNewAccountLiveData = MutableLiveData<Result<AccountEntity?>>()
   val updateAuthCredentialsLiveData = MutableLiveData<Result<Boolean?>>()
 
-  private val pureActiveAccountLiveData: LiveData<AccountEntity?> =
+  protected val pureActiveAccountLiveData: LiveData<AccountEntity?> =
     roomDatabase.accountDao().getActiveAccountLD()
   val activeAccountLiveData: LiveData<AccountEntity?> =
     pureActiveAccountLiveData.switchMap { accountEntity ->

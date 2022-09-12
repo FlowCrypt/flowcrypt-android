@@ -33,5 +33,5 @@ data class DraftEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val account: String,
   @ColumnInfo(name = "account_type") val accountType: String,
-  @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String?,
+  @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
 )

@@ -301,12 +301,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  @OptIn(DelicateCoroutinesApi::class)
   override fun onDestroyView() {
     super.onDestroyView()
     appBarLayout?.removeView(nonEncryptedHintView)
+    draftViewModel.processDraft(
+      coroutineScope = GlobalScope,
+      currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+    )
   }
 
-  @OptIn(DelicateCoroutinesApi::class)
   override fun onDestroy() {
     super.onDestroy()
     if (!isMsgSentToQueue) {
@@ -318,11 +322,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
       }
     }
-
-    draftViewModel.processDraft(
-      GlobalScope,
-      currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
-    )
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {

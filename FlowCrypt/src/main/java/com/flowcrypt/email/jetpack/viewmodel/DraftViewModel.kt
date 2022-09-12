@@ -8,9 +8,12 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.DraftEntity
+import com.flowcrypt.email.util.CacheManager
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -28,12 +32,11 @@ import java.util.concurrent.TimeUnit
  *         Time: 3:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DraftViewModel(cachedDraftId: String? = null, application: Application) :
+class DraftViewModel(private val cachedDraftId: String? = null, application: Application) :
   AccountViewModel(application) {
-  private val sessionDraftId = "${System.currentTimeMillis()}_"
-  private var draftId: String? = cachedDraftId
-  private var lastMsgText: String = ""
-  private var lastMsgSubject: String = ""
+  private var draftEntity: DraftEntity? = null
+  private var lastMsgText: String? = null
+  private var lastMsgSubject: String? = null
   private val lastToRecipients: MutableSet<String> = mutableSetOf()
   private val lastCcRecipients: MutableSet<String> = mutableSetOf()
   private val lastBccRecipients: MutableSet<String> = mutableSetOf()
@@ -71,8 +74,8 @@ class DraftViewModel(cachedDraftId: String? = null, application: Application) :
         isSavingDraftNeeded = true
       }
 
-      lastMsgText = currentOutgoingMessageInfo.msg ?: ""
-      lastMsgSubject = currentOutgoingMessageInfo.subject ?: ""
+      lastMsgText = currentOutgoingMessageInfo.msg
+      lastMsgSubject = currentOutgoingMessageInfo.subject
       lastToRecipients.clear()
       lastToRecipients.addAll(currentToRecipients)
       lastCcRecipients.clear()
@@ -81,23 +84,35 @@ class DraftViewModel(cachedDraftId: String? = null, application: Application) :
       lastBccRecipients.addAll(currentBccRecipients)
 
       if (isSavingDraftNeeded) {
-        uploadDraftToRemoteServer(currentOutgoingMessageInfo)
+        prepareAndSaveDraftForUploading(currentOutgoingMessageInfo)
       }
     }
   }
 
-  private suspend fun uploadDraftToRemoteServer(outgoingMessageInfo: OutgoingMessageInfo) =
+  private suspend fun prepareAndSaveDraftForUploading(outgoingMessageInfo: OutgoingMessageInfo) =
     withContext(Dispatchers.IO) {
       try {
         val activeAccount =
           roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
-        val mimeMessage = EmailUtil.genMessage(getApplication(), activeAccount, outgoingMessageInfo)
-        draftId = GmailApiHelper.uploadDraft(
-          context = getApplication(),
-          account = activeAccount,
-          mimeMessage = mimeMessage,
-          draftId = draftId
-        )
+
+        if (draftEntity == null) {
+          draftEntity = getDraftEntity(activeAccount)
+        }
+
+        draftEntity?.let { draftEntity ->
+          val mimeMessage =
+            EmailUtil.genMessage(getApplication(), activeAccount, outgoingMessageInfo)
+          val draftsDir = CacheManager.getDraftDirectory(getApplication())
+
+          val currentMsgDraftDir = draftsDir.walkTopDown().firstOrNull {
+            it.name == draftEntity.id.toString()
+          } ?: FileAndDirectoryUtils.getDir(draftEntity.id.toString(), draftsDir)
+
+          val draftFile = File(currentMsgDraftDir, "${System.currentTimeMillis()}")
+          draftFile.outputStream().use {
+            mimeMessage.writeTo(it)
+          }
+        }
       } catch (e: Exception) {
         e.printStackTrace()
         //need to think about this one
@@ -114,7 +129,24 @@ class DraftViewModel(cachedDraftId: String? = null, application: Application) :
     lastBccRecipients.addAll(initializationData.bccAddresses.map { it.lowercase() })
   }
 
+  private suspend fun getDraftEntity(accountEntity: AccountEntity): DraftEntity =
+    withContext(Dispatchers.IO) {
+      val existingDraft = roomDatabase.draftDao()
+        .getDraftEntitySuspend(accountEntity.email, accountEntity.accountType, cachedDraftId)
+
+      if (existingDraft == null) {
+        val newDraft = DraftEntity(
+          account = accountEntity.email,
+          accountType = accountEntity.accountType ?: ""
+        )
+        val id = roomDatabase.draftDao().insertSuspend(newDraft)
+        return@withContext newDraft.copy(id = id)
+      }
+
+      return@withContext existingDraft
+    }
+
   companion object {
-    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(15)
+    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)
   }
 }
