@@ -22,6 +22,9 @@ import jakarta.mail.Store
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.filefilter.DirectoryFileFilter
+import org.apache.commons.io.filefilter.TrueFileFilter
 import java.io.File
 import java.io.FileFilter
 import java.util.Properties
@@ -74,34 +77,48 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   ) = withContext(Dispatchers.IO) {
     val draftsDir = CacheManager.getDraftDirectory(applicationContext)
     val directories = draftsDir.listFiles(FileFilter { it.isDirectory }) ?: emptyArray()
-    for (directory in directories) {
-      val draftIdFile = directory.listFiles(
-        FileFilter { it.isFile && it.name.startsWith(PREFIX_FOR_DRAFT_ID) })?.firstOrNull()
-      val originalDraftId = draftIdFile?.name?.substringAfter(PREFIX_FOR_DRAFT_ID)
-      val files = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
-      try {
-        val lastVersion = files.maxBy { it.lastModified() }
-        val mimeMessage = MimeMessage(Session.getInstance(Properties()), lastVersion.inputStream())
-        val draftId = action.invoke(originalDraftId, mimeMessage)
-        if (originalDraftId == null) {
-          File(directory, PREFIX_FOR_DRAFT_ID + draftId).outputStream().use {
-            it.write(draftId.toByteArray())
-          }
+    var attemptsCount = 0
+    while (attemptsCount <= MAX_ATTEMPTS_COUNT && FileUtils.listFiles(
+        draftsDir,
+        TrueFileFilter.INSTANCE,
+        DirectoryFileFilter.DIRECTORY
+      ).isNotEmpty()
+    ) {
+      for (directory in directories) {
+        val directoryName = directory.name
+        val existingDraftEntity = roomDatabase.draftDao().getDraftEntityById(directoryName)
+        if (existingDraftEntity == null) {
+          FileAndDirectoryUtils.deleteDir(directory)
+          continue
         }
-      } catch (e: Exception) {
-        e.printStackTrace()
-      } finally {
-        files.forEach { FileAndDirectoryUtils.deleteFile(it) }
+        val originalDraftId = existingDraftEntity.draftId
+        val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
+        try {
+          val lastVersion = drafts.maxBy { it.lastModified() }
+          val mimeMessage =
+            MimeMessage(Session.getInstance(Properties()), lastVersion.inputStream())
+          val draftId = action.invoke(originalDraftId, mimeMessage)
+          if (originalDraftId == null) {
+            roomDatabase.draftDao().updateSuspend(existingDraftEntity.copy(draftId = draftId))
+          }
+
+          drafts.forEach { FileAndDirectoryUtils.deleteFile(it) }
+          if ((directory.listFiles() ?: emptyArray<File>()).isEmpty()) {
+            FileAndDirectoryUtils.deleteDir(directory)
+          }
+        } catch (e: Exception) {
+          e.printStackTrace()
+          break
+        }
       }
+
+      attemptsCount++
     }
   }
 
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPLOAD_DRAFTS"
-
-    const val PREFIX_FOR_DRAFT_ID = "draft_id_"
-    const val PREFIX_DELETE = "delete"
-    const val PREFIX_UPDATE = "update"
+    const val MAX_ATTEMPTS_COUNT = 10
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()

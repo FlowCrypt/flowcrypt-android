@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.DraftEntity
+import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.CoroutineScope
@@ -116,6 +117,8 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
       } catch (e: Exception) {
         e.printStackTrace()
         //need to think about this one
+      } finally {
+        UploadDraftsWorker.enqueue(getApplication())
       }
     }
 
@@ -132,7 +135,7 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
   private suspend fun getDraftEntity(accountEntity: AccountEntity): DraftEntity =
     withContext(Dispatchers.IO) {
       val existingDraft = roomDatabase.draftDao()
-        .getDraftEntitySuspend(accountEntity.email, accountEntity.accountType, cachedDraftId)
+        .getDraftEntity(accountEntity.email, accountEntity.accountType, cachedDraftId)
 
       if (existingDraft == null) {
         val newDraft = DraftEntity(
