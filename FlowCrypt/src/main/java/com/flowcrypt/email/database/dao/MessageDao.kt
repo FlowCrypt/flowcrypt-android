@@ -399,38 +399,17 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     }
 
   @Transaction
-  open suspend fun updateFlagsSuspend(
-    email: String?,
-    label: String?,
-    addedFlagsMap: Map<Long, Flags> = emptyMap(),
-    removedFlagsMap: Map<Long, Flags> = emptyMap(),
-    replacedFlagsMap: Map<Long, Flags> = emptyMap()
-  ) =
+  open fun updateFlags(email: String?, label: String?, flagsMap: Map<Long, Flags>) {
+    doOperationViaSteps(list = ArrayList(flagsMap.keys)) { stepUIDs: Collection<Long> ->
+      updateFlagsByUIDs(email, label, flagsMap, stepUIDs)
+    }
+  }
+
+  @Transaction
+  open suspend fun updateFlagsSuspend(email: String?, label: String?, flagsMap: Map<Long, Flags>) =
     withContext(Dispatchers.IO) {
-      doOperationViaStepsSuspend(list = ArrayList(addedFlagsMap.keys)) { stepUIDs: Collection<Long> ->
-        updateFlagsByUIDs(email, label, addedFlagsMap, stepUIDs) { msgEntity, newFlags ->
-          msgEntity.copy(
-            flags = msgEntity.getFlags().apply { add(newFlags) }.toString().uppercase()
-          )
-        }
-      }
-
-      doOperationViaStepsSuspend(list = ArrayList(removedFlagsMap.keys)) { stepUIDs: Collection<Long> ->
-        updateFlagsByUIDs(email, label, removedFlagsMap, stepUIDs) { msgEntity, newFlags ->
-          msgEntity.copy(
-            flags = msgEntity.getFlags().apply { remove(newFlags) }.toString().uppercase()
-          )
-        }
-      }
-
-      doOperationViaStepsSuspend(list = ArrayList(replacedFlagsMap.keys)) { stepUIDs: Collection<Long> ->
-        updateFlagsByUIDs(email, label, replacedFlagsMap, stepUIDs) { msgEntity, newFlags ->
-          if (newFlags.contains(Flags.Flag.SEEN)) {
-            msgEntity.copy(flags = newFlags.toString().uppercase(), isNew = false)
-          } else {
-            msgEntity.copy(flags = newFlags.toString().uppercase())
-          }
-        }
+      doOperationViaStepsSuspend(list = ArrayList(flagsMap.keys)) { stepUIDs: Collection<Long> ->
+        updateFlagsByUIDsSuspend(email, label, flagsMap, stepUIDs)
       }
     }
 
@@ -524,11 +503,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     }
   }
 
-  private suspend fun updateFlagsByUIDs(
-    email: String?, label: String?,
-    flagsMap: Map<Long, Flags>,
-    uids: Collection<Long>?,
-    action: suspend (msgEntity: MessageEntity, newFlags: Flags) -> MessageEntity
+  private suspend fun updateFlagsByUIDsSuspend(
+    email: String?, label: String?, flagsMap: Map<Long, Flags>,
+    uids: Collection<Long>?
   ): Int = withContext(Dispatchers.IO) {
     val msgEntities = getMsgsByUidsSuspend(account = email, folder = label, msgsUID = uids)
     val modifiedMsgEntities = ArrayList<MessageEntity>()
@@ -536,12 +513,38 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     for (msgEntity in msgEntities) {
       val flags = flagsMap[msgEntity.uid]
       flags?.let {
-        val msgEntityWithUpdatedFlags = action.invoke(msgEntity, flags)
-        modifiedMsgEntities.add(msgEntityWithUpdatedFlags)
+        val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
+          msgEntity.copy(flags = it.toString().uppercase(), isNew = false)
+        } else {
+          msgEntity.copy(flags = it.toString().uppercase())
+        }
+        modifiedMsgEntities.add(modifiedMsgEntity)
       }
     }
 
     return@withContext updateSuspend(modifiedMsgEntities)
+  }
+
+  private fun updateFlagsByUIDs(
+    email: String?, label: String?, flagsMap: Map<Long, Flags>,
+    uids: Collection<Long>?
+  ): Int {
+    val msgEntities = getMsgsByUids(account = email, folder = label, msgsUID = uids)
+    val modifiedMsgEntities = ArrayList<MessageEntity>()
+
+    for (msgEntity in msgEntities) {
+      val flags = flagsMap[msgEntity.uid]
+      flags?.let {
+        val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
+          msgEntity.copy(flags = it.toString().uppercase(), isNew = false)
+        } else {
+          msgEntity.copy(flags = it.toString().uppercase())
+        }
+        modifiedMsgEntities.add(modifiedMsgEntity)
+      }
+    }
+
+    return update(modifiedMsgEntities)
   }
 
   data class UidFlagsPair(val uid: Long, val flags: String? = null)

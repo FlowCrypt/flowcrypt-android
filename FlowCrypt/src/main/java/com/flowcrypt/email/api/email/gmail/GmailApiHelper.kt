@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.email.gmail.api.GMailRawAttachmentFilterInputStre
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -99,7 +98,6 @@ class GmailApiHelper {
 
     const val LABEL_INBOX = JavaEmailConstants.FOLDER_INBOX
     const val LABEL_UNREAD = JavaEmailConstants.FOLDER_UNREAD
-    const val LABEL_DRAFT = JavaEmailConstants.FOLDER_DRAFT
     const val LABEL_SENT = JavaEmailConstants.FOLDER_SENT
     const val LABEL_TRASH = JavaEmailConstants.FOLDER_TRASH
 
@@ -481,25 +479,18 @@ class GmailApiHelper {
     suspend fun processHistory(
       localFolder: LocalFolder,
       historyList: List<History>,
-      action: suspend (
-        deleteCandidatesUIDs: Set<Long>,
-        newCandidatesMap: Map<Long, Message>,
-        flagsAddedMap: Map<Long, Flags>,
-        flagsRemovedMap: Map<Long, Flags>
-      ) -> Unit
+      action: suspend (deleteCandidatesUIDs: Set<Long>, newCandidatesMap: Map<Long, Message>, updateCandidatesMap: Map<Long, Flags>) -> Unit
     ) = withContext(Dispatchers.IO)
     {
       val deleteCandidatesUIDs = mutableSetOf<Long>()
       val newCandidatesMap = mutableMapOf<Long, Message>()
-      val flagsAdded = mutableMapOf<Long, Flags>()
-      val flagsRemoved = mutableMapOf<Long, Flags>()
+      val updateCandidates = mutableMapOf<Long, Flags>()
 
       for (history in historyList) {
         history.messagesDeleted?.let { messagesDeleted ->
           for (historyMsgDeleted in messagesDeleted) {
             newCandidatesMap.remove(historyMsgDeleted.message.uid)
-            flagsAdded.remove(historyMsgDeleted.message.uid)
-            flagsRemoved.remove(historyMsgDeleted.message.uid)
+            updateCandidates.remove(historyMsgDeleted.message.uid)
             deleteCandidatesUIDs.add(historyMsgDeleted.message.uid)
           }
         }
@@ -507,8 +498,7 @@ class GmailApiHelper {
         history.messagesAdded?.let { messagesAdded ->
           for (historyMsgAdded in messagesAdded) {
             deleteCandidatesUIDs.remove(historyMsgAdded.message.uid)
-            flagsAdded.remove(historyMsgAdded.message.uid)
-            flagsRemoved.remove(historyMsgAdded.message.uid)
+            updateCandidates.remove(historyMsgAdded.message.uid)
             newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
           }
         }
@@ -517,7 +507,7 @@ class GmailApiHelper {
           for (historyLabelRemoved in labelsRemoved) {
             if (localFolder.fullName in historyLabelRemoved.labelIds) {
               newCandidatesMap.remove(historyLabelRemoved.message.uid)
-              flagsRemoved.remove(historyLabelRemoved.message.uid)
+              updateCandidates.remove(historyLabelRemoved.message.uid)
               deleteCandidatesUIDs.add(historyLabelRemoved.message.uid)
               continue
             }
@@ -526,17 +516,17 @@ class GmailApiHelper {
               val msg = historyLabelRemoved.message
               if (localFolder.fullName in msg.labelIds) {
                 deleteCandidatesUIDs.remove(msg.uid)
-                flagsRemoved.remove(msg.uid)
+                updateCandidates.remove(msg.uid)
                 newCandidatesMap[msg.uid] = msg
                 continue
               }
             }
 
-            val existedFlags = flagsRemoved[historyLabelRemoved.message.uid] ?: Flags()
-            historyLabelRemoved.labelIds.forEach {
-              existedFlags.add(if (it.equals(LABEL_UNREAD)) MessageFlag.SEEN.value else it)
+            if (LABEL_UNREAD in historyLabelRemoved.labelIds) {
+              val existedFlags = updateCandidates[historyLabelRemoved.message.uid] ?: Flags()
+              existedFlags.add(Flags.Flag.SEEN)
+              updateCandidates[historyLabelRemoved.message.uid] = existedFlags
             }
-            flagsRemoved[historyLabelRemoved.message.uid] = existedFlags
           }
         }
 
@@ -544,27 +534,27 @@ class GmailApiHelper {
           for (historyLabelAdded in labelsAdded) {
             if (localFolder.fullName in historyLabelAdded.labelIds) {
               deleteCandidatesUIDs.remove(historyLabelAdded.message.uid)
-              flagsAdded.remove(historyLabelAdded.message.uid)
+              updateCandidates.remove(historyLabelAdded.message.uid)
               newCandidatesMap[historyLabelAdded.message.uid] = historyLabelAdded.message
               continue
             }
 
             if (historyLabelAdded.labelIds.contains(LABEL_TRASH)) {
               newCandidatesMap.remove(historyLabelAdded.message.uid)
-              flagsAdded.remove(historyLabelAdded.message.uid)
+              updateCandidates.remove(historyLabelAdded.message.uid)
               deleteCandidatesUIDs.add(historyLabelAdded.message.uid)
               continue
             }
 
-            val existedFlags = flagsAdded[historyLabelAdded.message.uid] ?: Flags()
-            historyLabelAdded.labelIds.forEach {
-              existedFlags.add(if (it.equals(LABEL_UNREAD)) MessageFlag.SEEN.value else it)
+            if (LABEL_UNREAD in historyLabelAdded.labelIds) {
+              val existedFlags = updateCandidates[historyLabelAdded.message.uid] ?: Flags()
+              existedFlags.remove(Flags.Flag.SEEN)
+              updateCandidates[historyLabelAdded.message.uid] = existedFlags
             }
-            flagsRemoved[historyLabelAdded.message.uid] = existedFlags
           }
         }
 
-        action.invoke(deleteCandidatesUIDs, newCandidatesMap, flagsAdded, flagsRemoved)
+        action.invoke(deleteCandidatesUIDs, newCandidatesMap, updateCandidates)
       }
     }
 

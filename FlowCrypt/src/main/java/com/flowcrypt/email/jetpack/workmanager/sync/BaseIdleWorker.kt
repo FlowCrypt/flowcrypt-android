@@ -66,21 +66,12 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
   protected suspend fun processUpdatedMsgs(
     accountEntity: AccountEntity,
     folderFullName: String,
-    addedFlagsMap: Map<Long, Flags> = emptyMap(),
-    removedFlagsMap: Map<Long, Flags> = emptyMap(),
-    replacedFlagsMap: Map<Long, Flags> = emptyMap()
+    updateCandidates: Map<Long, Flags>
   ) {
-    roomDatabase.msgDao().updateFlagsSuspend(
-      email = accountEntity.email,
-      label = folderFullName,
-      addedFlagsMap = addedFlagsMap,
-      removedFlagsMap = removedFlagsMap,
-      replacedFlagsMap = replacedFlagsMap
-    )
+    roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderFullName, updateCandidates)
 
     if (!GeneralUtil.isAppForegrounded()) {
-      //need to think
-      for (item in replacedFlagsMap.ifEmpty { addedFlagsMap }) {
+      for (item in updateCandidates) {
         val uid = item.key
         if (item.value.contains(Flags.Flag.SEEN)) {
           notificationManager.cancel(uid.toHex())
