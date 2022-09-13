@@ -145,7 +145,8 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
   ) = withContext(Dispatchers.IO) {
     GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
                                                               newCandidatesMap,
-                                                              updateCandidatesMap ->
+                                                              flagsAddedMap,
+                                                              flagsRemovedMap ->
       val email = accountEntity.email
       processDeletedMsgs(accountEntity, localFolder.fullName, deleteCandidatesUIDs)
 
@@ -178,7 +179,12 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
         )
       }
 
-      processUpdatedMsgs(accountEntity, localFolder.fullName, updateCandidatesMap)
+      processUpdatedMsgs(
+        accountEntity = accountEntity,
+        folderFullName = localFolder.fullName,
+        addedFlagsMap = flagsAddedMap,
+        removedFlagsMap = flagsRemovedMap
+      )
     }
   }
 

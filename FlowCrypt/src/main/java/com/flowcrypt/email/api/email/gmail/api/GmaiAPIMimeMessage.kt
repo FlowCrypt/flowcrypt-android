@@ -65,6 +65,10 @@ class GmaiAPIMimeMessage(
     if (message.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) != true) {
       setFlag(Flags.Flag.SEEN, true)
     }
+
+    if (message.labelIds?.contains(GmailApiHelper.LABEL_DRAFT) == true) {
+      setFlag(Flags.Flag.DRAFT, true)
+    }
   }
 
   private fun generateMultipart(message: Message): Multipart? {

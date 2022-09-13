@@ -261,6 +261,10 @@ data class MessageEntity(
     return result
   }
 
+  fun getFlags(): Flags {
+    return Flags().apply { flags?.split(" ")?.forEach { add(it) } }
+  }
+
   companion object CREATOR : Parcelable.Creator<MessageEntity> {
     const val TABLE_NAME = "messages"
 
