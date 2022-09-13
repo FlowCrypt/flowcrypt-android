@@ -98,6 +98,7 @@ class GmailApiHelper {
 
     const val LABEL_INBOX = JavaEmailConstants.FOLDER_INBOX
     const val LABEL_UNREAD = JavaEmailConstants.FOLDER_UNREAD
+    const val LABEL_DRAFT = JavaEmailConstants.FOLDER_DRAFT
     const val LABEL_SENT = JavaEmailConstants.FOLDER_SENT
     const val LABEL_TRASH = JavaEmailConstants.FOLDER_TRASH
 
@@ -522,11 +523,8 @@ class GmailApiHelper {
               }
             }
 
-            if (LABEL_UNREAD in historyLabelRemoved.labelIds) {
-              val existedFlags = updateCandidates[historyLabelRemoved.message.uid] ?: Flags()
-              existedFlags.add(Flags.Flag.SEEN)
-              updateCandidates[historyLabelRemoved.message.uid] = existedFlags
-            }
+            val existedFlags = labelsToImapFlags(historyLabelRemoved.message.labelIds)
+            updateCandidates[historyLabelRemoved.message.uid] = existedFlags
           }
         }
 
@@ -546,11 +544,8 @@ class GmailApiHelper {
               continue
             }
 
-            if (LABEL_UNREAD in historyLabelAdded.labelIds) {
-              val existedFlags = updateCandidates[historyLabelAdded.message.uid] ?: Flags()
-              existedFlags.remove(Flags.Flag.SEEN)
-              updateCandidates[historyLabelAdded.message.uid] = existedFlags
-            }
+            val existedFlags = labelsToImapFlags(historyLabelAdded.message.labelIds)
+            updateCandidates[historyLabelAdded.message.uid] = existedFlags
           }
         }
 
@@ -901,6 +896,23 @@ class GmailApiHelper {
     ): GoogleAccountCredential {
       return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES))
         .setSelectedAccount(account)
+    }
+
+    private fun labelsToImapFlags(labelIds: MutableList<String>): Flags {
+      val flags = Flags()
+      labelIds.forEach {
+        when (it) {
+          LABEL_DRAFT -> flags.add(Flags.Flag.DRAFT)
+          LABEL_UNREAD -> {}//do nothing
+          else -> flags.add(it)
+        }
+      }
+
+      if (!labelIds.contains(LABEL_UNREAD)) {
+        flags.add(Flags.Flag.SEEN)
+      }
+
+      return flags
     }
 
     private fun processException(e: Throwable): Throwable {
