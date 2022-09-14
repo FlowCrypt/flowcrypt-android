@@ -109,24 +109,27 @@ class MsgDetailsViewModel(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   val gmailApiDraftFlow = activeAccountLiveData.asFlow().transformLatest { accountEntity ->
-    val draft = if (messageEntity.isDraft) {
-      if (accountEntity == null) {
-        emit(null)
-        return@transformLatest
-      }
+    try {
+      val draft = if (messageEntity.isDraft) {
+        if (accountEntity == null) {
+          emit(null)
+          return@transformLatest
+        }
 
-      GmailApiHelper.getDraftByMsgId(
-        application,
-        accountEntity,
-        messageEntity.uid.toHex()
-      )
-    } else null
-
-    emit(draft)
+        GmailApiHelper.getDraftByMsgId(
+          application,
+          accountEntity,
+          messageEntity.uid.toHex()
+        )
+      } else null
+      emit(Result.success(draft))
+    } catch (e: Exception) {
+      emit(Result.exception(e))
+    }
   }.stateIn(
     scope = viewModelScope,
     started = WhileSubscribed(5000),
-    initialValue = null
+    initialValue = Result.none()
   )
 
   private val initMsgLiveData: LiveData<MessageEntity?> = liveData {
@@ -179,7 +182,7 @@ class MsgDetailsViewModel(
   private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
     mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
-        if (messageEntity?.isOutboxMsg() == true) {
+        if (messageEntity?.isOutboxMsg == true) {
           emit(Result.loading())
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
           val processingResult =
@@ -193,7 +196,7 @@ class MsgDetailsViewModel(
   private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
     mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
-        if (messageEntity?.isOutboxMsg() == false) {
+        if (messageEntity?.isOutboxMsg == false) {
           emit(Result.loading())
           val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
           if (existedMsgSnapshot != null) {

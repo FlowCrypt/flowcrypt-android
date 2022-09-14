@@ -663,7 +663,7 @@ class EmailUtil {
       }
 
       return when (outgoingMsgInfo.messageType) {
-        MessageType.NEW, MessageType.FORWARD -> {
+        MessageType.NEW, MessageType.FORWARD, MessageType.DRAFT -> {
           prepareNewMsg(session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
         }
 

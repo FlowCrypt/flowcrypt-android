@@ -140,7 +140,8 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
       if (existingDraft == null) {
         val newDraft = DraftEntity(
           account = accountEntity.email,
-          accountType = accountEntity.accountType ?: ""
+          accountType = accountEntity.accountType ?: "",
+          draftId = cachedDraftId
         )
         val id = roomDatabase.draftDao().insertSuspend(newDraft)
         return@withContext newDraft.copy(id = id)

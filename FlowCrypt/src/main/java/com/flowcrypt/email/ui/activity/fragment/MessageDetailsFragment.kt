@@ -444,8 +444,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
-    binding?.imageButtonReplyAll?.visibleOrGone(!args.messageEntity.isOutboxMsg())
-    binding?.imageButtonMoreOptions?.visibleOrGone(!args.messageEntity.isOutboxMsg())
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
@@ -677,8 +675,28 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun updateViews() {
+    binding?.imageButtonReplyAll?.visibleOrGone(
+      !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
+    )
+    binding?.imageButtonMoreOptions?.visibleOrGone(
+      !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
+    )
     binding?.imageButtonReplyAll?.setOnClickListener(this)
     binding?.imageButtonMoreOptions?.setOnClickListener(this)
+
+    binding?.imageButtonEditDraft?.setOnClickListener {
+      startActivity(
+        CreateMessageActivity.generateIntent(
+          context,
+          MessageType.DRAFT,
+          msgEncryptType,
+          msgInfo?.copy(
+            msgBlocks = emptyList(),
+            draftId = msgDetailsViewModel.gmailApiDraftFlow.value?.data?.id
+          )
+        )
+      )
+    }
 
     binding?.iBShowDetails?.setOnClickListener {
       binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
@@ -998,7 +1016,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.root?.visibleOrGone(!args.messageEntity.isOutboxMsg())
+      binding?.layoutReplyButtons?.root?.visibleOrGone(
+        !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
+      )
     }
   }
 
@@ -1341,6 +1361,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun setupMsgDetailsViewModel() {
+    collectGmailApiDraftFlow()
     observeFreshMsgLiveData()
     observerIncomingMessageInfoLiveData()
     observeAttsLiveData()
@@ -1385,6 +1406,31 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         else -> {
+        }
+      }
+    }
+  }
+
+  private fun collectGmailApiDraftFlow() {
+    lifecycleScope.launchWhenStarted {
+      msgDetailsViewModel.gmailApiDraftFlow.collect {
+        when (it?.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource?.incrementSafely()
+          }
+
+          Result.Status.SUCCESS -> {
+            binding?.imageButtonEditDraft?.visibleOrGone(it.data?.id?.isNotEmpty() == true)
+            countingIdlingResource?.decrementSafely()
+          }
+
+          Result.Status.EXCEPTION, Result.Status.ERROR -> {
+            //think about it
+            countingIdlingResource?.decrementSafely()
+          }
+
+          else -> {
+          }
         }
       }
     }

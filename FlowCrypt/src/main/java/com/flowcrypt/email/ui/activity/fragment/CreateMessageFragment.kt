@@ -148,7 +148,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return DraftViewModel(application = requireActivity().application) as T
+        return DraftViewModel(
+          cachedDraftId = args.incomingMessageInfo?.draftId,
+          application = requireActivity().application
+        ) as T
       }
     }
   }

@@ -86,12 +86,23 @@
                     android:textColor="@color/dark"
                     android:textSize="@dimen/default_text_size_very_big"
                     android:textStyle="italic"
-                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/imageButtonEditDraft"
                     app:layout_constraintHorizontal_bias="0.487"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_goneMarginLeft="@dimen/default_margin_medium"
                     tools:text="[FlowCrypt/flowcrypt-security] Unlimited unauthenticated file storage via password protected attachments (#126)" />
+
+                <ImageButton
+                    android:id="@+id/imageButtonEditDraft"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/edit_draft"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_baseline_edit_note_24" />
 
                 <View
                     android:id="@+id/view"

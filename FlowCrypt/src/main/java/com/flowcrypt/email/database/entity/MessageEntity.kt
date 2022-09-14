@@ -106,6 +106,9 @@ data class MessageEntity(
   val isDraft: Boolean = flags?.contains(MessageFlag.DRAFT.value) ?: false
 
   @Ignore
+  val isOutboxMsg: Boolean = JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
+
+  @Ignore
   val uidAsHEX: String = uid.toHex()
 
   @Ignore
@@ -183,10 +186,6 @@ data class MessageEntity(
 
   override fun describeContents(): Int {
     return 0
-  }
-
-  fun isOutboxMsg(): Boolean {
-    return JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
   }
 
   override fun equals(other: Any?): Boolean {
