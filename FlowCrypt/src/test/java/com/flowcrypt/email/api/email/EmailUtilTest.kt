@@ -142,11 +142,11 @@ class EmailUtilTest {
     )
     assertArrayEquals(replyToMIME.from, replyMIME.getRecipients(Message.RecipientType.TO))
     assertArrayEquals(
-      replyToMIME.getHeader("Message-ID"),
+      replyToMIME.getHeader(JavaEmailConstants.HEADER_MESSAGE_ID),
       replyMIME.getHeader("In-Reply-To")
     )
     assertArrayEquals(
-      replyToMIME.getHeader("Message-ID"),
+      replyToMIME.getHeader(JavaEmailConstants.HEADER_MESSAGE_ID),
       replyMIME.getHeader("References")
     )
   }

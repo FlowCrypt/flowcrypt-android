@@ -883,6 +883,27 @@ class GmailApiHelper {
       }
     }
 
+    suspend fun getDraftByMsgId(
+      context: Context,
+      account: AccountEntity,
+      msgId: String
+    ): Draft? =
+      withContext(Dispatchers.IO) {
+        val gmail = generateGmailApiService(context, account)
+
+        val rfc822msgid =
+          getHeaderValueByMessageId(context, account, msgId, JavaEmailConstants.HEADER_MESSAGE_ID)
+
+        val response = gmail
+          .users()
+          .drafts()
+          .list(DEFAULT_USER_ID)
+          .setQ("rfc822msgid:${rfc822msgid}")
+          .execute()
+
+        return@withContext response?.drafts?.firstOrNull()
+      }
+
     /**
      * Generate [GoogleAccountCredential] which will be used with Gmail API.
      *
@@ -913,6 +934,24 @@ class GmailApiHelper {
       }
 
       return flags
+    }
+
+    private suspend fun getHeaderValueByMessageId(
+      context: Context,
+      account: AccountEntity?,
+      msgId: String,
+      headerName: String
+    ): String? = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, account)
+
+      val message = gmailApiService
+        .users()
+        .messages()
+        .get(DEFAULT_USER_ID, msgId)
+        .setFormat(MESSAGE_RESPONSE_FORMAT_METADATA)
+      message.metadataHeaders = listOf(headerName)
+
+      return@withContext message.execute()?.payload?.headers?.firstOrNull { it.name == headerName }?.value
     }
 
     private fun processException(e: Throwable): Throwable {

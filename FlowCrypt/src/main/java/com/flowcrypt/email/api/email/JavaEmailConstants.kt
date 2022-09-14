@@ -76,6 +76,7 @@ class JavaEmailConstants {
     const val FOLDER_ATTRIBUTE_NO_SELECT = "\\Noselect"
 
     const val HEADER_X_ATTACHMENT_ID = "X-Attachment-Id"
+    const val HEADER_MESSAGE_ID = "Message-ID"
     const val HEADER_CONTENT_ID = "Content-ID"
     const val HEADER_IN_REPLY_TO = "In-Reply-To"
     const val FOLDER_INBOX = "INBOX"

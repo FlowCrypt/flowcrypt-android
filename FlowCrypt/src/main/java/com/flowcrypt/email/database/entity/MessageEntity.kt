@@ -103,6 +103,9 @@ data class MessageEntity(
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
 
   @Ignore
+  val isDraft: Boolean = flags?.contains(MessageFlag.DRAFT.value) ?: false
+
+  @Ignore
   val uidAsHEX: String = uid.toHex()
 
   @Ignore
