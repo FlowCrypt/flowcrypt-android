@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import jakarta.mail.Session
 import jakarta.mail.Store
 import jakarta.mail.internet.MimeMessage
@@ -78,7 +79,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     val draftsDir = CacheManager.getDraftDirectory(applicationContext)
     val directories = draftsDir.listFiles(FileFilter { it.isDirectory }) ?: emptyArray()
     var attemptsCount = 0
-    while (attemptsCount <= MAX_ATTEMPTS_COUNT && FileUtils.listFiles(
+    while (attemptsCount < MAX_ATTEMPTS_COUNT && FileUtils.listFiles(
         draftsDir,
         TrueFileFilter.INSTANCE,
         DirectoryFileFilter.DIRECTORY
@@ -108,7 +109,18 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           }
         } catch (e: Exception) {
           e.printStackTrace()
-          break
+
+          if (e.cause is GoogleJsonResponseException) {
+            if ((e.cause as GoogleJsonResponseException).details.errors.any {
+                it.message == "Message not a draft"
+              }) {
+              //it means the draft was discarded or a message has been sent
+              roomDatabase.draftDao().deleteSuspend(existingDraftEntity)
+              FileAndDirectoryUtils.deleteDir(directory)
+            }
+          }
+
+          continue
         }
       }
 

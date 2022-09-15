@@ -951,7 +951,9 @@ class GmailApiHelper {
         .setFormat(MESSAGE_RESPONSE_FORMAT_METADATA)
       message.metadataHeaders = listOf(headerName)
 
-      return@withContext message.execute()?.payload?.headers?.firstOrNull { it.name == headerName }?.value
+      return@withContext message.execute()?.payload?.headers?.firstOrNull {
+        headerName.equals(it.name, true)
+      }?.value
     }
 
     private fun processException(e: Throwable): Throwable {

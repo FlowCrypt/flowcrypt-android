@@ -178,6 +178,13 @@ data class IncomingMessageInfo constructor(
 
         body = stringBuilder.toString()
       }
+
+      MessageType.DRAFT -> {
+        toAddresses.addAll(getTo().map { it.address.lowercase() })
+        ccAddresses.addAll(getCc().map { it.address.lowercase() })
+        body = text ?: ""
+      }
+
       else -> {}
     }
 

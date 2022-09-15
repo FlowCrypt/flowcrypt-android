@@ -692,6 +692,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           msgEncryptType,
           msgInfo?.copy(
             msgBlocks = emptyList(),
+            text = clipLargeText(msgInfo?.text),
             draftId = msgDetailsViewModel.gmailApiDraftFlow.value?.data?.id
           )
         )

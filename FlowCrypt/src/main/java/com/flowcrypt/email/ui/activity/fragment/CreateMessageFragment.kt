@@ -929,11 +929,15 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsFromIncomingMsgInfo(initializationData: InitializationData) {
-    binding?.iBShowQuotedText?.visible()
+    binding?.iBShowQuotedText?.visibleOrGone(args.messageType != MessageType.DRAFT)
     binding?.iBShowQuotedText?.let { registerForContextMenu(it) }
     binding?.editTextEmailSubject?.setText(initializationData.subject)
     binding?.editTextEmailMessage?.requestFocus()
     binding?.editTextEmailMessage?.showKeyboard()
+
+    if (args.messageType == MessageType.DRAFT) {
+      binding?.editTextEmailMessage?.setText(args.incomingMessageInfo?.text)
+    }
 
     when (args.messageType) {
       MessageType.REPLY_ALL -> {
