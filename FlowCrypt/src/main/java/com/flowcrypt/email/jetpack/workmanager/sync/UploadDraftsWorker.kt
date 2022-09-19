@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
@@ -96,8 +97,8 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
         val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
         try {
           val lastVersion = drafts.maxBy { it.lastModified() }
-          val mimeMessage =
-            MimeMessage(Session.getInstance(Properties()), lastVersion.inputStream())
+          val inputStream = KeyStoreCryptoManager.getCipherInputStream(lastVersion.inputStream())
+          val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
           val draftId = action.invoke(originalDraftId, mimeMessage)
           if (originalDraftId == null) {
             roomDatabase.draftDao().updateSuspend(existingDraftEntity.copy(draftId = draftId))
@@ -111,10 +112,20 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           e.printStackTrace()
 
           if (e.cause is GoogleJsonResponseException) {
-            if ((e.cause as GoogleJsonResponseException).details.errors.any {
-                it.message == "Message not a draft"
-              }) {
-              //it means the draft was discarded or a message has been sent
+            val isNotDraft = (e.cause as GoogleJsonResponseException).details.errors.any {
+              it.message == "Message not a draft"
+            }
+
+            val isNotActual = (e.cause as GoogleJsonResponseException).details.errors.any {
+              it.message == "Requested entity was not found."
+            }
+
+            if (isNotDraft || isNotActual) {
+              /*
+              it means the draft was discarded
+              or a message has been sent
+              or updating the draft with local changes is not actual
+              */
               roomDatabase.draftDao().deleteSuspend(existingDraftEntity)
               FileAndDirectoryUtils.deleteDir(directory)
             }

@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.DraftEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.CoroutineScope
@@ -110,8 +111,10 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
           } ?: FileAndDirectoryUtils.getDir(draftEntity.id.toString(), draftsDir)
 
           val draftFile = File(currentMsgDraftDir, "${System.currentTimeMillis()}")
-          draftFile.outputStream().use {
-            mimeMessage.writeTo(it)
+          draftFile.outputStream().use { outputStream ->
+            KeyStoreCryptoManager.encryptOutputStream(outputStream) { cipherOutputStream ->
+              mimeMessage.writeTo(cipherOutputStream)
+            }
           }
         }
       } catch (e: Exception) {
