@@ -488,4 +488,5 @@
     <string name="add_recipient_to_send_message">Щоб надіслати це повідомлення, додайте принаймні одного одержувача в поле \"Кому\"</string>
     <string name="send_feedback_failed_hint">Під час відправки повідомлення виникла помилка. Будь ласка, напишіть нам безпосередньо на %1$s.\n\nДеталі помилки:\n%2$s</string>
     <string name="edit_draft">Редагувати чорновик</string>
+    <string name="saving_draft">Зберегіємо чорновик&#8230;</string>
 </resources>

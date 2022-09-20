@@ -11,8 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
@@ -104,7 +102,6 @@ import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -176,7 +173,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     ) {
       val email = recipientInfo.recipientWithPubKeys.recipient.email
       composeMsgViewModel.removeRecipient(recipientType, email)
-      composeMsgViewModel.changeMessageModificationState(true)
     }
 
     override fun onAddFieldFocusChanged(recipientType: Message.RecipientType, hasFocus: Boolean) {
@@ -229,16 +225,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val bccAutoCompleteResultRecyclerViewAdapter =
     AutoCompleteResultRecyclerViewAdapter(Message.RecipientType.BCC, onAutoCompleteResultListener)
 
-  private val messageContentChangedListener = object : TextWatcher {
-    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-      composeMsgViewModel.changeMessageModificationState(true)
-    }
-
-    override fun afterTextChanged(s: Editable?) {}
-  }
-
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
   private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
@@ -290,28 +276,28 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToNoPgpFoundDialogFragment()
     subscribeToChoosePublicKeyDialogFragment()
 
-    val isEncryptedMode = composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
+    val isEncryptedMode =
+      composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       composeMsgViewModel.callLookUpForMissedPubKeys()
     }
   }
 
-  override fun onStop() {
-    super.onStop()
-    if (composeMsgViewModel.messageChangedStateFlow.value) {
-      toast("message changed. Saving a draft...")
-      composeMsgViewModel.changeMessageModificationState(false)
+  @OptIn(DelicateCoroutinesApi::class)
+  override fun onPause() {
+    super.onPause()
+    if (account?.isGoogleAccountType == true) {
+      draftViewModel.processDraft(
+        coroutineScope = GlobalScope,
+        currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
+        showNotification = true
+      )
     }
   }
 
-  @OptIn(DelicateCoroutinesApi::class)
   override fun onDestroyView() {
     super.onDestroyView()
     appBarLayout?.removeView(nonEncryptedHintView)
-    draftViewModel.processDraft(
-      coroutineScope = GlobalScope,
-      currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
-    )
   }
 
   override fun onDestroy() {
@@ -761,7 +747,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       )
     }
     binding?.editTextEmailMessage?.onFocusChangeListener = onFocusChangeListener
-    binding?.editTextEmailMessage?.doOnTextChanged { text, _, _, _ ->
+    binding?.editTextEmailMessage?.doOnTextChanged { _, _, _, _ ->
       var msg = binding?.editTextEmailMessage?.text.toString()
       if (args.messageType == MessageType.REPLY || args.messageType == MessageType.REPLY_ALL) {
         if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
@@ -840,8 +826,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       draftViewModel.setupWithInitializationData(initializationData = initializationData)
     }
-
-    listenToMessageTextChanges()
   }
 
   private fun parseInitializationData(): InitializationData {
@@ -862,11 +846,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       else -> InitializationData()
     }
-  }
-
-  private fun listenToMessageTextChanges() {
-    binding?.editTextEmailSubject?.addTextChangedListener(messageContentChangedListener)
-    binding?.editTextEmailMessage?.addTextChangedListener(messageContentChangedListener)
   }
 
   private fun updateViewsUsingIncomingData(initializationData: InitializationData) {
@@ -921,7 +900,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       args.serviceInfo?.isSubjectEditable ?: false
 
     binding?.editTextEmailMessage?.isFocusable = args.serviceInfo?.isMsgEditable ?: false
-    binding?.editTextEmailMessage?.isFocusableInTouchMode = args.serviceInfo?.isMsgEditable ?: false
+    binding?.editTextEmailMessage?.isFocusableInTouchMode =
+      args.serviceInfo?.isMsgEditable ?: false
 
     if (args.serviceInfo?.systemMsg?.isNotEmpty() == true) {
       binding?.editTextEmailMessage?.setText(args.serviceInfo?.systemMsg)
@@ -1029,7 +1009,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.layoutAtts?.removeAllViews()
       val layoutInflater = LayoutInflater.from(context)
       for (att in attachments) {
-        val rootView = layoutInflater.inflate(R.layout.attachment_item, binding?.layoutAtts, false)
+        val rootView =
+          layoutInflater.inflate(R.layout.attachment_item, binding?.layoutAtts, false)
 
         val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
         textViewAttName.text = att.name
@@ -1102,7 +1083,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       fromAddressesAdapter?.clear()
       fromAddressesAdapter?.addAll(aliases)
 
-      updateFromAddressAdapter(KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings())
+      updateFromAddressAdapter(
+        KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings()
+      )
 
       if (args.incomingMessageInfo != null) {
         prepareAliasForReplyIfNeeded(aliases)
@@ -1246,23 +1229,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
 
     lifecycleScope.launchWhenStarted {
-      composeMsgViewModel.recipientsStateFlow.collectIndexed { index, recipients ->
-        //we skip the init value and listen to the next changes
-        when (args.messageType) {
-          MessageType.NEW, MessageType.FORWARD -> {
-            if (index > 0) {
-              composeMsgViewModel.changeMessageModificationState(true)
-            }
-          }
-
-          MessageType.REPLY, MessageType.REPLY_ALL -> {
-            val incomingRecipients = args.incomingMessageInfo?.msgEntity?.to
-          }
-        }
-      }
-    }
-
-    lifecycleScope.launchWhenStarted {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1332,9 +1298,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 0
               )
               setText(R.string.tap_to_protect_with_web_portal_password)
-              background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                ContextCompat.getColor(context, R.color.orange), BlendModeCompat.MODULATE
-              )
+              background?.colorFilter =
+                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                  ContextCompat.getColor(context, R.color.orange), BlendModeCompat.MODULATE
+                )
             } else {
               setCompoundDrawablesWithIntrinsicBounds(
                 R.drawable.ic_password_protected_white_24,
@@ -1343,18 +1310,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 0
               )
               setText(R.string.web_portal_password_added)
-              background?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                ContextCompat.getColor(context, R.color.colorPrimary), BlendModeCompat.MODULATE
-              )
+              background?.colorFilter =
+                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                  ContextCompat.getColor(context, R.color.colorPrimary), BlendModeCompat.MODULATE
+                )
             }
           }
         }
-      }
-    }
-
-    lifecycleScope.launchWhenStarted {
-      composeMsgViewModel.messageChangedStateFlow.collect {
-        //here we can show some label that message was changed or saved on a remote server
       }
     }
 

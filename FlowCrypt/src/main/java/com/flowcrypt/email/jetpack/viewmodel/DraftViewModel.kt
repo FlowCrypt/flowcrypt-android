@@ -6,12 +6,15 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.DraftEntity
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
@@ -37,11 +40,7 @@ import java.util.concurrent.TimeUnit
 class DraftViewModel(private val cachedDraftId: String? = null, application: Application) :
   AccountViewModel(application) {
   private var draftEntity: DraftEntity? = null
-  private var lastMsgText: String? = null
-  private var lastMsgSubject: String? = null
-  private val lastToRecipients: MutableSet<String> = mutableSetOf()
-  private val lastCcRecipients: MutableSet<String> = mutableSetOf()
-  private val lastBccRecipients: MutableSet<String> = mutableSetOf()
+  private var draftFingerprint = DraftFingerprint()
 
   val draftRepeatableCheckingFlow: Flow<Long> = flow {
     while (viewModelScope.isActive) {
@@ -52,43 +51,65 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
 
   fun processDraft(
     coroutineScope: CoroutineScope = viewModelScope,
-    currentOutgoingMessageInfo: OutgoingMessageInfo
+    currentOutgoingMessageInfo: OutgoingMessageInfo,
+    showNotification: Boolean = false
   ) {
     coroutineScope.launch {
-      var isSavingDraftNeeded = false
-      val currentToRecipients = currentOutgoingMessageInfo.toRecipients?.map { internetAddress ->
-        internetAddress.address.lowercase()
-      }?.toSet() ?: emptySet()
-      val currentCcRecipients = currentOutgoingMessageInfo.ccRecipients?.map { internetAddress ->
-        internetAddress.address.lowercase()
-      }?.toSet() ?: emptySet()
-      val currentBccRecipients =
-        currentOutgoingMessageInfo.bccRecipients?.map { internetAddress ->
-          internetAddress.address.lowercase()
-        }?.toSet() ?: emptySet()
-
-      if (currentOutgoingMessageInfo.msg != lastMsgText
-        || currentOutgoingMessageInfo.subject != lastMsgSubject
-        || currentToRecipients != lastToRecipients
-        || currentCcRecipients != lastCcRecipients
-        || currentBccRecipients != lastBccRecipients
-      ) {
-        isSavingDraftNeeded = true
-      }
-
-      lastMsgText = currentOutgoingMessageInfo.msg
-      lastMsgSubject = currentOutgoingMessageInfo.subject
-      lastToRecipients.clear()
-      lastToRecipients.addAll(currentToRecipients)
-      lastCcRecipients.clear()
-      lastCcRecipients.addAll(currentCcRecipients)
-      lastBccRecipients.clear()
-      lastBccRecipients.addAll(currentBccRecipients)
-
+      val context: Context = getApplication()
+      val isSavingDraftNeeded = isMessageChanged(currentOutgoingMessageInfo)
       if (isSavingDraftNeeded) {
+        if (showNotification) {
+          withContext(Dispatchers.Main) {
+            context.toast(context.getString(R.string.saving_draft))
+          }
+        }
         prepareAndSaveDraftForUploading(currentOutgoingMessageInfo)
       }
     }
+  }
+
+  fun setupWithInitializationData(
+    initializationData: InitializationData
+  ) {
+    draftFingerprint = DraftFingerprint(
+      msgText = initializationData.body ?: "",
+      msgSubject = initializationData.subject ?: "",
+      toRecipients = initializationData.toAddresses.map { it.lowercase() }.toSet(),
+      ccRecipients = initializationData.ccAddresses.map { it.lowercase() }.toSet(),
+      bccRecipients = initializationData.bccAddresses.map { it.lowercase() }.toSet(),
+    )
+  }
+
+  private fun isMessageChanged(outgoingMessageInfo: OutgoingMessageInfo): Boolean {
+    var isSavingDraftNeeded = false
+    val currentToRecipients = outgoingMessageInfo.toRecipients?.map { internetAddress ->
+      internetAddress.address.lowercase()
+    }?.toSet() ?: emptySet()
+    val currentCcRecipients = outgoingMessageInfo.ccRecipients?.map { internetAddress ->
+      internetAddress.address.lowercase()
+    }?.toSet() ?: emptySet()
+    val currentBccRecipients =
+      outgoingMessageInfo.bccRecipients?.map { internetAddress ->
+        internetAddress.address.lowercase()
+      }?.toSet() ?: emptySet()
+
+    if (outgoingMessageInfo.msg != draftFingerprint.msgText
+      || outgoingMessageInfo.subject != draftFingerprint.msgSubject
+      || currentToRecipients != draftFingerprint.toRecipients
+      || currentCcRecipients != draftFingerprint.ccRecipients
+      || currentBccRecipients != draftFingerprint.bccRecipients
+    ) {
+      isSavingDraftNeeded = true
+      draftFingerprint = DraftFingerprint(
+        msgText = outgoingMessageInfo.msg,
+        msgSubject = outgoingMessageInfo.subject,
+        toRecipients = currentToRecipients,
+        ccRecipients = currentCcRecipients,
+        bccRecipients = currentBccRecipients,
+      )
+    }
+
+    return isSavingDraftNeeded
   }
 
   private suspend fun prepareAndSaveDraftForUploading(outgoingMessageInfo: OutgoingMessageInfo) =
@@ -125,16 +146,6 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
       }
     }
 
-  fun setupWithInitializationData(
-    initializationData: InitializationData
-  ) {
-    lastMsgText = initializationData.body ?: ""
-    lastMsgSubject = initializationData.subject ?: ""
-    lastToRecipients.addAll(initializationData.toAddresses.map { it.lowercase() })
-    lastCcRecipients.addAll(initializationData.ccAddresses.map { it.lowercase() })
-    lastBccRecipients.addAll(initializationData.bccAddresses.map { it.lowercase() })
-  }
-
   private suspend fun getDraftEntity(accountEntity: AccountEntity): DraftEntity =
     withContext(Dispatchers.IO) {
       val existingDraft = roomDatabase.draftDao()
@@ -152,6 +163,14 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
 
       return@withContext existingDraft
     }
+
+  private data class DraftFingerprint(
+    var msgText: String? = null,
+    var msgSubject: String? = null,
+    val toRecipients: Set<String> = mutableSetOf(),
+    val ccRecipients: Set<String> = mutableSetOf(),
+    val bccRecipients: Set<String> = mutableSetOf()
+  )
 
   companion object {
     val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)

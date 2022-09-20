@@ -116,25 +116,27 @@ data class OutgoingMessageInfo constructor(
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
+    if (isPasswordProtected != other.isPasswordProtected) return false
 
     return true
   }
 
   override fun hashCode(): Int {
-    var result = account.hashCode()
-    result = 31 * result + subject.hashCode()
+    var result = account?.hashCode() ?: 0
+    result = 31 * result + (subject?.hashCode() ?: 0)
     result = 31 * result + (msg?.hashCode() ?: 0)
-    result = 31 * result + toRecipients.hashCode()
+    result = 31 * result + (toRecipients?.hashCode() ?: 0)
     result = 31 * result + (ccRecipients?.hashCode() ?: 0)
     result = 31 * result + (bccRecipients?.hashCode() ?: 0)
-    result = 31 * result + from.hashCode()
+    result = 31 * result + (from?.hashCode() ?: 0)
     result = 31 * result + (atts?.hashCode() ?: 0)
     result = 31 * result + (forwardedAtts?.hashCode() ?: 0)
-    result = 31 * result + encryptionType.hashCode()
-    result = 31 * result + messageType.hashCode()
+    result = 31 * result + (encryptionType?.hashCode() ?: 0)
+    result = 31 * result + messageType
     result = 31 * result + (replyToMsgEntity?.hashCode() ?: 0)
     result = 31 * result + uid.hashCode()
     result = 31 * result + (password?.contentHashCode() ?: 0)
+    result = 31 * result + (isPasswordProtected?.hashCode() ?: 0)
     return result
   }
 
