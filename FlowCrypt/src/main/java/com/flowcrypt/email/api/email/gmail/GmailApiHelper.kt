@@ -233,7 +233,7 @@ class GmailApiHelper {
         .setPageToken(nextPageToken)
         .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
 
-      if (!localFolder.isAll()) {
+      if (!localFolder.isAll) {
         request.labelIds = listOf(localFolder.fullName)
       }
 
@@ -439,7 +439,7 @@ class GmailApiHelper {
         .history()
         .list(DEFAULT_USER_ID)
         .setStartHistoryId(historyId).apply {
-          if (!localFolder.isAll()) {
+          if (!localFolder.isAll) {
             labelId = localFolder.fullName
           }
         }
@@ -456,7 +456,7 @@ class GmailApiHelper {
           .list(DEFAULT_USER_ID)
           .setStartHistoryId(historyId)
           .apply {
-            if (!localFolder.isAll()) {
+            if (!localFolder.isAll) {
               labelId = localFolder.fullName
             }
           }

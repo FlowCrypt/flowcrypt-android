@@ -1041,14 +1041,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
     msgsViewModel.outboxMsgsLiveData.observe(viewLifecycleOwner) {
       val msgsCount = it.size
-      supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
+      supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox == false) {
         resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
       } else null
 
       isForceSendingEnabled = msgsCount > 0
       isForceSendingEnabled = it.none { entity -> entity.msgState == MessageState.SENDING }
 
-      if (currentFolder?.isOutbox() == true) {
+      if (currentFolder?.isOutbox == true) {
         activity?.invalidateOptionsMenu()
       }
     }

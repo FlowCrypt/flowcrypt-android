@@ -192,7 +192,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   fun loadMsgsFromRemoteServer() {
     viewModelScope.launch {
       val localFolder = foldersLiveData.value ?: return@launch
-      if (localFolder.isOutbox()) {
+      if (localFolder.isOutbox) {
         loadMsgsFromRemoteServerLiveData.value = Result.success(true)
         return@launch
       }
