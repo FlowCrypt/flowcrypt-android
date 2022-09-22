@@ -146,7 +146,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return DraftViewModel(
-          cachedDraftId = args.incomingMessageInfo?.draftId,
+          existingDraftMessageEntity = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
+            args.incomingMessageInfo?.msgEntity
+          } else {
+            null
+          },
           application = requireActivity().application
         ) as T
       }
