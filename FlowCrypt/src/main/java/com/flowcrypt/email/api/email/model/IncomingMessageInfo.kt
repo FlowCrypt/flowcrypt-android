@@ -39,8 +39,7 @@ data class IncomingMessageInfo constructor(
   var inlineSubject: String? = null,
   val msgBlocks: List<@JvmSuppressWildcards MsgBlock>? = null,
   val encryptionType: MessageEncryptionType,
-  val verificationResult: VerificationResult,
-  val draftId: String? = null
+  val verificationResult: VerificationResult
 ) : Parcelable {
   fun getSubject(): String? = msgEntity.subject
 
@@ -244,8 +243,7 @@ data class IncomingMessageInfo constructor(
     source.readString(),
     mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
     source.readParcelable(MessageEncryptionType::class.java.classLoader)!!,
-    source.readParcelable(VerificationResult::class.java.classLoader)!!,
-    source.readString(),
+    source.readParcelable(VerificationResult::class.java.classLoader)!!
   )
 
   override fun describeContents() = 0
@@ -259,7 +257,6 @@ data class IncomingMessageInfo constructor(
     writeTypedList(msgBlocks)
     writeParcelable(encryptionType, flags)
     writeParcelable(verificationResult, flags)
-    writeString(draftId)
   }
 
   companion object {

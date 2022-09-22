@@ -6,6 +6,7 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
@@ -41,6 +42,8 @@ import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
+import com.google.api.services.gmail.model.ListDraftsResponse
+import com.google.api.services.gmail.model.ListMessagesResponse
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
@@ -448,6 +451,24 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           getApplication(), accountEntity,
           localFolder, if (totalItemsCount > 0) labelEntity?.nextPageToken else null
         )
+
+        val draftIdsMap = when (messagesBaseInfo) {
+          is ListDraftsResponse -> messagesBaseInfo.drafts.associateBy({ it.message.id }, { it.id })
+          else -> emptyMap()
+        }
+
+        val messages = when (messagesBaseInfo) {
+          is ListMessagesResponse -> messagesBaseInfo.messages
+          is ListDraftsResponse -> messagesBaseInfo.drafts.map { it.message }
+          else -> emptyList()
+        }
+
+        val nextPageToken = when (messagesBaseInfo) {
+          is ListMessagesResponse -> messagesBaseInfo.nextPageToken
+          is ListDraftsResponse -> messagesBaseInfo.nextPageToken
+          else -> null
+        }
+
         loadMsgsFromRemoteServerLiveData.postValue(
           Result.loading(
             progress = 70.0,
@@ -455,9 +476,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           )
         )
 
-        if (messagesBaseInfo.messages?.isNotEmpty() == true) {
+        if (messages.isNotEmpty()) {
           val msgs = GmailApiHelper.loadMsgsInParallel(
-            getApplication(), accountEntity, messagesBaseInfo.messages
+            getApplication(), accountEntity, messages
               ?: emptyList(), localFolder
           )
           loadMsgsFromRemoteServerLiveData.postValue(
@@ -466,7 +487,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               resultCode = R.id.progress_id_gmail_msgs_info
             )
           )
-          handleReceivedMsgs(accountEntity, localFolder, msgs)
+          handleReceivedMsgs(accountEntity, localFolder, msgs, draftIdsMap)
         } else {
           loadMsgsFromRemoteServerLiveData.postValue(
             Result.loading(
@@ -476,8 +497,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           )
         }
         labelEntity?.let {
-          roomDatabase.labelDao()
-            .updateSuspend(it.copy(nextPageToken = messagesBaseInfo.nextPageToken))
+          roomDatabase.labelDao().updateSuspend(it.copy(nextPageToken = nextPageToken))
         }
       }
     }
@@ -486,8 +506,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   private suspend fun handleReceivedMsgs(
-    account: AccountEntity, localFolder: LocalFolder,
-    msgs: List<com.google.api.services.gmail.model.Message>
+    account: AccountEntity,
+    localFolder: LocalFolder,
+    msgs: List<com.google.api.services.gmail.model.Message>,
+    draftIdsMap: Map<String, String> = emptyMap()
   ) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
@@ -499,7 +521,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       label = folder,
       msgsList = msgs,
       isNew = false,
-      areAllMsgsEncrypted = isEncryptedModeEnabled
+      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      draftIdsMap = draftIdsMap
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
@@ -512,8 +535,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   private suspend fun handleReceivedMsgs(
-    account: AccountEntity, localFolder: LocalFolder,
-    remoteFolder: IMAPFolder, msgs: Array<Message>
+    account: AccountEntity,
+    localFolder: LocalFolder,
+    remoteFolder: IMAPFolder,
+    msgs: Array<Message>
   ) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
@@ -927,7 +952,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
     val updateCandidates =
       EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs)
-        .map { remoteFolder.getUID(it) to it.flags }.toMap()
+        .associate { remoteFolder.getUID(it) to it.flags }
     roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderName, updateCandidates)
 
     updateLocalContactsIfNeeded(remoteFolder, newCandidates)
@@ -959,6 +984,18 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           newCandidates.toList(), localFolder
         )
 
+        val draftIdsMap = if (localFolder.isDraft) {
+          val drafts =
+            GmailApiHelper.loadBaseDraftInfoInParallel(getApplication(), accountEntity, msgs)
+          val fetchedDraftIdsMap = drafts.associateBy({ it.message.id }, { it.id })
+          if (fetchedDraftIdsMap.size != msgs.size) {
+            throw IllegalStateException(
+              (getApplication() as Context).getString(R.string.fetching_drafts_info_failed)
+            )
+          }
+          fetchedDraftIdsMap
+        } else emptyMap()
+
         val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
         val isNew =
           !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
@@ -969,7 +1006,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,
-          areAllMsgsEncrypted = isEncryptedModeEnabled
+          areAllMsgsEncrypted = isEncryptedModeEnabled,
+          draftIdsMap = draftIdsMap
         )
 
         roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)

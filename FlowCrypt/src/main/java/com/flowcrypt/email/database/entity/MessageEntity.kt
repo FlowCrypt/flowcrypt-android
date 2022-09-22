@@ -352,7 +352,8 @@ data class MessageEntity(
       label: String,
       msgsList: List<com.google.api.services.gmail.model.Message>,
       isNew: Boolean,
-      areAllMsgsEncrypted: Boolean
+      areAllMsgsEncrypted: Boolean,
+      draftIdsMap: Map<String, String> = emptyMap()
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
@@ -396,7 +397,11 @@ data class MessageEntity(
               isNew = isNewTemp,
               isEncrypted = isEncrypted,
               hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
-            ).copy(threadId = msg.threadId, historyId = msg.historyId.toString())
+            ).copy(
+              threadId = msg.threadId,
+              historyId = msg.historyId.toString(),
+              draftId = draftIdsMap[msg.id]
+            )
           )
         } catch (e: MessageRemovedException) {
           e.printStackTrace()

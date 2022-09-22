@@ -42,6 +42,7 @@ import com.google.api.client.googleapis.json.GoogleJsonError
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpHeaders
 import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.GenericJson
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
@@ -50,6 +51,7 @@ import com.google.api.services.gmail.model.BatchModifyMessagesRequest
 import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.Label
+import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
@@ -224,25 +226,39 @@ class GmailApiHelper {
     suspend fun loadMsgsBaseInfo(
       context: Context, accountEntity: AccountEntity, localFolder:
       LocalFolder, nextPageToken: String? = null
-    ): ListMessagesResponse = withContext(Dispatchers.IO) {
+    ): GenericJson = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      val request = gmailApiService
-        .users()
-        .messages()
-        .list(DEFAULT_USER_ID)
-        .setPageToken(nextPageToken)
-        .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+      if (localFolder.isDraft) {
+        val request = gmailApiService
+          .users()
+          .drafts()
+          .list(DEFAULT_USER_ID)
+          .setPageToken(nextPageToken)
+          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
 
-      if (!localFolder.isAll) {
-        request.labelIds = listOf(localFolder.fullName)
+        if (accountEntity.showOnlyEncrypted == true) {
+          request.q =
+            (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+        }
+        return@withContext request.execute()
+      } else {
+        val request = gmailApiService
+          .users()
+          .messages()
+          .list(DEFAULT_USER_ID)
+          .setPageToken(nextPageToken)
+          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+
+        if (!localFolder.isAll) {
+          request.labelIds = listOf(localFolder.fullName)
+        }
+
+        if (accountEntity.showOnlyEncrypted == true) {
+          request.q =
+            (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+        }
+        return@withContext request.execute()
       }
-
-      if (accountEntity.showOnlyEncrypted == true) {
-        request.q =
-          (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
-      }
-
-      return@withContext request.execute()
     }
 
     /**
@@ -548,9 +564,8 @@ class GmailApiHelper {
             updateCandidates[historyLabelAdded.message.uid] = existedFlags
           }
         }
-
-        action.invoke(deleteCandidatesUIDs, newCandidatesMap, updateCandidates)
       }
+      action.invoke(deleteCandidatesUIDs, newCandidatesMap, updateCandidates)
     }
 
     suspend fun identifyAttachments(
@@ -903,6 +918,78 @@ class GmailApiHelper {
 
         return@withContext response?.drafts?.firstOrNull()
       }
+
+    suspend fun loadBaseDraftInfoInParallel(
+      context: Context,
+      accountEntity: AccountEntity,
+      messages: List<Message>,
+      stepValue: Int = 10
+    ): List<Draft> = withContext(Dispatchers.IO)
+    {
+      val useParallel = messages.size > stepValue * 2
+      val steps = mutableListOf<Deferred<List<Draft>>>()
+
+      if (messages.isNotEmpty()) {
+        if (messages.size <= stepValue && !useParallel) {
+          steps.add(async { loadDrafts(context, accountEntity, messages) })
+        } else {
+          var i = 0
+          while (i < messages.size) {
+            val tempList = if (messages.size - i > stepValue) {
+              messages.subList(i, i + stepValue)
+            } else {
+              messages.subList(i, messages.size)
+            }
+            steps.add(async {
+              loadDrafts(context, accountEntity, tempList)
+            })
+            i += stepValue
+          }
+        }
+      }
+
+      return@withContext awaitAll(*steps.toTypedArray()).flatten()
+    }
+
+    suspend fun loadDrafts(
+      context: Context,
+      accountEntity: AccountEntity,
+      messages: Collection<Message>,
+      fields: List<String>? = listOf("drafts/id", "drafts/message/id")
+    ): List<Draft> = withContext(Dispatchers.IO)
+    {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      val listResult = mutableListOf<Draft>()
+      val request = gmailApiService
+        .users()
+        .drafts()
+        .list(DEFAULT_USER_ID)
+        .setQ(messages.joinToString(separator = " OR ") { item ->
+          "rfc822msgid:${
+            item.payload.headers.first {
+              JavaEmailConstants.HEADER_MESSAGE_ID.equals(it.name, true)
+            }.value
+          }"
+        })
+
+      fields?.let { fields ->
+        request.fields = fields.joinToString(separator = ",")
+      }
+
+      request.queue(batch, object : JsonBatchCallback<ListDraftsResponse>() {
+        override fun onSuccess(t: ListDraftsResponse?, responseHeaders: HttpHeaders?) {
+          t?.let { listResult.addAll(it.drafts) }
+        }
+
+        override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {}
+      })
+
+      batch.execute()
+
+      return@withContext listResult
+    }
 
     /**
      * Generate [GoogleAccountCredential] which will be used with Gmail API.

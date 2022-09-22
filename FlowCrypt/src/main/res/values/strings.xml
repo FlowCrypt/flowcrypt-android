@@ -574,4 +574,5 @@
     <string name="send_feedback_failed_hint">There was an error sending message. Our direct email is %1$s.\n\nError details:\n%2$s</string>
     <string name="edit_draft">Edit draft</string>
     <string name="saving_draft">Saving a draft&#8230;</string>
+    <string name="fetching_drafts_info_failed">Fetching drafts info failed. Please try again.</string>
 </resources>

@@ -12,7 +12,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -39,7 +38,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
-import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -65,13 +63,9 @@ import jakarta.mail.Store
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -105,31 +99,6 @@ class MsgDetailsViewModel(
     account = messageEntity.email,
     folder = messageEntity.folder,
     uid = messageEntity.uid
-  )
-
-  @OptIn(ExperimentalCoroutinesApi::class)
-  val gmailApiDraftFlow = activeAccountLiveData.asFlow().transformLatest { accountEntity ->
-    try {
-      val draft = if (messageEntity.isDraft) {
-        if (accountEntity == null) {
-          emit(null)
-          return@transformLatest
-        }
-
-        GmailApiHelper.getDraftByMsgId(
-          application,
-          accountEntity,
-          messageEntity.uid.toHex()
-        )
-      } else null
-      emit(Result.success(draft))
-    } catch (e: Exception) {
-      emit(Result.exception(e))
-    }
-  }.stateIn(
-    scope = viewModelScope,
-    started = WhileSubscribed(5000),
-    initialValue = Result.none()
   )
 
   private val initMsgLiveData: LiveData<MessageEntity?> = liveData {

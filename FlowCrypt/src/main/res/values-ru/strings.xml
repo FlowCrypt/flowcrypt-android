@@ -488,4 +488,5 @@
     <string name="send_feedback_failed_hint">При отправке сообщения произошла ошибка. Пожалуйста, напишите нам напрямую на %1$s.\n\nДетали ошибки:\n%2$s</string>
     <string name="edit_draft">Редактировать черновик</string>
     <string name="saving_draft">Сохранение черновика&#8230;</string>
+    <string name="fetching_drafts_info_failed">Не удалось загрузить информацию о черновиках. Пожалуйста, попробуйте еще раз.</string>
 </resources>

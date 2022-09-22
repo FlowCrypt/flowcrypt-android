@@ -452,6 +452,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     updateMsgBody()
     showContent()
+
+    if (args.messageEntity.isDraft) {
+      binding?.imageButtonEditDraft?.visibleOrGone(args.messageEntity.draftId?.isNotEmpty() == true)
+    }
   }
 
   private fun setActionProgress(progress: Int, message: String? = null) {
@@ -693,7 +697,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           msgInfo?.copy(
             msgBlocks = emptyList(),
             text = clipLargeText(msgInfo?.text),
-            draftId = msgDetailsViewModel.gmailApiDraftFlow.value?.data?.id
           )
         )
       )
@@ -1362,7 +1365,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun setupMsgDetailsViewModel() {
-    collectGmailApiDraftFlow()
     observeFreshMsgLiveData()
     observerIncomingMessageInfoLiveData()
     observeAttsLiveData()
@@ -1407,31 +1409,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         else -> {
-        }
-      }
-    }
-  }
-
-  private fun collectGmailApiDraftFlow() {
-    lifecycleScope.launchWhenStarted {
-      msgDetailsViewModel.gmailApiDraftFlow.collect {
-        when (it?.status) {
-          Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
-          }
-
-          Result.Status.SUCCESS -> {
-            binding?.imageButtonEditDraft?.visibleOrGone(it.data?.id?.isNotEmpty() == true)
-            countingIdlingResource?.decrementSafely()
-          }
-
-          Result.Status.EXCEPTION, Result.Status.ERROR -> {
-            //think about it
-            countingIdlingResource?.decrementSafely()
-          }
-
-          else -> {
-          }
         }
       }
     }
