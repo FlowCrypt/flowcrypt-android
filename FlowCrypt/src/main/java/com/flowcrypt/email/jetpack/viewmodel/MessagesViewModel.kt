@@ -458,8 +458,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         }
 
         val messages = when (messagesBaseInfo) {
-          is ListMessagesResponse -> messagesBaseInfo.messages
-          is ListDraftsResponse -> messagesBaseInfo.drafts.map { it.message }
+          is ListMessagesResponse -> messagesBaseInfo.messages ?: emptyList()
+          is ListDraftsResponse -> messagesBaseInfo.drafts?.map { it.message } ?: emptyList()
           else -> emptyList()
         }
 
@@ -478,8 +478,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         if (messages.isNotEmpty()) {
           val msgs = GmailApiHelper.loadMsgsInParallel(
-            getApplication(), accountEntity, messages
-              ?: emptyList(), localFolder
+            getApplication(), accountEntity, messages, localFolder
           )
           loadMsgsFromRemoteServerLiveData.postValue(
             Result.loading(
@@ -984,7 +983,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           newCandidates.toList(), localFolder
         )
 
-        val draftIdsMap = if (localFolder.isDraft) {
+        val draftIdsMap = if (localFolder.isDrafts) {
           val drafts =
             GmailApiHelper.loadBaseDraftInfoInParallel(getApplication(), accountEntity, msgs)
           val fetchedDraftIdsMap = drafts.associateBy({ it.message.id }, { it.id })
