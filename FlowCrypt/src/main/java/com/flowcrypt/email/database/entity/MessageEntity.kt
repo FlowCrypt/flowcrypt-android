@@ -456,7 +456,8 @@ data class MessageEntity(
       email: String,
       label: String,
       uid: Long,
-      info: OutgoingMessageInfo
+      info: OutgoingMessageInfo,
+      flags: List<MessageFlag> = listOf(MessageFlag.SEEN)
     ): MessageEntity {
       return MessageEntity(
         email = email,
@@ -464,7 +465,7 @@ data class MessageEntity(
         uid = uid,
         sentDate = System.currentTimeMillis(),
         subject = info.subject,
-        flags = MessageFlag.SEEN.value,
+        flags = MessageFlag.flagsToString(flags),
         hasAttachments = !CollectionUtils.isEmpty(info.atts) || !CollectionUtils.isEmpty(info.forwardedAtts)
       )
     }

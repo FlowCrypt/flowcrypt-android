@@ -14,7 +14,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.text.TextUtils
 import android.text.format.DateUtils
 import android.transition.TransitionManager
 import android.view.LayoutInflater
@@ -252,8 +251,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    updateViews()
-
     setupLabelsViewModel()
     setupMsgDetailsViewModel()
     setupRecipientsViewModel()
@@ -450,11 +447,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     msgInfo.inlineSubject?.let { binding?.textViewSubject?.text = it }
 
-    updateMsgBody()
+    updatePgpBadges()
+    updateMsgView()
     showContent()
 
     if (args.messageEntity.isDraft) {
-      binding?.imageButtonEditDraft?.visibleOrGone(args.messageEntity.draftId?.isNotEmpty() == true)
+      binding?.imageButtonEditDraft?.visibleOrGone(args.messageEntity.isDraft)
     }
   }
 
@@ -470,13 +468,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     } else {
       binding?.textViewActionProgress?.text = null
       binding?.layoutActionProgress?.visibility = View.GONE
-    }
-  }
-
-  private fun updateMsgBody() {
-    if (msgInfo != null) {
-      updatePgpBadges()
-      updateMsgView()
     }
   }
 
@@ -678,12 +669,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     supportActionBar?.subtitle = actionBarSubTitle
   }
 
-  private fun updateViews() {
+  private fun updateViews(messageEntity: MessageEntity) {
+    updateActionBar(messageEntity)
+
     binding?.imageButtonReplyAll?.visibleOrGone(
-      !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
+      !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )
     binding?.imageButtonMoreOptions?.visibleOrGone(
-      !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
+      !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )
     binding?.imageButtonReplyAll?.setOnClickListener(this)
     binding?.imageButtonMoreOptions?.setOnClickListener(this)
@@ -719,26 +712,21 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       adapter = attachmentsRecyclerViewAdapter
     }
 
-    val subject =
-      if (TextUtils.isEmpty(args.messageEntity.subject)) getString(R.string.no_subject) else
-        args.messageEntity.subject
+    val subject = messageEntity.subject?.ifEmpty { getString(R.string.no_subject) }
 
     if (folderType === FoldersManager.FolderType.SENT) {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.to)
     } else {
-      binding?.textViewSenderAddress?.text =
-        EmailUtil.getFirstAddressString(args.messageEntity.from)
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
     }
     binding?.textViewSubject?.text = subject
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
       binding?.textViewDate?.text =
-        DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
+        DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
     } else {
       binding?.textViewDate?.text =
-        DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate ?: 0)
+        DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
     }
-
-    updateMsgBody()
   }
 
   private fun updateMsgDetails() {
@@ -1415,8 +1403,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun observeFreshMsgLiveData() {
-    msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner) {
-      it?.let { messageEntity -> updateActionBar(messageEntity) }
+    msgDetailsViewModel.mediatorMsgLiveData.observe(viewLifecycleOwner) {
+      it?.let { messageEntity ->
+        updateViews(messageEntity)
+      }
     }
   }
 
@@ -1444,7 +1434,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         Result.Status.SUCCESS -> {
-          showContent()
           it.data?.let { incomingMsgInfo ->
             showIncomingMsgInfo(incomingMsgInfo)
           }

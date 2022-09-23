@@ -52,7 +52,7 @@ data class LocalFolder constructor(
 
   val isOutbox: Boolean = JavaEmailConstants.FOLDER_OUTBOX.equals(fullName, ignoreCase = true)
   val isAll: Boolean = JavaEmailConstants.FOLDER_ALL_MAIL.equals(fullName, ignoreCase = true)
-  val isDraft: Boolean = JavaEmailConstants.FOLDER_DRAFT.equals(fullName, ignoreCase = true)
+  val isDrafts: Boolean = FoldersManager.FolderType.DRAFTS == getFolderType()
 
   fun getFolderType(): FoldersManager.FolderType? {
     return FoldersManager.getFolderType(this)

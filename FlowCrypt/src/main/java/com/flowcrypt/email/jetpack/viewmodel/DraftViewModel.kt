@@ -10,15 +10,20 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.InitializationData
+import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.DraftEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -37,9 +42,11 @@ import java.util.concurrent.TimeUnit
  *         Time: 3:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DraftViewModel(private val cachedDraftId: String? = null, application: Application) :
-  AccountViewModel(application) {
-  private var draftEntity: DraftEntity? = null
+class DraftViewModel(
+  existingDraftMessageEntity: MessageEntity? = null,
+  application: Application
+) : AccountViewModel(application) {
+  private var sessionDraftMessageEntity: MessageEntity? = existingDraftMessageEntity
   private var draftFingerprint = DraftFingerprint()
 
   val draftRepeatableCheckingFlow: Flow<Long> = flow {
@@ -118,18 +125,21 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
         val activeAccount =
           roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
 
-        if (draftEntity == null) {
-          draftEntity = getDraftEntity(activeAccount)
+        if (sessionDraftMessageEntity == null) {
+          sessionDraftMessageEntity = genDraftMessageEntity(
+            accountEntity = activeAccount,
+            outgoingMessageInfo = outgoingMessageInfo
+          )
         }
 
-        draftEntity?.let { draftEntity ->
+        sessionDraftMessageEntity?.let { draftMessageEntity ->
           val mimeMessage =
             EmailUtil.genMessage(getApplication(), activeAccount, outgoingMessageInfo)
           val draftsDir = CacheManager.getDraftDirectory(getApplication())
 
           val currentMsgDraftDir = draftsDir.walkTopDown().firstOrNull {
-            it.name == draftEntity.id.toString()
-          } ?: FileAndDirectoryUtils.getDir(draftEntity.id.toString(), draftsDir)
+            it.name == draftMessageEntity.id.toString()
+          } ?: FileAndDirectoryUtils.getDir(draftMessageEntity.id.toString(), draftsDir)
 
           val draftFile = File(currentMsgDraftDir, "${System.currentTimeMillis()}")
           draftFile.outputStream().use { outputStream ->
@@ -137,6 +147,16 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
               mimeMessage.writeTo(cipherOutputStream)
             }
           }
+
+          MsgsCacheManager.storeMsg(draftMessageEntity.id.toString(), mimeMessage as MimeMessage)
+
+          roomDatabase.msgDao().updateSuspend(
+            draftMessageEntity.copy(
+              subject = outgoingMessageInfo.subject,
+              fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
+              toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray())
+            )
+          )
         }
       } catch (e: Exception) {
         e.printStackTrace()
@@ -146,22 +166,26 @@ class DraftViewModel(private val cachedDraftId: String? = null, application: App
       }
     }
 
-  private suspend fun getDraftEntity(accountEntity: AccountEntity): DraftEntity =
+  private suspend fun genDraftMessageEntity(
+    accountEntity: AccountEntity,
+    outgoingMessageInfo: OutgoingMessageInfo
+  ): MessageEntity =
     withContext(Dispatchers.IO) {
-      val existingDraft = roomDatabase.draftDao()
-        .getDraftEntity(accountEntity.email, accountEntity.accountType, cachedDraftId)
-
-      if (existingDraft == null) {
-        val newDraft = DraftEntity(
-          account = accountEntity.email,
-          accountType = accountEntity.accountType ?: "",
-          draftId = cachedDraftId
-        )
-        val id = roomDatabase.draftDao().insertSuspend(newDraft)
-        return@withContext newDraft.copy(id = id)
-      }
-
-      return@withContext existingDraft
+      val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), accountEntity)
+      val folderDrafts =
+        foldersManager.folderDrafts ?: throw IllegalStateException("Drafts folder is undefined")
+      val newDraftMessageEntity = MessageEntity.genMsgEntity(
+        email = accountEntity.email,
+        label = folderDrafts.fullName,
+        uid = System.currentTimeMillis(),
+        info = outgoingMessageInfo,
+        flags = listOf(MessageFlag.DRAFT, MessageFlag.SEEN)
+      )
+      val id = roomDatabase.msgDao().insertSuspend(newDraftMessageEntity)
+      return@withContext newDraftMessageEntity.copy(
+        id = id,
+        receivedDate = newDraftMessageEntity.sentDate
+      )
     }
 
   private data class DraftFingerprint(

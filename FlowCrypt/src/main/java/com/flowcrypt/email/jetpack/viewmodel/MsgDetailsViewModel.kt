@@ -94,22 +94,13 @@ class MsgDetailsViewModel(
   private var lastUpdateTime = System.currentTimeMillis()
 
   val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
+  val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
-  val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
+  private val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
     account = messageEntity.email,
     folder = messageEntity.folder,
     uid = messageEntity.uid
   )
-
-  private val initMsgLiveData: LiveData<MessageEntity?> = liveData {
-    emit(
-      roomDatabase.msgDao().getMsgSuspend(
-        account = messageEntity.email,
-        folder = messageEntity.folder,
-        uid = messageEntity.uid
-      )
-    )
-  }
 
   private val afterKeysStorageUpdatedMsgLiveData: MediatorLiveData<MessageEntity?> =
     MediatorLiveData()
@@ -141,9 +132,6 @@ class MsgDetailsViewModel(
         )
       }
     }
-
-  private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
-
   private val processingMsgLiveData =
     MediatorLiveData<Result<PgpMsg.ProcessedMimeMessageResult?>>()
   private val processingProgressLiveData =
@@ -281,7 +269,7 @@ class MsgDetailsViewModel(
       afterKeysStorageUpdatedMsgLiveData.value = it
     }
 
-    mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
+    mediatorMsgLiveData.addSource(freshMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
     mediatorMsgLiveData.addSource(
@@ -689,6 +677,7 @@ class MsgDetailsViewModel(
     isSeen: Boolean,
     usePending: Boolean = false
   ) {
+    if (msgEntity.isSeen == isSeen) return
     roomDatabase.msgDao().updateSuspend(
       msgEntity.copy(
         state = if (usePending) {

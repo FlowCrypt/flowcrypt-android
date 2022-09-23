@@ -136,10 +136,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private val isOutboxFolder: Boolean
     get() {
-      return JavaEmailConstants.FOLDER_OUTBOX.equals(
-        currentFolder?.fullName,
-        ignoreCase = true
-      )
+      return currentFolder?.isOutbox ?: false
+    }
+
+  private val isDraftsFolder: Boolean
+    get() {
+      return currentFolder?.isDrafts ?: false
     }
 
   private val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
@@ -507,11 +509,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     )
   }
 
-  private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {
+  private fun isItSyncOrCachedFolder(localFolder: LocalFolder?): Boolean {
     return localFolder?.fullName.equals(
       JavaEmailConstants.FOLDER_INBOX,
       ignoreCase = true
-    ) || isOutboxFolder
+    ) || isOutboxFolder || isDraftsFolder
   }
 
   /**
@@ -1251,9 +1253,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     adapter.currentFolder = newFolder
 
     val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
-    val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
+    val isItSyncOrCachedFolder = isItSyncOrCachedFolder(newFolder)
     var isForceClearCacheNeeded = false
-    if ((isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) || forceClearCache) {
+    if ((isFolderNameEmpty?.not() == true && isItSyncOrCachedFolder.not()) || forceClearCache) {
       isForceClearCacheNeeded = true
     }
 

@@ -227,7 +227,7 @@ class GmailApiHelper {
       LocalFolder, nextPageToken: String? = null
     ): GenericJson = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      if (localFolder.isDraft) {
+      if (localFolder.isDrafts) {
         val request = gmailApiService
           .users()
           .drafts()

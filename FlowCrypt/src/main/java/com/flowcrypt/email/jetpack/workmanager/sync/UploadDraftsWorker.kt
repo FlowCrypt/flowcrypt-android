@@ -88,21 +88,21 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     ) {
       for (directory in directories) {
         val directoryName = directory.name
-        val existingDraftEntity = roomDatabase.draftDao().getDraftEntityById(directoryName)
+        /*val existingDraftEntity = roomDatabase.draftDao().getDraftEntityById(directoryName)
         if (existingDraftEntity == null) {
           FileAndDirectoryUtils.deleteDir(directory)
           continue
-        }
-        val originalDraftId = existingDraftEntity.draftId
+        }*/
+        val originalDraftId = ""//existingDraftEntity.draftId
         val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
         try {
           val lastVersion = drafts.maxBy { it.lastModified() }
           val inputStream = KeyStoreCryptoManager.getCipherInputStream(lastVersion.inputStream())
           val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
           val draftId = action.invoke(originalDraftId, mimeMessage)
-          if (originalDraftId == null) {
+          /*if (originalDraftId == null) {
             roomDatabase.draftDao().updateSuspend(existingDraftEntity.copy(draftId = draftId))
-          }
+          }*/
 
           drafts.forEach { FileAndDirectoryUtils.deleteFile(it) }
           if ((directory.listFiles() ?: emptyArray<File>()).isEmpty()) {
@@ -126,7 +126,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
               or a message has been sent
               or updating the draft with local changes is not actual
               */
-              roomDatabase.draftDao().deleteSuspend(existingDraftEntity)
+              //roomDatabase.draftDao().deleteSuspend(existingDraftEntity)
               FileAndDirectoryUtils.deleteDir(directory)
             }
           }
