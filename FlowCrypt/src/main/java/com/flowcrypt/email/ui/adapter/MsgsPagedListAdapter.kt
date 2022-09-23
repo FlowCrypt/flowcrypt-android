@@ -144,6 +144,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           FoldersManager.FolderType.SENT -> viewHolder.textViewSenderAddress?.text =
             generateAddresses(messageEntity.to)
 
+          FoldersManager.FolderType.DRAFTS -> viewHolder.textViewSenderAddress?.text =
+            generateAddresses(messageEntity.to).ifEmpty {
+              context.getString(R.string.no_recipients)
+            }
+
           FoldersManager.FolderType.OUTBOX -> {
             val status = generateOutboxStatus(
               viewHolder.textViewSenderAddress?.context,
@@ -159,7 +164,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       }
 
       viewHolder.textViewSubject?.text = subject
-      if (folderType === FoldersManager.FolderType.OUTBOX) {
+      if (folderType in listOf(
+          FoldersManager.FolderType.OUTBOX,
+          FoldersManager.FolderType.DRAFTS
+        )
+      ) {
         viewHolder.textViewDate?.text =
           DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate)
       } else {

@@ -490,4 +490,5 @@
     <string name="edit_draft">Редагувати чорновик</string>
     <string name="saving_draft">Зберегіємо чорновик&#8230;</string>
     <string name="fetching_drafts_info_failed">Не вдалося отримати інформацію про чорновики. Будь ласка, спробуйте ще раз.</string>
+    <string name="no_recipients">(без отримувачів)</string>
 </resources>

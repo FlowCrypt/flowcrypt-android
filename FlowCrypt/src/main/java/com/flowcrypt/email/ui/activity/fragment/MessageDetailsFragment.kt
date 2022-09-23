@@ -786,7 +786,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       add(
         MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.to),
-          value = formatAddresses(args.messageEntity.to)
+          value = formatAddresses(args.messageEntity.to).ifEmpty { getString(R.string.no_recipients) }
         )
       )
 
