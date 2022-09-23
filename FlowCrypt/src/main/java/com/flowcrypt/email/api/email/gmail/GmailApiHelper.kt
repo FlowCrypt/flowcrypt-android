@@ -51,7 +51,6 @@ import com.google.api.services.gmail.model.BatchModifyMessagesRequest
 import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.Label
-import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
@@ -266,34 +265,17 @@ class GmailApiHelper {
      * twice value of <code>stepValue</code> we will use parallel requests to minimize latency
      */
     suspend fun loadMsgsInParallel(
-      context: Context, accountEntity: AccountEntity, messages: List<Message>,
+      context: Context,
+      accountEntity: AccountEntity,
+      messages: List<Message>,
       localFolder: LocalFolder,
-      format: String = MESSAGE_RESPONSE_FORMAT_FULL, stepValue: Int = 10
+      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      stepValue: Int = 10
     ): List<Message> = withContext(Dispatchers.IO)
     {
-      val useParallel = messages.size > stepValue * 2
-      val steps = mutableListOf<Deferred<List<Message>>>()
-
-      if (messages.isNotEmpty()) {
-        if (messages.size <= stepValue && !useParallel) {
-          steps.add(async { loadMsgs(context, accountEntity, messages, localFolder, format) })
-        } else {
-          var i = 0
-          while (i < messages.size) {
-            val tempList = if (messages.size - i > stepValue) {
-              messages.subList(i, i + stepValue)
-            } else {
-              messages.subList(i, messages.size)
-            }
-            steps.add(async {
-              loadMsgs(context, accountEntity, tempList, localFolder, format)
-            })
-            i += stepValue
-          }
-        }
+      return@withContext loadInParallel(list = messages, stepValue = stepValue) { list ->
+        loadMsgs(context, accountEntity, list, localFolder, format)
       }
-
-      return@withContext awaitAll(*steps.toTypedArray()).flatten()
     }
 
     suspend fun loadMsgs(
@@ -926,23 +908,32 @@ class GmailApiHelper {
       stepValue: Int = 10
     ): List<Draft> = withContext(Dispatchers.IO)
     {
-      val useParallel = messages.size > stepValue * 2
-      val steps = mutableListOf<Deferred<List<Draft>>>()
+      return@withContext loadInParallel(list = messages, stepValue = stepValue) { list ->
+        loadDrafts(context, accountEntity, list)
+      }
+    }
 
-      if (messages.isNotEmpty()) {
-        if (messages.size <= stepValue && !useParallel) {
-          steps.add(async { loadDrafts(context, accountEntity, messages) })
+    suspend fun <T, V> loadInParallel(
+      list: List<T>,
+      stepValue: Int = 10,
+      action: suspend (subList: List<T>) -> List<V>
+    ): List<V> = withContext(Dispatchers.IO)
+    {
+      val useParallel = list.size > stepValue * 2
+      val steps = mutableListOf<Deferred<List<V>>>()
+
+      if (list.isNotEmpty()) {
+        if (list.size <= stepValue && !useParallel) {
+          steps.add(async { action.invoke(list) })
         } else {
           var i = 0
-          while (i < messages.size) {
-            val tempList = if (messages.size - i > stepValue) {
-              messages.subList(i, i + stepValue)
+          while (i < list.size) {
+            val tempList = if (list.size - i > stepValue) {
+              list.subList(i, i + stepValue)
             } else {
-              messages.subList(i, messages.size)
+              list.subList(i, list.size)
             }
-            steps.add(async {
-              loadDrafts(context, accountEntity, tempList)
-            })
+            steps.add(async { action.invoke(tempList) })
             i += stepValue
           }
         }
@@ -951,7 +942,7 @@ class GmailApiHelper {
       return@withContext awaitAll(*steps.toTypedArray()).flatten()
     }
 
-    suspend fun loadDrafts(
+    private suspend fun loadDrafts(
       context: Context,
       accountEntity: AccountEntity,
       messages: Collection<Message>,
@@ -959,9 +950,6 @@ class GmailApiHelper {
     ): List<Draft> = withContext(Dispatchers.IO)
     {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      val batch = gmailApiService.batch()
-
-      val listResult = mutableListOf<Draft>()
       val request = gmailApiService
         .users()
         .drafts()
@@ -978,17 +966,7 @@ class GmailApiHelper {
         request.fields = fields.joinToString(separator = ",")
       }
 
-      request.queue(batch, object : JsonBatchCallback<ListDraftsResponse>() {
-        override fun onSuccess(t: ListDraftsResponse?, responseHeaders: HttpHeaders?) {
-          t?.let { listResult.addAll(it.drafts) }
-        }
-
-        override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {}
-      })
-
-      batch.execute()
-
-      return@withContext listResult
+      return@withContext request.execute().drafts
     }
 
     /**
