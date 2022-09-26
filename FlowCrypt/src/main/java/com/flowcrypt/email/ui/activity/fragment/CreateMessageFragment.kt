@@ -151,6 +151,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           } else {
             null
           },
+          gmailThreadId = args.incomingMessageInfo?.msgEntity?.threadId,
           application = requireActivity().application
         ) as T
       }

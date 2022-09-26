@@ -850,7 +850,8 @@ class GmailApiHelper {
       context: Context,
       account: AccountEntity,
       mimeMessage: jakarta.mail.Message,
-      draftId: String? = null
+      draftId: String? = null,
+      threadId: String? = null
     ): Draft = withContext(Dispatchers.IO) {
       val gmail = generateGmailApiService(context, account)
       val outputStream = ByteArrayOutputStream()
@@ -862,6 +863,8 @@ class GmailApiHelper {
             it.toByteArray(),
             Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
           )
+
+          setThreadId(threadId)
         }
       }
 

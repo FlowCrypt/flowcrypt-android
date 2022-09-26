@@ -69,7 +69,8 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           context = applicationContext,
           account = account,
           mimeMessage = mimeMessage,
-          draftId = draftId
+          draftId = draftId,
+          threadId = messageEntity.threadId
         )
 
         val message = GmailApiHelper.loadMsgFullInfoSuspend(

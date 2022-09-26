@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit
  */
 class DraftViewModel(
   existingDraftMessageEntity: MessageEntity? = null,
+  private val gmailThreadId: String? = null,
   application: Application
 ) : AccountViewModel(application) {
   private var sessionDraftMessageEntity: MessageEntity? = existingDraftMessageEntity
@@ -184,7 +185,10 @@ class DraftViewModel(
         uid = System.currentTimeMillis(),
         info = outgoingMessageInfo,
         flags = listOf(MessageFlag.DRAFT, MessageFlag.SEEN)
-      ).copy(state = MessageState.PENDING_UPLOADING_DRAFT.value)
+      ).copy(
+        state = MessageState.PENDING_UPLOADING_DRAFT.value,
+        threadId = gmailThreadId
+      )
       val id = roomDatabase.msgDao().insertSuspend(newDraftMessageEntity)
       return@withContext newDraftMessageEntity.copy(
         id = id,
