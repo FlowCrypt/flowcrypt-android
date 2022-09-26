@@ -16,6 +16,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
@@ -46,8 +47,6 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   private suspend fun uploadDrafts(account: AccountEntity, store: Store) =
     withContext(Dispatchers.IO) {
       uploadDraftsInternal(account) { draftId, mimeMessage ->
-
-        return@uploadDraftsInternal Pair(0, "")
         //to update IMAP draft we have to delete the old one and add a new one
         /*val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
         val folderDrafts = foldersManager.folderDrafts ?: return@uploadDraftsInternal
@@ -63,7 +62,8 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     }
 
   private suspend fun uploadDrafts(account: AccountEntity) = withContext(Dispatchers.IO) {
-    uploadDraftsInternal(account) { draftId, mimeMessage ->
+    uploadDraftsInternal(account) { messageEntity, mimeMessage ->
+      val draftId = messageEntity.draftId
       executeGMailAPICall(applicationContext) {
         val draft = GmailApiHelper.uploadDraft(
           context = applicationContext,
@@ -71,14 +71,38 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           mimeMessage = mimeMessage,
           draftId = draftId
         )
-        return@executeGMailAPICall Pair(draft.message.uid, draft.id)
+
+        val message = GmailApiHelper.loadMsgFullInfoSuspend(
+          context = applicationContext,
+          accountEntity = account,
+          msgId = draft.message.id,
+          fields = listOf(
+            "id",
+            "threadId",
+            "labelIds",
+            "snippet",
+            "sizeEstimate",
+            "historyId",
+            "internalDate"
+          )
+        )
+
+        roomDatabase.msgDao().updateSuspend(
+          messageEntity.copy(
+            uid = message.uid,
+            threadId = message.threadId,
+            draftId = draft.id,
+            state = MessageState.NONE.value,
+            historyId = message.historyId.toString()
+          )
+        )
       }
     }
   }
 
   private suspend fun uploadDraftsInternal(
     account: AccountEntity,
-    action: suspend (draftId: String?, mimeMessage: MimeMessage) -> Pair<Long, String>
+    action: suspend (messageEntity: MessageEntity, mimeMessage: MimeMessage) -> Unit
   ) = withContext(Dispatchers.IO) {
     val draftsDir = CacheManager.getDraftDirectory(applicationContext)
     val directories = draftsDir.listFiles(FileFilter { it.isDirectory }) ?: emptyArray()
@@ -96,30 +120,12 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           FileAndDirectoryUtils.deleteDir(directory)
           continue
         }
-        val originalDraftId = existingDraftEntity.draftId
         val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
         try {
           val lastVersion = drafts.maxBy { it.lastModified() }
           val inputStream = KeyStoreCryptoManager.getCipherInputStream(lastVersion.inputStream())
           val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
-          val messageIdWithDraftId = action.invoke(originalDraftId, mimeMessage)
-          if (originalDraftId == null) {
-            roomDatabase.msgDao().updateSuspend(
-              existingDraftEntity.copy(
-                uid = messageIdWithDraftId.first,
-                draftId = messageIdWithDraftId.second,
-                state = MessageState.NONE.value
-              )
-            )
-          } else {
-            roomDatabase.msgDao().updateSuspend(
-              existingDraftEntity.copy(
-                uid = messageIdWithDraftId.first,
-                state = MessageState.NONE.value
-              )
-            )
-          }
-
+          action.invoke(existingDraftEntity, mimeMessage)
           drafts.forEach { FileAndDirectoryUtils.deleteFile(it) }
           if ((directory.listFiles() ?: emptyArray<File>()).isEmpty()) {
             FileAndDirectoryUtils.deleteDir(directory)
