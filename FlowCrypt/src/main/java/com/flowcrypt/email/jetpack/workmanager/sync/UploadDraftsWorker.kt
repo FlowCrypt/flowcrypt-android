@@ -14,7 +14,9 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -45,7 +47,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     withContext(Dispatchers.IO) {
       uploadDraftsInternal(account) { draftId, mimeMessage ->
 
-        return@uploadDraftsInternal ""
+        return@uploadDraftsInternal Pair(0, "")
         //to update IMAP draft we have to delete the old one and add a new one
         /*val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
         val folderDrafts = foldersManager.folderDrafts ?: return@uploadDraftsInternal
@@ -63,19 +65,20 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   private suspend fun uploadDrafts(account: AccountEntity) = withContext(Dispatchers.IO) {
     uploadDraftsInternal(account) { draftId, mimeMessage ->
       executeGMailAPICall(applicationContext) {
-        return@executeGMailAPICall GmailApiHelper.uploadDraft(
+        val draft = GmailApiHelper.uploadDraft(
           context = applicationContext,
           account = account,
           mimeMessage = mimeMessage,
           draftId = draftId
         )
+        return@executeGMailAPICall Pair(draft.message.uid, draft.id)
       }
     }
   }
 
   private suspend fun uploadDraftsInternal(
     account: AccountEntity,
-    action: suspend (draftId: String?, mimeMessage: MimeMessage) -> String
+    action: suspend (draftId: String?, mimeMessage: MimeMessage) -> Pair<Long, String>
   ) = withContext(Dispatchers.IO) {
     val draftsDir = CacheManager.getDraftDirectory(applicationContext)
     val directories = draftsDir.listFiles(FileFilter { it.isDirectory }) ?: emptyArray()
@@ -88,21 +91,30 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     ) {
       for (directory in directories) {
         val directoryName = directory.name
-        /*val existingDraftEntity = roomDatabase.draftDao().getDraftEntityById(directoryName)
+        val existingDraftEntity = roomDatabase.msgDao().getDraftById(directoryName.toLong())
         if (existingDraftEntity == null) {
           FileAndDirectoryUtils.deleteDir(directory)
           continue
-        }*/
-        val originalDraftId = ""//existingDraftEntity.draftId
+        }
+        val originalDraftId = existingDraftEntity.draftId
         val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
         try {
           val lastVersion = drafts.maxBy { it.lastModified() }
           val inputStream = KeyStoreCryptoManager.getCipherInputStream(lastVersion.inputStream())
           val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
-          val draftId = action.invoke(originalDraftId, mimeMessage)
-          /*if (originalDraftId == null) {
-            roomDatabase.draftDao().updateSuspend(existingDraftEntity.copy(draftId = draftId))
-          }*/
+          val messageIdWithDraftId = action.invoke(originalDraftId, mimeMessage)
+          if (originalDraftId == null) {
+            roomDatabase.msgDao().updateSuspend(
+              existingDraftEntity.copy(
+                uid = messageIdWithDraftId.first,
+                draftId = messageIdWithDraftId.second,
+                state = MessageState.NONE.value
+              )
+            )
+          } else {
+            roomDatabase.msgDao()
+              .updateSuspend(existingDraftEntity.copy(state = MessageState.NONE.value))
+          }
 
           drafts.forEach { FileAndDirectoryUtils.deleteFile(it) }
           if ((directory.listFiles() ?: emptyArray<File>()).isEmpty()) {

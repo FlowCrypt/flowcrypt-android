@@ -851,7 +851,7 @@ class GmailApiHelper {
       account: AccountEntity,
       mimeMessage: jakarta.mail.Message,
       draftId: String? = null
-    ): String = withContext(Dispatchers.IO) {
+    ): Draft = withContext(Dispatchers.IO) {
       val gmail = generateGmailApiService(context, account)
       val outputStream = ByteArrayOutputStream()
       mimeMessage.writeTo(outputStream)
@@ -872,11 +872,11 @@ class GmailApiHelper {
       return@withContext if (draftId == null) {
         gmailUsersDrafts
           .create(DEFAULT_USER_ID, draft)
-          .execute().id
+          .execute()
       } else {
         gmailUsersDrafts
           .update(DEFAULT_USER_ID, draftId, draft)
-          .execute().id
+          .execute()
       }
     }
 

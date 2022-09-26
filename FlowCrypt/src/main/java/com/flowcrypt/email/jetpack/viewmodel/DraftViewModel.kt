@@ -153,6 +153,7 @@ class DraftViewModel(
 
           roomDatabase.msgDao().updateSuspend(
             draftMessageEntity.copy(
+              state = MessageState.PENDING_UPLOADING_DRAFT.value,
               subject = outgoingMessageInfo.subject,
               fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
               toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray())

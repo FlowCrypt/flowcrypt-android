@@ -358,10 +358,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       return
     }
 
-    val isOutbox =
-      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)
+    val isOutbox = currentFolder?.isOutbox ?: false
+    val isDraft = msgEntity.isDraft
     val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
-    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
+    if (isDraft || isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
       when (msgEntity.msgState) {
         MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
         MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
