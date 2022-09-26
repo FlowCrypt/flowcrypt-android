@@ -230,6 +230,13 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
         }
 
+        MessageState.PENDING_UPLOADING_DRAFT -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_baseline_pending_actions_blue_24)
+          }
+        }
+
         else -> viewHolder.imageViewStatus?.visibility = View.GONE
       }
 

@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.toast
@@ -180,7 +181,7 @@ class DraftViewModel(
         uid = System.currentTimeMillis(),
         info = outgoingMessageInfo,
         flags = listOf(MessageFlag.DRAFT, MessageFlag.SEEN)
-      )
+      ).copy(state = MessageState.PENDING_UPLOADING_DRAFT.value)
       val id = roomDatabase.msgDao().insertSuspend(newDraftMessageEntity)
       return@withContext newDraftMessageEntity.copy(
         id = id,
