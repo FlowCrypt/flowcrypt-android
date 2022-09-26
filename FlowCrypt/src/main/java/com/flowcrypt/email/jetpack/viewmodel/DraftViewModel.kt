@@ -126,11 +126,13 @@ class DraftViewModel(
         val activeAccount =
           roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
 
-        if (sessionDraftMessageEntity == null) {
-          sessionDraftMessageEntity = genDraftMessageEntity(
+        sessionDraftMessageEntity = if (sessionDraftMessageEntity == null) {
+          genDraftMessageEntity(
             accountEntity = activeAccount,
             outgoingMessageInfo = outgoingMessageInfo
           )
+        } else {
+          roomDatabase.msgDao().getDraftById(sessionDraftMessageEntity?.id ?: Long.MIN_VALUE)
         }
 
         sessionDraftMessageEntity?.let { draftMessageEntity ->

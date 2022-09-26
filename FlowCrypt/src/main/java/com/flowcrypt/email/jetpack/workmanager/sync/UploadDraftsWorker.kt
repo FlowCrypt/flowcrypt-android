@@ -112,8 +112,12 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
               )
             )
           } else {
-            roomDatabase.msgDao()
-              .updateSuspend(existingDraftEntity.copy(state = MessageState.NONE.value))
+            roomDatabase.msgDao().updateSuspend(
+              existingDraftEntity.copy(
+                uid = messageIdWithDraftId.first,
+                state = MessageState.NONE.value
+              )
+            )
           }
 
           drafts.forEach { FileAndDirectoryUtils.deleteFile(it) }
@@ -164,7 +168,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
         .getInstance(context.applicationContext)
         .enqueueUniqueWork(
           GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.APPEND,
+          ExistingWorkPolicy.KEEP,
           OneTimeWorkRequestBuilder<UploadDraftsWorker>()
             .addTag(TAG_SYNC)
             .setConstraints(constraints)

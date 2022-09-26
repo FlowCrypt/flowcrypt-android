@@ -453,7 +453,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         )
 
         val draftIdsMap = when (messagesBaseInfo) {
-          is ListDraftsResponse -> messagesBaseInfo.drafts.associateBy({ it.message.id }, { it.id })
+          is ListDraftsResponse -> messagesBaseInfo.drafts?.associateBy(
+            { it.message.id },
+            { it.id }) ?: emptyMap()
           else -> emptyMap()
         }
 
