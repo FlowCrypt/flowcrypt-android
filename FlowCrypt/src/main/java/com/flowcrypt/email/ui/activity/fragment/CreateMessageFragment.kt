@@ -840,7 +840,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       updateViewsUsingIncomingData(initializationData)
       this.isIncomingDataUsed = true
 
-      draftViewModel.setupWithInitializationData(initializationData = initializationData)
+      draftViewModel.setupWithInitializationData(
+        initializationData = initializationData,
+        timeInMilliseconds = startOfSessionInMilliseconds
+      )
     }
   }
 

@@ -87,7 +87,8 @@ class DraftViewModel(
   }
 
   fun setupWithInitializationData(
-    initializationData: InitializationData
+    initializationData: InitializationData,
+    timeInMilliseconds: Long
   ) {
     draftFingerprint = DraftFingerprint(
       msgText = initializationData.body,
@@ -95,6 +96,7 @@ class DraftViewModel(
       toRecipients = initializationData.toAddresses.map { it.lowercase() }.toSet(),
       ccRecipients = initializationData.ccAddresses.map { it.lowercase() }.toSet(),
       bccRecipients = initializationData.bccAddresses.map { it.lowercase() }.toSet(),
+      timeInMilliseconds = timeInMilliseconds
     )
   }
 
