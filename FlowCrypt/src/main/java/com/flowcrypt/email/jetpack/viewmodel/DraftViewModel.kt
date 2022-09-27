@@ -85,8 +85,8 @@ class DraftViewModel(
     initializationData: InitializationData
   ) {
     draftFingerprint = DraftFingerprint(
-      msgText = initializationData.body ?: "",
-      msgSubject = initializationData.subject ?: "",
+      msgText = initializationData.body,
+      msgSubject = initializationData.subject,
       toRecipients = initializationData.toAddresses.map { it.lowercase() }.toSet(),
       ccRecipients = initializationData.ccAddresses.map { it.lowercase() }.toSet(),
       bccRecipients = initializationData.bccAddresses.map { it.lowercase() }.toSet(),

@@ -100,7 +100,7 @@ data class IncomingMessageInfo constructor(
     val toAddresses: java.util.ArrayList<String> = arrayListOf()
     val ccAddresses: java.util.ArrayList<String> = arrayListOf()
     val bccAddresses: java.util.ArrayList<String> = arrayListOf()
-    var body = ""
+    var body: String? = null
 
     val folderType = FoldersManager.getFolderType(localFolder)
     when (messageType) {
@@ -181,7 +181,7 @@ data class IncomingMessageInfo constructor(
       MessageType.DRAFT -> {
         toAddresses.addAll(getTo().map { it.address.lowercase() })
         ccAddresses.addAll(getCc().map { it.address.lowercase() })
-        body = text ?: ""
+        body = text
       }
 
       else -> {}
