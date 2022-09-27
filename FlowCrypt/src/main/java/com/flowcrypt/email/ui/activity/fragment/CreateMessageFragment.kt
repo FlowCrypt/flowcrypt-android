@@ -240,6 +240,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private var isMsgSentToQueue: Boolean = false
   private var updatingRecipientsMarker: Boolean = false
   private var originalColor: Int = 0
+  private var startOfSessionInMilliseconds = System.currentTimeMillis()
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -265,6 +266,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         },
       )
     )
+  }
+
+  override fun onResume() {
+    super.onResume()
+    startOfSessionInMilliseconds = System.currentTimeMillis()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -299,7 +305,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       draftViewModel.processDraft(
         coroutineScope = GlobalScope,
         currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
-        showNotification = true
+        showNotification = true,
+        timeToCompare = startOfSessionInMilliseconds
       )
     }
   }
@@ -1349,7 +1356,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
         draftViewModel.draftRepeatableCheckingFlow.collect {
           draftViewModel.processDraft(
-            currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+            currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
+            timeToCompare = startOfSessionInMilliseconds
           )
         }
       }

@@ -65,7 +65,8 @@ class DraftViewModel(
   fun processDraft(
     coroutineScope: CoroutineScope = viewModelScope,
     currentOutgoingMessageInfo: OutgoingMessageInfo,
-    showNotification: Boolean = false
+    showNotification: Boolean = false,
+    timeToCompare: Long = Long.MAX_VALUE
   ) {
     coroutineScope.launch {
       val context: Context = getApplication()
@@ -73,10 +74,14 @@ class DraftViewModel(
       if (isSavingDraftNeeded) {
         if (showNotification) {
           withContext(Dispatchers.Main) {
-            context.toast(context.getString(R.string.saving_draft))
+            context.toast(context.getString(R.string.draft_saved))
           }
         }
         prepareAndSaveDraftForUploading(currentOutgoingMessageInfo)
+      } else if (showNotification && timeToCompare < draftFingerprint.timeInMilliseconds) {
+        withContext(Dispatchers.Main) {
+          context.toast(context.getString(R.string.draft_saved))
+        }
       }
     }
   }
@@ -229,7 +234,8 @@ class DraftViewModel(
     var msgSubject: String? = null,
     val toRecipients: Set<String> = mutableSetOf(),
     val ccRecipients: Set<String> = mutableSetOf(),
-    val bccRecipients: Set<String> = mutableSetOf()
+    val bccRecipients: Set<String> = mutableSetOf(),
+    val timeInMilliseconds: Long = System.currentTimeMillis()
   )
 
   companion object {
