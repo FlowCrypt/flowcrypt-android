@@ -153,12 +153,12 @@ class DraftViewModel(
                     KeyStoreCryptoManager.getCipherInputStream(inputStream)
                   )
 
-                  oldVersion.getHeader(JavaEmailConstants.HEADER_REFERENCES).firstOrNull()
+                  oldVersion.getHeader(JavaEmailConstants.HEADER_REFERENCES)?.firstOrNull()
                     ?.let { references ->
                       mimeMessage.setHeader(JavaEmailConstants.HEADER_REFERENCES, references)
                     }
 
-                  oldVersion.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO).firstOrNull()
+                  oldVersion.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO)?.firstOrNull()
                     ?.let { inReplyTo ->
                       mimeMessage.setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, inReplyTo)
                     }
