@@ -96,11 +96,8 @@ class MsgDetailsViewModel(
   val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
   val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
-  private val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
-    account = messageEntity.email,
-    folder = messageEntity.folder,
-    uid = messageEntity.uid
-  )
+  private val freshMsgLiveData: LiveData<MessageEntity?> =
+    roomDatabase.msgDao().getMsgLiveDataById(messageEntity.id ?: -1)
 
   private val afterKeysStorageUpdatedMsgLiveData: MediatorLiveData<MessageEntity?> =
     MediatorLiveData()
@@ -201,7 +198,7 @@ class MsgDetailsViewModel(
             if (processedMimeMessageResult != null) {
               try {
                 val msgInfo = IncomingMessageInfo(
-                  msgEntity = messageEntity,
+                  msgEntity = mediatorMsgLiveData.value ?: messageEntity,
                   text = processedMimeMessageResult.text,
                   //subject = parseDecryptedMsgResult.subject,
                   msgBlocks = processedMimeMessageResult.blocks,

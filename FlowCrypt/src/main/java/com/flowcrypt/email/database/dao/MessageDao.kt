@@ -105,6 +105,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
   abstract fun getMsgLiveData(account: String, folder: String, uid: Long): LiveData<MessageEntity?>
 
+  @Query("SELECT * FROM messages WHERE _id = :id")
+  abstract fun getMsgLiveDataById(id: Long): LiveData<MessageEntity?>
+
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label")
   abstract suspend fun delete(email: String?, label: String?): Int
 
