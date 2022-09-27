@@ -10,7 +10,9 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -23,6 +25,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +38,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 /**
@@ -139,6 +143,28 @@ class DraftViewModel(
         sessionDraftMessageEntity?.let { draftMessageEntity ->
           val mimeMessage =
             EmailUtil.genMessage(getApplication(), activeAccount, outgoingMessageInfo)
+          val existingSnapshot = MsgsCacheManager.getMsgSnapshot(draftMessageEntity.id.toString())
+          if (existingSnapshot != null) {
+            existingSnapshot.getUri(0)?.let { fileUri ->
+              (getApplication() as Context).contentResolver?.openInputStream(fileUri)
+                ?.let { inputStream ->
+                  val oldVersion = FlowCryptMimeMessage(
+                    Session.getInstance(Properties()),
+                    KeyStoreCryptoManager.getCipherInputStream(inputStream)
+                  )
+
+                  oldVersion.getHeader(JavaEmailConstants.HEADER_REFERENCES).firstOrNull()
+                    ?.let { references ->
+                      mimeMessage.setHeader(JavaEmailConstants.HEADER_REFERENCES, references)
+                    }
+
+                  oldVersion.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO).firstOrNull()
+                    ?.let { inReplyTo ->
+                      mimeMessage.setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, inReplyTo)
+                    }
+                }
+            }
+          }
           val draftsDir = CacheManager.getDraftDirectory(getApplication())
 
           val currentMsgDraftDir = draftsDir.walkTopDown().firstOrNull {
@@ -159,7 +185,9 @@ class DraftViewModel(
               state = MessageState.PENDING_UPLOADING_DRAFT.value,
               subject = outgoingMessageInfo.subject,
               fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
-              toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray())
+              toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
+              sentDate = mimeMessage.sentDate?.time,
+              receivedDate = mimeMessage.sentDate?.time
             )
           )
         }

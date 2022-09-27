@@ -71,6 +71,12 @@ class GmaiAPIMimeMessage(
     }
   }
 
+  override fun updateMessageID() {
+    if (messageID.isNullOrEmpty()) {
+      super.updateMessageID()
+    }
+  }
+
   private fun generateMultipart(message: Message): Multipart? {
     return message.payload?.let { mainMessagePart ->
       parseBodyPart(mainMessagePart)?.content as Multipart
