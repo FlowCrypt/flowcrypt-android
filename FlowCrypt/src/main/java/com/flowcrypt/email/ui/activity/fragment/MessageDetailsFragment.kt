@@ -322,7 +322,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                     .show()
                 } else {
                   msgDetailsViewModel.deleteMsg()
-                  Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
+                  toast(R.string.message_was_deleted)
                 }
               }
             } else {
@@ -1403,9 +1403,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun observeFreshMsgLiveData() {
-    msgDetailsViewModel.mediatorMsgLiveData.observe(viewLifecycleOwner) {
-      it?.let { messageEntity ->
+    msgDetailsViewModel.mediatorMsgLiveData.observe(viewLifecycleOwner) { messageEntity ->
+      if (messageEntity != null) {
         updateViews(messageEntity)
+      } else {
+        toast(R.string.message_was_deleted)
+        navController?.navigateUp()
       }
     }
   }

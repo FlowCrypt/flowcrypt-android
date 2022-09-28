@@ -63,8 +63,8 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
 
   private suspend fun uploadDrafts(account: AccountEntity) = withContext(Dispatchers.IO) {
     uploadDraftsInternal(account) { messageEntity, mimeMessage ->
-      val draftId = messageEntity.draftId
       executeGMailAPICall(applicationContext) {
+        val draftId = messageEntity.draftId
         val draft = GmailApiHelper.uploadDraft(
           context = applicationContext,
           account = account,
@@ -80,11 +80,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           fields = listOf(
             "id",
             "threadId",
-            "labelIds",
-            "snippet",
-            "sizeEstimate",
-            "historyId",
-            "internalDate"
+            "historyId"
           )
         )
 

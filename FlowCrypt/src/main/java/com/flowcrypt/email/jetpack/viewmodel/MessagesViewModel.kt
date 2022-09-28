@@ -35,6 +35,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -137,6 +138,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   fun switchFolder(newFolder: LocalFolder, deleteAllMsgs: Boolean, forceClearFolderCache: Boolean) {
     if (foldersLiveData.value == newFolder) {
       return
+    }
+
+    if (newFolder.isDrafts) {
+      UploadDraftsWorker.enqueue(getApplication())
     }
 
     viewModelScope.launch {
