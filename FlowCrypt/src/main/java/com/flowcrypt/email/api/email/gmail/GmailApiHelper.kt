@@ -223,8 +223,12 @@ class GmailApiHelper {
     }
 
     suspend fun loadMsgsBaseInfo(
-      context: Context, accountEntity: AccountEntity, localFolder:
-      LocalFolder, nextPageToken: String? = null
+      context: Context,
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      maxResult: Long = COUNT_OF_LOADED_EMAILS_BY_STEP,
+      fields: List<String>? = null,
+      nextPageToken: String? = null
     ): GenericJson = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       if (localFolder.isDrafts) {
@@ -233,7 +237,11 @@ class GmailApiHelper {
           .drafts()
           .list(DEFAULT_USER_ID)
           .setPageToken(nextPageToken)
-          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+          .setMaxResults(maxResult)
+
+        fields?.let { fields ->
+          request.fields = fields.joinToString(separator = ",")
+        }
 
         if (accountEntity.showOnlyEncrypted == true) {
           request.q =
@@ -246,7 +254,11 @@ class GmailApiHelper {
           .messages()
           .list(DEFAULT_USER_ID)
           .setPageToken(nextPageToken)
-          .setMaxResults(COUNT_OF_LOADED_EMAILS_BY_STEP)
+          .setMaxResults(maxResult)
+
+        fields?.let { fields ->
+          request.fields = fields.joinToString(separator = ",")
+        }
 
         if (!localFolder.isAll) {
           request.labelIds = listOf(localFolder.fullName)

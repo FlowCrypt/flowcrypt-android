@@ -35,6 +35,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.SyncDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -141,6 +142,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
 
     if (newFolder.isDrafts) {
+      SyncDraftsWorker.enqueue(getApplication())
       UploadDraftsWorker.enqueue(getApplication())
     }
 
@@ -453,8 +455,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           )
         )
         val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(
-          getApplication(), accountEntity,
-          localFolder, if (totalItemsCount > 0) labelEntity?.nextPageToken else null
+          context = getApplication(),
+          accountEntity = accountEntity,
+          localFolder = localFolder,
+          nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
         )
 
         val draftIdsMap = when (messagesBaseInfo) {
