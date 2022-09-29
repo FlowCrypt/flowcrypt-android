@@ -445,7 +445,7 @@ dependencies {
     }
 
     implementation 'org.bouncycastle:bcprov-jdk15to18:1.71'
-    implementation 'org.bouncycastle:bcpg-jdk15to18:1.71'
+    implementation 'org.bouncycastle:bcpg-jdk15to18:1.72'
 
     implementation 'ch.acra:acra-http:5.9.6'
     //ACRA needs the following dependency to use a custom report sender
