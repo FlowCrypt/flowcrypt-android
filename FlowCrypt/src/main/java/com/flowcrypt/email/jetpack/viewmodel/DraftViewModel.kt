@@ -148,8 +148,12 @@ class DraftViewModel(
         }
 
         sessionDraftMessageEntity?.let { draftMessageEntity ->
-          val mimeMessage =
-            EmailUtil.genMessage(getApplication(), activeAccount, outgoingMessageInfo)
+          val mimeMessage = EmailUtil.genMessage(
+            context = getApplication(),
+            accountEntity = activeAccount,
+            outgoingMsgInfo = outgoingMessageInfo,
+            signingRequired = false
+          )
           val existingSnapshot = MsgsCacheManager.getMsgSnapshot(draftMessageEntity.id.toString())
           if (existingSnapshot != null) {
             existingSnapshot.getUri(0)?.let { fileUri ->

@@ -78,7 +78,8 @@ object ProcessingOutgoingMessageInfoHelper {
       val msg = EmailUtil.genMessage(
         context = context,
         accountEntity = accountEntity,
-        outgoingMsgInfo = outgoingMsgInfo
+        outgoingMsgInfo = outgoingMsgInfo,
+        signingRequired = true
       )
 
       val attsCacheDir = getAttsCacheDir(context)

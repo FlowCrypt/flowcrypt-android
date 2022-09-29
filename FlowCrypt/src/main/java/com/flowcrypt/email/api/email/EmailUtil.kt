@@ -642,7 +642,8 @@ class EmailUtil {
      */
     fun genMessage(
       context: Context, accountEntity: AccountEntity,
-      outgoingMsgInfo: OutgoingMessageInfo
+      outgoingMsgInfo: OutgoingMessageInfo,
+      signingRequired: Boolean = true
     ): Message {
       val session = Session.getInstance(Properties())
       val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
@@ -655,11 +656,15 @@ class EmailUtil {
         pubKeys = mutableListOf()
         pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
         pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
-        prvKeys = listOf(
-          SecurityUtils.getSenderPgpKeyDetails(context, accountEntity, senderEmail).privateKey
-            ?: throw IllegalStateException("Sender private key not found")
-        )
-        ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
+        prvKeys = if (signingRequired) {
+          listOf(
+            SecurityUtils.getSenderPgpKeyDetails(context, accountEntity, senderEmail).privateKey
+              ?: throw IllegalStateException("Sender private key not found")
+          )
+        } else null
+        ringProtector = if (signingRequired) {
+          KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
+        } else null
       }
 
       return when (outgoingMsgInfo.messageType) {
