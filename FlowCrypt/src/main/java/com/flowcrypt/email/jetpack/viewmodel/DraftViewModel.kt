@@ -21,6 +21,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
@@ -54,6 +55,7 @@ class DraftViewModel(
 ) : AccountViewModel(application) {
   private var sessionDraftMessageEntity: MessageEntity? = existingDraftMessageEntity
   private var draftFingerprint = DraftFingerprint()
+  private var isDeleted = false
 
   val draftRepeatableCheckingFlow: Flow<Long> = flow {
     while (viewModelScope.isActive) {
@@ -69,6 +71,7 @@ class DraftViewModel(
     timeToCompare: Long = Long.MAX_VALUE
   ) {
     coroutineScope.launch {
+      if (isDeleted) return@launch
       val context: Context = getApplication()
       val isSavingDraftNeeded = isMessageChanged(currentOutgoingMessageInfo)
       if (isSavingDraftNeeded) {
@@ -190,16 +193,20 @@ class DraftViewModel(
           }
 
           MsgsCacheManager.storeMsg(draftMessageEntity.id.toString(), mimeMessage as MimeMessage)
+          val messageEntityWithoutStateChange = draftMessageEntity.copy(
+            subject = outgoingMessageInfo.subject,
+            fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
+            toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
+            sentDate = mimeMessage.sentDate?.time,
+            receivedDate = mimeMessage.sentDate?.time
+          )
 
           roomDatabase.msgDao().updateSuspend(
-            draftMessageEntity.copy(
-              state = MessageState.PENDING_UPLOADING_DRAFT.value,
-              subject = outgoingMessageInfo.subject,
-              fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
-              toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
-              sentDate = mimeMessage.sentDate?.time,
-              receivedDate = mimeMessage.sentDate?.time
-            )
+            if (isDeleted) {
+              messageEntityWithoutStateChange
+            } else {
+              messageEntityWithoutStateChange.copy(state = MessageState.PENDING_UPLOADING_DRAFT.value)
+            }
           )
         }
       } catch (e: Exception) {
@@ -234,6 +241,19 @@ class DraftViewModel(
         receivedDate = newDraftMessageEntity.sentDate
       )
     }
+
+  fun deleteDraft(coroutineScope: CoroutineScope = viewModelScope) {
+    isDeleted = true
+    coroutineScope.launch {
+      sessionDraftMessageEntity?.let { draftEntity ->
+        roomDatabase.msgDao().updateSuspend(
+          draftEntity.copy(state = MessageState.PENDING_DELETING_DRAFT.value)
+        )
+
+        DeleteDraftsWorker.enqueue(getApplication())
+      }
+    }
+  }
 
   private data class DraftFingerprint(
     var msgText: String? = null,

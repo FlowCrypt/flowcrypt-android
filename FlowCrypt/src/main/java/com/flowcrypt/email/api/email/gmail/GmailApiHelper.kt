@@ -229,7 +229,7 @@ class GmailApiHelper {
       maxResult: Long = COUNT_OF_LOADED_EMAILS_BY_STEP,
       fields: List<String>? = null,
       nextPageToken: String? = null
-    ): GenericJson = withContext(Dispatchers.IO) {
+    ): GenericJson? = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
       if (localFolder.isDrafts) {
         val request = gmailApiService
@@ -285,7 +285,7 @@ class GmailApiHelper {
       stepValue: Int = 10
     ): List<Message> = withContext(Dispatchers.IO)
     {
-      return@withContext loadInParallel(list = messages, stepValue = stepValue) { list ->
+      return@withContext useParallel(list = messages, stepValue = stepValue) { list ->
         loadMsgs(context, accountEntity, list, localFolder, format)
       }
     }
@@ -382,6 +382,33 @@ class GmailApiHelper {
           this.ids = ids
         })
         .execute()
+    }
+
+    suspend fun deleteDrafts(
+      context: Context,
+      accountEntity: AccountEntity,
+      ids: List<String>,
+      stepValue: Int = 20
+    ) = withContext(Dispatchers.IO) {
+      useParallel(list = ids, stepValue = stepValue) { list ->
+        val gmailApiService = generateGmailApiService(context, accountEntity)
+        val batch = gmailApiService.batch()
+
+        for (id in list) {
+          val request = gmailApiService
+            .users()
+            .drafts()
+            .delete(DEFAULT_USER_ID, id)
+
+          request.queue(batch, object : JsonBatchCallback<Void>() {
+            override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {}
+            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {}
+          })
+        }
+
+        batch.execute()
+        return@useParallel list
+      }
     }
 
     suspend fun moveToTrash(context: Context, accountEntity: AccountEntity, ids: List<String>) =
@@ -923,12 +950,12 @@ class GmailApiHelper {
       stepValue: Int = 10
     ): List<Draft> = withContext(Dispatchers.IO)
     {
-      return@withContext loadInParallel(list = messages, stepValue = stepValue) { list ->
+      return@withContext useParallel(list = messages, stepValue = stepValue) { list ->
         loadDrafts(context, accountEntity, list)
       }
     }
 
-    suspend fun <T, V> loadInParallel(
+    suspend fun <T, V> useParallel(
       list: List<T>,
       stepValue: Int = 10,
       action: suspend (subList: List<T>) -> List<V>

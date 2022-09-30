@@ -84,14 +84,22 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           )
         )
 
+        val freshestMessageEntity =
+          roomDatabase.msgDao().getDraftById(messageEntity.id ?: Long.MIN_VALUE)
+
+        val messageEntityWithoutStateChange = messageEntity.copy(
+          uid = message.uid,
+          threadId = message.threadId,
+          draftId = draft.id,
+          historyId = message.historyId.toString()
+        )
+
         roomDatabase.msgDao().updateSuspend(
-          messageEntity.copy(
-            uid = message.uid,
-            threadId = message.threadId,
-            draftId = draft.id,
-            state = MessageState.NONE.value,
-            historyId = message.historyId.toString()
-          )
+          if (MessageState.PENDING_DELETING_DRAFT.value == freshestMessageEntity?.state) {
+            messageEntityWithoutStateChange
+          } else {
+            messageEntityWithoutStateChange.copy(state = MessageState.NONE.value)
+          }
         )
       }
     }

@@ -43,13 +43,15 @@ class SyncDraftsWorker(context: Context, params: WorkerParameters) :
     ).filter { it.isDraft && it.draftId?.isNotEmpty() == true }
     val existingDraftIds = existingSyncedDrafts.map { it.draftId }.toSet()
 
-    val draftsOnServer = (GmailApiHelper.loadMsgsBaseInfo(
+    val response = GmailApiHelper.loadMsgsBaseInfo(
       context = applicationContext,
       accountEntity = accountEntity,
       localFolder = folderDrafts,
       fields = listOf("drafts/id", "drafts/message/id"),
       maxResult = 500
-    ) as? ListDraftsResponse)?.drafts ?: return
+    )
+
+    val draftsOnServer = (response as? ListDraftsResponse)?.drafts ?: emptyList()
 
     val remoteDraftIds = draftsOnServer.map { it.id }.toSet()
     val entitiesToBeDeleted = existingSyncedDrafts.filter { it.draftId !in remoteDraftIds }

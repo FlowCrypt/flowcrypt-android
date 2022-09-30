@@ -216,6 +216,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
         MessageState.PENDING_DELETING,
         MessageState.PENDING_DELETING_PERMANENTLY,
+        MessageState.PENDING_DELETING_DRAFT,
         MessageState.PENDING_EMPTY_TRASH -> {
           with(viewHolder.imageViewStatus) {
             this?.visibility = View.VISIBLE

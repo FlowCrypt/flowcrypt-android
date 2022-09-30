@@ -1000,6 +1000,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   /**
    * Send a message.
    */
+  @OptIn(DelicateCoroutinesApi::class)
   private fun sendMsg() {
     dismissCurrentSnackBar()
     val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
@@ -1010,6 +1011,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         password = usePasswordIfNeeded()
       )
     )
+
+    draftViewModel.deleteDraft(GlobalScope)
 
     toast(
       if (GeneralUtil.isConnected(requireContext()))
