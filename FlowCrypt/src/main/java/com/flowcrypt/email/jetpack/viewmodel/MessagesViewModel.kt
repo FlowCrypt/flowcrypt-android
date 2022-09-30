@@ -303,7 +303,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
         localFolder.fullName, ids.map { it })
 
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
+      if (localFolder.isOutbox) {
         if (newMsgState == MessageState.PENDING_DELETING) {
           deleteOutgoingMsgs(entities)
           return@launch

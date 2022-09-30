@@ -83,6 +83,7 @@ import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
@@ -305,21 +306,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           }
 
           R.id.menuActionDeleteMessage -> {
-            if (JavaEmailConstants.FOLDER_OUTBOX.equals(
-                args.messageEntity.folder,
-                ignoreCase = true
-              )
-            ) {
+            if (args.messageEntity.isOutboxMsg) {
               val msgEntity = args.messageEntity
 
               msgEntity.let {
                 if (msgEntity.msgState === MessageState.SENDING) {
-                  Toast.makeText(
-                    context,
-                    R.string.can_not_delete_sending_message,
-                    Toast.LENGTH_LONG
-                  )
-                    .show()
+                  toast(R.string.can_not_delete_sending_message, Toast.LENGTH_LONG)
                 } else {
                   msgDetailsViewModel.deleteMsg()
                   toast(R.string.message_was_deleted)
@@ -339,7 +331,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                   negativeButtonTitle = getString(android.R.string.cancel),
                 )
               } else {
-                msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
+                msgDetailsViewModel.changeMsgState(
+                  if (args.messageEntity.isDraft) {
+                    MessageState.PENDING_DELETING_DRAFT
+                  } else {
+                    MessageState.PENDING_DELETING
+                  }
+                )
               }
             }
             true
@@ -1512,6 +1510,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       when (newState) {
         MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING_DRAFT -> DeleteDraftsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )

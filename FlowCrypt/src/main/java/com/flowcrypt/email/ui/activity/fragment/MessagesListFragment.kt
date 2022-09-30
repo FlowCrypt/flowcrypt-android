@@ -65,6 +65,7 @@ import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
@@ -814,7 +815,15 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                   isCancelable = false
                 )
               } else {
-                msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+                msgsViewModel.changeMsgsState(
+                  ids = ids,
+                  localFolder = it,
+                  newMsgState = if (it.isDrafts) {
+                    MessageState.PENDING_DELETING_DRAFT
+                  } else {
+                    MessageState.PENDING_DELETING
+                  }
+                )
                 mode?.finish()
               }
               true
@@ -985,6 +994,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       when (it) {
         MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING_DRAFT -> DeleteDraftsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )
