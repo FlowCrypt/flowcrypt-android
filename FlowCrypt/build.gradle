@@ -328,7 +328,7 @@ easylauncher {
 }
 
 dependencies {
-    kapt 'com.github.bumptech.glide:compiler:4.14.0'
+    kapt 'com.github.bumptech.glide:compiler:4.14.1'
     kapt 'androidx.annotation:annotation:1.5.0'
     kapt 'androidx.room:room-compiler:2.5.0-alpha03'
     //ACRA needs the following dependency to use a custom report sender
