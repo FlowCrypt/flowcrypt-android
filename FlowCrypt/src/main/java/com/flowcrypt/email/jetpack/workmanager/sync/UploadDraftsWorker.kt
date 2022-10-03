@@ -153,7 +153,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
               or a message has been sent
               or updating the draft with local changes is not actual
               */
-              //roomDatabase.draftDao().deleteSuspend(existingDraftEntity)
+              roomDatabase.msgDao().deleteSuspend(existingDraftEntity)
               FileAndDirectoryUtils.deleteDir(directory)
             }
           }
