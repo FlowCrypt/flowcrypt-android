@@ -695,17 +695,22 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     binding?.imageButtonMoreOptions?.setOnClickListener(this)
 
     binding?.imageButtonEditDraft?.setOnClickListener {
-      startActivity(
-        CreateMessageActivity.generateIntent(
-          context,
-          MessageType.DRAFT,
-          msgEncryptType,
-          msgInfo?.copy(
-            msgBlocks = emptyList(),
-            text = clipLargeText(msgInfo?.text),
+      val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
+      if (fingerprintList?.isNotEmpty() == true) {
+        showNeedPassphraseDialog(fingerprintList)
+      } else {
+        startActivity(
+          CreateMessageActivity.generateIntent(
+            context,
+            MessageType.DRAFT,
+            msgEncryptType,
+            msgInfo?.copy(
+              msgBlocks = emptyList(),
+              text = clipLargeText(msgInfo?.text),
+            )
           )
         )
-      )
+      }
     }
 
     binding?.iBShowDetails?.setOnClickListener {
