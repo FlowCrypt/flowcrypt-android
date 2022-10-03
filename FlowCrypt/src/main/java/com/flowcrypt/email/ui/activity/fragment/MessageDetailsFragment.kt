@@ -1413,7 +1413,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       if (messageEntity != null) {
         updateViews(messageEntity)
       } else {
-        toast(R.string.message_was_deleted)
+        if (!args.messageEntity.isDraft) {
+          toast(R.string.message_was_deleted)
+        }
         navController?.navigateUp()
       }
     }
