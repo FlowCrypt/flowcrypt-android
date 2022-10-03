@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 
 /**
@@ -121,7 +122,7 @@ data class AccountEntity constructor(
     showOnlyEncrypted = false,
     uuid = uuid,
     clientConfiguration = orgRules,
-    useAPI = true,//FlavorSettings.isGMailAPIEnabled(),
+    useAPI = FlavorSettings.isGMailAPIEnabled(),
     useFES = useFES
   )
 
