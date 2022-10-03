@@ -252,6 +252,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    initViews()
     setupLabelsViewModel()
     setupMsgDetailsViewModel()
     setupRecipientsViewModel()
@@ -667,67 +668,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     supportActionBar?.subtitle = actionBarSubTitle
   }
 
-  private fun updateViews(messageEntity: MessageEntity) {
-    updateActionBar(messageEntity)
-
-    binding?.imageButtonReplyAll?.visibleOrGone(
-      !messageEntity.isOutboxMsg && !messageEntity.isDraft
-    )
-    binding?.imageButtonMoreOptions?.visibleOrGone(
-      !messageEntity.isOutboxMsg && !messageEntity.isDraft
-    )
-    binding?.imageButtonReplyAll?.setOnClickListener(this)
-    binding?.imageButtonMoreOptions?.setOnClickListener(this)
-
-    binding?.imageButtonEditDraft?.setOnClickListener {
-      startActivity(
-        CreateMessageActivity.generateIntent(
-          context,
-          MessageType.DRAFT,
-          msgEncryptType,
-          msgInfo?.copy(
-            msgBlocks = emptyList(),
-            text = clipLargeText(msgInfo?.text),
-          )
-        )
-      )
-    }
-
-    binding?.iBShowDetails?.setOnClickListener {
-      binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
-      binding?.textViewDate?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
-    }
-
-    updateMsgDetails()
-
-    binding?.rVAttachments?.apply {
-      layoutManager = LinearLayoutManager(context)
-      addItemDecoration(
-        MarginItemDecoration(
-          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
-        )
-      )
-      adapter = attachmentsRecyclerViewAdapter
-    }
-
-    val subject = messageEntity.subject?.ifEmpty { getString(R.string.no_subject) }
-
-    if (folderType === FoldersManager.FolderType.SENT) {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.to)
-    } else {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
-    }
-    binding?.textViewSubject?.text = subject
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
-      binding?.textViewDate?.text =
-        DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
-    } else {
-      binding?.textViewDate?.text =
-        DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
-    }
-  }
-
-  private fun updateMsgDetails() {
+  private fun initViews() {
     binding?.rVMsgDetails?.apply {
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
@@ -750,21 +691,83 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       adapter = pgpBadgeListAdapter
     }
 
+    binding?.imageButtonReplyAll?.setOnClickListener(this)
+    binding?.imageButtonMoreOptions?.setOnClickListener(this)
+
+    binding?.imageButtonEditDraft?.setOnClickListener {
+      startActivity(
+        CreateMessageActivity.generateIntent(
+          context,
+          MessageType.DRAFT,
+          msgEncryptType,
+          msgInfo?.copy(
+            msgBlocks = emptyList(),
+            text = clipLargeText(msgInfo?.text),
+          )
+        )
+      )
+    }
+
+    binding?.iBShowDetails?.setOnClickListener {
+      binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
+      binding?.textViewDate?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
+    }
+
+    binding?.rVAttachments?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+        )
+      )
+      adapter = attachmentsRecyclerViewAdapter
+    }
+  }
+
+  private fun updateViews(messageEntity: MessageEntity) {
+    updateActionBar(messageEntity)
+
+    binding?.imageButtonReplyAll?.visibleOrGone(
+      !messageEntity.isOutboxMsg && !messageEntity.isDraft
+    )
+    binding?.imageButtonMoreOptions?.visibleOrGone(
+      !messageEntity.isOutboxMsg && !messageEntity.isDraft
+    )
+    updateMsgDetails(messageEntity)
+
+    val subject = messageEntity.subject?.ifEmpty { getString(R.string.no_subject) }
+
+    if (folderType === FoldersManager.FolderType.SENT) {
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.to)
+    } else {
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
+    }
+    binding?.textViewSubject?.text = subject
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+      binding?.textViewDate?.text =
+        DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
+    } else {
+      binding?.textViewDate?.text =
+        DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
+    }
+  }
+
+  private fun updateMsgDetails(messageEntity: MessageEntity) {
     binding?.tVTo?.text = prepareToText()
 
     val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
       add(
         MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.from),
-          value = formatAddresses(args.messageEntity.from)
+          value = formatAddresses(messageEntity.from)
         )
       )
 
-      if (args.messageEntity.replyToAddress.isNotEmpty()) {
+      if (messageEntity.replyToAddress.isNotEmpty()) {
         add(
           MsgDetailsRecyclerViewAdapter.Header(
             name = getString(R.string.reply_to),
-            value = formatAddresses(args.messageEntity.replyToAddress)
+            value = formatAddresses(messageEntity.replyToAddress)
           )
         )
       }
@@ -772,15 +775,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       add(
         MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.to),
-          value = formatAddresses(args.messageEntity.to).ifEmpty { getString(R.string.no_recipients) }
+          value = formatAddresses(messageEntity.to).ifEmpty { getString(R.string.no_recipients) }
         )
       )
 
-      if (args.messageEntity.cc.isNotEmpty()) {
+      if (messageEntity.cc.isNotEmpty()) {
         add(
           MsgDetailsRecyclerViewAdapter.Header(
             name = getString(R.string.cc),
-            value = formatAddresses(args.messageEntity.cc)
+            value = formatAddresses(messageEntity.cc)
           )
         )
       }
@@ -788,7 +791,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       add(
         MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.date),
-          value = prepareDateHeaderValue()
+          value = prepareDateHeaderValue(messageEntity)
         )
       )
     }
@@ -796,12 +799,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     msgDetailsAdapter.submitList(headers)
   }
 
-  private fun prepareDateHeaderValue(): String {
+  private fun prepareDateHeaderValue(messageEntity: MessageEntity): String {
     val dateInMilliseconds: Long =
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-        args.messageEntity.sentDate ?: 0
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+        messageEntity.sentDate ?: 0
       } else {
-        args.messageEntity.receivedDate ?: 0
+        messageEntity.receivedDate ?: 0
       }
 
     val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or

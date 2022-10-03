@@ -196,7 +196,9 @@ class DraftViewModel(
           val messageEntityWithoutStateChange = draftMessageEntity.copy(
             subject = outgoingMessageInfo.subject,
             fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
+            replyTo = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
             toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
+            ccAddress = InternetAddress.toString(outgoingMessageInfo.ccRecipients?.toTypedArray()),
             sentDate = mimeMessage.sentDate?.time,
             receivedDate = mimeMessage.sentDate?.time
           )
