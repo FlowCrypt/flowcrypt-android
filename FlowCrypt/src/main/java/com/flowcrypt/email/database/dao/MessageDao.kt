@@ -37,7 +37,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract suspend fun getMsgSuspend(account: String?, folder: String?, uid: Long): MessageEntity?
 
   @Query("SELECT * FROM messages WHERE _id = :id")
-  abstract suspend fun getDraftById(id: Long): MessageEntity?
+  abstract suspend fun getMsgById(id: Long): MessageEntity?
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getMsgsLD(account: String, folder: String): LiveData<MessageEntity>

@@ -85,7 +85,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
         )
 
         val freshestMessageEntity =
-          roomDatabase.msgDao().getDraftById(messageEntity.id ?: Long.MIN_VALUE)
+          roomDatabase.msgDao().getMsgById(messageEntity.id ?: Long.MIN_VALUE)
 
         val messageEntityWithoutStateChange = messageEntity.copy(
           uid = message.uid,
@@ -120,7 +120,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     ) {
       for (directory in directories) {
         val directoryName = directory.name
-        val existingDraftEntity = roomDatabase.msgDao().getDraftById(directoryName.toLong())
+        val existingDraftEntity = roomDatabase.msgDao().getMsgById(directoryName.toLong())
         if (existingDraftEntity == null) {
           FileAndDirectoryUtils.deleteDir(directory)
           continue

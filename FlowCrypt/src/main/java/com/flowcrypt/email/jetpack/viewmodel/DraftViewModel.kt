@@ -147,7 +147,7 @@ class DraftViewModel(
             outgoingMessageInfo = outgoingMessageInfo
           )
         } else {
-          roomDatabase.msgDao().getDraftById(sessionDraftMessageEntity?.id ?: Long.MIN_VALUE)
+          roomDatabase.msgDao().getMsgById(sessionDraftMessageEntity?.id ?: Long.MIN_VALUE)
         }
 
         sessionDraftMessageEntity?.let { draftMessageEntity ->
