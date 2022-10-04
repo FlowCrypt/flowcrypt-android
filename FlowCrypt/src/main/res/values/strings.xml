@@ -576,4 +576,5 @@
     <string name="draft_saved">Draft saved</string>
     <string name="fetching_drafts_info_failed">Fetching drafts info failed. Please try again.</string>
     <string name="no_recipients">(no recipients)</string>
+    <string name="could_not_save_draft">Could not save a draft\n\nError details:\n%1$s</string>
 </resources>

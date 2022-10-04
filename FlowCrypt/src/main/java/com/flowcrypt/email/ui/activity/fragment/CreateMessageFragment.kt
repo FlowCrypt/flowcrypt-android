@@ -58,6 +58,7 @@ import com.flowcrypt.email.databinding.FragmentCreateMessageBinding
 import com.flowcrypt.email.extensions.appBarLayout
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
@@ -1365,6 +1366,28 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
             timeToCompare = startOfSessionInMilliseconds
           )
+        }
+      }
+    }
+
+    lifecycleScope.launchWhenStarted {
+      draftViewModel.savingDraftStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource?.incrementSafely()
+          }
+
+          Result.Status.SUCCESS, Result.Status.ERROR -> {
+            countingIdlingResource?.decrementSafely()
+          }
+
+          Result.Status.EXCEPTION -> {
+            showInfoDialog(dialogMsg = getString(R.string.could_not_save_draft, it.exceptionMsg))
+            countingIdlingResource?.decrementSafely()
+          }
+
+          else -> {
+          }
         }
       }
     }

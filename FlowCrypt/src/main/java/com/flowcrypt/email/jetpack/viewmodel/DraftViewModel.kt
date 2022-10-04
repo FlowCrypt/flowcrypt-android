@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -26,6 +27,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
@@ -33,6 +35,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
@@ -64,6 +69,12 @@ class DraftViewModel(
     }
   }.flowOn(Dispatchers.Default)
 
+  private val controlledRunnerForSavingDraft = ControlledRunner<Result<Boolean>>()
+  private val savingDraftMutableStateFlow: MutableStateFlow<Result<Boolean>> =
+    MutableStateFlow(Result.none())
+  val savingDraftStateFlow: StateFlow<Result<Boolean>> =
+    savingDraftMutableStateFlow.asStateFlow()
+
   fun processDraft(
     coroutineScope: CoroutineScope = viewModelScope,
     currentOutgoingMessageInfo: OutgoingMessageInfo,
@@ -80,7 +91,19 @@ class DraftViewModel(
             context.toast(context.getString(R.string.draft_saved))
           }
         }
-        prepareAndSaveDraftForUploading(currentOutgoingMessageInfo)
+        withContext(Dispatchers.IO) {
+          savingDraftMutableStateFlow.value = Result.loading()
+          try {
+            savingDraftMutableStateFlow.value =
+              controlledRunnerForSavingDraft.cancelPreviousThenRun {
+                return@cancelPreviousThenRun prepareAndSaveDraftForUploading(
+                  currentOutgoingMessageInfo
+                )
+              }
+          } finally {
+            UploadDraftsWorker.enqueue(getApplication())
+          }
+        }
       } else if (showNotification && timeToCompare < draftFingerprint.timeInMilliseconds) {
         withContext(Dispatchers.Main) {
           context.toast(context.getString(R.string.draft_saved))
@@ -135,11 +158,11 @@ class DraftViewModel(
     return isSavingDraftNeeded
   }
 
-  private suspend fun prepareAndSaveDraftForUploading(outgoingMessageInfo: OutgoingMessageInfo) =
+  private suspend fun prepareAndSaveDraftForUploading(outgoingMessageInfo: OutgoingMessageInfo): Result<Boolean> =
     withContext(Dispatchers.IO) {
       try {
-        val activeAccount =
-          roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
+        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+          ?: return@withContext Result.success(false)
 
         sessionDraftMessageEntity = if (sessionDraftMessageEntity == null) {
           genDraftMessageEntity(
@@ -210,12 +233,11 @@ class DraftViewModel(
               messageEntityWithoutStateChange.copy(state = MessageState.PENDING_UPLOADING_DRAFT.value)
             }
           )
-        }
+          return@withContext Result.success(true)
+        } ?: return@withContext Result.success(false)
       } catch (e: Exception) {
         e.printStackTrace()
-        //need to think about this one
-      } finally {
-        UploadDraftsWorker.enqueue(getApplication())
+        return@withContext Result.exception(e)
       }
     }
 

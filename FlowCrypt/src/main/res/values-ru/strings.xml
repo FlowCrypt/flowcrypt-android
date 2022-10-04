@@ -490,4 +490,5 @@
     <string name="draft_saved">Черновик сохранен</string>
     <string name="fetching_drafts_info_failed">Не удалось загрузить информацию о черновиках. Пожалуйста, попробуйте еще раз.</string>
     <string name="no_recipients">(без получателей)</string>
+    <string name="could_not_save_draft">Не удалось сохранить черновик\n\nДетали ошибки:\n%1$s</string>
 </resources>
