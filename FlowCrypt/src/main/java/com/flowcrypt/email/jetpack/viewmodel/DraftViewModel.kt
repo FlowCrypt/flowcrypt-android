@@ -83,6 +83,13 @@ class DraftViewModel(
   ) {
     coroutineScope.launch {
       if (isDeleted) return@launch
+      val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return@launch
+
+      //here we enable 'drafts' functionality only for Google users who use Gmail API.
+      if (!activeAccount.isGoogleAccountType || !activeAccount.useAPI) {
+        return@launch
+      }
+
       val context: Context = getApplication()
       val isSavingDraftNeeded = isMessageChanged(currentOutgoingMessageInfo)
       if (isSavingDraftNeeded) {
