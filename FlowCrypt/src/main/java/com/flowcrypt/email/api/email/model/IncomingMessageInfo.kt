@@ -97,9 +97,9 @@ data class IncomingMessageInfo constructor(
     accountEmail: String,
     aliases: List<String>
   ): InitializationData {
-    val toAddresses: java.util.ArrayList<String> = arrayListOf()
-    val ccAddresses: java.util.ArrayList<String> = arrayListOf()
-    val bccAddresses: java.util.ArrayList<String> = arrayListOf()
+    val toAddresses = arrayListOf<String>()
+    val ccAddresses = arrayListOf<String>()
+    val bccAddresses = arrayListOf<String>()
     var body: String? = null
 
     val folderType = FoldersManager.getFolderType(localFolder)
@@ -129,7 +129,7 @@ data class IncomingMessageInfo constructor(
             val toRecipients = getReplyToWithoutOwnerAddress().ifEmpty { getTo() }
             toAddresses.addAll(toRecipients.map { it.address.lowercase() })
 
-            val ccSet = HashSet<InternetAddress>()
+            val ccSet = LinkedHashSet<InternetAddress>()
 
             if (getTo().isNotEmpty()) {
               ccSet.addAll(getTo().filter { !accountEmail.equals(it.address, ignoreCase = true) })
@@ -149,8 +149,8 @@ data class IncomingMessageInfo constructor(
 
             //here we remove the owner address
             val fromAddress = msgEntity.email
-            val finalCcSet = ccSet.filter { !fromAddress.equals(it.address, true) }
-            ccAddresses.addAll(finalCcSet.map { it.address.lowercase() })
+            val finalCcList = ccSet.filter { !fromAddress.equals(it.address, true) }
+            ccAddresses.addAll(finalCcList.map { it.address.lowercase() })
           }
         }
       }

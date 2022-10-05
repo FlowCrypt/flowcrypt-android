@@ -286,12 +286,12 @@ class DraftViewModel(
     }
   }
 
-  private data class DraftFingerprint(
+  private data class DraftFingerprint constructor(
     var msgText: String? = null,
     var msgSubject: String? = null,
-    val toRecipients: Set<String> = mutableSetOf(),
-    val ccRecipients: Set<String> = mutableSetOf(),
-    val bccRecipients: Set<String> = mutableSetOf(),
+    val toRecipients: Set<String> = setOf(),
+    val ccRecipients: Set<String> = setOf(),
+    val bccRecipients: Set<String> = setOf(),
     val timeInMilliseconds: Long = System.currentTimeMillis()
   )
 
