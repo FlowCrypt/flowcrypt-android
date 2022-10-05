@@ -523,6 +523,7 @@ class GmailApiHelper {
       val deleteCandidatesUIDs = mutableSetOf<Long>()
       val newCandidatesMap = mutableMapOf<Long, Message>()
       val updateCandidates = mutableMapOf<Long, Flags>()
+      val isDrafts = localFolder.isDrafts
 
       for (history in historyList) {
         history.messagesDeleted?.let { messagesDeleted ->
@@ -535,6 +536,10 @@ class GmailApiHelper {
 
         history.messagesAdded?.let { messagesAdded ->
           for (historyMsgAdded in messagesAdded) {
+            if (LABEL_DRAFT in historyMsgAdded.message.labelIds && !isDrafts) {
+              //skip adding drafts to non-Drafts folder
+              continue
+            }
             deleteCandidatesUIDs.remove(historyMsgAdded.message.uid)
             updateCandidates.remove(historyMsgAdded.message.uid)
             newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
