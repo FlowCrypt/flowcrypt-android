@@ -135,7 +135,8 @@ class PropertiesHelper {
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_TIMEOUT] = 1000 * 20
 
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = BOOLEAN_VALUE_TRUE
-      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = "false"
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] =
         JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] =
