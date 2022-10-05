@@ -494,6 +494,13 @@ class MsgDetailsViewModel(
               MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
             }
 
+            GmailApiHelper.changeLabels(
+              context = getApplication(),
+              accountEntity = accountEntity,
+              ids = listOf(messageEntity.uidAsHEX),
+              removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
+            )
+
             Result.success(null)
           }
           if (result.status == Result.Status.SUCCESS) {
