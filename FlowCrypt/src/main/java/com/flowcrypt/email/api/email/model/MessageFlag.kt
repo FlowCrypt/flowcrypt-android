@@ -19,5 +19,11 @@ enum class MessageFlag constructor(val value: String) {
   DRAFT("\\DRAFT"),
   FLAGGED("\\FLAGGED"),
   RECENT("\\RECENT"),
-  SEEN("\\SEEN")
+  SEEN("\\SEEN");
+
+  companion object {
+    fun flagsToString(messageFlags: Collection<MessageFlag>): String {
+      return messageFlags.joinToString(" ") { it.value }
+    }
+  }
 }

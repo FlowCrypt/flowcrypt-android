@@ -486,4 +486,9 @@
     <string name="more_recipients">+%1$d ещё</string>
     <string name="add_recipient_to_send_message">Пожалуйста, добавьте хотя бы одного получателя в поле \"Кому\" для отправки этого сообщения</string>
     <string name="send_feedback_failed_hint">При отправке сообщения произошла ошибка. Пожалуйста, напишите нам напрямую на %1$s.\n\nДетали ошибки:\n%2$s</string>
+    <string name="edit_draft">Редактировать черновик</string>
+    <string name="draft_saved">Черновик сохранен</string>
+    <string name="fetching_drafts_info_failed">Не удалось загрузить информацию о черновиках. Пожалуйста, попробуйте еще раз.</string>
+    <string name="no_recipients">(без получателей)</string>
+    <string name="could_not_save_draft">Не удалось сохранить черновик\n\nДетали ошибки:\n%1$s</string>
 </resources>

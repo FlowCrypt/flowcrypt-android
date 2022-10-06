@@ -65,6 +65,7 @@ import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
@@ -136,10 +137,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private val isOutboxFolder: Boolean
     get() {
-      return JavaEmailConstants.FOLDER_OUTBOX.equals(
-        currentFolder?.fullName,
-        ignoreCase = true
-      )
+      return currentFolder?.isOutbox ?: false
+    }
+
+  private val isDraftsFolder: Boolean
+    get() {
+      return currentFolder?.isDrafts ?: false
     }
 
   private val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
@@ -356,10 +359,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       return
     }
 
-    val isOutbox =
-      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)
+    val isOutbox = currentFolder?.isOutbox ?: false
+    val isDraft = msgEntity.isDraft
     val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
-    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
+    if (isDraft || isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
       when (msgEntity.msgState) {
         MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
         MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
@@ -507,11 +510,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     )
   }
 
-  private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {
+  private fun isItSyncOrCachedFolder(localFolder: LocalFolder?): Boolean {
     return localFolder?.fullName.equals(
       JavaEmailConstants.FOLDER_INBOX,
       ignoreCase = true
-    ) || isOutboxFolder
+    ) || isOutboxFolder || isDraftsFolder
   }
 
   /**
@@ -812,7 +815,15 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                   isCancelable = false
                 )
               } else {
-                msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+                msgsViewModel.changeMsgsState(
+                  ids = ids,
+                  localFolder = it,
+                  newMsgState = if (it.isDrafts) {
+                    MessageState.PENDING_DELETING_DRAFT
+                  } else {
+                    MessageState.PENDING_DELETING
+                  }
+                )
                 mode?.finish()
               }
               true
@@ -983,6 +994,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       when (it) {
         MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING_DRAFT -> DeleteDraftsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )
@@ -1041,14 +1053,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
     msgsViewModel.outboxMsgsLiveData.observe(viewLifecycleOwner) {
       val msgsCount = it.size
-      supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
+      supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox == false) {
         resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
       } else null
 
       isForceSendingEnabled = msgsCount > 0
       isForceSendingEnabled = it.none { entity -> entity.msgState == MessageState.SENDING }
 
-      if (currentFolder?.isOutbox() == true) {
+      if (currentFolder?.isOutbox == true) {
         activity?.invalidateOptionsMenu()
       }
     }
@@ -1251,9 +1263,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     adapter.currentFolder = newFolder
 
     val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
-    val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
+    val isItSyncOrCachedFolder = isItSyncOrCachedFolder(newFolder)
     var isForceClearCacheNeeded = false
-    if ((isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) || forceClearCache) {
+    if ((isFolderNameEmpty?.not() == true && isItSyncOrCachedFolder.not()) || forceClearCache) {
       isForceClearCacheNeeded = true
     }
 

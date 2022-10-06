@@ -642,10 +642,11 @@ class EmailUtil {
      */
     fun genMessage(
       context: Context, accountEntity: AccountEntity,
-      outgoingMsgInfo: OutgoingMessageInfo
+      outgoingMsgInfo: OutgoingMessageInfo,
+      signingRequired: Boolean = true
     ): Message {
       val session = Session.getInstance(Properties())
-      val senderEmail = outgoingMsgInfo.from.address
+      val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
       var pubKeys: List<String>? = null
       var prvKeys: List<String>? = null
       var ringProtector: SecretKeyRingProtector? = null
@@ -655,15 +656,20 @@ class EmailUtil {
         pubKeys = mutableListOf()
         pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
         pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
-        prvKeys = listOf(
-          SecurityUtils.getSenderPgpKeyDetails(context, accountEntity, senderEmail).privateKey
-            ?: throw IllegalStateException("Sender private key not found")
-        )
-        ringProtector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
+
+        if (signingRequired) {
+          prvKeys = listOf(
+            SecurityUtils.getSenderPgpKeyDetails(context, accountEntity, senderEmail).privateKey
+              ?: throw IllegalStateException("Sender private key not found")
+          )
+
+          ringProtector =
+            KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
+        }
       }
 
       return when (outgoingMsgInfo.messageType) {
-        MessageType.NEW, MessageType.FORWARD -> {
+        MessageType.NEW, MessageType.FORWARD, MessageType.DRAFT -> {
           prepareNewMsg(session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
         }
 
@@ -976,7 +982,7 @@ class EmailUtil {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
       msg.setFrom(info.from)
-      msg.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      msg.setRecipients(Message.RecipientType.TO, info.toRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       msg.setContent(MimeMultipart().apply {
@@ -997,7 +1003,7 @@ class EmailUtil {
       reply.setContent(MimeMultipart().apply {
         addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
       })
-      reply.setRecipients(Message.RecipientType.TO, info.toRecipients.toTypedArray())
+      reply.setRecipients(Message.RecipientType.TO, info.toRecipients?.toTypedArray())
       reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       reply.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       return reply

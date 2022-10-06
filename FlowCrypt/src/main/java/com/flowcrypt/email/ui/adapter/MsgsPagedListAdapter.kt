@@ -144,6 +144,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           FoldersManager.FolderType.SENT -> viewHolder.textViewSenderAddress?.text =
             generateAddresses(messageEntity.to)
 
+          FoldersManager.FolderType.DRAFTS -> viewHolder.textViewSenderAddress?.text =
+            generateAddresses(messageEntity.to).ifEmpty {
+              context.getString(R.string.no_recipients)
+            }
+
           FoldersManager.FolderType.OUTBOX -> {
             val status = generateOutboxStatus(
               viewHolder.textViewSenderAddress?.context,
@@ -159,7 +164,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       }
 
       viewHolder.textViewSubject?.text = subject
-      if (folderType === FoldersManager.FolderType.OUTBOX) {
+      if (folderType in listOf(
+          FoldersManager.FolderType.OUTBOX,
+          FoldersManager.FolderType.DRAFTS
+        )
+      ) {
         viewHolder.textViewDate?.text =
           DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate)
       } else {
@@ -207,6 +216,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
         MessageState.PENDING_DELETING,
         MessageState.PENDING_DELETING_PERMANENTLY,
+        MessageState.PENDING_DELETING_DRAFT,
         MessageState.PENDING_EMPTY_TRASH -> {
           with(viewHolder.imageViewStatus) {
             this?.visibility = View.VISIBLE
@@ -218,6 +228,13 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           with(viewHolder.imageViewStatus) {
             this?.visibility = View.VISIBLE
             this?.setBackgroundResource(R.drawable.ic_move_to_inbox_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_UPLOADING_DRAFT -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_baseline_pending_actions_blue_24)
           }
         }
 

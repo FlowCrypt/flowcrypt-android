@@ -14,7 +14,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.text.TextUtils
 import android.text.format.DateUtils
 import android.transition.TransitionManager
 import android.view.LayoutInflater
@@ -84,6 +83,7 @@ import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
@@ -252,8 +252,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    updateViews()
-
+    initViews()
     setupLabelsViewModel()
     setupMsgDetailsViewModel()
     setupRecipientsViewModel()
@@ -264,7 +263,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onDestroy() {
     super.onDestroy()
-    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(requireContext()))
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -308,24 +307,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           }
 
           R.id.menuActionDeleteMessage -> {
-            if (JavaEmailConstants.FOLDER_OUTBOX.equals(
-                args.messageEntity.folder,
-                ignoreCase = true
-              )
-            ) {
+            if (args.messageEntity.isOutboxMsg) {
               val msgEntity = args.messageEntity
 
               msgEntity.let {
                 if (msgEntity.msgState === MessageState.SENDING) {
-                  Toast.makeText(
-                    context,
-                    R.string.can_not_delete_sending_message,
-                    Toast.LENGTH_LONG
-                  )
-                    .show()
+                  toast(R.string.can_not_delete_sending_message, Toast.LENGTH_LONG)
                 } else {
                   msgDetailsViewModel.deleteMsg()
-                  Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
+                  toast(R.string.message_was_deleted)
                 }
               }
             } else {
@@ -342,7 +332,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                   negativeButtonTitle = getString(android.R.string.cancel),
                 )
               } else {
-                msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING)
+                msgDetailsViewModel.changeMsgState(
+                  if (args.messageEntity.isDraft) {
+                    MessageState.PENDING_DELETING_DRAFT
+                  } else {
+                    MessageState.PENDING_DELETING
+                  }
+                )
               }
             }
             true
@@ -444,16 +440,19 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
-    binding?.imageButtonReplyAll?.visibleOrGone(!args.messageEntity.isOutboxMsg())
-    binding?.imageButtonMoreOptions?.visibleOrGone(!args.messageEntity.isOutboxMsg())
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
 
     msgInfo.inlineSubject?.let { binding?.textViewSubject?.text = it }
 
-    updateMsgBody()
+    updatePgpBadges()
+    updateMsgView()
     showContent()
+
+    if (args.messageEntity.isDraft) {
+      binding?.imageButtonEditDraft?.visibleOrGone(args.messageEntity.isDraft)
+    }
   }
 
   private fun setActionProgress(progress: Int, message: String? = null) {
@@ -468,13 +467,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     } else {
       binding?.textViewActionProgress?.text = null
       binding?.layoutActionProgress?.visibility = View.GONE
-    }
-  }
-
-  private fun updateMsgBody() {
-    if (msgInfo != null) {
-      updatePgpBadges()
-      updateMsgView()
     }
   }
 
@@ -676,50 +668,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     supportActionBar?.subtitle = actionBarSubTitle
   }
 
-  private fun updateViews() {
-    binding?.imageButtonReplyAll?.setOnClickListener(this)
-    binding?.imageButtonMoreOptions?.setOnClickListener(this)
-
-    binding?.iBShowDetails?.setOnClickListener {
-      binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
-      binding?.textViewDate?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
-    }
-
-    updateMsgDetails()
-
-    binding?.rVAttachments?.apply {
-      layoutManager = LinearLayoutManager(context)
-      addItemDecoration(
-        MarginItemDecoration(
-          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
-        )
-      )
-      adapter = attachmentsRecyclerViewAdapter
-    }
-
-    val subject =
-      if (TextUtils.isEmpty(args.messageEntity.subject)) getString(R.string.no_subject) else
-        args.messageEntity.subject
-
-    if (folderType === FoldersManager.FolderType.SENT) {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(args.messageEntity.to)
-    } else {
-      binding?.textViewSenderAddress?.text =
-        EmailUtil.getFirstAddressString(args.messageEntity.from)
-    }
-    binding?.textViewSubject?.text = subject
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-      binding?.textViewDate?.text =
-        DateTimeUtil.formatSameDayTime(context, args.messageEntity.sentDate ?: 0)
-    } else {
-      binding?.textViewDate?.text =
-        DateTimeUtil.formatSameDayTime(context, args.messageEntity.receivedDate ?: 0)
-    }
-
-    updateMsgBody()
-  }
-
-  private fun updateMsgDetails() {
+  private fun initViews() {
     binding?.rVMsgDetails?.apply {
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
@@ -742,21 +691,88 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       adapter = pgpBadgeListAdapter
     }
 
+    binding?.imageButtonReplyAll?.setOnClickListener(this)
+    binding?.imageButtonMoreOptions?.setOnClickListener(this)
+
+    binding?.imageButtonEditDraft?.setOnClickListener {
+      val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
+      if (fingerprintList?.isNotEmpty() == true) {
+        showNeedPassphraseDialog(fingerprintList)
+      } else {
+        startActivity(
+          CreateMessageActivity.generateIntent(
+            context,
+            MessageType.DRAFT,
+            msgEncryptType,
+            msgInfo?.copy(
+              msgBlocks = emptyList(),
+              text = clipLargeText(msgInfo?.text),
+            )
+          )
+        )
+      }
+    }
+
+    binding?.iBShowDetails?.setOnClickListener {
+      binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
+      binding?.textViewDate?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
+    }
+
+    binding?.rVAttachments?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+        )
+      )
+      adapter = attachmentsRecyclerViewAdapter
+    }
+  }
+
+  private fun updateViews(messageEntity: MessageEntity) {
+    updateActionBar(messageEntity)
+
+    binding?.imageButtonReplyAll?.visibleOrGone(
+      !messageEntity.isOutboxMsg && !messageEntity.isDraft
+    )
+    binding?.imageButtonMoreOptions?.visibleOrGone(
+      !messageEntity.isOutboxMsg && !messageEntity.isDraft
+    )
+    updateMsgDetails(messageEntity)
+
+    val subject = messageEntity.subject?.ifEmpty { getString(R.string.no_subject) }
+
+    if (folderType === FoldersManager.FolderType.SENT) {
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.to)
+    } else {
+      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
+    }
+    binding?.textViewSubject?.text = subject
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+      binding?.textViewDate?.text =
+        DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
+    } else {
+      binding?.textViewDate?.text =
+        DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
+    }
+  }
+
+  private fun updateMsgDetails(messageEntity: MessageEntity) {
     binding?.tVTo?.text = prepareToText()
 
     val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
       add(
         MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.from),
-          value = formatAddresses(args.messageEntity.from)
+          value = formatAddresses(messageEntity.from)
         )
       )
 
-      if (args.messageEntity.replyToAddress.isNotEmpty()) {
+      if (messageEntity.replyToAddress.isNotEmpty()) {
         add(
           MsgDetailsRecyclerViewAdapter.Header(
             name = getString(R.string.reply_to),
-            value = formatAddresses(args.messageEntity.replyToAddress)
+            value = formatAddresses(messageEntity.replyToAddress)
           )
         )
       }
@@ -764,15 +780,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       add(
         MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.to),
-          value = formatAddresses(args.messageEntity.to)
+          value = formatAddresses(messageEntity.to).ifEmpty { getString(R.string.no_recipients) }
         )
       )
 
-      if (args.messageEntity.cc.isNotEmpty()) {
+      if (messageEntity.cc.isNotEmpty()) {
         add(
           MsgDetailsRecyclerViewAdapter.Header(
             name = getString(R.string.cc),
-            value = formatAddresses(args.messageEntity.cc)
+            value = formatAddresses(messageEntity.cc)
           )
         )
       }
@@ -780,7 +796,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       add(
         MsgDetailsRecyclerViewAdapter.Header(
           name = getString(R.string.date),
-          value = prepareDateHeaderValue()
+          value = prepareDateHeaderValue(messageEntity)
         )
       )
     }
@@ -788,12 +804,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     msgDetailsAdapter.submitList(headers)
   }
 
-  private fun prepareDateHeaderValue(): String {
+  private fun prepareDateHeaderValue(messageEntity: MessageEntity): String {
     val dateInMilliseconds: Long =
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)) {
-        args.messageEntity.sentDate ?: 0
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+        messageEntity.sentDate ?: 0
       } else {
-        args.messageEntity.receivedDate ?: 0
+        messageEntity.receivedDate ?: 0
       }
 
     val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
@@ -998,7 +1014,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.root?.visibleOrGone(!args.messageEntity.isOutboxMsg())
+      binding?.layoutReplyButtons?.root?.visibleOrGone(
+        !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
+      )
     }
   }
 
@@ -1391,8 +1409,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun observeFreshMsgLiveData() {
-    msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner) {
-      it?.let { messageEntity -> updateActionBar(messageEntity) }
+    msgDetailsViewModel.mediatorMsgLiveData.observe(viewLifecycleOwner) { messageEntity ->
+      if (messageEntity != null) {
+        updateViews(messageEntity)
+      } else {
+        if (!args.messageEntity.isDraft) {
+          toast(R.string.message_was_deleted)
+        }
+        navController?.navigateUp()
+      }
     }
   }
 
@@ -1420,7 +1445,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         Result.Status.SUCCESS -> {
-          showContent()
           it.data?.let { incomingMsgInfo ->
             showIncomingMsgInfo(incomingMsgInfo)
           }
@@ -1496,6 +1520,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       when (newState) {
         MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+        MessageState.PENDING_DELETING_DRAFT -> DeleteDraftsWorker.enqueue(requireContext())
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )
@@ -1644,7 +1669,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun useFileProviderToGenerateUri(attInfo: AttachmentInfo): Pair<File, Uri> {
-    val tempDir = CacheManager.getCurrentMsgTempDir()
+    val tempDir = CacheManager.getCurrentMsgTempDirectory(requireContext())
     val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
     val file = if (fileName.isNullOrEmpty()) {
       File.createTempFile("tmp", null, tempDir)

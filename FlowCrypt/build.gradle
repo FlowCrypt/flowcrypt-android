@@ -32,6 +32,7 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
+    namespace 'com.flowcrypt.email'
 
     defaultConfig {
         applicationId "com.flowcrypt.email"
