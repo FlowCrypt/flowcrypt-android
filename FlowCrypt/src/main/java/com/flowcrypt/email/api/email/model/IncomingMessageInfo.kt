@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.google.android.gms.common.util.CollectionUtils
 import jakarta.mail.internet.InternetAddress
 import java.util.Date
 import java.util.regex.Pattern
@@ -197,21 +196,7 @@ data class IncomingMessageInfo constructor(
   }
 
   private fun prepareRecipientsLineForForwarding(recipients: List<InternetAddress>?): String {
-    val stringBuilder = StringBuilder()
-    return if (!CollectionUtils.isEmpty(recipients)) {
-      stringBuilder.append(recipients!![0])
-
-      if (recipients.size > 1) {
-        for (i in 1 until recipients.size) {
-          val recipient = recipients[0].address
-          stringBuilder.append(", ")
-          stringBuilder.append(recipient)
-        }
-      }
-
-      stringBuilder.toString()
-    } else
-      ""
+    return recipients?.joinToString { it.toString() } ?: ""
   }
 
   private fun prepareReplySubject(@MessageType messageType: Int): String {
