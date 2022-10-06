@@ -657,19 +657,14 @@ class EmailUtil {
         pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
         pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
 
-        prvKeys = if (signingRequired) {
-          listOf(
+        if (signingRequired) {
+          prvKeys = listOf(
             SecurityUtils.getSenderPgpKeyDetails(context, accountEntity, senderEmail).privateKey
               ?: throw IllegalStateException("Sender private key not found")
           )
-        } else {
-          null
-        }
 
-        ringProtector = if (signingRequired) {
-          KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
-        } else {
-          null
+          ringProtector =
+            KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
         }
       }
 
