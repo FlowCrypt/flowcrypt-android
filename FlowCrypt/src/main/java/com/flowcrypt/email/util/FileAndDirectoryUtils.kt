@@ -150,7 +150,7 @@ class FileAndDirectoryUtils {
      * @param parentDir A parent directory where the current directory will be created if it doesn't exist
      */
     fun getDir(directoryName: String, parentDir: File? = null): File {
-      val dir = if (parentDir == null) File(directoryName) else File(parentDir, directoryName)
+      val dir = File(parentDir, directoryName)
 
       if (!dir.exists() && !dir.mkdir()) {
         throw IOException("Couldn't create a temp directory for the current message")

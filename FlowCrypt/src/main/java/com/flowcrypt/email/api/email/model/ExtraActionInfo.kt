@@ -69,8 +69,6 @@ data class ExtraActionInfo(
     fun parseExtraActionInfo(context: Context, intent: Intent): ExtraActionInfo? {
       var infoFromRFC6068Parser: ExtraActionInfo? = null
       val attsList = ArrayList<AttachmentInfo>()
-      var finalBody: String? = null
-      var finalSubject: String? = null
 
       //parse mailto: URI
       if (intent.action in listOf(Intent.ACTION_VIEW, Intent.ACTION_SENDTO)) {
@@ -81,19 +79,6 @@ data class ExtraActionInfo(
 
       when (intent.action) {
         Intent.ACTION_VIEW, Intent.ACTION_SENDTO, Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
-
-          val extraText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)
-          // Only use EXTRA_TEXT if the body hasn't already been set by the mailto: URI
-          if (extraText != null && infoFromRFC6068Parser?.initializationData?.body.isNullOrEmpty()) {
-            finalBody = extraText.toString()
-          }
-
-          val subj = intent.getStringExtra(Intent.EXTRA_SUBJECT)
-          // Only use EXTRA_SUBJECT if the subject hasn't already been set by the mailto: URI
-          if (subj != null && infoFromRFC6068Parser?.initializationData?.subject.isNullOrEmpty()) {
-            finalSubject = subj
-          }
-
           if (Intent.ACTION_SEND == intent.action) {
             val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
             if (stream != null) {
@@ -117,11 +102,16 @@ data class ExtraActionInfo(
         }
       }
 
+      val finalSubject = infoFromRFC6068Parser?.initializationData?.subject
+        ?: intent.getStringExtra(Intent.EXTRA_SUBJECT)
+      val finalBody = infoFromRFC6068Parser?.initializationData?.body
+        ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+
       return infoFromRFC6068Parser?.copy(
         atts = attsList,
         initializationData = infoFromRFC6068Parser.initializationData.copy(
-          subject = finalSubject ?: infoFromRFC6068Parser.initializationData.subject,
-          body = finalBody ?: infoFromRFC6068Parser.initializationData.body,
+          subject = finalSubject,
+          body = finalBody,
         )
       ) ?: ExtraActionInfo(attsList, InitializationData(subject = finalSubject, body = finalBody))
     }
