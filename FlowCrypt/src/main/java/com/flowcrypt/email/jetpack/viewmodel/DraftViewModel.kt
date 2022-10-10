@@ -86,7 +86,7 @@ class DraftViewModel(
       val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return@launch
 
       //here we enable 'drafts' functionality only for Google users who use Gmail API.
-      if (!activeAccount.isGoogleAccountType || !activeAccount.useAPI) {
+      if (!activeAccount.isGoogleSignInAccount || !activeAccount.useAPI) {
         return@launch
       }
 

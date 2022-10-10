@@ -27,7 +27,7 @@ class GmailConstants {
 
     const val GMAIL_IMAP_SERVER = "imap.gmail.com"
     const val GMAIL_SMTP_SERVER = "smtp.gmail.com"
-    const val GMAIL_SMTP_PORT_SSL = 465
+    const val GMAIL_SMTP_PORT_SSL = 466
     const val GMAIL_SMTP_PORT_STARTTLS = 587
     const val GMAIL_IMAP_PORT = 993
   }

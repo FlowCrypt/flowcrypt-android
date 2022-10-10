@@ -435,7 +435,6 @@
     <string name="please_leave_at_least_one_key">You can\'t delete all keys. Please leave at least one key available for encryption/decryption purposes</string>
     <string name="server_settings">Server settings</string>
     <string name="check_and_save">Check and save</string>
-    <string name="settings_oauth_note">These settings are predefined by the OAuth provider and cannot be changed</string>
     <string name="server_settings_updated">Server settings updated</string>
     <string name="server_settings_were_not_updated">Error. The server settings were not updated</string>
     <string name="updating_server_settings">Updating server settings</string>

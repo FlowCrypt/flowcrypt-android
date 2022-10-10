@@ -84,7 +84,7 @@ data class AccountEntity constructor(
   )
 
   @Ignore
-  val isGoogleAccountType: Boolean = ACCOUNT_TYPE_GOOGLE.equals(accountType, ignoreCase = true)
+  val isGoogleSignInAccount: Boolean = ACCOUNT_TYPE_GOOGLE.equals(accountType, ignoreCase = true)
 
   val useOAuth2: Boolean
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
