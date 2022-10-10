@@ -24,6 +24,7 @@ import java.util.Properties
 class PropertiesHelper {
   companion object {
     private const val BOOLEAN_VALUE_TRUE = "true"
+    private const val BOOLEAN_VALUE_FALSE = "false"
 
     /**
      * Generate properties for imap protocol which will be used for download attachment.
@@ -62,7 +63,7 @@ class PropertiesHelper {
       accountEntity ?: return Properties()
       return when (accountEntity.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          generateGmailProperties()
+          generateGmailProperties(accountEntity)
         }
 
         else -> {
@@ -123,7 +124,7 @@ class PropertiesHelper {
       return prop
     }
 
-    private fun generateGmailProperties(): Properties {
+    private fun generateGmailProperties(accountEntity: AccountEntity): Properties {
       val prop = Properties()
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE] =
         JavaEmailConstants.DEFAULT_FETCH_BUFFER
@@ -135,8 +136,18 @@ class PropertiesHelper {
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_TIMEOUT] = 1000 * 20
 
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = BOOLEAN_VALUE_TRUE
-      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = "false"
-      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = BOOLEAN_VALUE_TRUE
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] =
+        if (accountEntity.smtpUseSslTls == true) {
+          BOOLEAN_VALUE_TRUE
+        } else {
+          BOOLEAN_VALUE_FALSE
+        }
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] =
+        if (accountEntity.smtpUseStarttls == true) {
+          BOOLEAN_VALUE_TRUE
+        } else {
+          BOOLEAN_VALUE_FALSE
+        }
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] =
         JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] =

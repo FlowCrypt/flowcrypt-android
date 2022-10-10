@@ -78,7 +78,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
 
       val session = OpenStoreHelper.getAccountSess(getApplication(), accountEntity)
 
-      /*try {
+      try {
         checkEmailSettingsLiveData.postValue(
           Result.loading(
             progressMsg = context.getString(R.string.checking_imap_settings),
@@ -89,7 +89,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
       } catch (e: Exception) {
         e.printStackTrace()
         return@withContext Result.exception(Exception("IMAP: " + e.message, e))
-      }*/
+      }
 
       try {
         checkEmailSettingsLiveData.postValue(

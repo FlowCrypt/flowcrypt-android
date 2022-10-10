@@ -93,9 +93,10 @@ data class AccountEntity constructor(
     googleSignInAccount: GoogleSignInAccount,
     uuid: String? = null,
     orgRules: OrgRules? = null,
-    useFES: Boolean
+    useFES: Boolean,
+    useStartTlsForSmtp: Boolean = false,
   ) : this(
-    email = googleSignInAccount.email!!.lowercase(),
+    email = requireNotNull(googleSignInAccount.email).lowercase(),
     accountType = googleSignInAccount.account?.type?.lowercase(),
     displayName = googleSignInAccount.displayName,
     givenName = googleSignInAccount.givenName,
@@ -103,7 +104,7 @@ data class AccountEntity constructor(
     photoUrl = googleSignInAccount.photoUrl?.toString(),
     isEnabled = true,
     isActive = false,
-    username = googleSignInAccount.email!!,
+    username = requireNotNull(googleSignInAccount.email),
     password = "",
     imapServer = GmailConstants.GMAIL_IMAP_SERVER,
     imapPort = GmailConstants.GMAIL_IMAP_PORT,
@@ -111,9 +112,13 @@ data class AccountEntity constructor(
     imapUseStarttls = false,
     imapAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
     smtpServer = GmailConstants.GMAIL_SMTP_SERVER,
-    smtpPort = GmailConstants.GMAIL_SMTP_PORT_SSL,
-    smtpUseSslTls = false,
-    smtpUseStarttls = true,
+    smtpPort = if (useStartTlsForSmtp) {
+      GmailConstants.GMAIL_SMTP_PORT_STARTTLS
+    } else {
+      GmailConstants.GMAIL_SMTP_PORT_SSL
+    },
+    smtpUseSslTls = !useStartTlsForSmtp,
+    smtpUseStarttls = useStartTlsForSmtp,
     smtpAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
     smtpUseCustomSign = false,
     smtpUsername = null,
