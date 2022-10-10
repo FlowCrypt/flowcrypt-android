@@ -111,7 +111,7 @@ data class AccountEntity constructor(
     imapUseStarttls = false,
     imapAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,
     smtpServer = GmailConstants.GMAIL_SMTP_SERVER,
-    smtpPort = GmailConstants.GMAIL_SMTP_PORT,
+    smtpPort = GmailConstants.GMAIL_SMTP_PORT_SSL,
     smtpUseSslTls = false,
     smtpUseStarttls = true,
     smtpAuthMechanisms = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2,

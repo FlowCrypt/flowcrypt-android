@@ -55,7 +55,7 @@ class SmtpProtocolUtil {
           val password = EmailUtil.getGmailAccountToken(context, accountEntity)
           transport.connect(
             GmailConstants.GMAIL_SMTP_SERVER,
-            GmailConstants.GMAIL_SMTP_PORT,
+            GmailConstants.GMAIL_SMTP_PORT_SSL,
             userName,
             password
           )
@@ -104,47 +104,31 @@ class SmtpProtocolUtil {
      * Prepare a [Transport] for SMTP protocol.
      *
      * @param session The [Session] object.
-     * @param accountEntity [AccountEntity] information which will be used of connection.
      * @param authCredentials [AuthCredentials] information which will be used of connection.
      * @return Generated [Transport]
      * @throws MessagingException
      * @throws IOException
      * @throws GoogleAuthException
      */
-    fun prepareSmtpTransport(
-      session: Session,
-      accountEntity: AccountEntity,
-      authCredentials: AuthCredentials
-    ): Transport {
+    fun prepareSmtpTransport(session: Session, authCredentials: AuthCredentials): Transport {
       val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
-      when (accountEntity.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          transport.connect(
-            GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT,
-            authCredentials.email, authCredentials.peekPassword()
-          )
-        }
+      val username: String?
+      val password: String?
 
-        else -> {
-          val username: String?
-          val password: String?
-
-          if (authCredentials.hasCustomSignInForSmtp) {
-            username = authCredentials.smtpSigInUsername
-            password = authCredentials.peekSmtpPassword()
-          } else {
-            username = authCredentials.username
-            password = authCredentials.peekPassword()
-          }
-
-          transport.connect(
-            authCredentials.smtpServer,
-            authCredentials.smtpPort,
-            username,
-            password
-          )
-        }
+      if (authCredentials.hasCustomSignInForSmtp) {
+        username = authCredentials.smtpSigInUsername
+        password = authCredentials.peekSmtpPassword()
+      } else {
+        username = authCredentials.username
+        password = authCredentials.peekPassword()
       }
+
+      transport.connect(
+        authCredentials.smtpServer,
+        authCredentials.smtpPort,
+        username,
+        password
+      )
 
       return transport
     }
