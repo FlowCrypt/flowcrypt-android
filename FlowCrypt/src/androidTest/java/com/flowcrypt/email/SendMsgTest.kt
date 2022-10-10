@@ -481,7 +481,7 @@ class SendMsgTest {
             assertEquals(outgoingMessageInfo.subject, mimeMessage.subject)
             assertArrayEquals(arrayOf(outgoingMessageInfo.from), mimeMessage.from)
             assertArrayEquals(
-              outgoingMessageInfo.toRecipients.toTypedArray(),
+              outgoingMessageInfo.toRecipients?.toTypedArray(),
               mimeMessage.getRecipients(Message.RecipientType.TO)
             )
             assertArrayEquals(

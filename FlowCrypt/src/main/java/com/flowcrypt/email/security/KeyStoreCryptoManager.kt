@@ -9,17 +9,21 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Base64InputStream
+import android.util.Base64OutputStream
 import androidx.annotation.WorkerThread
+import com.flowcrypt.email.util.ProgressOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.Buffer
 import okio.source
 import java.io.BufferedInputStream
 import java.io.InputStream
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
+import javax.crypto.CipherOutputStream
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
@@ -161,6 +165,24 @@ object KeyStoreCryptoManager {
     val iv = String(buffer.readByteArray(buffer.size - 1))
     val base64InputStream = Base64InputStream(bufferedInputStream, BASE64_FLAGS)
     return CipherInputStream(base64InputStream, getCipherForDecryption(iv))
+  }
+
+  @WorkerThread
+  fun encryptOutputStream(
+    outputStream: OutputStream,
+    action: (cipherOutputStream: CipherOutputStream) -> Unit
+  ) {
+    val progressOutputStream = ProgressOutputStream(outputStream)
+    val cipherForEncryption = getCipherForEncryption()
+    val base64OutputStream = Base64OutputStream(progressOutputStream, BASE64_FLAGS)
+    val cipherOutputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
+    cipherOutputStream.use {
+      progressOutputStream.write(
+        Base64.encodeToString(cipherForEncryption.iv, BASE64_FLAGS).toByteArray()
+      )
+      progressOutputStream.write("\n".toByteArray())
+      action.invoke(it)
+    }
   }
 
   /**

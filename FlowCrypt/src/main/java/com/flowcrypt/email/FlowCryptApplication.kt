@@ -21,7 +21,6 @@ import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
-import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -52,7 +51,6 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     enableDeprecatedSHA1ForPGPainlessPolicy()
     setupKeysStorage()
     initPerInstallationSharedPrefs()
-    CacheManager.init(this)
     MsgsCacheManager.init(this)
     NotificationChannelManager.registerNotificationChannels(this)
     IMAPStoreManager.init(this)
