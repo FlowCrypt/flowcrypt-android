@@ -10,7 +10,6 @@ import android.content.Context
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -54,8 +53,8 @@ class SmtpProtocolUtil {
           val userName = accountEntity.email
           val password = EmailUtil.getGmailAccountToken(context, accountEntity)
           transport.connect(
-            GmailConstants.GMAIL_SMTP_SERVER,
-            GmailConstants.GMAIL_SMTP_PORT_SSL,
+            accountEntity.smtpServer,
+            accountEntity.smtpPort ?: 0,
             userName,
             password
           )
