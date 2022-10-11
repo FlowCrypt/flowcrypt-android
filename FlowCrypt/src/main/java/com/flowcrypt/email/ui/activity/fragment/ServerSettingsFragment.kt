@@ -72,18 +72,10 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     super.onViewCreated(view, savedInstanceState)
     ErrorNotificationManager(requireContext()).cancel(R.id.notification_id_auth_failure)
     initViews()
-    setupChangeAuthCredentialsViewModel()
+    setupAccountSettingsViewModel()
     initAccountViewModel()
     observeOnResultLiveData()
     subscribeToTwoWayDialog()
-  }
-
-  private fun setupChangeAuthCredentialsViewModel() {
-    lifecycleScope.launchWhenStarted {
-      accountSettingsViewModel.accountSettingsStateFlow.collect {
-        updateViews(it)
-      }
-    }
   }
 
   override fun onDestroy() {
@@ -140,7 +132,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
       view?.hideKeyboard()
       isImapSpinnerRestored = false
       isSmtpSpinnerRestored = false
-      changeAuthCredentialsCache()
+      changeCachedAccountSettings()
       accountSettingsViewModel.cachedAccountEntity?.let { accountEntity ->
         navController?.navigate(
           ServerSettingsFragmentDirections.actionServerSettingsFragmentToCheckCredentialsFragment(
@@ -277,7 +269,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     return false
   }
 
-  private fun changeAuthCredentialsCache() {
+  private fun changeCachedAccountSettings() {
     val imapPort =
       if (TextUtils.isEmpty(binding?.editTextImapPort?.text)) JavaEmailConstants.SSL_IMAP_PORT
       else Integer.parseInt(binding?.editTextImapPort?.text.toString())
@@ -394,6 +386,14 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
             toast(getString(R.string.server_settings_were_not_updated))
           }
         }
+      }
+    }
+  }
+
+  private fun setupAccountSettingsViewModel() {
+    lifecycleScope.launchWhenStarted {
+      accountSettingsViewModel.accountSettingsStateFlow.collect {
+        updateViews(it)
       }
     }
   }
