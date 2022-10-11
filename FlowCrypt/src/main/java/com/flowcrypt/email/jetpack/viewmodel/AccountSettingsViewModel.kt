@@ -7,7 +7,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.api.email.model.AuthCredentials
+import com.flowcrypt.email.database.entity.AccountEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,27 +20,26 @@ import kotlinx.coroutines.launch
  *         Time: 10:21 AM
  *         E-mail: DenBond7@gmail.com
  */
-open class ChangeAuthCredentialsViewModel(application: Application) :
+open class AccountSettingsViewModel(application: Application) :
   AccountViewModel(application) {
-  private val authCredentialsMutableStateFlow: MutableStateFlow<AuthCredentials?> =
+  private val accountSettingsMutableStateFlow: MutableStateFlow<AccountEntity?> =
     MutableStateFlow(null)
-  val authCredentialsStateFlow: StateFlow<AuthCredentials?> =
-    authCredentialsMutableStateFlow.asStateFlow()
+  val accountSettingsStateFlow: StateFlow<AccountEntity?> =
+    accountSettingsMutableStateFlow.asStateFlow()
 
-  val authCredentials: AuthCredentials?
-    get() = authCredentialsStateFlow.value
+  val cachedAccountEntity: AccountEntity?
+    get() = accountSettingsStateFlow.value
 
   init {
     viewModelScope.launch {
       val accountEntity = getActiveAccountSuspend()
-      accountEntity?.let {
-        authCredentialsMutableStateFlow.value =
-          AuthCredentials.from(it).copy(password = "", smtpSignInPassword = "")
-      }
+      accountSettingsMutableStateFlow.value = accountEntity?.copy(password = "", smtpPassword = "")
     }
   }
 
-  fun updateAuthCredentials(authCredentials: AuthCredentials) {
-    authCredentialsMutableStateFlow.update { authCredentials }
+  fun updateCachedAccountSettings(accountEntity: AccountEntity) {
+    accountSettingsMutableStateFlow.update {
+      accountEntity
+    }
   }
 }

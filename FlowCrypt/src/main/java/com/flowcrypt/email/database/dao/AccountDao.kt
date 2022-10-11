@@ -9,8 +9,6 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
-import com.flowcrypt.email.api.email.model.AuthCredentials
-import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 
@@ -172,27 +170,17 @@ abstract class AccountDao : BaseDao<AccountEntity> {
   }
 
   @Transaction
-  open suspend fun updateAccountByAuthCredentials(authCredentials: AuthCredentials): Int {
-    val existedAccount = getAccount(authCredentials.email) ?: return 0
-
+  open suspend fun updateExistingAccountSettings(accountEntity: AccountEntity): Int {
     //encrypt sensitive info
-    val encryptedPassword = KeyStoreCryptoManager.encrypt(authCredentials.password)
-    val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(authCredentials.smtpSignInPassword)
+    val encryptedPassword = KeyStoreCryptoManager.encrypt(accountEntity.password)
+    val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(accountEntity.smtpPassword)
+    val encryptedUUID = KeyStoreCryptoManager.encrypt(accountEntity.uuid)
 
-    return update(
-      existedAccount.copy(
+    return updateSuspend(
+      accountEntity.copy(
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
-        imapServer = authCredentials.imapServer.lowercase(),
-        imapPort = authCredentials.imapPort,
-        imapUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
-        imapUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
-        smtpServer = authCredentials.smtpServer.lowercase(),
-        smtpPort = authCredentials.smtpPort,
-        smtpUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
-        smtpUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
-        smtpUseCustomSign = authCredentials.hasCustomSignInForSmtp,
-        smtpUsername = authCredentials.smtpSigInUsername
+        uuid = encryptedUUID,
       )
     )
   }
