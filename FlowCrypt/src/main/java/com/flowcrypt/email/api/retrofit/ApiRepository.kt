@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
@@ -60,20 +59,12 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param model An instance of [InitialLegacySubmitModel].
    */
-  suspend fun submitPubKey(
+  suspend fun submitPrimaryEmailPubKey(
     context: Context,
-    model: InitialLegacySubmitModel
-  ): Result<InitialLegacySubmitResponse>
-
-  /**
-   * @param context Interface to global information about an application environment.
-   * @param model An instance of [InitialLegacySubmitModel].
-   */
-  suspend fun postInitialLegacySubmit(
-    context: Context,
-    model: InitialLegacySubmitModel
+    email: String,
+    pubkey: String,
+    idToken: String,
   ): Result<InitialLegacySubmitResponse>
 
   /**

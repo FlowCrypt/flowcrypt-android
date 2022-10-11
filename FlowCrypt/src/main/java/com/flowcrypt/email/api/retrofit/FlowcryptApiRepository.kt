@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.retrofit
 import android.content.Context
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
@@ -84,22 +83,15 @@ class FlowcryptApiRepository : ApiRepository {
       }
     }
 
-  override suspend fun submitPubKey(
+  override suspend fun submitPrimaryEmailPubKey(
     context: Context,
-    model: InitialLegacySubmitModel
+    email: String,
+    pubkey: String,
+    idToken: String,
   ): Result<InitialLegacySubmitResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.submitPubKey(model) }
-    }
-
-  override suspend fun postInitialLegacySubmit(
-    context: Context,
-    model: InitialLegacySubmitModel
-  ): Result<InitialLegacySubmitResponse> =
-    withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.postInitialLegacySubmitSuspend(model) }
+      getResult { apiService.submitPrimaryEmailPubKey(email, pubkey, "Bearer $idToken") }
     }
 
   override suspend fun postTestWelcome(

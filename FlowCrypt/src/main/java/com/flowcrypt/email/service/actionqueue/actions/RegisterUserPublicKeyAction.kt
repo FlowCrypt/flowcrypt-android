@@ -10,8 +10,6 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
-import com.flowcrypt.email.util.exception.ApiException
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -34,7 +32,7 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(
 
   override suspend fun run(context: Context) {
     val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-    val body = InitialLegacySubmitModel(email!!, publicKey)
+    /*val body = InitialLegacySubmitModel(email!!, publicKey)
     val response = apiService.postInitialLegacySubmit(body).execute()
 
     val (apiError) = response.body() ?: throw IllegalArgumentException("The response is null!")
@@ -44,7 +42,7 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(
       if (code < 400 || code >= 500) {
         throw ApiException(apiError)
       }
-    }
+    }*/
   }
 
   constructor(source: Parcel) : this(

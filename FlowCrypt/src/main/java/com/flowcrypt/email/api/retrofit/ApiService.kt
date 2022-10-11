@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.retrofit
 
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.oauth.OAuth2Helper
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
@@ -50,24 +49,6 @@ import retrofit2.http.Url
  * E-mail: DenBond7@gmail.com
  */
 interface ApiService {
-  /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("initial/legacy_submit")
-  fun postInitialLegacySubmit(@Body body: InitialLegacySubmitModel): Call<InitialLegacySubmitResponse>
-
-  /**
-   * This method create a [Response] object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("initial/legacy_submit")
-  suspend fun postInitialLegacySubmitSuspend(@Body body: InitialLegacySubmitModel): Response<InitialLegacySubmitResponse>
-
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/test/welcome"
    *
@@ -174,8 +155,12 @@ interface ApiService {
    * @param body POJO model for requests
    * @return [<]
    */
-  @POST("initial/legacy_submit")
-  suspend fun submitPubKey(@Body body: InitialLegacySubmitModel): Response<InitialLegacySubmitResponse>
+  @POST("pub/{email}")
+  suspend fun submitPrimaryEmailPubKey(
+    @Path("email") email: String,
+    @Body pubkey: String,
+    @Header("Authorization") authorization: String
+  ): Response<InitialLegacySubmitResponse>
 
   @FormUrlEncoded
   @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)

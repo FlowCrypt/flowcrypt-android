@@ -23,7 +23,6 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -427,8 +426,12 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     pgpKeyDetails: PgpKeyDetails
   ) {
     if (accountEntity.isRuleExist(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
-      val model = InitialLegacySubmitModel(accountEntity.email, pgpKeyDetails.publicKey)
-      val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
+      val initialLegacySubmitResult = apiRepository.submitPrimaryEmailPubKey(
+        context = getApplication(),
+        email = accountEntity.email,
+        pubkey = pgpKeyDetails.publicKey,
+        idToken = ""
+      )
 
       when (initialLegacySubmitResult.status) {
         Result.Status.EXCEPTION -> {
@@ -600,8 +603,12 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     keyDetails: PgpKeyDetails
   ): Boolean = withContext(Dispatchers.IO) {
     return@withContext try {
-      val model = InitialLegacySubmitModel(accountEntity.email, keyDetails.publicKey)
-      val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
+      val initialLegacySubmitResult = apiRepository.submitPrimaryEmailPubKey(
+        context = getApplication(),
+        email = accountEntity.email,
+        pubkey = keyDetails.publicKey,
+        idToken = ""
+      )
       when (initialLegacySubmitResult.status) {
         Result.Status.SUCCESS -> {
           val body = initialLegacySubmitResult.data
