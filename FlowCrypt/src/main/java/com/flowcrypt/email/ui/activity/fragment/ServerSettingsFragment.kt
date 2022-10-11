@@ -141,7 +141,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
       isImapSpinnerRestored = false
       isSmtpSpinnerRestored = false
       changeAuthCredentialsCache()
-      accountSettingsViewModel.accountSettingsStateFlow.value?.let { accountEntity ->
+      accountSettingsViewModel.cachedAccountEntity?.let { accountEntity ->
         navController?.navigate(
           ServerSettingsFragmentDirections.actionServerSettingsFragmentToCheckCredentialsFragment(
             accountEntity
