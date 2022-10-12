@@ -93,7 +93,7 @@ class FlowcryptApiRepository : ApiRepository {
     withContext(Dispatchers.IO) {
       if (orgRules?.canSubmitPubToAttester() == false) {
         return@withContext Result.exception(
-          IllegalStateException("Cannot replace pubkey at attester because your organisation rules forbid it.")
+          IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
         )
       }
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
