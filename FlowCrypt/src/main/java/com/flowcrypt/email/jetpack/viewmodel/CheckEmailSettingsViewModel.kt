@@ -98,7 +98,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
             progress = 0.0
           )
         )
-        testSmtpConn(accountEntity, authCreds, session)
+        testSmtpConn(authCreds, session)
       } catch (e: Exception) {
         e.printStackTrace()
         return@withContext Result.exception(Exception("SMTP: " + e.message, e))
@@ -151,16 +151,11 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
   /**
    * Trying to connect to the SMTP server. If an exception will occur than that exception will be throw up.
    *
-   * @param authCreds The [AuthCredentials] which will be used for the connection.
    * @param session The [Session] which will be used for the connection.
    * @throws MessagingException This operation can throw some exception.
    */
-  private fun testSmtpConn(
-    accountEntity: AccountEntity,
-    authCreds: AuthCredentials,
-    session: Session
-  ) {
-    val transport = SmtpProtocolUtil.prepareSmtpTransport(session, accountEntity, authCreds)
+  private fun testSmtpConn(authCreds: AuthCredentials, session: Session) {
+    val transport = SmtpProtocolUtil.prepareSmtpTransport(session, authCreds)
     transport.close()
   }
 }

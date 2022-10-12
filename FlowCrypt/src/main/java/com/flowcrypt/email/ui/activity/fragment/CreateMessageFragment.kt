@@ -302,7 +302,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   @OptIn(DelicateCoroutinesApi::class)
   override fun onPause() {
     super.onPause()
-    if (account?.isGoogleAccountType == true) {
+    if (account?.isGoogleSignInAccount == true) {
       draftViewModel.processDraft(
         coroutineScope = GlobalScope,
         currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,

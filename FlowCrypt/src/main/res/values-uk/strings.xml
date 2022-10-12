@@ -227,7 +227,6 @@
     <string name="auth_failure">Помилка аутентифікації</string>
     <string name="updating_server_settings">Оновлення налаштувань сервера</string>
     <string name="server_settings_were_not_updated">Помилка. Налаштування сервера не оновлені</string>
-    <string name="settings_oauth_note">Ці налаштування визначені наперед постачальником OAuth і не можуть бути змінені.</string>
     <string name="check_and_save">Перевірити та зберегти</string>
     <string name="please_leave_at_least_one_key">Ви не можете видалити усі ключі. Будь ласка, залиште хоча б один ключ для цілей зашифрування / розшифрування.</string>
     <string name="could_not_add_new_account">Не вдалося додати новий обліковий запис</string>

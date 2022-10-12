@@ -14,7 +14,6 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.LoadRecipientsWorker
@@ -32,7 +31,7 @@ import kotlinx.coroutines.withContext
  */
 open class AccountViewModel(application: Application) : RoomBasicViewModel(application) {
   val addNewAccountLiveData = MutableLiveData<Result<AccountEntity?>>()
-  val updateAuthCredentialsLiveData = MutableLiveData<Result<Boolean?>>()
+  val updateAccountLiveData = MutableLiveData<Result<Boolean?>>()
 
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> =
     roomDatabase.accountDao().getActiveAccountLD()
@@ -95,21 +94,21 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
     }
   }
 
-  fun updateAccountByAuthCredentials(authCredentials: AuthCredentials) {
+  fun updateAccount(accountEntity: AccountEntity) {
     viewModelScope.launch {
       val context: Context = getApplication()
-      updateAuthCredentialsLiveData.value =
+      updateAccountLiveData.value =
         Result.loading(progressMsg = context.getString(R.string.updating_server_settings))
       try {
         val accountDao = roomDatabase.accountDao()
-        val isUpdated = accountDao.updateAccountByAuthCredentials(authCredentials) > 0
+        val isUpdated = accountDao.updateExistingAccountSettings(accountEntity) > 0
         val intent = Intent(context, IdleService::class.java)
         context.stopService(intent)
         context.startService(intent)
-        updateAuthCredentialsLiveData.value = Result.success(isUpdated)
+        updateAccountLiveData.value = Result.success(isUpdated)
       } catch (e: Exception) {
         e.printStackTrace()
-        updateAuthCredentialsLiveData.value = Result.exception(e)
+        updateAccountLiveData.value = Result.exception(e)
       }
     }
   }
