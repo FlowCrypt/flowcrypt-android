@@ -18,8 +18,8 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -83,15 +83,25 @@ class FlowcryptApiRepository : ApiRepository {
       }
     }
 
-  override suspend fun submitPrimaryEmailPubKey(
+  override suspend fun submitPubKey(
     context: Context,
     email: String,
-    pubkey: String,
-    idToken: String,
-  ): Result<InitialLegacySubmitResponse> =
+    pubKey: String,
+    idToken: String?,
+    orgRules: OrgRules?
+  ): Result<SubmitPubKeyResponse> =
     withContext(Dispatchers.IO) {
+      if (orgRules?.canSubmitPubToAttester() == false) {
+        return@withContext Result.exception(
+          IllegalStateException("Cannot replace pubkey at attester because your organisation rules forbid it.")
+        )
+      }
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.submitPrimaryEmailPubKey(email, pubkey, "Bearer $idToken") }
+      getResult {
+        idToken?.let { nonNullIdToken ->
+          apiService.submitPrimaryEmailPubKey(email, pubKey, "Bearer $nonNullIdToken")
+        } ?: apiService.submitPubKeyWithConditionalEmailVerification(email, pubKey)
+      }
     }
 
   override suspend fun postTestWelcome(

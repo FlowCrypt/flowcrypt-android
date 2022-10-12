@@ -18,7 +18,7 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
@@ -150,17 +150,27 @@ interface ApiService {
   suspend fun getOrgRulesFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
 
   /**
-   * This method calls API "https://flowcrypt.com/attester/initial/legacy_submit" via coroutines
-   *
-   * @param body POJO model for requests
-   * @return [<]
+   * Set or replace public key with idToken as an auth mechanism
+   * Used during setup
+   * Can only be used for primary email because idToken does not contain info about aliases
    */
   @POST("pub/{email}")
   suspend fun submitPrimaryEmailPubKey(
     @Path("email") email: String,
-    @Body pubkey: String,
+    @Body pubKey: String,
     @Header("Authorization") authorization: String
-  ): Response<InitialLegacySubmitResponse>
+  ): Response<SubmitPubKeyResponse>
+
+  /**
+   * Request to replace public key that will be verified by clicking email
+   * Used when user manually chooses to replace key
+   * Can also be used for aliases
+   */
+  @POST("pub/{email}")
+  suspend fun submitPubKeyWithConditionalEmailVerification(
+    @Path("email") email: String,
+    @Body pubKey: String
+  ): Response<SubmitPubKeyResponse>
 
   @FormUrlEncoded
   @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)

@@ -17,7 +17,7 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -129,7 +129,7 @@ class ImportPrivateKeyNoPubOrgRulesFlowTest : BaseTest() {
                       )
                     )
                   ),
-                  InitialLegacySubmitResponse::class.java
+                  SubmitPubKeyResponse::class.java
                 )
                 return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(gson.toJson(model))

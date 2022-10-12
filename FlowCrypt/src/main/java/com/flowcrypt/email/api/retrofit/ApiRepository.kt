@@ -17,8 +17,8 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -59,13 +59,19 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
+   * @param email For this email address will be applied changes.
+   * @param pubKey A new public key.
+   * @param idToken If idToken != null we will use submitPrimaryEmailPubKey,
+   * otherwise submitPubKeyWithConditionalEmailVerification.
+   * @param orgRules An instance of [OrgRules]. We have to check if submitting pub keys is allowed.
    */
-  suspend fun submitPrimaryEmailPubKey(
+  suspend fun submitPubKey(
     context: Context,
     email: String,
-    pubkey: String,
-    idToken: String,
-  ): Result<InitialLegacySubmitResponse>
+    pubKey: String,
+    idToken: String? = null,
+    orgRules: OrgRules? = null
+  ): Result<SubmitPubKeyResponse>
 
   /**
    * @param context Interface to global information about an application environment.

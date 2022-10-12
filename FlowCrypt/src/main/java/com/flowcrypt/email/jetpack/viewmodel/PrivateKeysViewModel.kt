@@ -426,11 +426,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     pgpKeyDetails: PgpKeyDetails
   ) {
     if (accountEntity.isRuleExist(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
-      val initialLegacySubmitResult = apiRepository.submitPrimaryEmailPubKey(
+      val initialLegacySubmitResult = apiRepository.submitPubKey(
         context = getApplication(),
         email = accountEntity.email,
-        pubkey = pgpKeyDetails.publicKey,
-        idToken = ""
+        pubKey = pgpKeyDetails.publicKey
       )
 
       when (initialLegacySubmitResult.status) {
@@ -603,11 +602,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     keyDetails: PgpKeyDetails
   ): Boolean = withContext(Dispatchers.IO) {
     return@withContext try {
-      val initialLegacySubmitResult = apiRepository.submitPrimaryEmailPubKey(
+      val initialLegacySubmitResult = apiRepository.submitPubKey(
         context = getApplication(),
         email = accountEntity.email,
-        pubkey = keyDetails.publicKey,
-        idToken = ""
+        pubKey = keyDetails.publicKey
       )
       when (initialLegacySubmitResult.status) {
         Result.Status.SUCCESS -> {

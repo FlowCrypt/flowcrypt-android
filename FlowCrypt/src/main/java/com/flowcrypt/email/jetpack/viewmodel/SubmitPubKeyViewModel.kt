@@ -11,7 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -41,10 +41,10 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
     keyDetails?.publicKey?.let {
       viewModelScope.launch {
 
-        val result = repository.submitPrimaryEmailPubKey(
+        val result = repository.submitPubKey(
           context = getApplication(),
           email = "accountEntity.email",
-          pubkey = "pgpKeyDetails.publicKey",
+          pubKey = "pgpKeyDetails.publicKey",
           idToken = ""
         )
 
@@ -59,7 +59,7 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
                 FlowCryptRoomDatabase.getDatabase(getApplication()).actionQueueDao()
                   .insertSuspend(action)
               }
-              submitPubKeyLiveData.value = Result.success(InitialLegacySubmitResponse(null, false))
+              submitPubKeyLiveData.value = Result.success(SubmitPubKeyResponse(null))
             }
           }
           else -> {
