@@ -22,7 +22,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -39,7 +39,6 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
-import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -442,15 +441,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       registerUserPublicKey(accountEntity, pgpKeyDetails, idToken)
     }
 
-    if (!requestingTestMsgWithNewPublicKey(accountEntity, pgpKeyDetails)) {
-      val welcomeEmailAction = ActionQueueEntity.fromAction(
-        SendWelcomeTestEmailAction(
-          0,
-          accountEntity.email, 0, pgpKeyDetails.publicKey
-        )
-      )
-      welcomeEmailAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
-    }
+    idToken?.let { postWelcomeMessage(accountEntity, pgpKeyDetails, it) }
   }
 
   private suspend fun getModifiedPgpKeyDetails(
@@ -572,19 +563,20 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   }
 
   /**
-   * Request a test email from FlowCrypt.
+   * Send a welcome message.
    *
    * @param keyDetails Details of the created key.
    * @return true if no errors.
    */
-  private suspend fun requestingTestMsgWithNewPublicKey(
+  private suspend fun postWelcomeMessage(
     accountEntity: AccountEntity,
-    keyDetails: PgpKeyDetails
+    keyDetails: PgpKeyDetails,
+    idToken: String,
   ): Boolean =
     withContext(Dispatchers.IO) {
       return@withContext try {
-        val model = TestWelcomeModel(accountEntity.email, keyDetails.publicKey)
-        val testWelcomeResult = apiRepository.postTestWelcome(getApplication(), model)
+        val model = WelcomeMessageModel(accountEntity.email, keyDetails.publicKey)
+        val testWelcomeResult = apiRepository.postWelcomeMessage(getApplication(), model, idToken)
         when (testWelcomeResult.status) {
           Result.Status.SUCCESS -> {
             testWelcomeResult.data?.apiError == null
