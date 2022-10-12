@@ -9,7 +9,6 @@ import com.flowcrypt.email.service.actionqueue.actions.Action
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
-import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
 import com.google.gson.Gson
 import com.google.gson.JsonDeserializationContext
@@ -38,11 +37,6 @@ class ActionJsonDeserializer : JsonDeserializer<Action> {
       Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX -> context.deserialize(
         json,
         BackupPrivateKeyToInboxAction::class.java
-      )
-
-      Action.Type.REGISTER_USER_PUBLIC_KEY -> context.deserialize(
-        json,
-        RegisterUserPublicKeyAction::class.java
       )
 
       Action.Type.SEND_WELCOME_TEST_EMAIL -> context.deserialize(

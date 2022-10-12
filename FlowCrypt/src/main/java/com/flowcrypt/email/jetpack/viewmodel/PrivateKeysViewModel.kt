@@ -39,7 +39,6 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
-import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
@@ -440,15 +439,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         }
       }
 
-      if (!registerUserPublicKey(accountEntity, pgpKeyDetails, idToken)) {
-        val registerAction = ActionQueueEntity.fromAction(
-          RegisterUserPublicKeyAction(
-            0,
-            accountEntity.email, 0, pgpKeyDetails.publicKey
-          )
-        )
-        registerAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
-      }
+      registerUserPublicKey(accountEntity, pgpKeyDetails, idToken)
     }
 
     if (!requestingTestMsgWithNewPublicKey(accountEntity, pgpKeyDetails)) {
