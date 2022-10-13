@@ -61,15 +61,27 @@ interface ApiRepository : BaseApiRepository {
    * @param context Interface to global information about an application environment.
    * @param email For this email address will be applied changes.
    * @param pubKey A new public key.
-   * @param idToken If idToken != null we will use submitPrimaryEmailPubKey,
-   * otherwise submitPubKeyWithConditionalEmailVerification.
+   * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
    * @param orgRules An instance of [OrgRules]. We have to check if submitting pub keys is allowed.
    */
-  suspend fun submitPubKey(
+  suspend fun submitPrimaryEmailPubKey(
     context: Context,
     email: String,
     pubKey: String,
-    idToken: String? = null,
+    idToken: String,
+    orgRules: OrgRules? = null
+  ): Result<SubmitPubKeyResponse>
+
+  /**
+   * @param context Interface to global information about an application environment.
+   * @param email For this email address will be applied changes.
+   * @param pubKey A new public key.
+   * @param orgRules An instance of [OrgRules]. We have to check if submitting pub keys is allowed.
+   */
+  suspend fun submitPubKeyWithConditionalEmailVerification(
+    context: Context,
+    email: String,
+    pubKey: String,
     orgRules: OrgRules? = null
   ): Result<SubmitPubKeyResponse>
 

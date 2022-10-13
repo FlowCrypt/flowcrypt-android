@@ -83,11 +83,11 @@ class FlowcryptApiRepository : ApiRepository {
       }
     }
 
-  override suspend fun submitPubKey(
+  override suspend fun submitPrimaryEmailPubKey(
     context: Context,
     email: String,
     pubKey: String,
-    idToken: String?,
+    idToken: String,
     orgRules: OrgRules?
   ): Result<SubmitPubKeyResponse> =
     withContext(Dispatchers.IO) {
@@ -97,11 +97,23 @@ class FlowcryptApiRepository : ApiRepository {
         )
       }
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult {
-        idToken?.let { nonNullIdToken ->
-          apiService.submitPrimaryEmailPubKey(email, pubKey, "Bearer $nonNullIdToken")
-        } ?: apiService.submitPubKeyWithConditionalEmailVerification(email, pubKey)
+      getResult { apiService.submitPrimaryEmailPubKey(email, pubKey, "Bearer $idToken") }
+    }
+
+  override suspend fun submitPubKeyWithConditionalEmailVerification(
+    context: Context,
+    email: String,
+    pubKey: String,
+    orgRules: OrgRules?
+  ): Result<SubmitPubKeyResponse> =
+    withContext(Dispatchers.IO) {
+      if (orgRules?.canSubmitPubToAttester() == false) {
+        return@withContext Result.exception(
+          IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
+        )
       }
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      getResult { apiService.submitPubKeyWithConditionalEmailVerification(email, pubKey) }
     }
 
   override suspend fun postWelcomeMessage(

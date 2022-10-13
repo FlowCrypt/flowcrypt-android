@@ -514,7 +514,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
    *
    * @param accountEntity [AccountEntity] which will be used for registration.
    * @param keyDetails Details of the created key.
-   * @param idToken A value from [com.google.android.gms.auth.api.signin.GoogleSignInAccount].
+   * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
    * @param isSilent If true - skip errors or exceptions.
    */
   private suspend fun registerUserPublicKey(
@@ -523,13 +523,22 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     idToken: String? = null,
     isSilent: Boolean = true,
   ): Boolean = withContext(Dispatchers.IO) {
-    val submitPubKeyResult = apiRepository.submitPubKey(
-      context = getApplication(),
-      email = accountEntity.email,
-      pubKey = keyDetails.publicKey,
-      idToken = idToken,
-      orgRules = accountEntity.clientConfiguration
-    )
+    val submitPubKeyResult = if (idToken != null) {
+      apiRepository.submitPrimaryEmailPubKey(
+        context = getApplication(),
+        email = accountEntity.email,
+        pubKey = keyDetails.publicKey,
+        idToken = idToken,
+        orgRules = accountEntity.clientConfiguration,
+      )
+    } else {
+      apiRepository.submitPubKeyWithConditionalEmailVerification(
+        context = getApplication(),
+        email = accountEntity.email,
+        pubKey = keyDetails.publicKey,
+        orgRules = accountEntity.clientConfiguration,
+      )
+    }
 
     when (submitPubKeyResult.status) {
       Result.Status.SUCCESS -> {
