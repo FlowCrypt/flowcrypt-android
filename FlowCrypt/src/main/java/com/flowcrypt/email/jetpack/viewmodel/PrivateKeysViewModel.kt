@@ -508,14 +508,14 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
 
   /**
-   * Registering a key with attester API.
-   * Note: this will only be successful if it's the first time submitting a key for this email address, or if the
-   * key being submitted has the same fingerprint as the one already recorded. If it's an error due to key
-   * conflict, ignore the error.
+   * Set or replace public key. If idToken != null an auth mechanism will be used to upload
+   * the given pub key. Otherwise will be used a request to replace public key that will
+   * be verified by clicking email.
    *
    * @param accountEntity [AccountEntity] which will be used for registration.
    * @param keyDetails Details of the created key.
-   * @return true if no errors.
+   * @param idToken A value from [com.google.android.gms.auth.api.signin.GoogleSignInAccount].
+   * @param isSilent If true - skip errors or exceptions.
    */
   private suspend fun registerUserPublicKey(
     accountEntity: AccountEntity,
@@ -534,11 +534,16 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     when (submitPubKeyResult.status) {
       Result.Status.SUCCESS -> {
         val body = submitPubKeyResult.data
-        val isSuccess = body != null && (body.apiError == null || body.apiError.code !in 400..499)
-        if (isSilent) {
-          isSuccess
-        } else {
-          throw IllegalStateException(body?.apiError?.msg)
+        when {
+          isSilent -> {
+            body != null && (body.apiError == null || body.apiError.code !in 400..499)
+          }
+
+          body?.apiError != null -> {
+            throw IllegalStateException(ApiException(body.apiError))
+          }
+
+          else -> body != null
         }
       }
 
