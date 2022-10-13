@@ -9,7 +9,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
 import okhttp3.MultipartBody
@@ -50,22 +50,13 @@ import retrofit2.http.Url
  */
 interface ApiService {
   /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/attester/test/welcome"
-   *
-   * @param body POJO model for requests
-   * @return [<]
+   * This method create a [Response] object for the API "https://flowcrypt.com/attester/welcome-message"
    */
-  @POST("test/welcome")
-  fun postTestWelcome(@Body body: TestWelcomeModel): Call<TestWelcomeResponse>
-
-  /**
-   * This method create a [Response] object for the API "https://flowcrypt.com/attester/test/welcome"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("test/welcome")
-  suspend fun postTestWelcomeSuspend(@Body body: TestWelcomeModel): Response<TestWelcomeResponse>
+  @POST("welcome-message")
+  suspend fun postWelcomeMessage(
+    @Body body: WelcomeMessageModel,
+    @Header("Authorization") authorization: String
+  ): Response<WelcomeMessageResponse>
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/api/help/feedback"

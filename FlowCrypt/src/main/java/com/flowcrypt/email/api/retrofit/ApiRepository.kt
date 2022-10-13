@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -75,12 +75,13 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param model An instance of [TestWelcomeModel].
+   * @param model An instance of [WelcomeMessageModel].
    */
-  suspend fun postTestWelcome(
+  suspend fun postWelcomeMessage(
     context: Context,
-    model: TestWelcomeModel
-  ): Result<TestWelcomeResponse>
+    model: WelcomeMessageModel,
+    idToken: String
+  ): Result<WelcomeMessageResponse>
 
   /**
    * @param requestCode A unique request code for this call
