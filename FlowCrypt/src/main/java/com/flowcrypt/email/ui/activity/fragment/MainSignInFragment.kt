@@ -460,7 +460,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           account ?: return@setFragmentResultListener
           privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
             account,
-            pgpKeyDetails
+            pgpKeyDetails,
+            googleSignInAccount?.idToken
           )
         }
 

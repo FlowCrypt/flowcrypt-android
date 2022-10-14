@@ -18,13 +18,11 @@ import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -41,8 +39,6 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
-import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
-import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -52,7 +48,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.key.collection.PGPKeyRingCollection
-import org.pgpainless.key.util.UserId
 import org.pgpainless.util.Passphrase
 
 /**
@@ -335,12 +330,17 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
   fun doAdditionalActionsAfterPrivateKeyCreation(
     accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails
+    pgpKeyDetails: PgpKeyDetails,
+    idToken: String? = null,
   ) {
     viewModelScope.launch {
       additionalActionsAfterPrivateKeyCreationLiveData.value = Result.loading()
       try {
-        doAdditionalOperationsAfterKeyCreation(accountEntity, pgpKeyDetails)
+        doAdditionalOperationsAfterKeyCreation(
+          accountEntity = accountEntity,
+          pgpKeyDetails = pgpKeyDetails,
+          idToken = idToken,
+        )
         additionalActionsAfterPrivateKeyCreationLiveData.value =
           Result.success(Pair(accountEntity, pgpKeyDetails))
       } catch (e: Exception) {
@@ -406,43 +406,13 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
   }
 
-  private suspend fun savePrivateKeyToDatabase(
-    accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails,
-    passphrase: String
-  ) {
-    val keyEntity = pgpKeyDetails.toKeyEntity(accountEntity).copy(
-      source = KeyImportDetails.SourceType.NEW.toPrivateKeySourceTypeString(),
-      privateKey = KeyStoreCryptoManager.encryptSuspend(pgpKeyDetails.privateKey).toByteArray(),
-      storedPassphrase = KeyStoreCryptoManager.encryptSuspend(passphrase)
-    )
-
-    if (roomDatabase.keysDao().insertSuspend(keyEntity) == -1L) {
-      throw NullPointerException("Cannot save a generated private key")
-    }
-  }
-
   private suspend fun doAdditionalOperationsAfterKeyCreation(
     accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails
+    pgpKeyDetails: PgpKeyDetails,
+    idToken: String? = null,
   ) {
     if (accountEntity.isRuleExist(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
-      val model = InitialLegacySubmitModel(accountEntity.email, pgpKeyDetails.publicKey)
-      val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
-
-      when (initialLegacySubmitResult.status) {
-        Result.Status.EXCEPTION -> {
-          initialLegacySubmitResult.exception?.let { exception -> throw exception }
-        }
-
-        Result.Status.ERROR -> {
-          initialLegacySubmitResult.data?.apiError?.let { apiError -> throw ApiException(apiError) }
-        }
-
-        else -> {
-          // all looks well
-        }
-      }
+      registerUserPublicKey(accountEntity, pgpKeyDetails, idToken, false)
 
       if (!accountEntity.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
@@ -468,26 +438,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         }
       }
 
-      if (!registerUserPublicKey(accountEntity, pgpKeyDetails)) {
-        val registerAction = ActionQueueEntity.fromAction(
-          RegisterUserPublicKeyAction(
-            0,
-            accountEntity.email, 0, pgpKeyDetails.publicKey
-          )
-        )
-        registerAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
-      }
+      registerUserPublicKey(accountEntity, pgpKeyDetails, idToken)
     }
 
-    if (!requestingTestMsgWithNewPublicKey(accountEntity, pgpKeyDetails)) {
-      val welcomeEmailAction = ActionQueueEntity.fromAction(
-        SendWelcomeTestEmailAction(
-          0,
-          accountEntity.email, 0, pgpKeyDetails.publicKey
-        )
-      )
-      welcomeEmailAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
-    }
+    idToken?.let { postWelcomeMessage(accountEntity, pgpKeyDetails, it) }
   }
 
   private suspend fun getModifiedPgpKeyDetails(
@@ -553,85 +507,90 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       }
     }
 
-  private suspend fun genUserIds(accountEntity: AccountEntity): List<UserId> =
-    withContext(Dispatchers.IO) {
-      val userIds = ArrayList<UserId>()
-      userIds.add(UserId.newBuilder().withEmail(accountEntity.email).apply {
-        accountEntity.displayName?.let { name ->
-          withName(name)
-        }
-      }.build())
-
-      if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-        try {
-          val gmail = GmailApiHelper.generateGmailApiService(getApplication(), accountEntity)
-          val aliases =
-            gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-          for (alias in aliases.sendAs) {
-            if (alias.verificationStatus != null) {
-              userIds.add(UserId.newBuilder().withEmail(alias.sendAsEmail).apply {
-                alias.displayName?.let { name ->
-                  withName(name)
-                }
-              }.build())
-            }
-          }
-        } catch (e: Exception) {
-          //skip any issues
-          e.printStackTrace()
-        }
-      }
-
-      return@withContext userIds
-    }
-
   /**
-   * Registering a key with attester API.
-   * Note: this will only be successful if it's the first time submitting a key for this email address, or if the
-   * key being submitted has the same fingerprint as the one already recorded. If it's an error due to key
-   * conflict, ignore the error.
+   * Set or replace public key. If idToken != null an auth mechanism will be used to upload
+   * the given pub key. Otherwise will be used a request to replace public key that will
+   * be verified by clicking email.
    *
    * @param accountEntity [AccountEntity] which will be used for registration.
    * @param keyDetails Details of the created key.
-   * @return true if no errors.
+   * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
+   * @param isSilent If true - skip errors or exceptions.
    */
   private suspend fun registerUserPublicKey(
     accountEntity: AccountEntity,
-    keyDetails: PgpKeyDetails
+    keyDetails: PgpKeyDetails,
+    idToken: String? = null,
+    isSilent: Boolean = true,
   ): Boolean = withContext(Dispatchers.IO) {
-    return@withContext try {
-      val model = InitialLegacySubmitModel(accountEntity.email, keyDetails.publicKey)
-      val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
-      when (initialLegacySubmitResult.status) {
-        Result.Status.SUCCESS -> {
-          val body = initialLegacySubmitResult.data
-          body != null && (body.apiError == null || body.apiError.code !in 400..499)
+    val submitPubKeyResult = if (idToken != null) {
+      apiRepository.submitPrimaryEmailPubKey(
+        context = getApplication(),
+        email = accountEntity.email,
+        pubKey = keyDetails.publicKey,
+        idToken = idToken,
+        orgRules = accountEntity.clientConfiguration,
+      )
+    } else {
+      apiRepository.submitPubKeyWithConditionalEmailVerification(
+        context = getApplication(),
+        email = accountEntity.email,
+        pubKey = keyDetails.publicKey,
+        orgRules = accountEntity.clientConfiguration,
+      )
+    }
+
+    when (submitPubKeyResult.status) {
+      Result.Status.SUCCESS -> {
+        val body = submitPubKeyResult.data
+        when {
+          isSilent -> {
+            body != null && (body.apiError == null || body.apiError.code !in 400..499)
+          }
+
+          body?.apiError != null -> {
+            throw IllegalStateException(ApiException(body.apiError))
+          }
+
+          else -> body != null
+        }
+      }
+
+      else -> if (isSilent) {
+        false
+      } else when (submitPubKeyResult.status) {
+        Result.Status.EXCEPTION -> {
+          submitPubKeyResult.exception?.let { exception -> throw exception }
+            ?: throw IllegalStateException("Unknown exception")
+        }
+
+        Result.Status.ERROR -> {
+          submitPubKeyResult.data?.apiError?.let { apiError -> throw ApiException(apiError) }
+            ?: throw IllegalStateException("Unknown API error")
         }
 
         else -> {
-          false
+          throw IllegalStateException("Undefined case")
         }
       }
-    } catch (e: Exception) {
-      e.printStackTrace()
-      false
     }
   }
 
   /**
-   * Request a test email from FlowCrypt.
+   * Send a welcome message.
    *
    * @param keyDetails Details of the created key.
    * @return true if no errors.
    */
-  private suspend fun requestingTestMsgWithNewPublicKey(
+  private suspend fun postWelcomeMessage(
     accountEntity: AccountEntity,
-    keyDetails: PgpKeyDetails
+    keyDetails: PgpKeyDetails,
+    idToken: String,
   ): Boolean =
     withContext(Dispatchers.IO) {
       return@withContext try {
-        val model = TestWelcomeModel(accountEntity.email, keyDetails.publicKey)
-        val testWelcomeResult = apiRepository.postTestWelcome(getApplication(), model)
+        val model = WelcomeMessageModel(accountEntity.email, keyDetails.publicKey)
+        val testWelcomeResult = apiRepository.postWelcomeMessage(getApplication(), model, idToken)
         when (testWelcomeResult.status) {
           Result.Status.SUCCESS -> {
             testWelcomeResult.data?.apiError == null

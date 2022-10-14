@@ -490,4 +490,5 @@
     <string name="fetching_drafts_info_failed">Не удалось загрузить информацию о черновиках. Пожалуйста, попробуйте еще раз.</string>
     <string name="no_recipients">(без получателей)</string>
     <string name="could_not_save_draft">Не удалось сохранить черновик\n\nДетали ошибки:\n%1$s</string>
+    <string name="can_not_replace_public_key_at_attester">Невозможно заменить публичный ключ на сервере attester. Правила организации запрещают это.</string>
 </resources>
