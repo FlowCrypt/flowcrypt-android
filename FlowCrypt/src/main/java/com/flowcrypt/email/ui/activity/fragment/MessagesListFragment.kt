@@ -5,14 +5,17 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.Manifest
 import android.accounts.AuthenticatorException
 import android.app.SearchManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -21,6 +24,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
@@ -165,9 +170,17 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
+  private val requestPermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+      if (!isGranted) {
+        toast(R.string.cannot_show_notifications_without_permission, Toast.LENGTH_LONG)
+      }
+    }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter(this)
+    requestPostNotificationPermissionIfNeeded()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -1287,6 +1300,33 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     } else {
       binding?.textViewActionProgress?.text = null
       adapter.changeProgress(false)
+    }
+  }
+
+  private fun requestPostNotificationPermissionIfNeeded() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      val permission = Manifest.permission.POST_NOTIFICATIONS
+      val value = PackageManager.PERMISSION_GRANTED
+      val isGranted = ContextCompat.checkSelfPermission(requireContext(), permission) == value
+      when {
+        isGranted -> {} // All looks well.
+
+        shouldShowRequestPermissionRationale(permission) -> {
+          view?.let {
+            showSnackbar(
+              it,
+              getString(R.string.need_post_notification_permission),
+              getString(R.string.ask)
+            ) {
+              requestPermissionLauncher.launch(permission)
+            }
+          }
+        }
+
+        else -> {
+          requestPermissionLauncher.launch(permission)
+        }
+      }
     }
   }
 

@@ -491,4 +491,7 @@
     <string name="no_recipients">(без получателей)</string>
     <string name="could_not_save_draft">Не удалось сохранить черновик\n\nДетали ошибки:\n%1$s</string>
     <string name="can_not_replace_public_key_at_attester">Невозможно заменить публичный ключ на сервере attester. Правила организации запрещают это.</string>
+    <string name="cannot_show_notifications_without_permission">Отображение уведомлений не включено в приложении</string>
+    <string name="need_post_notification_permission">Нам нужно разрешение, чтобы показывать уведомления о новых сообщениях</string>
+    <string name="ask">Спросить</string>
 </resources>

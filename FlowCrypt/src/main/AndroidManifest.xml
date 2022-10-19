@@ -25,6 +25,9 @@
     <!-- Request the foreground service permission. Details here
      https://developer.android.com/guide/components/foreground-services#request-foreground-service-permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!--Starting from Android 13 (API level 33) the app has to ask a user permission to show any notifications
+    https://developer.android.com/develop/ui/views/notifications/notification-permission-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".FlowCryptApplication"

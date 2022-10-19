@@ -13,13 +13,13 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
-import com.flowcrypt.email.util.UIUtil
 
 /**
  * This fragment contains actions which related to Security options.
@@ -49,8 +49,8 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
       Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
         val keysStorage = KeysStorageImpl.getInstance(requireContext())
         if (keysStorage.getRawKeys().isEmpty()) {
-          UIUtil.showInfoSnackbar(
-            requireView(), getString(
+          showInfoDialog(
+            dialogMsg = getString(
               R.string.account_has_no_associated_keys,
               getString(R.string.support_email)
             )

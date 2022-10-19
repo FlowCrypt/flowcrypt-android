@@ -577,4 +577,7 @@
     <string name="no_recipients">(no recipients)</string>
     <string name="could_not_save_draft">Could not save a draft\n\nError details:\n%1$s</string>
     <string name="can_not_replace_public_key_at_attester">Cannot replace public key at attester because your organisation rules forbid it.</string>
+    <string name="cannot_show_notifications_without_permission">Showing notifications is not enabled in the app</string>
+    <string name="need_post_notification_permission">We need permission to show notifications about new messages</string>
+    <string name="ask">Ask</string>
 </resources>
