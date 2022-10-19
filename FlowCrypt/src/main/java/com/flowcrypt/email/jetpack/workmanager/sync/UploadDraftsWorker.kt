@@ -37,16 +37,16 @@ import java.util.Properties
 class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
-    uploadDrafts(accountEntity, store)
+    uploadDrafts()
   }
 
   override suspend fun runAPIAction(accountEntity: AccountEntity) {
     uploadDrafts(accountEntity)
   }
 
-  private suspend fun uploadDrafts(account: AccountEntity, store: Store) =
+  private suspend fun uploadDrafts() =
     withContext(Dispatchers.IO) {
-      uploadDraftsInternal(account) { draftId, mimeMessage ->
+      uploadDraftsInternal { _, _ ->
         //to update IMAP draft we have to delete the old one and add a new one
         /*val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
         val folderDrafts = foldersManager.folderDrafts ?: return@uploadDraftsInternal
@@ -62,7 +62,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     }
 
   private suspend fun uploadDrafts(account: AccountEntity) = withContext(Dispatchers.IO) {
-    uploadDraftsInternal(account) { messageEntity, mimeMessage ->
+    uploadDraftsInternal { messageEntity, mimeMessage ->
       executeGMailAPICall(applicationContext) {
         val draftId = messageEntity.draftId
         val draft = GmailApiHelper.uploadDraft(
@@ -106,7 +106,6 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   }
 
   private suspend fun uploadDraftsInternal(
-    account: AccountEntity,
     action: suspend (messageEntity: MessageEntity, mimeMessage: MimeMessage) -> Unit
   ) = withContext(Dispatchers.IO) {
     val draftsDir = CacheManager.getDraftDirectory(applicationContext)
