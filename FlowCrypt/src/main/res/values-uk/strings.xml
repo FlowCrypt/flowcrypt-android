@@ -492,4 +492,7 @@
     <string name="no_recipients">(без отримувачів)</string>
     <string name="could_not_save_draft">Не вдалося зберегти чорновик\n\nДеталі помилки:\n%1$s</string>
     <string name="can_not_replace_public_key_at_attester">Неможливо замінити публічний ключ на сервері attester. Правила організації забороняють це.</string>
+    <string name="cannot_show_notifications_without_permission">У додатку не ввімкнено показ сповіщень</string>
+    <string name="need_post_notification_permission">Нам потрібен дозвіл, щоб показувати сповіщення про нові листи</string>
+    <string name="ask">Запитати</string>
 </resources>
