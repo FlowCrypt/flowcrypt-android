@@ -11,6 +11,9 @@ import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.extensions.android.content.getParcelableArrayListExtraViaExt
+import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.util.RFC6068Parser
 
 /**
@@ -34,7 +37,7 @@ data class ExtraActionInfo(
 
   constructor(parcel: Parcel) : this(
     mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
-    requireNotNull(parcel.readParcelable(InitializationData::class.java.classLoader))
+    requireNotNull(parcel.readParcelableViaExt(InitializationData::class.java))
   )
 
   override fun describeContents(): Int {
@@ -80,7 +83,7 @@ data class ExtraActionInfo(
       when (intent.action) {
         Intent.ACTION_VIEW, Intent.ACTION_SENDTO, Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
           if (Intent.ACTION_SEND == intent.action) {
-            val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            val stream = intent.getParcelableExtraViaExt<Uri>(Intent.EXTRA_STREAM)
             if (stream != null) {
               val attachmentInfo = EmailUtil.getAttInfoFromUri(context, stream)
               attachmentInfo?.let {
@@ -88,7 +91,7 @@ data class ExtraActionInfo(
               }
             }
           } else {
-            val uriList = intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
+            val uriList = intent.getParcelableArrayListExtraViaExt<Parcelable>(Intent.EXTRA_STREAM)
             if (uriList != null) {
               for (parcelable in uriList) {
                 val uri = parcelable as Uri

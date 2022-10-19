@@ -55,6 +55,8 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.databinding.FragmentCreateMessageBinding
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
+import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.appBarLayout
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
@@ -1547,7 +1549,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       SelectRecipientsFragment.REQUEST_KEY_SELECT_RECIPIENTS
     ) { _, bundle ->
       val list =
-        bundle.getParcelableArrayList<RecipientEntity>(SelectRecipientsFragment.KEY_RECIPIENTS)
+        bundle.getParcelableArrayListViaExt<RecipientEntity>(SelectRecipientsFragment.KEY_RECIPIENTS)
       list?.let { recipients ->
         val recipientEntity = recipients.firstOrNull() ?: return@let
         recipientsViewModel.copyPubKeysBetweenRecipients(
@@ -1571,7 +1573,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     setFragmentResultListener(
       ImportMissingPublicKeyFragment.REQUEST_KEY_RECIPIENT_WITH_PUB_KEY
     ) { _, bundle ->
-      val recipientWithPubKeys = bundle.getParcelable<RecipientWithPubKeys>(
+      val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         ImportMissingPublicKeyFragment.KEY_RECIPIENT_WITH_PUB_KEY
       )
 
@@ -1594,7 +1596,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun subscribeToNoPgpFoundDialogFragment() {
     setFragmentResultListener(NoPgpFoundDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
-      val recipientWithPubKeys = bundle.getParcelable<RecipientWithPubKeys>(
+      val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         NoPgpFoundDialogFragment.KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS
       )
 
@@ -1649,7 +1651,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
     setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
-      val keyList = bundle.getParcelableArrayList<AttachmentInfo>(
+      val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       ) ?: return@setFragmentResultListener
 

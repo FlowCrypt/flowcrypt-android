@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 
@@ -29,7 +30,7 @@ data class SignedMsgBlock(
   constructor(source: Parcel) : this(
     source.readString(),
     source.readString(),
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    source.readParcelableViaExt<MsgBlockError>(MsgBlockError::class.java),
     1 == source.readInt()
   )
 
@@ -45,7 +46,7 @@ data class SignedMsgBlock(
 
   companion object CREATOR : Parcelable.Creator<MsgBlock> {
     override fun createFromParcel(parcel: Parcel): MsgBlock {
-      val partType = parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!
+      val partType = parcel.readParcelableViaExt(MsgBlock.Type::class.java)!!
       return MsgBlockFactory.fromParcel(partType, parcel)
     }
 

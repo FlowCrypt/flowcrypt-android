@@ -8,6 +8,8 @@ package com.flowcrypt.email.api.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.android.os.readListViaExt
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import jakarta.mail.internet.InternetAddress
 
 /**
@@ -76,35 +78,23 @@ data class GeneralMessageDetails constructor(
     source.readLong(),
     source.readLong(),
     mutableListOf<InternetAddress>().apply {
-      source.readList(
-        this as List<*>,
-        InternetAddress::class.java.classLoader
-      )
+      source.readListViaExt(this, InternetAddress::class.java)
     },
     mutableListOf<InternetAddress>().apply {
-      source.readList(
-        this as List<*>,
-        InternetAddress::class.java.classLoader
-      )
+      source.readListViaExt(this, InternetAddress::class.java)
     },
     mutableListOf<InternetAddress>().apply {
-      source.readList(
-        this as List<*>,
-        InternetAddress::class.java.classLoader
-      )
+      source.readListViaExt(this, InternetAddress::class.java)
     },
     mutableListOf<InternetAddress>().apply {
-      source.readList(
-        this as List<*>,
-        InternetAddress::class.java.classLoader
-      )
+      source.readListViaExt(this, InternetAddress::class.java)
     },
     source.readString(),
     source.createStringArrayList()!!,
     1 == source.readInt(),
     1 == source.readInt(),
     1 == source.readInt(),
-    source.readParcelable(MessageState::class.java.classLoader)!!,
+    source.readParcelableViaExt(MessageState::class.java)!!,
     source.readString(),
     source.readString()
   )

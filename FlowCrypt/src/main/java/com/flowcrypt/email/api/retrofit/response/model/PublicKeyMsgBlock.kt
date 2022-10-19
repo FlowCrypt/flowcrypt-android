@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 
 import com.flowcrypt.email.security.model.PgpKeyDetails
 
@@ -34,12 +35,12 @@ data class PublicKeyMsgBlock constructor(
 
   constructor(parcel: Parcel) : this(
     parcel.readString(),
-    parcel.readParcelable(PgpKeyDetails::class.java.classLoader),
-    parcel.readParcelable(MsgBlockError::class.java.classLoader),
+    parcel.readParcelableViaExt(PgpKeyDetails::class.java),
+    parcel.readParcelableViaExt(MsgBlockError::class.java),
     1 == parcel.readInt()
   ) {
     existingRecipientWithPubKeys =
-      parcel.readParcelable(RecipientWithPubKeys::class.java.classLoader)
+      parcel.readParcelableViaExt(RecipientWithPubKeys::class.java)
   }
 
   override fun writeToParcel(parcel: Parcel, flags: Int) =
@@ -56,7 +57,7 @@ data class PublicKeyMsgBlock constructor(
 
   companion object CREATOR : Parcelable.Creator<PublicKeyMsgBlock> {
     override fun createFromParcel(parcel: Parcel): PublicKeyMsgBlock {
-      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      parcel.readParcelableViaExt(MsgBlock.Type::class.java)
       return PublicKeyMsgBlock(parcel)
     }
 

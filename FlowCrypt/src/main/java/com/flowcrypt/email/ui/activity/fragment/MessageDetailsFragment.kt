@@ -63,6 +63,8 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
+import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
@@ -1591,7 +1593,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
     setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
-      val keyList = bundle.getParcelableArrayList<AttachmentInfo>(
+      val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       ) ?: return@setFragmentResultListener
 
@@ -1688,7 +1690,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     setFragmentResultListener(DownloadAttachmentDialogFragment.REQUEST_KEY_ATTACHMENT_DATA) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
       val attachmentInfo =
-        bundle.getParcelable<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
+        bundle.getParcelableViaExt<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
       val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
       attachmentInfo?.rawData = data
 
@@ -1730,7 +1732,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     setFragmentResultListener(
       ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
     ) { _, bundle ->
-      val keys = bundle.getParcelableArrayList<PgpKeyDetails>(
+      val keys = bundle.getParcelableArrayListViaExt<PgpKeyDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
       if (keys?.isNotEmpty() == true) {

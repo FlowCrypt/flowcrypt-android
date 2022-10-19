@@ -11,6 +11,7 @@ import androidx.room.Embedded
 import androidx.room.Relation
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 
 /**
  * @author Denis Bondarenko
@@ -28,7 +29,7 @@ data class RecipientWithPubKeys(
   val publicKeys: List<PublicKeyEntity>
 ) : Parcelable {
   constructor(parcel: Parcel) : this(
-    requireNotNull(parcel.readParcelable(RecipientEntity::class.java.classLoader)),
+    requireNotNull(parcel.readParcelableViaExt(RecipientEntity::class.java)),
     requireNotNull(parcel.createTypedArrayList(PublicKeyEntity))
   )
 

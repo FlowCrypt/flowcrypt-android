@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
@@ -23,7 +24,7 @@ data class DecryptError constructor(
   @Expose val isEncrypted: Boolean
 ) : Parcelable {
   constructor(source: Parcel) : this(
-    source.readParcelable<DecryptErrorDetails>(DecryptErrorDetails::class.java.classLoader),
+    source.readParcelableViaExt<DecryptErrorDetails>(DecryptErrorDetails::class.java),
     source.createStringArrayList(),
     1 == source.readInt()
   )

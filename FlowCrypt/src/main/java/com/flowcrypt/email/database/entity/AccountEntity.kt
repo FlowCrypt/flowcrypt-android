@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 
@@ -225,7 +226,7 @@ data class AccountEntity constructor(
     source.readValue(Boolean::class.java.classLoader) as Boolean?,
     source.readValue(Boolean::class.java.classLoader) as Boolean?,
     source.readString(),
-    source.readParcelable(OrgRules::class.java.classLoader),
+    source.readParcelableViaExt(OrgRules::class.java),
     source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean
   )

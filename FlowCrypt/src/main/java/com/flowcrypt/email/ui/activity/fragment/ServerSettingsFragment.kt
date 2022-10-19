@@ -25,6 +25,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentServerSettingsBinding
+import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
@@ -305,9 +306,9 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
 
   private fun observeOnResultLiveData() {
     setFragmentResultListener(CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
-      val result: Result<*> =
-        bundle.getSerializable(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as Result<*>
-      when (result.status) {
+      val result =
+        bundle.getSerializableViaExt(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+      when (result?.status) {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
           val exception = result.exception ?: return@setFragmentResultListener

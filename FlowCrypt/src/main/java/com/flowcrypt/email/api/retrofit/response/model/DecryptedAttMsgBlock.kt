@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -32,12 +33,12 @@ data class DecryptedAttMsgBlock(
 
   constructor(source: Parcel) : this(
     source.readString(),
-    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
-    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader),
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    source.readParcelableViaExt<AttMeta>(AttMeta::class.java)!!,
+    source.readParcelableViaExt<DecryptError>(DecryptError::class.java),
+    source.readParcelableViaExt<MsgBlockError>(MsgBlockError::class.java),
     1 == source.readInt()
   ) {
-    fileUri = source.readParcelable(Uri::class.java.classLoader)
+    fileUri = source.readParcelableViaExt(Uri::class.java)
   }
 
   override fun describeContents(): Int {
@@ -57,7 +58,7 @@ data class DecryptedAttMsgBlock(
 
   companion object CREATOR : Parcelable.Creator<DecryptedAttMsgBlock> {
     override fun createFromParcel(parcel: Parcel): DecryptedAttMsgBlock {
-      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      parcel.readParcelableViaExt(MsgBlock.Type::class.java)
       return DecryptedAttMsgBlock(parcel)
     }
 

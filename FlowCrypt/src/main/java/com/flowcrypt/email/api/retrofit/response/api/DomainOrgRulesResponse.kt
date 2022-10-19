@@ -10,6 +10,7 @@ import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -28,8 +29,8 @@ data class DomainOrgRulesResponse constructor(
   @Expose val orgRules: OrgRules?
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
-    parcel.readParcelable(ApiError::class.java.classLoader),
-    parcel.readParcelable<OrgRules>(OrgRules::class.java.classLoader)
+    parcel.readParcelableViaExt(ApiError::class.java),
+    parcel.readParcelableViaExt<OrgRules>(OrgRules::class.java)
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {

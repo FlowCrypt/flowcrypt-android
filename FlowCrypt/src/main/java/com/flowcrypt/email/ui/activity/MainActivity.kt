@@ -47,6 +47,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
+import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
@@ -280,7 +281,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   private fun handleAccountAuthenticatorResponse() {
     accountAuthenticatorResponse =
-      intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
+      intent.getParcelableExtraViaExt(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
     accountAuthenticatorResponse?.onRequestContinued()
   }
 
@@ -338,7 +339,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   private fun handleLogoutFromSystemSettings(intent: Intent?): Boolean {
     return if (ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS.equals(intent?.action, true)) {
-      val account = intent?.getParcelableExtra<Account>(KEY_ACCOUNT)
+      val account = intent?.getParcelableExtraViaExt<Account>(KEY_ACCOUNT)
       account?.let {
         toast(getString(R.string.open_side_menu_and_do_logout, it.name), Toast.LENGTH_LONG)
       }
