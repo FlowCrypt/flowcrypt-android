@@ -19,6 +19,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -99,6 +100,36 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onServiceDisconnected(arg0: ComponentName) {}
   }
 
+  private val onBackPressedCallback = object : OnBackPressedCallback(true) {
+    override fun handleOnBackPressed() {
+      if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+        binding.drawerLayout.closeDrawer(GravityCompat.START)
+      } else {
+        if (navController.currentDestination?.id == R.id.messagesListFragment) {
+          val foldersManager = labelsViewModel.foldersManagerLiveData.value
+          val currentFolder = labelsViewModel.activeFolderLiveData.value
+          val inbox = foldersManager?.findInboxFolder()
+          if (inbox != null) {
+            if (currentFolder == inbox) {
+              onBackPressed()
+            } else {
+              labelsViewModel.changeActiveFolder(inbox)
+            }
+          } else {
+            onBackPressed()
+          }
+        } else {
+          onBackPressed()
+        }
+      }
+    }
+
+    private fun onBackPressed() {
+      isEnabled = false
+      onBackPressedDispatcher.onBackPressed()
+    }
+  }
+
   override fun inflateBinding(inflater: LayoutInflater): ActivityMainBinding =
     ActivityMainBinding.inflate(layoutInflater)
 
@@ -115,6 +146,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       }
     }
     super.onCreate(savedInstanceState)
+    handleOnBackPressed()
     observeMovingToBackground()
 
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
@@ -136,6 +168,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   override fun onStart() {
     super.onStart()
     tryToUpdateOrgRules()
+    onBackPressedCallback.isEnabled = true
   }
 
   override fun finish() {
@@ -162,27 +195,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     super.onDestroy()
     unbindService(idleServiceConnection)
     actionBarDrawerToggle?.let { binding.drawerLayout.removeDrawerListener(it) }
-  }
-
-  override fun onBackPressed() {
-    if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-      binding.drawerLayout.closeDrawer(GravityCompat.START)
-    } else {
-      if (navController.currentDestination?.id == R.id.messagesListFragment) {
-        val foldersManager = labelsViewModel.foldersManagerLiveData.value
-        val currentFolder = labelsViewModel.activeFolderLiveData.value
-        val inbox = foldersManager?.findInboxFolder()
-        if (inbox != null) {
-          if (currentFolder == inbox) {
-            super.onBackPressed()
-          } else {
-            labelsViewModel.changeActiveFolder(inbox)
-          }
-        } else super.onBackPressed()
-      } else {
-        super.onBackPressed()
-      }
-    }
   }
 
   override fun onDestinationChanged(
@@ -392,6 +404,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     } as? MessagesListFragment
 
     fragment?.onDrawerStateChanged(slideOffset, isOpened)
+  }
+
+  private fun handleOnBackPressed() {
+    onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
   }
 
   private fun observeMovingToBackground() {
