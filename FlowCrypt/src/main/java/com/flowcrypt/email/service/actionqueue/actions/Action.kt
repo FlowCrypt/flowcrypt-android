@@ -30,8 +30,6 @@ interface Action : Parcelable {
    */
   enum class Type constructor(val value: String) : Parcelable {
     BACKUP_PRIVATE_KEY_TO_INBOX("backup_private_key_to_inbox"),
-    REGISTER_USER_PUBLIC_KEY("register_user_public_key"),
-    SEND_WELCOME_TEST_EMAIL("send_welcome_test_email"),
     ENCRYPT_PRIVATE_KEYS("encrypt_private_keys"),
     LOAD_GMAIL_ALIASES("load_gmail_aliases");
 

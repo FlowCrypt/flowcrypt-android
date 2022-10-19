@@ -7,10 +7,9 @@ package com.flowcrypt.email.api.retrofit
 
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.oauth.OAuth2Helper
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
@@ -19,8 +18,8 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
+import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
 import okhttp3.MultipartBody
@@ -51,40 +50,13 @@ import retrofit2.http.Url
  */
 interface ApiService {
   /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
-   *
-   * @param body POJO model for requests
-   * @return [<]
+   * This method create a [Response] object for the API "https://flowcrypt.com/attester/welcome-message"
    */
-  @POST("initial/legacy_submit")
-  fun postInitialLegacySubmit(@Body body: InitialLegacySubmitModel): Call<InitialLegacySubmitResponse>
-
-  /**
-   * This method create a [Response] object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("initial/legacy_submit")
-  suspend fun postInitialLegacySubmitSuspend(@Body body: InitialLegacySubmitModel): Response<InitialLegacySubmitResponse>
-
-  /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/attester/test/welcome"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("test/welcome")
-  fun postTestWelcome(@Body body: TestWelcomeModel): Call<TestWelcomeResponse>
-
-  /**
-   * This method create a [Response] object for the API "https://flowcrypt.com/attester/test/welcome"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("test/welcome")
-  suspend fun postTestWelcomeSuspend(@Body body: TestWelcomeModel): Response<TestWelcomeResponse>
+  @POST("welcome-message")
+  suspend fun postWelcomeMessage(
+    @Body body: WelcomeMessageModel,
+    @Header("Authorization") authorization: String
+  ): Response<WelcomeMessageResponse>
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/api/help/feedback"
@@ -169,13 +141,27 @@ interface ApiService {
   suspend fun getOrgRulesFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
 
   /**
-   * This method calls API "https://flowcrypt.com/attester/initial/legacy_submit" via coroutines
-   *
-   * @param body POJO model for requests
-   * @return [<]
+   * Set or replace public key with idToken as an auth mechanism
+   * Used during setup
+   * Can only be used for primary email because idToken does not contain info about aliases
    */
-  @POST("initial/legacy_submit")
-  suspend fun submitPubKey(@Body body: InitialLegacySubmitModel): Response<InitialLegacySubmitResponse>
+  @POST("pub/{email}")
+  suspend fun submitPrimaryEmailPubKey(
+    @Path("email") email: String,
+    @Body pubKey: String,
+    @Header("Authorization") authorization: String
+  ): Response<SubmitPubKeyResponse>
+
+  /**
+   * Request to replace public key that will be verified by clicking email
+   * Used when user manually chooses to replace key
+   * Can also be used for aliases
+   */
+  @POST("pub/{email}")
+  suspend fun submitPubKeyWithConditionalEmailVerification(
+    @Path("email") email: String,
+    @Body pubKey: String
+  ): Response<SubmitPubKeyResponse>
 
   @FormUrlEncoded
   @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)

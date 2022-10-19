@@ -30,7 +30,7 @@ class FlowCryptMimeMessageTest {
     msg.setFrom(fromAddress)
     msg.setText("Some text")
     msg.saveChanges()
-    val messageId = msg.getHeader("Message-ID").first()
+    val messageId = msg.getHeader(JavaEmailConstants.HEADER_MESSAGE_ID).first()
     val actualDomain = extractDomainFromMessageID(messageId)
     assertEquals(expectedDomain, actualDomain)
   }
@@ -42,7 +42,7 @@ class FlowCryptMimeMessageTest {
     val msg = FlowCryptMimeMessage(session)
     msg.setText("Some text")
     msg.saveChanges()
-    val messageId = msg.getHeader("Message-ID").first()
+    val messageId = msg.getHeader(JavaEmailConstants.HEADER_MESSAGE_ID).first()
     val actualDomain = extractDomainFromMessageID(messageId)
     assertEquals(localAddressDomain, actualDomain)
   }

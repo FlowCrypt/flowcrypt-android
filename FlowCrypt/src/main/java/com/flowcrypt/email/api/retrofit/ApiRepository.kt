@@ -7,20 +7,19 @@ package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
+import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -60,30 +59,41 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param model An instance of [InitialLegacySubmitModel].
+   * @param email For this email address will be applied changes.
+   * @param pubKey A new public key.
+   * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
+   * @param orgRules An instance of [OrgRules]. We have to check if submitting pub keys is allowed.
    */
-  suspend fun submitPubKey(
+  suspend fun submitPrimaryEmailPubKey(
     context: Context,
-    model: InitialLegacySubmitModel
-  ): Result<InitialLegacySubmitResponse>
+    email: String,
+    pubKey: String,
+    idToken: String,
+    orgRules: OrgRules? = null
+  ): Result<SubmitPubKeyResponse>
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param model An instance of [InitialLegacySubmitModel].
+   * @param email For this email address will be applied changes.
+   * @param pubKey A new public key.
+   * @param orgRules An instance of [OrgRules]. We have to check if submitting pub keys is allowed.
    */
-  suspend fun postInitialLegacySubmit(
+  suspend fun submitPubKeyWithConditionalEmailVerification(
     context: Context,
-    model: InitialLegacySubmitModel
-  ): Result<InitialLegacySubmitResponse>
+    email: String,
+    pubKey: String,
+    orgRules: OrgRules? = null
+  ): Result<SubmitPubKeyResponse>
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param model An instance of [TestWelcomeModel].
+   * @param model An instance of [WelcomeMessageModel].
    */
-  suspend fun postTestWelcome(
+  suspend fun postWelcomeMessage(
     context: Context,
-    model: TestWelcomeModel
-  ): Result<TestWelcomeResponse>
+    model: WelcomeMessageModel,
+    idToken: String
+  ): Result<WelcomeMessageResponse>
 
   /**
    * @param requestCode A unique request code for this call

@@ -15,7 +15,6 @@ import android.text.TextUtils
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
-import com.google.android.material.snackbar.Snackbar
 import java.io.ByteArrayOutputStream
 
 /**
@@ -28,40 +27,6 @@ import java.io.ByteArrayOutputStream
  */
 class UIUtil {
   companion object {
-    /**
-     * Show some information as Snackbar.
-     *
-     * @param view    The view to find a parent from.
-     * @param msgText The text to show.  Can be formatted text..
-     */
-    fun showInfoSnackbar(view: View, msgText: String): Snackbar {
-      val snackbar = Snackbar.make(view, msgText, Snackbar.LENGTH_INDEFINITE)
-        .setAction(android.R.string.ok) { }
-      snackbar.show()
-
-      return snackbar
-    }
-
-    /**
-     * Show some information as Snackbar with custom message, action button mame and listener. .
-     *
-     * @param view            The view to find a parent from.
-     * @param msgText         The text to show.  Can be formatted text..
-     * @param buttonName      The text of the Snackbar button;
-     * @param onClickListener The Snackbar button click listener.
-     * @param duration        How long to display the message. Either [Snackbar.LENGTH_SHORT] or [Snackbar.LENGTH_LONG]
-     */
-    @JvmOverloads
-    fun showSnackbar(
-      view: View, msgText: String, buttonName: String,
-      onClickListener: View.OnClickListener, duration: Int = Snackbar.LENGTH_INDEFINITE
-    ): Snackbar {
-      val snackbar = Snackbar.make(view, msgText, duration).setAction(buttonName, onClickListener)
-      snackbar.show()
-
-      return snackbar
-    }
-
     /**
      * Request to hide the soft input window from the
      * context of the window that is currently accepting input.

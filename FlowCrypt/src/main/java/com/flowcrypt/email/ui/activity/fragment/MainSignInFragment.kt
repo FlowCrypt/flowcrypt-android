@@ -97,6 +97,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private val loginViewModel: LoginViewModel by viewModels()
   private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
+  private var useStartTlsForSmtp = false
 
   private val forActivityResultSignIn = registerForActivityResult(
     ActivityResultContracts.StartActivityForResult()
@@ -149,7 +150,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         googleSignInAccount = it,
         uuid = uuid,
         orgRules = orgRules,
-        useFES = fesUrl?.isNotEmpty() == true
+        useFES = fesUrl?.isNotEmpty() == true,
+        useStartTlsForSmtp = useStartTlsForSmtp,
       )
     }
   }
@@ -296,6 +298,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             showContent()
             val exception = result.exception ?: return@setFragmentResultListener
             val original = result.exception.cause
+
+            if (original is MailConnectException && !useStartTlsForSmtp) {
+              useStartTlsForSmtp = true
+              onSignSuccess(googleSignInAccount)
+              return@setFragmentResultListener
+            }
+
             val msg: String? = if (exception.message.isNullOrEmpty()) {
               exception.javaClass.simpleName
             } else exception.message
@@ -451,7 +460,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           account ?: return@setFragmentResultListener
           privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
             account,
-            pgpKeyDetails
+            pgpKeyDetails,
+            googleSignInAccount?.idToken
           )
         }
 

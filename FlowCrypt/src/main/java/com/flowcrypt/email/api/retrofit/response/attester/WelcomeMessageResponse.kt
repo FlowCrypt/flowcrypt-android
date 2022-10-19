@@ -28,7 +28,7 @@ import com.google.gson.annotations.SerializedName
  * Time: 14:38
  * E-mail: DenBond7@gmail.com
  */
-data class TestWelcomeResponse constructor(
+data class WelcomeMessageResponse constructor(
   @SerializedName("error") @Expose override val apiError: ApiError?
 ) : ApiResponse {
 
@@ -47,9 +47,9 @@ data class TestWelcomeResponse constructor(
 
   companion object {
     @JvmField
-    val CREATOR = object : Parcelable.Creator<TestWelcomeResponse> {
-      override fun createFromParcel(source: Parcel) = TestWelcomeResponse(source)
-      override fun newArray(size: Int): Array<TestWelcomeResponse?> = arrayOfNulls(size)
+    val CREATOR = object : Parcelable.Creator<WelcomeMessageResponse> {
+      override fun createFromParcel(source: Parcel) = WelcomeMessageResponse(source)
+      override fun newArray(size: Int): Array<WelcomeMessageResponse?> = arrayOfNulls(size)
     }
   }
 }

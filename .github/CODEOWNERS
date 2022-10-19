@@ -1,30 +1,30 @@
 # intentionally not using * to allow for dependabot automerge-see comment below
 # (github does not allow negative !FlowCrypt/build.gradle 
 
-.github @DenBond7 @IvanPizhenko @seisvelas
-.idea @DenBond7 @IvanPizhenko @seisvelas
-.semaphore @DenBond7 @IvanPizhenko @seisvelas
+.github @DenBond7 @ioanmo226
+.idea @DenBond7 @ioanmo226
+.semaphore @DenBond7 @ioanmo226
 
-FlowCrypt/libs @DenBond7 @IvanPizhenko @seisvelas
-FlowCrypt/schemas @DenBond7 @IvanPizhenko @seisvelas
-FlowCrypt/src @DenBond7 @IvanPizhenko @seisvelas
-FlowCrypt/.gitignore @DenBond7 @IvanPizhenko @seisvelas
-FlowCrypt/CMakeLists.txt @DenBond7 @IvanPizhenko @seisvelas
-FlowCrypt/lint.xml @DenBond7 @IvanPizhenko @seisvelas
-FlowCrypt/proguard-rules.pro @DenBond7 @IvanPizhenko @seisvelas
+FlowCrypt/libs @DenBond7 @ioanmo226
+FlowCrypt/schemas @DenBond7 @ioanmo226
+FlowCrypt/src @DenBond7 @ioanmo226
+FlowCrypt/.gitignore @DenBond7 @ioanmo226
+FlowCrypt/CMakeLists.txt @DenBond7 @ioanmo226
+FlowCrypt/lint.xml @DenBond7 @ioanmo226
+FlowCrypt/proguard-rules.pro @DenBond7 @ioanmo226
 # intentionally leaving out FlowCrypt/build.gradle 
 #   so that dependabot does not need codeowner approvals to auto-merge
 
-design @DenBond7 @IvanPizhenko @seisvelas
-docker-mailserver @DenBond7 @IvanPizhenko @seisvelas
-gradle/wrapper @DenBond7 @IvanPizhenko @seisvelas
-script @DenBond7 @IvanPizhenko @seisvelas
-.gitignore @DenBond7 @IvanPizhenko @seisvelas
-README.md @DenBond7 @IvanPizhenko @seisvelas
-detekt-config.yml @DenBond7 @IvanPizhenko @seisvelas
-detekt.gradle @DenBond7 @IvanPizhenko @seisvelas
-ext.gradle @DenBond7 @IvanPizhenko @seisvelas
-gradle.properties @DenBond7 @IvanPizhenko @seisvelas
-gradlew @DenBond7 @IvanPizhenko @seisvelas
-gradlew.bat @DenBond7 @IvanPizhenko @seisvelas
-settings.gradle @DenBond7 @IvanPizhenko @seisvelas
+design @DenBond7 @ioanmo226
+docker-mailserver @DenBond7 @ioanmo226
+gradle/wrapper @DenBond7 @ioanmo226
+script @DenBond7 @ioanmo226
+.gitignore @DenBond7 @ioanmo226
+README.md @DenBond7 @ioanmo226
+detekt-config.yml @DenBond7 @ioanmo226
+detekt.gradle @DenBond7 @ioanmo226
+ext.gradle @DenBond7 @ioanmo226
+gradle.properties @DenBond7 @ioanmo226
+gradlew @DenBond7 @ioanmo226
+gradlew.bat @DenBond7 @ioanmo226
+settings.gradle @DenBond7 @ioanmo226

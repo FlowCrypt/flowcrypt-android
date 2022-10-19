@@ -8,20 +8,19 @@ package com.flowcrypt.email.api.retrofit
 import android.content.Context
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
+import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -84,31 +83,47 @@ class FlowcryptApiRepository : ApiRepository {
       }
     }
 
-  override suspend fun submitPubKey(
+  override suspend fun submitPrimaryEmailPubKey(
     context: Context,
-    model: InitialLegacySubmitModel
-  ): Result<InitialLegacySubmitResponse> =
+    email: String,
+    pubKey: String,
+    idToken: String,
+    orgRules: OrgRules?
+  ): Result<SubmitPubKeyResponse> =
     withContext(Dispatchers.IO) {
+      if (orgRules?.canSubmitPubToAttester() == false) {
+        return@withContext Result.exception(
+          IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
+        )
+      }
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.submitPubKey(model) }
+      getResult { apiService.submitPrimaryEmailPubKey(email, pubKey, "Bearer $idToken") }
     }
 
-  override suspend fun postInitialLegacySubmit(
+  override suspend fun submitPubKeyWithConditionalEmailVerification(
     context: Context,
-    model: InitialLegacySubmitModel
-  ): Result<InitialLegacySubmitResponse> =
+    email: String,
+    pubKey: String,
+    orgRules: OrgRules?
+  ): Result<SubmitPubKeyResponse> =
     withContext(Dispatchers.IO) {
+      if (orgRules?.canSubmitPubToAttester() == false) {
+        return@withContext Result.exception(
+          IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
+        )
+      }
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.postInitialLegacySubmitSuspend(model) }
+      getResult { apiService.submitPubKeyWithConditionalEmailVerification(email, pubKey) }
     }
 
-  override suspend fun postTestWelcome(
+  override suspend fun postWelcomeMessage(
     context: Context,
-    model: TestWelcomeModel
-  ): Result<TestWelcomeResponse> =
+    model: WelcomeMessageModel,
+    idToken: String
+  ): Result<WelcomeMessageResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.postTestWelcomeSuspend(model) }
+      getResult { apiService.postWelcomeMessage(model, "Bearer $idToken") }
     }
 
   override suspend fun pubLookup(

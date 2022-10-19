@@ -21,17 +21,17 @@ import jakarta.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 data class OutgoingMessageInfo constructor(
-  val account: String,
-  val subject: String,
+  val account: String? = null,
+  val subject: String? = null,
   val msg: String? = null,
-  val toRecipients: List<InternetAddress>,
+  val toRecipients: List<InternetAddress>? = null,
   val ccRecipients: List<InternetAddress>? = null,
   val bccRecipients: List<InternetAddress>? = null,
-  val from: InternetAddress,
+  val from: InternetAddress? = null,
   val atts: List<AttachmentInfo>? = null,
   val forwardedAtts: List<AttachmentInfo>? = null,
-  val encryptionType: MessageEncryptionType,
-  @MessageType val messageType: Int,
+  val encryptionType: MessageEncryptionType? = null,
+  @MessageType val messageType: Int = MessageType.NEW,
   val replyToMsgEntity: MessageEntity? = null,
   val uid: Long = 0,
   val password: CharArray? = null
@@ -46,7 +46,7 @@ data class OutgoingMessageInfo constructor(
    */
   fun getAllRecipients(): List<String> {
     val allRecipients = mutableListOf<String>()
-    allRecipients.addAll(toRecipients.map { address -> address.address })
+    toRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
     ccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
     bccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
     return allRecipients
@@ -54,13 +54,13 @@ data class OutgoingMessageInfo constructor(
 
   @Suppress("UNCHECKED_CAST")
   constructor(parcel: Parcel) : this(
-    parcel.readString()!!,
-    parcel.readString()!!,
     parcel.readString(),
-    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>,
+    parcel.readString(),
+    parcel.readString(),
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-    parcel.readSerializable() as InternetAddress,
+    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
+    parcel.readSerializable() as InternetAddress?,
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
@@ -116,25 +116,27 @@ data class OutgoingMessageInfo constructor(
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
+    if (isPasswordProtected != other.isPasswordProtected) return false
 
     return true
   }
 
   override fun hashCode(): Int {
-    var result = account.hashCode()
-    result = 31 * result + subject.hashCode()
+    var result = account?.hashCode() ?: 0
+    result = 31 * result + (subject?.hashCode() ?: 0)
     result = 31 * result + (msg?.hashCode() ?: 0)
-    result = 31 * result + toRecipients.hashCode()
+    result = 31 * result + (toRecipients?.hashCode() ?: 0)
     result = 31 * result + (ccRecipients?.hashCode() ?: 0)
     result = 31 * result + (bccRecipients?.hashCode() ?: 0)
-    result = 31 * result + from.hashCode()
+    result = 31 * result + (from?.hashCode() ?: 0)
     result = 31 * result + (atts?.hashCode() ?: 0)
     result = 31 * result + (forwardedAtts?.hashCode() ?: 0)
-    result = 31 * result + encryptionType.hashCode()
-    result = 31 * result + messageType.hashCode()
+    result = 31 * result + (encryptionType?.hashCode() ?: 0)
+    result = 31 * result + messageType
     result = 31 * result + (replyToMsgEntity?.hashCode() ?: 0)
     result = 31 * result + uid.hashCode()
     result = 31 * result + (password?.contentHashCode() ?: 0)
+    result = 31 * result + (isPasswordProtected?.hashCode() ?: 0)
     return result
   }
 
