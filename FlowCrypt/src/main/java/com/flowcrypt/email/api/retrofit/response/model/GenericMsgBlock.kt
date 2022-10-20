@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 
 /**
@@ -30,7 +31,7 @@ data class GenericMsgBlock(
   constructor(type: MsgBlock.Type, source: Parcel) : this(
     type,
     source.readString(),
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    source.readParcelableViaExt(MsgBlockError::class.java),
     1 == source.readInt()
   )
 
@@ -45,7 +46,7 @@ data class GenericMsgBlock(
 
   companion object CREATOR : Parcelable.Creator<MsgBlock> {
     override fun createFromParcel(parcel: Parcel): MsgBlock {
-      val partType = parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!
+      val partType = parcel.readParcelableViaExt(MsgBlock.Type::class.java)!!
       return MsgBlockFactory.fromParcel(partType, parcel)
     }
 

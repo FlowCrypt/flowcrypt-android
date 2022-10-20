@@ -94,22 +94,10 @@ class MsgDetailsViewModel(
   private var lastUpdateTime = System.currentTimeMillis()
 
   val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
+  val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
 
-  val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
-    account = messageEntity.email,
-    folder = messageEntity.folder,
-    uid = messageEntity.uid
-  )
-
-  private val initMsgLiveData: LiveData<MessageEntity?> = liveData {
-    emit(
-      roomDatabase.msgDao().getMsgSuspend(
-        account = messageEntity.email,
-        folder = messageEntity.folder,
-        uid = messageEntity.uid
-      )
-    )
-  }
+  private val freshMsgLiveData: LiveData<MessageEntity?> =
+    roomDatabase.msgDao().getMsgLiveDataById(messageEntity.id ?: -1)
 
   private val afterKeysStorageUpdatedMsgLiveData: MediatorLiveData<MessageEntity?> =
     MediatorLiveData()
@@ -141,9 +129,6 @@ class MsgDetailsViewModel(
         )
       }
     }
-
-  private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
-
   private val processingMsgLiveData =
     MediatorLiveData<Result<PgpMsg.ProcessedMimeMessageResult?>>()
   private val processingProgressLiveData =
@@ -151,7 +136,7 @@ class MsgDetailsViewModel(
   private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
     mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
-        if (messageEntity?.isOutboxMsg() == true) {
+        if (messageEntity?.isOutboxMsg == true) {
           emit(Result.loading())
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
           val processingResult =
@@ -165,7 +150,7 @@ class MsgDetailsViewModel(
   private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
     mediatorMsgLiveData.switchMap { messageEntity ->
       liveData {
-        if (messageEntity?.isOutboxMsg() == false) {
+        if (messageEntity?.isOutboxMsg == false) {
           emit(Result.loading())
           val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
           if (existedMsgSnapshot != null) {
@@ -213,7 +198,7 @@ class MsgDetailsViewModel(
             if (processedMimeMessageResult != null) {
               try {
                 val msgInfo = IncomingMessageInfo(
-                  msgEntity = messageEntity,
+                  msgEntity = mediatorMsgLiveData.value ?: messageEntity,
                   text = processedMimeMessageResult.text,
                   //subject = parseDecryptedMsgResult.subject,
                   msgBlocks = processedMimeMessageResult.blocks,
@@ -281,7 +266,7 @@ class MsgDetailsViewModel(
       afterKeysStorageUpdatedMsgLiveData.value = it
     }
 
-    mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
+    mediatorMsgLiveData.addSource(freshMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
     mediatorMsgLiveData.addSource(
@@ -409,7 +394,7 @@ class MsgDetailsViewModel(
     if (uri != null) {
       val context: Context = getApplication()
       try {
-        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
 
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
@@ -435,7 +420,7 @@ class MsgDetailsViewModel(
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       try {
-        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDir())
+        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
 
         val processedMimeMessageResult =
           PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
@@ -508,6 +493,13 @@ class MsgDetailsViewModel(
               )
               MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
             }
+
+            GmailApiHelper.changeLabels(
+              context = getApplication(),
+              accountEntity = accountEntity,
+              ids = listOf(messageEntity.uidAsHEX),
+              removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
+            )
 
             Result.success(null)
           }
@@ -689,6 +681,7 @@ class MsgDetailsViewModel(
     isSeen: Boolean,
     usePending: Boolean = false
   ) {
+    if (msgEntity.isSeen == isSeen) return
     roomDatabase.msgDao().updateSuspend(
       msgEntity.copy(
         state = if (usePending) {

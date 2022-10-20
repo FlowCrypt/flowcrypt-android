@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 
 /**
  * This class describes a details information about auth settings for some IMAP and SMTP servers.
@@ -42,17 +43,17 @@ data class AuthCredentials constructor(
     source.readString()!!,
     source.readString()!!,
     source.readInt(),
-    source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
+    source.readParcelableViaExt(SecurityType.Option::class.java)!!,
     source.readString()!!,
     source.readInt(),
-    source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
+    source.readParcelableViaExt(SecurityType.Option::class.java)!!,
     source.readByte() != 0.toByte(),
     source.readString(),
     source.readString(),
     source.readString(),
     source.readByte() != 0.toByte(),
     source.readString(),
-    source.readParcelable(AuthTokenInfo::class.java.classLoader)
+    source.readParcelableViaExt(AuthTokenInfo::class.java)
   )
 
   override fun describeContents() = 0

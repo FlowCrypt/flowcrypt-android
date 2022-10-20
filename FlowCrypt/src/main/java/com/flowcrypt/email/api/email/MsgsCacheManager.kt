@@ -7,11 +7,8 @@ package com.flowcrypt.email.api.email
 
 import android.content.Context
 import android.net.Uri
-import android.util.Base64
-import android.util.Base64OutputStream
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.flowcrypt.email.util.ProgressOutputStream
 import com.flowcrypt.email.util.cache.DiskLruCache
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +20,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import javax.crypto.CipherOutputStream
 
 /**
  * This class describes a logic of caching massages. Here we use [DiskLruCache] to store and retrieve raw MIME messages.
@@ -101,24 +97,13 @@ object MsgsCacheManager {
 
     try {
       val bufferedSink = editor.newSink().buffer()
-      val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
-      val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
-      val base64OutputStream =
-        Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
-      val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
 
-      outputStream.use {
-        outputStreamOfBufferedSink.write(
-          Base64.encodeToString(
-            cipherForEncryption.iv,
-            KeyStoreCryptoManager.BASE64_FLAGS
-          ).toByteArray()
-        )
-        outputStreamOfBufferedSink.write("\n".toByteArray())
-        action.invoke(outputStream)
+      KeyStoreCryptoManager.encryptOutputStream(bufferedSink.outputStream()) {
+        action.invoke(it)
         bufferedSink.flush()
-        editor.commit()
       }
+
+      editor.commit()
 
       diskLruCache[key] ?: throw IOException("No space left on device")
     } catch (e: Exception) {

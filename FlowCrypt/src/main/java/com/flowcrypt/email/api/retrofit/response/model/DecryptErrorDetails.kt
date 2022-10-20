@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.google.gson.annotations.Expose
 
@@ -21,7 +22,7 @@ data class DecryptErrorDetails(
   @Expose val message: String?
 ) : Parcelable {
   constructor(source: Parcel) : this(
-    source.readParcelable<PgpDecryptAndOrVerify.DecryptionErrorType>(PgpDecryptAndOrVerify.DecryptionErrorType::class.java.classLoader),
+    source.readParcelableViaExt(PgpDecryptAndOrVerify.DecryptionErrorType::class.java),
     source.readString()
   )
 

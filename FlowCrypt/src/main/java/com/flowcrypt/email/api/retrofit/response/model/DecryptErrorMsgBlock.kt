@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -28,8 +29,8 @@ data class DecryptErrorMsgBlock(
 
   constructor(source: Parcel) : this(
     source.readString(),
-    source.readParcelable<DecryptError>(DecryptError::class.java.classLoader),
-    source.readParcelable(MsgBlockError::class.java.classLoader),
+    source.readParcelableViaExt(DecryptError::class.java),
+    source.readParcelableViaExt(MsgBlockError::class.java),
     1 == source.readInt()
   )
 
@@ -47,7 +48,7 @@ data class DecryptErrorMsgBlock(
 
   companion object CREATOR : Parcelable.Creator<DecryptErrorMsgBlock> {
     override fun createFromParcel(parcel: Parcel): DecryptErrorMsgBlock {
-      parcel.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+      parcel.readParcelableViaExt(MsgBlock.Type::class.java)
       return DecryptErrorMsgBlock(parcel)
     }
 

@@ -8,6 +8,7 @@ package com.flowcrypt.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
@@ -35,9 +36,9 @@ data class KeyImportDetails constructor(
   constructor(parcel: Parcel) : this(
     parcel.readString(),
     parcel.readString()!!,
-    parcel.readParcelable(SourceType::class.java.classLoader)!!,
+    parcel.readParcelableViaExt(SourceType::class.java)!!,
     parcel.readByte() != 0.toByte(),
-    parcel.readParcelable(RecipientWithPubKeys::class.java.classLoader)
+    parcel.readParcelableViaExt(RecipientWithPubKeys::class.java)
   )
 
   constructor(value: String, sourceType: SourceType) : this(

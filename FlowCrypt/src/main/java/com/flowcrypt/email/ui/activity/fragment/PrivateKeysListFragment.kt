@@ -26,6 +26,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentPrivateKeysBinding
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
@@ -246,7 +247,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     setFragmentResultListener(
       ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
     ) { _, bundle ->
-      val keys = bundle.getParcelableArrayList<PgpKeyDetails>(
+      val keys = bundle.getParcelableArrayListViaExt<PgpKeyDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
       if (keys?.isNotEmpty() == true) {

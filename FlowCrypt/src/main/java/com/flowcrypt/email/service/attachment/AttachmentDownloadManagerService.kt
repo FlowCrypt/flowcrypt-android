@@ -35,6 +35,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -105,7 +106,7 @@ class AttachmentDownloadManagerService : Service() {
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     LogsUtil.d(TAG, "onStartCommand |intent =$intent|flags = $flags|startId = $startId")
     if (intent != null && !TextUtils.isEmpty(intent.action)) {
-      val attInfo = intent.getParcelableExtra<AttachmentInfo>(EXTRA_KEY_ATTACHMENT_INFO)
+      val attInfo = intent.getParcelableExtraViaExt<AttachmentInfo>(EXTRA_KEY_ATTACHMENT_INFO)
       when (intent.action) {
         ACTION_CANCEL_DOWNLOAD_ATTACHMENT -> attInfo?.let { cancelDownloadAtt(it) }
 

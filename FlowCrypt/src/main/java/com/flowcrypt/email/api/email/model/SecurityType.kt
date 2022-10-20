@@ -10,6 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 
 /**
  * This class describes settings for some security type.
@@ -28,7 +29,7 @@ data class SecurityType constructor(
 
   constructor(parcel: Parcel) : this(
     parcel.readString()!!,
-    parcel.readParcelable(Option::class.java.classLoader)!!,
+    parcel.readParcelableViaExt(Option::class.java)!!,
     parcel.readInt(),
     parcel.readInt()
   )

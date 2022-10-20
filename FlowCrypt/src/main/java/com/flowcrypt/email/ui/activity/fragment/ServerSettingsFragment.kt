@@ -11,26 +11,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentServerSettingsBinding
+import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.viewmodel.AccountSettingsViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -51,10 +52,10 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentServerSettingsBinding.inflate(inflater, container, false)
 
-  private var authCreds: AuthCredentials? = null
-
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
+
+  private val accountSettingsViewModel: AccountSettingsViewModel by viewModels()
 
   override val progressView: View?
     get() = binding?.progress?.root
@@ -72,7 +73,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     super.onViewCreated(view, savedInstanceState)
     ErrorNotificationManager(requireContext()).cancel(R.id.notification_id_auth_failure)
     initViews()
-    updateViews(authCreds)
+    setupAccountSettingsViewModel()
     initAccountViewModel()
     observeOnResultLiveData()
     subscribeToTwoWayDialog()
@@ -81,16 +82,6 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   override fun onDestroy() {
     super.onDestroy()
     ErrorNotificationManager.isShowingAuthErrorEnabled = true
-  }
-
-  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
-    super.onAccountInfoRefreshed(accountEntity)
-    accountEntity?.let {
-      if (authCreds == null) {
-        authCreds = AuthCredentials.from(it).copy(password = "", smtpSignInPassword = "")
-        updateViews(authCreds)
-      }
-    }
   }
 
   private fun initViews() {
@@ -140,66 +131,59 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   private fun checkCredentials(view: View? = null) {
     if (isDataCorrect()) {
       view?.hideKeyboard()
-      authCreds = generateAuthCreds()
-      authCreds?.let { authCredentials ->
-        isImapSpinnerRestored = false
-        isSmtpSpinnerRestored = false
+      isImapSpinnerRestored = false
+      isSmtpSpinnerRestored = false
+      changeCachedAccountSettings()
+      accountSettingsViewModel.cachedAccountEntity?.let { accountEntity ->
         navController?.navigate(
           ServerSettingsFragmentDirections.actionServerSettingsFragmentToCheckCredentialsFragment(
-            AccountEntity(authCredentials)
+            accountEntity
           )
         )
       }
     }
   }
 
-  private fun updateViews(authCreds: AuthCredentials?) {
-    authCreds?.let { nonNullAuthCreds ->
+  private fun updateViews(accountEntity: AccountEntity?) {
+    accountEntity?.let { nonNullAccount ->
       showContent()
-      binding?.editTextEmail?.setText(nonNullAuthCreds.email)
-      binding?.editTextUserName?.setText(nonNullAuthCreds.username)
-      binding?.editTextPassword?.setText(nonNullAuthCreds.password)
-      binding?.editTextImapServer?.setText(nonNullAuthCreds.imapServer)
-      binding?.editTextImapPort?.setText(nonNullAuthCreds.imapPort.toString())
-      binding?.editTextSmtpServer?.setText(nonNullAuthCreds.smtpServer)
-      binding?.editTextSmtpPort?.setText(nonNullAuthCreds.smtpPort.toString())
-      binding?.checkBoxRequireSignInForSmtp?.isChecked = nonNullAuthCreds.hasCustomSignInForSmtp
-      binding?.editTextSmtpUsername?.setText(nonNullAuthCreds.smtpSigInUsername)
+      binding?.editTextEmail?.setText(nonNullAccount.email)
+      binding?.editTextUserName?.setText(nonNullAccount.username)
+      binding?.editTextPassword?.setText(nonNullAccount.password)
+      binding?.editTextImapServer?.setText(nonNullAccount.imapServer)
+      binding?.editTextImapPort?.setText(nonNullAccount.imapPort.toString())
+      binding?.editTextSmtpServer?.setText(nonNullAccount.smtpServer)
+      binding?.editTextSmtpPort?.setText(nonNullAccount.smtpPort.toString())
+      binding?.checkBoxRequireSignInForSmtp?.isChecked = nonNullAccount.smtpUseCustomSign ?: false
+      binding?.editTextSmtpUsername?.setText(nonNullAccount.smtpUsername)
 
-      if (authCreds.useOAuth2) {
+      if (accountEntity.useOAuth2) {
         binding?.editTextEmail?.isEnabled = false
         binding?.editTextUserName?.isEnabled = false
         binding?.editTextImapServer?.isEnabled = false
         binding?.editTextImapPort?.isEnabled = false
         binding?.editTextSmtpServer?.isEnabled = false
-        binding?.editTextSmtpPort?.isEnabled = false
         binding?.checkBoxRequireSignInForSmtp?.isEnabled = false
         binding?.editTextSmtpUsername?.isEnabled = false
         binding?.spinnerImapSecurityType?.isEnabled = false
-        binding?.spinnerSmtpSecurityType?.isEnabled = false
         binding?.layoutPassword?.isVisible = false
-        binding?.buttonCheckAndSave?.isVisible = false
-
-        if (!nonNullAuthCreds.hasCustomSignInForSmtp) {
-          binding?.checkBoxRequireSignInForSmtp?.isVisible = false
-        }
-
-        toast(text = getString(R.string.settings_oauth_note), duration = Toast.LENGTH_LONG)
+        binding?.buttonCheckAndSave?.isVisible = true
+        binding?.checkBoxRequireSignInForSmtp?.isVisible = nonNullAccount.smtpUseCustomSign ?: false
       } else {
         binding?.buttonCheckAndSave?.isVisible = true
-        binding?.editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)
+        binding?.editTextSmtpPassword?.setText(nonNullAccount.smtpPassword)
       }
 
       val imapOptionsCount = binding?.spinnerImapSecurityType?.adapter?.count ?: 0
       for (i in 0 until imapOptionsCount) {
-        if (nonNullAuthCreds.imapOpt === (binding?.spinnerImapSecurityType?.adapter?.getItem(i) as SecurityType).opt) {
+        if (nonNullAccount.imapOpt() === (binding?.spinnerImapSecurityType?.adapter?.getItem(i) as SecurityType).opt) {
           binding?.spinnerImapSecurityType?.setSelection(i)
         }
       }
 
       val smtpOptionsCount = binding?.spinnerSmtpSecurityType?.adapter?.count ?: 0
       for (i in 0 until smtpOptionsCount) {
-        if (nonNullAuthCreds.smtpOpt === (binding?.spinnerSmtpSecurityType?.adapter?.getItem(i) as SecurityType).opt) {
+        if (nonNullAccount.smtpOpt() === (binding?.spinnerSmtpSecurityType?.adapter?.getItem(i) as SecurityType).opt) {
           binding?.spinnerSmtpSecurityType?.setSelection(i)
         }
       }
@@ -208,11 +192,10 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
 
   private fun isDataCorrect(): Boolean {
     when {
-      binding?.editTextPassword?.text.isNullOrEmpty() -> {
+      accountSettingsViewModel.cachedAccountEntity?.useOAuth2 != true && binding?.editTextPassword?.text.isNullOrEmpty() -> {
         showInfoSnackbar(
           binding?.editTextPassword, getString(
-            R.string.text_must_not_be_empty,
-            getString(R.string.password)
+            R.string.text_must_not_be_empty, getString(R.string.password)
           )
         )
         binding?.editTextPassword?.requestFocus()
@@ -287,38 +270,45 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     return false
   }
 
-  private fun generateAuthCreds(): AuthCredentials {
-    val imapPort = if (TextUtils.isEmpty(binding?.editTextImapPort?.text))
-      JavaEmailConstants.SSL_IMAP_PORT
-    else
-      Integer.parseInt(binding?.editTextImapPort?.text.toString())
+  private fun changeCachedAccountSettings() {
+    val imapPort =
+      if (TextUtils.isEmpty(binding?.editTextImapPort?.text)) JavaEmailConstants.SSL_IMAP_PORT
+      else Integer.parseInt(binding?.editTextImapPort?.text.toString())
 
-    val smtpPort = if (TextUtils.isEmpty(binding?.editTextSmtpPort?.text))
-      JavaEmailConstants.SSL_SMTP_PORT
-    else
-      Integer.parseInt(binding?.editTextSmtpPort?.text.toString())
+    val smtpPort =
+      if (TextUtils.isEmpty(binding?.editTextSmtpPort?.text)) JavaEmailConstants.SSL_SMTP_PORT
+      else Integer.parseInt(binding?.editTextSmtpPort?.text.toString())
 
-    return AuthCredentials(
-      email = binding?.editTextEmail?.text.toString(),
-      username = binding?.editTextUserName?.text.toString(),
-      password = binding?.editTextPassword?.text.toString(),
-      imapServer = binding?.editTextImapServer?.text.toString(),
-      imapPort = imapPort,
-      imapOpt = (binding?.spinnerImapSecurityType?.selectedItem as SecurityType).opt,
-      smtpServer = binding?.editTextSmtpServer?.text.toString(),
-      smtpPort = smtpPort,
-      smtpOpt = (binding?.spinnerSmtpSecurityType?.selectedItem as SecurityType).opt,
-      hasCustomSignInForSmtp = binding?.checkBoxRequireSignInForSmtp?.isChecked ?: false,
-      smtpSigInUsername = binding?.editTextSmtpUsername?.text.toString(),
-      smtpSignInPassword = binding?.editTextSmtpPassword?.text.toString()
-    )
+    val imapSecurityType = (binding?.spinnerImapSecurityType?.selectedItem as SecurityType).opt
+    val smtpSecurityType = (binding?.spinnerSmtpSecurityType?.selectedItem as SecurityType).opt
+
+    accountSettingsViewModel.cachedAccountEntity?.let {
+      accountSettingsViewModel.updateCachedAccountSettings(
+        it.copy(
+          email = binding?.editTextEmail?.text.toString(),
+          username = binding?.editTextUserName?.text.toString(),
+          password = binding?.editTextPassword?.text.toString(),
+          imapServer = binding?.editTextImapServer?.text.toString(),
+          imapPort = imapPort,
+          imapUseSslTls = imapSecurityType === SecurityType.Option.SSL_TLS,
+          imapUseStarttls = imapSecurityType === SecurityType.Option.STARTLS,
+          smtpServer = binding?.editTextSmtpServer?.text.toString(),
+          smtpPort = smtpPort,
+          smtpUseSslTls = smtpSecurityType === SecurityType.Option.SSL_TLS,
+          smtpUseStarttls = smtpSecurityType === SecurityType.Option.STARTLS,
+          smtpUseCustomSign = binding?.checkBoxRequireSignInForSmtp?.isChecked ?: false,
+          smtpUsername = binding?.editTextSmtpUsername?.text.toString(),
+          smtpPassword = binding?.editTextSmtpPassword?.text.toString()
+        )
+      )
+    }
   }
 
   private fun observeOnResultLiveData() {
     setFragmentResultListener(CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
-      val result: Result<*> =
-        bundle.getSerializable(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as Result<*>
-      when (result.status) {
+      val result =
+        bundle.getSerializableViaExt(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+      when (result?.status) {
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
           val exception = result.exception ?: return@setFragmentResultListener
@@ -355,8 +345,8 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
           val isSuccess = result.data as? Boolean?
 
           if (isSuccess == true) {
-            authCreds?.let { authCredentials ->
-              accountViewModel.updateAccountByAuthCredentials(authCredentials)
+            accountSettingsViewModel.cachedAccountEntity?.let { accountEntity ->
+              accountViewModel.updateAccount(accountEntity)
             }
           } else {
             showContent()
@@ -369,7 +359,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   }
 
   private fun initAccountViewModel() {
-    accountViewModel.updateAuthCredentialsLiveData.observe(viewLifecycleOwner) {
+    accountViewModel.updateAccountLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -397,6 +387,14 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
             toast(getString(R.string.server_settings_were_not_updated))
           }
         }
+      }
+    }
+  }
+
+  private fun setupAccountSettingsViewModel() {
+    lifecycleScope.launchWhenStarted {
+      accountSettingsViewModel.accountSettingsStateFlow.collect {
+        updateViews(it)
       }
     }
   }

@@ -53,8 +53,9 @@ object ProcessingOutgoingMessageInfoHelper {
   fun process(context: Context, outgoingMessageInfo: OutgoingMessageInfo) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
-    val accountEntity = roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.lowercase())
-      ?: return
+    val accountEntity =
+      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account?.lowercase() ?: "")
+        ?: return
 
     val uid = outgoingMsgInfo.uid
     val email = accountEntity.email
@@ -77,7 +78,8 @@ object ProcessingOutgoingMessageInfoHelper {
       val msg = EmailUtil.genMessage(
         context = context,
         accountEntity = accountEntity,
-        outgoingMsgInfo = outgoingMsgInfo
+        outgoingMsgInfo = outgoingMsgInfo,
+        signingRequired = true
       )
 
       val attsCacheDir = getAttsCacheDir(context)
@@ -252,7 +254,7 @@ object ProcessingOutgoingMessageInfoHelper {
     var pubKeys: List<String>? = null
 
     if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-      val senderEmail = outgoingMsgInfo.from.address
+      val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
       val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
       pubKeys = mutableListOf()
       pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))

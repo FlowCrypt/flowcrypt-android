@@ -31,8 +31,8 @@ open class FlowCryptMimeMessage : MimeMessage {
     super.updateMessageID()
     val from = from?.firstOrNull() ?: return
     val domain = (from as? InternetAddress)?.domain ?: return
-    val originalMessageId = getHeader("Message-ID").firstOrNull() ?: return
+    val originalMessageId = getHeader(JavaEmailConstants.HEADER_MESSAGE_ID).firstOrNull() ?: return
     val modifiedMessageId = originalMessageId.replace("@.*>\$".toRegex(), "@$domain>")
-    setHeader("Message-ID", modifiedMessageId)
+    setHeader(JavaEmailConstants.HEADER_MESSAGE_ID, modifiedMessageId)
   }
 }

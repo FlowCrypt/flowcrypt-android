@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 
 data class EncryptedAttLinkMsgBlock(
@@ -23,8 +24,8 @@ data class EncryptedAttLinkMsgBlock(
   override val type: MsgBlock.Type = MsgBlock.Type.ENCRYPTED_ATT_LINK
 
   constructor(source: Parcel) : this(
-    source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
-    source.readParcelable<MsgBlockError>(MsgBlockError::class.java.classLoader),
+    source.readParcelableViaExt(AttMeta::class.java)!!,
+    source.readParcelableViaExt(MsgBlockError::class.java),
     1 == source.readInt()
   )
 

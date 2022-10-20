@@ -13,7 +13,6 @@ import androidx.annotation.WorkerThread
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -190,7 +189,7 @@ class OpenStoreHelper {
           token = EmailUtil.getGmailAccountToken(context, accountEntity)
         }
 
-        store.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
+        store.connect(accountEntity.imapServer, accountEntity.email, token)
       } catch (e: Exception) {
         e.printStackTrace()
         if (isAuthException(e)) {

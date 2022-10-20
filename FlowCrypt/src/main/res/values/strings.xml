@@ -128,7 +128,6 @@
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
-    <string name="template_reply_subject" translatable="false">%1$s: %2$s</string>
     <string name="other_email_provider">Other email provider</string>
     <string name="account_info">Account info</string>
     <string name="e_mail" translatable="false">E-mail</string>
@@ -436,7 +435,6 @@
     <string name="please_leave_at_least_one_key">You can\'t delete all keys. Please leave at least one key available for encryption/decryption purposes</string>
     <string name="server_settings">Server settings</string>
     <string name="check_and_save">Check and save</string>
-    <string name="settings_oauth_note">These settings are predefined by the OAuth provider and cannot be changed</string>
     <string name="server_settings_updated">Server settings updated</string>
     <string name="server_settings_were_not_updated">Error. The server settings were not updated</string>
     <string name="updating_server_settings">Updating server settings</string>
@@ -573,4 +571,13 @@
     <string name="more_recipients" tools:ignore="PluralsCandidate">+%1$d more</string>
     <string name="add_recipient_to_send_message">Please add at least one recipient in \"To\" to send this message</string>
     <string name="send_feedback_failed_hint">There was an error sending message. Our direct email is %1$s.\n\nError details:\n%2$s</string>
+    <string name="edit_draft">Edit draft</string>
+    <string name="draft_saved">Draft saved</string>
+    <string name="fetching_drafts_info_failed">Fetching drafts info failed. Please try again.</string>
+    <string name="no_recipients">(no recipients)</string>
+    <string name="could_not_save_draft">Could not save a draft\n\nError details:\n%1$s</string>
+    <string name="can_not_replace_public_key_at_attester">Cannot replace public key at attester because your organisation rules forbid it.</string>
+    <string name="cannot_show_notifications_without_permission">Showing notifications is not enabled in the app</string>
+    <string name="need_post_notification_permission">We need permission to show notifications about new messages</string>
+    <string name="ask">Ask</string>
 </resources>

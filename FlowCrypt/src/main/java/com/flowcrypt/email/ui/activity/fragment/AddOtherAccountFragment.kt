@@ -32,6 +32,8 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentAddOtherAccountBinding
 import com.flowcrypt.email.extensions.addInputFilter
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
+import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFeedbackFragment
@@ -318,7 +320,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   private fun subscribeToCheckAccountSettings() {
     setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
       val result: Result<*>? =
-        bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+        bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
 
       if (result != null) {
         when (result.status) {
@@ -385,7 +387,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   private fun subscribeToAuthorizeAndSearchBackups() {
     setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS) { _, bundle ->
       val result: Result<*>? =
-        bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+        bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
 
       if (result != null) {
         when (result.status) {
@@ -437,7 +439,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   private fun subscribeToCheckPrivateKeys() {
     setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
-        bundle.getParcelableArrayList<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+        bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           handleUnlockedKeys(keys)
@@ -459,7 +461,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
         bundle.getInt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_STATE)
 
       val keys =
-        bundle.getParcelableArrayList(CreateOrImportPrivateKeyDuringSetupFragment.KEY_PRIVATE_KEYS)
+        bundle.getParcelableArrayListViaExt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_PRIVATE_KEYS)
           ?: emptyList<PgpKeyDetails>()
 
       when (result) {

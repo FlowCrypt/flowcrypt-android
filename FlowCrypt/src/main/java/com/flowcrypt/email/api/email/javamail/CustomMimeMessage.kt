@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.email.javamail
 
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetHeaders
 import jakarta.mail.internet.MimeMessage
@@ -28,6 +29,6 @@ class CustomMimeMessage constructor(
   }
 
   fun setMessageId(msgId: String) {
-    setHeader("Message-ID", msgId)
+    setHeader(JavaEmailConstants.HEADER_MESSAGE_ID, msgId)
   }
 }

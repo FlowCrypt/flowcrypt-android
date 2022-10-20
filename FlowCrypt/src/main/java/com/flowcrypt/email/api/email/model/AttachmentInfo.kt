@@ -10,6 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.SecurityUtils
 
 /**
@@ -66,7 +67,7 @@ data class AttachmentInfo constructor(
     source.readString()!!,
     source.readString(),
     source.readString()!!,
-    source.readParcelable(Uri::class.java.classLoader),
+    source.readParcelableViaExt(Uri::class.java),
     source.readByte() != 0.toByte(),
     source.readByte() != 0.toByte(),
     source.readByte() != 0.toByte(),

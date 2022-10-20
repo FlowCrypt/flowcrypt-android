@@ -82,6 +82,7 @@ data class MessageEntity(
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
+  @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null
 ) : Parcelable {
 
   @Ignore
@@ -101,6 +102,12 @@ data class MessageEntity(
 
   @Ignore
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
+
+  @Ignore
+  val isDraft: Boolean = flags?.contains(MessageFlag.DRAFT.value) ?: false
+
+  @Ignore
+  val isOutboxMsg: Boolean = JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
 
   @Ignore
   val uidAsHEX: String = uid.toHex()
@@ -150,7 +157,8 @@ data class MessageEntity(
     parcel.readString(),
     parcel.readString(),
     parcel.readString(),
-    parcel.createByteArray()
+    parcel.createByteArray(),
+    parcel.readString()
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -176,14 +184,11 @@ data class MessageEntity(
     parcel.writeString(threadId)
     parcel.writeString(historyId)
     parcel.writeByteArray(password)
+    parcel.writeString(draftId)
   }
 
   override fun describeContents(): Int {
     return 0
-  }
-
-  fun isOutboxMsg(): Boolean {
-    return JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
   }
 
   override fun equals(other: Any?): Boolean {
@@ -217,13 +222,17 @@ data class MessageEntity(
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
+    if (draftId != other.draftId) return false
     if (from != other.from) return false
     if (replyToAddress != other.replyToAddress) return false
     if (to != other.to) return false
     if (cc != other.cc) return false
     if (msgState != other.msgState) return false
     if (isSeen != other.isSeen) return false
+    if (isDraft != other.isDraft) return false
+    if (isOutboxMsg != other.isOutboxMsg) return false
     if (uidAsHEX != other.uidAsHEX) return false
+    if (isPasswordProtected != other.isPasswordProtected) return false
 
     return true
   }
@@ -251,13 +260,17 @@ data class MessageEntity(
     result = 31 * result + (threadId?.hashCode() ?: 0)
     result = 31 * result + (historyId?.hashCode() ?: 0)
     result = 31 * result + (password?.contentHashCode() ?: 0)
+    result = 31 * result + (draftId?.hashCode() ?: 0)
     result = 31 * result + from.hashCode()
     result = 31 * result + replyToAddress.hashCode()
     result = 31 * result + to.hashCode()
     result = 31 * result + cc.hashCode()
     result = 31 * result + msgState.hashCode()
     result = 31 * result + isSeen.hashCode()
+    result = 31 * result + isDraft.hashCode()
+    result = 31 * result + isOutboxMsg.hashCode()
     result = 31 * result + uidAsHEX.hashCode()
+    result = 31 * result + isPasswordProtected.hashCode()
     return result
   }
 
@@ -339,7 +352,8 @@ data class MessageEntity(
       label: String,
       msgsList: List<com.google.api.services.gmail.model.Message>,
       isNew: Boolean,
-      areAllMsgsEncrypted: Boolean
+      areAllMsgsEncrypted: Boolean,
+      draftIdsMap: Map<String, String> = emptyMap()
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
@@ -383,7 +397,11 @@ data class MessageEntity(
               isNew = isNewTemp,
               isEncrypted = isEncrypted,
               hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
-            ).copy(threadId = msg.threadId, historyId = msg.historyId.toString())
+            ).copy(
+              threadId = msg.threadId,
+              historyId = msg.historyId.toString(),
+              draftId = draftIdsMap[msg.id]
+            )
           )
         } catch (e: MessageRemovedException) {
           e.printStackTrace()
@@ -438,7 +456,8 @@ data class MessageEntity(
       email: String,
       label: String,
       uid: Long,
-      info: OutgoingMessageInfo
+      info: OutgoingMessageInfo,
+      flags: List<MessageFlag> = listOf(MessageFlag.SEEN)
     ): MessageEntity {
       return MessageEntity(
         email = email,
@@ -446,7 +465,7 @@ data class MessageEntity(
         uid = uid,
         sentDate = System.currentTimeMillis(),
         subject = info.subject,
-        flags = MessageFlag.SEEN.value,
+        flags = MessageFlag.flagsToString(flags),
         hasAttachments = !CollectionUtils.isEmpty(info.atts) || !CollectionUtils.isEmpty(info.forwardedAtts)
       )
     }

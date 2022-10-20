@@ -64,7 +64,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
       override fun onMenuItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
           android.R.id.home -> if (isNavigationArrowDisplayed) {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
             true
           } else {
             false

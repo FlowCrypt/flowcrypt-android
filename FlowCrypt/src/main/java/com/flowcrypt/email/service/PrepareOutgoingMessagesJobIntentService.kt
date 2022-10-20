@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.JobIntentService
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -40,7 +41,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   override fun onHandleWork(intent: Intent) {
     LogsUtil.d(TAG, "onHandleWork")
     val originalOutgoingMsgInfo =
-      intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
+      intent.getParcelableExtraViaExt<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
         ?: return
     ProcessingOutgoingMessageInfoHelper.process(applicationContext, originalOutgoingMsgInfo)
   }

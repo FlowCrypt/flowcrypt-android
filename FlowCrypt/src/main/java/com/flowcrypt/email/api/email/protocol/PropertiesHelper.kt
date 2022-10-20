@@ -23,8 +23,6 @@ import java.util.Properties
  */
 class PropertiesHelper {
   companion object {
-    private const val BOOLEAN_VALUE_TRUE = "true"
-
     /**
      * Generate properties for imap protocol which will be used for download attachment.
      *
@@ -62,7 +60,7 @@ class PropertiesHelper {
       accountEntity ?: return Properties()
       return when (accountEntity.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          generateGmailProperties()
+          generateGmailProperties(accountEntity)
         }
 
         else -> {
@@ -106,14 +104,14 @@ class PropertiesHelper {
         if (authCreds.useOAuth2) {
           prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS] =
             JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
-          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_LOGIN_DISABLE] = "true"
-          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_PLAIN_DISABLE] = "true"
-          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_XOAUTH2_DISABLE] = "false"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_LOGIN_DISABLE] = true.toString()
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_PLAIN_DISABLE] = true.toString()
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_XOAUTH2_DISABLE] = false.toString()
           prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] =
             JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
-          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_LOGIN_DISABLE] = "true"
-          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_PLAIN_DISABLE] = "true"
-          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_XOAUTH2_DISABLE] = "false"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_LOGIN_DISABLE] = true.toString()
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_PLAIN_DISABLE] = true.toString()
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_XOAUTH2_DISABLE] = false.toString()
         }
 
         //apply flavor settings
@@ -123,23 +121,25 @@ class PropertiesHelper {
       return prop
     }
 
-    private fun generateGmailProperties(): Properties {
+    private fun generateGmailProperties(accountEntity: AccountEntity): Properties {
       val prop = Properties()
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE] =
         JavaEmailConstants.DEFAULT_FETCH_BUFFER
-      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
+      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE] = true.toString()
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS] =
         JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
-      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
+      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_CHECK_SERVER_IDENTITY] = true.toString()
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_CONNECTIONTIMEOUT] = 1000 * 30
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_TIMEOUT] = 1000 * 20
 
-      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = BOOLEAN_VALUE_TRUE
-      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = true.toString()
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] =
+        (accountEntity.smtpUseSslTls ?: false).toString()
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] =
+        (accountEntity.smtpUseStarttls ?: false).toString()
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] =
         JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
-      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] =
-        BOOLEAN_VALUE_TRUE
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = true.toString()
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT] = 1000 * 30
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_TIMEOUT] = 1000 * 30
       return prop
