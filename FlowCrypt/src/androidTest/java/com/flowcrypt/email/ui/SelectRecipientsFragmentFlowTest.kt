@@ -20,6 +20,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -64,6 +65,7 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
+    .around(GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(AddAccountToDatabaseRule())
     .around(AddRecipientsToDatabaseRule(CONTACTS))
     .around(activityScenarioRule)

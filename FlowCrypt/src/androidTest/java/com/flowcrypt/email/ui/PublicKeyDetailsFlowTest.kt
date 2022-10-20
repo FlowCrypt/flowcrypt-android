@@ -26,6 +26,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
+import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -83,6 +84,7 @@ class PublicKeyDetailsFlowTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
+    .around(GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(AddAccountToDatabaseRule())
     .around(
       AddRecipientsToDatabaseRule(
