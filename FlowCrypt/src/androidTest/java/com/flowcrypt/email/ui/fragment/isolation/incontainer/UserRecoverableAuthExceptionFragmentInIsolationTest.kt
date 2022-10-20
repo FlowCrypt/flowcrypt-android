@@ -52,6 +52,9 @@ class UserRecoverableAuthExceptionFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testBaseInfo() {
+    //need to wait a response from database
+    Thread.sleep(2000)
+
     onView(
       withText(
         getResString(
