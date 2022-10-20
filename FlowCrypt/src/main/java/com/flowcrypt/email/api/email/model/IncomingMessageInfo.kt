@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import jakarta.mail.internet.InternetAddress
@@ -221,14 +222,14 @@ data class IncomingMessageInfo constructor(
   }
 
   constructor(source: Parcel) : this(
-    source.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader)!!,
+    source.readParcelableViaExt(MessageEntity::class.java)!!,
     source.createTypedArrayList(AttachmentInfo.CREATOR),
-    source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
+    source.readParcelableViaExt(LocalFolder::class.java),
     source.readString(),
     source.readString(),
     mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
-    source.readParcelable(MessageEncryptionType::class.java.classLoader)!!,
-    source.readParcelable(VerificationResult::class.java.classLoader)!!
+    source.readParcelableViaExt(MessageEncryptionType::class.java)!!,
+    source.readParcelableViaExt(VerificationResult::class.java)!!
   )
 
   override fun describeContents() = 0

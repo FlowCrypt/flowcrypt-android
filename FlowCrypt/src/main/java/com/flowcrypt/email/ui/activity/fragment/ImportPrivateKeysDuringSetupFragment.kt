@@ -15,6 +15,7 @@ import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportPrivateKeysDuringSetupBinding
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
@@ -102,7 +103,7 @@ class ImportPrivateKeysDuringSetupFragment :
   private fun subscribeToCheckPrivateKeys() {
     setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
-        bundle.getParcelableArrayList<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+        bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           navController?.navigateUp()

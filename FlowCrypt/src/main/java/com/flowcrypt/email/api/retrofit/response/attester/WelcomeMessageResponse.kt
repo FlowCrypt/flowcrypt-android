@@ -10,6 +10,7 @@ import android.os.Parcelable
 
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -33,7 +34,7 @@ data class WelcomeMessageResponse constructor(
 ) : ApiResponse {
 
   constructor(source: Parcel) : this(
-    source.readParcelable<ApiError>(ApiError::class.java.classLoader)
+    source.readParcelableViaExt(ApiError::class.java)
   )
 
   override fun describeContents(): Int {

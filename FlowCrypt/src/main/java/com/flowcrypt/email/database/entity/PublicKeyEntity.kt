@@ -14,6 +14,7 @@ import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
@@ -69,7 +70,7 @@ data class PublicKeyEntity(
     requireNotNull(parcel.readString()),
     requireNotNull(parcel.createByteArray())
   ) {
-    pgpKeyDetails = parcel.readParcelable(PgpKeyDetails::class.java.classLoader)
+    pgpKeyDetails = parcel.readParcelableViaExt(PgpKeyDetails::class.java)
     isNotUsable = parcel.readValue(Boolean::class.java.classLoader) as? Boolean
   }
 

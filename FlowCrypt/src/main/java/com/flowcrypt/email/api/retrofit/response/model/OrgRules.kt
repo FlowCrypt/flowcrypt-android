@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -49,7 +50,7 @@ data class OrgRules constructor(
     parcel.readString(),
     parcel.createStringArrayList(),
     parcel.createStringArrayList(),
-    parcel.readParcelable(KeyAlgo::class.java.classLoader),
+    parcel.readParcelableViaExt(KeyAlgo::class.java),
     parcel.readValue(Int::class.java.classLoader) as? Int,
     parcel.readValue(Int::class.java.classLoader) as? Int
   )

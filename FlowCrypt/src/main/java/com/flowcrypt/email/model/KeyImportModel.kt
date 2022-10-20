@@ -8,6 +8,7 @@ package com.flowcrypt.email.model
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 
 /**
  * This model describes info about an imported key.
@@ -24,10 +25,10 @@ data class KeyImportModel constructor(
   val sourceType: KeyImportDetails.SourceType
 ) : Parcelable {
   constructor(source: Parcel) : this(
-    source.readParcelable<Uri>(Uri::class.java.classLoader),
+    source.readParcelableViaExt(Uri::class.java),
     source.readString(),
     source.readInt() == 1,
-    source.readParcelable(KeyImportDetails.SourceType::class.java.classLoader)!!
+    source.readParcelableViaExt(KeyImportDetails.SourceType::class.java)!!
   )
 
   override fun describeContents(): Int {

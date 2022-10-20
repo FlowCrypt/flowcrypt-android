@@ -18,6 +18,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentCreateOrImportPrivateKeyDuringSetupBinding
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
+import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -101,18 +103,19 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   private fun subscribeToCheckPrivateKeysFromImport() {
     setFragmentResultListener(ImportPrivateKeysDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
       val keys =
-        bundle.getParcelableArrayList<PgpKeyDetails>(ImportPrivateKeysDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+        bundle.getParcelableArrayListViaExt<PgpKeyDetails>(ImportPrivateKeysDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       keys?.let { setResult(HANDLE_RESOLVED_KEYS, it, args.accountEntity) }
     }
   }
 
   private fun subscribeToCreatePrivateKey() {
     setFragmentResultListener(CreatePrivateKeyFirstFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
-      val pgpKeyDetails = bundle.getParcelable<PgpKeyDetails>(
+      val pgpKeyDetails = bundle.getParcelableViaExt<PgpKeyDetails>(
         CreatePrivateKeyFirstFragment.KEY_CREATED_KEY
       ) ?: return@setFragmentResultListener
-      val account = bundle.getParcelable<AccountEntity>(CreatePrivateKeyFirstFragment.KEY_ACCOUNT)
-        ?: return@setFragmentResultListener
+      val account =
+        bundle.getParcelableViaExt<AccountEntity>(CreatePrivateKeyFirstFragment.KEY_ACCOUNT)
+          ?: return@setFragmentResultListener
       setResult(HANDLE_CREATED_KEY, listOf(pgpKeyDetails), account)
     }
   }

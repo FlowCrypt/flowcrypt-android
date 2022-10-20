@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readListViaExt
 import com.google.gson.annotations.Expose
 
 /**
@@ -31,12 +32,7 @@ data class VerificationResult(
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
     parcel.readByte() != 0.toByte(),
-    mutableListOf<Long>().apply {
-      parcel.readList(
-        this as List<*>,
-        Long::class.java.classLoader
-      )
-    },
+    mutableListOf<Long>().apply { parcel.readListViaExt(this, Long::class.java) },
     parcel.readByte() != 0.toByte()
   )
 

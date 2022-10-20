@@ -16,6 +16,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.model.KeyImportDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
@@ -77,15 +78,11 @@ data class PgpKeyDetails constructor(
     source.readLong(),
     source.readValue(Long::class.java.classLoader) as Long?,
     source.readValue(Long::class.java.classLoader) as Long?,
-    source.readParcelable<Algo>(Algo::class.java.classLoader) ?: throw NullPointerException(),
+    source.readParcelableViaExt(Algo::class.java) ?: throw NullPointerException(),
     source.readLong(),
     source.createCharArray(),
-    source.readParcelable<KeyEntity.PassphraseType>(
-      KeyEntity.PassphraseType::class.java.classLoader
-    ),
-    source.readParcelable<KeyImportDetails.SourceType>(
-      KeyImportDetails.SourceType::class.java.classLoader
-    )
+    source.readParcelableViaExt(KeyEntity.PassphraseType::class.java),
+    source.readParcelableViaExt(KeyImportDetails.SourceType::class.java)
   )
 
   override fun describeContents() = 0

@@ -8,6 +8,8 @@ package com.flowcrypt.email.api.email.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
+import com.flowcrypt.email.extensions.android.os.readSerializableViaExt
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import jakarta.mail.internet.InternetAddress
@@ -60,12 +62,12 @@ data class OutgoingMessageInfo constructor(
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
     parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-    parcel.readSerializable() as InternetAddress?,
+    parcel.readSerializableViaExt(InternetAddress::class.java),
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
-    parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
+    parcel.readParcelableViaExt(MessageEncryptionType::class.java)!!,
     parcel.readInt(),
-    parcel.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader),
+    parcel.readParcelableViaExt(MessageEntity::class.java),
     parcel.readLong(),
     parcel.createCharArray()
   )

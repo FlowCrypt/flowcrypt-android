@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 
@@ -30,7 +31,7 @@ data class DecryptedAndOrSignedContentMsgBlock(
   var openPgpMetadata: OpenPgpMetadata? = null
 
   constructor(parcel: Parcel) : this(
-    parcel.readParcelable(MsgBlockError::class.java.classLoader),
+    parcel.readParcelableViaExt(MsgBlockError::class.java),
     mutableListOf<MsgBlock>().apply { parcel.readTypedList(this, GenericMsgBlock.CREATOR) },
     1 == parcel.readInt()
   )

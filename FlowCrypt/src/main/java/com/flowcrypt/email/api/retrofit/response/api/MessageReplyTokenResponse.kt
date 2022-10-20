@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -24,7 +25,7 @@ data class MessageReplyTokenResponse(
   @Expose val replyToken: String? = null
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
-    parcel.readParcelable(ApiError::class.java.classLoader),
+    parcel.readParcelableViaExt(ApiError::class.java),
     parcel.readString()
   )
 

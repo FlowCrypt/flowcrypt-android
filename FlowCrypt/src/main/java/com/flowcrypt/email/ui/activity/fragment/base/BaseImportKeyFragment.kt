@@ -11,6 +11,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.setFragmentResultListener
 import androidx.viewbinding.ViewBinding
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment
@@ -62,7 +63,7 @@ abstract class BaseImportKeyFragment<T : ViewBinding> : BaseFragment<T>() {
   private fun subscribeToParsedPgpKeysFromSource() {
     setFragmentResultListener(ParsePgpKeysFromSourceDialogFragment.REQUEST_KEY_PARSED_KEYS) { _, bundle ->
       val keys =
-        bundle.getParcelableArrayList<PgpKeyDetails>(ParsePgpKeysFromSourceDialogFragment.KEY_PARSED_KEYS)
+        bundle.getParcelableArrayListViaExt<PgpKeyDetails>(ParsePgpKeysFromSourceDialogFragment.KEY_PARSED_KEYS)
       handleParsedKeys(keys?.toList() ?: emptyList())
     }
   }

@@ -61,7 +61,7 @@ class DeleteDraftsWorker(context: Context, params: WorkerParameters) :
     }
 
   private suspend fun deleteDrafts(account: AccountEntity) = withContext(Dispatchers.IO) {
-    deleteDraftsInternal(account) { localFolder, messageEntities ->
+    deleteDraftsInternal(account) { _, messageEntities ->
       executeGMailAPICall(applicationContext) {
         GmailApiHelper.deleteDrafts(
           context = applicationContext,
