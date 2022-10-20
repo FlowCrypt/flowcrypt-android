@@ -30,7 +30,7 @@ data class DomainOrgRulesResponse constructor(
 ) : ApiResponse {
   constructor(parcel: Parcel) : this(
     parcel.readParcelableViaExt(ApiError::class.java),
-    parcel.readParcelableViaExt<OrgRules>(OrgRules::class.java)
+    parcel.readParcelableViaExt(OrgRules::class.java)
   )
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {

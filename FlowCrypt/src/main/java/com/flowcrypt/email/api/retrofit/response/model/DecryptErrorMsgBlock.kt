@@ -29,7 +29,7 @@ data class DecryptErrorMsgBlock(
 
   constructor(source: Parcel) : this(
     source.readString(),
-    source.readParcelableViaExt<DecryptError>(DecryptError::class.java),
+    source.readParcelableViaExt(DecryptError::class.java),
     source.readParcelableViaExt(MsgBlockError::class.java),
     1 == source.readInt()
   )

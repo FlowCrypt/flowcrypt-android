@@ -78,11 +78,11 @@ data class PgpKeyDetails constructor(
     source.readLong(),
     source.readValue(Long::class.java.classLoader) as Long?,
     source.readValue(Long::class.java.classLoader) as Long?,
-    source.readParcelableViaExt<Algo>(Algo::class.java) ?: throw NullPointerException(),
+    source.readParcelableViaExt(Algo::class.java) ?: throw NullPointerException(),
     source.readLong(),
     source.createCharArray(),
-    source.readParcelableViaExt<KeyEntity.PassphraseType>(KeyEntity.PassphraseType::class.java),
-    source.readParcelableViaExt<KeyImportDetails.SourceType>(KeyImportDetails.SourceType::class.java)
+    source.readParcelableViaExt(KeyEntity.PassphraseType::class.java),
+    source.readParcelableViaExt(KeyImportDetails.SourceType::class.java)
   )
 
   override fun describeContents() = 0

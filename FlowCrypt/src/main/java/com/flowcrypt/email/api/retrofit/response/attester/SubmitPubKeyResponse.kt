@@ -27,7 +27,7 @@ data class SubmitPubKeyResponse constructor(
   apiError: ApiError? = null
 ) : ApiResponse {
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<ApiError>(ApiError::class.java)
+    source.readParcelableViaExt(ApiError::class.java)
   )
 
   override fun describeContents(): Int {

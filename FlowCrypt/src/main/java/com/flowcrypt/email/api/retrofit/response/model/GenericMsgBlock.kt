@@ -31,7 +31,7 @@ data class GenericMsgBlock(
   constructor(type: MsgBlock.Type, source: Parcel) : this(
     type,
     source.readString(),
-    source.readParcelableViaExt<MsgBlockError>(MsgBlockError::class.java),
+    source.readParcelableViaExt(MsgBlockError::class.java),
     1 == source.readInt()
   )
 

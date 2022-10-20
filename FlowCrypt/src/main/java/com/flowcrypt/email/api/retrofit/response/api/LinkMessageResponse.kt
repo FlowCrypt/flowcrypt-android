@@ -38,7 +38,7 @@ data class LinkMessageResponse constructor(
   @Expose val repliable: Boolean?
 ) : ApiResponse {
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<ApiError>(ApiError::class.java),
+    source.readParcelableViaExt(ApiError::class.java),
     source.readString(),
     1 == source.readInt(),
     source.readString(),

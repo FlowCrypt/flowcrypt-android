@@ -24,7 +24,7 @@ data class DecryptError constructor(
   @Expose val isEncrypted: Boolean
 ) : Parcelable {
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<DecryptErrorDetails>(DecryptErrorDetails::class.java),
+    source.readParcelableViaExt(DecryptErrorDetails::class.java),
     source.createStringArrayList(),
     1 == source.readInt()
   )

@@ -28,7 +28,7 @@ data class PubResponse constructor(
   @Expose val pubkey: String?
 ) : ApiResponse {
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<ApiError>(ApiError::class.java),
+    source.readParcelableViaExt(ApiError::class.java),
     source.readString()
   )
 

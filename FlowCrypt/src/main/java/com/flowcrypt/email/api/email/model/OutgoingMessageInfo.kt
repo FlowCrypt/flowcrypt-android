@@ -65,9 +65,9 @@ data class OutgoingMessageInfo constructor(
     parcel.readSerializableViaExt(InternetAddress::class.java),
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
     parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
-    parcel.readParcelableViaExt<MessageEncryptionType>(MessageEncryptionType::class.java)!!,
+    parcel.readParcelableViaExt(MessageEncryptionType::class.java)!!,
     parcel.readInt(),
-    parcel.readParcelableViaExt<MessageEntity>(MessageEntity::class.java),
+    parcel.readParcelableViaExt(MessageEntity::class.java),
     parcel.readLong(),
     parcel.createCharArray()
   )

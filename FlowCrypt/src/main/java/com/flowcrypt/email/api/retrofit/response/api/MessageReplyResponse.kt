@@ -35,7 +35,7 @@ data class MessageReplyResponse constructor(
   @Expose val isSent: Boolean
 ) : ApiResponse {
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<ApiError>(ApiError::class.java),
+    source.readParcelableViaExt(ApiError::class.java),
     1 == source.readInt()
   )
 

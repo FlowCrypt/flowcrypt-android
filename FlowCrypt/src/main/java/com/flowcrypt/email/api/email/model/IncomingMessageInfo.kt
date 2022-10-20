@@ -222,9 +222,9 @@ data class IncomingMessageInfo constructor(
   }
 
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<MessageEntity>(MessageEntity::class.java)!!,
+    source.readParcelableViaExt(MessageEntity::class.java)!!,
     source.createTypedArrayList(AttachmentInfo.CREATOR),
-    source.readParcelableViaExt<LocalFolder>(LocalFolder::class.java),
+    source.readParcelableViaExt(LocalFolder::class.java),
     source.readString(),
     source.readString(),
     mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },

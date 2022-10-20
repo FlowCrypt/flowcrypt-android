@@ -34,7 +34,7 @@ data class WelcomeMessageResponse constructor(
 ) : ApiResponse {
 
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<ApiError>(ApiError::class.java)
+    source.readParcelableViaExt(ApiError::class.java)
   )
 
   override fun describeContents(): Int {

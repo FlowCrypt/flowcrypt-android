@@ -30,7 +30,7 @@ data class SignedMsgBlock(
   constructor(source: Parcel) : this(
     source.readString(),
     source.readString(),
-    source.readParcelableViaExt<MsgBlockError>(MsgBlockError::class.java),
+    source.readParcelableViaExt(MsgBlockError::class.java),
     1 == source.readInt()
   )
 

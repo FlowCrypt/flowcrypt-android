@@ -22,7 +22,7 @@ data class DecryptErrorDetails(
   @Expose val message: String?
 ) : Parcelable {
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<PgpDecryptAndOrVerify.DecryptionErrorType>(PgpDecryptAndOrVerify.DecryptionErrorType::class.java),
+    source.readParcelableViaExt(PgpDecryptAndOrVerify.DecryptionErrorType::class.java),
     source.readString()
   )
 

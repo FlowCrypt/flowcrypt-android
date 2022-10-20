@@ -26,8 +26,8 @@ data class EncryptedAttMsgBlock(
 
   constructor(source: Parcel) : this(
     source.readString(),
-    source.readParcelableViaExt<AttMeta>(AttMeta::class.java)!!,
-    source.readParcelableViaExt<MsgBlockError>(MsgBlockError::class.java),
+    source.readParcelableViaExt(AttMeta::class.java)!!,
+    source.readParcelableViaExt(MsgBlockError::class.java),
     1 == source.readInt()
   ) {
     fileUri = source.readParcelableViaExt(Uri::class.java)

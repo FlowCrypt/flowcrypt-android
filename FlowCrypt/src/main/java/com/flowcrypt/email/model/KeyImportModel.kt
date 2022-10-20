@@ -25,7 +25,7 @@ data class KeyImportModel constructor(
   val sourceType: KeyImportDetails.SourceType
 ) : Parcelable {
   constructor(source: Parcel) : this(
-    source.readParcelableViaExt<Uri>(Uri::class.java),
+    source.readParcelableViaExt(Uri::class.java),
     source.readString(),
     source.readInt() == 1,
     source.readParcelableViaExt(KeyImportDetails.SourceType::class.java)!!
