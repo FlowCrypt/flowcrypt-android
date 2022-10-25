@@ -10,7 +10,7 @@ else
      touch ~/.android/repositories.cfg
 fi
 
-SDK_ARCHIVE=commandlinetools-linux-6858069_latest.zip
+SDK_ARCHIVE=commandlinetools-linux-8512546_latest.zip
 
 sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
 sudo kvm-ok
