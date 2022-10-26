@@ -16,13 +16,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
@@ -58,7 +58,7 @@ class CreateMessageFragmentInIsolationTest : BaseComposeScreenTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
-    .around(GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
     .around(ScreenshotTestRule())

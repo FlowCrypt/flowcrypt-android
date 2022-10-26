@@ -9,7 +9,6 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.rule.GrantPermissionRule
 import androidx.work.ListenableWorker
 import androidx.work.testing.TestListenableWorkerBuilder
 import com.flowcrypt.email.api.email.EmailUtil
@@ -30,6 +29,7 @@ import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -139,7 +139,7 @@ class SendMsgTest {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
-    .around(GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
     .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))

@@ -15,13 +15,13 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
-import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.IMAPStoreConnection
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
@@ -30,10 +30,10 @@ import com.flowcrypt.email.util.AccountDaoManager
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Folder
-import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -80,7 +80,7 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
-    .around(GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(mockWebServerRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())

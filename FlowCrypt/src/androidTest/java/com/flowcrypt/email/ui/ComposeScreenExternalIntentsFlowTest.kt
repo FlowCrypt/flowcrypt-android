@@ -22,7 +22,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -31,6 +30,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewIte
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
@@ -39,7 +39,8 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.Matchers.isEmptyString
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
@@ -97,7 +98,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
-    .around(GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(mockWebServerRule)
     .around(AddAccountToDatabaseRule())
     .around(activeActivityRule)
@@ -390,7 +391,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     onView(withText(R.string.compose))
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
-      .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
+      .check(matches(isDisplayed())).check(matches(withText(not(`is`(emptyString())))))
     closeSoftKeyboard()
 
     checkRecipients(recipientsCount)
@@ -425,7 +426,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         .check(matches(withText(getRidOfCharacterSubstitutes(body.toString()))))
     } else {
       onView(withId(R.id.editTextEmailMessage))
-        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+        .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
     }
   }
 
@@ -436,7 +437,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         .check(matches(withText(getRidOfCharacterSubstitutes(subject))))
     } else {
       onView(withId(R.id.editTextEmailSubject))
-        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+        .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
     }
   }
 
