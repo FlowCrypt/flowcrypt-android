@@ -7,9 +7,9 @@ agent:
 execution_time_limit:
   minutes: 60
 
-fail_fast:
-  stop:
-    when: "branch != 'master'" # Stopping all jobs on the first failure
+#fail_fast:
+#  stop:
+#    when: "branch != 'master'" # Stopping all jobs on the first failure
 
 auto_cancel:
   running:
