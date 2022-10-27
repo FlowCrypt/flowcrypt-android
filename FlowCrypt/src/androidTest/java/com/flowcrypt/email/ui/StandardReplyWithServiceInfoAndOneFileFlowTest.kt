@@ -34,13 +34,15 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.isEmptyString
+import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -103,6 +105,7 @@ class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
@@ -161,7 +164,7 @@ class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
         matches(
           allOf(
             isDisplayed(),
-            if (TextUtils.isEmpty(serviceInfo.systemMsg)) withText(isEmptyString())
+            if (TextUtils.isEmpty(serviceInfo.systemMsg)) withText(`is`(emptyString()))
             else withText(serviceInfo.systemMsg),
             if (serviceInfo.isMsgEditable) isFocusable() else not(isFocusable())
           )

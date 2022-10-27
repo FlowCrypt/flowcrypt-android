@@ -37,6 +37,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -80,6 +82,19 @@ abstract class BaseTest : BaseActivityTestImplementation {
       }
       return decorView
     }
+
+  /**
+   * https://stackoverflow.com/questions/39457305/android-testing-waited-for-the-root-of-the-view
+   * -hierarchy-to-have-window-focus
+   */
+  @Before
+  fun dismissANRSystemDialogIfExists() {
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    val waitButton = device.findObject(UiSelector().textContains("wait"))
+    if (waitButton.exists()) {
+      waitButton.click()
+    }
+  }
 
   @Before
   fun registerCountingIdlingResource() {

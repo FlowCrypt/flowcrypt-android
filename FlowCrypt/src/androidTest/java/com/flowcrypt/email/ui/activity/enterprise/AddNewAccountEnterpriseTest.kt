@@ -24,6 +24,7 @@ import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
@@ -59,6 +60,7 @@ class AddNewAccountEnterpriseTest : BaseSignTest() {
   val ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(AddAccountToDatabaseRule())
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())

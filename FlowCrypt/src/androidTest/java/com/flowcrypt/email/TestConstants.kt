@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email
 
+import android.os.Build
+
 /**
  * @author Denis Bondarenko
  * Date: 17.01.2018
@@ -13,6 +15,7 @@ package com.flowcrypt.email
  */
 class TestConstants {
   companion object {
+    const val ANDROID_EMULATOR_VERSION = Build.VERSION_CODES.S_V2
     const val MOCK_WEB_SERVER_PORT = 1212
 
     const val IMAP = "IMAP"

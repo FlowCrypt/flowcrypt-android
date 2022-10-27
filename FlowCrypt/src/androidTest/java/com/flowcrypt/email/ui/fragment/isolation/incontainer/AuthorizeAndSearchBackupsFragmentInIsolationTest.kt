@@ -14,9 +14,11 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.AuthorizeAndSearchBackupsFragment
@@ -45,6 +47,7 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(ScreenshotTestRule())
 
   @Test
@@ -65,8 +68,9 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
           AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
           fragment
         ) { _, bundle ->
-          actualResult =
-            bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as Result<*>
+          actualResult = requireNotNull(
+            bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+          )
         }
     }
 
@@ -90,8 +94,9 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
           AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS,
           fragment
         ) { _, bundle ->
-          actualResult =
-            bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as Result<*>
+          actualResult = requireNotNull(
+            bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+          )
         }
     }
 
