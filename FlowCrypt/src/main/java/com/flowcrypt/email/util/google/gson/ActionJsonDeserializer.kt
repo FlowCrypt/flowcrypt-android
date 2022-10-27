@@ -32,7 +32,13 @@ class ActionJsonDeserializer : JsonDeserializer<Action> {
   ): Action {
     val jsonObject = json.asJsonObject
 
-    return when (Action.Type.valueOf(jsonObject.get(Action.TAG_NAME_ACTION_TYPE).asString)) {
+    val enum = try {
+      Action.Type.valueOf(jsonObject.get(Action.TAG_NAME_ACTION_TYPE).asString)
+    } catch (e: IllegalArgumentException) {
+      Action.Type.NONE
+    }
+
+    return when (enum) {
       Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX -> context.deserialize(
         json,
         BackupPrivateKeyToInboxAction::class.java
@@ -47,6 +53,8 @@ class ActionJsonDeserializer : JsonDeserializer<Action> {
         json,
         LoadGmailAliasesAction::class.java
       )
+
+      else -> Action.None()
     }
   }
 }
