@@ -7,9 +7,9 @@ agent:
 execution_time_limit:
   minutes: 60
 
-#fail_fast:
-#  stop:
-#    when: "branch != 'master'" # Stopping all jobs on the first failure
+fail_fast:
+  stop:
+    when: "branch != 'master'" # Stopping all jobs on the first failure
 
 auto_cancel:
   running:
@@ -107,7 +107,7 @@ blocks:
             minutes: 45
           matrix:
             - env_var: EMULATOR
-              values: [ "0", "1", "2", "3", "4", "5", "6", "7" ]
+              values: [ "0", "1", "2", "3" ]
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -116,7 +116,7 @@ blocks:
             # Run logging
             - adb logcat --buffer=crash > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 8 $EMULATOR
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
