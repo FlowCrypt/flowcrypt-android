@@ -336,7 +336,7 @@ dependencies {
     kapt 'com.google.auto.service:auto-service:1.0.1'
 
     devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
-    debugImplementation 'androidx.fragment:fragment-testing:1.5.3'
+    debugImplementation 'androidx.fragment:fragment-testing:1.5.4'
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.4.0'
