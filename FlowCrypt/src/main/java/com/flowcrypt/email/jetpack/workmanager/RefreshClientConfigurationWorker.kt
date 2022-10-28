@@ -42,11 +42,16 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
     }
 
     val fesUrl = GeneralUtil.generateFesUrl(domain)
-    val uuid = account.uuid ?: return Result.success()
     try {
+      val retryAttempts = 5
+      val idToken = GeneralUtil.getGoogleIdToken(
+        context = applicationContext,
+        maxRetryAttemptCount = retryAttempts
+      )
+
       val result = repository.getDomainOrgRules(
         context = applicationContext,
-        loginModel = LoginModel(account.email, uuid),
+        loginModel = LoginModel(account.email, idToken),
         fesUrl = fesUrl
       )
 
