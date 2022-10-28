@@ -51,8 +51,9 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
       val result = repository.getDomainOrgRules(
         context = applicationContext,
-        loginModel = LoginModel(account.email, idToken),
-        fesUrl = fesUrl
+        loginModel = LoginModel(account.email),
+        fesUrl = fesUrl,
+        idToken = idToken
       )
 
       if (result.status == Status.SUCCESS) {

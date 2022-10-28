@@ -39,7 +39,8 @@ class DomainOrgRulesViewModel(application: Application) : BaseAndroidViewModel(a
       try {
         domainOrgRulesLiveData.value = repository.getDomainOrgRules(
           context = context,
-          loginModel = LoginModel(account, idToken),
+          loginModel = LoginModel(account),
+          idToken = idToken,
           fesUrl = fesUrl
         )
       } catch (e: Exception) {

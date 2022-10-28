@@ -70,7 +70,8 @@ class FlowcryptApiRepository : ApiRepository {
   override suspend fun getDomainOrgRules(
     context: Context,
     loginModel: LoginModel,
-    fesUrl: String?
+    fesUrl: String?,
+    idToken: String
   ): Result<ApiResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
@@ -78,7 +79,10 @@ class FlowcryptApiRepository : ApiRepository {
         if (fesUrl != null) {
           apiService.getOrgRulesFromFes(fesUrl = fesUrl)
         } else {
-          apiService.getOrgRulesFromFlowCryptComBackend(body = loginModel)
+          apiService.getOrgRulesFromFlowCryptComBackend(
+            body = loginModel,
+            authorization = "Bearer $idToken"
+          )
         }
       }
     }

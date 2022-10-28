@@ -130,7 +130,10 @@ interface ApiService {
    * @param body POJO model for requests
    */
   @POST(BuildConfig.API_URL + "account/get")
-  suspend fun getOrgRulesFromFlowCryptComBackend(@Body body: LoginModel): Response<DomainOrgRulesResponse>
+  suspend fun getOrgRulesFromFlowCryptComBackend(
+    @Body body: LoginModel,
+    @Header("Authorization") authorization: String
+  ): Response<DomainOrgRulesResponse>
 
   /**
    * This method calls "https://fes.$domain/api/v1/client-configuration?domain=$domain"

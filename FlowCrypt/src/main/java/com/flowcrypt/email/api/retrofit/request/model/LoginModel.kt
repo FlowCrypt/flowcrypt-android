@@ -15,4 +15,4 @@ import com.google.gson.annotations.Expose
  *         Time: 3:53 PM
  *         E-mail: DenBond7@gmail.com
  */
-data class LoginModel(@Expose val account: String, @Expose val uuid: String)
+data class LoginModel(@Expose val account: String)

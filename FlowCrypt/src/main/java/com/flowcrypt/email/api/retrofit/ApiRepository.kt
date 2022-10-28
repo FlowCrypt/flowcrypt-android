@@ -50,11 +50,13 @@ interface ApiRepository : BaseApiRepository {
    * @param context Interface to global information about an application environment.
    * @param fesUrl Url that will be used to fetch [OrgRules].
    * @param loginModel An instance of [LoginModel].
+   * @param idToken OIDC token.
    */
   suspend fun getDomainOrgRules(
     context: Context,
     loginModel: LoginModel,
-    fesUrl: String? = null
+    fesUrl: String? = null,
+    idToken: String
   ): Result<ApiResponse>
 
   /**

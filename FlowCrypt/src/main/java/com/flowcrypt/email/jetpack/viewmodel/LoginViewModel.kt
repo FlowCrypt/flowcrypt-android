@@ -38,7 +38,7 @@ class LoginViewModel(application: Application) : BaseAndroidViewModel(applicatio
       try {
         loginLiveData.value = repository.login(
           context = context,
-          loginModel = LoginModel(account, idToken),
+          loginModel = LoginModel(account),
           idToken = idToken
         )
       } catch (e: Exception) {
