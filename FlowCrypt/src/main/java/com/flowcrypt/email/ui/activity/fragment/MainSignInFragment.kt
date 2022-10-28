@@ -410,9 +410,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         REQUEST_CODE_RETRY_LOGIN -> if (result == TwoWayDialogFragment.RESULT_OK) {
           orgRules = null
-          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          loginViewModel.login(account, idToken)
+          loginViewModel.login(idToken)
         }
 
         REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> if (result == TwoWayDialogFragment.RESULT_OK) {
@@ -611,10 +610,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueWithRegularFlow() {
-    val account = googleSignInAccount?.account?.name
     val idToken = googleSignInAccount?.idToken
-    if (account != null && idToken != null) {
-      loginViewModel.login(account, idToken)
+    if (idToken != null) {
+      loginViewModel.login(idToken)
     } else {
       showContent()
     }
