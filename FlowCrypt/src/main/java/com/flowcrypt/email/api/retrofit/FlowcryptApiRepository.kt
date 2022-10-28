@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.retrofit
 import android.content.Context
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
@@ -56,7 +55,6 @@ import java.util.concurrent.TimeUnit
 class FlowcryptApiRepository : ApiRepository {
   override suspend fun login(
     context: Context,
-    loginModel: LoginModel,
     idToken: String
   ): Result<LoginResponse> =
     withContext(Dispatchers.IO) {
@@ -64,12 +62,11 @@ class FlowcryptApiRepository : ApiRepository {
       getResult(
         context = context,
         expectedResultClass = LoginResponse::class.java
-      ) { apiService.postLogin(loginModel, "Bearer $idToken") }
+      ) { apiService.postLogin(authorization = "Bearer $idToken") }
     }
 
   override suspend fun getDomainOrgRules(
     context: Context,
-    loginModel: LoginModel,
     fesUrl: String?,
     idToken: String
   ): Result<ApiResponse> =
@@ -79,10 +76,7 @@ class FlowcryptApiRepository : ApiRepository {
         if (fesUrl != null) {
           apiService.getOrgRulesFromFes(fesUrl = fesUrl)
         } else {
-          apiService.getOrgRulesFromFlowCryptComBackend(
-            body = loginModel,
-            authorization = "Bearer $idToken"
-          )
+          apiService.getOrgRulesFromFlowCryptComBackend(authorization = "Bearer $idToken")
         }
       }
     }

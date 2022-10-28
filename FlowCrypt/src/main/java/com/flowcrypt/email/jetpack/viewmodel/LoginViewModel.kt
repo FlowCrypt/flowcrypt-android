@@ -14,7 +14,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.launch
@@ -38,7 +37,6 @@ class LoginViewModel(application: Application) : BaseAndroidViewModel(applicatio
       try {
         loginLiveData.value = repository.login(
           context = context,
-          loginModel = LoginModel(account),
           idToken = idToken
         )
       } catch (e: Exception) {

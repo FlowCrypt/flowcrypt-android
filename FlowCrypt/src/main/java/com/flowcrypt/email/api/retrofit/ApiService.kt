@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.retrofit
 
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.oauth.OAuth2Helper
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
@@ -116,23 +115,21 @@ interface ApiService {
   suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
 
   /**
-   * This method calls the API "https://flowcrypt.com/api/account/login"
-   *
-   * @param body POJO model for requests
+   * This method calls "https://flowcrypt.com/api/account/login"
    */
   @POST(BuildConfig.API_URL + "account/login")
-  suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") authorization: String):
-      Response<LoginResponse>
+  suspend fun postLogin(
+    @Header("Authorization") authorization: String,
+    @Body body: Any = Any(),
+  ): Response<LoginResponse>
 
   /**
-   * This method calls the API "https://flowcrypt.com/api/account/get"
-   *
-   * @param body POJO model for requests
+   * This method calls "https://flowcrypt.com/api/account/get"
    */
   @POST(BuildConfig.API_URL + "account/get")
   suspend fun getOrgRulesFromFlowCryptComBackend(
-    @Body body: LoginModel,
-    @Header("Authorization") authorization: String
+    @Header("Authorization") authorization: String,
+    @Body body: Any = Any(),
   ): Response<DomainOrgRulesResponse>
 
   /**
