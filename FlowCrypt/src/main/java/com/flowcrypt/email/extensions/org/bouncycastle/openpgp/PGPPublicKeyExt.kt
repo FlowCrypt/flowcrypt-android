@@ -17,6 +17,9 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 @Throws(IOException::class)
-fun PGPPublicKey.armor(headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS): String {
-  return SecurityUtils.armor(headers) { this.encode(it) }
+fun PGPPublicKey.armor(
+  hideArmorMeta: Boolean = false,
+  headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS
+): String {
+  return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
 }

@@ -87,8 +87,11 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
 }
 
 @Throws(IOException::class)
-fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS): String {
-  return SecurityUtils.armor(headers) { this.encode(it) }
+fun PGPKeyRing.armor(
+  hideArmorMeta: Boolean = false,
+  headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS
+): String {
+  return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
 }
 
 val PGPKeyRing.expiration: Instant?
