@@ -148,8 +148,7 @@ object PgpEncryptAndOrSign {
 
     producerOptions.isAsciiArmor = doArmor
     if (doArmor) {
-      //https://github.com/pgpainless/pgpainless/issues/328
-      //producerOptions.hideArmorMeta = hideArmorMeta
+      producerOptions.isHideArmorHeaders = true
     }
 
     return PGPainless.encryptAndOrSign()

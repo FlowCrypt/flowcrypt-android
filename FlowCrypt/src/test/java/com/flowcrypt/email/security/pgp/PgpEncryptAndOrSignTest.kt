@@ -91,7 +91,7 @@ class PgpEncryptAndOrSignTest {
 
     val encryptedBytes = encryptedArmoredText.toByteArray()
     val armoredInputStream = ArmoredInputStream(encryptedBytes.inputStream())
-    assertArrayEquals(emptyArray(), armoredInputStream.armorHeaders)
+    assertArrayEquals(null, armoredInputStream.armorHeaders)
   }
 
   @Test
@@ -113,7 +113,7 @@ class PgpEncryptAndOrSignTest {
 
     val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
     val armoredInputStream = ArmoredInputStream(encryptedBytes.inputStream())
-    assertArrayEquals(emptyArray(), armoredInputStream.armorHeaders)
+    assertArrayEquals(null, armoredInputStream.armorHeaders)
   }
 
   //todo-denbond7 Replace it when we will have PgpDecrypt.decryptFile()
