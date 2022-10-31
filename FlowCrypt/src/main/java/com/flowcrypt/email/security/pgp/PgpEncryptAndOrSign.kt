@@ -35,6 +35,7 @@ object PgpEncryptAndOrSign {
     pubKeys: List<String>,
     prvKeys: List<String>? = null,
     secretKeyRingProtector: SecretKeyRingProtector? = null,
+    hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null
   ): String {
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
@@ -45,6 +46,7 @@ object PgpEncryptAndOrSign {
       prvKeys = prvKeys,
       secretKeyRingProtector = secretKeyRingProtector,
       doArmor = true,
+      hideArmorMeta = hideArmorMeta,
       passphrase = passphrase
     )
     return String(outputStreamForEncryptedSource.toByteArray())
@@ -57,6 +59,7 @@ object PgpEncryptAndOrSign {
     prvKeys: List<String>? = null,
     secretKeyRingProtector: SecretKeyRingProtector? = null,
     doArmor: Boolean = false,
+    hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null
   ) {
     val pubKeysStream = ByteArrayInputStream(pubKeys.joinToString(separator = "\n").toByteArray())
@@ -84,6 +87,7 @@ object PgpEncryptAndOrSign {
       pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
       secretKeyRingProtector = secretKeyRingProtector,
       doArmor = doArmor,
+      hideArmorMeta = hideArmorMeta,
       passphrase = passphrase
     )
   }
@@ -95,6 +99,7 @@ object PgpEncryptAndOrSign {
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection? = null,
     secretKeyRingProtector: SecretKeyRingProtector? = null,
     doArmor: Boolean = false,
+    hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null
   ) {
     srcInputStream.use { srcStream ->
@@ -104,6 +109,7 @@ object PgpEncryptAndOrSign {
         pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
         secretKeyRingProtector = secretKeyRingProtector,
         doArmor = doArmor,
+        hideArmorMeta = hideArmorMeta,
         passphrase = passphrase
       ).use { encryptionStream ->
         srcStream.copyTo(encryptionStream)
@@ -111,12 +117,13 @@ object PgpEncryptAndOrSign {
     }
   }
 
-  fun genEncryptionStream(
+  private fun genEncryptionStream(
     destOutputStream: OutputStream,
     pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection?,
     secretKeyRingProtector: SecretKeyRingProtector?,
     doArmor: Boolean,
+    hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null
   ): EncryptionStream {
     val encOpt = EncryptionOptions().apply {
@@ -140,6 +147,10 @@ object PgpEncryptAndOrSign {
       }
 
     producerOptions.isAsciiArmor = doArmor
+    if (doArmor) {
+      //https://github.com/pgpainless/pgpainless/issues/328
+      //producerOptions.hideArmorMeta = hideArmorMeta
+    }
 
     return PGPainless.encryptAndOrSign()
       .onOutputStream(destOutputStream)

@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
+import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -76,6 +77,43 @@ class PgpEncryptAndOrSignTest {
     )
       .toByteArray()
     assertArrayEquals(sourceBytes, decryptedBytesForReceiver)
+  }
+
+  @Test
+  fun testEncryptionWithHideArmorMetaPasswordProtected() {
+    val encryptedArmoredText = PgpEncryptAndOrSign.encryptAndOrSignMsg(
+      msg = "some text",
+      pubKeys = emptyList(),
+      prvKeys = emptyList(),
+      passphrase = Passphrase.fromPassword("flowcrypt"),
+      hideArmorMeta = true
+    )
+
+    val encryptedBytes = encryptedArmoredText.toByteArray()
+    val armoredInputStream = ArmoredInputStream(encryptedBytes.inputStream())
+    assertArrayEquals(emptyArray(), armoredInputStream.armorHeaders)
+  }
+
+  @Test
+  fun testEncryptionWithHideArmorMeta() {
+    val sourceBytes = "some text".toByteArray()
+    val outputStreamForEncryptedSource = ByteArrayOutputStream()
+    PgpEncryptAndOrSign.encryptAndOrSign(
+      srcInputStream = ByteArrayInputStream(sourceBytes),
+      destOutputStream = outputStreamForEncryptedSource,
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+        listOf(
+          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
+          KeyRingUtils.publicKeyRingFrom(recipientPGPSecretKeyRing)
+        )
+      ),
+      doArmor = true,
+      hideArmorMeta = true
+    )
+
+    val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
+    val armoredInputStream = ArmoredInputStream(encryptedBytes.inputStream())
+    assertArrayEquals(emptyArray(), armoredInputStream.armorHeaders)
   }
 
   //todo-denbond7 Replace it when we will have PgpDecrypt.decryptFile()

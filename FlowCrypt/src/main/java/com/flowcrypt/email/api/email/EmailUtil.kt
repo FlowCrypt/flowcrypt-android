@@ -643,7 +643,8 @@ class EmailUtil {
     fun genMessage(
       context: Context, accountEntity: AccountEntity,
       outgoingMsgInfo: OutgoingMessageInfo,
-      signingRequired: Boolean = true
+      signingRequired: Boolean = true,
+      hideArmorMeta: Boolean = false,
     ): Message {
       val session = Session.getInstance(Properties())
       val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
@@ -670,11 +671,26 @@ class EmailUtil {
 
       return when (outgoingMsgInfo.messageType) {
         MessageType.NEW, MessageType.FORWARD, MessageType.DRAFT -> {
-          prepareNewMsg(session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
+          prepareNewMsg(
+            session = session,
+            info = outgoingMsgInfo,
+            pubKeys = pubKeys,
+            prvKeys = prvKeys,
+            protector = ringProtector,
+            hideArmorMeta = hideArmorMeta
+          )
         }
 
         MessageType.REPLY, MessageType.REPLY_ALL -> {
-          prepareReplyMsg(context, session, outgoingMsgInfo, pubKeys, prvKeys, ringProtector)
+          prepareReplyMsg(
+            context = context,
+            session = session,
+            info = outgoingMsgInfo,
+            pubKeys = pubKeys,
+            prvKeys = prvKeys,
+            protector = ringProtector,
+            hideArmorMeta = hideArmorMeta
+          )
         }
 
         else -> throw IllegalStateException("Unsupported message type")
@@ -977,7 +993,8 @@ class EmailUtil {
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
-      protector: SecretKeyRingProtector? = null
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
     ): MimeMessage {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
@@ -986,7 +1003,15 @@ class EmailUtil {
       msg.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
       msg.setRecipients(Message.RecipientType.BCC, info.bccRecipients?.toTypedArray())
       msg.setContent(MimeMultipart().apply {
-        addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
+        addBodyPart(
+          prepareBodyPart(
+            info = info,
+            pubKeys = pubKeys,
+            prvKeys = prvKeys,
+            protector = protector,
+            hideArmorMeta = hideArmorMeta
+          )
+        )
       })
       return msg
     }
@@ -996,12 +1021,21 @@ class EmailUtil {
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
-      protector: SecretKeyRingProtector? = null
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
     ): Message {
       val reply = replyToMsg.reply(false)//we use replyToAll == false to use the own logic
       reply.setFrom(info.from)
       reply.setContent(MimeMultipart().apply {
-        addBodyPart(prepareBodyPart(info, pubKeys, prvKeys, protector))
+        addBodyPart(
+          prepareBodyPart(
+            info = info,
+            pubKeys = pubKeys,
+            prvKeys = prvKeys,
+            protector = protector,
+            hideArmorMeta = hideArmorMeta
+          )
+        )
       })
       reply.setRecipients(Message.RecipientType.TO, info.toRecipients?.toTypedArray())
       reply.setRecipients(Message.RecipientType.CC, info.ccRecipients?.toTypedArray())
@@ -1113,7 +1147,8 @@ class EmailUtil {
       info: OutgoingMessageInfo,
       pubKeys: List<String>?,
       prvKeys: List<String>? = null,
-      protector: SecretKeyRingProtector? = null
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
     ): Message {
       val replyToMessageEntity = info.replyToMsgEntity
         ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
@@ -1135,21 +1170,30 @@ class EmailUtil {
         }
       }
 
-      return genReplyMessage(msg, info, pubKeys, prvKeys, protector)
+      return genReplyMessage(
+        replyToMsg = msg,
+        info = info,
+        pubKeys = pubKeys,
+        prvKeys = prvKeys,
+        protector = protector,
+        hideArmorMeta = hideArmorMeta
+      )
     }
 
     private fun prepareBodyPart(
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
-      protector: SecretKeyRingProtector? = null
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
     ): BodyPart {
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
         val encryptedContent = PgpEncryptAndOrSign.encryptAndOrSignMsg(
           msg = info.msg ?: "",
           pubKeys = pubKeys ?: emptyList(),
           prvKeys = prvKeys,
-          secretKeyRingProtector = protector
+          secretKeyRingProtector = protector,
+          hideArmorMeta = hideArmorMeta,
         )
 
         if (info.isPasswordProtected == true) {

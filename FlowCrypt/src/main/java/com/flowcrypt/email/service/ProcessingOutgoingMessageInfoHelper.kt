@@ -79,7 +79,8 @@ object ProcessingOutgoingMessageInfoHelper {
         context = context,
         accountEntity = accountEntity,
         outgoingMsgInfo = outgoingMsgInfo,
-        signingRequired = true
+        signingRequired = true,
+        hideArmorMeta = accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
       )
 
       val attsCacheDir = getAttsCacheDir(context)
@@ -303,9 +304,9 @@ object ProcessingOutgoingMessageInfoHelper {
             requireNotNull(pubKeys)
 
             PgpEncryptAndOrSign.encryptAndOrSign(
-              originalFileInputStream,
-              encryptedTempFile.outputStream(),
-              pubKeys
+              srcInputStream = originalFileInputStream,
+              destOutputStream = encryptedTempFile.outputStream(),
+              pubKeys = pubKeys
             )
             val uri =
               FileProvider.getUriForFile(
