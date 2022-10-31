@@ -147,9 +147,7 @@ object PgpEncryptAndOrSign {
       }
 
     producerOptions.isAsciiArmor = doArmor
-    if (doArmor) {
-      producerOptions.isHideArmorHeaders = true
-    }
+    producerOptions.isHideArmorHeaders = doArmor && hideArmorMeta
 
     return PGPainless.encryptAndOrSign()
       .onOutputStream(destOutputStream)
