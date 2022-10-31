@@ -76,9 +76,14 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
       liveData {
         emit(Result.loading())
+        val account = getActiveAccountSuspend()
         emit(
           try {
-            Result.success(list.map { it.toPgpKeyDetails() })
+            Result.success(list.map {
+              it.toPgpKeyDetails(
+                account?.clientConfiguration?.shouldHideArmorMeta() ?: false
+              )
+            })
           } catch (e: Exception) {
             Result.exception(e)
           }

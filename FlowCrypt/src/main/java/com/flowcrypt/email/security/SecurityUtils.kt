@@ -101,7 +101,8 @@ class SecurityUtils {
 
         PgpPwd.checkForWeakPassphrase(passPhrase)
 
-        val keyDetails = key.toPgpKeyDetails()
+        val keyDetails =
+          key.toPgpKeyDetails(account.clientConfiguration?.shouldHideArmorMeta() ?: false)
         val encryptedKey = if (keyDetails.isFullyDecrypted) {
           PgpKey.encryptKey(keyDetails.privateKey ?: throw IllegalStateException(), passPhrase)
         } else {

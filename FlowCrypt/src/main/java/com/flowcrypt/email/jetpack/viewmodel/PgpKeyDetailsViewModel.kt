@@ -35,11 +35,12 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
         emit(Result.loading())
         emit(
           try {
+            val account = getActiveAccountSuspend()
             Result.success(
               list.firstOrNull {
                 val openPgpV4Fingerprint = OpenPgpV4Fingerprint(it)
                 openPgpV4Fingerprint.toString().equals(fingerprint, true)
-              }?.toPgpKeyDetails()
+              }?.toPgpKeyDetails(account?.clientConfiguration?.shouldHideArmorMeta() ?: false)
             )
           } catch (e: Exception) {
             Result.exception(e)
@@ -53,8 +54,11 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
       liveData {
         emit(Result.loading())
         val pgpKeyDetailsResult = pgpKeyDetailsLiveDataDirect.value ?: try {
+          val account = getActiveAccountSuspend()
           Result.success(
-            keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyDetails()
+            keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyDetails(
+              account?.clientConfiguration?.shouldHideArmorMeta() ?: false
+            )
           )
         } catch (e: Exception) {
           Result.exception(e)

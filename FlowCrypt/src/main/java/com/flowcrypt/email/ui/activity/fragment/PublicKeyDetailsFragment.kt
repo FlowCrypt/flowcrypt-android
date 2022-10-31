@@ -20,7 +20,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -111,7 +110,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
             clipboard.setPrimaryClip(
               ClipData.newPlainText(
                 "pubKey",
-                String(cachedPublicKeyEntity?.publicKey ?: byteArrayOf())
+                cachedPublicKeyEntity?.pgpKeyDetails?.publicKey
               )
             )
             toast(R.string.public_key_copied_to_clipboard)
@@ -165,7 +164,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           Result.Status.SUCCESS -> {
             val pgpKeyDetails = it.data?.pgpKeyDetails
             if (pgpKeyDetails == null) {
-              Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
+              toast(R.string.error_no_keys)
               navController?.navigateUp()
             } else {
               updateViews(pgpKeyDetails)
@@ -200,10 +199,9 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     uri ?: return
     try {
       val context = this.context ?: return
-      val publicKeySource = cachedPublicKeyEntity?.publicKey ?: return
-      val pubKey = String(publicKeySource)
+      val pubKey = cachedPublicKeyEntity?.pgpKeyDetails?.publicKey ?: return
       GeneralUtil.writeFileFromStringToUri(context, uri, pubKey)
-      Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
+      toast(getString(R.string.saved))
     } catch (e: Exception) {
       e.printStackTrace()
       var error = if (e.message.isNullOrEmpty()) e.javaClass.simpleName else e.message

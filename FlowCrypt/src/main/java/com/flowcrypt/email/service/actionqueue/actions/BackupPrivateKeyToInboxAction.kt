@@ -43,7 +43,8 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
     val keysStorage = KeysStorageImpl.getInstance(context)
     val pgpKeyDetails = keysStorage
-      .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)?.toPgpKeyDetails() ?: return
+      .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)
+      ?.toPgpKeyDetails(account.clientConfiguration?.shouldHideArmorMeta() ?: false) ?: return
 
     val encryptedKey: String
     if (pgpKeyDetails.isFullyEncrypted) {

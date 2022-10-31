@@ -33,8 +33,14 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
         emit(Result.loading())
         emit(
           try {
-            Result.success(list
-              .map { it.toPgpKeyDetails() }
+            val account = getActiveAccountSuspend()
+            Result.success(
+              list
+                .map {
+                  it.toPgpKeyDetails(
+                    account?.clientConfiguration?.shouldHideArmorMeta() ?: false
+                  )
+                }
               .filter { keysStorage.getPassphraseByFingerprint(it.fingerprint)?.isEmpty == true }
               .map {
                 it.copy(passphraseType = keysStorage.getPassphraseTypeByFingerprint(it.fingerprint))
