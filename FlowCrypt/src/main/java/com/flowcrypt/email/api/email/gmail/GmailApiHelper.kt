@@ -180,6 +180,9 @@ class GmailApiHelper {
       val rootUrl = FlavorSettings.getGmailAPIRootUrl()
       val builder = Gmail.Builder(transport, factory, credential).setApplicationName(appName)
       rootUrl.let { builder.rootUrl = it }
+      if (!FlavorSettings.isGMailAPIHttpRequestInitializerEnabled()) {
+        builder.httpRequestInitializer = null
+      }
       return builder.build()
     }
 
