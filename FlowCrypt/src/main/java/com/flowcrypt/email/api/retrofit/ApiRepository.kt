@@ -7,13 +7,11 @@ package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
@@ -37,24 +35,13 @@ import com.google.gson.JsonObject
 interface ApiRepository : BaseApiRepository {
   /**
    * @param context Interface to global information about an application environment.
-   * @param loginModel An instance of [LoginModel].
-   * @param idToken OIDC token.
-   */
-  suspend fun login(
-    context: Context,
-    loginModel: LoginModel,
-    idToken: String
-  ): Result<LoginResponse>
-
-  /**
-   * @param context Interface to global information about an application environment.
    * @param fesUrl Url that will be used to fetch [OrgRules].
-   * @param loginModel An instance of [LoginModel].
+   * @param idToken OIDC token.
    */
   suspend fun getDomainOrgRules(
     context: Context,
-    loginModel: LoginModel,
-    fesUrl: String? = null
+    fesUrl: String? = null,
+    idToken: String
   ): Result<ApiResponse>
 
   /**

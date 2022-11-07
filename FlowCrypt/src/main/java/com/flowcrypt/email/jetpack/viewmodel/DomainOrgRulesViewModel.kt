@@ -12,7 +12,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.launch
@@ -30,7 +29,7 @@ class DomainOrgRulesViewModel(application: Application) : BaseAndroidViewModel(a
   val domainOrgRulesLiveData: MutableLiveData<Result<ApiResponse>> =
     MutableLiveData(Result.none())
 
-  fun fetchOrgRules(account: String, uuid: String, fesUrl: String? = null) {
+  fun fetchOrgRules(account: String, idToken: String, fesUrl: String? = null) {
     viewModelScope.launch {
       val context: Context = getApplication()
       domainOrgRulesLiveData.value =
@@ -39,8 +38,8 @@ class DomainOrgRulesViewModel(application: Application) : BaseAndroidViewModel(a
       try {
         domainOrgRulesLiveData.value = repository.getDomainOrgRules(
           context = context,
-          loginModel = LoginModel(account, uuid),
-          fesUrl = fesUrl
+          idToken = idToken,
+          fesUrl = null,
         )
       } catch (e: Exception) {
         domainOrgRulesLiveData.value = Result.exception(e)

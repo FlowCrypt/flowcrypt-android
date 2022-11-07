@@ -342,7 +342,6 @@
     <string name="your_email_address">Your email address</string>
     <string name="pending">Pending&#8230;</string>
     <string name="mark_unread">Mark unread</string>
-    <string name="user_not_verified">User not verified successfully</string>
     <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
     <string name="reconnect_your_account">Please reconnect your account to continue using %1$s\nwith\n%2$s</string>
     <string name="reconnect">Reconnect</string>

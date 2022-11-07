@@ -68,15 +68,13 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     //encrypt sensitive info
     val encryptedPassword = KeyStoreCryptoManager.encryptSuspend(accountEntity.password)
     val encryptedSmtpPassword = KeyStoreCryptoManager.encryptSuspend(accountEntity.smtpPassword)
-    val encryptedUuid = KeyStoreCryptoManager.encryptSuspend(accountEntity.uuid)
 
     insertSuspend(
       accountEntity.copy(
         email = accountEntity.email.lowercase(),
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
-        uuid = encryptedUuid,
-        isActive = true
+        isActive = true,
       )
     )
   }
@@ -90,15 +88,13 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     //encrypt sensitive info
     val encryptedPassword = KeyStoreCryptoManager.encrypt(accountEntity.password)
     val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(accountEntity.smtpPassword)
-    val encryptedUuid = KeyStoreCryptoManager.encrypt(accountEntity.uuid)
 
     insert(
       accountEntity.copy(
         email = accountEntity.email.lowercase(),
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
-        uuid = encryptedUuid,
-        isActive = true
+        isActive = true,
       )
     )
   }
@@ -129,7 +125,6 @@ abstract class AccountDao : BaseDao<AccountEntity> {
         id = existedAccount.id,
         password = existedAccount.password,
         smtpPassword = existedAccount.smtpPassword,
-        uuid = existedAccount.uuid
       )
     )
   }
@@ -142,7 +137,6 @@ abstract class AccountDao : BaseDao<AccountEntity> {
         id = existedAccount.id,
         password = existedAccount.password,
         smtpPassword = existedAccount.smtpPassword,
-        uuid = existedAccount.uuid
       )
     )
   }
@@ -174,13 +168,11 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     //encrypt sensitive info
     val encryptedPassword = KeyStoreCryptoManager.encrypt(accountEntity.password)
     val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(accountEntity.smtpPassword)
-    val encryptedUUID = KeyStoreCryptoManager.encrypt(accountEntity.uuid)
 
     return updateSuspend(
       accountEntity.copy(
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
-        uuid = encryptedUUID,
       )
     )
   }

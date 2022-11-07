@@ -47,9 +47,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CheckFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DomainOrgRulesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
-import com.flowcrypt.email.jetpack.viewmodel.LoginViewModel
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.CHECKED_KEYS
@@ -92,12 +90,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
-  private var uuid: String = SecurityUtils.generateRandomUUID()
   private var orgRules: OrgRules? = null
   private var fesUrl: String? = null
 
   private val checkFesServerViewModel: CheckFesServerViewModel by viewModels()
-  private val loginViewModel: LoginViewModel by viewModels()
   private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
   private var useStartTlsForSmtp = false
@@ -151,7 +147,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     return googleSignInAccount?.let {
       AccountEntity(
         googleSignInAccount = it,
-        uuid = uuid,
         orgRules = orgRules,
         useFES = fesUrl?.isNotEmpty() == true,
         useStartTlsForSmtp = useStartTlsForSmtp,
@@ -221,7 +216,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         googleSignInAccount = task.getResult(ApiException::class.java)
 
         val account = googleSignInAccount?.account?.name ?: return
-        uuid = SecurityUtils.generateRandomUUID()
 
         val publicEmailDomains = EmailUtil.getPublicEmailDomains()
         if (EmailUtil.getDomain(account) in publicEmailDomains) {
@@ -380,10 +374,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       val keys = bundle.getParcelableArrayListViaExt(
         CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
       ) ?: emptyList<PgpKeyDetails>()
-      @CheckKeysFragment.CheckingState val checkingState: Int =
-        bundle.getInt(CheckKeysFragment.KEY_STATE)
 
-      when (checkingState) {
+      when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CHECKED_KEYS,
         SKIP_REMAINING_KEYS -> {
           handleUnlockedKeys(getTempAccount(), keys)
@@ -414,18 +406,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           checkFesServerViewModel.checkFesServerAvailability(account)
         }
 
-        REQUEST_CODE_RETRY_LOGIN -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          orgRules = null
-          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
-          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          loginViewModel.login(account, uuid, idToken)
-        }
-
         REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
           domainOrgRulesViewModel.fetchOrgRules(
             account = account,
-            uuid = uuid,
+            idToken = idToken,
             fesUrl = fesUrl
           )
         }
@@ -517,7 +503,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun initEnterpriseViewModels() {
     initCheckFesServerViewModel()
-    initLoginViewModel()
     initDomainOrgRulesViewModel()
     initEkmViewModel()
   }
@@ -534,10 +519,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           if ("enterprise-server" == it.data?.service) {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
+              val idToken = googleSignInAccount?.idToken ?: return@let
               fesUrl = GeneralUtil.generateFesUrl(domain)
               domainOrgRulesViewModel.fetchOrgRules(
                 account = account,
-                uuid = uuid,
+                idToken = idToken,
                 fesUrl = fesUrl
               )
             }
@@ -615,51 +601,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueWithRegularFlow() {
-    val account = googleSignInAccount?.account?.name
     val idToken = googleSignInAccount?.idToken
+    val account = googleSignInAccount?.account?.name
+
     if (account != null && idToken != null) {
-      loginViewModel.login(account, uuid, idToken)
+      domainOrgRulesViewModel.fetchOrgRules(account, idToken)
     } else {
       showContent()
-    }
-  }
-
-  private fun initLoginViewModel() {
-    loginViewModel.loginLiveData.observe(viewLifecycleOwner) {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
-          showProgress(progressMsg = it.progressMsg)
-        }
-
-        Result.Status.SUCCESS -> {
-          if (it.data?.isVerified == true) {
-            val account = googleSignInAccount?.account?.name
-            if (account != null) {
-              domainOrgRulesViewModel.fetchOrgRules(account, uuid)
-            } else {
-              showContent()
-              askUserToReLogin()
-            }
-          } else {
-            showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = getString(R.string.user_not_verified),
-              isCancelable = true
-            )
-          }
-
-          loginViewModel.loginLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_LOGIN)
-          loginViewModel.loginLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
-        }
-        else -> {}
-      }
+      askUserToReLogin()
     }
   }
 
@@ -829,7 +778,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   companion object {
-    private const val REQUEST_CODE_RETRY_LOGIN = 104
     private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106
     private const val REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY = 107

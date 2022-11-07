@@ -8,13 +8,11 @@ package com.flowcrypt.email.api.retrofit
 import android.content.Context
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
@@ -54,23 +52,10 @@ import java.util.concurrent.TimeUnit
  *         E-mail: DenBond7@gmail.com
  */
 class FlowcryptApiRepository : ApiRepository {
-  override suspend fun login(
-    context: Context,
-    loginModel: LoginModel,
-    idToken: String
-  ): Result<LoginResponse> =
-    withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult(
-        context = context,
-        expectedResultClass = LoginResponse::class.java
-      ) { apiService.postLogin(loginModel, "Bearer $idToken") }
-    }
-
   override suspend fun getDomainOrgRules(
     context: Context,
-    loginModel: LoginModel,
-    fesUrl: String?
+    fesUrl: String?,
+    idToken: String
   ): Result<ApiResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
@@ -78,7 +63,7 @@ class FlowcryptApiRepository : ApiRepository {
         if (fesUrl != null) {
           apiService.getOrgRulesFromFes(fesUrl = fesUrl)
         } else {
-          apiService.getOrgRulesFromFlowCryptComBackend(body = loginModel)
+          apiService.getOrgRulesFromFlowCryptComBackend(authorization = "Bearer $idToken")
         }
       }
     }

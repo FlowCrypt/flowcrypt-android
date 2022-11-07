@@ -14,7 +14,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result.Status
@@ -42,12 +41,16 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
     }
 
     val fesUrl = GeneralUtil.generateFesUrl(domain)
-    val uuid = account.uuid ?: return Result.success()
     try {
+      val idToken = GeneralUtil.getGoogleIdToken(
+        context = applicationContext,
+        maxRetryAttemptCount = 5
+      )
+
       val result = repository.getDomainOrgRules(
         context = applicationContext,
-        loginModel = LoginModel(account.email, uuid),
-        fesUrl = fesUrl
+        fesUrl = fesUrl,
+        idToken = idToken
       )
 
       if (result.status == Status.SUCCESS) {

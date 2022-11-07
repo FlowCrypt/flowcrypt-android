@@ -24,8 +24,6 @@ import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
-import org.apache.commons.codec.android.binary.Hex
-import org.apache.commons.codec.android.digest.DigestUtils
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -34,7 +32,6 @@ import org.pgpainless.util.Passphrase
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
-import java.util.UUID
 
 /**
  * This class help to receive security information.
@@ -191,14 +188,6 @@ class SecurityUtils {
      */
     fun sanitizeFileName(originalFileName: String?): String {
       return originalFileName?.split("/")?.lastOrNull()?.replace("\\", "") ?: "unnamed"
-    }
-
-    /**
-     * Generate uuid which is 40 characters long, containing only lowercase hex
-     * characters 0-9a-f. Example: 8d43af.................................93. It uses [UUID] to generate these.
-     */
-    fun generateRandomUUID(): String {
-      return String(Hex.encodeHex(DigestUtils.sha1(UUID.randomUUID().toString())))
     }
 
     /**

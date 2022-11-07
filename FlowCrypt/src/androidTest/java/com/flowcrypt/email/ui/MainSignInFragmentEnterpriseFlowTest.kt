@@ -17,12 +17,10 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
@@ -50,7 +48,6 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 
 /**
@@ -89,15 +86,9 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
           handleEkmAPI(request, gson)?.let { return it }
         }
 
-        val model =
-          gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
-
-        if (request.path.equals("/account/login")) {
-          return handleLoginAPI(model, gson)
-        }
-
         if (request.path.equals("/account/get")) {
-          return handleGetDomainRulesAPI(model, gson)
+          val account = extractEmailFromRecordedRequest(request)
+          return handleGetDomainRulesAPI(account, gson)
         }
 
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -117,20 +108,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   @Before
   fun waitWhileToastWillBeDismissed() {
     Thread.sleep(1000)
-  }
-
-  @Test
-  fun testErrorLogin() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_ERROR))
-    isDialogWithTextDisplayed(decorView, LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
-    onView(withText(R.string.retry))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testSuccessLoginNotVerified() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_VERIFIED))
-    isDialogWithTextDisplayed(decorView, getResString(R.string.user_not_verified))
   }
 
   @Test
@@ -431,8 +408,8 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     return null
   }
 
-  private fun handleGetDomainRulesAPI(model: LoginModel, gson: Gson): MockResponse {
-    when (model.account) {
+  private fun handleGetDomainRulesAPI(account: String?, gson: Gson): MockResponse {
+    when (account) {
       EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
 
@@ -529,36 +506,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     }
   }
 
-  private fun handleLoginAPI(model: LoginModel, gson: Gson): MockResponse {
-    when (model.account) {
-      EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
-
-      EMAIL_LOGIN_NOT_VERIFIED -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(gson.toJson(LoginResponse(null, isVerified = false)))
-
-      EMAIL_DOMAIN_ORG_RULES_ERROR,
-      EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS,
-      EMAIL_FES_CLIENT_CONFIGURATION_FAILED,
-      EMAIL_WITH_NO_PRV_CREATE_RULE,
-      EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST,
-      EMAIL_FES_REQUEST_TIME_OUT,
-      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS,
-      EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED,
-      EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED,
-      EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING,
-      EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED,
-      EMAIL_FES_NOT_ENTERPRISE_SERVER,
-      EMAIL_FORBID_STORING_PASS_PHRASE_MISSING,
-      EMAIL_GET_KEYS_VIA_EKM_ERROR,
-      EMAIL_FES_HTTP_404
-      -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
-
-      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
-    }
-  }
-
   private fun successMockResponseForOrgRules(gson: Gson, orgRules: OrgRules) =
     MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       .setBody(
@@ -610,8 +557,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "https://localhost:1212/ekm/not_fully_decrypted_key/"
     private const val EMAIL_EKM_URL_ERROR = "https://localhost:1212/ekm/error/"
     private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.test"
-    private const val EMAIL_LOGIN_ERROR = "login_error@flowcrypt.test"
-    private const val EMAIL_LOGIN_NOT_VERIFIED = "login_not_verified@flowcrypt.test"
     private const val EMAIL_DOMAIN_ORG_RULES_ERROR = "domain_org_rules_error@flowcrypt.test"
     private const val EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED =
       "must_autogen_pass_phrase_quietly_existed@flowcrypt.test"
@@ -641,13 +586,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
       OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
       OrgRules.DomainRule.NO_PRV_CREATE
-    )
-
-    private val LOGIN_API_ERROR_RESPONSE = LoginResponse(
-      ApiError(
-        HttpURLConnection.HTTP_BAD_REQUEST, "Something wrong happened.",
-        "api input: missing key: token"
-      ), null
     )
 
     private val DOMAIN_ORG_RULES_ERROR_RESPONSE = DomainOrgRulesResponse(

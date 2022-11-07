@@ -77,8 +77,7 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
           roomDatabase.accountDao().updateAccountSuspend(
             accountEntity.copy(
               id = existingAccount.id,
-              uuid = existingAccount.uuid,
-              clientConfiguration = existingAccount.clientConfiguration
+              clientConfiguration = existingAccount.clientConfiguration,
             )
           )
         }
@@ -121,37 +120,17 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
 
   companion object {
     fun getAccountEntityWithDecryptedInfo(accountEntity: AccountEntity?): AccountEntity? {
-      var originalPassword = accountEntity?.password
-
-      //fixed a bug when try to decrypting the template password.
-      // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
-      //todo-denbond7 remove this in 2022
-      if ("password".equals(originalPassword, ignoreCase = true)) {
-        originalPassword = ""
-      }
-
       return accountEntity?.copy(
-        password = KeyStoreCryptoManager.decrypt(originalPassword),
+        password = KeyStoreCryptoManager.decrypt(accountEntity.password),
         smtpPassword = KeyStoreCryptoManager.decrypt(accountEntity.smtpPassword),
-        uuid = KeyStoreCryptoManager.decrypt(accountEntity.uuid)
       )
     }
 
     suspend fun getAccountEntityWithDecryptedInfoSuspend(accountEntity: AccountEntity?): AccountEntity? =
       withContext(Dispatchers.IO) {
-        var originalPassword = accountEntity?.password
-
-        //fixed a bug when try to decrypting the template password.
-        // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
-        //todo-denbond7 remove this in 2022
-        if ("password".equals(originalPassword, ignoreCase = true)) {
-          originalPassword = ""
-        }
-
         return@withContext accountEntity?.copy(
-          password = KeyStoreCryptoManager.decryptSuspend(originalPassword),
+          password = KeyStoreCryptoManager.decryptSuspend(accountEntity.password),
           smtpPassword = KeyStoreCryptoManager.decryptSuspend(accountEntity.smtpPassword),
-          uuid = KeyStoreCryptoManager.decryptSuspend(accountEntity.uuid)
         )
       }
   }

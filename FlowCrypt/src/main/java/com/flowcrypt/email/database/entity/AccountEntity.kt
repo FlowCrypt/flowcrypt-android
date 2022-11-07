@@ -69,7 +69,6 @@ data class AccountEntity constructor(
     name = "show_only_encrypted",
     defaultValue = "0"
   ) val showOnlyEncrypted: Boolean? = false,
-  @ColumnInfo(defaultValue = "NULL") val uuid: String? = null,
   @ColumnInfo(
     name = "client_configuration",
     defaultValue = "NULL"
@@ -92,7 +91,6 @@ data class AccountEntity constructor(
 
   constructor(
     googleSignInAccount: GoogleSignInAccount,
-    uuid: String? = null,
     orgRules: OrgRules? = null,
     useFES: Boolean,
     useStartTlsForSmtp: Boolean = false,
@@ -126,13 +124,12 @@ data class AccountEntity constructor(
     smtpPassword = null,
     contactsLoaded = false,
     showOnlyEncrypted = false,
-    uuid = uuid,
     clientConfiguration = orgRules,
     useAPI = FlavorSettings.isGMailAPIEnabled(),
     useFES = useFES
   )
 
-  constructor(authCredentials: AuthCredentials, uuid: String? = null, orgRules: OrgRules? = null) :
+  constructor(authCredentials: AuthCredentials, orgRules: OrgRules? = null) :
       this(
         email = authCredentials.email.lowercase(),
         accountType =
@@ -160,7 +157,6 @@ data class AccountEntity constructor(
         smtpPassword = authCredentials.smtpSignInPassword,
         contactsLoaded = false,
         showOnlyEncrypted = false,
-        uuid = uuid,
         clientConfiguration = orgRules,
         useAPI = false,
         useFES = false
@@ -193,7 +189,6 @@ data class AccountEntity constructor(
         smtpPassword = null,
         contactsLoaded = false,
         showOnlyEncrypted = false,
-        uuid = null,
         clientConfiguration = null,
         useAPI = false
       )
@@ -225,7 +220,6 @@ data class AccountEntity constructor(
     source.readString(),
     source.readValue(Boolean::class.java.classLoader) as Boolean?,
     source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readString(),
     source.readParcelableViaExt(OrgRules::class.java),
     source.readValue(Boolean::class.java.classLoader) as Boolean,
     source.readValue(Boolean::class.java.classLoader) as Boolean
@@ -292,7 +286,6 @@ data class AccountEntity constructor(
     writeString(smtpPassword)
     writeValue(contactsLoaded)
     writeValue(showOnlyEncrypted)
-    writeString(uuid)
     writeParcelable(clientConfiguration, flags)
     writeValue(useAPI)
     writeValue(useFES)
