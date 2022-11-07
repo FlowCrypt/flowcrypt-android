@@ -38,7 +38,6 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 
 /**
@@ -83,39 +82,31 @@ class AddNewAccountEnterpriseTest : BaseSignTest() {
         override fun dispatch(request: RecordedRequest): MockResponse {
           val gson =
             ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-          val model =
-            gson.fromJson(InputStreamReader(request.body.inputStream()), LoginModel::class.java)
-
-          if (request.path.equals("/account/login")) {
-            when (model.account) {
+          if (request.path.equals("/account/get")) {
+            when (extractEmailFromRecordedRequest(request)) {
               EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(
                 HttpURLConnection.HTTP_OK
               )
-                .setBody(gson.toJson(LoginResponse(null, isVerified = true)))
+                .setBody(
+                  gson.toJson(
+                    DomainOrgRulesResponse(
+                      apiError = null,
+                      orgRules = OrgRules(
+                        flags = listOf(
+                          OrgRules.DomainRule.NO_PRV_CREATE,
+                          OrgRules.DomainRule.NO_PRV_BACKUP
+                        ),
+                        customKeyserverUrl = null,
+                        keyManagerUrl = null,
+                        disallowAttesterSearchForDomains = null,
+                        enforceKeygenAlgo = null,
+                        enforceKeygenExpireMonths = null
+                      )
+                    )
+                  )
+                )
             }
           }
-
-        if (request.path.equals("/account/get")) {
-          when (model.account) {
-            EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(
-                gson.toJson(
-                  DomainOrgRulesResponse(
-                    apiError = null,
-                    orgRules = OrgRules(
-                      flags = listOf(
-                        OrgRules.DomainRule.NO_PRV_CREATE,
-                        OrgRules.DomainRule.NO_PRV_BACKUP
-                      ),
-                      customKeyserverUrl = null,
-                      keyManagerUrl = null,
-                      disallowAttesterSearchForDomains = null,
-                      enforceKeygenAlgo = null,
-                      enforceKeygenExpireMonths = null
-                    )
-                    )))
-          }
-        }
 
           return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
         }
