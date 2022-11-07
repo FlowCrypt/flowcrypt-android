@@ -42,10 +42,9 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
     val fesUrl = GeneralUtil.generateFesUrl(domain)
     try {
-      val retryAttempts = 5
       val idToken = GeneralUtil.getGoogleIdToken(
         context = applicationContext,
-        maxRetryAttemptCount = retryAttempts
+        maxRetryAttemptCount = 5
       )
 
       val result = repository.getDomainOrgRules(
