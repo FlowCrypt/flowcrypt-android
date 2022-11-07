@@ -16,6 +16,4 @@ import kotlinx.parcelize.Parcelize
  *         E-mail: DenBond7@gmail.com
  */
 @Parcelize
-data class MsgBlockError(
-  @Expose val errorMsg: String? = null
-) : Parcelable
+data class MsgBlockError(@Expose val errorMsg: String? = null) : Parcelable

@@ -34,6 +34,7 @@ import com.google.gson.annotations.SerializedName
  * Time: 4:03 PM
  * E-mail: DenBond7@gmail.com
  */
+//@Parcelize
 data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
   override var id: Long = 0,
   override var email: String? = null,

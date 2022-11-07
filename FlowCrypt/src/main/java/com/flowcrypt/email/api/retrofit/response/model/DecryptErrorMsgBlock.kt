@@ -17,6 +17,7 @@ import com.google.gson.annotations.SerializedName
  * Time: 3:02 PM
  * E-mail: DenBond7@gmail.com
  */
+//@Parcelize
 data class DecryptErrorMsgBlock(
   @Expose override val content: String?,
   @SerializedName("decryptErr") @Expose val decryptErr: DecryptError?,

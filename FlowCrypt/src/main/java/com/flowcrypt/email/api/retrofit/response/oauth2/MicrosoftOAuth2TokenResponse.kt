@@ -5,12 +5,11 @@
 
 package com.flowcrypt.email.api.retrofit.response.oauth2
 
-import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -18,6 +17,7 @@ import com.google.gson.annotations.SerializedName
  *         Time: 2:52 PM
  *         E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class MicrosoftOAuth2TokenResponse constructor(
   @SerializedName("access_token") @Expose val accessToken: String? = null,
   @SerializedName("token_type") @Expose val tokenType: String? = null,
@@ -32,21 +32,6 @@ data class MicrosoftOAuth2TokenResponse constructor(
   @SerializedName("trace_id") @Expose val traceId: String? = null,
   @SerializedName("correlation_id") @Expose val correlationId: String? = null
 ) : ApiResponse {
-  constructor(parcel: Parcel) : this(
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readValue(Long::class.java.classLoader) as? Long,
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.createIntArray(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString()
-  )
-
   override val apiError: ApiError?
     get() = if (error != null) {
       ApiError(
@@ -55,25 +40,6 @@ data class MicrosoftOAuth2TokenResponse constructor(
         internal = error
       )
     } else null
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeString(accessToken)
-    parcel.writeString(tokenType)
-    parcel.writeValue(expiresIn)
-    parcel.writeString(scope)
-    parcel.writeString(refreshToken)
-    parcel.writeString(idToken)
-    parcel.writeString(error)
-    parcel.writeString(errorDescription)
-    parcel.writeIntArray(errorCodes)
-    parcel.writeString(timestamp)
-    parcel.writeString(traceId)
-    parcel.writeString(correlationId)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -116,15 +82,5 @@ data class MicrosoftOAuth2TokenResponse constructor(
     result = 31 * result + (correlationId?.hashCode() ?: 0)
     result = 31 * result + (apiError?.hashCode() ?: 0)
     return result
-  }
-
-  companion object CREATOR : Parcelable.Creator<MicrosoftOAuth2TokenResponse> {
-    override fun createFromParcel(parcel: Parcel): MicrosoftOAuth2TokenResponse {
-      return MicrosoftOAuth2TokenResponse(parcel)
-    }
-
-    override fun newArray(size: Int): Array<MicrosoftOAuth2TokenResponse?> {
-      return arrayOfNulls(size)
-    }
   }
 }

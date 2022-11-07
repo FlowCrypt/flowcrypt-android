@@ -15,6 +15,7 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata
 /**
  * Message block which represents content with a signature.
  */
+//@Parcelize
 data class SignedMsgBlock(
   @Expose override val content: String?,
   @Expose val signature: String? = null,

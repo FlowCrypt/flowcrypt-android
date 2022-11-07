@@ -12,6 +12,7 @@ import android.os.Parcelable
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 
+//@Parcelize
 data class EncryptedAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val attMeta: AttMeta,

@@ -24,6 +24,7 @@ import com.google.gson.annotations.SerializedName
  *         Time: 12:09 PM
  *         E-mail: DenBond7@gmail.com
  */
+//@Parcelize
 data class LoadGmailAliasesAction(
   override var id: Long = 0,
   override val email: String? = null,

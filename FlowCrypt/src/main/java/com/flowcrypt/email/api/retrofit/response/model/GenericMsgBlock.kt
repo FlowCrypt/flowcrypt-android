@@ -21,6 +21,7 @@ import com.google.gson.annotations.Expose
  *
  * @author Ivan Pizhenko
  */
+//@Parcelize
 data class GenericMsgBlock(
   @Expose override val type: MsgBlock.Type = MsgBlock.Type.UNKNOWN,
   @Expose override val content: String?,

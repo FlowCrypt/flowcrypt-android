@@ -18,6 +18,7 @@ import com.google.gson.annotations.SerializedName
  *         Time: 10:12 AM
  *         E-mail: DenBond7@gmail.com
  */
+//@Parcelize
 data class DecryptedAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val attMeta: AttMeta,

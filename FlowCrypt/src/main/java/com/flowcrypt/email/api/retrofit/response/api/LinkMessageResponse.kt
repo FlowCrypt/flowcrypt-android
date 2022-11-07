@@ -5,14 +5,11 @@
 
 package com.flowcrypt.email.api.retrofit.response.api
 
-import android.os.Parcel
-import android.os.Parcelable
-
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
 /**
  * This class describes a response from the https://flowcrypt.com/api/link/message API.
@@ -29,6 +26,7 @@ import com.google.gson.annotations.SerializedName
  * Time: 15:16
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class LinkMessageResponse constructor(
   @SerializedName("error") @Expose override val apiError: ApiError?,
   @Expose val url: String?,
@@ -36,38 +34,4 @@ data class LinkMessageResponse constructor(
   @Expose val expire: String?,
   @Expose val isExpired: Boolean,
   @Expose val repliable: Boolean?
-) : ApiResponse {
-  constructor(source: Parcel) : this(
-    source.readParcelableViaExt(ApiError::class.java),
-    source.readString(),
-    1 == source.readInt(),
-    source.readString(),
-    1 == source.readInt(),
-    source.readValue(Boolean::class.java.classLoader) as Boolean?
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeParcelable(apiError, 0)
-      writeString(url)
-      writeInt((if (isDeleted) 1 else 0))
-      writeString(expire)
-      writeInt((if (isExpired) 1 else 0))
-      writeValue(repliable)
-    }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<LinkMessageResponse> =
-      object : Parcelable.Creator<LinkMessageResponse> {
-        override fun createFromParcel(source: Parcel): LinkMessageResponse =
-          LinkMessageResponse(source)
-
-        override fun newArray(size: Int): Array<LinkMessageResponse?> = arrayOfNulls(size)
-      }
-  }
-}
+) : ApiResponse

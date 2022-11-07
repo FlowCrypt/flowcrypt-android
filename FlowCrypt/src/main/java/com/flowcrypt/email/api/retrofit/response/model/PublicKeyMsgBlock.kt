@@ -9,9 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
-
 import com.flowcrypt.email.security.model.PgpKeyDetails
-
 import com.google.gson.annotations.Expose
 
 /**
@@ -22,6 +20,7 @@ import com.google.gson.annotations.Expose
  * Time: 2:35 PM
  * E-mail: DenBond7@gmail.com
  */
+//@Parcelize
 data class PublicKeyMsgBlock constructor(
   @Expose override val content: String?,
   @Expose val keyDetails: PgpKeyDetails? = null,

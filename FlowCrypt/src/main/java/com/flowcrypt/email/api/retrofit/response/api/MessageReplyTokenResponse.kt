@@ -5,13 +5,11 @@
 
 package com.flowcrypt.email.api.retrofit.response.api
 
-import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -19,27 +17,9 @@ import com.google.gson.annotations.SerializedName
  *         Time: 12:10 PM
  *         E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class MessageReplyTokenResponse(
   @SerializedName("error")
   @Expose override val apiError: ApiError? = null,
   @Expose val replyToken: String? = null
-) : ApiResponse {
-  constructor(parcel: Parcel) : this(
-    parcel.readParcelableViaExt(ApiError::class.java),
-    parcel.readString()
-  )
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeParcelable(apiError, flags)
-    parcel.writeString(replyToken)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  companion object CREATOR : Parcelable.Creator<MessageReplyTokenResponse> {
-    override fun createFromParcel(parcel: Parcel) = MessageReplyTokenResponse(parcel)
-    override fun newArray(size: Int): Array<MessageReplyTokenResponse?> = arrayOfNulls(size)
-  }
-}
+) : ApiResponse
