@@ -662,7 +662,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     @VisibleForTesting
     val MIGRATION_22_23 = object : FlowCryptMigration(22, 23) {
       override fun doMigration(database: SupportSQLiteDatabase) {
-        //create temp table with existed content
+        //create temp table with existing content
         database.execSQL(
           "CREATE TEMP TABLE IF NOT EXISTS keys_temp " +
               "AS SELECT * FROM keys;"
@@ -771,7 +771,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     @VisibleForTesting
     val MIGRATION_24_25 = object : FlowCryptMigration(24, 25) {
       override fun doMigration(database: SupportSQLiteDatabase) {
-        //create temp table with existed content
+        //create temp table with existing content
         database.execSQL(
           "CREATE TEMP TABLE IF NOT EXISTS keys_temp " +
               "AS SELECT * FROM keys;"
@@ -800,7 +800,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
               "`fingerprint_account_account_type_in_keys` " +
               "ON `keys` (`fingerprint`, `account`, `account_type`)"
         )
-        //fill new keys table with existed data. Later we will update fingerprints
+        //fill new keys table with existing data. Later we will update fingerprints
         database.execSQL(
           "INSERT INTO keys(" +
               "_id, " +
@@ -836,7 +836,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     @VisibleForTesting
     val MIGRATION_25_26 = object : FlowCryptMigration(25, 26) {
       override fun doMigration(database: SupportSQLiteDatabase) {
-        //create temp table with existed content
+        //create temp table with existing content
         database.execSQL(
           "CREATE TEMP TABLE IF NOT EXISTS " +
               "accounts_temp AS SELECT * FROM accounts;"
@@ -881,7 +881,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_in_accounts`" +
               " ON `accounts` (`email`, `account_type`);"
         )
-        //fill new accounts table with existed data.
+        //fill new accounts table with existing data.
         database.execSQL(
           "INSERT INTO accounts(" +
               "_id," +
@@ -1082,7 +1082,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     @VisibleForTesting
     val MIGRATION_33_34 = object : FlowCryptMigration(33, 34) {
       override fun doMigration(database: SupportSQLiteDatabase) {
-        //create temp table with existed content
+        //create temp table with existing content
         database.execSQL(
           "CREATE TEMP TABLE IF NOT EXISTS " +
               "accounts_temp AS SELECT * FROM accounts;"
@@ -1127,7 +1127,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_in_accounts`" +
               " ON `accounts` (`email`, `account_type`);"
         )
-        //fill new accounts table with existed data.
+        //fill new accounts table with existing data.
         database.execSQL(
           "INSERT INTO accounts SELECT" +
               " _id," +
