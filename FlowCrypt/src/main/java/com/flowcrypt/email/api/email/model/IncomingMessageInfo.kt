@@ -6,19 +6,17 @@
 package com.flowcrypt.email.api.email.model
 
 import android.content.Context
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import jakarta.mail.internet.InternetAddress
+import kotlinx.parcelize.Parcelize
 import java.util.Date
 import java.util.regex.Pattern
 
@@ -30,7 +28,7 @@ import java.util.regex.Pattern
  * Time: 11:20
  * E-mail: DenBond7@gmail.com
  */
-
+@Parcelize
 data class IncomingMessageInfo constructor(
   val msgEntity: MessageEntity,
   var atts: List<AttachmentInfo>? = null,
@@ -219,41 +217,5 @@ data class IncomingMessageInfo constructor(
     }
 
     return false
-  }
-
-  constructor(source: Parcel) : this(
-    source.readParcelableViaExt(MessageEntity::class.java)!!,
-    source.createTypedArrayList(AttachmentInfo.CREATOR),
-    source.readParcelableViaExt(LocalFolder::class.java),
-    source.readString(),
-    source.readString(),
-    mutableListOf<MsgBlock>().apply { source.readTypedList(this, GenericMsgBlock.CREATOR) },
-    source.readParcelableViaExt(MessageEncryptionType::class.java)!!,
-    source.readParcelableViaExt(VerificationResult::class.java)!!
-  )
-
-  override fun describeContents() = 0
-
-  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeParcelable(msgEntity, flags)
-    writeTypedList(atts)
-    writeParcelable(localFolder, flags)
-    writeString(text)
-    writeString(inlineSubject)
-    writeTypedList(msgBlocks)
-    writeParcelable(encryptionType, flags)
-    writeParcelable(verificationResult, flags)
-  }
-
-  companion object {
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<IncomingMessageInfo> =
-      object : Parcelable.Creator<IncomingMessageInfo> {
-        override fun createFromParcel(source: Parcel): IncomingMessageInfo =
-          IncomingMessageInfo(source)
-
-        override fun newArray(size: Int): Array<IncomingMessageInfo?> = arrayOfNulls(size)
-      }
   }
 }

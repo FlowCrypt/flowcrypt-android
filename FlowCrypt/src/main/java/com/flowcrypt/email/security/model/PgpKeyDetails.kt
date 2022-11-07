@@ -7,7 +7,6 @@ package com.flowcrypt.email.security.model
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.os.Parcel
 import android.os.Parcelable
 import android.util.Patterns
 import androidx.core.content.ContextCompat
@@ -16,12 +15,12 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.model.KeyImportDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
+import kotlinx.parcelize.Parcelize
 
 /**
  * This class collects base info of [org.bouncycastle.openpgp.PGPKeyRing]
@@ -32,6 +31,7 @@ import jakarta.mail.internet.InternetAddress
  * Time: 1:23 PM
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class PgpKeyDetails constructor(
   @Expose val isFullyDecrypted: Boolean,
   @Expose val isFullyEncrypted: Boolean,
@@ -65,46 +65,6 @@ data class PgpKeyDetails constructor(
     get() {
       return !isFullyDecrypted && !isFullyEncrypted
     }
-
-  constructor(source: Parcel) : this(
-    source.readValue(Boolean::class.java.classLoader) as Boolean,
-    source.readValue(Boolean::class.java.classLoader) as Boolean,
-    source.readValue(Boolean::class.java.classLoader) as Boolean,
-    source.readValue(Boolean::class.java.classLoader) as Boolean,
-    source.readString(),
-    source.readString() ?: throw IllegalArgumentException("pubkey can't be null"),
-    source.createStringArrayList() ?: throw NullPointerException(),
-    source.createTypedArrayList(KeyId.CREATOR) ?: throw NullPointerException(),
-    source.readLong(),
-    source.readValue(Long::class.java.classLoader) as Long?,
-    source.readValue(Long::class.java.classLoader) as Long?,
-    source.readParcelableViaExt(Algo::class.java) ?: throw NullPointerException(),
-    source.readLong(),
-    source.createCharArray(),
-    source.readParcelableViaExt(KeyEntity.PassphraseType::class.java),
-    source.readParcelableViaExt(KeyImportDetails.SourceType::class.java)
-  )
-
-  override fun describeContents() = 0
-
-  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeValue(isFullyDecrypted)
-    writeValue(isFullyEncrypted)
-    writeValue(isRevoked)
-    writeValue(usableForEncryption)
-    writeString(privateKey)
-    writeString(publicKey)
-    writeStringList(users)
-    writeTypedList(ids)
-    writeLong(created)
-    writeValue(lastModified)
-    writeValue(expiration)
-    writeParcelable(algo, flags)
-    writeLong(primaryKeyId)
-    writeCharArray(tempPassphrase)
-    writeParcelable(passphraseType, flags)
-    writeParcelable(importSourceType, flags)
-  }
 
   fun getUserIdsAsSingleString(): String {
     return mimeAddresses.joinToString { it.address }
@@ -241,10 +201,5 @@ data class PgpKeyDetails constructor(
     result = 31 * result + (tempPassphrase?.contentHashCode() ?: 0)
     result = 31 * result + (passphraseType?.hashCode() ?: 0)
     return result
-  }
-
-  companion object CREATOR : Parcelable.Creator<PgpKeyDetails> {
-    override fun createFromParcel(parcel: Parcel): PgpKeyDetails = PgpKeyDetails(parcel)
-    override fun newArray(size: Int): Array<PgpKeyDetails?> = arrayOfNulls(size)
   }
 }

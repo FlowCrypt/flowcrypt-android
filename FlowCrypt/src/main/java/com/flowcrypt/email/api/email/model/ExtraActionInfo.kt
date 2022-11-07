@@ -8,13 +8,12 @@ package com.flowcrypt.email.api.email.model
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.extensions.android.content.getParcelableArrayListExtraViaExt
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.util.RFC6068Parser
+import kotlinx.parcelize.Parcelize
 
 /**
  * This class describes information about incoming extra info from the intent with one of next actions:
@@ -30,34 +29,13 @@ import com.flowcrypt.email.util.RFC6068Parser
  * Time: 16:16
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class ExtraActionInfo(
   val atts: List<AttachmentInfo> = emptyList(),
   val initializationData: InitializationData
 ) : Parcelable {
 
-  constructor(parcel: Parcel) : this(
-    mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
-    requireNotNull(parcel.readParcelableViaExt(InitializationData::class.java))
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    dest.writeTypedList(atts)
-    dest.writeParcelable(initializationData, flags)
-  }
-
   companion object {
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<ExtraActionInfo> =
-      object : Parcelable.Creator<ExtraActionInfo> {
-        override fun createFromParcel(source: Parcel): ExtraActionInfo = ExtraActionInfo(source)
-        override fun newArray(size: Int): Array<ExtraActionInfo?> = arrayOfNulls(size)
-      }
-
     /**
      * Parse incoming information from the intent which can have the next actions:
      *

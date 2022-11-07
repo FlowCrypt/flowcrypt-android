@@ -5,9 +5,9 @@
 
 package com.flowcrypt.email.security.pgp
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.util.exception.DecryptionException
+import kotlinx.parcelize.Parcelize
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
@@ -193,6 +193,7 @@ object PgpDecryptAndOrVerify {
     }
   }
 
+  @Parcelize
   enum class DecryptionErrorType : Parcelable {
     KEY_MISMATCH,
     WRONG_PASSPHRASE,
@@ -201,18 +202,5 @@ object PgpDecryptAndOrVerify {
     NEED_PASSPHRASE,
     FORMAT,
     OTHER;
-
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
-
-    companion object CREATOR : Parcelable.Creator<DecryptionErrorType> {
-      override fun createFromParcel(parcel: Parcel) = values()[parcel.readInt()]
-      override fun newArray(size: Int): Array<DecryptionErrorType?> = arrayOfNulls(size)
-    }
   }
 }

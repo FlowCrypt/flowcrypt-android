@@ -5,11 +5,12 @@
 
 package com.flowcrypt.email.api.email.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.entity.LabelEntity
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 
 /**
  * This is a simple POJO object, which describe information about the email folder.
@@ -19,7 +20,7 @@ import com.flowcrypt.email.database.entity.LabelEntity
  * Time: 14:49
  * E-mail: DenBond7@gmail.com
  */
-
+@Parcelize
 data class LocalFolder constructor(
   val account: String,
   val fullName: String,
@@ -29,17 +30,6 @@ data class LocalFolder constructor(
   var msgCount: Int = 0,
   var searchQuery: String? = null
 ) : Parcelable {
-
-  constructor(source: Parcel) : this(
-    source.readString()!!,
-    source.readString()!!,
-    source.readString(),
-    source.createStringArrayList(),
-    source.readInt() == 1,
-    source.readInt(),
-    source.readString()
-  )
-
   constructor(source: LabelEntity) : this(
     source.email,
     source.name,
@@ -50,35 +40,16 @@ data class LocalFolder constructor(
     null
   )
 
+  @IgnoredOnParcel
   val isOutbox: Boolean = JavaEmailConstants.FOLDER_OUTBOX.equals(fullName, ignoreCase = true)
+
+  @IgnoredOnParcel
   val isAll: Boolean = JavaEmailConstants.FOLDER_ALL_MAIL.equals(fullName, ignoreCase = true)
+
+  @IgnoredOnParcel
   val isDrafts: Boolean = FoldersManager.FolderType.DRAFTS == getFolderType()
 
   fun getFolderType(): FoldersManager.FolderType? {
     return FoldersManager.getFolderType(this)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeString(account)
-      writeString(fullName)
-      writeString(folderAlias)
-      writeStringList(attributes)
-      writeInt((if (isCustom) 1 else 0))
-      writeInt(msgCount)
-      writeString(searchQuery)
-    }
-
-  companion object {
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<LocalFolder> = object : Parcelable.Creator<LocalFolder> {
-      override fun createFromParcel(source: Parcel): LocalFolder = LocalFolder(source)
-      override fun newArray(size: Int): Array<LocalFolder?> = arrayOfNulls(size)
-    }
   }
 }

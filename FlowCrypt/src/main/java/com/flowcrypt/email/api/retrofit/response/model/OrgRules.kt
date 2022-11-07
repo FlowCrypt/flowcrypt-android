@@ -5,12 +5,11 @@
 
 package com.flowcrypt.email.api.retrofit.response.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -18,6 +17,7 @@ import com.google.gson.annotations.SerializedName
  *         Time: 11:30 AM
  *         E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class OrgRules constructor(
   @Expose val flags: List<DomainRule>? = null,
   @SerializedName("custom_keyserver_url")
@@ -43,32 +43,6 @@ data class OrgRules constructor(
         minOf(value, Int.MAX_VALUE)
       } else null
     }
-
-  constructor(parcel: Parcel) : this(
-    parcel.createTypedArrayList(DomainRule.CREATOR),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.createStringArrayList(),
-    parcel.createStringArrayList(),
-    parcel.readParcelableViaExt(KeyAlgo::class.java),
-    parcel.readValue(Int::class.java.classLoader) as? Int,
-    parcel.readValue(Int::class.java.classLoader) as? Int
-  )
-
-  override fun writeToParcel(parcel: Parcel, flagsList: Int) {
-    parcel.writeTypedList(flags)
-    parcel.writeString(customKeyserverUrl)
-    parcel.writeString(keyManagerUrl)
-    parcel.writeStringList(disallowAttesterSearchForDomains)
-    parcel.writeStringList(allowAttesterSearchOnlyForDomains)
-    parcel.writeParcelable(enforceKeygenAlgo, flagsList)
-    parcel.writeValue(enforceKeygenExpireMonths)
-    parcel.writeValue(inMemoryPassPhraseSessionLength)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
 
   /**
    * Internal company SKS-like public key server to trust above Attester
@@ -239,6 +213,7 @@ data class OrgRules constructor(
     return flags?.firstOrNull { it == domainRule } != null
   }
 
+  @Parcelize
   enum class DomainRule : Parcelable {
     NO_PRV_CREATE,
     NO_PRV_BACKUP,
@@ -252,47 +227,12 @@ data class OrgRules constructor(
     HIDE_ARMOR_META,
     FORBID_STORING_PASS_PHRASE,
     RESTRICT_ANDROID_ATTACHMENT_HANDLING;
-
-    companion object CREATOR : Parcelable.Creator<DomainRule> {
-      override fun createFromParcel(parcel: Parcel): DomainRule = values()[parcel.readInt()]
-      override fun newArray(size: Int): Array<DomainRule?> = arrayOfNulls(size)
-    }
-
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
   }
 
+  @Parcelize
   enum class KeyAlgo : Parcelable {
     curve25519,
     rsa2048,
     rsa4096;
-
-    companion object CREATOR : Parcelable.Creator<KeyAlgo> {
-      override fun createFromParcel(parcel: Parcel): KeyAlgo = values()[parcel.readInt()]
-      override fun newArray(size: Int): Array<KeyAlgo?> = arrayOfNulls(size)
-    }
-
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
-  }
-
-  companion object CREATOR : Parcelable.Creator<OrgRules> {
-    override fun createFromParcel(parcel: Parcel): OrgRules {
-      return OrgRules(parcel)
-    }
-
-    override fun newArray(size: Int): Array<OrgRules?> {
-      return arrayOfNulls(size)
-    }
   }
 }

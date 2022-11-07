@@ -51,6 +51,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
     )
   ]
 )
+//@Parcelize
 data class PublicKeyEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   @ColumnInfo(name = "recipient") val recipient: String,

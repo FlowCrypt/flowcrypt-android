@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.database.entity
 
-import android.os.Parcel
 import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
@@ -13,6 +12,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import jakarta.mail.internet.InternetAddress
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -28,37 +28,14 @@ import jakarta.mail.internet.InternetAddress
     Index(name = "email_in_recipients", value = ["email"], unique = true)
   ]
 )
+@Parcelize
 data class RecipientEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
   @ColumnInfo(defaultValue = "NULL") val name: String? = null,
   @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long = 0
 ) : Parcelable {
-
-  constructor(parcel: Parcel) : this(
-    parcel.readValue(Long::class.java.classLoader) as? Long,
-    requireNotNull(parcel.readString()),
-    parcel.readString(),
-    parcel.readLong()
-  )
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeValue(id)
-    parcel.writeString(email)
-    parcel.writeString(name)
-    parcel.writeLong(lastUse)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
   fun toInternetAddress(): InternetAddress {
     return InternetAddress(email, name)
-  }
-
-  companion object CREATOR : Parcelable.Creator<RecipientEntity> {
-    override fun createFromParcel(parcel: Parcel): RecipientEntity = RecipientEntity(parcel)
-    override fun newArray(size: Int): Array<RecipientEntity?> = arrayOfNulls(size)
   }
 }
