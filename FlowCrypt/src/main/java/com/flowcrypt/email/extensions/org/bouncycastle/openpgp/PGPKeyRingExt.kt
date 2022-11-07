@@ -36,7 +36,7 @@ import java.time.Instant
  */
 @Throws(IOException::class)
 @WorkerThread
-fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
+fun PGPKeyRing.toPgpKeyDetails(hideArmorMeta: Boolean = false): PgpKeyDetails {
   val keyRingInfo = KeyRingInfo(this)
 
   val algo = Algo(
@@ -62,11 +62,11 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
     throw IllegalArgumentException("There are no fingerprints")
   }
 
-  val privateKey = if (keyRingInfo.isSecretKey) armor() else null
+  val privateKey = if (keyRingInfo.isSecretKey) armor(hideArmorMeta = hideArmorMeta) else null
   val publicKey = if (keyRingInfo.isSecretKey) {
-    (this as PGPSecretKeyRing).toPublicKeyRing().armor()
+    (this as PGPSecretKeyRing).toPublicKeyRing().armor(hideArmorMeta = hideArmorMeta)
   } else {
-    armor()
+    armor(hideArmorMeta = hideArmorMeta)
   }
 
   return PgpKeyDetails(
@@ -87,8 +87,11 @@ fun PGPKeyRing.toPgpKeyDetails(): PgpKeyDetails {
 }
 
 @Throws(IOException::class)
-fun PGPKeyRing.armor(headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS): String {
-  return SecurityUtils.armor(headers) { this.encode(it) }
+fun PGPKeyRing.armor(
+  hideArmorMeta: Boolean = false,
+  headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS
+): String {
+  return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
 }
 
 val PGPKeyRing.expiration: Instant?

@@ -39,9 +39,14 @@ class PublicKeyDetailsViewModel(
         emit(Result.loading())
         try {
           if (publicKeyEntity != null) {
+            val activeAccount = getActiveAccountSuspend()
             withContext(Dispatchers.IO) {
               publicKeyEntity.pgpKeyDetails =
-                PgpKey.parseKeys(publicKeyEntity.publicKey, false).pgpKeyDetailsList.firstOrNull()
+                PgpKey.parseKeys(
+                  source = publicKeyEntity.publicKey,
+                  throwExceptionIfUnknownSource = false,
+                  hideArmorMeta = activeAccount?.clientConfiguration?.shouldHideArmorMeta() ?: false
+                ).pgpKeyDetailsList.firstOrNull()
             }
           }
           emit(Result.success(publicKeyEntity))

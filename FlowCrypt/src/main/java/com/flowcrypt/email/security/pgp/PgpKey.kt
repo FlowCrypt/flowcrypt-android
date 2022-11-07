@@ -73,8 +73,16 @@ object PgpKey {
     return parseKeys(source.toInputStream(), throwExceptionIfUnknownSource)
   }
 
-  fun parseKeys(source: ByteArray, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
-    return parseKeys(source.inputStream(), throwExceptionIfUnknownSource)
+  fun parseKeys(
+    source: ByteArray,
+    throwExceptionIfUnknownSource: Boolean = true,
+    hideArmorMeta: Boolean = false
+  ): ParseKeyResult {
+    return parseKeys(
+      source = source.inputStream(),
+      throwExceptionIfUnknownSource = throwExceptionIfUnknownSource,
+      hideArmorMeta = hideArmorMeta
+    )
   }
 
   /**
@@ -86,10 +94,12 @@ object PgpKey {
    */
   fun parseKeys(
     source: InputStream,
-    throwExceptionIfUnknownSource: Boolean = true
+    throwExceptionIfUnknownSource: Boolean = true,
+    hideArmorMeta: Boolean = false
   ): ParseKeyResult {
     return ParseKeyResult(
-      parseKeysRaw(source, throwExceptionIfUnknownSource)
+      pgpKeyRingCollection = parseKeysRaw(source, throwExceptionIfUnknownSource),
+      hideArmorMeta = hideArmorMeta,
     )
   }
 
@@ -172,12 +182,15 @@ object PgpKey {
       throw IllegalArgumentException("Key is not a secret key")
   }
 
-  data class ParseKeyResult(val pgpKeyRingCollection: PGPKeyRingCollection) {
+  data class ParseKeyResult(
+    val pgpKeyRingCollection: PGPKeyRingCollection,
+    val hideArmorMeta: Boolean = false
+  ) {
     fun getAllKeys(): List<PGPKeyRing> =
       pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
           pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
 
-    val pgpKeyDetailsList = getAllKeys().map { it.toPgpKeyDetails() }
+    val pgpKeyDetailsList = getAllKeys().map { it.toPgpKeyDetails(hideArmorMeta = hideArmorMeta) }
   }
 
   // Restored here some previous code. Not sure if PGPainless can help with this.

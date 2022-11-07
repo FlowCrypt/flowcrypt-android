@@ -52,7 +52,7 @@ class CreatePrivateKeyViewModel(application: Application) : RoomBasicViewModel(a
                   accountEntity.displayName
                     ?: accountEntity.email, accountEntity.email
                 ), passphrase
-              ).toPgpKeyDetails()
+              ).toPgpKeyDetails(accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false)
                 .copy(
                   passphraseType = passphraseType,
                   tempPassphrase = passphrase.toCharArray(),

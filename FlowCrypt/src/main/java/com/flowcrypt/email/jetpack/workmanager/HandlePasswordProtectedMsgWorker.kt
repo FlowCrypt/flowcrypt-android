@@ -178,7 +178,8 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               prvKeys = emptyList(),
               passphrase = Passphrase.fromPassword(
                 KeyStoreCryptoManager.decryptSuspend(String(requireNotNull(msgEntity.password)))
-              )
+              ),
+              hideArmorMeta = account.clientConfiguration?.shouldHideArmorMeta() ?: false
             )
 
             //upload resulting data to FES

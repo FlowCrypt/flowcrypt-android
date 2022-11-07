@@ -185,7 +185,8 @@ class DraftViewModel(
             context = getApplication(),
             accountEntity = activeAccount,
             outgoingMsgInfo = outgoingMessageInfo,
-            signingRequired = false
+            signingRequired = false,
+            hideArmorMeta = activeAccount.clientConfiguration?.shouldHideArmorMeta() ?: false
           )
           val existingSnapshot = MsgsCacheManager.getMsgSnapshot(draftMessageEntity.id.toString())
           if (existingSnapshot != null) {
