@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
@@ -113,15 +112,6 @@ interface ApiService {
   @Streaming
   @GET("https://{directHost}/.well-known/openpgpkey/policy")
   suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
-
-  /**
-   * This method calls "https://flowcrypt.com/api/account/login"
-   */
-  @POST(BuildConfig.API_URL + "account/login")
-  suspend fun postLogin(
-    @Header("Authorization") authorization: String,
-    @Body body: Any = Any(),
-  ): Response<LoginResponse>
 
   /**
    * This method calls "https://flowcrypt.com/api/account/get"

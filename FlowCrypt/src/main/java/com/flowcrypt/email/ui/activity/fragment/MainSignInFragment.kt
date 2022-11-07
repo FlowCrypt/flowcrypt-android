@@ -47,7 +47,6 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CheckFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DomainOrgRulesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
-import com.flowcrypt.email.jetpack.viewmodel.LoginViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
@@ -95,7 +94,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private var fesUrl: String? = null
 
   private val checkFesServerViewModel: CheckFesServerViewModel by viewModels()
-  private val loginViewModel: LoginViewModel by viewModels()
   private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
   private var useStartTlsForSmtp = false
@@ -408,12 +406,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           checkFesServerViewModel.checkFesServerAvailability(account)
         }
 
-        REQUEST_CODE_RETRY_LOGIN -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          orgRules = null
-          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          loginViewModel.login(idToken)
-        }
-
         REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
@@ -511,7 +503,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun initEnterpriseViewModels() {
     initCheckFesServerViewModel()
-    initLoginViewModel()
     initDomainOrgRulesViewModel()
     initEkmViewModel()
   }
@@ -611,50 +602,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun continueWithRegularFlow() {
     val idToken = googleSignInAccount?.idToken
-    if (idToken != null) {
-      loginViewModel.login(idToken)
+    val account = googleSignInAccount?.account?.name
+
+    if (account != null && idToken != null) {
+      domainOrgRulesViewModel.fetchOrgRules(account, idToken)
     } else {
       showContent()
-    }
-  }
-
-  private fun initLoginViewModel() {
-    loginViewModel.loginLiveData.observe(viewLifecycleOwner) {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
-          showProgress(progressMsg = it.progressMsg)
-        }
-
-        Result.Status.SUCCESS -> {
-          if (it.data?.isVerified == true) {
-            val account = googleSignInAccount?.account?.name
-            val idToken = googleSignInAccount?.idToken
-            if (account != null && idToken != null) {
-              domainOrgRulesViewModel.fetchOrgRules(account, idToken)
-            } else {
-              showContent()
-              askUserToReLogin()
-            }
-          } else {
-            showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = getString(R.string.user_not_verified),
-              isCancelable = true
-            )
-          }
-
-          loginViewModel.loginLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_LOGIN)
-          loginViewModel.loginLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
-        }
-        else -> {}
-      }
+      askUserToReLogin()
     }
   }
 
@@ -824,7 +778,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   companion object {
-    private const val REQUEST_CODE_RETRY_LOGIN = 104
     private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106
     private const val REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY = 107

@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
@@ -53,18 +52,6 @@ import java.util.concurrent.TimeUnit
  *         E-mail: DenBond7@gmail.com
  */
 class FlowcryptApiRepository : ApiRepository {
-  override suspend fun login(
-    context: Context,
-    idToken: String
-  ): Result<LoginResponse> =
-    withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult(
-        context = context,
-        expectedResultClass = LoginResponse::class.java
-      ) { apiService.postLogin(authorization = "Bearer $idToken") }
-    }
-
   override suspend fun getDomainOrgRules(
     context: Context,
     fesUrl: String?,

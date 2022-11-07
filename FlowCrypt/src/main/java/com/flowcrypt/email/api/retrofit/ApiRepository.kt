@@ -12,7 +12,6 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
@@ -34,15 +33,6 @@ import com.google.gson.JsonObject
  *         E-mail: DenBond7@gmail.com
  */
 interface ApiRepository : BaseApiRepository {
-  /**
-   * @param context Interface to global information about an application environment.
-   * @param idToken OIDC token.
-   */
-  suspend fun login(
-    context: Context,
-    idToken: String
-  ): Result<LoginResponse>
-
   /**
    * @param context Interface to global information about an application environment.
    * @param fesUrl Url that will be used to fetch [OrgRules].

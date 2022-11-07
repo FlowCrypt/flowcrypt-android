@@ -266,7 +266,6 @@
     <string name="access_was_not_granted">Доступ не предоставлен</string>
     <string name="reconnect">Переподключиться</string>
     <string name="key_already_imported_finishing_setup">Ключ уже импортирован, завершаем настройку.</string>
-    <string name="user_not_verified">Пользователь не прошел проверку</string>
     <string name="pending">В ожидании&#8230;</string>
     <string name="public_key_copied_to_clipboard">Открытый ключ скопирован в буфер обмена</string>
     <string name="template_user">Пользователь %1$d: %2$s</string>
