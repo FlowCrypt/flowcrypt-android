@@ -6,7 +6,6 @@
 package com.flowcrypt.email.service.actionqueue.actions
 
 import android.content.Context
-import android.os.Parcel
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
@@ -54,24 +53,13 @@ interface Action : Parcelable {
     const val TAG_NAME_ACTION_TYPE = "actionType"
   }
 
-  //@Parcelize
-  data class None(override var id: Long = 0) : Action {
-    override val email: String? = null
-    override val version: Int = 0
+  @Parcelize
+  data class None(
+    override var id: Long = 0,
+    override val email: String? = null,
+    override val version: Int = 0,
     override val type: Type = Type.NONE
-
-    constructor(parcel: Parcel) : this(parcel.readLong())
-
+  ) : Action {
     override suspend fun run(context: Context) {}
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-      parcel.writeLong(id)
-    }
-
-    override fun describeContents(): Int = 0
-
-    companion object CREATOR : Parcelable.Creator<None> {
-      override fun createFromParcel(parcel: Parcel): None = None(parcel)
-      override fun newArray(size: Int): Array<None?> = arrayOfNulls(size)
-    }
   }
 }

@@ -8,8 +8,6 @@
 package com.flowcrypt.email.service.actionqueue.actions
 
 import android.content.Context
-import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
@@ -19,6 +17,8 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 
 /**
  * This action describes a task which backups a private key to INBOX.
@@ -28,13 +28,14 @@ import com.google.gson.annotations.SerializedName
  * Time: 16:58
  * E-mail: DenBond7@gmail.com
  */
-//@Parcelize
+@Parcelize
 data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(
   override var id: Long = 0,
   override var email: String,
   override val version: Int = 0,
   private val privateKeyFingerprint: String
 ) : Action {
+  @IgnoredOnParcel
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
@@ -69,33 +70,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(
     transport.sendMessage(message, message.allRecipients)
   }
 
-  constructor(source: Parcel) : this(
-    source.readLong(),
-    source.readString()!!,
-    source.readInt(),
-    source.readString()!!
-  )
-
   override fun describeContents(): Int {
     return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeLong(id)
-      writeString(email)
-      writeInt(version)
-      writeString(privateKeyFingerprint)
-    }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<BackupPrivateKeyToInboxAction> =
-      object : Parcelable.Creator<BackupPrivateKeyToInboxAction> {
-        override fun createFromParcel(source: Parcel): BackupPrivateKeyToInboxAction =
-          BackupPrivateKeyToInboxAction(source)
-
-        override fun newArray(size: Int): Array<BackupPrivateKeyToInboxAction?> = arrayOfNulls(size)
-      }
   }
 }

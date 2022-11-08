@@ -6,11 +6,13 @@
 package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.google.gson.annotations.Expose
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
 
 /**
  * It's a variant of [MsgBlock] which describes a public key.
@@ -20,13 +22,14 @@ import com.google.gson.annotations.Expose
  * Time: 2:35 PM
  * E-mail: DenBond7@gmail.com
  */
-//@Parcelize
+@Parcelize
 data class PublicKeyMsgBlock constructor(
   @Expose override val content: String?,
   @Expose val keyDetails: PgpKeyDetails? = null,
   @Expose override val error: MsgBlockError? = null,
   @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
+  @IgnoredOnParcel
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
 
@@ -42,24 +45,20 @@ data class PublicKeyMsgBlock constructor(
       parcel.readParcelableViaExt(RecipientWithPubKeys::class.java)
   }
 
-  override fun writeToParcel(parcel: Parcel, flags: Int) =
-    with(parcel) {
-      writeParcelable(type, flags)
-      writeString(content)
-      writeParcelable(keyDetails, flags)
-      writeParcelable(error, flags)
-      writeInt(if (isOpenPGPMimeSigned) 1 else 0)
-      writeParcelable(existingRecipientWithPubKeys, flags)
-    }
+  companion object : Parceler<PublicKeyMsgBlock> {
+    override fun PublicKeyMsgBlock.write(parcel: Parcel, flags: Int) =
+      with(parcel) {
+        writeParcelable(type, flags)
+        writeString(content)
+        writeParcelable(keyDetails, flags)
+        writeParcelable(error, flags)
+        writeInt(if (isOpenPGPMimeSigned) 1 else 0)
+        writeParcelable(existingRecipientWithPubKeys, flags)
+      }
 
-  override fun describeContents(): Int = 0
-
-  companion object CREATOR : Parcelable.Creator<PublicKeyMsgBlock> {
-    override fun createFromParcel(parcel: Parcel): PublicKeyMsgBlock {
+    override fun create(parcel: Parcel): PublicKeyMsgBlock {
       parcel.readParcelableViaExt(MsgBlock.Type::class.java)
       return PublicKeyMsgBlock(parcel)
     }
-
-    override fun newArray(size: Int): Array<PublicKeyMsgBlock?> = arrayOfNulls(size)
   }
 }

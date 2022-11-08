@@ -6,7 +6,6 @@
 package com.flowcrypt.email.service.actionqueue.actions
 
 import android.content.Context
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -14,6 +13,8 @@ import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 
 /**
  * This action describes a task which loads Gmail aliases for the given account and save them to
@@ -24,21 +25,16 @@ import com.google.gson.annotations.SerializedName
  *         Time: 12:09 PM
  *         E-mail: DenBond7@gmail.com
  */
-//@Parcelize
+@Parcelize
 data class LoadGmailAliasesAction(
   override var id: Long = 0,
   override val email: String? = null,
   override val version: Int = 0
 ) : Action, Parcelable {
 
+  @IgnoredOnParcel
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.LOAD_GMAIL_ALIASES
-
-  constructor(parcel: Parcel) : this(
-    parcel.readLong(),
-    parcel.readString(),
-    parcel.readInt()
-  )
 
   override suspend fun run(context: Context) {
     try {
@@ -72,26 +68,6 @@ data class LoadGmailAliasesAction(
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
-    }
-  }
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeLong(id)
-    parcel.writeString(email)
-    parcel.writeInt(version)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  companion object CREATOR : Parcelable.Creator<LoadGmailAliasesAction> {
-    override fun createFromParcel(parcel: Parcel): LoadGmailAliasesAction {
-      return LoadGmailAliasesAction(parcel)
-    }
-
-    override fun newArray(size: Int): Array<LoadGmailAliasesAction?> {
-      return arrayOfNulls(size)
     }
   }
 }

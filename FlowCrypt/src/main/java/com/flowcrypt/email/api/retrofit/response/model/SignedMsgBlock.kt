@@ -7,15 +7,17 @@
 package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 
 /**
  * Message block which represents content with a signature.
  */
-//@Parcelize
+@Parcelize
 data class SignedMsgBlock(
   @Expose override val content: String?,
   @Expose val signature: String? = null,
@@ -23,8 +25,10 @@ data class SignedMsgBlock(
   @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
 
+  @IgnoredOnParcel
   var openPgpMetadata: OpenPgpMetadata? = null
 
+  @IgnoredOnParcel
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.SIGNED_CONTENT
 
@@ -35,22 +39,19 @@ data class SignedMsgBlock(
     1 == source.readInt()
   )
 
-  override fun describeContents() = 0
+  companion object : Parceler<SignedMsgBlock> {
 
-  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeParcelable(type, flags)
-    writeString(content)
-    writeString(signature)
-    writeParcelable(error, flags)
-    writeInt(if (isOpenPGPMimeSigned) 1 else 0)
-  }
-
-  companion object CREATOR : Parcelable.Creator<MsgBlock> {
-    override fun createFromParcel(parcel: Parcel): MsgBlock {
-      val partType = parcel.readParcelableViaExt(MsgBlock.Type::class.java)!!
-      return MsgBlockFactory.fromParcel(partType, parcel)
+    override fun SignedMsgBlock.write(parcel: Parcel, flags: Int) = with(parcel) {
+      writeParcelable(type, flags)
+      writeString(content)
+      writeString(signature)
+      writeParcelable(error, flags)
+      writeInt(if (isOpenPGPMimeSigned) 1 else 0)
     }
 
-    override fun newArray(size: Int): Array<SignedMsgBlock?> = arrayOfNulls(size)
+    override fun create(parcel: Parcel): SignedMsgBlock {
+      val partType = requireNotNull(parcel.readParcelableViaExt(MsgBlock.Type::class.java))
+      return MsgBlockFactory.fromParcel(partType, parcel) as SignedMsgBlock
+    }
   }
 }
