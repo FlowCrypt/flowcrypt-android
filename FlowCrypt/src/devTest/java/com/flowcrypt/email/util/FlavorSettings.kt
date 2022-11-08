@@ -21,8 +21,10 @@ object FlavorSettings : EnvironmentSettings {
     GeneralUtil.isDebugBuild()
   )
 
-  override fun isGMailAPIEnabled(): Boolean = false
+  override fun isGMailAPIEnabled(): Boolean = true
   override fun configure(context: Context) {}
   override fun getCountingIdlingResource() = countingIdlingResource
-  override fun getGoogleIdToken(): String? = UUID.randomUUID().toString()
+  override fun getGoogleIdToken(): String = UUID.randomUUID().toString()
+  override fun getGmailAPIRootUrl() = "https://localhost:1212/"
+  override fun isGMailAPIHttpRequestInitializerEnabled(): Boolean = false
 }

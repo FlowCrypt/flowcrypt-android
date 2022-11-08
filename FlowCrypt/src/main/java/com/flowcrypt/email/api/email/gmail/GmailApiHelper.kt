@@ -31,6 +31,7 @@ import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
+import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.GmailAPIException
@@ -176,7 +177,13 @@ class GmailApiHelper {
 
       val factory = GsonFactory.getDefaultInstance()
       val appName = context.getString(R.string.app_name)
-      return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
+      val rootUrl = FlavorSettings.getGmailAPIRootUrl()
+      val builder = Gmail.Builder(transport, factory, credential).setApplicationName(appName)
+      rootUrl.let { builder.rootUrl = it }
+      if (!FlavorSettings.isGMailAPIHttpRequestInitializerEnabled()) {
+        builder.httpRequestInitializer = null
+      }
+      return builder.build()
     }
 
     suspend fun <M> doOperationViaStepsSuspend(

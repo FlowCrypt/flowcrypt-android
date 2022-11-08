@@ -22,4 +22,6 @@ interface EnvironmentSettings {
   fun configure(context: Context)
   fun getCountingIdlingResource(): CountingIdlingResource? = null
   fun getGoogleIdToken(): String? = null
+  fun getGmailAPIRootUrl(): String? = null
+  fun isGMailAPIHttpRequestInitializerEnabled(): Boolean = true
 }
